@@ -1,6 +1,7 @@
+"use client";
 // src/components/SocialLinks.tsx
 // Branded social media link cards for streamer's official channels.
-import { Youtube, Instagram, Music2 } from "lucide-react";
+import { Youtube, Instagram } from "lucide-react";
 
 type SocialPlatform = {
   id: string;
