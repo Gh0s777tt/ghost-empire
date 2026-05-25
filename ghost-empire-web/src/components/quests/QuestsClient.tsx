@@ -1,0 +1,392 @@
+"use client";
+// src/components/quests/QuestsClient.tsx
+import { useState, useEffect, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import {
+  Zap, Check, Loader2, MessageCircle, Mic2, Gift, Flame, X, Clock,
+} from "lucide-react";
+import { fmt, cn } from "@/lib/utils";
+
+type UserTask = {
+  id: string;
+  taskId: string;
+  progress: number;
+  done: boolean;
+  claimed: boolean;
+  claimedAt: string | null;
+  task: {
+    code: string;
+    text: string;
+    textEn: string | null;
+    target: number;
+    reward: number;
+    bonusReward: number;
+    triggerType: string;
+  };
+};
+
+const TRIGGER_META: Record<string, { icon: typeof MessageCircle; color: string; unit: string }> = {
+  messages:      { icon: MessageCircle, color: "#5865F2", unit: "wiad."  },
+  voice_minutes: { icon: Mic2,          color: "#9146FF", unit: "min"    },
+  drop_code:     { icon: Gift,          color: "#FF4500", unit: "drop"   },
+  shop_purchase: { icon: Gift,          color: "#10b981", unit: "zakup"  },
+  manual:        { icon: Zap,           color: "#a855f7", unit: ""       },
+};
+
+function secondsUntilMidnight(): number {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setHours(24, 0, 0, 0);
+  return Math.floor((tomorrow.getTime() - now.getTime()) / 1000);
+}
+
+function formatHMS(totalSec: number): string {
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+export function QuestsClient({
+  tasks: initialTasks,
+  streak,
+  balance,
+}: {
+  tasks: UserTask[];
+  streak: number;
+  balance: number;
+}) {
+  const router = useRouter();
+  const { update: refreshSession } = useSession();
+  const [tasks, setTasks] = useState(initialTasks);
+  const [pending, startTransition] = useTransition();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const [resetIn, setResetIn] = useState(() => secondsUntilMidnight());
+
+  useEffect(() => {
+    const t = setInterval(() => setResetIn(secondsUntilMidnight()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const completedCount = tasks.filter((t) => t.progress >= t.task.target).length;
+  const claimedCount = tasks.filter((t) => t.claimed).length;
+  const totalClaimableTokens = tasks
+    .filter((t) => t.progress >= t.task.target && !t.claimed)
+    .reduce((sum, t) => sum + t.task.reward, 0);
+  const totalReward = tasks.reduce((sum, t) => sum + t.task.reward, 0);
+
+  function showToast(kind: "ok" | "err", msg: string) {
+    setToast({ kind, msg });
+    setTimeout(() => setToast(null), 4500);
+  }
+
+  async function claim(taskId: string) {
+    setBusyId(taskId);
+    try {
+      const res = await fetch("/api/tasks/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast("err", data.error ?? "Błąd");
+        return;
+      }
+      // Optimistic update
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.taskId === taskId
+            ? { ...t, claimed: true, claimedAt: new Date().toISOString() }
+            : t,
+        ),
+      );
+      showToast("ok", `+${fmt(data.reward)} GT — nowy balans ${fmt(data.newBalance)} GT`);
+      await refreshSession();
+      startTransition(() => router.refresh());
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <Zap className="w-6 h-6 text-orange-500" />
+            <h1
+              className="font-display text-4xl text-white tracking-wider"
+              style={{ textShadow: "2px 0 0 rgba(255,69,0,0.7), -2px 0 0 rgba(139,0,0,0.4)" }}
+            >
+              DAILY QUESTY
+            </h1>
+          </div>
+          <p className="text-zinc-500 text-sm">
+            Codziennie 3 zadania. Wykonaj, zclaimuj, zgarnij Ghost Tokens.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 border border-zinc-800 bg-zinc-950/80 px-4 py-2.5">
+          <Clock className="w-4 h-4 text-orange-500" />
+          <div className="leading-tight">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+              Reset za
+            </div>
+            <div className="font-mono text-lg font-bold text-white tabular-nums">
+              {formatHMS(resetIn)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatTile
+          label="Wykonane"
+          value={`${completedCount} / ${tasks.length}`}
+          emoji="✅"
+          accent={completedCount === tasks.length && tasks.length > 0}
+        />
+        <StatTile
+          label="Zclaimowane"
+          value={`${claimedCount} / ${tasks.length}`}
+          emoji="🎁"
+        />
+        <StatTile
+          label="Do odbioru"
+          value={`${fmt(totalClaimableTokens)}`}
+          suffix="GT"
+          emoji="💰"
+          accent={totalClaimableTokens > 0}
+        />
+        <StatTile
+          label="Streak"
+          value={streak.toString()}
+          suffix={streak === 1 ? "dzień" : "dni"}
+          emoji="🔥"
+        />
+      </div>
+
+      {/* All claimed banner */}
+      {tasks.length > 0 && claimedCount === tasks.length && (
+        <div
+          className="border-2 border-green-700 bg-green-950/30 p-4 flex items-center gap-3"
+          style={{
+            clipPath:
+              "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+          }}
+        >
+          <div className="text-3xl">🎉</div>
+          <div>
+            <div className="font-bold text-green-300 text-sm">Wszystkie questy na dziś zaliczone!</div>
+            <div className="text-zinc-400 text-xs">
+              Łącznie zarobiłeś {fmt(totalReward)} GT z daily questów. Reset o 00:00.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tasks */}
+      {tasks.length === 0 ? (
+        <div className="border border-zinc-800 bg-zinc-950/50 p-12 text-center">
+          <Zap className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
+          <p className="text-zinc-500">Brak aktywnych questów na dziś.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {tasks.map((t) => (
+            <QuestCard
+              key={t.id}
+              userTask={t}
+              busy={busyId === t.taskId || pending}
+              onClaim={() => claim(t.taskId)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* How it works */}
+      <div className="border border-zinc-800 bg-zinc-950/50 p-5 mt-8">
+        <h3 className="font-display text-base text-white tracking-wider mb-3">JAK TO DZIAŁA</h3>
+        <ul className="text-xs text-zinc-400 space-y-1.5">
+          <li className="flex gap-2">
+            <span className="text-orange-500 flex-shrink-0">▸</span>
+            Bot Discord śledzi Twoją aktywność (wiadomości, voice) i aktualizuje progress automatycznie.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-orange-500 flex-shrink-0">▸</span>
+            Drop codes wpisujesz podczas live streama (Ghost wrzuca kod na czat → wpisz pierwszy).
+          </li>
+          <li className="flex gap-2">
+            <span className="text-orange-500 flex-shrink-0">▸</span>
+            Gdy progress dobije do targetu, kliknij <strong className="text-white">CLAIM</strong> — tokeny lecą na Twoje konto.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-orange-500 flex-shrink-0">▸</span>
+            Wszystko resetuje się o 00:00. Niezclaimowane wczorajsze questy znikają (claim w dniu wygenerowania!).
+          </li>
+        </ul>
+      </div>
+
+      {toast && (
+        <div
+          className={cn(
+            "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
+            toast.kind === "ok"
+              ? "border-green-700 bg-green-950/90 text-green-200"
+              : "border-red-700 bg-red-950/90 text-red-200",
+          )}
+        >
+          {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+          <span className="text-sm">{toast.msg}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatTile({
+  label, value, suffix, emoji, accent,
+}: {
+  label: string; value: string; suffix?: string; emoji: string; accent?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "border bg-zinc-950/70 backdrop-blur-sm p-3",
+        accent ? "border-orange-700 bg-orange-950/20" : "border-zinc-800",
+      )}
+    >
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className="text-base">{emoji}</span>
+        <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">
+          {label}
+        </span>
+      </div>
+      <div className="font-mono text-xl font-bold text-white tabular-nums">
+        {value}
+        {suffix && <span className="text-zinc-500 text-xs ml-1">{suffix}</span>}
+      </div>
+    </div>
+  );
+}
+
+function QuestCard({
+  userTask,
+  busy,
+  onClaim,
+}: {
+  userTask: UserTask;
+  busy: boolean;
+  onClaim: () => void;
+}) {
+  const { task, progress, claimed } = userTask;
+  const done = progress >= task.target;
+  const ratio = Math.min(100, (progress / task.target) * 100);
+  const meta = TRIGGER_META[task.triggerType] ?? TRIGGER_META.manual;
+  const Icon = meta.icon;
+
+  const status: "claimed" | "claimable" | "in_progress" = claimed
+    ? "claimed"
+    : done
+      ? "claimable"
+      : "in_progress";
+
+  return (
+    <div
+      className={cn(
+        "border bg-zinc-950/80 backdrop-blur-sm p-4 flex flex-col transition-all",
+        status === "claimed" && "border-zinc-800 opacity-60",
+        status === "claimable" && "border-green-700 bg-green-950/10",
+        status === "in_progress" && "border-zinc-800",
+      )}
+      style={{
+        clipPath:
+          "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-3">
+        <div
+          className="w-10 h-10 flex-shrink-0 flex items-center justify-center"
+          style={{ background: meta.color + "20", border: `1px solid ${meta.color}50` }}
+        >
+          <Icon className="w-4 h-4" style={{ color: meta.color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mb-0.5">
+            {task.code.replace("daily_", "").toUpperCase()}
+          </div>
+          <h3 className="text-white text-sm font-bold leading-tight">{task.text}</h3>
+          {task.textEn && (
+            <p className="text-zinc-600 text-[10px] mt-0.5 italic">{task.textEn}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest mb-1.5">
+          <span className="text-zinc-500">Postęp</span>
+          <span className={status === "claimable" ? "text-green-300" : "text-white"}>
+            {fmt(Math.min(progress, task.target))} / {fmt(task.target)}{" "}
+            <span className="text-zinc-500">{meta.unit}</span>
+          </span>
+        </div>
+        <div className="h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">
+          <div
+            className="h-full transition-all"
+            style={{
+              width: `${ratio}%`,
+              background:
+                status === "claimable"
+                  ? "linear-gradient(90deg, #10b981, #34d399)"
+                  : `linear-gradient(90deg, ${meta.color}, ${meta.color}aa)`,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Reward */}
+      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest mb-3">
+        <span className="text-zinc-500">Nagroda</span>
+        <span className="text-white text-sm normal-case font-bold tabular-nums">
+          {fmt(task.reward)} GT
+          {task.bonusReward > 0 && (
+            <span className="text-orange-400 text-xs ml-1.5">+{fmt(task.bonusReward)} bonus</span>
+          )}
+        </span>
+      </div>
+
+      {/* Action */}
+      <div className="mt-auto">
+        {status === "claimed" ? (
+          <button
+            disabled
+            className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-600 text-xs font-bold tracking-widest uppercase cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <Check className="w-3.5 h-3.5" />
+            Odebrane
+          </button>
+        ) : status === "claimable" ? (
+          <button
+            onClick={onClaim}
+            disabled={busy}
+            className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Gift className="w-3.5 h-3.5" />}
+            Claim {fmt(task.reward)} GT
+          </button>
+        ) : (
+          <div className="w-full px-4 py-2.5 border border-zinc-800 bg-zinc-950 text-zinc-500 text-xs font-bold tracking-widest uppercase text-center">
+            W toku — {fmt(task.target - progress)} {meta.unit} pozostało
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

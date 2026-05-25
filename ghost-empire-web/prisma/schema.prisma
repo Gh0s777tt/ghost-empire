@@ -1,0 +1,494 @@
+// prisma/schema.prisma
+// Ghost Empire - Full Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =====================================================
+// USER & AUTH
+// =====================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  // Identity
+  username      String?   @unique
+  displayName   String?
+  bio           String?
+
+  // Economy
+  tokens        Int       @default(0)
+  totalEarned   Int       @default(0)
+  totalSpent    Int       @default(0)
+
+  // Progression
+  level         Int       @default(1)
+  xp            Int       @default(0)
+  streak        Int       @default(0)
+  lastStreakDate String?   // "YYYY-MM-DD"
+  lastDaily     DateTime?
+
+  // Stats
+  messageCount  Int       @default(0)
+  voiceMinutes  Int       @default(0)
+
+  // Discord link
+  discordId     String?   @unique
+  discordUsername String?
+
+  // Admin & roles
+  isAdmin       Boolean   @default(false)
+  isModerator   Boolean   @default(false)
+  isDonator     Boolean   @default(false)
+  totalDonated  Int       @default(0)    // suma w PLN groszach lub w jednostkach umownych
+  modNote       String?                   // notatka admina (np. "Mod od 2024-01, Twitch+Discord")
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts      Account[]
+  sessions      Session[]
+
+  // App relations
+  connections     Connection[]
+  transactions    Transaction[]
+  userAchievements UserAchievement[]
+  userTasks       UserTask[]
+  socialLinks     SocialLink[]
+  eventEntries    EventEntry[]
+  raffleTickets   RaffleTicket[]
+  notifications   Notification[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// =====================================================
+// PLATFORM CONNECTIONS
+// =====================================================
+
+model Connection {
+  id           String   @id @default(cuid())
+  userId       String
+  platform     String   // "twitch" | "kick" | "youtube" | "discord"
+  platformId   String   // user's ID on that platform
+  username     String
+  displayName  String?
+  avatar       String?
+
+  // OAuth tokens (encrypted in production)
+  accessToken  String?  @db.Text
+  refreshToken String?  @db.Text
+  tokenExpiry  DateTime?
+
+  // Sub status
+  isSubscriber Boolean  @default(false)
+  subTier      String?  // "T1" | "T2" | "T3" | "Prime"
+  subMonths    Int      @default(0)
+  subStartDate DateTime?
+
+  // Platform role (Twitch mod, Discord admin, Kick mod, etc.)
+  isModerator  Boolean  @default(false)  // mod na DANEJ platformie
+  isVip        Boolean  @default(false)  // VIP na Twitch / equivalent
+
+  // Cached stats (updated via webhook/cron)
+  followers    Int?
+  following    Int?
+  viewCount    Int?
+
+  connectedAt  DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@unique([platform, platformId])
+  @@map("connections")
+}
+
+// =====================================================
+// ECONOMY
+// =====================================================
+
+model Transaction {
+  id     String @id @default(cuid())
+  userId String
+
+  type   String // "earn" | "spend" | "admin_grant" | "admin_deduct" | "refund"
+  amount Int    // positive = earn, negative = spend
+
+  reason     String
+  multiplier Float   @default(1.0)
+
+  // If purchase
+  shopItemId String?
+  shopItem   ShopItem? @relation(fields: [shopItemId], references: [id])
+
+  // Delivery status (for physical/digital items)
+  status String @default("completed") // "pending" | "completed" | "delivered" | "refunded"
+  note   String?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+// =====================================================
+// SHOP
+// =====================================================
+
+model ShopItem {
+  id          String  @id @default(cuid())
+  name        String
+  description String  @db.Text
+  category    String  // "games" | "skins" | "subs" | "cosmetic" | "experience"
+  price       Int
+
+  imageUrl    String?
+  imageEmoji  String? @default("🎁")
+
+  stock       Int     @default(-1)   // -1 = unlimited
+  totalStock  Int     @default(-1)
+
+  hot         Boolean @default(false)
+  active      Boolean @default(true)
+  featured    Boolean @default(false)
+
+  // Requirements
+  requiresSubTier  String?  // "T1" | "T2" | "T3" | "DUAL"
+  requiresMinLevel Int?
+  requiresMinMonths Int?
+
+  sortOrder   Int     @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@map("shop_items")
+}
+
+// =====================================================
+// EVENTS
+// =====================================================
+
+model Event {
+  id          String  @id @default(cuid())
+  type        String  // "giveaway" | "raffle" | "contest" | "happy_hour"
+  name        String
+  description String? @db.Text
+
+  active      Boolean  @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+
+  // Happy Hour fields
+  multiplier  Float?
+
+  // Giveaway / Contest / Raffle fields
+  prize         String?
+  prizeImageUrl String?
+  winnersCount  Int?
+  requirement   String?
+
+  // Raffle specific
+  ticketPrice   Int?
+  maxTicketsPerUser Int?
+
+  // Auto-draw
+  autoDrawAt    DateTime?
+  drawnAt       DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+
+  entries     EventEntry[]
+  raffleTickets RaffleTicket[]
+
+  @@map("events")
+}
+
+model EventEntry {
+  id       String  @id @default(cuid())
+  eventId  String
+  userId   String
+
+  isWinner Boolean @default(false)
+  claimedAt DateTime?
+
+  joinedAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("event_entries")
+}
+
+model RaffleTicket {
+  id      String @id @default(cuid())
+  eventId String
+  userId  String
+  ticketNumber Int
+
+  boughtAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("raffle_tickets")
+}
+
+// =====================================================
+// ACHIEVEMENTS
+// =====================================================
+
+model Achievement {
+  id          String @id @default(cuid())
+  code        String @unique
+  name        String
+  description String
+  icon        String
+  rarity      String // "common" | "rare" | "epic" | "legendary"
+  hidden      Boolean @default(false)
+
+  // Trigger conditions (checked by engine)
+  triggerType  String?  // "level" | "tokens_earned" | "streak" | "messages" | "manual"
+  triggerValue Int?
+
+  xpReward     Int @default(0)
+  tokenReward  Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String @id @default(cuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+// =====================================================
+// DAILY TASKS
+// =====================================================
+
+model DailyTask {
+  id      String @id @default(cuid())
+  code    String @unique
+  text    String
+  textEn  String?
+
+  target      Int
+  reward      Int
+  bonusReward Int @default(0)
+
+  triggerType String // "messages" | "voice_minutes" | "drop_code" | "shop_purchase" | "manual"
+  active      Boolean @default(true)
+
+  userTasks UserTask[]
+
+  @@map("daily_tasks")
+}
+
+model UserTask {
+  id       String @id @default(cuid())
+  userId   String
+  taskId   String
+  date     String // "YYYY-MM-DD" — resets daily
+
+  progress Int     @default(0)
+  done     Boolean @default(false)
+  claimed  Boolean @default(false)
+  claimedAt DateTime?
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task DailyTask @relation(fields: [taskId], references: [id])
+
+  @@unique([userId, taskId, date])
+  @@map("user_tasks")
+}
+
+// =====================================================
+// SOCIAL LINKS
+// =====================================================
+
+model SocialLink {
+  id       String @id @default(cuid())
+  userId   String
+  platform String // "instagram" | "twitter" | "tiktok" | "youtube" | "website"
+  handle   String
+  url      String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@map("social_links")
+}
+
+// =====================================================
+// NOTIFICATIONS
+// =====================================================
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+
+  type    String // "achievement" | "task_reward" | "shop_delivered" | "event_win" | "system"
+  title   String
+  message String
+  icon    String?
+  link    String?
+  read    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// =====================================================
+// STREAM DROPS
+// =====================================================
+
+model StreamDrop {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  reward    Int
+  bonusReward Int    @default(0)
+  bonusSlots  Int    @default(10)  // first N users get bonus
+
+  active    Boolean  @default(true)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  createdById String?
+
+  claims    DropClaim[]
+
+  @@map("stream_drops")
+}
+
+// =====================================================
+// AUDIT LOG (admin actions — for forensics + security)
+// =====================================================
+
+model AdminAction {
+  id          String   @id @default(cuid())
+  adminId     String   // user.id who did the action
+  adminName   String?  // snapshot of admin username at time of action
+  action      String   // "grant_tokens" | "create_drop" | "create_event" | "draw_event" | "deliver_order" | "refund_order" | "set_user_role" | "set_connection_role" | "deactivate_drop" | "deactivate_event"
+  targetType  String?  // "user" | "drop" | "event" | "transaction" | "connection"
+  targetId    String?  // affected entity id
+  details     String?  @db.Text // JSON-stringified payload for inspection
+  ipAddress   String?  // request IP (rough client identification)
+  createdAt   DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([action, createdAt])
+  @@map("admin_actions")
+}
+
+// =====================================================
+// RATE LIMIT BUCKETS (in-memory fallback; persisted for cross-instance state)
+// =====================================================
+
+model DiscordLinkCode {
+  code      String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("discord_link_codes")
+}
+
+model RateLimitBucket {
+  key        String   @id        // e.g. "award:127.0.0.1" or "claim:userId"
+  count      Int      @default(0)
+  windowStart DateTime
+  expiresAt  DateTime
+
+  @@index([expiresAt])
+  @@map("rate_limit_buckets")
+}
+
+model DropClaim {
+  id       String @id @default(cuid())
+  dropId   String
+  userId   String
+  reward   Int    // actual reward received (bonus or regular)
+  claimedAt DateTime @default(now())
+
+  drop StreamDrop @relation(fields: [dropId], references: [id])
+
+  @@unique([dropId, userId])
+  @@map("drop_claims")
+}

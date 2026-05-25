@@ -1,0 +1,111 @@
+// src/app/profile/page.tsx
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { Header } from "@/components/Header";
+import { ProfileClient } from "@/components/profile/ProfileClient";
+
+export const dynamic = "force-dynamic";
+
+export const metadata = { title: "Profil" };
+
+export default async function ProfilePage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    redirect("/auth/signin?callbackUrl=/profile");
+  }
+
+  const userId = session.user.id;
+
+  const [user, connections, earnedAchievements, allAchievements, socialLinks, transactions] =
+    await Promise.all([
+      prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          displayName: true,
+          bio: true,
+          image: true,
+          tokens: true,
+          totalEarned: true,
+          totalSpent: true,
+          level: true,
+          xp: true,
+          streak: true,
+          messageCount: true,
+          voiceMinutes: true,
+          isAdmin: true,
+          isModerator: true,
+          isDonator: true,
+          totalDonated: true,
+          discordId: true,
+          createdAt: true,
+        },
+      }),
+      prisma.connection.findMany({
+        where: { userId },
+        orderBy: { connectedAt: "asc" },
+      }),
+      prisma.userAchievement.findMany({
+        where: { userId },
+        include: { achievement: true },
+        orderBy: { earnedAt: "desc" },
+      }),
+      prisma.achievement.findMany({
+        where: { hidden: false },
+        orderBy: [{ rarity: "asc" }, { triggerValue: "asc" }],
+      }),
+      prisma.socialLink.findMany({
+        where: { userId },
+        orderBy: { platform: "asc" },
+      }),
+      prisma.transaction.findMany({
+        where: { userId },
+        include: { shopItem: { select: { name: true, imageEmoji: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 30,
+      }),
+    ]);
+
+  return (
+    <div className="min-h-screen bg-black">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full blur-[150px] opacity-15"
+          style={{ background: "radial-gradient(circle, #E50914 0%, transparent 70%)" }}
+        />
+      </div>
+
+      <Header />
+
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-6">
+        <ProfileClient
+          user={{ ...user, createdAt: user.createdAt.toISOString() }}
+          connections={connections.map((c) => ({
+            ...c,
+            connectedAt: c.connectedAt.toISOString(),
+            updatedAt: c.updatedAt.toISOString(),
+            tokenExpiry: c.tokenExpiry?.toISOString() ?? null,
+            subStartDate: c.subStartDate?.toISOString() ?? null,
+            accessToken: null,
+            refreshToken: null,
+          }))}
+          earnedAchievements={earnedAchievements.map((ua) => ({
+            id: ua.id,
+            earnedAt: ua.earnedAt.toISOString(),
+            achievement: ua.achievement,
+          }))}
+          allAchievements={allAchievements}
+          socialLinks={socialLinks}
+          transactions={transactions.map((t) => ({
+            ...t,
+            createdAt: t.createdAt.toISOString(),
+          }))}
+        />
+      </main>
+    </div>
+  );
+}

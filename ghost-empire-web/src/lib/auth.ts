@@ -1,0 +1,203 @@
+// src/lib/auth.ts
+import { NextAuthOptions } from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import TwitchProvider from "next-auth/providers/twitch";
+import DiscordProvider from "next-auth/providers/discord";
+import { prisma } from "@/lib/prisma";
+import type { Adapter } from "next-auth/adapters";
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma) as Adapter,
+
+  providers: [
+    TwitchProvider({
+      clientId: process.env.TWITCH_CLIENT_ID!,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "user:read:email",
+        },
+      },
+    }),
+    DiscordProvider({
+      clientId: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "identify email guilds",
+        },
+      },
+    }),
+  ],
+
+  session: {
+    strategy: "database",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+
+  callbacks: {
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+        session.user.isAdmin =
+          (user as any).isAdmin ??
+          (user as any).discordId === process.env.ADMIN_DISCORD_ID;
+        session.user.isModerator = (user as any).isModerator ?? false;
+        session.user.isDonator = (user as any).isDonator ?? false;
+        session.user.tokens = (user as any).tokens ?? 0;
+        session.user.level = (user as any).level ?? 1;
+        session.user.username = (user as any).username ?? null;
+      }
+      return session;
+    },
+
+    async signIn({ user, account, profile }) {
+      if (!account) return true;
+
+      try {
+        // On first sign-in, set username and link platform
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
+
+        if (dbUser) {
+          // Auto-set username if not set yet
+          if (!dbUser.username) {
+            const rawName =
+              (profile as any)?.login || // Twitch uses login
+              (profile as any)?.username ||
+              user.name ||
+              `ghost_${dbUser.id.slice(-6)}`;
+
+            const slug = rawName
+              .toLowerCase()
+              .replace(/[^a-z0-9_]/g, "_")
+              .slice(0, 32);
+
+            await prisma.user.update({
+              where: { id: dbUser.id },
+              data: {
+                username: slug,
+                displayName: user.name ?? slug,
+              },
+            });
+          }
+
+          // Save/update connection record
+          const platformId =
+            (profile as any)?.id?.toString() ||
+            (profile as any)?.sub ||
+            account.providerAccountId;
+
+          const platformUsername =
+            (profile as any)?.login ||
+            (profile as any)?.username ||
+            user.name ||
+            "";
+
+          await prisma.connection.upsert({
+            where: {
+              userId_platform: {
+                userId: dbUser.id,
+                platform: account.provider,
+              },
+            },
+            update: {
+              platformId,
+              username: platformUsername,
+              displayName: user.name ?? "",
+              avatar: user.image ?? "",
+              accessToken: account.access_token,
+              refreshToken: account.refresh_token,
+              tokenExpiry: account.expires_at
+                ? new Date(account.expires_at * 1000)
+                : null,
+              updatedAt: new Date(),
+            },
+            create: {
+              userId: dbUser.id,
+              platform: account.provider,
+              platformId,
+              username: platformUsername,
+              displayName: user.name ?? "",
+              avatar: user.image ?? "",
+              accessToken: account.access_token,
+              refreshToken: account.refresh_token,
+              tokenExpiry: account.expires_at
+                ? new Date(account.expires_at * 1000)
+                : null,
+            },
+          });
+
+          // Grant first_login achievement if not already earned
+          const alreadyGranted = await prisma.userAchievement.findFirst({
+            where: { userId: dbUser.id, achievement: { code: "first_login" } },
+          });
+
+          if (!alreadyGranted) {
+            const achievement = await prisma.achievement.findUnique({
+              where: { code: "first_login" },
+            });
+            if (achievement) {
+              await prisma.userAchievement.create({
+                data: { userId: dbUser.id, achievementId: achievement.id },
+              });
+            }
+          }
+
+          // For Discord logins: always set User.discordId (bot uses it to map awards)
+          if (account.provider === "discord") {
+            const shouldBeAdmin = platformId === process.env.ADMIN_DISCORD_ID;
+            const dataPatch: Record<string, unknown> = {};
+            if (dbUser.discordId !== platformId) dataPatch.discordId = platformId;
+            if (!dbUser.discordUsername && platformUsername) {
+              dataPatch.discordUsername = platformUsername;
+            }
+            if (shouldBeAdmin && !dbUser.isAdmin) dataPatch.isAdmin = true;
+            if (Object.keys(dataPatch).length > 0) {
+              await prisma.user.update({
+                where: { id: dbUser.id },
+                data: dataPatch,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("SignIn callback error:", error);
+        // Don't block login on non-critical errors
+      }
+
+      return true;
+    },
+  },
+
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
+  },
+
+  events: {
+    async createUser({ user }) {
+      // New user created — grant 500 welcome tokens
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { tokens: 500, totalEarned: 500 },
+        });
+
+        await prisma.transaction.create({
+          data: {
+            userId: user.id,
+            type: "earn",
+            amount: 500,
+            reason: "welcome_bonus",
+          },
+        });
+      } catch (e) {
+        console.error("Error granting welcome bonus:", e);
+      }
+    },
+  },
+
+  debug: process.env.NODE_ENV === "development",
+};

@@ -1,0 +1,22 @@
+{
+  "name": "ghost-empire-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Discord bot dla Ghost Empire — tracking aktywności, awarding tokenów, /link slash command",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4.19.2",
+    "typescript": "^5"
+  }
+}

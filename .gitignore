@@ -1,0 +1,63 @@
+# ===== Monorepo .gitignore =====
+# Per-project .gitignores also exist in subfolders.
+# This is the safety net.
+
+# Dependencies
+**/node_modules/
+**/.pnp
+**/.pnp.js
+
+# Next.js build artifacts
+**/.next/
+**/out/
+**/build/
+**/dist/
+
+# Environment files — NEVER COMMIT
+**/.env
+**/.env.local
+**/.env.*.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Vercel
+**/.vercel
+
+# IDE / OS
+.DS_Store
+**/Thumbs.db
+**/*.pem
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.next-dev.log
+
+# TypeScript build cache
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# Prisma migrations (not used in this project — using db push)
+**/prisma/migrations/
+
+# Coverage
+**/coverage/
+
+# Backup / temp files
+*.bak
+*.tmp
+*_pwtest.js
+
+# Skills lock (auto-generated)
+**/skills-lock.json
+
+# Agent / Claude artifacts
+**/.agents/
+**/.claude/
