@@ -103,6 +103,112 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true, event });
 }
 
+export async function PATCH(req: Request) {
+  const auth = await requireAdmin();
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  let body: {
+    id?: string;
+    name?: string;
+    description?: string | null;
+    prize?: string | null;
+    winnersCount?: number;
+    requirement?: string | null;
+    multiplier?: number;
+    ticketPrice?: number;
+    maxTicketsPerUser?: number;
+    extendByMinutes?: number;       // adds to existing endsAt
+    setEndsAt?: string | null;       // ISO string — overrides endsAt
+    active?: boolean;
+  };
+  try { body = await req.json(); } catch {
+    return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
+  }
+  if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
+
+  const existing = await prisma.event.findUnique({ where: { id: body.id } });
+  if (!existing) return NextResponse.json({ error: "Event nie istnieje" }, { status: 404 });
+  if (existing.drawnAt) {
+    return NextResponse.json({ error: "Event już wylosowany — nie da się edytować" }, { status: 409 });
+  }
+
+  const data: Record<string, unknown> = {};
+  if (body.name !== undefined) {
+    const n = body.name.trim().slice(0, 200);
+    if (!n) return NextResponse.json({ error: "Nazwa pusta" }, { status: 400 });
+    data.name = n;
+  }
+  if (body.description !== undefined) {
+    data.description = body.description ? body.description.trim().slice(0, 2000) : null;
+  }
+  if (body.prize !== undefined) {
+    data.prize = body.prize ? body.prize.trim().slice(0, 500) : null;
+  }
+  if (body.requirement !== undefined) {
+    data.requirement = body.requirement ? body.requirement.trim().slice(0, 500) : null;
+  }
+  if (body.winnersCount !== undefined) {
+    const wc = Math.floor(Number(body.winnersCount));
+    if (wc < 1 || wc > 100) return NextResponse.json({ error: "winnersCount 1-100" }, { status: 400 });
+    data.winnersCount = wc;
+  }
+  if (body.multiplier !== undefined) {
+    if (existing.type !== "happy_hour") {
+      return NextResponse.json({ error: "Multiplier tylko dla happy_hour" }, { status: 400 });
+    }
+    const m = Number(body.multiplier);
+    if (!Number.isFinite(m) || m < 1.1 || m > 10) {
+      return NextResponse.json({ error: "Multiplier 1.1-10" }, { status: 400 });
+    }
+    data.multiplier = m;
+  }
+  if (body.ticketPrice !== undefined) {
+    if (existing.type !== "raffle") {
+      return NextResponse.json({ error: "ticketPrice tylko dla raffle" }, { status: 400 });
+    }
+    const p = Math.floor(Number(body.ticketPrice));
+    if (p < 1 || p > 1_000_000) return NextResponse.json({ error: "ticketPrice 1-1,000,000" }, { status: 400 });
+    data.ticketPrice = p;
+  }
+  if (body.maxTicketsPerUser !== undefined) {
+    if (existing.type !== "raffle") {
+      return NextResponse.json({ error: "maxTicketsPerUser tylko dla raffle" }, { status: 400 });
+    }
+    const m = Math.floor(Number(body.maxTicketsPerUser));
+    if (m < 1 || m > 10_000) return NextResponse.json({ error: "maxTicketsPerUser 1-10000" }, { status: 400 });
+    data.maxTicketsPerUser = m;
+  }
+  if (body.extendByMinutes !== undefined && body.extendByMinutes > 0) {
+    const minutes = Math.floor(Number(body.extendByMinutes));
+    if (minutes < 1 || minutes > 60 * 24 * 30) {
+      return NextResponse.json({ error: "extendByMinutes 1 minuta - 30 dni" }, { status: 400 });
+    }
+    const currentEndsAt = existing.endsAt ?? new Date();
+    data.endsAt = new Date(currentEndsAt.getTime() + minutes * 60_000);
+  }
+  if (body.setEndsAt !== undefined) {
+    data.endsAt = body.setEndsAt ? new Date(body.setEndsAt) : null;
+  }
+  if (body.active !== undefined) data.active = !!body.active;
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: "Brak pól do aktualizacji" }, { status: 400 });
+  }
+
+  const updated = await prisma.event.update({ where: { id: body.id }, data });
+
+  await logAdminAction({
+    adminId: auth.userId,
+    action: "create_event", // TODO add "edit_event" type
+    targetType: "event",
+    targetId: body.id,
+    details: { changed: Object.keys(data), values: data },
+    req,
+  });
+
+  return NextResponse.json({ ok: true, event: updated });
+}
+
 export async function DELETE(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });

@@ -63,6 +63,11 @@ export default async function AdminPage() {
     take: 30,
   });
 
+  // All shop items (including inactive — admin needs to see/reactivate)
+  const allShopItems = await prisma.shopItem.findMany({
+    orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }],
+  });
+
   const [totalUsers, sums, eventsActive, ordersPending] = stats;
 
   return (
@@ -122,6 +127,38 @@ export default async function AdminPage() {
             details: a.details,
             ipAddress: a.ipAddress,
             createdAt: a.createdAt.toISOString(),
+          }))}
+          allShopItems={allShopItems.map((s) => ({
+            id: s.id,
+            name: s.name,
+            description: s.description,
+            category: s.category,
+            price: s.price,
+            imageEmoji: s.imageEmoji,
+            stock: s.stock,
+            totalStock: s.totalStock,
+            hot: s.hot,
+            active: s.active,
+            featured: s.featured,
+            requiresSubTier: s.requiresSubTier,
+            requiresMinLevel: s.requiresMinLevel,
+            requiresMinMonths: s.requiresMinMonths,
+          }))}
+          allEvents={activeEvents.map((e) => ({
+            id: e.id,
+            type: e.type,
+            name: e.name,
+            description: e.description,
+            multiplier: e.multiplier,
+            prize: e.prize,
+            winnersCount: e.winnersCount,
+            requirement: e.requirement,
+            ticketPrice: e.ticketPrice,
+            maxTicketsPerUser: e.maxTicketsPerUser,
+            startsAt: e.startsAt?.toISOString() ?? null,
+            endsAt: e.endsAt?.toISOString() ?? null,
+            drawnAt: e.drawnAt?.toISOString() ?? null,
+            active: e.active,
           }))}
         />
       </main>

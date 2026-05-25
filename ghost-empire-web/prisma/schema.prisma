@@ -48,11 +48,17 @@ model User {
   discordUsername String?
 
   // Admin & roles
-  isAdmin       Boolean   @default(false)
-  isModerator   Boolean   @default(false)
-  isDonator     Boolean   @default(false)
-  totalDonated  Int       @default(0)    // suma w PLN groszach lub w jednostkach umownych
-  modNote       String?                   // notatka admina (np. "Mod od 2024-01, Twitch+Discord")
+  isAdmin        Boolean   @default(false)
+  isModerator    Boolean   @default(false)
+  isDonator      Boolean   @default(false)
+  totalDonated   Int       @default(0)    // suma donejtów (w jednostkach umownych, np. groszach)
+  modNote        String?                   // notatka admina
+  modPermissions String[]  @default([])    // ["create_events","grant_tokens","ban_users","manage_shop","draw_events","mark_subs"]
+
+  // Site-level ban/mute (independent of platform bans)
+  isBanned       Boolean   @default(false)
+  bannedUntil    DateTime?                 // null = permanent
+  banReason      String?
 
   // Timestamps
   createdAt     DateTime  @default(now())
@@ -142,6 +148,17 @@ model Connection {
   // Platform role (Twitch mod, Discord admin, Kick mod, etc.)
   isModerator  Boolean  @default(false)  // mod na DANEJ platformie
   isVip        Boolean  @default(false)  // VIP na Twitch / equivalent
+  isOG         Boolean  @default(false)  // Kick OG (original supporter)
+
+  // Platform-side ban/mute (set by streamer/mods on tej platformie)
+  isBanned     Boolean  @default(false)
+  isMuted      Boolean  @default(false)
+  banReason    String?
+
+  // Platform metrics
+  bits         Int?                       // Twitch lifetime bits cheered
+  kickPoints   Int?                       // Kick channel points
+  subCount     Int?                       // sub count of THIS user's channel (if streamer themselves)
 
   // Cached stats (updated via webhook/cron)
   followers    Int?

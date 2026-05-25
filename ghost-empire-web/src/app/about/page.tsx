@@ -5,8 +5,9 @@ import { authOptions } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import {
   Ghost, ShoppingBag, Trophy, Calendar, Award, MessageCircle, Mic2,
-  Zap, Gift, Sparkles, ArrowRight, Twitch, Twitter,
+  Zap, Gift, Sparkles, ArrowRight,
 } from "lucide-react";
+import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
 
 export const metadata = {
   title: "O Ghost Empire",
@@ -163,26 +164,9 @@ export default async function AboutPage() {
             </Link>
           )}
 
-          {/* Live links */}
-          <div className="flex items-center justify-center gap-4 mt-8 text-xs font-mono text-zinc-500">
-            <a
-              href="https://twitch.tv/gh0s77tt"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 hover:text-purple-400 transition-colors"
-            >
-              <Twitch className="w-3.5 h-3.5" />
-              twitch.tv/gh0s77tt
-            </a>
-            <span className="text-zinc-700">·</span>
-            <a
-              href="https://kick.com/Gh0s77tt"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 hover:text-green-400 transition-colors"
-            >
-              🟢 kick.com/Gh0s77tt
-            </a>
+          {/* Compact social row under hero */}
+          <div className="mt-8">
+            <SocialLinksRow />
           </div>
         </section>
 
@@ -303,6 +287,14 @@ export default async function AboutPage() {
           <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mt-4 text-center">
             * Mnożniki kumulują się (sub × happy_hour × streak).
           </p>
+        </Section>
+
+        {/* Socials */}
+        <Section title="Znajdziesz nas tutaj" id="socials">
+          <p className="text-zinc-400 text-sm mb-4 max-w-2xl">
+            Wszystkie oficjalne kanały Ghost Empire. Discord to centrum społeczności — eventy, drop codes, wsparcie.
+          </p>
+          <SocialLinksGrid />
         </Section>
 
         {/* Changelog */}
