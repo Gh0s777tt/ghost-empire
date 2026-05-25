@@ -70,15 +70,32 @@ const STEPS = [
 
 const CHANGELOG = [
   {
-    date: "2026-05",
+    date: "2026-05-25",
+    title: "Security & Roles update",
+    items: [
+      "Role system: ADMIN / MODERATOR / DONATOR badges (header + profile + ranking)",
+      "Platform roles per Connection: SUB (T1/T2/T3/Prime), MOD, VIP — manualne flagowanie z admin panelu",
+      "Discord link UI na /profile — generuj 6-znakowy kod i wpisz /link kod:XXX na serwerze",
+      "Security headers: HSTS preload, CSP, X-Frame-Options, Permissions-Policy",
+      "Rate limiting (DB-backed sliding window) na publicznych i internal endpointach",
+      "Audit log wszystkich akcji admin — kto/kiedy/co/IP, viewer w panelu",
+      "Production deploy na Vercel + GitHub auto-deploy on push do main",
+    ],
+  },
+  {
+    date: "2026-05-20",
     title: "Phase 1 launch",
     items: [
       "Pełna autoryzacja przez Twitch i Discord OAuth",
       "Sklep z 12 itemami w 5 kategoriach + ograniczenia per sub tier",
       "Eventy: giveawaye, raffles z kupowaniem biletów, happy hours, konkursy",
+      "Drawing logic: losowanie zwycięzców (crypto-secure RNG)",
       "Ranking po 4 metrykach + podium top 3",
       "Profil z 22 achievementami, social linkami i historią transakcji",
-      "Admin panel: grant tokenów, tworzenie eventów/dropów, realizacja zamówień",
+      "Daily questy (messages / voice / drop_code) + claim",
+      "Drop codes z bonus slots dla najszybszych",
+      "Notifications widget (bell + dropdown z pollingiem)",
+      "Discord bot (discord.js v14) z anti-spam cooldownem",
     ],
   },
 ];
