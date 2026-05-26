@@ -127,6 +127,7 @@ export default async function RankingPage({
           totalUsers={totalUsers}
           currentUserId={session?.user?.id ?? null}
           myRank={myRank}
+          isAdmin={!!session?.user?.isAdmin}
         />
       </main>
     </div>

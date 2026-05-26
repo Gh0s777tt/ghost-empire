@@ -1,7 +1,12 @@
 "use client";
 // src/components/ranking/RankingClient.tsx
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Trophy, TrendingUp, Sparkles, Flame, Crown, Medal, ShieldCheck } from "lucide-react";
+import {
+  Trophy, TrendingUp, Sparkles, Flame, Crown, Medal, ShieldCheck,
+  X, Loader2, Check, Coins, Heart, UserCog,
+} from "lucide-react";
 import { fmt, rankForLevel, cn } from "@/lib/utils";
 
 type Sort = "tokens" | "totalEarned" | "level" | "streak";
@@ -43,6 +48,7 @@ export function RankingClient({
   totalUsers,
   currentUserId,
   myRank,
+  isAdmin,
 }: {
   sort: Sort;
   topUsers: User[];
@@ -50,7 +56,9 @@ export function RankingClient({
   totalUsers: number;
   currentUserId: string | null;
   myRank: { position: number; user: User } | null;
+  isAdmin: boolean;
 }) {
+  const [adminTarget, setAdminTarget] = useState<User | null>(null);
   const meta = SORT_META[sort];
   const Icon = meta.icon;
 
@@ -145,11 +153,14 @@ export function RankingClient({
                 return (
                   <div
                     key={u.id}
+                    onClick={isAdmin ? () => setAdminTarget(u) : undefined}
+                    role={isAdmin ? "button" : undefined}
                     className={cn(
                       "border-2 bg-zinc-950/80 backdrop-blur-sm p-4 sm:p-5 flex flex-col items-center text-center transition-all relative",
                       style.border,
                       center && "sm:-mt-4 sm:scale-105",
                       isMe && "ring-2 ring-red-500/40 ring-offset-2 ring-offset-black",
+                      isAdmin && "cursor-pointer hover:brightness-110",
                     )}
                     style={{
                       clipPath:
@@ -248,6 +259,7 @@ export function RankingClient({
                       user={u}
                       isMe={u.id === currentUserId}
                       sortLabel={valueOf(u)}
+                      onAdminClick={isAdmin ? () => setAdminTarget(u) : undefined}
                     />
                   ))}
                 </tbody>
@@ -283,6 +295,14 @@ export function RankingClient({
           )}
         </>
       )}
+
+      {/* Admin quick-actions modal */}
+      {adminTarget && (
+        <AdminUserActions
+          user={adminTarget}
+          onClose={() => setAdminTarget(null)}
+        />
+      )}
     </div>
   );
 }
@@ -292,18 +312,23 @@ function UserRow({
   user,
   isMe,
   sortLabel,
+  onAdminClick,
 }: {
   position: number;
   user: User;
   isMe: boolean;
   sortLabel: string;
+  onAdminClick?: () => void;
 }) {
   const rank = rankForLevel(user.level);
   return (
     <tr
+      onClick={onAdminClick}
+      role={onAdminClick ? "button" : undefined}
       className={cn(
         "border-b border-zinc-900 last:border-0 transition-colors",
         isMe ? "bg-red-950/20" : "hover:bg-zinc-900/50",
+        onAdminClick && "cursor-pointer",
       )}
     >
       <td className="p-3 font-mono text-zinc-500 tabular-nums">
@@ -355,5 +380,231 @@ function UserRow({
         </span>
       </td>
     </tr>
+  );
+}
+
+// ============== ADMIN QUICK-ACTIONS MODAL ==============
+
+function AdminUserActions({
+  user,
+  onClose,
+}: {
+  user: User;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+
+  // Grant tokens form
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+
+  // Role toggles
+  const [makeAdmin, setMakeAdmin] = useState(user.isAdmin);
+  const [makeMod, setMakeMod] = useState(false); // unknown from User type, default false
+  const [makeDonator, setMakeDonator] = useState(false);
+
+  function showToast(kind: "ok" | "err", msg: string) {
+    setToast({ kind, msg });
+    setTimeout(() => setToast(null), 4500);
+  }
+
+  async function grantTokens(value?: number) {
+    const amt = value ?? parseInt(amount);
+    if (!Number.isFinite(amt) || amt === 0) {
+      showToast("err", "Wpisz kwotę != 0");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/grant-tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target: user.username ?? user.id,
+          amount: amt,
+          reason: reason || "admin_quick_action",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast("err", data.error ?? "Błąd");
+      } else {
+        showToast("ok", `${amt > 0 ? "+" : ""}${fmt(amt)} GT → ${user.username ?? "user"}. Balans: ${fmt(data.newBalance)}`);
+        setAmount("");
+        startTransition(() => router.refresh());
+      }
+    } finally { setBusy(false); }
+  }
+
+  async function setRole(role: "admin" | "moderator" | "donator", enable: boolean) {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/user-roles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target: user.username ?? user.id, role, enable }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast("err", data.error ?? "Błąd");
+      } else {
+        showToast("ok", `${enable ? "Nadano" : "Odebrano"} ${role}`);
+        startTransition(() => router.refresh());
+      }
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={() => !busy && onClose()}
+    >
+      <div
+        className="bg-zinc-950 border-2 border-red-900/50 max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          clipPath:
+            "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-start gap-3 mb-4">
+          {user.image ? (
+            <img src={user.image} alt="" className="w-12 h-12 border-2 border-red-700 object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-12 h-12 border-2 border-red-700 bg-zinc-900 flex items-center justify-center text-xl flex-shrink-0">👻</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <h3 className="font-display text-xl text-white tracking-wider truncate">
+                {user.displayName ?? user.name ?? "Anonim"}
+              </h3>
+              {user.isAdmin && <ShieldCheck className="w-4 h-4 text-red-500" />}
+            </div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+              @{user.username ?? "—"} · LVL {user.level} · {fmt(user.tokens)} GT
+            </div>
+          </div>
+          <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400 flex-shrink-0">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Quick token grants */}
+        <div className="space-y-2 mb-4">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
+            <Coins className="w-3 h-3" /> Szybki grant tokenów
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {[100, 500, 1000, 5000, 10000, -500].map((v) => (
+              <button
+                key={v}
+                onClick={() => grantTokens(v)}
+                disabled={busy}
+                className={cn(
+                  "px-2 py-2 border text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50",
+                  v > 0
+                    ? "border-green-800 hover:border-green-500 text-green-300 hover:bg-green-950/40"
+                    : "border-red-800 hover:border-red-500 text-red-300 hover:bg-red-950/40",
+                )}
+              >
+                {v > 0 ? "+" : ""}{fmt(v)} GT
+              </button>
+            ))}
+          </div>
+
+          {/* Custom amount */}
+          <div className="flex gap-1.5 pt-1">
+            <input
+              type="number"
+              placeholder="Custom kwota"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="flex-1 border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-none focus:border-red-600 placeholder:text-zinc-700"
+            />
+            <input
+              type="text"
+              placeholder="Powód"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="flex-1 border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-red-600 placeholder:text-zinc-700"
+            />
+            <button
+              onClick={() => grantTokens()}
+              disabled={busy || !amount}
+              className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1"
+            >
+              {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+              GO
+            </button>
+          </div>
+        </div>
+
+        {/* Role toggles */}
+        <div className="space-y-2 mb-4">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
+            <UserCog className="w-3 h-3" /> Role
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            <button
+              onClick={() => { setMakeAdmin(!makeAdmin); setRole("admin", !makeAdmin); }}
+              disabled={busy}
+              className={cn(
+                "px-2 py-2 border text-[10px] font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-1.5 disabled:opacity-50",
+                makeAdmin ? "border-red-500 bg-red-600/20 text-red-300" : "border-zinc-800 text-zinc-500 hover:text-zinc-300",
+              )}
+            >
+              <Crown className="w-3 h-3" /> ADMIN {makeAdmin ? "✓" : ""}
+            </button>
+            <button
+              onClick={() => { setMakeMod(!makeMod); setRole("moderator", !makeMod); }}
+              disabled={busy}
+              className={cn(
+                "px-2 py-2 border text-[10px] font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-1.5 disabled:opacity-50",
+                makeMod ? "border-blue-500 bg-blue-600/20 text-blue-300" : "border-zinc-800 text-zinc-500 hover:text-zinc-300",
+              )}
+            >
+              <ShieldCheck className="w-3 h-3" /> MOD {makeMod ? "✓" : ""}
+            </button>
+            <button
+              onClick={() => { setMakeDonator(!makeDonator); setRole("donator", !makeDonator); }}
+              disabled={busy}
+              className={cn(
+                "px-2 py-2 border text-[10px] font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-1.5 disabled:opacity-50",
+                makeDonator ? "border-yellow-500 bg-yellow-600/20 text-yellow-300" : "border-zinc-800 text-zinc-500 hover:text-zinc-300",
+              )}
+            >
+              <Heart className="w-3 h-3" /> DONATOR {makeDonator ? "✓" : ""}
+            </button>
+          </div>
+          <p className="text-[9px] font-mono text-zinc-600 leading-snug">
+            Klik = toggle. Stan rzeczywisty z bazy może się różnić od UI tu — odśwież po zmianach.
+          </p>
+        </div>
+
+        {/* Link to full admin */}
+        <Link
+          href="/admin"
+          className="block w-full text-center px-3 py-2 border border-zinc-800 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase"
+        >
+          → Pełen panel admin (sklep, eventy, audit log)
+        </Link>
+
+        {toast && (
+          <div
+            className={cn(
+              "mt-3 px-3 py-2 text-xs flex items-center gap-2",
+              toast.kind === "ok" ? "border border-green-700 bg-green-950/40 text-green-200" : "border border-red-700 bg-red-950/40 text-red-200",
+            )}
+          >
+            {toast.kind === "ok" ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+            <span>{toast.msg}</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
