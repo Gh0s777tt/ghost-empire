@@ -13,9 +13,18 @@ export const authOptions: NextAuthOptions = {
     TwitchProvider({
       clientId: process.env.TWITCH_CLIENT_ID!,
       clientSecret: process.env.TWITCH_CLIENT_SECRET!,
+      // NOTE: scope MUST include "openid" — Twitch is OIDC and won't return
+      // id_token without it. NextAuth v4 fails with "id_token not present in TokenSet".
       authorization: {
         params: {
-          scope: "user:read:email",
+          scope: "openid user:read:email",
+          claims: JSON.stringify({
+            id_token: {
+              email: null,
+              picture: null,
+              preferred_username: null,
+            },
+          }),
         },
       },
     }),
