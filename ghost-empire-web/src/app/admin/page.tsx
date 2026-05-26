@@ -86,6 +86,14 @@ export default async function AdminPage() {
     orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }, { startMinute: "asc" }],
   });
 
+  // Streamlabs connection + recent unmatched donations
+  const streamlabsConn = await prisma.streamlabsConnection.findUnique({ where: { id: "default" } });
+  const unmatchedDonations = await prisma.donation.findMany({
+    where: { userId: null, matchType: null },
+    orderBy: { donatedAt: "desc" },
+    take: 30,
+  });
+
   const [totalUsers, sums, eventsActive, ordersPending] = stats;
 
   return (
@@ -190,6 +198,22 @@ export default async function AdminPage() {
             title: s.title,
             platform: s.platform,
             active: s.active,
+          }))}
+          streamlabsConnection={streamlabsConn ? {
+            connected: true,
+            streamlabsUsername: streamlabsConn.streamlabsUsername,
+            connectedAt: streamlabsConn.connectedAt.toISOString(),
+            lastPolledAt: streamlabsConn.lastPolledAt?.toISOString() ?? null,
+            lastSeenDonationId: streamlabsConn.lastSeenDonationId,
+          } : { connected: false }}
+          unmatchedDonations={unmatchedDonations.map((d) => ({
+            id: d.id,
+            externalId: d.externalId,
+            donorName: d.donorName,
+            message: d.message,
+            amountGrosze: d.amountGrosze,
+            currency: d.currency,
+            donatedAt: d.donatedAt.toISOString(),
           }))}
         />
       </main>
