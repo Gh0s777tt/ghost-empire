@@ -3,8 +3,60 @@ import { NextAuthOptions } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import TwitchProvider from "next-auth/providers/twitch";
 import DiscordProvider from "next-auth/providers/discord";
+import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import type { Adapter } from "next-auth/adapters";
+import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
+
+// Custom Kick provider — KICK isn't built into next-auth.
+// API docs: https://docs.kick.com/getting-started/kick-developer-api
+type KickProfile = {
+  id?: number | string;
+  user_id?: number | string;
+  username?: string;
+  email?: string | null;
+  profile_picture?: string | null;
+  agreed_to_terms?: boolean;
+};
+
+function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfile> {
+  return {
+    id: "kick",
+    name: "Kick",
+    type: "oauth",
+    authorization: {
+      url: "https://id.kick.com/oauth/authorize",
+      params: {
+        scope: "user:read",
+        response_type: "code",
+      },
+    },
+    token: "https://id.kick.com/oauth/token",
+    userinfo: {
+      url: "https://api.kick.com/public/v1/users",
+      async request({ tokens }) {
+        const res = await fetch("https://api.kick.com/public/v1/users", {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        const data = await res.json();
+        // Kick returns { data: [{ user_id, username, email, profile_picture, ... }] } or { user_id, ... }
+        const profile = Array.isArray(data?.data) ? data.data[0] : data;
+        return profile ?? {};
+      },
+    },
+    checks: ["pkce", "state"],
+    profile(profile) {
+      const id = profile.user_id?.toString() ?? profile.id?.toString() ?? "";
+      return {
+        id,
+        name: profile.username ?? null,
+        email: profile.email ?? null,
+        image: profile.profile_picture ?? null,
+      };
+    },
+    options: opts,
+  };
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
@@ -36,6 +88,19 @@ export const authOptions: NextAuthOptions = {
           scope: "identify email guilds",
         },
       },
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "openid email profile",
+        },
+      },
+    }),
+    KickProvider({
+      clientId: process.env.KICK_CLIENT_ID!,
+      clientSecret: process.env.KICK_CLIENT_SECRET!,
     }),
   ],
 
@@ -119,11 +184,16 @@ export const authOptions: NextAuthOptions = {
             user.name ||
             "";
 
+          // Map OAuth provider id → semantic platform name we use in DB
+          //   google → youtube (because we want one "YouTube" connection per user)
+          const platformName =
+            account.provider === "google" ? "youtube" : account.provider;
+
           await prisma.connection.upsert({
             where: {
               userId_platform: {
                 userId: dbUser.id,
-                platform: account.provider,
+                platform: platformName,
               },
             },
             update: {
@@ -140,7 +210,7 @@ export const authOptions: NextAuthOptions = {
             },
             create: {
               userId: dbUser.id,
-              platform: account.provider,
+              platform: platformName,
               platformId,
               username: platformUsername,
               displayName: user.name ?? "",

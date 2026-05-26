@@ -21,7 +21,7 @@ const PROVIDER_CONFIG: Record<
     bg: "rgba(145,70,255,0.1)",
     border: "rgba(145,70,255,0.5)",
     emoji: "💜",
-    desc: "Połącz konto Twitch — automatyczne śledzenie subskrypcji",
+    desc: "Połącz konto Twitch — śledzenie subskrypcji",
   },
   discord: {
     color: "#5865F2",
@@ -29,6 +29,20 @@ const PROVIDER_CONFIG: Record<
     border: "rgba(88,101,242,0.5)",
     emoji: "👾",
     desc: "Połącz Discord — synchronizacja rang i Ghost Tokens",
+  },
+  kick: {
+    color: "#53FC18",
+    bg: "rgba(83,252,24,0.08)",
+    border: "rgba(83,252,24,0.5)",
+    emoji: "🟢",
+    desc: "Połącz Kick — drugi stream channel",
+  },
+  google: {
+    color: "#FF0000",
+    bg: "rgba(255,0,0,0.08)",
+    border: "rgba(255,0,0,0.5)",
+    emoji: "📺",
+    desc: "Zaloguj przez YouTube (Google account)",
   },
 };
 
