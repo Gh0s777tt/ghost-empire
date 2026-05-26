@@ -93,12 +93,19 @@ const RARITY_STYLE: Record<string, { border: string; bg: string; text: string; l
   legendary: { border: "border-orange-600",  bg: "bg-orange-950/30", text: "text-orange-300", label: "Legendarne" },
 };
 
+// Manual social-link platforms (editable by user)
 const SOCIAL_META: Record<string, { label: string; icon: typeof Instagram; color: string; placeholder: string }> = {
   instagram: { label: "Instagram", icon: Instagram, color: "#E4405F", placeholder: "twoj_handle" },
   twitter:   { label: "X (Twitter)", icon: Twitter, color: "#000",    placeholder: "twoj_handle" },
   tiktok:    { label: "TikTok",    icon: Music2,    color: "#fff",    placeholder: "twoj_handle" },
   youtube:   { label: "YouTube",   icon: Youtube,   color: "#FF0000", placeholder: "@channel lub link" },
   website:   { label: "Website",   icon: Globe,     color: "#10b981", placeholder: "domena.pl" },
+};
+
+// Auto-derived from OAuth Connection. Discord left out — no public profile URL.
+const AUTO_PLATFORM_META: Record<string, { label: string; color: string; urlFor: (handle: string) => string }> = {
+  twitch: { label: "Twitch", color: "#9146FF", urlFor: (h) => `https://twitch.tv/${h}` },
+  kick:   { label: "Kick",   color: "#53FC18", urlFor: (h) => `https://kick.com/${h}` },
 };
 
 const PLATFORM_META: Record<string, { label: string; color: string; emoji: string }> = {
@@ -328,7 +335,7 @@ export function ProfileClient({
 
         {/* Social links editor */}
         <SectionCard title="Social linki" icon={Globe} className="lg:col-span-2">
-          <SocialLinksEditor initialLinks={socialLinks} />
+          <SocialLinksEditor initialLinks={socialLinks} connections={connections} />
         </SectionCard>
       </div>
 
@@ -471,10 +478,38 @@ function SectionCard({
   );
 }
 
+// Brand-color SVG icons for OAuth-derived tiles (lucide doesn't have official Twitch/Kick marks)
+function BrandIcon({ platform, className }: { platform: "twitch" | "kick"; className?: string }) {
+  if (platform === "twitch") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M1.714 0v24h6.857v-5.486h2.286v3.2h2.286V24h6.857v-6.857h-2.286V14.857h-2.286v-2.285h2.286V9.43h2.286V0h-6.857v6.857h-2.286V9.43H8.57V6.857H8.57V0z"/>
+    </svg>
+  );
+}
+
+type Tile = {
+  key: string;
+  platform: string;
+  label: string;
+  color: string;
+  handle: string;
+  url: string;
+  source: "auto" | "manual";
+  Icon: React.ReactNode;
+};
+
 function SocialLinksEditor({
-  initialLinks,
+  initialLinks, connections,
 }: {
   initialLinks: Array<{ id: string; platform: string; handle: string; url: string }>;
+  connections: Array<{ platform: string; username: string }>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -482,8 +517,26 @@ function SocialLinksEditor({
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
 
-  const allPlatforms = Object.keys(SOCIAL_META);
+  const manualPlatforms = Object.keys(SOCIAL_META);
+
+  // Tiles for OAuth-derived platforms (read-only — comes from Connection row)
+  const autoTiles: Tile[] = connections
+    .filter((c) => AUTO_PLATFORM_META[c.platform])
+    .map((c) => {
+      const meta = AUTO_PLATFORM_META[c.platform];
+      return {
+        key: `auto-${c.platform}`,
+        platform: c.platform,
+        label: meta.label,
+        color: meta.color,
+        handle: c.username,
+        url: meta.urlFor(c.username),
+        source: "auto" as const,
+        Icon: <BrandIcon platform={c.platform as "twitch" | "kick"} className="w-5 h-5" />,
+      };
+    });
 
   async function save(platform: string) {
     if (!draft.trim()) return;
@@ -524,104 +577,231 @@ function SocialLinksEditor({
     }
   }
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {allPlatforms.map((platform) => {
-        const meta = SOCIAL_META[platform];
-        const Icon = meta.icon;
-        const existing = links.find((l) => l.platform === platform);
-        const isEditing = editing === platform;
-        const isBusy = busy === platform || pending;
+  // Manual links with data — rendered in main view alongside auto tiles
+  const manualTiles: Tile[] = manualPlatforms.flatMap((platform) => {
+    const link = links.find((l) => l.platform === platform);
+    if (!link) return [];
+    const meta = SOCIAL_META[platform];
+    const Icon = meta.icon;
+    const tile: Tile = {
+      key: `manual-${platform}`,
+      platform,
+      label: meta.label,
+      color: meta.color,
+      handle: link.handle,
+      url: link.url,
+      source: "manual",
+      Icon: <Icon className="w-5 h-5" style={{ color: meta.color }} strokeWidth={2} />,
+    };
+    return [tile];
+  });
 
-        if (isEditing) {
-          return (
-            <div key={platform} className="border border-red-900/50 bg-black/40 p-2.5 flex items-center gap-2">
-              <Icon className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
-              <input
-                autoFocus
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") save(platform);
-                  if (e.key === "Escape") { setEditing(null); setDraft(""); }
-                }}
-                placeholder={meta.placeholder}
-                className="flex-1 bg-transparent text-xs text-white outline-none font-mono min-w-0"
-              />
-              <button
-                onClick={() => save(platform)}
-                disabled={isBusy || !draft.trim()}
-                className="text-green-400 hover:text-green-300 disabled:opacity-30"
-              >
-                {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              </button>
-              <button
-                onClick={() => { setEditing(null); setDraft(""); }}
-                className="text-zinc-500 hover:text-zinc-300"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          );
-        }
+  const allTiles = [...autoTiles, ...manualTiles];
 
-        return (
-          <div
-            key={platform}
-            className={cn(
-              "border bg-black/30 p-2.5 flex items-center gap-2",
-              existing ? "border-zinc-800" : "border-zinc-900",
+  // === View mode: tile grid ===
+  if (!editMode) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-zinc-500 text-xs">
+            Kliknij kafelek żeby przejść do profilu. {autoTiles.length > 0 && (
+              <span className="text-zinc-600">({autoTiles.length} auto z OAuth)</span>
             )}
+          </p>
+          <button
+            onClick={() => setEditMode(true)}
+            className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-700 px-2.5 py-1 transition-colors"
           >
-            <Icon className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                {meta.label}
+            Edytuj
+          </button>
+        </div>
+
+        {allTiles.length === 0 ? (
+          <div className="text-center py-8 border border-zinc-900 bg-black/20">
+            <p className="text-zinc-600 text-xs mb-2">Brak social linków</p>
+            <button
+              onClick={() => setEditMode(true)}
+              className="text-[11px] font-mono uppercase tracking-widest text-red-400 hover:text-red-300"
+            >
+              + Dodaj pierwszy
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {allTiles.map((tile) => (
+              <a
+                key={tile.key}
+                href={tile.url}
+                target="_blank"
+                rel="noreferrer"
+                title={`${tile.label} — @${tile.handle}`}
+                className="group relative border border-zinc-800 bg-black/30 p-3 flex items-center gap-2.5 hover:border-transparent transition-all"
+                style={{
+                  clipPath:
+                    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `0 0 18px ${tile.color}55, inset 0 0 0 1px ${tile.color}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "";
+                }}
+              >
+                <div
+                  className="w-9 h-9 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
+                  style={{ color: tile.color }}
+                >
+                  {tile.Icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 truncate">
+                    {tile.label}
+                  </div>
+                  <div className="text-xs text-white font-mono truncate">@{tile.handle}</div>
+                </div>
+                {tile.source === "auto" && (
+                  <span className="text-[8px] font-mono uppercase tracking-widest text-zinc-600 border border-zinc-800 px-1 py-0.5 shrink-0">
+                    OAuth
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // === Edit mode: per-platform rows with handle inputs ===
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-zinc-500 text-xs">
+          Twitch / Kick są pobierane automatycznie z połączeń OAuth — nie da się ich edytować tutaj.
+        </p>
+        <button
+          onClick={() => { setEditMode(false); setEditing(null); setDraft(""); }}
+          className="text-[10px] font-mono uppercase tracking-widest text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 px-2.5 py-1 transition-colors"
+        >
+          Gotowe
+        </button>
+      </div>
+
+      {/* OAuth-derived (read-only) */}
+      {autoTiles.length > 0 && (
+        <div className="space-y-1.5 mb-3">
+          {autoTiles.map((tile) => (
+            <div
+              key={tile.key}
+              className="border border-zinc-900 bg-black/20 p-2.5 flex items-center gap-2"
+            >
+              <span style={{ color: tile.color }} className="shrink-0">{tile.Icon}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                  {tile.label}
+                </div>
+                <div className="text-xs text-zinc-300 font-mono truncate">@{tile.handle}</div>
+              </div>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 border border-zinc-800 px-1.5 py-0.5">
+                OAuth · read-only
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Manual social links (editable) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {manualPlatforms.map((platform) => {
+          const meta = SOCIAL_META[platform];
+          const Icon = meta.icon;
+          const existing = links.find((l) => l.platform === platform);
+          const isEditing = editing === platform;
+          const isBusy = busy === platform || pending;
+
+          if (isEditing) {
+            return (
+              <div key={platform} className="border border-red-900/50 bg-black/40 p-2.5 flex items-center gap-2">
+                <Icon className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
+                <input
+                  autoFocus
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") save(platform);
+                    if (e.key === "Escape") { setEditing(null); setDraft(""); }
+                  }}
+                  placeholder={meta.placeholder}
+                  className="flex-1 bg-transparent text-xs text-white outline-none font-mono min-w-0"
+                />
+                <button
+                  onClick={() => save(platform)}
+                  disabled={isBusy || !draft.trim()}
+                  className="text-green-400 hover:text-green-300 disabled:opacity-30"
+                >
+                  {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                </button>
+                <button
+                  onClick={() => { setEditing(null); setDraft(""); }}
+                  className="text-zinc-500 hover:text-zinc-300"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={platform}
+              className={cn(
+                "border bg-black/30 p-2.5 flex items-center gap-2",
+                existing ? "border-zinc-800" : "border-zinc-900",
+              )}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                  {meta.label}
+                </div>
+                {existing ? (
+                  <span className="text-xs text-white font-mono truncate block">@{existing.handle}</span>
+                ) : (
+                  <span className="text-xs text-zinc-600 italic">Brak</span>
+                )}
               </div>
               {existing ? (
-                <a
-                  href={existing.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-white hover:text-red-400 font-mono truncate block"
-                >
-                  @{existing.handle}
-                </a>
+                <>
+                  <button
+                    onClick={() => { setEditing(platform); setDraft(existing.handle); }}
+                    disabled={isBusy}
+                    className="text-zinc-500 hover:text-zinc-300 text-[10px] font-mono uppercase tracking-widest"
+                  >
+                    Edytuj
+                  </button>
+                  <button
+                    onClick={() => remove(platform)}
+                    disabled={isBusy}
+                    className="text-red-500 hover:text-red-400 disabled:opacity-30"
+                    title="Usuń"
+                  >
+                    {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                  </button>
+                </>
               ) : (
-                <span className="text-xs text-zinc-600 italic">Brak</span>
+                <button
+                  onClick={() => { setEditing(platform); setDraft(""); }}
+                  disabled={isBusy}
+                  className="text-zinc-500 hover:text-red-400"
+                  title="Dodaj"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               )}
             </div>
-            {existing ? (
-              <>
-                <button
-                  onClick={() => { setEditing(platform); setDraft(existing.handle); }}
-                  disabled={isBusy}
-                  className="text-zinc-500 hover:text-zinc-300 text-[10px] font-mono uppercase tracking-widest"
-                >
-                  Edytuj
-                </button>
-                <button
-                  onClick={() => remove(platform)}
-                  disabled={isBusy}
-                  className="text-red-500 hover:text-red-400 disabled:opacity-30"
-                  title="Usuń"
-                >
-                  {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => { setEditing(platform); setDraft(""); }}
-                disabled={isBusy}
-                className="text-zinc-500 hover:text-red-400"
-                title="Dodaj"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
