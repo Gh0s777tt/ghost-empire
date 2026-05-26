@@ -1,11 +1,12 @@
 "use client";
 // src/components/admin/AdminClient.tsx
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
   Users, TrendingUp, Trash2, Copy, Dice5, Crown, Heart, UserCog, History,
   ShoppingBag, Pencil, Eye, EyeOff, Ban, Bot, CalendarDays, Zap, Link as LinkIcon,
+  LayoutDashboard, Bell, Tv, Menu,
 } from "lucide-react";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { fmt, formatDate, cn } from "@/lib/utils";
@@ -203,10 +204,63 @@ export function AdminClient({
   streamAlerts: StreamAlertsData;
 }) {
   // Permission checker — admins implicitly have all
-  const can = (perm: string) => isAdmin || myPermissions.includes(perm);
+  const can = useCallback(
+    (perm: string) => isAdmin || myPermissions.includes(perm),
+    [isAdmin, myPermissions],
+  );
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+
+  // Navigation sections — each maps to a group of cards previously rendered linearly.
+  // `permission` returns true if the user can see ANY card in this section.
+  type SectionId =
+    | "dashboard" | "users" | "events" | "shop" | "drops"
+    | "schedule" | "bot" | "donations" | "twitch" | "alerts" | "audit";
+
+  const SECTIONS: Array<{
+    id: SectionId;
+    label: string;
+    icon: typeof Users;
+    permission: () => boolean;
+  }> = [
+    { id: "dashboard", label: "Dashboard",   icon: LayoutDashboard, permission: () => true },
+    { id: "users",     label: "Użytkownicy", icon: UserCog,         permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
+    { id: "events",    label: "Eventy",      icon: Calendar,        permission: () => can("create_events") || can("edit_events") || can("draw_events") },
+    { id: "shop",      label: "Sklep",       icon: ShoppingBag,     permission: () => can("manage_shop") || can("deliver_orders") },
+    { id: "drops",     label: "Drops",       icon: Gift,            permission: () => can("create_drops") },
+    { id: "schedule",  label: "Harmonogram", icon: CalendarDays,    permission: () => can("manage_shop") },
+    { id: "bot",       label: "Bot Discord", icon: Bot,             permission: () => can("manage_shop") },
+    { id: "donations", label: "Donacje",     icon: Heart,           permission: () => isAdmin },
+    { id: "twitch",    label: "Twitch",      icon: Tv,              permission: () => isAdmin },
+    { id: "alerts",    label: "Stream Alerts", icon: Bell,          permission: () => isAdmin },
+    { id: "audit",     label: "Audit log",   icon: History,         permission: () => can("view_audit") },
+  ];
+
+  const visibleSections = SECTIONS.filter((s) => s.permission());
+
+  // URL hash → active section (deep-linkable: /admin#shop)
+  const [activeSection, setActiveSection] = useState<SectionId>("dashboard");
+  useEffect(() => {
+    const fromHash = () => {
+      const raw = window.location.hash.replace(/^#/, "");
+      const known = visibleSections.find((s) => s.id === raw);
+      setActiveSection(known ? known.id : "dashboard");
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
+    // visibleSections recomputed each render — depending on perms, not on every state change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const goToSection = useCallback((id: SectionId) => {
+    setActiveSection(id);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.hash = id;
+      window.history.replaceState(null, "", url.toString());
+    }
+  }, []);
 
   function showToast(kind: "ok" | "err", msg: string) {
     setToast({ kind, msg });
@@ -216,6 +270,8 @@ export function AdminClient({
   function refresh() {
     startTransition(() => router.refresh());
   }
+
+  const sharedProps = { onToast: showToast, onSuccess: refresh, pending };
 
   return (
     <div className="space-y-6">
@@ -229,7 +285,7 @@ export function AdminClient({
         </h1>
       </div>
 
-      {/* Stats */}
+      {/* Stats — always visible above the sidebar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatTile label="Userów" value={fmt(stats.totalUsers)} icon={Users} />
         <StatTile label="Tokens w obiegu" value={fmt(stats.totalTokensInCirculation)} suffix="GT" icon={Coins} />
@@ -246,59 +302,89 @@ export function AdminClient({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {can("grant_tokens") && <GrantTokensCard onToast={showToast} onSuccess={refresh} pending={pending} />}
-        {can("create_drops") && <CreateDropCard onToast={showToast} onSuccess={refresh} pending={pending} />}
-      </div>
+      {/* Two-column layout: nav (sidebar / top scroll on mobile) + active section content */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        <AdminNav
+          sections={visibleSections}
+          active={activeSection}
+          onSelect={goToSection}
+        />
 
-      {/* User/connection role management — admin-only (granting admin to others is too sensitive) */}
-      {isAdmin && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <UserRolesCard onToast={showToast} onSuccess={refresh} pending={pending} />
-          <ConnectionRolesCard onToast={showToast} onSuccess={refresh} pending={pending} />
+        <div className="flex-1 min-w-0 space-y-6">
+          {activeSection === "dashboard" && (
+            <DashboardSection
+              stats={stats}
+              drops={drops}
+              events={events}
+              pendingOrders={pendingOrders}
+              onJump={goToSection}
+            />
+          )}
+
+          {activeSection === "users" && (
+            <div className="space-y-6">
+              {can("grant_tokens") && <GrantTokensCard {...sharedProps} />}
+              {isAdmin && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <UserRolesCard {...sharedProps} />
+                  <ConnectionRolesCard {...sharedProps} />
+                </div>
+              )}
+              {!isAdmin && can("mark_subs") && <ConnectionRolesCard {...sharedProps} />}
+            </div>
+          )}
+
+          {activeSection === "events" && (
+            <div className="space-y-6">
+              {can("create_events") && <CreateEventCard {...sharedProps} />}
+              {(can("edit_events") || can("draw_events")) && <ActiveEventsList events={events} {...sharedProps} />}
+              {can("edit_events") && <EventManager events={allEvents} {...sharedProps} />}
+            </div>
+          )}
+
+          {activeSection === "shop" && (
+            <div className="space-y-6">
+              {can("deliver_orders") && <PendingOrdersList orders={pendingOrders} {...sharedProps} />}
+              {can("manage_shop") && <ShopManager items={allShopItems} {...sharedProps} />}
+            </div>
+          )}
+
+          {activeSection === "drops" && (
+            <div className="space-y-6">
+              {can("create_drops") && <CreateDropCard {...sharedProps} />}
+              {can("create_drops") && <ActiveDropsList drops={drops} {...sharedProps} />}
+            </div>
+          )}
+
+          {activeSection === "schedule" && can("manage_shop") && (
+            <ScheduleManager slots={scheduleSlots} {...sharedProps} />
+          )}
+
+          {activeSection === "bot" && can("manage_shop") && (
+            <BotConfigCard config={botConfig} {...sharedProps} />
+          )}
+
+          {activeSection === "donations" && isAdmin && (
+            <StreamlabsManager
+              connection={streamlabsConnection}
+              unmatchedDonations={unmatchedDonations}
+              {...sharedProps}
+            />
+          )}
+
+          {activeSection === "twitch" && isAdmin && (
+            <TwitchEventSubManager data={twitchEventSub} {...sharedProps} />
+          )}
+
+          {activeSection === "alerts" && isAdmin && (
+            <StreamAlertsManager data={streamAlerts} {...sharedProps} />
+          )}
+
+          {activeSection === "audit" && can("view_audit") && (
+            <AuditLogSection auditLog={auditLog} />
+          )}
         </div>
-      )}
-      {/* Mod with mark_subs but not admin — they get connection-roles but not user-roles */}
-      {!isAdmin && can("mark_subs") && (
-        <ConnectionRolesCard onToast={showToast} onSuccess={refresh} pending={pending} />
-      )}
-
-      {can("create_events") && <CreateEventCard onToast={showToast} onSuccess={refresh} pending={pending} />}
-
-      {can("create_drops") && <ActiveDropsList drops={drops} onToast={showToast} onSuccess={refresh} pending={pending} />}
-      {(can("edit_events") || can("draw_events")) && <ActiveEventsList events={events} onToast={showToast} onSuccess={refresh} pending={pending} />}
-      {can("deliver_orders") && <PendingOrdersList orders={pendingOrders} onToast={showToast} onSuccess={refresh} pending={pending} />}
-      {can("manage_shop") && <ShopManager items={allShopItems} onToast={showToast} onSuccess={refresh} pending={pending} />}
-      {can("edit_events") && <EventManager events={allEvents} onToast={showToast} onSuccess={refresh} pending={pending} />}
-      {can("manage_shop") && <BotConfigCard config={botConfig} onToast={showToast} onSuccess={refresh} pending={pending} />}
-      {can("manage_shop") && <ScheduleManager slots={scheduleSlots} onToast={showToast} onSuccess={refresh} pending={pending} />}
-      {isAdmin && (
-        <StreamlabsManager
-          connection={streamlabsConnection}
-          unmatchedDonations={unmatchedDonations}
-          onToast={showToast}
-          onSuccess={refresh}
-          pending={pending}
-        />
-      )}
-      {isAdmin && (
-        <TwitchEventSubManager
-          data={twitchEventSub}
-          onToast={showToast}
-          onSuccess={refresh}
-          pending={pending}
-        />
-      )}
-      {isAdmin && (
-        <StreamAlertsManager
-          data={streamAlerts}
-          onToast={showToast}
-          onSuccess={refresh}
-          pending={pending}
-        />
-      )}
-
-      {can("view_audit") && <AuditLogSection auditLog={auditLog} />}
+      </div>
 
       {toast && (
         <div
@@ -312,6 +398,163 @@ export function AdminClient({
           {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
           <span className="text-sm">{toast.msg}</span>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ============== ADMIN NAV ==============
+
+function AdminNav<T extends string>({
+  sections, active, onSelect,
+}: {
+  sections: Array<{ id: T; label: string; icon: typeof Users }>;
+  active: T;
+  onSelect: (id: T) => void;
+}) {
+  return (
+    <aside className="lg:w-56 lg:shrink-0">
+      {/* Mobile: horizontal scroll. Desktop: vertical sticky sidebar */}
+      <nav
+        className={cn(
+          "flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible",
+          "lg:sticky lg:top-4",
+          "border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-2",
+        )}
+        style={{
+          clipPath:
+            "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
+        }}
+      >
+        {sections.map((s) => {
+          const Icon = s.icon;
+          const isActive = s.id === active;
+          return (
+            <button
+              key={s.id}
+              onClick={() => onSelect(s.id)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 text-[11px] font-mono uppercase tracking-widest transition-all shrink-0 lg:shrink",
+                "border-l-2 lg:border-l-2",
+                isActive
+                  ? "border-red-600 bg-red-950/40 text-white"
+                  : "border-transparent text-zinc-400 hover:text-white hover:bg-zinc-900/60",
+              )}
+            >
+              <Icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-red-400" : "")} />
+              <span className="whitespace-nowrap">{s.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
+
+// ============== DASHBOARD SECTION ==============
+
+function DashboardSection({
+  stats, drops, events, pendingOrders, onJump,
+}: {
+  stats: Stats;
+  drops: Drop[];
+  events: AdminEvent[];
+  pendingOrders: PendingOrder[];
+  onJump: (id: "shop" | "events" | "drops" | "alerts") => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <SectionCard title="Skrót — co wymaga uwagi" icon={LayoutDashboard}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <button
+            onClick={() => onJump("shop")}
+            className={cn(
+              "border bg-black/30 p-4 text-left hover:border-red-700 transition-colors",
+              stats.ordersPending > 0 ? "border-orange-700 bg-orange-950/20" : "border-zinc-800",
+            )}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Package className={cn("w-4 h-4", stats.ordersPending > 0 ? "text-orange-400" : "text-zinc-500")} />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                Pending orders
+              </span>
+            </div>
+            <div className="text-2xl font-mono font-bold text-white">{fmt(stats.ordersPending)}</div>
+            {stats.ordersPending > 0 && (
+              <div className="text-[10px] text-orange-300 mt-1">Kliknij żeby dostarczyć</div>
+            )}
+          </button>
+
+          <button
+            onClick={() => onJump("events")}
+            className="border border-zinc-800 bg-black/30 p-4 text-left hover:border-red-700 transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="w-4 h-4 text-zinc-500" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                Aktywne eventy
+              </span>
+            </div>
+            <div className="text-2xl font-mono font-bold text-white">{fmt(events.length)}</div>
+            <div className="text-[10px] text-zinc-500 mt-1">
+              {events.filter((e) => e.type !== "happy_hour").length} z losowaniem
+            </div>
+          </button>
+
+          <button
+            onClick={() => onJump("drops")}
+            className="border border-zinc-800 bg-black/30 p-4 text-left hover:border-red-700 transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Gift className="w-4 h-4 text-zinc-500" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                Aktywne dropy
+              </span>
+            </div>
+            <div className="text-2xl font-mono font-bold text-white">{fmt(drops.length)}</div>
+            <div className="text-[10px] text-zinc-500 mt-1">
+              {drops.reduce((acc, d) => acc + d.claimsCount, 0)} złapanych łącznie
+            </div>
+          </button>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Skróty" icon={Zap}>
+        <p className="text-zinc-500 text-xs mb-3">
+          Częste akcje — używaj zakładek po lewej stronie żeby przejść do pełnych narzędzi.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] font-mono uppercase tracking-widest">
+          <a href="#users" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
+            ▸ Eventy
+          </a>
+          <a href="#drops" onClick={(e) => { e.preventDefault(); onJump("drops"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
+            ▸ Nowy drop
+          </a>
+          <a href="#alerts" onClick={(e) => { e.preventDefault(); onJump("alerts"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
+            ▸ OBS Alerts
+          </a>
+          <a href="#shop" onClick={(e) => { e.preventDefault(); onJump("shop"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
+            ▸ Sklep
+          </a>
+        </div>
+      </SectionCard>
+
+      {pendingOrders.length > 0 && (
+        <SectionCard title={`Ostatnie zakupy czekające na dostawę (${pendingOrders.length})`} icon={Package}>
+          <div className="space-y-1 text-[10px] font-mono">
+            {pendingOrders.slice(0, 5).map((o) => (
+              <div key={o.id} className="flex items-center gap-2 border-l-2 border-orange-700 pl-2 py-1">
+                <span className="text-orange-300">{o.shopItem?.imageEmoji ?? "📦"} {o.shopItem?.name ?? "?"}</span>
+                <span className="text-zinc-500 truncate">
+                  {o.user.displayName || o.user.username || o.user.discordUsername || "anon"}
+                </span>
+                <span className="text-zinc-700 ml-auto shrink-0">
+                  {new Date(o.createdAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
       )}
     </div>
   );
