@@ -3,11 +3,11 @@
 // signIn callback blocks them). Permanent or with duration.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 export async function POST(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("ban_users");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: {

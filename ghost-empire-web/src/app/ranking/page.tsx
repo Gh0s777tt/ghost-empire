@@ -27,6 +27,23 @@ export default async function RankingPage({
 
   const session = await getServerSession(authOptions);
 
+  // Compute admin/mod permissions for quick-actions modal
+  let canGrantTokens = false;
+  let canSetRole = false;
+  let canBan = false;
+  if (session?.user?.id) {
+    const me = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { isAdmin: true, isModerator: true, modPermissions: true, isBanned: true },
+    });
+    if (me && !me.isBanned) {
+      canSetRole = me.isAdmin;  // Granting admin/mod is admin-only
+      canGrantTokens = me.isAdmin || (me.isModerator && me.modPermissions.includes("grant_tokens"));
+      canBan = me.isAdmin || (me.isModerator && me.modPermissions.includes("ban_users"));
+    }
+  }
+  const canDoAnything = canGrantTokens || canSetRole || canBan;
+
   // Order strategy: primary field DESC, then secondary tiebreakers
   const orderBy =
     sort === "level"
@@ -129,7 +146,8 @@ export default async function RankingPage({
           totalUsers={totalUsers}
           currentUserId={session?.user?.id ?? null}
           myRank={myRank}
-          isAdmin={!!session?.user?.isAdmin}
+          isAdmin={canDoAnything}
+          permissions={{ canGrantTokens, canSetRole, canBan }}
         />
       </main>
     </div>

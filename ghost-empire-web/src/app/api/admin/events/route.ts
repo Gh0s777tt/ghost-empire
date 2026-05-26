@@ -1,13 +1,13 @@
 // src/app/api/admin/events/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 const VALID_TYPES = ["giveaway", "raffle", "contest", "happy_hour"] as const;
 
 export async function POST(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("create_events");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: {
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("edit_events");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: {
@@ -210,7 +210,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("edit_events");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);

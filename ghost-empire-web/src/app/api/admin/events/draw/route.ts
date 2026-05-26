@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 // Crypto-secure Fisher-Yates shuffle
@@ -16,7 +16,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("draw_events");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: { eventId?: string };

@@ -42,6 +42,12 @@ const PODIUM_STYLE = [
   { color: "#CD7F32", label: "3.", border: "border-orange-700", glow: "shadow-orange-700/30" },
 ];
 
+type Permissions = {
+  canGrantTokens: boolean;
+  canSetRole: boolean;
+  canBan: boolean;
+};
+
 export function RankingClient({
   sort,
   topUsers,
@@ -49,7 +55,8 @@ export function RankingClient({
   totalUsers,
   currentUserId,
   myRank,
-  isAdmin,
+  isAdmin, // misleading name — actually "canDoAnyAdminAction"; kept for backwards compat
+  permissions = { canGrantTokens: false, canSetRole: false, canBan: false },
 }: {
   sort: Sort;
   topUsers: User[];
@@ -58,6 +65,7 @@ export function RankingClient({
   currentUserId: string | null;
   myRank: { position: number; user: User } | null;
   isAdmin: boolean;
+  permissions?: Permissions;
 }) {
   const [adminTarget, setAdminTarget] = useState<User | null>(null);
   const meta = SORT_META[sort];
@@ -301,6 +309,7 @@ export function RankingClient({
       {adminTarget && (
         <AdminUserActions
           user={adminTarget}
+          permissions={permissions}
           onClose={() => setAdminTarget(null)}
         />
       )}
@@ -393,9 +402,11 @@ function UserRow({
 
 function AdminUserActions({
   user,
+  permissions,
   onClose,
 }: {
   user: User;
+  permissions: Permissions;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -536,6 +547,7 @@ function AdminUserActions({
         </div>
 
         {/* Quick token grants */}
+        {permissions.canGrantTokens && (
         <div className="space-y-2 mb-4">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
             <Coins className="w-3 h-3" /> Szybki grant tokenów
@@ -584,8 +596,10 @@ function AdminUserActions({
             </button>
           </div>
         </div>
+        )}
 
-        {/* Role toggles */}
+        {/* Role toggles — admin-only */}
+        {permissions.canSetRole && (
         <div className="space-y-2 mb-4">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
             <UserCog className="w-3 h-3" /> Role
@@ -626,8 +640,10 @@ function AdminUserActions({
             Klik = toggle. Stan rzeczywisty z bazy może się różnić od UI tu — odśwież po zmianach.
           </p>
         </div>
+        )}
 
         {/* Ban / Unban */}
+        {permissions.canBan && (
         <div className="space-y-2 mb-4">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
             <Ban className="w-3 h-3" /> Ban
@@ -671,6 +687,7 @@ function AdminUserActions({
             Odbanuj (jeśli był banowany)
           </button>
         </div>
+        )}
 
         {/* Link to full admin */}
         <Link

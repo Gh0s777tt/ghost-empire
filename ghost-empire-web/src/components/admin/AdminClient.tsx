@@ -95,8 +95,11 @@ type PendingOrder = {
 };
 
 export function AdminClient({
+  isAdmin, myPermissions,
   stats, drops, events, pendingOrders, auditLog, allShopItems, allEvents,
 }: {
+  isAdmin: boolean;
+  myPermissions: string[];
   stats: Stats;
   drops: Drop[];
   events: AdminEvent[];
@@ -105,6 +108,8 @@ export function AdminClient({
   allShopItems: ShopItemRow[];
   allEvents: EventRow[];
 }) {
+  // Permission checker — admins implicitly have all
+  const can = (perm: string) => isAdmin || myPermissions.includes(perm);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -139,24 +144,39 @@ export function AdminClient({
         <StatTile label="Pending orders" value={fmt(stats.ordersPending)} icon={Package} accent={stats.ordersPending > 0} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GrantTokensCard onToast={showToast} onSuccess={refresh} pending={pending} />
-        <CreateDropCard onToast={showToast} onSuccess={refresh} pending={pending} />
-      </div>
+      {!isAdmin && (
+        <div className="border border-blue-700 bg-blue-950/30 px-4 py-2.5 text-xs text-blue-200">
+          🛡️ Widzisz panel jako <strong>moderator</strong>. Twoje uprawnienia:{" "}
+          <span className="font-mono">{myPermissions.length === 0 ? "BRAK" : myPermissions.join(", ")}</span>.
+          Sekcje bez odpowiedniego uprawnienia są ukryte.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <UserRolesCard onToast={showToast} onSuccess={refresh} pending={pending} />
+        {can("grant_tokens") && <GrantTokensCard onToast={showToast} onSuccess={refresh} pending={pending} />}
+        {can("create_drops") && <CreateDropCard onToast={showToast} onSuccess={refresh} pending={pending} />}
+      </div>
+
+      {/* User/connection role management — admin-only (granting admin to others is too sensitive) */}
+      {isAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <UserRolesCard onToast={showToast} onSuccess={refresh} pending={pending} />
+          <ConnectionRolesCard onToast={showToast} onSuccess={refresh} pending={pending} />
+        </div>
+      )}
+      {/* Mod with mark_subs but not admin — they get connection-roles but not user-roles */}
+      {!isAdmin && can("mark_subs") && (
         <ConnectionRolesCard onToast={showToast} onSuccess={refresh} pending={pending} />
-      </div>
+      )}
 
-      <CreateEventCard onToast={showToast} onSuccess={refresh} pending={pending} />
+      {can("create_events") && <CreateEventCard onToast={showToast} onSuccess={refresh} pending={pending} />}
 
-      <ActiveDropsList drops={drops} onToast={showToast} onSuccess={refresh} pending={pending} />
-      <ActiveEventsList events={events} onToast={showToast} onSuccess={refresh} pending={pending} />
-      <PendingOrdersList orders={pendingOrders} onToast={showToast} onSuccess={refresh} pending={pending} />
-      <ShopManager items={allShopItems} onToast={showToast} onSuccess={refresh} pending={pending} />
-      <EventManager events={allEvents} onToast={showToast} onSuccess={refresh} pending={pending} />
-      <AuditLogSection auditLog={auditLog} />
+      {can("create_drops") && <ActiveDropsList drops={drops} onToast={showToast} onSuccess={refresh} pending={pending} />}
+      {(can("edit_events") || can("draw_events")) && <ActiveEventsList events={events} onToast={showToast} onSuccess={refresh} pending={pending} />}
+      {can("deliver_orders") && <PendingOrdersList orders={pendingOrders} onToast={showToast} onSuccess={refresh} pending={pending} />}
+      {can("manage_shop") && <ShopManager items={allShopItems} onToast={showToast} onSuccess={refresh} pending={pending} />}
+      {can("edit_events") && <EventManager events={allEvents} onToast={showToast} onSuccess={refresh} pending={pending} />}
+      {can("view_audit") && <AuditLogSection auditLog={auditLog} />}
 
       {toast && (
         <div

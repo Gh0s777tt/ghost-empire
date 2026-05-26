@@ -4,14 +4,14 @@
 // DELETE — soft-delete (active=false)
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 const VALID_CATEGORIES = ["games", "skins", "subs", "cosmetic", "experience"];
 const VALID_TIERS = ["T1", "T2", "T3", "Prime", "OG", "DUAL"];
 
 export async function PATCH(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("manage_shop");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: {
@@ -109,7 +109,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("manage_shop");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: {
@@ -174,7 +174,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("manage_shop");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);

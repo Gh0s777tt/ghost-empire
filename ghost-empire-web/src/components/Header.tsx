@@ -121,14 +121,19 @@ export function Header() {
                   </span>
                 )}
 
-                {/* Moderator badge */}
+                {/* Moderator badge — clickable to /admin (panel shows their permissions only) */}
                 {session.user.isModerator && !session.user.isAdmin && (
-                  <span
-                    className="hidden sm:flex items-center gap-1.5 px-2 py-1.5 border border-blue-700 bg-blue-600/15 text-blue-300 text-[10px] font-bold tracking-widest uppercase"
+                  <Link
+                    href="/admin"
+                    className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 border text-[10px] font-bold tracking-widest uppercase transition-all ${
+                      pathname.startsWith("/admin")
+                        ? "border-blue-500 bg-blue-600 text-white"
+                        : "border-blue-700 bg-blue-600/15 text-blue-300 hover:border-blue-500"
+                    }`}
                   >
                     <ShieldCheck className="w-3 h-3" />
                     MOD
-                  </span>
+                  </Link>
                 )}
 
                 {/* Admin badge (also links to admin panel) */}

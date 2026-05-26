@@ -18,12 +18,18 @@ export default async function AdminPage() {
 
   const me = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { isAdmin: true },
+    select: { isAdmin: true, isModerator: true, modPermissions: true, isBanned: true },
   });
 
-  if (!me?.isAdmin) {
+  // Allow admins + moderators (any permissions). Block everyone else.
+  if (!me || me.isBanned || (!me.isAdmin && !me.isModerator)) {
     redirect("/?denied=admin");
   }
+
+  // Admin has implicit all permissions; mod has whatever's in their array.
+  const myPermissions: string[] = me.isAdmin
+    ? ["__all__"]   // sentinel — AdminClient treats this as "all"
+    : me.modPermissions;
 
   const [stats, activeDrops, activeEvents, pendingOrders] = await Promise.all([
     Promise.all([
@@ -83,6 +89,8 @@ export default async function AdminPage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-6">
         <AdminClient
+          isAdmin={me.isAdmin}
+          myPermissions={myPermissions}
           stats={{
             totalUsers,
             totalTokensInCirculation: sums._sum.tokens ?? 0,

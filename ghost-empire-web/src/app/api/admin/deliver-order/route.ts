@@ -1,11 +1,11 @@
 // src/app/api/admin/deliver-order/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 export async function POST(req: Request) {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("deliver_orders");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: { transactionId?: string; note?: string; action?: "deliver" | "refund" };
