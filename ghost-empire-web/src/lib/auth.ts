@@ -62,11 +62,14 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
 
   providers: [
+    // allowDangerousEmailAccountLinking: true on every OAuth provider —
+    // safe because all 4 providers verify email ownership themselves.
+    // Without this NextAuth blocks login when an existing user has the same
+    // email via different provider (OAuthAccountNotLinked error).
     TwitchProvider({
       clientId: process.env.TWITCH_CLIENT_ID!,
       clientSecret: process.env.TWITCH_CLIENT_SECRET!,
-      // NOTE: scope MUST include "openid" — Twitch is OIDC and won't return
-      // id_token without it. NextAuth v4 fails with "id_token not present in TokenSet".
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           scope: "openid user:read:email",
@@ -83,6 +86,7 @@ export const authOptions: NextAuthOptions = {
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           scope: "identify email guilds",
@@ -92,6 +96,7 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           scope: "openid email profile",
@@ -101,6 +106,7 @@ export const authOptions: NextAuthOptions = {
     KickProvider({
       clientId: process.env.KICK_CLIENT_ID!,
       clientSecret: process.env.KICK_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
 
