@@ -4,6 +4,7 @@ import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
+import { dispatchAlertSafe } from "@/lib/alerts";
 
 // Crypto-secure Fisher-Yates shuffle
 function shuffle<T>(arr: T[]): T[] {
@@ -118,6 +119,18 @@ export async function POST(req: Request) {
     where: { id: { in: winnerIds } },
     select: { id: true, username: true, displayName: true, image: true },
   });
+
+  // Dispatch one stream alert per winner (safe — never blocks)
+  for (const w of winners) {
+    await dispatchAlertSafe({
+      type: "event_win",
+      title: "🏆 Mamy zwycięzcę!",
+      message: `wygrał ${event.name}`,
+      icon: "🏆",
+      actorName: w.displayName || w.username || "Anon",
+      actorImage: w.image ?? undefined,
+    });
+  }
 
   await logAdminAction({
     adminId: auth.userId,

@@ -7,6 +7,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyEventSubSignature, isMessageFresh } from "@/lib/twitch";
+import { dispatchAlertSafe } from "@/lib/alerts";
 
 // Tunable token rewards (env-configurable later if needed)
 const REWARD_SUB_T1 = 5000;
@@ -163,6 +164,15 @@ async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId
 
   if (!userLogin) return { userId: null, tokens: null };
 
+  // Stream alert fires for every sub, even when the subscriber has no Ghost Empire account
+  await dispatchAlertSafe({
+    type: "twitch_sub",
+    title: `💜 Nowy sub ${tierLabel(tier)}!`,
+    message: "zasubował kanał",
+    icon: "💜",
+    actorName: userName ?? userLogin,
+  });
+
   // Find Ghost Empire user via Connection.username on Twitch
   const connection = await prisma.connection.findFirst({
     where: { platform: "twitch", username: { equals: userLogin, mode: "insensitive" } },
@@ -217,9 +227,21 @@ async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId
 
 async function handleGiftSub(event: Record<string, unknown>): Promise<{ userId: string | null; tokens: number | null }> {
   const gifterLogin = (event.user_login as string)?.toLowerCase();
+  const gifterName = event.user_name as string | undefined;
   const isAnonymous = event.is_anonymous as boolean | undefined;
   const total = (event.total as number) ?? 1;
   const tier = (event.tier as string) ?? "1000";
+
+  // Stream alert fires for every gift sub, including anonymous + non-Ghost-Empire users
+  await dispatchAlertSafe({
+    type: "twitch_gift_sub",
+    title: `🎁 Gifted ${total} sub${total === 1 ? "" : "y"} ${tierLabel(tier)}!`,
+    message: "rozdał suby community",
+    icon: "🎁",
+    actorName: isAnonymous ? "Anonymous Gifter" : (gifterName ?? gifterLogin ?? "Anon"),
+    amount: total,
+    amountLabel: "sub" + (total === 1 ? "" : "y"),
+  });
 
   if (isAnonymous || !gifterLogin) {
     console.log("[twitch-eventsub] anonymous gift sub — no reward");
@@ -269,8 +291,22 @@ async function handleGiftSub(event: Record<string, unknown>): Promise<{ userId: 
 
 async function handleCheer(event: Record<string, unknown>): Promise<{ userId: string | null; tokens: number | null }> {
   const userLogin = (event.user_login as string)?.toLowerCase();
+  const userName = event.user_name as string | undefined;
   const isAnonymous = event.is_anonymous as boolean | undefined;
   const bits = (event.bits as number) ?? 0;
+
+  // Stream alert fires for every cheer (including anonymous and non-Ghost-Empire users)
+  if (bits > 0) {
+    await dispatchAlertSafe({
+      type: "twitch_cheer",
+      title: `💎 Cheer ${bits.toLocaleString("pl-PL")} bits!`,
+      message: "wsparł bitami",
+      icon: "💎",
+      actorName: isAnonymous ? "Anonymous Cheerer" : (userName ?? userLogin ?? "Anon"),
+      amount: bits,
+      amountLabel: "bits",
+    });
+  }
 
   if (isAnonymous || !userLogin || bits <= 0) {
     return { userId: null, tokens: null };

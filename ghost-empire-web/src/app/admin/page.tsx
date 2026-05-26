@@ -104,6 +104,24 @@ export default async function AdminPage() {
     take: 10,
   });
 
+  // Stream alerts (OBS overlay) state
+  const ALL_ALERT_TYPES = [
+    "shop_purchase", "event_win", "drop_claim_bonus",
+    "twitch_sub", "twitch_gift_sub", "twitch_cheer",
+    "donation", "welcome", "level_up", "test",
+  ];
+  const alertSettings = await prisma.streamAlertSettings.upsert({
+    where: { id: "default" },
+    create: { id: "default" },
+    update: {},
+  });
+  const recentAlerts = await prisma.streamAlert.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+  const overlayConfigured =
+    !!process.env.OVERLAY_TOKEN && process.env.OVERLAY_TOKEN !== "REPLACE_WITH_HEX_32_BYTES";
+
   const [totalUsers, sums, eventsActive, ordersPending] = stats;
 
   return (
@@ -243,6 +261,28 @@ export default async function AdminPage() {
               userId: e.userId,
               tokensGranted: e.tokensGranted,
               receivedAt: e.receivedAt.toISOString(),
+            })),
+          }}
+          streamAlerts={{
+            overlayConfigured,
+            settings: {
+              enabledTypes: alertSettings.enabledTypes,
+              durationMs: alertSettings.durationMs,
+              accentColor: alertSettings.accentColor,
+              soundEnabled: alertSettings.soundEnabled,
+            },
+            allTypes: ALL_ALERT_TYPES,
+            recent: recentAlerts.map((a) => ({
+              id: a.id,
+              type: a.type,
+              title: a.title,
+              message: a.message,
+              icon: a.icon,
+              actorName: a.actorName,
+              amount: a.amount,
+              amountLabel: a.amountLabel,
+              createdAt: a.createdAt.toISOString(),
+              shownAt: a.shownAt?.toISOString() ?? null,
             })),
           }}
         />

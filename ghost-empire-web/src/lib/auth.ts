@@ -7,6 +7,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import type { Adapter } from "next-auth/adapters";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
+import { dispatchAlertSafe } from "@/lib/alerts";
 
 // Custom Kick provider — KICK isn't built into next-auth.
 // API docs: https://docs.kick.com/getting-started/kick-developer-api
@@ -333,6 +334,18 @@ export const authOptions: NextAuthOptions = {
             amount: 500,
             reason: "welcome_bonus",
           },
+        });
+
+        // Stream alert — viewer joined Ghost Empire
+        await dispatchAlertSafe({
+          type: "welcome",
+          title: "👻 Nowy duch dołączył!",
+          message: "wszedł do Ghost Empire",
+          icon: "👻",
+          actorName: user.name ?? "Anon",
+          actorImage: user.image ?? undefined,
+          amount: 500,
+          amountLabel: "GT",
         });
       } catch (e) {
         console.error("Error granting welcome bonus:", e);

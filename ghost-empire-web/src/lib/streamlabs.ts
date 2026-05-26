@@ -1,6 +1,7 @@
 // src/lib/streamlabs.ts
 // Streamlabs API integration — OAuth + donation polling + auto-matching.
 import { prisma } from "@/lib/prisma";
+import { dispatchAlertSafe } from "@/lib/alerts";
 
 const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v2.0/authorize";
 const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v2.0/token";
@@ -225,6 +226,25 @@ export async function pollAndProcessDonations(): Promise<{
           },
         }),
       ]);
+
+      // Fetch matched user for actor info
+      const matchedUser = await prisma.user.findUnique({
+        where: { id: match.userId },
+        select: { username: true, displayName: true, image: true },
+      });
+      await dispatchAlertSafe({
+        type: "donation",
+        title: "❤️ Donacja!",
+        message: d.message
+          ? `wpłacił z wiadomością: ${d.message.slice(0, 80)}`
+          : "wsparł streamera",
+        icon: "❤️",
+        actorName: matchedUser?.displayName || matchedUser?.username || d.name,
+        actorImage: matchedUser?.image ?? undefined,
+        amount: Math.round(amountFloat * 100) / 100,
+        amountLabel: d.currency,
+      });
+
       matched++;
     } else {
       // Unmatched — store for admin reconciliation
@@ -239,6 +259,20 @@ export async function pollAndProcessDonations(): Promise<{
           donatedAt: new Date(d.created_at * 1000),
         },
       });
+
+      // Still alert — streamer wants to see EVERY donation on overlay even if donor isn't linked
+      await dispatchAlertSafe({
+        type: "donation",
+        title: "❤️ Donacja!",
+        message: d.message
+          ? `wpłacił z wiadomością: ${d.message.slice(0, 80)}`
+          : "wsparł streamera",
+        icon: "❤️",
+        actorName: d.name,
+        amount: Math.round(amountFloat * 100) / 100,
+        amountLabel: d.currency,
+      });
+
       unmatched++;
     }
   }

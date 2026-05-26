@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { dispatchAlertSafe } from "@/lib/alerts";
 
 const CODE_REGEX = /^[A-Z0-9_-]{3,24}$/;
 
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
           tokens: { increment: totalReward },
           totalEarned: { increment: totalReward },
         },
-        select: { tokens: true },
+        select: { tokens: true, username: true, displayName: true, image: true },
       });
 
       await tx.transaction.create({
@@ -114,10 +115,30 @@ export async function POST(req: Request) {
         gotBonus: getsBonus,
         bonusSlotsLeft: Math.max(0, drop.bonusSlots - existingClaims - 1),
         newBalance: updatedUser.tokens,
+        _actor: {
+          name: updatedUser.displayName || updatedUser.username || "Anon",
+          image: updatedUser.image ?? null,
+        },
       };
     });
 
-    return NextResponse.json(result);
+    // Stream alert only for bonus claims (first N grabbers) — non-bonus claims would spam
+    if (result.gotBonus) {
+      await dispatchAlertSafe({
+        type: "drop_claim_bonus",
+        title: "🌟 Bonus drop złapany!",
+        message: `złapał bonusowy kod ${drop.code}`,
+        icon: "🌟",
+        actorName: result._actor.name,
+        actorImage: result._actor.image ?? undefined,
+        amount: result.totalReward,
+        amountLabel: "GT",
+      });
+    }
+
+    const { _actor, ...publicResult } = result;
+    void _actor;
+    return NextResponse.json(publicResult);
   } catch (e: unknown) {
     if (
       typeof e === "object" && e !== null && "code" in e &&

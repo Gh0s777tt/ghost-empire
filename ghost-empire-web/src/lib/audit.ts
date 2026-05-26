@@ -14,7 +14,9 @@ type AdminActionType =
   | "deliver_order"
   | "refund_order"
   | "set_user_role"
-  | "set_connection_role";
+  | "set_connection_role"
+  | "test_alert"
+  | "update_alert_settings";
 
 export async function logAdminAction(opts: {
   adminId: string;

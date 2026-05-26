@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { dispatchAlertSafe } from "@/lib/alerts";
 
 const TIER_RANK: Record<string, number> = { T1: 1, T2: 2, T3: 3, Prime: 1 };
 
@@ -130,7 +131,7 @@ export async function POST(req: Request) {
 
       const fresh = await tx.user.findUnique({
         where: { id: userId },
-        select: { tokens: true },
+        select: { tokens: true, username: true, displayName: true, image: true },
       });
 
       return {
@@ -139,10 +140,35 @@ export async function POST(req: Request) {
         spent: item.price,
         newBalance: fresh?.tokens ?? 0,
         deliveryPending: !isDigital,
+        // Internal-only fields used after the transaction for alert dispatch
+        _actor: {
+          name: fresh?.displayName || fresh?.username || "Anon",
+          image: fresh?.image ?? null,
+        },
+        _item: {
+          name: item.name,
+          emoji: item.imageEmoji,
+          price: item.price,
+        },
       };
     });
 
-    return NextResponse.json(result);
+    // Fire-and-forget stream alert (after commit so failures don't roll back the purchase)
+    await dispatchAlertSafe({
+      type: "shop_purchase",
+      title: "🛒 Nowy zakup w sklepie!",
+      message: `kupił ${result._item.name}`,
+      icon: result._item.emoji ?? "🛍️",
+      actorName: result._actor.name,
+      actorImage: result._actor.image ?? undefined,
+      amount: result._item.price,
+      amountLabel: "GT",
+    });
+
+    // Strip internal-only fields from the response
+    const { _actor, _item, ...publicResult } = result;
+    void _actor; void _item;
+    return NextResponse.json(publicResult);
   } catch (e) {
     if (e instanceof ShopError) {
       return NextResponse.json({ error: e.message }, { status: e.status });

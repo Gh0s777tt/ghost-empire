@@ -116,6 +116,29 @@ type TwitchEventSubData = {
   }>;
 };
 
+type StreamAlertsData = {
+  overlayConfigured: boolean;
+  settings: {
+    enabledTypes: string[];
+    durationMs: number;
+    accentColor: string;
+    soundEnabled: boolean;
+  };
+  allTypes: string[];
+  recent: Array<{
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    icon: string | null;
+    actorName: string | null;
+    amount: number | null;
+    amountLabel: string | null;
+    createdAt: string;
+    shownAt: string | null;
+  }>;
+};
+
 type StreamlabsConnectionData =
   | { connected: false }
   | {
@@ -161,7 +184,7 @@ export function AdminClient({
   isAdmin, myPermissions,
   stats, drops, events, pendingOrders, auditLog, allShopItems, allEvents,
   botConfig, scheduleSlots, streamlabsConnection, unmatchedDonations,
-  twitchEventSub,
+  twitchEventSub, streamAlerts,
 }: {
   isAdmin: boolean;
   myPermissions: string[];
@@ -177,6 +200,7 @@ export function AdminClient({
   streamlabsConnection: StreamlabsConnectionData;
   unmatchedDonations: UnmatchedDonation[];
   twitchEventSub: TwitchEventSubData;
+  streamAlerts: StreamAlertsData;
 }) {
   // Permission checker — admins implicitly have all
   const can = (perm: string) => isAdmin || myPermissions.includes(perm);
@@ -260,6 +284,14 @@ export function AdminClient({
       {isAdmin && (
         <TwitchEventSubManager
           data={twitchEventSub}
+          onToast={showToast}
+          onSuccess={refresh}
+          pending={pending}
+        />
+      )}
+      {isAdmin && (
+        <StreamAlertsManager
+          data={streamAlerts}
           onToast={showToast}
           onSuccess={refresh}
           pending={pending}
@@ -2421,5 +2453,265 @@ function FieldTextarea({
         className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-red-600 resize-y"
       />
     </div>
+  );
+}
+
+// ============== STREAM ALERTS (OBS overlay) ==============
+
+const ALERT_TYPE_LABEL: Record<string, string> = {
+  shop_purchase:    "Zakup w sklepie",
+  event_win:        "Wygrana w evencie",
+  drop_claim_bonus: "Drop bonus claim",
+  twitch_sub:       "Twitch — sub",
+  twitch_gift_sub:  "Twitch — gifted sub",
+  twitch_cheer:     "Twitch — cheer (bits)",
+  donation:         "Donacja",
+  welcome:          "Welcome / nowy user",
+  level_up:         "Level up",
+  test:             "Test (Admin)",
+};
+
+function StreamAlertsManager({
+  data, onToast, onSuccess, pending,
+}: {
+  data: StreamAlertsData;
+  onToast: (k: "ok" | "err", m: string) => void;
+  onSuccess: () => void;
+  pending: boolean;
+}) {
+  const [enabledTypes, setEnabledTypes] = useState<string[]>(data.settings.enabledTypes);
+  const [durationMs, setDurationMs] = useState(data.settings.durationMs);
+  const [accentColor, setAccentColor] = useState(data.settings.accentColor);
+  const [soundEnabled, setSoundEnabled] = useState(data.settings.soundEnabled);
+  const [busy, setBusy] = useState(false);
+
+  const dirty =
+    JSON.stringify([...enabledTypes].sort()) !== JSON.stringify([...data.settings.enabledTypes].sort()) ||
+    durationMs !== data.settings.durationMs ||
+    accentColor !== data.settings.accentColor ||
+    soundEnabled !== data.settings.soundEnabled;
+
+  function toggleType(t: string) {
+    setEnabledTypes((prev) =>
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
+    );
+  }
+
+  async function saveSettings() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "settings",
+          enabledTypes,
+          durationMs,
+          accentColor,
+          soundEnabled,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        onToast("err", result.error ?? "Błąd");
+      } else {
+        onToast("ok", "Zapisano");
+        onSuccess();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendTest() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test" }),
+      });
+      const result = await res.json();
+      if (!res.ok) onToast("err", result.error ?? "Błąd");
+      else onToast("ok", "Wysłano test alert — sprawdź overlay");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <SectionCard title="Stream Alerts (OBS Overlay)" icon={Zap}>
+      <p className="text-zinc-500 text-xs mb-3">
+        Alerty wyświetlane przez OBS Browser Source — pokazują live zakupy, wygrane, suby/bity, donacje.
+        Overlay polluje serwer co ~1.2s — alert pojawi się max 1.5s po zdarzeniu.
+      </p>
+
+      {/* Overlay configuration banner */}
+      <div className="border border-zinc-800 bg-black/30 p-3 mb-3 space-y-2">
+        {data.overlayConfigured ? (
+          <div className="text-[11px] text-green-300 font-mono">
+            ● OVERLAY_TOKEN ustawiony. URL dla OBS:
+            <div className="text-zinc-400 text-[10px] mt-1 break-all">
+              https://ghost-empire-web.vercel.app/overlay?token=<span className="text-zinc-600">&lt;OVERLAY_TOKEN&gt;</span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-[11px] text-orange-300">
+            ⚠ Brak <code className="text-orange-200">OVERLAY_TOKEN</code> w envach. Wygeneruj{" "}
+            <code className="text-zinc-300">openssl rand -hex 32</code> i wklej do Vercel env vars.
+          </div>
+        )}
+      </div>
+
+      {/* Test alert button */}
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={sendTest}
+          disabled={busy || pending}
+          className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
+        >
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+          Wyślij test alert
+        </button>
+        <span className="text-[10px] text-zinc-500">
+          Zobaczysz alert na overlay w ciągu ~1.5s.
+        </span>
+      </div>
+
+      {/* Settings */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="md:col-span-1">
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
+            Czas wyświetlania
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={1500}
+              max={20000}
+              step={500}
+              value={durationMs}
+              onChange={(e) => setDurationMs(parseInt(e.target.value, 10))}
+              className="flex-1"
+            />
+            <span className="text-xs text-white font-mono tabular-nums w-14 text-right">
+              {(durationMs / 1000).toFixed(1)}s
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
+            Kolor akcentu
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+              className="w-10 h-8 border border-zinc-800 bg-black/30 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+              className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1.5 text-xs font-mono text-white outline-none focus:border-red-600"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
+            Dźwięk
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={soundEnabled}
+              onChange={(e) => setSoundEnabled(e.target.checked)}
+              className="w-4 h-4 accent-red-600"
+            />
+            <span className="text-xs text-zinc-300">
+              {soundEnabled ? "Włączony (chime)" : "Wyłączony"}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      {/* Per-type toggles */}
+      <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
+        Aktywne typy alertów ({enabledTypes.length} z {data.allTypes.length})
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mb-4">
+        {data.allTypes.map((t) => {
+          const active = enabledTypes.includes(t);
+          return (
+            <button
+              key={t}
+              onClick={() => toggleType(t)}
+              className={cn(
+                "px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-widest border text-left",
+                active
+                  ? "border-red-700 bg-red-950/30 text-red-200"
+                  : "border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-700",
+              )}
+            >
+              {active ? "● " : "○ "}
+              {ALERT_TYPE_LABEL[t] ?? t}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Save button */}
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={saveSettings}
+          disabled={!dirty || busy || pending}
+          className="px-3 py-1.5 bg-purple-700 hover:bg-purple-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-40 flex items-center gap-1.5"
+        >
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+          {dirty ? "Zapisz zmiany" : "Brak zmian"}
+        </button>
+      </div>
+
+      {/* Recent alerts log */}
+      {data.recent.length > 0 && (
+        <>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
+            Ostatnie alerty ({data.recent.length})
+          </div>
+          <div className="space-y-1 text-[10px] font-mono">
+            {data.recent.slice(0, 10).map((a) => (
+              <div key={a.id} className="flex items-center gap-2 border-l-2 border-zinc-800 pl-2 py-1">
+                <span className="text-zinc-500 uppercase tracking-widest w-28 truncate shrink-0">
+                  {ALERT_TYPE_LABEL[a.type] ?? a.type}
+                </span>
+                <span className="text-zinc-300 truncate flex-1">
+                  {a.icon ?? "🔔"} {a.actorName ? <strong>{a.actorName}</strong> : null} {a.message}
+                </span>
+                {a.amount != null && (
+                  <span className="text-red-400 shrink-0">
+                    {a.amount.toLocaleString("pl-PL")}{a.amountLabel ? ` ${a.amountLabel}` : ""}
+                  </span>
+                )}
+                <span
+                  className={cn(
+                    "shrink-0 text-[9px] uppercase tracking-widest",
+                    a.shownAt ? "text-zinc-600" : "text-orange-400",
+                  )}
+                  title={a.shownAt ? `Pokazany ${new Date(a.shownAt).toLocaleTimeString("pl-PL")}` : "Jeszcze nie pokazany"}
+                >
+                  {a.shownAt ? "shown" : "pending"}
+                </span>
+                <span className="text-zinc-700 shrink-0">
+                  {new Date(a.createdAt).toLocaleTimeString("pl-PL")}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </SectionCard>
   );
 }

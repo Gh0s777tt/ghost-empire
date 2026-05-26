@@ -638,3 +638,48 @@ model DropClaim {
   @@unique([dropId, userId])
   @@map("drop_claims")
 }
+
+// =====================================================
+// STREAM ALERTS — OBS overlay queue
+// Alerts dispatched by various endpoints; polled by /overlay browser source.
+// =====================================================
+
+model StreamAlert {
+  id          String   @id @default(cuid())
+  type        String   // "shop_purchase" | "event_win" | "drop_claim_bonus" | "twitch_sub" | "twitch_gift_sub" | "twitch_cheer" | "donation" | "welcome" | "level_up" | "test"
+
+  title       String
+  message     String
+  icon        String?  // emoji shown in overlay
+
+  // Actor (who triggered — for displaying avatar/username on the alert)
+  actorName   String?
+  actorImage  String?
+
+  // Numeric display (e.g. token amount, bits count, donation kwota)
+  amount      Int?
+  amountLabel String?  // "GT" | "bits" | "PLN"
+
+  meta        String?  @db.Text  // optional JSON for type-specific extras
+
+  createdAt   DateTime @default(now())
+  shownAt     DateTime?  // set when overlay first picks it up
+
+  @@index([createdAt])
+  @@map("stream_alerts")
+}
+
+// =====================================================
+// STREAM ALERT SETTINGS — singleton; per-type enable/disable + visuals
+// =====================================================
+
+model StreamAlertSettings {
+  id              String   @id @default("default")
+  enabledTypes    String[] @default(["shop_purchase","event_win","drop_claim_bonus","twitch_sub","twitch_gift_sub","twitch_cheer","donation","welcome","level_up","test"])
+  durationMs      Int      @default(6000)
+  accentColor     String   @default("#E50914")
+  soundEnabled    Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  @@map("stream_alert_settings")
+}
