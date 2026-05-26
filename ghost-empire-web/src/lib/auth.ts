@@ -7,7 +7,9 @@ import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import type { Adapter } from "next-auth/adapters";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
+import { cookies } from "next/headers";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { LINK_COOKIE_NAME, verifyLinkToken, executeAccountLink } from "@/lib/account-linking";
 
 // Custom Kick provider — KICK isn't built into next-auth.
 // API docs: https://docs.kick.com/getting-started/kick-developer-api
@@ -176,6 +178,40 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (!account) return true;
 
+      // === LINK INTENT — process BEFORE the normal flow ===
+      // If user initiated /api/profile/connections/link/[provider] while logged in,
+      // a signed cookie tells us to bind the resulting OAuth Account to the original
+      // user instead of letting NextAuth create a duplicate User.
+      let linkSuccessRedirect: string | null = null;
+      try {
+        const cookieStore = await cookies();
+        const intentRaw = cookieStore.get(LINK_COOKIE_NAME)?.value;
+        const intent = verifyLinkToken(intentRaw);
+
+        if (intent && intent.provider === account.provider) {
+          cookieStore.delete(LINK_COOKIE_NAME);
+
+          const result = await executeAccountLink({
+            targetUserId: intent.uid,
+            orphanUserId: user.id,
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          });
+
+          if (result.kind === "conflict") {
+            return `/profile?link_error=${result.reason}`;
+          }
+
+          // Mutate user.id so adapter.createSession signs in as the original user,
+          // not the just-created OAuth orphan (which executeAccountLink may have deleted).
+          (user as { id: string }).id = intent.uid;
+          linkSuccessRedirect = `/profile?linked=${account.provider}`;
+        }
+      } catch (e) {
+        console.error("[link] error during link intent processing:", e);
+        // Fall through to normal sign-in
+      }
+
       try {
         // On first sign-in, set username and link platform
         const dbUser = await prisma.user.findUnique({
@@ -309,7 +345,7 @@ export const authOptions: NextAuthOptions = {
         // Don't block login on non-critical errors
       }
 
-      return true;
+      return linkSuccessRedirect ?? true;
     },
   },
 

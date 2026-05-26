@@ -1,6 +1,6 @@
 "use client";
 // src/components/profile/ProfileClient.tsx
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
@@ -84,6 +84,10 @@ type Props = {
     createdAt: string;
     shopItem: { name: string; imageEmoji: string | null } | null;
   }>;
+  linkedAccounts: Array<{
+    provider: string;
+    providerAccountId: string;
+  }>;
 };
 
 const RARITY_STYLE: Record<string, { border: string; bg: string; text: string; label: string }> = {
@@ -116,7 +120,7 @@ const PLATFORM_META: Record<string, { label: string; color: string; emoji: strin
 };
 
 export function ProfileClient({
-  user, connections, earnedAchievements, allAchievements, socialLinks, transactions,
+  user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts,
 }: Props) {
   const rank = rankForLevel(user.level);
   const xpNeeded = xpForLevel(user.level + 1);
@@ -336,6 +340,11 @@ export function ProfileClient({
         {/* Social links editor */}
         <SectionCard title="Social linki" icon={Globe} className="lg:col-span-2">
           <SocialLinksEditor initialLinks={socialLinks} connections={connections} />
+        </SectionCard>
+
+        {/* Connected OAuth accounts — link more platforms to unify identities */}
+        <SectionCard title="Połączone platformy" icon={LinkIcon} className="lg:col-span-2">
+          <ConnectedAccountsCard linkedAccounts={linkedAccounts} />
         </SectionCard>
       </div>
 
@@ -913,4 +922,172 @@ function prettyReason(reason: string): string {
   if (reason.startsWith("daily_task:")) return "Daily quest";
   if (reason.startsWith("shop:")) return reason.slice(5);
   return reason;
+}
+
+// ============== CONNECTED ACCOUNTS (link more platforms) ==============
+
+type ConnectableProvider = {
+  id: string;          // NextAuth provider id (twitch | kick | discord | google)
+  label: string;
+  color: string;
+  description: string;
+};
+
+const CONNECTABLE_PROVIDERS: ConnectableProvider[] = [
+  { id: "twitch",  label: "Twitch",         color: "#9146FF", description: "Subskrypcje, bity, EventSub" },
+  { id: "kick",    label: "Kick",           color: "#53FC18", description: "Status sub, follow" },
+  { id: "discord", label: "Discord",        color: "#5865F2", description: "Discord bot, voice/messages" },
+  { id: "google",  label: "Google / YouTube", color: "#FF0000", description: "YouTube channel (przyszłe super chaty)" },
+];
+
+const LINK_ERROR_MSG: Record<string, string> = {
+  target_missing:          "Konto źródłowe nie istnieje — spróbuj ponownie.",
+  already_used_by_another: "To konto platformy jest już połączone z innym kontem Ghost Empire.",
+  already_have_provider:   "Masz już połączoną tę platformę.",
+  internal:                "Wewnętrzny błąd. Spróbuj ponownie.",
+};
+
+function ConnectedAccountsCard({
+  linkedAccounts,
+}: {
+  linkedAccounts: Array<{ provider: string; providerAccountId: string }>;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [flash, setFlash] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+
+  // Pick up query-param flash messages from the OAuth round-trip
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const linked = params.get("linked");
+    const err = params.get("link_error");
+    if (linked) {
+      const meta = CONNECTABLE_PROVIDERS.find((p) => p.id === linked);
+      setFlash({ kind: "ok", msg: `Połączono z ${meta?.label ?? linked}` });
+    } else if (err) {
+      setFlash({ kind: "err", msg: LINK_ERROR_MSG[err] ?? "Nie udało się połączyć platformy." });
+    }
+    if (linked || err) {
+      // Clean URL so a refresh doesn't show the message again
+      const url = new URL(window.location.href);
+      url.searchParams.delete("linked");
+      url.searchParams.delete("link_error");
+      window.history.replaceState(null, "", url.toString());
+      const t = setTimeout(() => setFlash(null), 6000);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const linkedProviders = new Set(linkedAccounts.map((a) => a.provider));
+  const onlyOneMethod = linkedAccounts.length <= 1;
+
+  function startLink(providerId: string) {
+    window.location.href = `/api/profile/connections/link/${providerId}`;
+  }
+
+  async function unlink(providerId: string) {
+    const meta = CONNECTABLE_PROVIDERS.find((p) => p.id === providerId);
+    if (!confirm(`Odłączyć ${meta?.label ?? providerId} od konta?`)) return;
+    setBusy(providerId);
+    try {
+      const res = await fetch("/api/profile/connections/unlink", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: providerId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFlash({ kind: "err", msg: data.error ?? "Nie udało się odłączyć." });
+      } else {
+        setFlash({ kind: "ok", msg: `Odłączono ${meta?.label ?? providerId}` });
+        router.refresh();
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div>
+      <p className="text-zinc-500 text-xs mb-3">
+        Dodaj kolejne platformy do tego konta, żeby wszystko (tokeny, suby, achievementy) liczyło się w jednym miejscu — zamiast zakładania osobnego konta na każdej platformie.
+      </p>
+
+      {flash && (
+        <div
+          className={cn(
+            "mb-3 px-3 py-2 border text-xs",
+            flash.kind === "ok"
+              ? "border-green-700 bg-green-950/40 text-green-200"
+              : "border-red-700 bg-red-950/40 text-red-200",
+          )}
+        >
+          {flash.msg}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {CONNECTABLE_PROVIDERS.map((p) => {
+          const isLinked = linkedProviders.has(p.id);
+          const isBusy = busy === p.id;
+          return (
+            <div
+              key={p.id}
+              className={cn(
+                "border p-3 flex items-center gap-3",
+                isLinked ? "border-zinc-700 bg-black/30" : "border-zinc-900 bg-black/20",
+              )}
+            >
+              <div
+                className="w-2 h-10 shrink-0"
+                style={{ background: isLinked ? p.color : "#333" }}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="font-bold text-sm text-white">{p.label}</span>
+                  {isLinked ? (
+                    <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/30 text-green-300">
+                      Połączone
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-800 text-zinc-500">
+                      Nie połączone
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-zinc-500 truncate">{p.description}</div>
+              </div>
+              {isLinked ? (
+                <button
+                  onClick={() => unlink(p.id)}
+                  disabled={isBusy || onlyOneMethod}
+                  title={onlyOneMethod ? "To Twoja jedyna metoda logowania — najpierw połącz inną" : "Odłącz"}
+                  className="text-[10px] font-mono uppercase tracking-widest border border-red-900 hover:border-red-700 hover:bg-red-950/40 text-red-400 hover:text-red-300 px-2.5 py-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                >
+                  {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
+                  Odłącz
+                </button>
+              ) : (
+                <button
+                  onClick={() => startLink(p.id)}
+                  disabled={isBusy}
+                  className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 hover:border-red-700 hover:bg-red-950/40 text-zinc-300 hover:text-white px-2.5 py-1.5 transition-colors flex items-center gap-1.5"
+                >
+                  <Plus className="w-3 h-3" />
+                  Połącz
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {onlyOneMethod && (
+        <p className="text-[10px] text-zinc-600 mt-3 italic">
+          Masz jedną metodę logowania — odłączenie jej zablokowałoby Cię w koncie. Połącz drugą platformę żeby odblokować przycisk odłączenia.
+        </p>
+      )}
+    </div>
+  );
 }

@@ -18,7 +18,7 @@ export default async function ProfilePage() {
 
   const userId = session.user.id;
 
-  const [user, connections, earnedAchievements, allAchievements, socialLinks, transactions] =
+  const [user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts] =
     await Promise.all([
       prisma.user.findUniqueOrThrow({
         where: { id: userId },
@@ -71,6 +71,10 @@ export default async function ProfilePage() {
         orderBy: { createdAt: "desc" },
         take: 30,
       }),
+      prisma.account.findMany({
+        where: { userId },
+        select: { provider: true, providerAccountId: true },
+      }),
     ]);
 
   return (
@@ -111,6 +115,7 @@ export default async function ProfilePage() {
             ...t,
             createdAt: t.createdAt.toISOString(),
           }))}
+          linkedAccounts={linkedAccounts}
         />
       </main>
     </div>
