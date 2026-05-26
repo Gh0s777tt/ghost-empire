@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
   Users, TrendingUp, Trash2, Copy, Dice5, Crown, Heart, UserCog, History,
-  ShoppingBag, Pencil, Eye, EyeOff,
+  ShoppingBag, Pencil, Eye, EyeOff, Ban,
 } from "lucide-react";
+import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { fmt, formatDate, cn } from "@/lib/utils";
 
 type Stats = {
@@ -1245,6 +1246,92 @@ function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
   );
 }
 
+// ============== MOD PERMISSIONS PICKER ==============
+
+function ModPermissionsPicker({
+  selected,
+  onToggle,
+}: {
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+}) {
+  const grouped: Record<string, typeof MOD_PERMISSIONS[number][]> = {};
+  for (const p of MOD_PERMISSIONS) {
+    if (!grouped[p.group]) grouped[p.group] = [];
+    grouped[p.group].push(p);
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
+          <ShieldCheck className="w-3 h-3" /> Uprawnienia moderatora
+        </label>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => MOD_PERMISSIONS.forEach((p) => !selected.has(p.id) && onToggle(p.id))}
+            className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 hover:text-green-400"
+          >
+            Zaznacz wszystkie
+          </button>
+          <span className="text-[9px] text-zinc-700">·</span>
+          <button
+            type="button"
+            onClick={() => MOD_PERMISSIONS.forEach((p) => selected.has(p.id) && onToggle(p.id))}
+            className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 hover:text-red-400"
+          >
+            Wyczyść
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {Object.entries(grouped).map(([groupKey, perms]) => {
+          const group = PERMISSION_GROUPS[groupKey];
+          return (
+            <div key={groupKey} className="border border-zinc-800 bg-black/30 p-2.5">
+              <div
+                className="text-[9px] font-mono uppercase tracking-widest mb-2"
+                style={{ color: group.color }}
+              >
+                {group.label}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {perms.map((p) => {
+                  const isSet = selected.has(p.id);
+                  return (
+                    <label
+                      key={p.id}
+                      className={cn(
+                        "flex items-center gap-2 px-2 py-1.5 border cursor-pointer transition-all",
+                        isSet
+                          ? "border-blue-700 bg-blue-950/30 text-blue-200"
+                          : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700",
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSet}
+                        onChange={() => onToggle(p.id)}
+                        className="accent-blue-500"
+                      />
+                      <span className="text-xs">{p.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-[9px] font-mono text-zinc-600 mt-2 leading-snug">
+        Admini mają wszystkie uprawnienia automatycznie. Moderatorzy — tylko zaznaczone.
+      </p>
+    </div>
+  );
+}
+
 // ============== USER ROLES (admin/mod/donator) ==============
 
 function UserRolesCard({
@@ -1258,7 +1345,17 @@ function UserRolesCard({
   const [role, setRole] = useState<"admin" | "moderator" | "donator">("moderator");
   const [enable, setEnable] = useState(true);
   const [addDonation, setAddDonation] = useState("");
+  const [modPermissions, setModPermissions] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
+
+  function togglePerm(id: string) {
+    setModPermissions((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   async function submit() {
     setBusy(true);
@@ -1266,6 +1363,9 @@ function UserRolesCard({
       const body: Record<string, unknown> = { target, role, enable };
       if (role === "donator" && addDonation) {
         body.addDonation = parseInt(addDonation);
+      }
+      if (role === "moderator" && enable) {
+        body.modPermissions = Array.from(modPermissions);
       }
       const res = await fetch("/api/admin/user-roles", {
         method: "POST",
@@ -1373,6 +1473,10 @@ function UserRolesCard({
             placeholder="np. 50 (PLN)"
             type="number"
           />
+        )}
+
+        {role === "moderator" && enable && (
+          <ModPermissionsPicker selected={modPermissions} onToggle={togglePerm} />
         )}
 
         <button

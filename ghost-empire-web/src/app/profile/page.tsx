@@ -42,6 +42,9 @@ export default async function ProfilePage() {
           isDonator: true,
           totalDonated: true,
           discordId: true,
+          isBanned: true,
+          bannedUntil: true,
+          banReason: true,
           createdAt: true,
         },
       }),
@@ -83,7 +86,11 @@ export default async function ProfilePage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-6">
         <ProfileClient
-          user={{ ...user, createdAt: user.createdAt.toISOString() }}
+          user={{
+            ...user,
+            createdAt: user.createdAt.toISOString(),
+            bannedUntil: user.bannedUntil?.toISOString() ?? null,
+          }}
           connections={connections.map((c) => ({
             ...c,
             connectedAt: c.connectedAt.toISOString(),

@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     enable?: boolean;
     addDonation?: number;
     modNote?: string;
+    modPermissions?: string[];
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -45,7 +46,18 @@ export async function POST(req: Request) {
 
   const data: Record<string, unknown> = {};
   if (role === "admin") data.isAdmin = enable;
-  if (role === "moderator") data.isModerator = enable;
+  if (role === "moderator") {
+    data.isModerator = enable;
+    // Permissions only set when enabling mod, cleared when disabling
+    if (enable && Array.isArray(body.modPermissions)) {
+      // Whitelist filter — only allow known permission IDs
+      const { MOD_PERMISSIONS } = await import("@/lib/permissions");
+      const validIds = MOD_PERMISSIONS.map((p) => p.id);
+      data.modPermissions = body.modPermissions.filter((p) => validIds.includes(p as never));
+    } else if (!enable) {
+      data.modPermissions = [];
+    }
+  }
   if (role === "donator") {
     data.isDonator = enable;
     if (addDonation > 0) data.totalDonated = { increment: addDonation };

@@ -7,7 +7,7 @@ import { AlertCircle } from "lucide-react";
 
 const ERROR_MESSAGES: Record<string, string> = {
   Configuration: "Błąd konfiguracji serwera. Skontaktuj się z administratorem.",
-  AccessDenied: "Odmowa dostępu. Upewnij się, że zaakceptowałeś uprawnienia.",
+  AccessDenied: "Odmowa dostępu. Twoje konto może być zablokowane — skontaktuj się z administratorem przez Discord.",
   Verification: "Link weryfikacyjny wygasł lub jest nieprawidłowy.",
   OAuthSignin: "Błąd podczas logowania przez OAuth.",
   OAuthCallback: "Błąd w odpowiedzi OAuth.",

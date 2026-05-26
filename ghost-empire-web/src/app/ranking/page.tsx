@@ -54,6 +54,7 @@ export default async function RankingPage({
         xp: true,
         streak: true,
         isAdmin: true,
+        isBanned: true,
       },
     }),
     prisma.user.count({ where }),
@@ -83,6 +84,7 @@ export default async function RankingPage({
           xp: true,
           streak: true,
           isAdmin: true,
+          isBanned: true,
         },
       });
       if (me) {

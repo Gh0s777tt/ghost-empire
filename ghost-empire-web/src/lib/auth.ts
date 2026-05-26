@@ -69,6 +69,21 @@ export const authOptions: NextAuthOptions = {
           where: { id: user.id },
         });
 
+        // BLOCK BANNED USERS — site-level ban
+        if (dbUser?.isBanned) {
+          // Expired bans auto-unban themselves
+          if (dbUser.bannedUntil && dbUser.bannedUntil < new Date()) {
+            await prisma.user.update({
+              where: { id: dbUser.id },
+              data: { isBanned: false, bannedUntil: null, banReason: null },
+            });
+            // Continue with login flow
+          } else {
+            console.warn(`[auth] blocked login attempt by banned user ${dbUser.id} (${dbUser.username})`);
+            return "/auth/error?error=AccessDenied";
+          }
+        }
+
         if (dbUser) {
           // Auto-set username if not set yet
           if (!dbUser.username) {

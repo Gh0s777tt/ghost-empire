@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
   Instagram, Twitter, Youtube, Globe, Music2, Flame, MessageCircle, Mic2,
-  Copy, ShieldCheck, Heart, Star, Crown,
+  Copy, ShieldCheck, Heart, Star, Crown, Ban,
 } from "lucide-react";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn } from "@/lib/utils";
 
@@ -42,6 +42,9 @@ type Props = {
     isDonator: boolean;
     totalDonated: number;
     discordId: string | null;
+    isBanned: boolean;
+    bannedUntil: string | null;
+    banReason: string | null;
     createdAt: string;
   };
   connections: Array<{
@@ -177,6 +180,15 @@ export function ProfileClient({
                   title={user.totalDonated > 0 ? `Łącznie wsparł: ${fmt(user.totalDonated)}` : "Donator"}
                 >
                   <Heart className="w-2.5 h-2.5" /> DONATOR
+                </span>
+              )}
+              {user.isBanned && (
+                <span
+                  className="text-[10px] font-bold tracking-widest uppercase border-2 border-red-600 bg-red-950/60 text-red-300 px-2 py-0.5 flex items-center gap-1"
+                  title={user.banReason ?? "Konto zablokowane"}
+                >
+                  <Ban className="w-2.5 h-2.5" /> BANNED
+                  {user.bannedUntil && ` (do ${new Date(user.bannedUntil).toLocaleDateString("pl-PL")})`}
                 </span>
               )}
             </div>

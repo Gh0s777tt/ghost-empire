@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Trophy, TrendingUp, Sparkles, Flame, Crown, Medal, ShieldCheck,
-  X, Loader2, Check, Coins, Heart, UserCog,
+  X, Loader2, Check, Coins, Heart, UserCog, Ban,
 } from "lucide-react";
 import { fmt, rankForLevel, cn } from "@/lib/utils";
 
@@ -23,6 +23,7 @@ type User = {
   xp: number;
   streak: number;
   isAdmin: boolean;
+  isBanned?: boolean;
 };
 
 const SORT_META: Record<
@@ -354,6 +355,11 @@ function UserRow({
                 {user.displayName ?? user.name ?? "Anonim"}
               </span>
               {user.isAdmin && <ShieldCheck className="w-3 h-3 text-red-500 flex-shrink-0" />}
+              {user.isBanned && (
+                <span className="text-[9px] font-bold tracking-widest uppercase border border-red-700 bg-red-950/50 text-red-300 px-1 flex-shrink-0 flex items-center gap-1">
+                  <Ban className="w-2.5 h-2.5" /> BANNED
+                </span>
+              )}
               {isMe && (
                 <span className="text-[9px] font-bold tracking-widest uppercase text-red-400 flex-shrink-0">
                   TY
@@ -434,6 +440,42 @@ function AdminUserActions({
       } else {
         showToast("ok", `${amt > 0 ? "+" : ""}${fmt(amt)} GT → ${user.username ?? "user"}. Balans: ${fmt(data.newBalance)}`);
         setAmount("");
+        startTransition(() => router.refresh());
+      }
+    } finally { setBusy(false); }
+  }
+
+  async function banUser(durationDays: number) {
+    const reason = prompt("Powód bana (opcjonalnie):") ?? undefined;
+    if (!confirm(durationDays > 0 ? `Zbanować na ${durationDays} dni?` : "Zbanować NA STAŁE?")) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/ban-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target: user.username ?? user.id, action: "ban", durationDays, reason }),
+      });
+      const data = await res.json();
+      if (!res.ok) showToast("err", data.error ?? "Błąd");
+      else {
+        showToast("ok", `${user.username ?? "User"} zbanowany${durationDays > 0 ? ` na ${durationDays} dni` : " na stałe"}`);
+        startTransition(() => router.refresh());
+      }
+    } finally { setBusy(false); }
+  }
+
+  async function unbanUser() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/ban-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target: user.username ?? user.id, action: "unban" }),
+      });
+      const data = await res.json();
+      if (!res.ok) showToast("err", data.error ?? "Błąd");
+      else {
+        showToast("ok", `${user.username ?? "User"} odbanowany`);
         startTransition(() => router.refresh());
       }
     } finally { setBusy(false); }
@@ -583,6 +625,51 @@ function AdminUserActions({
           <p className="text-[9px] font-mono text-zinc-600 leading-snug">
             Klik = toggle. Stan rzeczywisty z bazy może się różnić od UI tu — odśwież po zmianach.
           </p>
+        </div>
+
+        {/* Ban / Unban */}
+        <div className="space-y-2 mb-4">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
+            <Ban className="w-3 h-3" /> Ban
+          </div>
+          <div className="grid grid-cols-4 gap-1.5">
+            <button
+              onClick={() => banUser(1)}
+              disabled={busy || user.isAdmin}
+              className="px-2 py-2 border border-orange-800 hover:border-orange-500 text-orange-300 hover:bg-orange-950/40 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed"
+              title={user.isAdmin ? "Nie da się zbanować admina" : "Ban na 1 dzień"}
+            >
+              1 dzień
+            </button>
+            <button
+              onClick={() => banUser(7)}
+              disabled={busy || user.isAdmin}
+              className="px-2 py-2 border border-orange-800 hover:border-orange-500 text-orange-300 hover:bg-orange-950/40 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              7 dni
+            </button>
+            <button
+              onClick={() => banUser(30)}
+              disabled={busy || user.isAdmin}
+              className="px-2 py-2 border border-red-800 hover:border-red-500 text-red-300 hover:bg-red-950/40 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              30 dni
+            </button>
+            <button
+              onClick={() => banUser(0)}
+              disabled={busy || user.isAdmin}
+              className="px-2 py-2 border-2 border-red-700 hover:bg-red-950 text-red-200 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+            >
+              <Ban className="w-3 h-3" /> Permanent
+            </button>
+          </div>
+          <button
+            onClick={unbanUser}
+            disabled={busy}
+            className="w-full px-3 py-1.5 border border-green-800 hover:border-green-500 text-green-300 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
+          >
+            Odbanuj (jeśli był banowany)
+          </button>
         </div>
 
         {/* Link to full admin */}
