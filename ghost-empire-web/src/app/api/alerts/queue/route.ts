@@ -16,7 +16,7 @@ const MAX_TAKE = 20;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
-  if (!isValidOverlayToken(token)) {
+  if (!(await isValidOverlayToken(token))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

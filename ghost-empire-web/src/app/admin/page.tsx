@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { AdminClient } from "@/components/admin/AdminClient";
+import { getSettings as getAlertSettings } from "@/lib/alerts";
 
 export const dynamic = "force-dynamic";
 
@@ -89,12 +90,9 @@ export default async function AdminPage() {
     prisma.twitchStreamerToken.findUnique({ where: { id: "default" } }),
     prisma.twitchEventSubscription.findMany({ orderBy: { type: "asc" } }),
     prisma.twitchEvent.findMany({ orderBy: { receivedAt: "desc" }, take: 10 }),
-    prisma.streamAlertSettings.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
+    getAlertSettings(), // lazy-creates row + auto-generates overlayToken on first call
     prisma.streamAlert.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
   ]);
-
-  const overlayConfigured =
-    !!process.env.OVERLAY_TOKEN && process.env.OVERLAY_TOKEN !== "REPLACE_WITH_HEX_32_BYTES";
 
   return (
     <div className="min-h-screen bg-black">
@@ -236,7 +234,7 @@ export default async function AdminPage() {
             })),
           }}
           streamAlerts={{
-            overlayConfigured,
+            overlayToken: alertSettings.overlayToken,
             settings: {
               enabledTypes: alertSettings.enabledTypes,
               durationMs: alertSettings.durationMs,

@@ -1,6 +1,7 @@
 // src/lib/alerts.ts
 // Stream alerts — dispatch helpers used by endpoints to push OBS overlay events.
 // Storage is a DB queue; the overlay polls /api/alerts/queue.
+import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
 export type AlertType =
@@ -67,25 +68,55 @@ export async function dispatchAlertSafe(input: AlertInput): Promise<void> {
   }
 }
 
-/** Settings singleton — lazy-created on first read. */
+/** Settings singleton — lazy-created on first read; lazy-generates overlayToken too. */
 export async function getSettings() {
-  return prisma.streamAlertSettings.upsert({
+  const existing = await prisma.streamAlertSettings.upsert({
     where: { id: "default" },
     create: { id: "default" },
     update: {},
   });
+
+  // Auto-generate the overlay token on first read so the admin never has to
+  // hand-write env vars. Stored in DB, rotatable via the admin UI.
+  if (!existing.overlayToken) {
+    return prisma.streamAlertSettings.update({
+      where: { id: "default" },
+      data: { overlayToken: randomBytes(32).toString("hex") },
+    });
+  }
+  return existing;
 }
 
-/** Validates the overlay token from query/header against env. Used by /overlay + /api/alerts/queue. */
-export function isValidOverlayToken(token: string | null | undefined): boolean {
-  const expected = process.env.OVERLAY_TOKEN;
-  if (!expected || expected === "REPLACE_WITH_HEX_32_BYTES") return false;
+/** Regenerate the overlay token — invalidates the previous OBS browser source URL. */
+export async function regenerateOverlayToken() {
+  return prisma.streamAlertSettings.upsert({
+    where: { id: "default" },
+    create: { id: "default", overlayToken: randomBytes(32).toString("hex") },
+    update: { overlayToken: randomBytes(32).toString("hex") },
+  });
+}
+
+/** Validates the overlay token from query/header. Reads DB first, falls back to env var (legacy). */
+export async function isValidOverlayToken(token: string | null | undefined): Promise<boolean> {
   if (!token || typeof token !== "string") return false;
-  if (token.length !== expected.length) return false;
-  // Constant-time compare
-  let mismatch = 0;
-  for (let i = 0; i < token.length; i++) {
-    mismatch |= token.charCodeAt(i) ^ expected.charCodeAt(i);
+
+  const settings = await prisma.streamAlertSettings.findUnique({
+    where: { id: "default" },
+    select: { overlayToken: true },
+  });
+  const candidates: string[] = [];
+  if (settings?.overlayToken) candidates.push(settings.overlayToken);
+  const envToken = process.env.OVERLAY_TOKEN;
+  if (envToken && envToken !== "REPLACE_WITH_HEX_32_BYTES") candidates.push(envToken);
+
+  for (const expected of candidates) {
+    if (token.length !== expected.length) continue;
+    // Constant-time compare
+    let mismatch = 0;
+    for (let i = 0; i < token.length; i++) {
+      mismatch |= token.charCodeAt(i) ^ expected.charCodeAt(i);
+    }
+    if (mismatch === 0) return true;
   }
-  return mismatch === 0;
+  return false;
 }

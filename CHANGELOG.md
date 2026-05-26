@@ -9,6 +9,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 (Zmiany na lokalnym branchu `main`, jeszcze nie pushnięte na produkcję.)
 
+### Changed
+
+- **OVERLAY_TOKEN przeniesiony z env do DB** — token overlay'a żył w Vercel env vars co zmuszało admina do ręcznej generacji + redeploya przy każdej rotacji. Teraz token siedzi w `StreamAlertSettings.overlayToken`, auto-generuje się przy pierwszym wejściu na `/admin#alerts`, jest tam widoczny z przyciskami "Pokaż / Kopiuj token / Kopiuj URL OBS / Wygeneruj nowy". Env var pozostaje jako legacy fallback. Wymaga `npm run db:push`.
+
 ### Performance
 
 - **Parallelized admin page queries** — w `/admin` było ~10 sekwencyjnych `await prisma.*` po pierwszym Promise.all. Z `connection_limit=1` w DATABASE_URL (Supabase pgbouncer) każde query musiało czekać na poprzednie. Zlepione w jeden Promise.all → wszystko leci równolegle, czas ładowania `/admin` powinien spaść kilkukrotnie.

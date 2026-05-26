@@ -118,7 +118,7 @@ type TwitchEventSubData = {
 };
 
 type StreamAlertsData = {
-  overlayConfigured: boolean;
+  overlayToken: string | null;
   settings: {
     enabledTypes: string[];
     durationMs: number;
@@ -2727,6 +2727,9 @@ function StreamAlertsManager({
   const [accentColor, setAccentColor] = useState(data.settings.accentColor);
   const [soundEnabled, setSoundEnabled] = useState(data.settings.soundEnabled);
   const [busy, setBusy] = useState(false);
+  const [tokenVisible, setTokenVisible] = useState(false);
+  const [tokenCopied, setTokenCopied] = useState(false);
+  const [urlCopied, setUrlCopied] = useState(false);
 
   const dirty =
     JSON.stringify([...enabledTypes].sort()) !== JSON.stringify([...data.settings.enabledTypes].sort()) ||
@@ -2789,19 +2792,96 @@ function StreamAlertsManager({
         Overlay polluje serwer co ~1.2s — alert pojawi się max 1.5s po zdarzeniu.
       </p>
 
-      {/* Overlay configuration banner */}
+      {/* Overlay token + OBS URL */}
       <div className="border border-zinc-800 bg-black/30 p-3 mb-3 space-y-2">
-        {data.overlayConfigured ? (
-          <div className="text-[11px] text-green-300 font-mono">
-            ● OVERLAY_TOKEN ustawiony. URL dla OBS:
-            <div className="text-zinc-400 text-[10px] mt-1 break-all">
-              https://ghost-empire-web.vercel.app/overlay?token=<span className="text-zinc-600">&lt;OVERLAY_TOKEN&gt;</span>
+        {data.overlayToken ? (
+          <>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                Overlay token (sekret)
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setTokenVisible((v) => !v)}
+                  className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 px-2 py-0.5 transition-colors flex items-center gap-1"
+                  title={tokenVisible ? "Ukryj" : "Pokaż"}
+                >
+                  {tokenVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  {tokenVisible ? "Ukryj" : "Pokaż"}
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(data.overlayToken ?? "");
+                      setTokenCopied(true);
+                      setTimeout(() => setTokenCopied(false), 1500);
+                    } catch { onToast("err", "Schowek niedostępny"); }
+                  }}
+                  className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 px-2 py-0.5 transition-colors flex items-center gap-1"
+                >
+                  <Copy className="w-3 h-3" />
+                  {tokenCopied ? "Skopiowano" : "Token"}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!confirm("Wygenerować nowy token? Stare URL-e do OBS przestaną działać — będziesz musiał wkleić nowy URL do OBS Browser Source.")) return;
+                    setBusy(true);
+                    try {
+                      const res = await fetch("/api/admin/alerts", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "regenerate_token" }),
+                      });
+                      const result = await res.json();
+                      if (!res.ok) onToast("err", result.error ?? "Błąd");
+                      else { onToast("ok", "Nowy token wygenerowany — wklej nowy URL do OBS"); onSuccess(); }
+                    } finally { setBusy(false); }
+                  }}
+                  disabled={busy || pending}
+                  className="text-[10px] font-mono uppercase tracking-widest text-orange-300 hover:text-orange-200 border border-orange-900 hover:border-orange-700 px-2 py-0.5 disabled:opacity-50 transition-colors flex items-center gap-1"
+                  title="Rotacja tokena — unieważnia stare URL-e"
+                >
+                  <Zap className="w-3 h-3" />
+                  Wygeneruj nowy
+                </button>
+              </div>
             </div>
-          </div>
+            <div className="font-mono text-[10px] text-zinc-300 break-all bg-black/40 border border-zinc-900 p-2">
+              {tokenVisible ? data.overlayToken : "•".repeat(Math.min(data.overlayToken.length, 64))}
+            </div>
+
+            <div className="pt-1">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                  URL dla OBS Browser Source
+                </span>
+                <button
+                  onClick={async () => {
+                    const url = `${window.location.origin}/overlay?token=${data.overlayToken}`;
+                    try {
+                      await navigator.clipboard.writeText(url);
+                      setUrlCopied(true);
+                      setTimeout(() => setUrlCopied(false), 1500);
+                    } catch { onToast("err", "Schowek niedostępny"); }
+                  }}
+                  className="text-[10px] font-mono uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-900 hover:border-red-700 bg-red-950/30 px-2 py-0.5 transition-colors flex items-center gap-1"
+                >
+                  <Copy className="w-3 h-3" />
+                  {urlCopied ? "Skopiowano!" : "Kopiuj URL"}
+                </button>
+              </div>
+              <div className="font-mono text-[10px] text-zinc-400 break-all bg-black/40 border border-zinc-900 p-2">
+                {typeof window !== "undefined" ? window.location.origin : "https://ghost-empire-web.vercel.app"}
+                /overlay?token={tokenVisible ? data.overlayToken : "•".repeat(8) + "..."}
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-1.5">
+                Wklej ten URL jako <strong>Browser Source</strong> w OBS (rozmiar 1920×1080, transparent background = ON, refresh on activate = ON).
+              </p>
+            </div>
+          </>
         ) : (
           <div className="text-[11px] text-orange-300">
-            ⚠ Brak <code className="text-orange-200">OVERLAY_TOKEN</code> w envach. Wygeneruj{" "}
-            <code className="text-zinc-300">openssl rand -hex 32</code> i wklej do Vercel env vars.
+            ⚠ Brak tokena overlay w bazie. Odśwież stronę — powinien się auto-wygenerować przy pierwszym wejściu na sekcję.
           </div>
         )}
       </div>

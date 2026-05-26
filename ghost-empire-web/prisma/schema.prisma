@@ -679,6 +679,7 @@ model StreamAlertSettings {
   durationMs      Int      @default(6000)
   accentColor     String   @default("#E50914")
   soundEnabled    Boolean  @default(true)
+  overlayToken    String?  // auto-generated on first admin view; rotate via UI to invalidate OBS browser source URLs
   updatedAt       DateTime @updatedAt
 
   @@map("stream_alert_settings")

@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
-import { dispatchAlert, getSettings, type AlertType } from "@/lib/alerts";
+import { dispatchAlert, getSettings, regenerateOverlayToken, type AlertType } from "@/lib/alerts";
 import { logAdminAction } from "@/lib/audit";
 
 const ALL_TYPES: AlertType[] = [
@@ -39,7 +39,7 @@ export async function GET() {
       soundEnabled: settings.soundEnabled,
     },
     allTypes: ALL_TYPES,
-    overlayConfigured: !!process.env.OVERLAY_TOKEN && process.env.OVERLAY_TOKEN !== "REPLACE_WITH_HEX_32_BYTES",
+    overlayToken: settings.overlayToken,
     recent: recent.map((a) => ({
       id: a.id,
       type: a.type,
@@ -149,5 +149,16 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ error: "action: test | settings" }, { status: 400 });
+  if (body.action === "regenerate_token") {
+    const updated = await regenerateOverlayToken();
+    await logAdminAction({
+      adminId: auth.userId,
+      action: "update_alert_settings",
+      details: { tokenRotated: true },
+      req,
+    });
+    return NextResponse.json({ ok: true, overlayToken: updated.overlayToken });
+  }
+
+  return NextResponse.json({ error: "action: test | settings | regenerate_token" }, { status: 400 });
 }
