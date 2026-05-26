@@ -12,10 +12,11 @@ export const contentType = "image/png";
 export default async function Image({
   params,
 }: {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }) {
+  const { username } = await params;
   const user = await prisma.user.findUnique({
-    where: { username: params.username },
+    where: { username },
     select: {
       displayName: true,
       username: true,
