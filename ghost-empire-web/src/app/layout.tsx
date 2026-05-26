@@ -1,14 +1,23 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
 
+// Self-host fonts via next/font (eliminates the previous duplicate <link rel="stylesheet">
+// to Google Fonts in <head> — fewer round-trips, no CLS, automatic preload).
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -53,12 +62,16 @@ export default function RootLayout({
   return (
     <html lang="pl" className="dark">
       <head>
+        {/* Anton — display font, not in next/font's bundled Google Fonts set so stays as <link>.
+            Preconnect first so the font request can fire in parallel with HTML. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Anton&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
         <Providers>
           <div className="flex-1 flex flex-col">{children}</div>
           <SiteFooter />

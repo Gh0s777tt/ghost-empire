@@ -31,13 +31,26 @@ export default async function AdminPage() {
     ? ["__all__"]   // sentinel — AdminClient treats this as "all"
     : me.modPermissions;
 
-  const [stats, activeDrops, activeEvents, pendingOrders] = await Promise.all([
-    Promise.all([
-      prisma.user.count(),
-      prisma.user.aggregate({ _sum: { tokens: true, totalEarned: true } }),
-      prisma.event.count({ where: { active: true } }),
-      prisma.transaction.count({ where: { type: "spend", status: "pending" } }),
-    ]),
+  // ALL admin-page DB reads in a single Promise.all — previously these were ~10
+  // sequential awaits which serialized on `connection_limit=1` in DATABASE_URL.
+  // Bundling them lets pgbouncer pipeline and cuts load time dramatically.
+  const ALL_ALERT_TYPES = [
+    "shop_purchase", "event_win", "drop_claim_bonus",
+    "twitch_sub", "twitch_gift_sub", "twitch_cheer",
+    "donation", "welcome", "level_up", "test",
+  ];
+  const [
+    totalUsers, sums, eventsActive, ordersPending,
+    activeDrops, activeEvents, pendingOrders,
+    auditLog, allShopItems, botConfig, scheduleSlots,
+    streamlabsConn, unmatchedDonations,
+    twitchStreamer, twitchSubs, recentTwitchEvents,
+    alertSettings, recentAlerts,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.aggregate({ _sum: { tokens: true, totalEarned: true } }),
+    prisma.event.count({ where: { active: true } }),
+    prisma.transaction.count({ where: { type: "spend", status: "pending" } }),
     prisma.streamDrop.findMany({
       where: { active: true },
       orderBy: { createdAt: "desc" },
@@ -48,9 +61,7 @@ export default async function AdminPage() {
       where: { active: true },
       orderBy: { createdAt: "desc" },
       take: 20,
-      include: {
-        _count: { select: { entries: true, raffleTickets: true } },
-      },
+      include: { _count: { select: { entries: true, raffleTickets: true } } },
     }),
     prisma.transaction.findMany({
       where: { type: "spend", status: "pending" },
@@ -61,68 +72,29 @@ export default async function AdminPage() {
         user: { select: { username: true, displayName: true, discordId: true, discordUsername: true } },
       },
     }),
+    prisma.adminAction.findMany({ orderBy: { createdAt: "desc" }, take: 30 }),
+    prisma.shopItem.findMany({
+      orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }],
+    }),
+    prisma.botConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
+    prisma.streamScheduleSlot.findMany({
+      orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }, { startMinute: "asc" }],
+    }),
+    prisma.streamlabsConnection.findUnique({ where: { id: "default" } }),
+    prisma.donation.findMany({
+      where: { userId: null, matchType: null },
+      orderBy: { donatedAt: "desc" },
+      take: 30,
+    }),
+    prisma.twitchStreamerToken.findUnique({ where: { id: "default" } }),
+    prisma.twitchEventSubscription.findMany({ orderBy: { type: "asc" } }),
+    prisma.twitchEvent.findMany({ orderBy: { receivedAt: "desc" }, take: 10 }),
+    prisma.streamAlertSettings.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
+    prisma.streamAlert.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
   ]);
 
-  // Audit log — last 30 admin actions
-  const auditLog = await prisma.adminAction.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 30,
-  });
-
-  // All shop items (including inactive — admin needs to see/reactivate)
-  const allShopItems = await prisma.shopItem.findMany({
-    orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }],
-  });
-
-  // Bot config (singleton, lazy-create)
-  const botConfig = await prisma.botConfig.upsert({
-    where: { id: "default" },
-    create: { id: "default" },
-    update: {},
-  });
-
-  // Schedule slots
-  const scheduleSlots = await prisma.streamScheduleSlot.findMany({
-    orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }, { startMinute: "asc" }],
-  });
-
-  // Streamlabs connection + recent unmatched donations
-  const streamlabsConn = await prisma.streamlabsConnection.findUnique({ where: { id: "default" } });
-  const unmatchedDonations = await prisma.donation.findMany({
-    where: { userId: null, matchType: null },
-    orderBy: { donatedAt: "desc" },
-    take: 30,
-  });
-
-  // Twitch EventSub state
-  const twitchStreamer = await prisma.twitchStreamerToken.findUnique({ where: { id: "default" } });
-  const twitchSubs = await prisma.twitchEventSubscription.findMany({
-    orderBy: { type: "asc" },
-  });
-  const recentTwitchEvents = await prisma.twitchEvent.findMany({
-    orderBy: { receivedAt: "desc" },
-    take: 10,
-  });
-
-  // Stream alerts (OBS overlay) state
-  const ALL_ALERT_TYPES = [
-    "shop_purchase", "event_win", "drop_claim_bonus",
-    "twitch_sub", "twitch_gift_sub", "twitch_cheer",
-    "donation", "welcome", "level_up", "test",
-  ];
-  const alertSettings = await prisma.streamAlertSettings.upsert({
-    where: { id: "default" },
-    create: { id: "default" },
-    update: {},
-  });
-  const recentAlerts = await prisma.streamAlert.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
   const overlayConfigured =
     !!process.env.OVERLAY_TOKEN && process.env.OVERLAY_TOKEN !== "REPLACE_WITH_HEX_32_BYTES";
-
-  const [totalUsers, sums, eventsActive, ordersPending] = stats;
 
   return (
     <div className="min-h-screen bg-black">

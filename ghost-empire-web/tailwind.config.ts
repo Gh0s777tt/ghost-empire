@@ -22,8 +22,10 @@ const config: Config = {
       },
       fontFamily: {
         display: ["Anton", "Impact", "sans-serif"],
-        mono:    ["JetBrains Mono", "Consolas", "monospace"],
-        sans:    ["Inter", "system-ui", "sans-serif"],
+        // Use the CSS variable set by next/font (--font-mono / --font-inter),
+        // with the Google Fonts name + system fallback as a safety net.
+        mono:    ["var(--font-mono)", "JetBrains Mono", "Consolas", "monospace"],
+        sans:    ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
       },
       animation: {
         "ping-slow": "ping 2s cubic-bezier(0,0,0.2,1) infinite",
