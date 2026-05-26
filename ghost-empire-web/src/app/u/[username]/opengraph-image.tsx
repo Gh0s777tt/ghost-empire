@@ -118,7 +118,7 @@ export default async function Image({
             gap: 50,
           }}
         >
-          {/* Avatar */}
+          {/* Avatar — emoji rank tile (avoiding external img fetch issues in Satori) */}
           <div
             style={{
               display: "flex",
@@ -126,33 +126,20 @@ export default async function Image({
               flexShrink: 0,
             }}
           >
-            {user.image ? (
-              <img
-                src={user.image}
-                alt=""
-                width={220}
-                height={220}
-                style={{
-                  border: `6px solid ${rank.color}`,
-                  objectFit: "cover",
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 220,
-                  height: 220,
-                  background: "#18181b",
-                  border: `6px solid ${rank.color}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 100,
-                }}
-              >
-                👻
-              </div>
-            )}
+            <div
+              style={{
+                width: 220,
+                height: 220,
+                background: `linear-gradient(135deg, ${rank.color}40 0%, ${rank.color}80 100%)`,
+                border: `6px solid ${rank.color}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 130,
+              }}
+            >
+              {rank.emoji}
+            </div>
             <div
               style={{
                 position: "absolute",
