@@ -94,6 +94,16 @@ export default async function AdminPage() {
     take: 30,
   });
 
+  // Twitch EventSub state
+  const twitchStreamer = await prisma.twitchStreamerToken.findUnique({ where: { id: "default" } });
+  const twitchSubs = await prisma.twitchEventSubscription.findMany({
+    orderBy: { type: "asc" },
+  });
+  const recentTwitchEvents = await prisma.twitchEvent.findMany({
+    orderBy: { receivedAt: "desc" },
+    take: 10,
+  });
+
   const [totalUsers, sums, eventsActive, ordersPending] = stats;
 
   return (
@@ -215,6 +225,26 @@ export default async function AdminPage() {
             currency: d.currency,
             donatedAt: d.donatedAt.toISOString(),
           }))}
+          twitchEventSub={{
+            streamerConnected: !!twitchStreamer,
+            broadcasterLogin: twitchStreamer?.broadcasterLogin ?? null,
+            broadcasterId: twitchStreamer?.broadcasterId ?? null,
+            connectedAt: twitchStreamer?.connectedAt.toISOString() ?? null,
+            subscriptions: twitchSubs.map((s) => ({
+              id: s.id,
+              type: s.type,
+              status: s.status,
+              lastSeenAt: s.lastSeenAt?.toISOString() ?? null,
+              createdAt: s.createdAt.toISOString(),
+            })),
+            recentEvents: recentTwitchEvents.map((e) => ({
+              id: e.id,
+              type: e.type,
+              userId: e.userId,
+              tokensGranted: e.tokensGranted,
+              receivedAt: e.receivedAt.toISOString(),
+            })),
+          }}
         />
       </main>
     </div>

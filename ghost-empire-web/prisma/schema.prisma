@@ -517,6 +517,49 @@ model StreamScheduleSlot {
 }
 
 // =====================================================
+// TWITCH EVENTSUB — broadcaster token + subscriptions + event log
+// =====================================================
+
+model TwitchStreamerToken {
+  id              String    @id @default("default")  // singleton
+  broadcasterId   String                              // Twitch user_id of the streamer (Gh0s77tt)
+  broadcasterLogin String                             // Twitch username for display
+  accessToken     String    @db.Text
+  refreshToken    String?   @db.Text
+  tokenExpiresAt  DateTime?
+  scope           String                              // space-separated scopes granted
+  connectedAt     DateTime  @default(now())
+  connectedById   String?                             // admin user id who authorized
+
+  @@map("twitch_streamer_token")
+}
+
+model TwitchEventSubscription {
+  id              String    @id                       // Twitch's subscription_id
+  type            String                              // "channel.subscribe" | "channel.subscription.gift" | "channel.cheer"
+  status          String                              // "enabled" | "webhook_callback_verification_pending" | ...
+  broadcasterId   String
+  createdAt       DateTime  @default(now())
+  lastSeenAt      DateTime?                           // last time we received an event of this type
+
+  @@index([type])
+  @@map("twitch_event_subscriptions")
+}
+
+model TwitchEvent {
+  id              String    @id @default(cuid())
+  eventId         String    @unique                   // Twitch message_id (for idempotency)
+  type            String                              // event type
+  payload         String    @db.Text                  // JSON of full event
+  userId          String?                             // matched Ghost Empire user
+  tokensGranted   Int?
+  receivedAt      DateTime  @default(now())
+
+  @@index([type, receivedAt])
+  @@map("twitch_events")
+}
+
+// =====================================================
 // STREAMLABS — singleton connection + donations
 // =====================================================
 
