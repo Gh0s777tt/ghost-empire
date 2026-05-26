@@ -2,10 +2,10 @@
 // Streamlabs API integration — OAuth + donation polling + auto-matching.
 import { prisma } from "@/lib/prisma";
 
-const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v1.0/authorize";
-const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v1.0/token";
-const STREAMLABS_DONATIONS = "https://streamlabs.com/api/v1.0/donations";
-const STREAMLABS_USER = "https://streamlabs.com/api/v1.0/user";
+const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v2.0/authorize";
+const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v2.0/token";
+const STREAMLABS_DONATIONS = "https://streamlabs.com/api/v2.0/donations";
+const STREAMLABS_USER = "https://streamlabs.com/api/v2.0/user";
 
 const REDIRECT_URI = (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app")
   + "/api/auth/streamlabs/callback";
