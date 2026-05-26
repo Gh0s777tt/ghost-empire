@@ -1,6 +1,7 @@
 // src/app/u/[username]/opengraph-image.tsx
-// Dynamic OG image showing user's avatar, rank, level, and stats.
-// Uses node runtime because we need Prisma DB access.
+// Dynamic OG image. Uses node runtime for Prisma access.
+// Emojis avoided — twemoji needs network fetch which fails intermittently
+// on node runtime; using pure CSS text/shapes for reliability.
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
 import { fmt, rankForLevel } from "@/lib/utils";
@@ -15,24 +16,28 @@ export default async function Image({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  const user = await prisma.user.findUnique({
-    where: { username },
-    select: {
-      displayName: true,
-      username: true,
-      image: true,
-      level: true,
-      totalEarned: true,
-      streak: true,
-      messageCount: true,
-      isAdmin: true,
-      isModerator: true,
-      isDonator: true,
-    },
-  });
+
+  let user;
+  try {
+    user = await prisma.user.findUnique({
+      where: { username },
+      select: {
+        displayName: true,
+        username: true,
+        level: true,
+        totalEarned: true,
+        streak: true,
+        messageCount: true,
+        isAdmin: true,
+        isModerator: true,
+        isDonator: true,
+      },
+    });
+  } catch {
+    user = null;
+  }
 
   if (!user) {
-    // Fallback to generic image if user not found
     return new ImageResponse(
       (
         <div
@@ -57,6 +62,7 @@ export default async function Image({
 
   const rank = rankForLevel(user.level);
   const displayName = user.displayName ?? user.username ?? "Anonim";
+  const initial = displayName.charAt(0).toUpperCase();
 
   return new ImageResponse(
     (
@@ -72,7 +78,7 @@ export default async function Image({
           fontFamily: "sans-serif",
         }}
       >
-        {/* Top-left: Ghost Empire branding */}
+        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -86,30 +92,24 @@ export default async function Image({
               width: 50,
               height: 50,
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
               background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
               clipPath:
                 "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-              fontSize: 24,
             }}
-          >
-            👻
-          </div>
+          />
           <div
             style={{
               fontSize: 28,
               fontWeight: 900,
               color: "white",
               letterSpacing: "0.1em",
-              textShadow: "2px 0 0 rgba(229,9,20,0.7)",
             }}
           >
             GH0ST EMPIRE
           </div>
         </div>
 
-        {/* Main card */}
+        {/* Main */}
         <div
           style={{
             display: "flex",
@@ -118,7 +118,7 @@ export default async function Image({
             gap: 50,
           }}
         >
-          {/* Avatar — emoji rank tile (avoiding external img fetch issues in Satori) */}
+          {/* Initial tile */}
           <div
             style={{
               display: "flex",
@@ -130,15 +130,17 @@ export default async function Image({
               style={{
                 width: 220,
                 height: 220,
-                background: `linear-gradient(135deg, ${rank.color}40 0%, ${rank.color}80 100%)`,
+                background: `linear-gradient(135deg, ${rank.color}80 0%, ${rank.color}30 100%)`,
                 border: `6px solid ${rank.color}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 130,
+                fontSize: 140,
+                fontWeight: 900,
+                color: "white",
               }}
             >
-              {rank.emoji}
+              {initial}
             </div>
             <div
               style={{
@@ -151,13 +153,14 @@ export default async function Image({
                 fontSize: 22,
                 fontWeight: 900,
                 letterSpacing: "0.1em",
+                display: "flex",
               }}
             >
               LVL {user.level}
             </div>
           </div>
 
-          {/* Info column */}
+          {/* Info */}
           <div
             style={{
               display: "flex",
@@ -166,30 +169,19 @@ export default async function Image({
               minWidth: 0,
             }}
           >
-            {/* Name + role badges */}
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
+                fontSize: 60,
+                fontWeight: 900,
+                color: "white",
+                letterSpacing: "0.05em",
                 marginBottom: 14,
+                display: "flex",
               }}
             >
-              <div
-                style={{
-                  fontSize: 60,
-                  fontWeight: 900,
-                  color: "white",
-                  letterSpacing: "0.05em",
-                  textShadow:
-                    "3px 0 0 rgba(229,9,20,0.7), -3px 0 0 rgba(139,0,0,0.5)",
-                }}
-              >
-                {displayName}
-              </div>
+              {displayName}
             </div>
 
-            {/* Badges */}
             <div
               style={{
                 display: "flex",
@@ -200,51 +192,53 @@ export default async function Image({
               {user.isAdmin && (
                 <div
                   style={{
-                    padding: "6px 12px",
+                    padding: "6px 14px",
                     background: "rgba(229,9,20,0.2)",
                     border: "1px solid #ef4444",
                     color: "#fca5a5",
                     fontSize: 18,
                     fontWeight: 900,
                     letterSpacing: "0.15em",
+                    display: "flex",
                   }}
                 >
-                  👑 ADMIN
+                  ADMIN
                 </div>
               )}
               {user.isModerator && !user.isAdmin && (
                 <div
                   style={{
-                    padding: "6px 12px",
+                    padding: "6px 14px",
                     background: "rgba(59,130,246,0.2)",
                     border: "1px solid #3b82f6",
                     color: "#93c5fd",
                     fontSize: 18,
                     fontWeight: 900,
                     letterSpacing: "0.15em",
+                    display: "flex",
                   }}
                 >
-                  🛡️ MOD
+                  MOD
                 </div>
               )}
               {user.isDonator && (
                 <div
                   style={{
-                    padding: "6px 12px",
+                    padding: "6px 14px",
                     background: "rgba(234,179,8,0.2)",
                     border: "1px solid #eab308",
                     color: "#fde68a",
                     fontSize: 18,
                     fontWeight: 900,
                     letterSpacing: "0.15em",
+                    display: "flex",
                   }}
                 >
-                  ❤️ DONATOR
+                  DONATOR
                 </div>
               )}
             </div>
 
-            {/* Username + rank */}
             <div
               style={{
                 fontSize: 22,
@@ -255,23 +249,22 @@ export default async function Image({
                 gap: 16,
               }}
             >
-              <span>@{user.username}</span>
-              <span style={{ color: "#52525b" }}>·</span>
-              <span style={{ color: rank.color, letterSpacing: "0.15em" }}>
-                {rank.emoji} {rank.name}
-              </span>
+              <div style={{ display: "flex" }}>@{user.username}</div>
+              <div style={{ display: "flex", color: "#52525b" }}>·</div>
+              <div style={{ display: "flex", color: rank.color, letterSpacing: "0.15em" }}>
+                LVL {user.level} {rank.name}
+              </div>
             </div>
 
-            {/* Stats row */}
             <div
               style={{
                 display: "flex",
-                gap: 30,
+                gap: 20,
               }}
             >
-              <Stat label="LIFETIME GT" value={fmt(user.totalEarned)} accent={rank.color} />
-              <Stat label="STREAK" value={`${user.streak} dni`} accent={rank.color} />
-              <Stat label="WIADOMOŚCI" value={fmt(user.messageCount)} accent={rank.color} />
+              <Stat label="LIFETIME GT" value={fmt(user.totalEarned)} />
+              <Stat label="STREAK" value={`${user.streak} dni`} />
+              <Stat label="WIADOMOSCI" value={fmt(user.messageCount)} />
             </div>
           </div>
         </div>
@@ -287,8 +280,8 @@ export default async function Image({
             fontFamily: "monospace",
           }}
         >
-          <span>ghost-empire-web.vercel.app/u/{user.username}</span>
-          <span>twitch.tv/gh0s77tt</span>
+          <div style={{ display: "flex" }}>ghost-empire-web.vercel.app/u/{user.username}</div>
+          <div style={{ display: "flex" }}>twitch.tv/gh0s77tt</div>
         </div>
       </div>
     ),
@@ -296,7 +289,7 @@ export default async function Image({
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent: string }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div
       style={{
@@ -314,6 +307,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent: 
           letterSpacing: "0.2em",
           color: "#71717a",
           marginBottom: 4,
+          display: "flex",
         }}
       >
         {label}
@@ -323,6 +317,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent: 
           fontSize: 32,
           fontWeight: 900,
           color: "white",
+          display: "flex",
         }}
       >
         {value}
