@@ -200,4 +200,19 @@ export const authOptions: NextAuthOptions = {
   },
 
   debug: process.env.NODE_ENV === "development",
+
+  logger: {
+    error(code, metadata) {
+      // Always log auth errors with full detail — appears in Vercel function logs
+      console.error(`[next-auth][error] ${code}`, JSON.stringify(metadata, null, 2));
+    },
+    warn(code) {
+      console.warn(`[next-auth][warn] ${code}`);
+    },
+    debug(code, metadata) {
+      if (process.env.NODE_ENV === "development") {
+        console.log(`[next-auth][debug] ${code}`, metadata);
+      }
+    },
+  },
 };
