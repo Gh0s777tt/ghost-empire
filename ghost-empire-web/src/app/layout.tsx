@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -57,8 +58,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} font-sans bg-black text-zinc-200 antialiased`}>
-        <Providers>{children}</Providers>
+      <body className={`${inter.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
+        <Providers>
+          <div className="flex-1 flex flex-col">{children}</div>
+          <SiteFooter />
+        </Providers>
       </body>
     </html>
   );

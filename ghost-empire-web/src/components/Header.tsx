@@ -12,6 +12,7 @@ const NAV = [
   { href: "/shop",         label: "SKLEP",       icon: ShoppingBag },
   { href: "/ranking",      label: "RANKING",     icon: Trophy },
   { href: "/events",       label: "EVENTY",      icon: Calendar },
+  { href: "/schedule",     label: "PLAN",        icon: Zap },
   { href: "/achievements", label: "OSIĄGNIĘCIA", icon: Award },
   { href: "/profile",      label: "PROFIL",      icon: Users },
 ];

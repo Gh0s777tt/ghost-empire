@@ -1,10 +1,15 @@
 // src/handlers/voice.ts — tick every N seconds and award everyone currently in voice
 import { Client } from "discord.js";
-import { config } from "../config.js";
+import { config, runtimeConfig } from "../config.js";
 import { awardTokens } from "../api.js";
 
 export function setupVoiceTracker(client: Client) {
+  // Use static interval — tick rate not changed at runtime to keep timer logic simple.
+  // VOICE_TICK_SECONDS env can be changed but requires bot restart.
   setInterval(async () => {
+    // Skip if disabled via admin panel
+    if (!runtimeConfig.enabled) return;
+
     const guild = client.guilds.cache.get(config.DISCORD_GUILD_ID);
     if (!guild) {
       console.warn(`[voice] guild ${config.DISCORD_GUILD_ID} not in cache`);
@@ -16,8 +21,8 @@ export function setupVoiceTracker(client: Client) {
     for (const [, channel] of guild.channels.cache) {
       if (!channel.isVoiceBased()) continue;
 
-      // Skip AFK channel unless explicitly allowed
-      if (!config.AFK_GIVES_REWARD && channel.id === guild.afkChannelId) continue;
+      // Skip AFK channel unless explicitly allowed (live config)
+      if (!runtimeConfig.afkGivesReward && channel.id === guild.afkChannelId) continue;
 
       for (const [memberId, member] of channel.members) {
         if (member.user.bot) continue;
@@ -25,7 +30,7 @@ export function setupVoiceTracker(client: Client) {
         if (!vs) continue;
 
         // Skip self-muted / server-muted users if configured
-        if (!config.MUTED_GIVES_REWARD && (vs.selfMute || vs.serverMute)) continue;
+        if (!runtimeConfig.mutedGivesReward && (vs.selfMute || vs.serverMute)) continue;
 
         // Skip server-deafened (they can't even hear, definitely not active)
         if (vs.serverDeaf) continue;
@@ -37,13 +42,12 @@ export function setupVoiceTracker(client: Client) {
     if (activeUsers.length === 0) return;
     console.log(`[voice tick] ${activeUsers.length} active users`);
 
-    // Calculate proportional reward: if tick is 60s, give VOICE_REWARD_PER_MINUTE
+    // Proportional reward based on tick length
     const reward = Math.max(
       1,
-      Math.round((config.VOICE_REWARD_PER_MINUTE * config.VOICE_TICK_SECONDS) / 60),
+      Math.round((runtimeConfig.voiceRewardPerMinute * runtimeConfig.voiceTickSeconds) / 60),
     );
 
-    // Sequential rather than parallel — easier on web API + makes logs readable
     for (const u of activeUsers) {
       const result = await awardTokens({
         discordId: u.id,
@@ -54,5 +58,5 @@ export function setupVoiceTracker(client: Client) {
         console.log(`[voice] ${u.username} +${result.awarded} GT`);
       }
     }
-  }, config.VOICE_TICK_SECONDS * 1000);
+  }, runtimeConfig.voiceTickSeconds * 1000);
 }

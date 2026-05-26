@@ -1,6 +1,6 @@
 // src/index.ts — main entry
 import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
-import { config } from "./config.js";
+import { config, startConfigPolling } from "./config.js";
 import { setupMessageHandler } from "./handlers/messages.js";
 import { setupVoiceTracker } from "./handlers/voice.js";
 import { setupCommands } from "./handlers/commands.js";
@@ -20,6 +20,9 @@ client.once(Events.ClientReady, async (c) => {
   console.log(`✅ Bot online: ${c.user.tag}`);
   console.log(`   Guild: ${config.DISCORD_GUILD_ID}`);
   console.log(`   Web API: ${config.WEB_API_URL}`);
+
+  // Start polling /api/bot/config every 60s so admin can tweak rewards live
+  startConfigPolling();
   console.log(
     `   Rewards: msg=${config.MESSAGE_REWARD}GT/${config.MESSAGE_COOLDOWN_SECONDS}s, voice=${config.VOICE_REWARD_PER_MINUTE}GT/min`,
   );

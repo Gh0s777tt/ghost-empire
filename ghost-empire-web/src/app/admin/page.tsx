@@ -74,6 +74,18 @@ export default async function AdminPage() {
     orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }],
   });
 
+  // Bot config (singleton, lazy-create)
+  const botConfig = await prisma.botConfig.upsert({
+    where: { id: "default" },
+    create: { id: "default" },
+    update: {},
+  });
+
+  // Schedule slots
+  const scheduleSlots = await prisma.streamScheduleSlot.findMany({
+    orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }, { startMinute: "asc" }],
+  });
+
   const [totalUsers, sums, eventsActive, ordersPending] = stats;
 
   return (
@@ -167,6 +179,17 @@ export default async function AdminPage() {
             endsAt: e.endsAt?.toISOString() ?? null,
             drawnAt: e.drawnAt?.toISOString() ?? null,
             active: e.active,
+          }))}
+          botConfig={botConfig}
+          scheduleSlots={scheduleSlots.map((s) => ({
+            id: s.id,
+            dayOfWeek: s.dayOfWeek,
+            startHour: s.startHour,
+            startMinute: s.startMinute,
+            durationMinutes: s.durationMinutes,
+            title: s.title,
+            platform: s.platform,
+            active: s.active,
           }))}
         />
       </main>

@@ -1,0 +1,56 @@
+// src/components/SiteFooter.tsx
+// Persistent footer on every page — quick access to legal pages and streamer socials.
+import Link from "next/link";
+import { Ghost } from "lucide-react";
+import { SocialLinksRow } from "@/components/SocialLinks";
+
+export function SiteFooter() {
+  return (
+    <footer
+      className="relative z-30 border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-md mt-auto"
+      style={{
+        boxShadow: "0 -4px 30px rgba(0,0,0,0.6)",
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Left — branding */}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-6 h-6 flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
+                clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
+              }}
+            >
+              <Ghost className="w-3 h-3 text-white" strokeWidth={2.5} />
+            </div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+              GH0ST EMPIRE © 2026 · Portal społeczności Gh0s77tt
+            </div>
+          </div>
+
+          {/* Center — social icons */}
+          <div className="flex justify-center">
+            <SocialLinksRow />
+          </div>
+
+          {/* Right — legal links */}
+          <nav className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-widest">
+            <Link href="/about" className="text-zinc-500 hover:text-red-400 transition-colors">
+              O nas
+            </Link>
+            <span className="text-zinc-800">·</span>
+            <Link href="/privacy" className="text-zinc-500 hover:text-red-400 transition-colors">
+              Polityka prywatności
+            </Link>
+            <span className="text-zinc-800">·</span>
+            <Link href="/terms" className="text-zinc-500 hover:text-red-400 transition-colors">
+              Regulamin
+            </Link>
+          </nav>
+        </div>
+      </div>
+    </footer>
+  );
+}

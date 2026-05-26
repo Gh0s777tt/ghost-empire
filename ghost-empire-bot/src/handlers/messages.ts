@@ -1,6 +1,6 @@
 // src/handlers/messages.ts — award tokens for Discord messages with anti-spam cooldown
 import { Client, Events, Message } from "discord.js";
-import { config } from "../config.js";
+import { config, runtimeConfig } from "../config.js";
 import { awardTokens } from "../api.js";
 
 // In-memory cooldown map. Resets on bot restart (intentional — easier than persisting).
@@ -8,7 +8,7 @@ const userCooldowns = new Map<string, number>();
 
 // Prune cooldown map periodically so it doesn't grow unbounded across long uptimes.
 setInterval(() => {
-  const cutoff = Date.now() - config.MESSAGE_COOLDOWN_SECONDS * 1000;
+  const cutoff = Date.now() - runtimeConfig.messageCooldownSeconds * 1000;
   for (const [uid, ts] of userCooldowns) {
     if (ts < cutoff) userCooldowns.delete(uid);
   }
@@ -16,21 +16,23 @@ setInterval(() => {
 
 export function setupMessageHandler(client: Client) {
   client.on(Events.MessageCreate, async (msg: Message) => {
+    // Skip if bot disabled via admin panel
+    if (!runtimeConfig.enabled) return;
     // Skip bots, DMs, wrong guild, sticker-only/empty messages, commands
     if (msg.author.bot) return;
     if (!msg.guild || msg.guild.id !== config.DISCORD_GUILD_ID) return;
     if (msg.content.trim().length < 2) return;
     if (msg.content.startsWith("!") || msg.content.startsWith("/")) return;
 
-    // Cooldown per user
+    // Cooldown per user (uses live config from web)
     const last = userCooldowns.get(msg.author.id) ?? 0;
     const now = Date.now();
-    if (now - last < config.MESSAGE_COOLDOWN_SECONDS * 1000) return;
+    if (now - last < runtimeConfig.messageCooldownSeconds * 1000) return;
     userCooldowns.set(msg.author.id, now);
 
     const result = await awardTokens({
       discordId: msg.author.id,
-      amount: config.MESSAGE_REWARD,
+      amount: runtimeConfig.messageReward,
       reason: "message",
     });
 

@@ -476,6 +476,45 @@ model AdminAction {
 // RATE LIMIT BUCKETS (in-memory fallback; persisted for cross-instance state)
 // =====================================================
 
+// =====================================================
+// BOT CONFIG — singleton (always id="default")
+// Bot fetches from /api/bot/config periodically instead of reading env vars
+// =====================================================
+
+model BotConfig {
+  id                      String   @id @default("default")
+  messageReward           Int      @default(5)
+  messageCooldownSeconds  Int      @default(60)
+  voiceRewardPerMinute    Int      @default(10)
+  voiceTickSeconds        Int      @default(60)
+  afkGivesReward          Boolean  @default(false)
+  mutedGivesReward        Boolean  @default(true)
+  enabled                 Boolean  @default(true)
+  updatedAt               DateTime @updatedAt
+
+  @@map("bot_config")
+}
+
+// =====================================================
+// STREAM SCHEDULE
+// =====================================================
+
+model StreamScheduleSlot {
+  id          String   @id @default(cuid())
+  dayOfWeek   Int      // 0=niedziela, 1=poniedziałek, ..., 6=sobota
+  startHour   Int      // 0-23
+  startMinute Int      @default(0)
+  durationMinutes Int  @default(180)  // domyślnie 3h
+  title       String?  // np. "Just chatting", "GTA RP"
+  platform    String?  // "twitch" | "kick" — gdzie streamuje tego dnia (opcjonalne)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([dayOfWeek, active])
+  @@map("stream_schedule")
+}
+
 model DiscordLinkCode {
   code      String   @id
   userId    String
