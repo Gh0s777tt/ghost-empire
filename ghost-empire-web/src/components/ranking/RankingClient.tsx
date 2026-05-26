@@ -160,16 +160,21 @@ export function RankingClient({
                 const isMe = u.id === currentUserId;
                 const center = podium.length === 3 && viewIdx === 1;
                 return (
-                  <div
+                  <Link
                     key={u.id}
-                    onClick={isAdmin ? () => setAdminTarget(u) : undefined}
-                    role={isAdmin ? "button" : undefined}
+                    href={u.username ? `/u/${u.username}` : "#"}
+                    onClick={(e) => {
+                      if (isAdmin) {
+                        e.preventDefault();
+                        setAdminTarget(u);
+                      }
+                    }}
                     className={cn(
                       "border-2 bg-zinc-950/80 backdrop-blur-sm p-4 sm:p-5 flex flex-col items-center text-center transition-all relative",
                       style.border,
                       center && "sm:-mt-4 sm:scale-105",
                       isMe && "ring-2 ring-red-500/40 ring-offset-2 ring-offset-black",
-                      isAdmin && "cursor-pointer hover:brightness-110",
+                      "cursor-pointer hover:brightness-110",
                     )}
                     style={{
                       clipPath:
@@ -236,7 +241,7 @@ export function RankingClient({
                         TO TY
                       </div>
                     )}
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -330,15 +335,23 @@ function UserRow({
   sortLabel: string;
   onAdminClick?: () => void;
 }) {
+  const router = useRouter();
   const rank = rankForLevel(user.level);
+  // Clickable: admin → modal, else navigate to public profile (if username exists)
+  const handleClick = onAdminClick
+    ? onAdminClick
+    : user.username
+      ? () => router.push(`/u/${user.username}`)
+      : undefined;
+
   return (
     <tr
-      onClick={onAdminClick}
-      role={onAdminClick ? "button" : undefined}
+      onClick={handleClick}
+      role={handleClick ? "button" : undefined}
       className={cn(
         "border-b border-zinc-900 last:border-0 transition-colors",
         isMe ? "bg-red-950/20" : "hover:bg-zinc-900/50",
-        onAdminClick && "cursor-pointer",
+        handleClick && "cursor-pointer",
       )}
     >
       <td className="p-3 font-mono text-zinc-500 tabular-nums">
@@ -689,13 +702,23 @@ function AdminUserActions({
         </div>
         )}
 
-        {/* Link to full admin */}
-        <Link
-          href="/admin"
-          className="block w-full text-center px-3 py-2 border border-zinc-800 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase"
-        >
-          → Pełen panel admin (sklep, eventy, audit log)
-        </Link>
+        {/* Links to profile + full admin */}
+        <div className="grid grid-cols-2 gap-2">
+          {user.username && (
+            <Link
+              href={`/u/${user.username}`}
+              className="text-center px-3 py-2 border border-zinc-800 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase"
+            >
+              → Publiczny profil
+            </Link>
+          )}
+          <Link
+            href="/admin"
+            className="text-center px-3 py-2 border border-zinc-800 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase"
+          >
+            → Pełen admin
+          </Link>
+        </div>
 
         {toast && (
           <div

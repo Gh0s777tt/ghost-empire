@@ -160,7 +160,14 @@ export default function SignInPage() {
 
         {/* Footer */}
         <p className="text-center text-zinc-700 text-xs mt-6 font-mono">
-          Logując się, akceptujesz zasady serwera.
+          Logując się akceptujesz{" "}
+          <a href="/terms" className="text-zinc-500 hover:text-red-400 underline-offset-2 hover:underline">
+            Regulamin
+          </a>
+          {" "}i{" "}
+          <a href="/privacy" className="text-zinc-500 hover:text-red-400 underline-offset-2 hover:underline">
+            Politykę prywatności
+          </a>.
           <br />
           <a href="/about" className="hover:text-red-400 transition-colors underline-offset-2 hover:underline">
             Dowiedz się więcej o Ghost Empire

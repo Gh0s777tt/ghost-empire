@@ -328,6 +328,17 @@ export default async function AboutPage() {
           </div>
         </Section>
 
+        {/* Legal links */}
+        <div className="py-6 text-center text-xs text-zinc-600 font-mono">
+          <Link href="/privacy" className="hover:text-red-400 underline-offset-2 hover:underline">
+            Polityka prywatności
+          </Link>
+          {" · "}
+          <Link href="/terms" className="hover:text-red-400 underline-offset-2 hover:underline">
+            Regulamin
+          </Link>
+        </div>
+
         {/* Final CTA */}
         {!isAuthed && (
           <section className="py-12 text-center">
