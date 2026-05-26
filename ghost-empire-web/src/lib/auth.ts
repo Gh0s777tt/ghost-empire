@@ -31,7 +31,44 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
         response_type: "code",
       },
     },
-    token: "https://id.kick.com/oauth/token",
+    // Kick token endpoint requires client_secret in BODY (not Basic auth header)
+    client: {
+      token_endpoint_auth_method: "client_secret_post",
+    },
+    token: {
+      url: "https://id.kick.com/oauth/token",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async request(context: any): Promise<any> {
+        const body = new URLSearchParams();
+        body.set("grant_type", "authorization_code");
+        body.set("code", context.params.code ?? "");
+        body.set("redirect_uri", context.provider.callbackUrl);
+        body.set("client_id", context.provider.clientId);
+        body.set("client_secret", context.provider.clientSecret);
+        if (context.checks?.code_verifier) {
+          body.set("code_verifier", context.checks.code_verifier);
+        }
+
+        const res = await fetch("https://id.kick.com/oauth/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Accept: "application/json",
+          },
+          body: body.toString(),
+        });
+        const text = await res.text();
+        console.log(`[kick] token status=${res.status} body=${text.slice(0, 500)}`);
+        if (!res.ok) {
+          throw new Error(`Kick token exchange failed (${res.status}): ${text}`);
+        }
+        let parsed: Record<string, unknown>;
+        try { parsed = JSON.parse(text); } catch {
+          throw new Error(`Kick token endpoint returned non-JSON: ${text.slice(0, 200)}`);
+        }
+        return { tokens: parsed };
+      },
+    },
     userinfo: {
       url: "https://api.kick.com/public/v1/users",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
