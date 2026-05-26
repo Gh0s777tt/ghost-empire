@@ -34,13 +34,17 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
     token: "https://id.kick.com/oauth/token",
     userinfo: {
       url: "https://api.kick.com/public/v1/users",
-      async request({ tokens }) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async request({ tokens }: { tokens: { access_token?: string } }): Promise<any> {
         const res = await fetch("https://api.kick.com/public/v1/users", {
           headers: { Authorization: `Bearer ${tokens.access_token}` },
         });
-        const data = await res.json();
-        // Kick returns { data: [{ user_id, username, email, profile_picture, ... }] } or { user_id, ... }
-        const profile = Array.isArray(data?.data) ? data.data[0] : data;
+        const text = await res.text();
+        console.log(`[kick] userinfo status=${res.status} body=${text.slice(0, 500)}`);
+        let data: unknown;
+        try { data = JSON.parse(text); } catch { data = {}; }
+        const obj = data as { data?: unknown };
+        const profile = Array.isArray(obj?.data) ? obj.data[0] : data;
         return profile ?? {};
       },
     },
@@ -303,8 +307,23 @@ export const authOptions: NextAuthOptions = {
 
   logger: {
     error(code, metadata) {
-      // Always log auth errors with full detail — appears in Vercel function logs
-      console.error(`[next-auth][error] ${code}`, JSON.stringify(metadata, null, 2));
+      // Extract Error properties (non-enumerable so JSON.stringify misses them)
+      const err = (metadata as { error?: unknown })?.error;
+      let errDetail: Record<string, unknown> = {};
+      if (err instanceof Error) {
+        errDetail = {
+          name: err.name,
+          message: err.message,
+          stack: err.stack?.split("\n").slice(0, 5).join(" | "),
+          cause: err.cause,
+        };
+      } else if (typeof err === "object" && err !== null) {
+        errDetail = err as Record<string, unknown>;
+      }
+      console.error(
+        `[next-auth][error] ${code}`,
+        JSON.stringify({ ...metadata, errorDetail: errDetail }, null, 2),
+      );
     },
     warn(code) {
       console.warn(`[next-auth][warn] ${code}`);
