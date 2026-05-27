@@ -9,6 +9,11 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 (Zmiany na lokalnym branchu `main`, jeszcze nie pushnięte na produkcję.)
 
+### Docs
+
+- **README.md przepisane** jako single source of truth — pełna lista current features (Phase 2 done), setup od zera per OAuth provider, special-case'y dla EventSub/Streamlabs/OBS, link do CHANGELOG/PHASE2/PHASE3.
+- **PHASE3.md** dodany — plan stream chat bota (Twitch+Kick+YouTube) + engagement features + hardware integrations + AI, podzielone na 4 sub-fazy (3A foundation, 3B engagement, 3C alerts+hardware, 3D AI+analytics) z realistycznymi estymacjami. Wymaga akceptacji + decyzji priorytetów przed implementacją.
+
 ### Added
 
 - **Admin merge tool dla duplikatów** — sekcja "Merge duplikatów" w `/admin#merge`. Wykrywa potencjalne duplikaty po trzech sygnałach: wspólny OAuth account ID (najsilniejszy), wspólny email, wspólny Discord ID. Dla każdej grupy pokazuje statystyki side-by-side (tokeny, level, transakcje, achievementy, donejty, daty), klik na karcie wybiera primary/secondary, preview pokazuje co się przeniesie + konflikty (Account/Connection/Achievement/SocialLink/EventEntry/DropClaim primary'a wygrywają), confirm-by-typing-username przed wykonaniem. Całość w jednym `prisma.$transaction` — atomowe ale nieodwracalne. Blokuje merge konta admina/moda (najpierw odbierz role w sekcji Użytkownicy). Audit log loguje pełen breakdown.
