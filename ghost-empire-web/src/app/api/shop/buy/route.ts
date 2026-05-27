@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 const TIER_RANK: Record<string, number> = { T1: 1, T2: 2, T3: 3, Prime: 1 };
 
@@ -164,6 +165,9 @@ export async function POST(req: Request) {
       amount: result._item.price,
       amountLabel: "GT",
     });
+
+    // Achievement check — shop purchase milestones
+    await checkAndGrantAchievements({ userId, triggerType: "shop_purchases" });
 
     // Strip internal-only fields from the response
     const { _actor, _item, ...publicResult } = result;

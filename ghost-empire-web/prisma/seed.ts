@@ -30,6 +30,60 @@ async function main() {
     { code: "dual_supporter", name: "Dual Supporter",      icon: "🌟", rarity: "epic",      description: "Sub na Twitch i Kick jednocześnie",       triggerType: "manual",         triggerValue: 1 },
     { code: "event_winner",   name: "Zwycięzca Eventu",    icon: "🏆", rarity: "rare",      description: "Wygraj giveaway, konkurs lub raffle",     triggerType: "manual",         triggerValue: 1 },
     { code: "social_linked",  name: "Towarzyska Dusza",    icon: "🦋", rarity: "rare",      description: "Połącz 3 platformy z profilem",          triggerType: "manual",         triggerValue: 3 },
+
+    // Stream-event triggers (Phase 3+ — auto-granted by lib/achievements.ts)
+    // Donations (Streamlabs + YouTube super chats)
+    { code: "donation_first",    name: "Pierwsza Donacja",      icon: "❤️", rarity: "common",    description: "Zrób pierwszą donację",                     triggerType: "donations_count",       triggerValue: 1,   tokenReward: 1000 },
+    { code: "donation_5",        name: "Wsparcie x5",            icon: "💝", rarity: "rare",      description: "5 donacji",                                  triggerType: "donations_count",       triggerValue: 5,   tokenReward: 2500 },
+    { code: "donation_25",       name: "Stały Patron",           icon: "💞", rarity: "epic",      description: "25 donacji",                                 triggerType: "donations_count",       triggerValue: 25,  tokenReward: 10000 },
+    { code: "donor_50pln",       name: "Pierwsze 50 PLN",        icon: "💵", rarity: "common",    description: "Zsumowane donacje 50 PLN",                  triggerType: "donations_amount_pln",  triggerValue: 50,   tokenReward: 1000 },
+    { code: "donor_500pln",      name: "Pół Tysiąca",            icon: "💰", rarity: "epic",      description: "Zsumowane donacje 500 PLN",                 triggerType: "donations_amount_pln",  triggerValue: 500,  tokenReward: 10000 },
+    { code: "donor_1000pln",     name: "Tysiącznik",             icon: "🪙", rarity: "legendary", description: "Zsumowane donacje 1000 PLN",                triggerType: "donations_amount_pln",  triggerValue: 1000, tokenReward: 25000 },
+
+    // Twitch subs received (becoming a sub of Ghost's channel)
+    { code: "twitch_sub_1",      name: "Pierwszy Twitch Sub",    icon: "💜", rarity: "common",    description: "Zostań subem na Twitchu",                    triggerType: "twitch_sub_received",   triggerValue: 1,   tokenReward: 500 },
+    { code: "twitch_sub_3",      name: "Stała Załoga (TW)",      icon: "🔮", rarity: "rare",      description: "3 sub-y / odnowienia na Twitchu",            triggerType: "twitch_sub_received",   triggerValue: 3,   tokenReward: 2000 },
+    { code: "twitch_sub_12",     name: "Rok Werności (TW)",      icon: "👑", rarity: "legendary", description: "12 miesięcy subów na Twitchu",               triggerType: "twitch_sub_received",   triggerValue: 12,  tokenReward: 15000 },
+
+    // Kick subs received
+    { code: "kick_sub_1",        name: "Pierwszy Kick Sub",      icon: "💚", rarity: "common",    description: "Zostań subem na Kicku",                      triggerType: "kick_sub_received",     triggerValue: 1,   tokenReward: 500 },
+    { code: "kick_sub_3",        name: "Stała Załoga (Kick)",    icon: "🍀", rarity: "rare",      description: "3 sub-y / odnowienia na Kicku",              triggerType: "kick_sub_received",     triggerValue: 3,   tokenReward: 2000 },
+    { code: "kick_sub_12",       name: "Rok Werności (Kick)",    icon: "🌳", rarity: "legendary", description: "12 miesięcy subów na Kicku",                 triggerType: "kick_sub_received",     triggerValue: 12,  tokenReward: 15000 },
+
+    // Gift subs given (Twitch + Kick combined)
+    { code: "gifter_1",          name: "Mały Mikołaj",           icon: "🎁", rarity: "common",    description: "Pierwszy gifted sub",                       triggerType: "gift_subs_given",       triggerValue: 1,   tokenReward: 500 },
+    { code: "gifter_10",         name: "Hojny",                  icon: "🎀", rarity: "rare",      description: "10 gifted subs",                            triggerType: "gift_subs_given",       triggerValue: 10,  tokenReward: 5000 },
+    { code: "gifter_50",         name: "Sponsor Społeczności",   icon: "🎄", rarity: "epic",      description: "50 gifted subs",                            triggerType: "gift_subs_given",       triggerValue: 50,  tokenReward: 25000 },
+
+    // Bits cheered
+    { code: "cheer_100",         name: "Pierwszy Cheer",         icon: "💎", rarity: "common",    description: "100 bitów łącznie",                          triggerType: "bits_cheered",          triggerValue: 100,    tokenReward: 500 },
+    { code: "cheer_1000",        name: "Diament",                icon: "💍", rarity: "rare",      description: "1,000 bitów łącznie",                        triggerType: "bits_cheered",          triggerValue: 1000,   tokenReward: 3000 },
+    { code: "cheer_10000",       name: "Wzbogacacz",             icon: "💠", rarity: "epic",      description: "10,000 bitów łącznie",                       triggerType: "bits_cheered",          triggerValue: 10000,  tokenReward: 15000 },
+
+    // Super chats received
+    { code: "superchat_first",   name: "Pierwszy Super Chat",    icon: "⭐", rarity: "common",    description: "Wyślij pierwszego YT Super Chata",          triggerType: "super_chats_received",  triggerValue: 1,   tokenReward: 1000 },
+    { code: "superchat_10",      name: "Gwiazda YT",             icon: "🌟", rarity: "rare",      description: "10 Super Chats",                            triggerType: "super_chats_received",  triggerValue: 10,  tokenReward: 5000 },
+
+    // YT membership
+    { code: "yt_member_first",   name: "YT Member",              icon: "📺", rarity: "common",    description: "Zostań YouTube członkiem",                  triggerType: "yt_member",             triggerValue: 1,   tokenReward: 1500 },
+
+    // Drops claimed
+    { code: "drop_first",        name: "Łapacz Dropów",          icon: "🎯", rarity: "common",    description: "Złap pierwszy stream drop",                 triggerType: "drops_claimed",         triggerValue: 1,   tokenReward: 200 },
+    { code: "drop_10",           name: "Czujka",                 icon: "🦅", rarity: "rare",      description: "10 złapanych dropów",                       triggerType: "drops_claimed",         triggerValue: 10,  tokenReward: 2000 },
+    { code: "drop_50",           name: "Drop Master",            icon: "🏹", rarity: "epic",      description: "50 złapanych dropów",                       triggerType: "drops_claimed",         triggerValue: 50,  tokenReward: 10000 },
+
+    // Events won
+    { code: "event_win_1",       name: "Pierwsza Wygrana",       icon: "🏆", rarity: "common",    description: "Wygraj swój pierwszy event",                triggerType: "events_won",            triggerValue: 1,   tokenReward: 1000 },
+    { code: "event_win_5",       name: "Szczęściarz",            icon: "🍀", rarity: "rare",      description: "Wygraj 5 eventów",                          triggerType: "events_won",            triggerValue: 5,   tokenReward: 5000 },
+    { code: "event_win_10",      name: "Króliczek Losu",         icon: "🐇", rarity: "epic",      description: "Wygraj 10 eventów",                         triggerType: "events_won",            triggerValue: 10,  tokenReward: 15000 },
+
+    // Shop purchases
+    { code: "shop_1",            name: "Pierwszy Zakup",         icon: "🛒", rarity: "common",    description: "Pierwszy zakup w sklepie",                  triggerType: "shop_purchases",        triggerValue: 1,   tokenReward: 200 },
+    { code: "shop_10",           name: "Stały Klient",           icon: "🏪", rarity: "rare",      description: "10 zakupów w sklepie",                      triggerType: "shop_purchases",        triggerValue: 10,  tokenReward: 3000 },
+
+    // Platforms linked
+    { code: "linked_2",          name: "Dwa Konta",              icon: "🔗", rarity: "common",    description: "Połącz drugą platformę OAuth",              triggerType: "platforms_linked",      triggerValue: 2,   tokenReward: 500 },
+    { code: "linked_4",          name: "Wszystkie Platformy",    icon: "🌐", rarity: "epic",      description: "Połącz 4 platformy (TW/Kick/DC/Google)",    triggerType: "platforms_linked",      triggerValue: 4,   tokenReward: 5000 },
   ];
 
   for (const a of achievements) {

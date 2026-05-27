@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 const CODE_REGEX = /^[A-Z0-9_-]{3,24}$/;
 
@@ -135,6 +136,9 @@ export async function POST(req: Request) {
         amountLabel: "GT",
       });
     }
+
+    // Achievement check — drops claimed milestones
+    await checkAndGrantAchievements({ userId, triggerType: "drops_claimed" });
 
     const { _actor, ...publicResult } = result;
     void _actor;

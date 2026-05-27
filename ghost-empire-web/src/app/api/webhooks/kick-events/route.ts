@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyKickSignature, isMessageFresh } from "@/lib/kick";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 // Token rewards — mirror of Twitch tunables
 const REWARD_KICK_SUB        = 5000;
@@ -93,6 +94,14 @@ export async function POST(req: Request) {
       tokensGranted,
     },
   });
+
+  if (matchedUserId) {
+    if (eventType === "channel.subscription.new" || eventType === "channel.subscription.renewal") {
+      await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "kick_sub_received" });
+    } else if (eventType === "channel.subscription.gifts") {
+      await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "gift_subs_given" });
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }

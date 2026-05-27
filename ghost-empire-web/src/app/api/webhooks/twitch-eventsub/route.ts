@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyEventSubSignature, isMessageFresh } from "@/lib/twitch";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals, setHypeTrainStart, setHypeTrainProgress, setHypeTrainEnded } from "@/lib/stream-goals";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 // Tunable token rewards (env-configurable later if needed)
 const REWARD_SUB_T1 = 5000;
@@ -151,6 +152,17 @@ export async function POST(req: Request) {
       tokensGranted,
     },
   });
+
+  // Fire achievement checks AFTER persisting the event so count queries see it
+  if (matchedUserId) {
+    if (eventType === "channel.subscribe") {
+      await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "twitch_sub_received" });
+    } else if (eventType === "channel.subscription.gift") {
+      await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "gift_subs_given" });
+    } else if (eventType === "channel.cheer") {
+      await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "bits_cheered" });
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }

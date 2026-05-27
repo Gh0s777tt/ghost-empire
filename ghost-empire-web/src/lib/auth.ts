@@ -10,6 +10,7 @@ import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
 import { cookies } from "next/headers";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { LINK_COOKIE_NAME, verifyLinkToken, executeAccountLink } from "@/lib/account-linking";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 // Custom Kick provider — KICK isn't built into next-auth.
 // API docs: https://docs.kick.com/getting-started/kick-developer-api
@@ -306,6 +307,9 @@ export const authOptions: NextAuthOptions = {
                 : null,
             },
           });
+
+          // Achievement check — platforms_linked (fires after linking a new OAuth provider)
+          await checkAndGrantAchievements({ userId: dbUser.id, triggerType: "platforms_linked" });
 
           // Grant first_login achievement if not already earned
           const alreadyGranted = await prisma.userAchievement.findFirst({

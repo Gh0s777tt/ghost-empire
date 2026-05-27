@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v2.0/authorize";
 const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v2.0/token";
@@ -245,6 +246,10 @@ export async function pollAndProcessDonations(): Promise<{
         amount: Math.round(amountFloat * 100) / 100,
         amountLabel: d.currency,
       });
+
+      // Achievements — donation count + cumulative PLN
+      await checkAndGrantAchievements({ userId: match.userId, triggerType: "donations_count" });
+      await checkAndGrantAchievements({ userId: match.userId, triggerType: "donations_amount_pln" });
 
       matched++;
     } else {

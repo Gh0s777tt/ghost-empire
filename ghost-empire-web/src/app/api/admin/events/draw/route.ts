@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 // Crypto-secure Fisher-Yates shuffle
 function shuffle<T>(arr: T[]): T[] {
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
     select: { id: true, username: true, displayName: true, image: true },
   });
 
-  // Dispatch one stream alert per winner (safe — never blocks)
+  // Dispatch one stream alert per winner (safe — never blocks) + achievement check
   for (const w of winners) {
     await dispatchAlertSafe({
       type: "event_win",
@@ -130,6 +131,7 @@ export async function POST(req: Request) {
       actorName: w.displayName || w.username || "Anon",
       actorImage: w.image ?? undefined,
     });
+    await checkAndGrantAchievements({ userId: w.id, triggerType: "events_won" });
   }
 
   await logAdminAction({
