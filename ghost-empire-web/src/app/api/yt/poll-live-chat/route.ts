@@ -41,6 +41,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: authResult.error }, { status: authResult.status });
   }
 
+  try {
+    return await runPoll();
+  } catch (e) {
+    // Surface the real error to cron-job / admin UI — endpoint is auth-gated so OK to expose
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[yt/poll-live-chat] FAILED:", msg, e);
+    return NextResponse.json(
+      { error: "poll_failed", detail: msg.slice(0, 500) },
+      { status: 500 },
+    );
+  }
+}
+
+async function runPoll() {
   const streamer = await prisma.youTubeStreamerToken.findUnique({ where: { id: "default" } });
   if (!streamer) {
     return NextResponse.json(
@@ -49,15 +63,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let accessToken: string;
-  try {
-    accessToken = await getValidAccessToken();
-  } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "token_refresh_failed" },
-      { status: 500 },
-    );
-  }
+  const accessToken = await getValidAccessToken();
 
   // Decide which broadcast to poll: cached or rediscover
   let liveChatId = streamer.currentLiveChatId;
