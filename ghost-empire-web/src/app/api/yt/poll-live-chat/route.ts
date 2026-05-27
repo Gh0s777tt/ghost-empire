@@ -18,6 +18,7 @@ import {
   getLiveChatMessages,
 } from "@/lib/youtube";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { incrementGoals } from "@/lib/stream-goals";
 
 const YT_SUPERCHAT_GT_PER_PLN = 100;  // matches DONATION_GT_PER_PLN default
 const YT_MEMBER_REWARD = 5000;        // new sponsor / member milestone
@@ -296,6 +297,12 @@ async function handleSuperChat(input: {
     amountLabel: input.currency,
   });
 
+  // Bump donations_pln goal (currency conversion same as Streamlabs handler)
+  const plnAmount = ["PLN", "ZL"].includes(input.currency.toUpperCase())
+    ? amountFloat
+    : amountFloat * 4;
+  await incrementGoals("donations_pln", Math.floor(plnAmount));
+
   return true;
 }
 
@@ -372,6 +379,8 @@ async function handleMemberEvent(input: {
     icon: "📺",
     actorName: input.authorName ?? "Anonim",
   });
+
+  await incrementGoals("yt_members", 1);
 
   return true;
 }

@@ -2,6 +2,7 @@
 // Streamlabs API integration — OAuth + donation polling + auto-matching.
 import { prisma } from "@/lib/prisma";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { incrementGoals } from "@/lib/stream-goals";
 
 const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v2.0/authorize";
 const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v2.0/token";
@@ -275,6 +276,13 @@ export async function pollAndProcessDonations(): Promise<{
 
       unmatched++;
     }
+
+    // Bump donations_pln goal — applies to BOTH matched and unmatched donations.
+    // Currency conversion: PLN passthrough, others * 4 (USD-equivalent fallback, same as YT).
+    const plnAmount = ["PLN", "ZL"].includes(d.currency.toUpperCase())
+      ? amountFloat
+      : amountFloat * 4;
+    await incrementGoals("donations_pln", Math.floor(plnAmount));
   }
 
   // Update lastSeenDonationId to most recent (donations[0] is newest by default)

@@ -101,6 +101,9 @@ export const EVENT_TYPES_TO_SUBSCRIBE = [
   { type: "channel.subscribe", version: "1" },
   { type: "channel.subscription.gift", version: "1" },
   { type: "channel.cheer", version: "1" },
+  { type: "channel.hype_train.begin", version: "1" },
+  { type: "channel.hype_train.progress", version: "1" },
+  { type: "channel.hype_train.end", version: "1" },
 ] as const;
 
 type CreateEventSubBody = {

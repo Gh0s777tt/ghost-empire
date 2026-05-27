@@ -674,6 +674,49 @@ model StreamAlert {
 // =====================================================
 
 // =====================================================
+// STREAM GOALS — visible progress bars on OBS overlay
+// Auto-incremented when EventSub / Streamlabs handlers fire matching events.
+// =====================================================
+
+model StreamGoal {
+  id          String    @id @default(cuid())
+  type        String    // "subs" | "follows" | "donations_pln" | "cheers_bits" | "gift_subs" | "yt_members"
+  label       String    // admin custom text shown on overlay e.g. "500 subów = nowy setup!"
+  current     Int       @default(0)
+  target      Int
+  active      Boolean   @default(true)
+  resetMode   String    @default("manual")   // "manual" | "per_stream" | "daily" | "weekly" | "monthly"
+  lastResetAt DateTime?
+  color       String?                          // overlay accent override; falls back to StreamAlertSettings.accentColor
+  sortOrder   Int       @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([type, active])
+  @@map("stream_goals")
+}
+
+// =====================================================
+// HYPE TRAIN — singleton state, populated by Twitch EventSub
+// =====================================================
+
+model HypeTrainState {
+  id              String    @id @default("default")
+  active          Boolean   @default(false)
+  level           Int       @default(0)
+  goal            Int       @default(0)    // points needed to reach next level
+  total           Int       @default(0)    // points already accumulated this train
+  topContributor  String?                   // user_name of top contributor
+  startedAt       DateTime?
+  expiresAt       DateTime?                 // when this train auto-ends if no further contributions
+  endedAt         DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@map("hype_train_state")
+}
+
+// =====================================================
 // YOUTUBE LIVE CHAT — streamer token + event log
 // Powers super chat detection + member events during live broadcasts.
 // =====================================================

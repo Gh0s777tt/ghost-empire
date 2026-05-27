@@ -9,7 +9,7 @@ import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
 
-const STREAMER_SCOPES = "channel:read:subscriptions bits:read";
+const STREAMER_SCOPES = "channel:read:subscriptions bits:read channel:read:hype_train";
 
 export async function GET() {
   const auth = await requireAdmin();

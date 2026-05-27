@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyEventSubSignature, isMessageFresh } from "@/lib/twitch";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { incrementGoals, setHypeTrainStart, setHypeTrainProgress, setHypeTrainEnded } from "@/lib/stream-goals";
 
 // Tunable token rewards (env-configurable later if needed)
 const REWARD_SUB_T1 = 5000;
@@ -128,6 +129,12 @@ export async function POST(req: Request) {
       const result = await handleCheer(event);
       matchedUserId = result.userId;
       tokensGranted = result.tokens;
+    } else if (eventType === "channel.hype_train.begin") {
+      await handleHypeTrainBegin(event);
+    } else if (eventType === "channel.hype_train.progress") {
+      await handleHypeTrainProgress(event);
+    } else if (eventType === "channel.hype_train.end") {
+      await handleHypeTrainEnd(event);
     } else {
       console.log(`[twitch-eventsub] unhandled event type: ${eventType}`);
     }
@@ -172,6 +179,9 @@ async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId
     icon: "💜",
     actorName: userName ?? userLogin,
   });
+
+  // Bump any active "subs" stream goals
+  await incrementGoals("subs", 1);
 
   // Find Ghost Empire user via Connection.username on Twitch
   const connection = await prisma.connection.findFirst({
@@ -243,6 +253,10 @@ async function handleGiftSub(event: Record<string, unknown>): Promise<{ userId: 
     amountLabel: "sub" + (total === 1 ? "" : "y"),
   });
 
+  // Bump goals — both gift_subs (count) and subs (because each gift = a sub for someone)
+  await incrementGoals("gift_subs", total);
+  await incrementGoals("subs", total);
+
   if (isAnonymous || !gifterLogin) {
     console.log("[twitch-eventsub] anonymous gift sub — no reward");
     return { userId: null, tokens: null };
@@ -306,6 +320,7 @@ async function handleCheer(event: Record<string, unknown>): Promise<{ userId: st
       amount: bits,
       amountLabel: "bits",
     });
+    await incrementGoals("cheers_bits", bits);
   }
 
   if (isAnonymous || !userLogin || bits <= 0) {
@@ -355,6 +370,76 @@ async function handleCheer(event: Record<string, unknown>): Promise<{ userId: st
   ]);
 
   return { userId: connection.userId, tokens };
+}
+
+// =====================================================
+// Hype Train handlers
+// =====================================================
+
+async function handleHypeTrainBegin(event: Record<string, unknown>): Promise<void> {
+  const total = (event.total as number) ?? 0;
+  const progress = (event.progress as number) ?? 0;
+  const goal = (event.goal as number) ?? 0;
+  const level = (event.level as number) ?? 1;
+  const expiresAt = parseDate(event.expires_at as string | undefined);
+
+  await setHypeTrainStart({
+    level,
+    goal: goal || progress + 100,  // fallback if API doesn't return goal
+    total,
+    expiresAt: expiresAt ?? new Date(Date.now() + 5 * 60_000),
+  });
+
+  await dispatchAlertSafe({
+    type: "twitch_cheer",  // reuse cheer alert visual
+    title: `🚂 HYPE TRAIN STARTED! (Level ${level})`,
+    message: `wszystkie suby/bity teraz nakręcają hype train`,
+    icon: "🚂",
+    amount: level,
+    amountLabel: "level",
+  });
+}
+
+async function handleHypeTrainProgress(event: Record<string, unknown>): Promise<void> {
+  const total = (event.total as number) ?? 0;
+  const progress = (event.progress as number) ?? 0;
+  const goal = (event.goal as number) ?? 0;
+  const level = (event.level as number) ?? 1;
+  const expiresAt = parseDate(event.expires_at as string | undefined);
+
+  // top_contributions is an array; pick the highest
+  const topContribs = event.top_contributions as Array<{ user_name?: string; total?: number; type?: string }> | undefined;
+  const topContributor = topContribs?.sort((a, b) => (b.total ?? 0) - (a.total ?? 0))[0]?.user_name ?? null;
+
+  await setHypeTrainProgress({
+    level,
+    goal: goal || progress + 100,
+    total,
+    topContributor,
+    expiresAt: expiresAt ?? new Date(Date.now() + 5 * 60_000),
+  });
+}
+
+async function handleHypeTrainEnd(event: Record<string, unknown>): Promise<void> {
+  const level = (event.level as number) ?? 1;
+  const total = (event.total as number) ?? 0;
+
+  await setHypeTrainEnded();
+
+  await dispatchAlertSafe({
+    type: "twitch_cheer",
+    title: `🚂 HYPE TRAIN ENDED — Level ${level}!`,
+    message: "świetna jazda community!",
+    icon: "🏁",
+    amount: total,
+    amountLabel: "pkt",
+  });
+}
+
+function parseDate(s: string | undefined): Date | null {
+  if (!s) return null;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 // Allow GET for endpoint health check
