@@ -674,6 +674,46 @@ model StreamAlert {
 // =====================================================
 
 // =====================================================
+// PREDICTIONS / BETS — viewers wager Ghost Tokens on outcomes
+// =====================================================
+
+model Prediction {
+  id                  String    @id @default(cuid())
+  question            String    @db.Text
+  options             String[]                              // labels for each option, order matches optionIndex
+  status              String    @default("open")            // "open" | "locked" | "resolved" | "cancelled"
+  resolvedOptionIndex Int?                                  // null until resolved
+  totalPot            Int       @default(0)                 // sum of all wagers across all options
+  opensAt             DateTime  @default(now())
+  closesAt            DateTime?                              // wagers blocked after this (and status auto-flips to "locked")
+  resolvedAt          DateTime?
+  createdById         String?                                // admin user id
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  entries PredictionEntry[]
+
+  @@index([status, opensAt])
+  @@map("predictions")
+}
+
+model PredictionEntry {
+  id             String   @id @default(cuid())
+  predictionId   String
+  userId         String
+  optionIndex    Int                                        // which option they bet on
+  tokensWagered  Int                                        // positive — deducted from User.tokens at wager time
+  payout         Int      @default(0)                       // set on resolve; 0 if losing option
+  wageredAt      DateTime @default(now())
+
+  prediction Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+
+  @@unique([predictionId, userId])                          // one wager per user per prediction
+  @@index([userId])
+  @@map("prediction_entries")
+}
+
+// =====================================================
 // STREAM GOALS — visible progress bars on OBS overlay
 // Auto-incremented when EventSub / Streamlabs handlers fire matching events.
 // =====================================================
