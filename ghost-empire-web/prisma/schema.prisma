@@ -673,6 +673,50 @@ model StreamAlert {
 // STREAM ALERT SETTINGS — singleton; per-type enable/disable + visuals
 // =====================================================
 
+// =====================================================
+// YOUTUBE LIVE CHAT — streamer token + event log
+// Powers super chat detection + member events during live broadcasts.
+// =====================================================
+
+model YouTubeStreamerToken {
+  id              String    @id @default("default")  // singleton
+  channelId       String                              // YouTube channel id (e.g. UCxxx)
+  channelTitle    String?
+  accessToken     String    @db.Text
+  refreshToken    String    @db.Text                  // YouTube access tokens expire after 1h — refresh always required
+  tokenExpiresAt  DateTime
+  scope           String                              // space-separated; should include youtube.readonly
+  connectedAt     DateTime  @default(now())
+  connectedById   String?                             // admin user id who authorized
+
+  // Polling state — admin / external cron updates these
+  lastPolledAt    DateTime?
+  currentLiveVideoId    String?                       // most recently detected live broadcast videoId
+  currentLiveChatId     String?                       // its liveChatId
+  lastChatPageToken     String?                       // nextPageToken for liveChatMessages — incremental polling
+
+  @@map("youtube_streamer_token")
+}
+
+model YouTubeEvent {
+  id            String    @id @default(cuid())
+  messageId     String    @unique                    // YouTube liveChat messageId — idempotency key
+  videoId       String                                // which broadcast it came from
+  type          String                                // "superChat" | "superSticker" | "newSponsor" | "memberMilestone" | "textMessage"
+  authorChannelId String?
+  authorName    String?
+  message       String?   @db.Text
+  amountMicros  BigInt?                              // for super chats: amount in micros (e.g. 1990000 = $1.99)
+  currency      String?
+  userId        String?                              // matched Ghost Empire user
+  tokensGranted Int?
+  receivedAt    DateTime  @default(now())
+
+  @@index([type, receivedAt])
+  @@index([videoId])
+  @@map("youtube_events")
+}
+
 model StreamAlertSettings {
   id              String   @id @default("default")
   enabledTypes    String[] @default(["shop_purchase","event_win","drop_claim_bonus","twitch_sub","twitch_gift_sub","twitch_cheer","donation","welcome","level_up","test"])
