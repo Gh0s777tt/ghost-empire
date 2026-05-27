@@ -674,6 +674,48 @@ model StreamAlert {
 // =====================================================
 
 // =====================================================
+// KICK INTEGRATION — webhooks for subs/gifts/chat (mirror of Twitch EventSub)
+// =====================================================
+
+model KickStreamerToken {
+  id                String    @id @default("default")  // singleton
+  broadcasterId     String                              // Kick user_id (numeric, stored as string)
+  broadcasterLogin  String                              // Kick username/slug for display
+  accessToken       String    @db.Text
+  refreshToken      String?   @db.Text
+  tokenExpiresAt    DateTime?
+  scope             String                              // space-separated scopes granted
+  connectedAt       DateTime  @default(now())
+  connectedById     String?                             // admin user id who authorized
+
+  @@map("kick_streamer_token")
+}
+
+model KickEventSubscription {
+  id              String    @id                       // Kick's subscription id
+  type            String                              // "chat.message.sent" | "channel.subscription.new" | "channel.subscription.gifts" | ...
+  broadcasterId   String
+  createdAt       DateTime  @default(now())
+  lastSeenAt      DateTime?
+
+  @@index([type])
+  @@map("kick_event_subscriptions")
+}
+
+model KickEvent {
+  id              String    @id @default(cuid())
+  eventId         String    @unique                   // Kick message_id for idempotency
+  type            String
+  payload         String    @db.Text                  // JSON of full event
+  userId          String?                             // matched Ghost Empire user
+  tokensGranted   Int?
+  receivedAt      DateTime  @default(now())
+
+  @@index([type, receivedAt])
+  @@map("kick_events")
+}
+
+// =====================================================
 // PREDICTIONS / BETS — viewers wager Ghost Tokens on outcomes
 // =====================================================
 
