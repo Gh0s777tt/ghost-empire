@@ -9,6 +9,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 (Zmiany na lokalnym branchu `main`, jeszcze nie pushnięte na produkcję.)
 
+### Added
+
+- **Admin merge tool dla duplikatów** — sekcja "Merge duplikatów" w `/admin#merge`. Wykrywa potencjalne duplikaty po trzech sygnałach: wspólny OAuth account ID (najsilniejszy), wspólny email, wspólny Discord ID. Dla każdej grupy pokazuje statystyki side-by-side (tokeny, level, transakcje, achievementy, donejty, daty), klik na karcie wybiera primary/secondary, preview pokazuje co się przeniesie + konflikty (Account/Connection/Achievement/SocialLink/EventEntry/DropClaim primary'a wygrywają), confirm-by-typing-username przed wykonaniem. Całość w jednym `prisma.$transaction` — atomowe ale nieodwracalne. Blokuje merge konta admina/moda (najpierw odbierz role w sekcji Użytkownicy). Audit log loguje pełen breakdown.
+
 ### Changed
 
 - **OVERLAY_TOKEN przeniesiony z env do DB** — token overlay'a żył w Vercel env vars co zmuszało admina do ręcznej generacji + redeploya przy każdej rotacji. Teraz token siedzi w `StreamAlertSettings.overlayToken`, auto-generuje się przy pierwszym wejściu na `/admin#alerts`, jest tam widoczny z przyciskami "Pokaż / Kopiuj token / Kopiuj URL OBS / Wygeneruj nowy". Env var pozostaje jako legacy fallback. Wymaga `npm run db:push`.

@@ -16,7 +16,8 @@ type AdminActionType =
   | "set_user_role"
   | "set_connection_role"
   | "test_alert"
-  | "update_alert_settings";
+  | "update_alert_settings"
+  | "merge_users";
 
 export async function logAdminAction(opts: {
   adminId: string;

@@ -6,7 +6,7 @@ import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
   Users, TrendingUp, Trash2, Copy, Dice5, Crown, Heart, UserCog, History,
   ShoppingBag, Pencil, Eye, EyeOff, Ban, Bot, CalendarDays, Zap, Link as LinkIcon,
-  LayoutDashboard, Bell, Tv, Menu,
+  LayoutDashboard, Bell, Tv, Menu, GitMerge, AlertTriangle,
 } from "lucide-react";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { fmt, formatDate, cn } from "@/lib/utils";
@@ -215,7 +215,7 @@ export function AdminClient({
   // Navigation sections — each maps to a group of cards previously rendered linearly.
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
-    | "dashboard" | "users" | "events" | "shop" | "drops"
+    | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
     | "schedule" | "bot" | "donations" | "twitch" | "alerts" | "audit";
 
   const SECTIONS: Array<{
@@ -226,6 +226,7 @@ export function AdminClient({
   }> = [
     { id: "dashboard", label: "Dashboard",   icon: LayoutDashboard, permission: () => true },
     { id: "users",     label: "Użytkownicy", icon: UserCog,         permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
+    { id: "merge",     label: "Merge duplikatów", icon: GitMerge,   permission: () => isAdmin },
     { id: "events",    label: "Eventy",      icon: Calendar,        permission: () => can("create_events") || can("edit_events") || can("draw_events") },
     { id: "shop",      label: "Sklep",       icon: ShoppingBag,     permission: () => can("manage_shop") || can("deliver_orders") },
     { id: "drops",     label: "Drops",       icon: Gift,            permission: () => can("create_drops") },
@@ -332,6 +333,10 @@ export function AdminClient({
               )}
               {!isAdmin && can("mark_subs") && <ConnectionRolesCard {...sharedProps} />}
             </div>
+          )}
+
+          {activeSection === "merge" && isAdmin && (
+            <MergeUsersSection {...sharedProps} />
           )}
 
           {activeSection === "events" && (
@@ -3036,5 +3041,388 @@ function StreamAlertsManager({
         </>
       )}
     </SectionCard>
+  );
+}
+
+// ============== MERGE DUPLICATES ==============
+
+const MERGE_REASON_LABEL: Record<string, string> = {
+  shared_platform_id: "Wspólne konto OAuth (najsilniejszy sygnał)",
+  shared_email: "Wspólny email",
+  shared_discord_id: "Wspólny Discord ID",
+};
+
+type MergeUser = {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+  email: string | null;
+  image: string | null;
+  discordId: string | null;
+  tokens: number;
+  totalEarned: number;
+  totalDonated: number;
+  level: number;
+  isAdmin: boolean;
+  isModerator: boolean;
+  isBanned: boolean;
+  createdAt: string;
+  accountsCount: number;
+  connectionsCount: number;
+  transactionsCount: number;
+  donationsCount: number;
+  achievementsCount: number;
+  connections: Array<{ platform: string; username: string }>;
+};
+
+type MergeGroup = {
+  reason: keyof typeof MERGE_REASON_LABEL;
+  matchOn: string;
+  users: MergeUser[];
+};
+
+type MergePreview = {
+  primary: { id: string; username: string | null; tokens: number };
+  secondary: { id: string; username: string | null; tokens: number };
+  willMove: Record<string, number>;
+  conflicts: {
+    accountProviders: string[];
+    connectionPlatforms: string[];
+    achievements: number;
+    socialLinks: number;
+    eventEntries: number;
+    dropClaims: number;
+  };
+  finalPrimaryTokens: number;
+};
+
+function MergeUsersSection({
+  onToast, onSuccess, pending,
+}: {
+  onToast: (k: "ok" | "err", m: string) => void;
+  onSuccess: () => void;
+  pending: boolean;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [groups, setGroups] = useState<MergeGroup[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/merge-users");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Nie udało się załadować grup duplikatów");
+        setGroups([]);
+      } else {
+        setGroups(data.groups ?? []);
+      }
+    } catch {
+      setError("Błąd sieci");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  return (
+    <SectionCard title="Merge duplikatów" icon={GitMerge}>
+      <div className="border border-orange-900 bg-orange-950/20 px-3 py-2.5 text-xs text-orange-200 mb-4 flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-orange-400" />
+        <div>
+          <strong>Operacja destrukcyjna</strong> — drugie konto zostaje całkowicie usunięte po przeniesieniu danych do primary. Działanie jest atomowe (jeden DB transaction) ale nieodwracalne.
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 mb-3">
+        <button
+          onClick={load}
+          disabled={loading || pending}
+          className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 hover:border-red-700 text-zinc-300 hover:text-white px-2.5 py-1.5 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <History className="w-3 h-3" />}
+          Skanuj ponownie
+        </button>
+        <span className="text-[10px] text-zinc-500">
+          Wykrywanie: ten sam OAuth provider account ID, email, lub Discord ID.
+        </span>
+      </div>
+
+      {error && (
+        <div className="border border-red-700 bg-red-950/40 px-3 py-2 text-xs text-red-200 mb-3">
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && groups.length === 0 && (
+        <div className="border border-zinc-800 bg-black/30 p-6 text-center text-zinc-500 text-sm">
+          ✓ Brak wykrytych duplikatów — czyściutko.
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {groups.map((g, i) => (
+          <DuplicateGroupCard
+            key={`${g.reason}-${i}`}
+            group={g}
+            onToast={onToast}
+            onSuccess={() => { onSuccess(); void load(); }}
+          />
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+function DuplicateGroupCard({
+  group, onToast, onSuccess,
+}: {
+  group: MergeGroup;
+  onToast: (k: "ok" | "err", m: string) => void;
+  onSuccess: () => void;
+}) {
+  // Pick primary by default = the user with most tokens (likely the "real" account)
+  const defaultPrimaryId = group.users.reduce((acc, u) => (u.tokens > acc.tokens ? u : acc), group.users[0]).id;
+  const [primaryId, setPrimaryId] = useState<string>(defaultPrimaryId);
+  const [secondaryId, setSecondaryId] = useState<string>(
+    group.users.find((u) => u.id !== defaultPrimaryId)?.id ?? "",
+  );
+  const [preview, setPreview] = useState<MergePreview | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [executing, setExecuting] = useState(false);
+
+  const secondary = group.users.find((u) => u.id === secondaryId);
+  const expectedConfirm = secondary?.username ?? "";
+
+  async function loadPreview() {
+    if (!secondaryId || primaryId === secondaryId) return;
+    setPreviewing(true);
+    setPreview(null);
+    try {
+      const res = await fetch("/api/admin/merge-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "preview", primary: primaryId, secondary: secondaryId }),
+      });
+      const data = await res.json();
+      if (!res.ok) onToast("err", data.error ?? "Preview failed");
+      else setPreview(data);
+    } finally {
+      setPreviewing(false);
+    }
+  }
+
+  async function execute() {
+    if (confirmText.trim() !== expectedConfirm) {
+      onToast("err", "Wpisz dokładny username drugiego konta żeby potwierdzić");
+      return;
+    }
+    setExecuting(true);
+    try {
+      const res = await fetch("/api/admin/merge-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "execute",
+          primary: primaryId,
+          secondary: secondaryId,
+          confirm: confirmText.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onToast("err", data.error ?? "Merge failed");
+      } else {
+        onToast("ok", `Scalono. Przeniesione: ${data.summary.tokens} GT, ${data.summary.transactions} txn`);
+        setPreview(null);
+        setConfirmText("");
+        onSuccess();
+      }
+    } finally {
+      setExecuting(false);
+    }
+  }
+
+  return (
+    <div className="border border-zinc-800 bg-black/40 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 border border-red-700 bg-red-950/30 text-red-300">
+          {MERGE_REASON_LABEL[group.reason]}
+        </span>
+        <span className="text-[10px] font-mono text-zinc-500">{group.matchOn}</span>
+      </div>
+
+      {/* User comparison */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+        {group.users.map((u) => {
+          const isPrim = u.id === primaryId;
+          const isSec = u.id === secondaryId;
+          return (
+            <div
+              key={u.id}
+              className={cn(
+                "border p-3 cursor-pointer transition-colors",
+                isPrim ? "border-green-700 bg-green-950/20" :
+                isSec ? "border-orange-700 bg-orange-950/20" :
+                "border-zinc-800 bg-black/30 hover:border-zinc-600",
+              )}
+              onClick={() => {
+                // Click cycles role: primary → secondary → unselected → primary
+                if (isPrim) {
+                  // Make this secondary, pick another as primary
+                  const other = group.users.find((x) => x.id !== u.id);
+                  if (other) {
+                    setPrimaryId(other.id);
+                    setSecondaryId(u.id);
+                    setPreview(null);
+                  }
+                } else if (isSec) {
+                  setSecondaryId("");
+                  setPreview(null);
+                } else {
+                  setSecondaryId(u.id);
+                  setPreview(null);
+                }
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {u.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={u.image} alt="" className="w-8 h-8 rounded-full border border-zinc-800" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800" />
+                  )}
+                  <div>
+                    <div className="text-sm font-bold text-white">{u.displayName || u.username || u.id.slice(-6)}</div>
+                    <div className="text-[10px] font-mono text-zinc-500">@{u.username ?? "?"}</div>
+                  </div>
+                </div>
+                <div>
+                  {isPrim && <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/40 text-green-300">Primary</span>}
+                  {isSec  && <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-orange-700 bg-orange-950/40 text-orange-300">Secondary</span>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] font-mono">
+                <div className="text-zinc-500">Tokens</div>
+                <div className="text-white text-right">{u.tokens.toLocaleString("pl-PL")}</div>
+                <div className="text-zinc-500">Earned</div>
+                <div className="text-white text-right">{u.totalEarned.toLocaleString("pl-PL")}</div>
+                <div className="text-zinc-500">Donated</div>
+                <div className="text-white text-right">{(u.totalDonated / 100).toFixed(2)} PLN</div>
+                <div className="text-zinc-500">Level</div>
+                <div className="text-white text-right">{u.level}</div>
+                <div className="text-zinc-500">Transactions</div>
+                <div className="text-white text-right">{u.transactionsCount}</div>
+                <div className="text-zinc-500">Achievements</div>
+                <div className="text-white text-right">{u.achievementsCount}</div>
+                <div className="text-zinc-500">Accounts</div>
+                <div className="text-white text-right">{u.accountsCount}</div>
+                <div className="text-zinc-500">Connections</div>
+                <div className="text-white text-right">{u.connectionsCount}</div>
+                <div className="text-zinc-500">Utworzone</div>
+                <div className="text-white text-right">{new Date(u.createdAt).toLocaleDateString("pl-PL")}</div>
+              </div>
+
+              {(u.isAdmin || u.isModerator || u.isBanned) && (
+                <div className="flex gap-1 mt-2">
+                  {u.isAdmin     && <span className="text-[9px] px-1.5 py-0.5 border border-red-700 bg-red-950/40 text-red-300">ADMIN</span>}
+                  {u.isModerator && <span className="text-[9px] px-1.5 py-0.5 border border-blue-700 bg-blue-950/40 text-blue-300">MOD</span>}
+                  {u.isBanned    && <span className="text-[9px] px-1.5 py-0.5 border border-zinc-700 bg-black/40 text-zinc-400">BANNED</span>}
+                </div>
+              )}
+
+              {u.connections.length > 0 && (
+                <div className="mt-2 text-[10px] text-zinc-500">
+                  Platformy: {u.connections.map((c) => `${c.platform}=${c.username}`).join(", ")}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Preview + execute */}
+      {primaryId && secondaryId && primaryId !== secondaryId && (
+        <div className="border border-zinc-800 bg-black/50 p-3 space-y-3">
+          {!preview ? (
+            <button
+              onClick={loadPreview}
+              disabled={previewing}
+              className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 hover:border-red-700 text-zinc-200 hover:text-white px-3 py-1.5 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {previewing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye className="w-3 h-3" />}
+              Pokaż preview merge
+            </button>
+          ) : (
+            <>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                Co się przeniesie z @{preview.secondary.username} → @{preview.primary.username}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] font-mono">
+                {Object.entries(preview.willMove).map(([k, v]) => (
+                  <div key={k} className="flex justify-between">
+                    <span className="text-zinc-500">{k}</span>
+                    <span className="text-white">{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-[11px] text-zinc-400">
+                Tokeny po scaleniu: <strong className="text-white">{preview.finalPrimaryTokens.toLocaleString("pl-PL")} GT</strong>
+              </div>
+
+              {(preview.conflicts.accountProviders.length > 0 ||
+                preview.conflicts.connectionPlatforms.length > 0 ||
+                preview.conflicts.achievements > 0 ||
+                preview.conflicts.socialLinks > 0 ||
+                preview.conflicts.eventEntries > 0 ||
+                preview.conflicts.dropClaims > 0) && (
+                <div className="border border-orange-900 bg-orange-950/20 p-2 text-[11px] text-orange-200">
+                  <div className="font-bold mb-1">⚠ Konflikty (zostają wersje primary):</div>
+                  {preview.conflicts.accountProviders.length > 0 && (
+                    <div>Account providers: {preview.conflicts.accountProviders.join(", ")}</div>
+                  )}
+                  {preview.conflicts.connectionPlatforms.length > 0 && (
+                    <div>Connection platforms: {preview.conflicts.connectionPlatforms.join(", ")}</div>
+                  )}
+                  {preview.conflicts.achievements > 0 && <div>Achievements: {preview.conflicts.achievements}</div>}
+                  {preview.conflicts.socialLinks > 0 && <div>Social links: {preview.conflicts.socialLinks}</div>}
+                  {preview.conflicts.eventEntries > 0 && <div>Event entries: {preview.conflicts.eventEntries}</div>}
+                  {preview.conflicts.dropClaims > 0 && <div>Drop claims: {preview.conflicts.dropClaims}</div>}
+                </div>
+              )}
+
+              <div className="border-t border-zinc-800 pt-3">
+                <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
+                  Potwierdzenie — wpisz username drugiego konta:{" "}
+                  <code className="text-orange-300">{expectedConfirm}</code>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    placeholder={expectedConfirm}
+                    className="flex-1 border border-zinc-700 bg-black/40 px-2.5 py-1.5 text-xs text-white font-mono outline-none focus:border-red-600"
+                  />
+                  <button
+                    onClick={execute}
+                    disabled={executing || confirmText.trim() !== expectedConfirm}
+                    className="text-[10px] font-mono uppercase tracking-widest bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 transition-colors flex items-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {executing ? <Loader2 className="w-3 h-3 animate-spin" /> : <GitMerge className="w-3 h-3" />}
+                    Scal teraz
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
