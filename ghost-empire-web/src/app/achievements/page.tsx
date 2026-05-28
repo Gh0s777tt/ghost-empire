@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { AchievementsClient } from "@/components/achievements/AchievementsClient";
+import { getCachedAchievementsMeta } from "@/lib/cached";
 
 export const dynamic = "force-dynamic";
 
@@ -16,37 +17,34 @@ export default async function AchievementsPage() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
-  const [allAchievements, totalUsers, earnedCounts, myEarned, me] =
-    await Promise.all([
-      prisma.achievement.findMany({
-        orderBy: [{ rarity: "asc" }, { triggerValue: "asc" }, { name: "asc" }],
-      }),
-      prisma.user.count(),
-      prisma.userAchievement.groupBy({
-        by: ["achievementId"],
-        _count: { id: true },
-      }),
-      userId
-        ? prisma.userAchievement.findMany({
-            where: { userId },
-            select: { achievementId: true, earnedAt: true },
-          })
-        : Promise.resolve([]),
-      userId
-        ? prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-              level: true,
-              totalEarned: true,
-              streak: true,
-              messageCount: true,
-            },
-          })
-        : Promise.resolve(null),
-    ]);
+  // Global list + earned-counts come from cache (public, 120s). User-specific
+  // bits (myEarned, me) stay live.
+  const [meta, myEarned, me] = await Promise.all([
+    getCachedAchievementsMeta(),
+    userId
+      ? prisma.userAchievement.findMany({
+          where: { userId },
+          select: { achievementId: true, earnedAt: true },
+        })
+      : Promise.resolve([]),
+    userId
+      ? prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            level: true,
+            totalEarned: true,
+            streak: true,
+            messageCount: true,
+          },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  const allAchievements = meta.achievements;
+  const totalUsers = meta.totalUsers;
 
   const earnedMap = new Map(
-    earnedCounts.map((e) => [e.achievementId, e._count.id]),
+    meta.earnedCounts.map((e) => [e.achievementId, e.count]),
   );
   const myEarnedMap = new Map(
     myEarned.map((m) => [m.achievementId, m.earnedAt.toISOString()]),

@@ -54,6 +54,40 @@ export const getCachedRanking = (sort: "tokens" | "totalEarned" | "level" | "str
     { revalidate: 45, tags: ["ranking"] },
   )();
 
+export type CachedAchievement = {
+  id: string; code: string; name: string; description: string; icon: string;
+  rarity: string; hidden: boolean; triggerType: string | null; triggerValue: number | null;
+  xpReward: number; tokenReward: number;
+};
+
+/**
+ * Achievements master list + global earned-counts + total users. All public/global.
+ * The master list basically never changes (only on seed/deploy); earned-counts drift
+ * but 2-min staleness on a "% of users earned this" stat is fine. Cached 120s.
+ * Selects only Date-free columns so it's safe to JSON-cache.
+ */
+export const getCachedAchievementsMeta = () =>
+  unstable_cache(
+    async () => {
+      const [achievements, totalUsers, grouped] = await Promise.all([
+        prisma.achievement.findMany({
+          orderBy: [{ rarity: "asc" }, { triggerValue: "asc" }, { name: "asc" }],
+          select: {
+            id: true, code: true, name: true, description: true, icon: true,
+            rarity: true, hidden: true, triggerType: true, triggerValue: true,
+            xpReward: true, tokenReward: true,
+          },
+        }),
+        prisma.user.count(),
+        prisma.userAchievement.groupBy({ by: ["achievementId"], _count: { id: true } }),
+      ]);
+      const earnedCounts = grouped.map((g) => ({ achievementId: g.achievementId, count: g._count.id }));
+      return { achievements: achievements as CachedAchievement[], totalUsers, earnedCounts };
+    },
+    ["achievements-meta"],
+    { revalidate: 120, tags: ["achievements"] },
+  )();
+
 /** Homepage top-N preview. Cached 60s. */
 export const getCachedTopUsers = (limit = 3) =>
   unstable_cache(

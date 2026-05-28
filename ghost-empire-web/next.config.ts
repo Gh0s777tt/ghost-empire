@@ -64,6 +64,17 @@ const nextConfig: NextConfig = {
         "ghost-empire-web.vercel.app",
       ],
     },
+    // Client-side Router Cache: reuse the RSC payload when navigating BACK to a
+    // page within this window instead of refetching from the server. Default for
+    // dynamic pages is 0s (refetch every navigation) — that's why admin <-> profile
+    // <-> achievements back-and-forth felt slow. 30s = instant back-nav, data at
+    // most 30s stale (fine for these pages).
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+    // Trim client JS for the icon-heavy admin/profile pages.
+    optimizePackageImports: ["lucide-react"],
   },
 
   async headers() {
