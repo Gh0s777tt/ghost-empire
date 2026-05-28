@@ -184,9 +184,7 @@ type PendingOrder = {
 
 export function AdminClient({
   isAdmin, myPermissions,
-  stats, drops, events, pendingOrders, auditLog, allShopItems, allEvents,
-  botConfig, scheduleSlots, streamlabsConnection, unmatchedDonations,
-  twitchEventSub, streamAlerts,
+  stats, drops, events, pendingOrders,
 }: {
   isAdmin: boolean;
   myPermissions: string[];
@@ -194,15 +192,9 @@ export function AdminClient({
   drops: Drop[];
   events: AdminEvent[];
   pendingOrders: PendingOrder[];
-  auditLog: AuditEntry[];
-  allShopItems: ShopItemRow[];
-  allEvents: EventRow[];
-  botConfig: BotConfigData;
-  scheduleSlots: ScheduleSlot[];
-  streamlabsConnection: StreamlabsConnectionData;
-  unmatchedDonations: UnmatchedDonation[];
-  twitchEventSub: TwitchEventSubData;
-  streamAlerts: StreamAlertsData;
+  // Everything else (shop/events-manager/schedule/bot/audit/streamlabs/twitch/alerts)
+  // is lazy-loaded per-section via <LazySection> + /api/admin/section-data — keeps the
+  // initial /admin server render to just the Dashboard's data.
 }) {
   // Permission checker — admins implicitly have all
   const can = useCallback(
@@ -379,14 +371,22 @@ export function AdminClient({
             <div className="space-y-6">
               {can("create_events") && <CreateEventCard {...sharedProps} />}
               {(can("edit_events") || can("draw_events")) && <ActiveEventsList events={events} {...sharedProps} />}
-              {can("edit_events") && <EventManager events={allEvents} {...sharedProps} />}
+              {can("edit_events") && (
+                <LazySection<{ allEvents: EventRow[] }> s="events">
+                  {(d) => <EventManager events={d.allEvents} {...sharedProps} />}
+                </LazySection>
+              )}
             </div>
           )}
 
           {activeSection === "shop" && (
             <div className="space-y-6">
               {can("deliver_orders") && <PendingOrdersList orders={pendingOrders} {...sharedProps} />}
-              {can("manage_shop") && <ShopManager items={allShopItems} {...sharedProps} />}
+              {can("manage_shop") && (
+                <LazySection<{ allShopItems: ShopItemRow[] }> s="shop">
+                  {(d) => <ShopManager items={d.allShopItems} {...sharedProps} />}
+                </LazySection>
+              )}
             </div>
           )}
 
@@ -398,23 +398,33 @@ export function AdminClient({
           )}
 
           {activeSection === "schedule" && can("manage_shop") && (
-            <ScheduleManager slots={scheduleSlots} {...sharedProps} />
+            <LazySection<{ scheduleSlots: ScheduleSlot[] }> s="schedule">
+              {(d) => <ScheduleManager slots={d.scheduleSlots} {...sharedProps} />}
+            </LazySection>
           )}
 
           {activeSection === "bot" && can("manage_shop") && (
-            <BotConfigCard config={botConfig} {...sharedProps} />
+            <LazySection<{ botConfig: BotConfigData }> s="bot">
+              {(d) => <BotConfigCard config={d.botConfig} {...sharedProps} />}
+            </LazySection>
           )}
 
           {activeSection === "donations" && isAdmin && (
-            <StreamlabsManager
-              connection={streamlabsConnection}
-              unmatchedDonations={unmatchedDonations}
-              {...sharedProps}
-            />
+            <LazySection<{ streamlabsConnection: StreamlabsConnectionData; unmatchedDonations: UnmatchedDonation[] }> s="streamlabs">
+              {(d) => (
+                <StreamlabsManager
+                  connection={d.streamlabsConnection}
+                  unmatchedDonations={d.unmatchedDonations}
+                  {...sharedProps}
+                />
+              )}
+            </LazySection>
           )}
 
           {activeSection === "twitch" && isAdmin && (
-            <TwitchEventSubManager data={twitchEventSub} {...sharedProps} />
+            <LazySection<{ twitchEventSub: TwitchEventSubData }> s="twitch">
+              {(d) => <TwitchEventSubManager data={d.twitchEventSub} {...sharedProps} />}
+            </LazySection>
           )}
 
           {activeSection === "kick" && isAdmin && (
@@ -426,7 +436,9 @@ export function AdminClient({
           )}
 
           {activeSection === "alerts" && isAdmin && (
-            <StreamAlertsManager data={streamAlerts} {...sharedProps} />
+            <LazySection<{ streamAlerts: StreamAlertsData }> s="alerts">
+              {(d) => <StreamAlertsManager data={d.streamAlerts} {...sharedProps} />}
+            </LazySection>
           )}
 
           {activeSection === "goals" && isAdmin && (
@@ -442,7 +454,9 @@ export function AdminClient({
           )}
 
           {activeSection === "audit" && can("view_audit") && (
-            <AuditLogSection auditLog={auditLog} />
+            <LazySection<{ auditLog: AuditEntry[] }> s="audit">
+              {(d) => <AuditLogSection auditLog={d.auditLog} />}
+            </LazySection>
           )}
         </div>
       </div>
@@ -462,6 +476,51 @@ export function AdminClient({
       )}
     </div>
   );
+}
+
+// ============== LAZY SECTION (defers per-section data fetch) ==============
+
+/**
+ * Fetches /api/admin/section-data?s={s} on mount and renders children with the
+ * result. Keeps the manager components untouched — only their data loading is
+ * deferred, so opening /admin no longer fetches every section's data up-front.
+ */
+function LazySection<T>({ s, children }: { s: string; children: (data: T) => React.ReactNode }) {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setData(null);
+    setError(null);
+    fetch(`/api/admin/section-data?s=${encodeURIComponent(s)}`)
+      .then(async (r) => {
+        if (!r.ok) {
+          const e = await r.json().catch(() => ({}));
+          throw new Error(e.error ?? `Błąd ${r.status}`);
+        }
+        return r.json();
+      })
+      .then((d) => { if (!cancelled) setData(d as T); })
+      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Błąd ładowania"); });
+    return () => { cancelled = true; };
+  }, [s]);
+
+  if (error) {
+    return (
+      <div className="border border-red-800 bg-red-950/30 p-4 text-sm text-red-200">
+        Nie udało się załadować sekcji: {error}
+      </div>
+    );
+  }
+  if (data === null) {
+    return (
+      <div className="border border-zinc-800 bg-black/30 p-8 flex items-center justify-center gap-2 text-zinc-500 text-sm">
+        <Loader2 className="w-4 h-4 animate-spin" /> Ładowanie sekcji…
+      </div>
+    );
+  }
+  return <>{children(data)}</>;
 }
 
 // ============== ADMIN NAV ==============

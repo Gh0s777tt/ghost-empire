@@ -5,7 +5,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { AdminClient } from "@/components/admin/AdminClient";
-import { getSettings as getAlertSettings } from "@/lib/alerts";
 
 export const dynamic = "force-dynamic";
 
@@ -32,21 +31,12 @@ export default async function AdminPage() {
     ? ["__all__"]   // sentinel — AdminClient treats this as "all"
     : me.modPermissions;
 
-  // ALL admin-page DB reads in a single Promise.all — previously these were ~10
-  // sequential awaits which serialized on `connection_limit=1` in DATABASE_URL.
-  // Bundling them lets pgbouncer pipeline and cuts load time dramatically.
-  const ALL_ALERT_TYPES = [
-    "shop_purchase", "event_win", "drop_claim_bonus",
-    "twitch_sub", "twitch_gift_sub", "twitch_cheer",
-    "donation", "welcome", "level_up", "test",
-  ];
+  // Only the DEFAULT (Dashboard) view's data is fetched server-side. Every other
+  // section lazy-loads its own data on open via /api/admin/section-data, so the
+  // initial /admin render went from ~18 queries to these 7.
   const [
     totalUsers, sums, eventsActive, ordersPending,
     activeDrops, activeEvents, pendingOrders,
-    auditLog, allShopItems, botConfig, scheduleSlots,
-    streamlabsConn, unmatchedDonations,
-    twitchStreamer, twitchSubs, recentTwitchEvents,
-    alertSettings, recentAlerts,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.aggregate({ _sum: { tokens: true, totalEarned: true } }),
@@ -73,25 +63,6 @@ export default async function AdminPage() {
         user: { select: { username: true, displayName: true, discordId: true, discordUsername: true } },
       },
     }),
-    prisma.adminAction.findMany({ orderBy: { createdAt: "desc" }, take: 30 }),
-    prisma.shopItem.findMany({
-      orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }],
-    }),
-    prisma.botConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
-    prisma.streamScheduleSlot.findMany({
-      orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }, { startMinute: "asc" }],
-    }),
-    prisma.streamlabsConnection.findUnique({ where: { id: "default" } }),
-    prisma.donation.findMany({
-      where: { userId: null, matchType: null },
-      orderBy: { donatedAt: "desc" },
-      take: 30,
-    }),
-    prisma.twitchStreamerToken.findUnique({ where: { id: "default" } }),
-    prisma.twitchEventSubscription.findMany({ orderBy: { type: "asc" } }),
-    prisma.twitchEvent.findMany({ orderBy: { receivedAt: "desc" }, take: 10 }),
-    getAlertSettings(), // lazy-creates row + auto-generates overlayToken on first call
-    prisma.streamAlert.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
   ]);
 
   return (
@@ -143,118 +114,6 @@ export default async function AdminPage() {
             shopItem: t.shopItem,
             user: t.user,
           }))}
-          auditLog={auditLog.map((a) => ({
-            id: a.id,
-            adminId: a.adminId,
-            adminName: a.adminName,
-            action: a.action,
-            targetType: a.targetType,
-            targetId: a.targetId,
-            details: a.details,
-            ipAddress: a.ipAddress,
-            createdAt: a.createdAt.toISOString(),
-          }))}
-          allShopItems={allShopItems.map((s) => ({
-            id: s.id,
-            name: s.name,
-            description: s.description,
-            category: s.category,
-            price: s.price,
-            imageEmoji: s.imageEmoji,
-            stock: s.stock,
-            totalStock: s.totalStock,
-            hot: s.hot,
-            active: s.active,
-            featured: s.featured,
-            requiresSubTier: s.requiresSubTier,
-            requiresMinLevel: s.requiresMinLevel,
-            requiresMinMonths: s.requiresMinMonths,
-          }))}
-          allEvents={activeEvents.map((e) => ({
-            id: e.id,
-            type: e.type,
-            name: e.name,
-            description: e.description,
-            multiplier: e.multiplier,
-            prize: e.prize,
-            winnersCount: e.winnersCount,
-            requirement: e.requirement,
-            ticketPrice: e.ticketPrice,
-            maxTicketsPerUser: e.maxTicketsPerUser,
-            startsAt: e.startsAt?.toISOString() ?? null,
-            endsAt: e.endsAt?.toISOString() ?? null,
-            drawnAt: e.drawnAt?.toISOString() ?? null,
-            active: e.active,
-          }))}
-          botConfig={botConfig}
-          scheduleSlots={scheduleSlots.map((s) => ({
-            id: s.id,
-            dayOfWeek: s.dayOfWeek,
-            startHour: s.startHour,
-            startMinute: s.startMinute,
-            durationMinutes: s.durationMinutes,
-            title: s.title,
-            platform: s.platform,
-            active: s.active,
-          }))}
-          streamlabsConnection={streamlabsConn ? {
-            connected: true,
-            streamlabsUsername: streamlabsConn.streamlabsUsername,
-            connectedAt: streamlabsConn.connectedAt.toISOString(),
-            lastPolledAt: streamlabsConn.lastPolledAt?.toISOString() ?? null,
-            lastSeenDonationId: streamlabsConn.lastSeenDonationId,
-          } : { connected: false }}
-          unmatchedDonations={unmatchedDonations.map((d) => ({
-            id: d.id,
-            externalId: d.externalId,
-            donorName: d.donorName,
-            message: d.message,
-            amountGrosze: d.amountGrosze,
-            currency: d.currency,
-            donatedAt: d.donatedAt.toISOString(),
-          }))}
-          twitchEventSub={{
-            streamerConnected: !!twitchStreamer,
-            broadcasterLogin: twitchStreamer?.broadcasterLogin ?? null,
-            broadcasterId: twitchStreamer?.broadcasterId ?? null,
-            connectedAt: twitchStreamer?.connectedAt.toISOString() ?? null,
-            subscriptions: twitchSubs.map((s) => ({
-              id: s.id,
-              type: s.type,
-              status: s.status,
-              lastSeenAt: s.lastSeenAt?.toISOString() ?? null,
-              createdAt: s.createdAt.toISOString(),
-            })),
-            recentEvents: recentTwitchEvents.map((e) => ({
-              id: e.id,
-              type: e.type,
-              userId: e.userId,
-              tokensGranted: e.tokensGranted,
-              receivedAt: e.receivedAt.toISOString(),
-            })),
-          }}
-          streamAlerts={{
-            overlayToken: alertSettings.overlayToken,
-            settings: {
-              enabledTypes: alertSettings.enabledTypes,
-              durationMs: alertSettings.durationMs,
-              accentColor: alertSettings.accentColor,
-              soundEnabled: alertSettings.soundEnabled,
-            },
-            allTypes: ALL_ALERT_TYPES,
-            recent: recentAlerts.map((a) => ({
-              id: a.id,
-              type: a.type,
-              title: a.title,
-              message: a.message,
-              icon: a.icon,
-              actorName: a.actorName,
-              amount: a.amount,
-              amountLabel: a.amountLabel,
-              createdAt: a.createdAt.toISOString(),
-              shownAt: a.shownAt?.toISOString() ?? null,
-            })),
-          }}
         />
       </main>
     </div>
