@@ -18,9 +18,14 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
   },
+  // Isolate our browsing context from cross-origin openers (tabnabbing / XS-Leaks
+  // protection). "allow-popups" keeps any OAuth/popup windows we open functional.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+  // Stop legacy Flash/Acrobat from loading cross-domain policy files.
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
   // Light CSP — does not block inline styles/scripts (Next.js uses them);
-  // restricts where iframes/objects can load from. Tighter CSP would need
-  // Next.js nonces (more work) — deferred to Phase 2.
+  // blocks plugins (object-src) and upgrades any http subresource to https.
+  // Tightening script-src (drop unsafe-inline/eval) needs Next.js nonces — deferred.
   {
     key: "Content-Security-Policy",
     value: [
@@ -33,6 +38,8 @@ const securityHeaders = [
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self' https://id.twitch.tv https://discord.com",
+      "object-src 'none'",
+      "upgrade-insecure-requests",
     ].join("; "),
   },
 ];
