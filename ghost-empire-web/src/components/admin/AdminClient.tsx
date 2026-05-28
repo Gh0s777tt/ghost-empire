@@ -4421,12 +4421,15 @@ function KickEventsManager({
         body: JSON.stringify({ action: "setup" }),
       });
       const result = await res.json();
-      if (!res.ok) {
+      // Always log the full response so we can see exactly what Kick said
+      console.log("[kick setup] response:", result);
+      if (!res.ok || result.error) {
+        // Error case (incl. HTTP 200 but Kick rejected / created nothing)
         onToast("err", result.error ?? "Błąd setupu");
       } else if (Array.isArray(result.results) && result.results.length > 0) {
         const ok = result.results.filter((r: { ok: boolean }) => r.ok).length;
         const fail = result.results.length - ok;
-        onToast("ok", `Setup: ok=${ok}, fail=${fail}`);
+        onToast(fail > 0 ? "err" : "ok", `Setup: ok=${ok}, fail=${fail}`);
       } else {
         onToast("ok", result.message ?? "Setup zakończony");
       }

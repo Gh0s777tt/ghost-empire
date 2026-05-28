@@ -86,13 +86,17 @@ export async function POST(req: Request) {
     }
 
     const results: Array<{ type: string; ok: boolean; id?: string; error?: string }> = [];
+    let kickStatus = 0;
+    let kickRaw = "";
     try {
-      const created = await createEventSubscriptions(
+      const resp = await createEventSubscriptions(
         toCreate.map((t) => ({ name: t.name, version: t.version })),
         streamerToken.accessToken,
-        Number(streamerToken.broadcasterId),
       );
-      for (const c of created) {
+      kickStatus = resp.status;
+      kickRaw = resp.rawBody.slice(0, 800);
+
+      for (const c of resp.created) {
         const ok = !!c.subscription_id && !c.error;
         if (ok) {
           await prisma.kickEventSubscription.create({
@@ -103,12 +107,20 @@ export async function POST(req: Request) {
             },
           }).catch(() => {});
         }
-        results.push({
-          type: c.name,
-          ok,
-          id: c.subscription_id,
-          error: c.error,
-        });
+        results.push({ type: c.name, ok, id: c.subscription_id, error: c.error });
+      }
+
+      // Kick returned non-2xx, or 2xx but created nothing → surface the raw body
+      if (kickStatus >= 400 || resp.created.length === 0) {
+        return NextResponse.json(
+          {
+            error: `Kick odrzucił request (HTTP ${kickStatus}). Odpowiedź: ${kickRaw || "(pusta)"}`,
+            kickStatus,
+            kickRaw,
+            results,
+          },
+          { status: kickStatus >= 400 ? 502 : 200 },
+        );
       }
     } catch (e) {
       return NextResponse.json(
@@ -121,11 +133,11 @@ export async function POST(req: Request) {
       adminId: auth.userId,
       action: "set_user_role",
       targetType: "kick_events_setup",
-      details: { results, broadcasterId: streamerToken.broadcasterId },
+      details: { results, broadcasterId: streamerToken.broadcasterId, kickStatus },
       req,
     });
 
-    return NextResponse.json({ ok: true, results });
+    return NextResponse.json({ ok: true, results, kickStatus });
   }
 
   if (body.action === "delete") {

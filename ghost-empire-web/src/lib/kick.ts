@@ -134,30 +134,41 @@ export async function listEventSubscriptions(appToken: string): Promise<Array<{
   return Array.isArray(data?.data) ? data.data : [];
 }
 
+export type CreateSubsResult = {
+  status: number;
+  rawBody: string;
+  created: Array<{ name: string; version: number; subscription_id: string; error?: string }>;
+};
+
+/**
+ * Create webhook event subscriptions for the streamer.
+ *
+ * NOTE: with a USER access token (the streamer's), Kick defaults broadcaster_user_id
+ * to the token owner — we deliberately DON'T send it (sending it has been observed to
+ * cause silent no-ops / 400s). Returns the raw status + body so the caller can surface
+ * exactly what Kick said instead of guessing.
+ */
 export async function createEventSubscriptions(
   types: Array<{ name: string; version: number }>,
   userAccessToken: string,
-  broadcasterUserId?: number,
-): Promise<Array<{ name: string; version: number; subscription_id: string; error?: string }>> {
-  const body: Record<string, unknown> = {
-    method: "webhook",
-    types,
-  };
-  if (broadcasterUserId) body.broadcaster_user_id = broadcasterUserId;
-
+): Promise<CreateSubsResult> {
   const res = await fetch(`${KICK_API}/events/subscriptions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${userAccessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ method: "webhook", types }),
   });
-  if (!res.ok) {
-    throw new Error(`createEventSubscriptions failed: ${res.status} ${await res.text()}`);
+  const rawBody = await res.text();
+  let created: CreateSubsResult["created"] = [];
+  try {
+    const data = JSON.parse(rawBody);
+    if (Array.isArray(data?.data)) created = data.data;
+  } catch {
+    /* non-JSON — leave created empty, rawBody carries the diagnostic */
   }
-  const data = await res.json();
-  return Array.isArray(data?.data) ? data.data : [];
+  return { status: res.status, rawBody, created };
 }
 
 export async function deleteEventSubscription(id: string, userAccessToken: string): Promise<void> {
