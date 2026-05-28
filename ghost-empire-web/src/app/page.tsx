@@ -39,7 +39,8 @@ export default async function HomePage() {
   // User-specific data (only if logged in)
   let userData = null;
   if (session?.user?.id) {
-    const [user, connections, achievements, tasks] = await Promise.all([
+    const uid = session.user.id;
+    const [user, connections, achievements, tasks, activeDailyTaskIds] = await Promise.all([
       prisma.user.findUnique({
         where: { id: session.user.id },
         select: {
@@ -96,55 +97,47 @@ export default async function HomePage() {
           },
         },
       }),
+
+      // Active daily-task IDs — fetched in parallel so ensuring the user's rows
+      // doesn't need a separate sequential round-trip.
+      prisma.dailyTask.findMany({
+        where: { active: true },
+        select: { id: true },
+      }),
     ]);
 
-    // Ensure all 3 daily tasks exist for today
-    const allTasks = await prisma.dailyTask.findMany({
-      where: { active: true },
-    });
+    // Ensure a UserTask row exists for each active daily task (today). Previously
+    // this ran N sequential upserts on EVERY home load + an unconditional refetch.
+    // Now: create only the missing rows in one createMany, and refetch only if we
+    // actually created something (the common case = no missing = zero extra queries).
+    const missingTaskIds = activeDailyTaskIds
+      .filter((t) => !tasks.some((ut) => ut.taskId === t.id))
+      .map((t) => t.id);
 
-    for (const t of allTasks) {
-      const exists = tasks.find((ut) => ut.taskId === t.id);
-      if (!exists && session.user.id) {
-        await prisma.userTask.upsert({
-          where: {
-            userId_taskId_date: {
-              userId: session.user.id,
-              taskId: t.id,
-              date: today(),
+    let effectiveTasks = tasks;
+    if (missingTaskIds.length > 0) {
+      await prisma.userTask.createMany({
+        data: missingTaskIds.map((taskId) => ({ userId: uid, taskId, date: today() })),
+        skipDuplicates: true,
+      });
+      effectiveTasks = await prisma.userTask.findMany({
+        where: { userId: uid, date: today() },
+        include: {
+          task: {
+            select: {
+              id: true,
+              code: true,
+              text: true,
+              target: true,
+              reward: true,
+              triggerType: true,
             },
           },
-          update: {},
-          create: {
-            userId: session.user.id,
-            taskId: t.id,
-            date: today(),
-          },
-        });
-      }
+        },
+      });
     }
 
-    // Refetch tasks after ensuring they exist
-    const updatedTasks = await prisma.userTask.findMany({
-      where: {
-        userId: session.user.id,
-        date: today(),
-      },
-      include: {
-        task: {
-          select: {
-            id: true,
-            code: true,
-            text: true,
-            target: true,
-            reward: true,
-            triggerType: true,
-          },
-        },
-      },
-    });
-
-    userData = { user, connections, achievements, tasks: updatedTasks };
+    userData = { user, connections, achievements, tasks: effectiveTasks };
   }
 
   return (

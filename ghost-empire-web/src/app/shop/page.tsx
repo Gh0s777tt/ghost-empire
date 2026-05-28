@@ -15,32 +15,35 @@ export const metadata = {
 export default async function ShopPage() {
   const session = await getServerSession(authOptions);
 
-  const items = await prisma.shopItem.findMany({
-    where: { active: true },
-    orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
-  });
+  // Shop items and the user's context are independent → fetch in parallel.
+  const [items, user] = await Promise.all([
+    prisma.shopItem.findMany({
+      where: { active: true },
+      orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
+    }),
+    session?.user?.id
+      ? prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: {
+            tokens: true,
+            level: true,
+            connections: {
+              where: { isSubscriber: true },
+              select: { subTier: true, subMonths: true },
+            },
+          },
+        })
+      : Promise.resolve(null),
+  ]);
 
   let userContext: { tokens: number; level: number; subTiers: string[]; maxSubMonths: number } | null = null;
-  if (session?.user?.id) {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        tokens: true,
-        level: true,
-        connections: {
-          where: { isSubscriber: true },
-          select: { subTier: true, subMonths: true },
-        },
-      },
-    });
-    if (user) {
-      userContext = {
-        tokens: user.tokens,
-        level: user.level,
-        subTiers: user.connections.map((c) => c.subTier ?? "").filter(Boolean),
-        maxSubMonths: user.connections.reduce((m, c) => Math.max(m, c.subMonths), 0),
-      };
-    }
+  if (user) {
+    userContext = {
+      tokens: user.tokens,
+      level: user.level,
+      subTiers: user.connections.map((c) => c.subTier ?? "").filter(Boolean),
+      maxSubMonths: user.connections.reduce((m, c) => Math.max(m, c.subMonths), 0),
+    };
   }
 
   return (

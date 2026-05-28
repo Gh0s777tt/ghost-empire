@@ -212,7 +212,7 @@ function GuestView({ topUsers, hotItems, activeEvents }: any) {
               <div
                 className="w-10 h-10 border border-zinc-700 overflow-hidden bg-zinc-900 flex items-center justify-center text-lg"
               >
-                {u.image ? <img src={u.image} alt="" className="w-full h-full object-cover" /> : "👻"}
+                {u.image ? <img src={u.image} alt="" width={40} height={40} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" /> : "👻"}
               </div>
               <div className="flex-1">
                 <p className="font-bold text-white">{u.displayName ?? u.username}</p>
@@ -255,7 +255,7 @@ function ProfileHero({ user }: { user: any }) {
             <div className="absolute -inset-1 bg-gradient-to-br from-red-600 to-red-900 blur-sm opacity-50" />
             <div className="relative w-20 h-20 border-2 border-red-500 overflow-hidden bg-zinc-900 clip-corner">
               {user.image ? (
-                <img src={user.image} alt="" className="w-full h-full object-cover" />
+                <img src={user.image} alt="" width={80} height={80} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-3xl">👻</div>
               )}

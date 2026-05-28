@@ -365,7 +365,7 @@ function UserRow({
       <td className="p-3">
         <div className="flex items-center gap-3 min-w-0">
           {user.image ? (
-            <img src={user.image} alt="" className="w-8 h-8 object-cover border border-zinc-800 flex-shrink-0" />
+            <img src={user.image} alt="" width={32} height={32} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-8 h-8 object-cover border border-zinc-800 flex-shrink-0" />
           ) : (
             <div className="w-8 h-8 border border-zinc-800 bg-zinc-900 flex items-center justify-center text-sm flex-shrink-0">
               👻
@@ -539,7 +539,7 @@ function AdminUserActions({
         {/* Header */}
         <div className="flex items-start gap-3 mb-4">
           {user.image ? (
-            <img src={user.image} alt="" className="w-12 h-12 border-2 border-red-700 object-cover flex-shrink-0" />
+            <img src={user.image} alt="" width={48} height={48} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-12 h-12 border-2 border-red-700 object-cover flex-shrink-0" />
           ) : (
             <div className="w-12 h-12 border-2 border-red-700 bg-zinc-900 flex items-center justify-center text-xl flex-shrink-0">👻</div>
           )}

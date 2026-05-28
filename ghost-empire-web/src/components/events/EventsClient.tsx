@@ -330,7 +330,7 @@ function WinnersBanner({ event }: { event: EventData }) {
           {event.winners.map((w) => (
             <li key={w.id} className="flex items-center gap-2">
               {w.image ? (
-                <img src={w.image} alt="" className="w-6 h-6 object-cover border border-yellow-700" />
+                <img src={w.image} alt="" width={24} height={24} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-6 h-6 object-cover border border-yellow-700" />
               ) : (
                 <div className="w-6 h-6 border border-yellow-700 bg-zinc-900 flex items-center justify-center text-xs">
                   👻
