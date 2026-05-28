@@ -5,13 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { HomeClient } from "@/components/home/HomeClient";
 import { today } from "@/lib/utils";
+import { getCachedTopUsers } from "@/lib/cached";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
 
-  // Parallel data fetching
+  // Parallel data fetching. topUsers is cached (public, no Date fields → safe);
+  // hot items + events stay live (tiny take: 3/4 queries).
   const [hotItems, activeEvents, topUsers] = await Promise.all([
     // Hot items from shop
     prisma.shopItem.findMany({
@@ -30,20 +32,8 @@ export default async function HomePage() {
       orderBy: { createdAt: "desc" },
     }),
 
-    // Top 3 for quick ranking preview
-    prisma.user.findMany({
-      where: { tokens: { gt: 0 } },
-      orderBy: { tokens: "desc" },
-      take: 3,
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        image: true,
-        tokens: true,
-        level: true,
-      },
-    }),
+    // Top 3 for quick ranking preview (cached 60s)
+    getCachedTopUsers(3),
   ]);
 
   // User-specific data (only if logged in)

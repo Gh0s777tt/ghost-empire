@@ -30,6 +30,9 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Performance
 
+- **DB indexes na hot queries** — `User` zyskał indeksy na `tokens`, `totalEarned`, `[level, xp]`, `streak` (sortowane przez ranking + homepage top-users) oraz `Connection` na `[platform, username]` (lookup w webhook handlerach przy każdym subie/cheerze). Zamienia full-table scan+sort na index range scan — kluczowe na free-tier Postgres. Wymaga `npm run db:push`.
+- **Cache publicznych zapytań** (`lib/cached.ts`, `unstable_cache`) — ranking (45s per sort metric) i homepage top-users (60s) serwowane z cache zamiast uderzać w bazę przy każdym wejściu. Ranking to najcięższe publiczne zapytanie i wynik jest identyczny dla wszystkich → 1 hit DB na okno zamiast N. Cache'owane tylko selecty bez pól `Date` (uniknięcie JSON-serialization footgun).
+- **Env tuning (do zastosowania w Vercel)** — `.env.example` podbity `connection_limit=1 → 3` + `pool_timeout=20`. To główny fix na "wolno / czasem w ogóle": limit=1 serializował wszystkie zapytania na 1 połączeniu i zatykał pulę pod obciążeniem. **User musi zmienić DATABASE_URL w Vercel env** (kod tego nie wymusi).
 - **Parallelized admin page queries** — w `/admin` było ~10 sekwencyjnych `await prisma.*` po pierwszym Promise.all. Z `connection_limit=1` w DATABASE_URL (Supabase pgbouncer) każde query musiało czekać na poprzednie. Zlepione w jeden Promise.all → wszystko leci równolegle, czas ładowania `/admin` powinien spaść kilkukrotnie.
 - **Dedup font loading** — `layout.tsx` ładowało Inter dwukrotnie (raz przez `next/font/google`, raz przez `<link>` do fonts.googleapis.com). Przeniesiony JetBrains Mono też do `next/font`, w `<head>` zostało tylko Anton (display font, brak w next/font Google Fonts subset) z `<link rel="preconnect">`. Mniej round-tripów, brak CLS na fontach.
 

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { RankingClient } from "@/components/ranking/RankingClient";
+import { getCachedRanking } from "@/lib/cached";
 
 export const dynamic = "force-dynamic";
 
@@ -44,39 +45,14 @@ export default async function RankingPage({
   }
   const canDoAnything = canGrantTokens || canSetRole || canBan;
 
-  // Order strategy: primary field DESC, then secondary tiebreakers
-  const orderBy =
-    sort === "level"
-      ? [{ level: "desc" as const }, { xp: "desc" as const }]
-      : [{ [sort]: "desc" as const }];
-
   // Only count users with non-zero value on the sorted field — keeps the
   // ranking from being polluted by brand-new accounts with all zeros.
   const where = { [sort]: { gt: 0 } };
 
-  const [topUsers, totalRanked, totalUsers] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      orderBy,
-      take: 100,
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        name: true,
-        image: true,
-        tokens: true,
-        totalEarned: true,
-        level: true,
-        xp: true,
-        streak: true,
-        isAdmin: true,
-        isBanned: true,
-      },
-    }),
-    prisma.user.count({ where }),
-    prisma.user.count(),
-  ]);
+  // Cached 45s per sort metric — ranking is the heaviest public query and the
+  // result is identical for everyone, so we serve it from cache instead of
+  // hammering the (free-tier) DB on every visit.
+  const { topUsers, totalRanked, totalUsers } = await getCachedRanking(sort);
 
   // Compute current user's rank if not in top 100
   let myRank: {

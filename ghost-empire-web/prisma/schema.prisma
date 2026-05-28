@@ -79,6 +79,12 @@ model User {
   notifications   Notification[]
   donations       Donation[]
 
+  // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
+  // turn full-table scan+sort into index range scans on free-tier Postgres.
+  @@index([tokens])
+  @@index([totalEarned])
+  @@index([level, xp])
+  @@index([streak])
   @@map("users")
 }
 
@@ -173,6 +179,9 @@ model Connection {
 
   @@unique([userId, platform])
   @@unique([platform, platformId])
+  // Webhook handlers (Twitch/Kick) look up the linked account by platform + username
+  // on every sub/cheer/gift event — index the equality columns.
+  @@index([platform, username])
   @@map("connections")
 }
 
