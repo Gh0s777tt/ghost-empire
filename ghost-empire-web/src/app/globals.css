@@ -235,3 +235,25 @@
 .delay-200 { animation-delay: 0.2s; opacity: 0; }
 .delay-300 { animation-delay: 0.3s; opacity: 0; }
 .delay-400 { animation-delay: 0.4s; opacity: 0; }
+
+/* =========================================================
+   ACCESSIBILITY — respect reduced-motion preference
+   Users who set "reduce motion" at the OS level get near-instant
+   transitions/animations instead of pulses, slides and the rotating
+   border. Staggered-reveal elements are forced visible so nothing
+   stays stuck at opacity:0.
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .delay-100, .delay-200, .delay-300, .delay-400 {
+    opacity: 1 !important;
+  }
+}

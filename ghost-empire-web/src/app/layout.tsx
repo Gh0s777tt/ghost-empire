@@ -1,5 +1,5 @@
 // src/app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -49,9 +49,17 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  icons: {
-    icon: "/favicon.ico",
-  },
+  // Icons (icon.svg, apple-icon) and the manifest are file-based in app/ and
+  // auto-injected by Next — no explicit declarations needed here.
+};
+
+// Next 15: themeColor/colorScheme live in the viewport export, not metadata.
+// themeColor tints the mobile browser chrome (address bar) to the brand red.
+export const viewport: Viewport = {
+  themeColor: "#E50914",
+  colorScheme: "dark",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
