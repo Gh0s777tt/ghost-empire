@@ -7,7 +7,9 @@ import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
 import { getStreamerAuthorizeUrl } from "@/lib/kick";
 
-const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
+// Strip any trailing slash so we never build "...app//api/..." which Kick rejects
+// as an invalid redirect_uri (must byte-match the registered URI).
+const BASE = (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app").replace(/\/+$/, "");
 
 function base64url(buf: Buffer): string {
   return buf.toString("base64url");

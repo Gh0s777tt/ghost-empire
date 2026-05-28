@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { exchangeUserCode, getOwnUser } from "@/lib/kick";
 
-const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
+// Must byte-match the redirect_uri used in the authorize step — strip trailing slash too.
+const BASE = (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app").replace(/\/+$/, "");
 
 export async function GET(req: Request) {
   const auth = await requireAdmin();
