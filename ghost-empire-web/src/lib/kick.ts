@@ -152,13 +152,15 @@ export async function createEventSubscriptions(
   types: Array<{ name: string; version: number }>,
   userAccessToken: string,
 ): Promise<CreateSubsResult> {
+  // Kick expects the field name `events` (NOT `types`). Sending `types` makes Kick
+  // silently ignore it and return 200 {"data":[],"message":"OK"} — subscribing to nothing.
   const res = await fetch(`${KICK_API}/events/subscriptions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${userAccessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ method: "webhook", types }),
+    body: JSON.stringify({ method: "webhook", events: types }),
   });
   const rawBody = await res.text();
   let created: CreateSubsResult["created"] = [];
