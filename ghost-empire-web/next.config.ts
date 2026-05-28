@@ -48,12 +48,15 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
-    domains: [
-      "static-cdn.jtvnw.net",      // Twitch avatars
-      "api.dicebear.com",           // Fallback avatars
-      "cdn.discordapp.com",         // Discord avatars
-      "yt3.googleusercontent.com",  // YouTube avatars
-      "res.cloudinary.com",         // Cloudinary (shop images, future)
+    // remotePatterns replaces the deprecated `images.domains` (removed in a future
+    // Next major). Pin protocol to https so we never proxy plaintext-http images.
+    remotePatterns: [
+      { protocol: "https", hostname: "static-cdn.jtvnw.net" },   // Twitch avatars
+      { protocol: "https", hostname: "api.dicebear.com" },        // Fallback avatars
+      { protocol: "https", hostname: "cdn.discordapp.com" },      // Discord avatars
+      { protocol: "https", hostname: "yt3.googleusercontent.com" }, // YouTube avatars
+      { protocol: "https", hostname: "res.cloudinary.com" },      // Cloudinary (shop images, future)
+      { protocol: "https", hostname: "files.kick.com" },          // Kick avatars
     ],
   },
 
