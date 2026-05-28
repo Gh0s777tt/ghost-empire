@@ -20,6 +20,7 @@ import {
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { awardSeasonXp } from "@/lib/seasons";
 
 const YT_SUPERCHAT_GT_PER_PLN = 100;  // matches DONATION_GT_PER_PLN default
 const YT_MEMBER_REWARD = 5000;        // new sponsor / member milestone
@@ -309,6 +310,7 @@ async function handleSuperChat(input: {
     await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "donations_count" });
     await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "donations_amount_pln" });
     await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "super_chats_received" });
+    await awardSeasonXp(matchedUserId, "donation_per_pln", plnAmount);
   }
 
   return true;

@@ -10,6 +10,7 @@ import { verifyEventSubSignature, isMessageFresh } from "@/lib/twitch";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals, setHypeTrainStart, setHypeTrainProgress, setHypeTrainEnded } from "@/lib/stream-goals";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { awardSeasonXp } from "@/lib/seasons";
 
 // Tunable token rewards (env-configurable later if needed)
 const REWARD_SUB_T1 = 5000;
@@ -153,14 +154,19 @@ export async function POST(req: Request) {
     },
   });
 
-  // Fire achievement checks AFTER persisting the event so count queries see it
+  // Fire achievement checks + season XP AFTER persisting the event so count queries see it
   if (matchedUserId) {
     if (eventType === "channel.subscribe") {
       await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "twitch_sub_received" });
+      await awardSeasonXp(matchedUserId, "twitch_sub");
     } else if (eventType === "channel.subscription.gift") {
       await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "gift_subs_given" });
+      const giftTotal = (event.total as number) ?? 1;
+      await awardSeasonXp(matchedUserId, "gift_sub_each", giftTotal);
     } else if (eventType === "channel.cheer") {
       await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "bits_cheered" });
+      const cheerBits = (event.bits as number) ?? 0;
+      await awardSeasonXp(matchedUserId, "bit_each", cheerBits);
     }
   }
 

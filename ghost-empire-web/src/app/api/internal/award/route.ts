@@ -109,6 +109,8 @@ export async function POST(req: Request) {
 
   if (reason === "message" || reason === "voice") {
     await updateDailyTaskProgress(user.id, reason);
+    const { awardSeasonXp } = await import("@/lib/seasons");
+    await awardSeasonXp(user.id, reason === "message" ? "chat_message" : "voice_minute");
   }
 
   return NextResponse.json(

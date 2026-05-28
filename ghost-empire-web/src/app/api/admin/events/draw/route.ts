@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { awardSeasonXp } from "@/lib/seasons";
 
 // Crypto-secure Fisher-Yates shuffle
 function shuffle<T>(arr: T[]): T[] {
@@ -132,6 +133,7 @@ export async function POST(req: Request) {
       actorImage: w.image ?? undefined,
     });
     await checkAndGrantAchievements({ userId: w.id, triggerType: "events_won" });
+    await awardSeasonXp(w.id, "event_won");
   }
 
   await logAdminAction({

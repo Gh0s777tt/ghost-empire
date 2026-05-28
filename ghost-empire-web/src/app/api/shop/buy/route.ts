@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { awardSeasonXp } from "@/lib/seasons";
 
 const TIER_RANK: Record<string, number> = { T1: 1, T2: 2, T3: 3, Prime: 1 };
 
@@ -166,8 +167,9 @@ export async function POST(req: Request) {
       amountLabel: "GT",
     });
 
-    // Achievement check — shop purchase milestones
+    // Achievement check — shop purchase milestones + season XP
     await checkAndGrantAchievements({ userId, triggerType: "shop_purchases" });
+    await awardSeasonXp(userId, "shop_purchase");
 
     // Strip internal-only fields from the response
     const { _actor, _item, ...publicResult } = result;

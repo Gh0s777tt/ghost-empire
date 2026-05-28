@@ -11,6 +11,7 @@ import { cookies } from "next/headers";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { LINK_COOKIE_NAME, verifyLinkToken, executeAccountLink } from "@/lib/account-linking";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { awardSeasonXp } from "@/lib/seasons";
 
 // Custom Kick provider — KICK isn't built into next-auth.
 // API docs: https://docs.kick.com/getting-started/kick-developer-api
@@ -387,6 +388,9 @@ export const authOptions: NextAuthOptions = {
           amount: 500,
           amountLabel: "GT",
         });
+
+        // Season XP welcome bump
+        await awardSeasonXp(user.id, "welcome");
       } catch (e) {
         console.error("Error granting welcome bonus:", e);
       }

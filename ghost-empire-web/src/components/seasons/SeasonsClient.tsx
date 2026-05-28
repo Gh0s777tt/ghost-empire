@@ -1,0 +1,231 @@
+"use client";
+// src/components/seasons/SeasonsClient.tsx
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Ticket, Lock, Check, Loader2, Clock, Sparkles, X } from "lucide-react";
+import { fmt, cn } from "@/lib/utils";
+
+type Reward = {
+  id: string;
+  tier: number;
+  premium: boolean;
+  type: string;
+  label: string;
+  icon: string | null;
+  claimed: boolean;
+};
+
+type Season = {
+  number: number;
+  name: string;
+  description: string | null;
+  endsAt: string;
+  totalTiers: number;
+  xpPerTier: number;
+};
+
+export function SeasonsClient({
+  isAuthenticated, season, userXp, userTier, isPremium, rewards,
+}: {
+  isAuthenticated: boolean;
+  season: Season;
+  userXp: number;
+  userTier: number;
+  isPremium: boolean;
+  rewards: Reward[];
+}) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+
+  function showToast(kind: "ok" | "err", msg: string) {
+    setToast({ kind, msg });
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  async function claim(rewardId: string) {
+    setBusy(rewardId);
+    try {
+      const res = await fetch("/api/seasons/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rewardId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast("err", data.error ?? "Błąd");
+      } else {
+        showToast("ok", data.tokens ? `+${fmt(data.tokens)} GT — ${data.label}` : `Odebrano: ${data.label}`);
+        startTransition(() => router.refresh());
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // XP within current tier
+  const xpIntoTier = userXp % season.xpPerTier;
+  const tierPct = Math.min(100, (xpIntoTier / season.xpPerTier) * 100);
+  const daysLeft = Math.max(0, Math.ceil((new Date(season.endsAt).getTime() - Date.now()) / 86_400_000));
+
+  // Group rewards by tier for the track display
+  const maxTier = season.totalTiers;
+  const byTier = new Map<number, Reward[]>();
+  for (const r of rewards) {
+    if (!byTier.has(r.tier)) byTier.set(r.tier, []);
+    byTier.get(r.tier)!.push(r);
+  }
+  const tiersWithRewards = [...byTier.keys()].sort((a, b) => a - b);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-3 mb-2">
+          <Ticket className="w-7 h-7 text-red-500" />
+          <h1
+            className="font-display text-4xl text-white tracking-wider"
+            style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
+          >
+            BATTLE PASS
+          </h1>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap text-sm">
+          <span className="text-white font-bold">{season.name}</span>
+          <span className="text-zinc-500 flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" /> {daysLeft} dni do końca
+          </span>
+        </div>
+        {season.description && <p className="text-zinc-500 text-sm mt-1">{season.description}</p>}
+      </div>
+
+      {!isAuthenticated && (
+        <div className="border border-blue-700 bg-blue-950/30 p-4 text-sm text-blue-200">
+          Zaloguj się żeby zbierać XP sezonowe i odbierać nagrody.{" "}
+          <Link href="/auth/signin?callbackUrl=/seasons" className="text-white underline">Login</Link>
+        </div>
+      )}
+
+      {/* Progress */}
+      {isAuthenticated && (
+        <div className="border border-zinc-800 bg-zinc-950/70 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-red-950/40 border border-red-700 flex items-center justify-center font-display text-lg text-red-300">
+                {userTier}
+              </div>
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Twój tier</div>
+                <div className="text-white font-bold">{userTier} / {maxTier}</div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Total XP</div>
+              <div className="text-white font-mono font-bold tabular-nums">{fmt(userXp)}</div>
+            </div>
+          </div>
+          <div className="h-2 bg-zinc-900 rounded overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-red-700 to-red-500 transition-all"
+              style={{ width: `${tierPct}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-zinc-500 mt-1 font-mono">
+            <span>Tier {userTier}</span>
+            <span>{fmt(xpIntoTier)} / {fmt(season.xpPerTier)} XP do tier {Math.min(maxTier, userTier + 1)}</span>
+          </div>
+          {!isPremium && (
+            <div className="mt-2 text-[11px] text-zinc-500">
+              💡 Zbieraj XP za aktywność: chat, voice, suby, donacje, bity, dropy, eventy, zakupy.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Reward track */}
+      <div>
+        <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-red-500" />
+          Nagrody ({rewards.length})
+        </h2>
+        {tiersWithRewards.length === 0 ? (
+          <div className="border border-zinc-900 bg-black/30 p-8 text-center text-zinc-500 text-sm">
+            Nagrody tego sezonu nie zostały jeszcze skonfigurowane.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {tiersWithRewards.map((tier) =>
+              byTier.get(tier)!.map((r) => {
+                const unlocked = userTier >= r.tier;
+                const canClaim = isAuthenticated && unlocked && !r.claimed && (!r.premium || isPremium);
+                const lockedByPremium = r.premium && !isPremium;
+                return (
+                  <div
+                    key={r.id}
+                    className={cn(
+                      "border p-3 relative overflow-hidden flex flex-col",
+                      r.claimed ? "border-green-800 bg-green-950/15" :
+                      unlocked && canClaim ? "border-red-700 bg-red-950/15" :
+                      "border-zinc-800 bg-black/30",
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">
+                        Tier {r.tier}
+                      </span>
+                      {r.premium && (
+                        <span className="text-[8px] font-mono uppercase tracking-widest px-1 py-0.5 border border-yellow-700 bg-yellow-950/30 text-yellow-300">
+                          Premium
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-2xl mb-1">{r.icon ?? "🎁"}</div>
+                    <div className="text-xs text-white font-medium mb-2 flex-1">{r.label}</div>
+
+                    {r.claimed ? (
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-green-400 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Odebrano
+                      </div>
+                    ) : lockedByPremium ? (
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-yellow-500 flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Premium
+                      </div>
+                    ) : !unlocked ? (
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Tier {r.tier}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => claim(r.id)}
+                        disabled={busy === r.id}
+                        className="text-[10px] font-mono uppercase tracking-widest bg-red-700 hover:bg-red-600 text-white px-2 py-1 disabled:opacity-50 flex items-center justify-center gap-1"
+                      >
+                        {busy === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Odbierz"}
+                      </button>
+                    )}
+                  </div>
+                );
+              }),
+            )}
+          </div>
+        )}
+      </div>
+
+      {toast && (
+        <div
+          className={cn(
+            "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
+            toast.kind === "ok"
+              ? "border-green-700 bg-green-950/90 text-green-200"
+              : "border-red-700 bg-red-950/90 text-red-200",
+          )}
+        >
+          {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+          <span className="text-sm">{toast.msg}</span>
+        </div>
+      )}
+    </div>
+  );
+}

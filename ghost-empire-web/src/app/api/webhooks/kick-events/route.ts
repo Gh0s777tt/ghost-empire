@@ -9,6 +9,7 @@ import { verifyKickSignature, isMessageFresh } from "@/lib/kick";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { awardSeasonXp } from "@/lib/seasons";
 
 // Token rewards — mirror of Twitch tunables
 const REWARD_KICK_SUB        = 5000;
@@ -98,8 +99,11 @@ export async function POST(req: Request) {
   if (matchedUserId) {
     if (eventType === "channel.subscription.new" || eventType === "channel.subscription.renewal") {
       await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "kick_sub_received" });
+      await awardSeasonXp(matchedUserId, "kick_sub");
     } else if (eventType === "channel.subscription.gifts") {
       await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "gift_subs_given" });
+      const gifteesRaw = payload.giftees as Array<unknown> | undefined;
+      await awardSeasonXp(matchedUserId, "gift_sub_each", Array.isArray(gifteesRaw) ? gifteesRaw.length : 1);
     }
   }
 

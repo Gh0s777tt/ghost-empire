@@ -7,6 +7,7 @@ import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { awardSeasonXp } from "@/lib/seasons";
 
 const CODE_REGEX = /^[A-Z0-9_-]{3,24}$/;
 
@@ -137,8 +138,9 @@ export async function POST(req: Request) {
       });
     }
 
-    // Achievement check — drops claimed milestones
+    // Achievement check — drops claimed milestones + season XP
     await checkAndGrantAchievements({ userId, triggerType: "drops_claimed" });
+    await awardSeasonXp(userId, "drop_claim");
 
     const { _actor, ...publicResult } = result;
     void _actor;

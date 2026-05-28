@@ -2,6 +2,7 @@
 // Wager + resolve logic. All token movements run inside a single $transaction
 // so partial state on errors is impossible.
 import { prisma } from "@/lib/prisma";
+import { awardSeasonXp } from "@/lib/seasons";
 
 export const MAX_OPTIONS = 4;
 export const MIN_WAGER = 10;
@@ -118,9 +119,10 @@ export async function resolvePrediction(opts: {
   winningOptionIndex: number;
 }): Promise<ResolveResult> {
   const { predictionId, winningOptionIndex } = opts;
+  const winnerUserIds: string[] = [];  // collected for post-commit season XP
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const prediction = await tx.prediction.findUnique({
         where: { id: predictionId },
         include: { entries: true },
@@ -204,6 +206,7 @@ export async function resolvePrediction(opts: {
           data: { tokens: { increment: payout }, totalEarned: { increment: payout } },
         });
         await tx.predictionEntry.update({ where: { id: e.id }, data: { payout } });
+        winnerUserIds.push(e.userId);
         await tx.transaction.create({
           data: {
             userId: e.userId,
@@ -256,6 +259,15 @@ export async function resolvePrediction(opts: {
         refunded: false,
       } as const;
     });
+
+    // Award season XP to winners AFTER the transaction commits (awardSeasonXp uses its own queries)
+    if (result.ok && winnerUserIds.length > 0) {
+      for (const uid of winnerUserIds) {
+        await awardSeasonXp(uid, "prediction_win");
+      }
+    }
+
+    return result;
   } catch (e) {
     console.error("[predictions] resolve failed:", e);
     return { ok: false, status: 500, error: "Błąd serwera" };

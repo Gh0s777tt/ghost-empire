@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { awardSeasonXp } from "@/lib/seasons";
 
 const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v2.0/authorize";
 const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v2.0/token";
@@ -250,6 +251,8 @@ export async function pollAndProcessDonations(): Promise<{
       // Achievements — donation count + cumulative PLN
       await checkAndGrantAchievements({ userId: match.userId, triggerType: "donations_count" });
       await checkAndGrantAchievements({ userId: match.userId, triggerType: "donations_amount_pln" });
+      // Season XP proportional to PLN amount
+      await awardSeasonXp(match.userId, "donation_per_pln", amountFloat);
 
       matched++;
     } else {

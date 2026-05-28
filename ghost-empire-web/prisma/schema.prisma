@@ -674,6 +674,78 @@ model StreamAlert {
 // =====================================================
 
 // =====================================================
+// BATTLE PASS / SEASONS — monthly-rolling tier progression
+// =====================================================
+
+model Season {
+  id          String   @id @default(cuid())
+  number      Int      @unique                  // sequential: 1, 2, 3, ...
+  name        String                              // "Sezon 1: Pierwsza Krew" or "Maj 2026"
+  description String?  @db.Text
+  startsAt    DateTime
+  endsAt      DateTime
+  totalTiers  Int      @default(30)
+  xpPerTier   Int      @default(5000)
+  active      Boolean  @default(true)            // false after rollover; only one active at a time
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rewards  SeasonReward[]
+  progress UserSeasonProgress[]
+
+  @@index([active, endsAt])
+  @@map("seasons")
+}
+
+model SeasonReward {
+  id          String   @id @default(cuid())
+  seasonId    String
+  tier        Int                                 // 1..totalTiers
+  premium     Boolean  @default(false)            // false = free track, true = premium pass only
+  type        String                              // "tokens" | "badge" | "title" | "color" | "shop_unlock"
+  label       String                              // display name
+  value       String                              // payload: for tokens => "1000", for badge => achievement code, etc.
+  icon        String?
+
+  season  Season                  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  claims  UserSeasonRewardClaim[]
+
+  @@unique([seasonId, tier, premium])
+  @@index([seasonId, tier])
+  @@map("season_rewards")
+}
+
+model UserSeasonProgress {
+  id              String    @id @default(cuid())
+  userId          String
+  seasonId        String
+  xp              Int       @default(0)
+  tier            Int       @default(0)           // computed from xp / season.xpPerTier
+  premium         Boolean   @default(false)       // true after buying premium pass
+  premiumBoughtAt DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seasonId])
+  @@index([seasonId, xp])
+  @@map("user_season_progress")
+}
+
+model UserSeasonRewardClaim {
+  id        String   @id @default(cuid())
+  userId    String
+  rewardId  String
+  claimedAt DateTime @default(now())
+
+  reward SeasonReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, rewardId])
+  @@index([userId])
+  @@map("user_season_reward_claims")
+}
+
+// =====================================================
 // KICK INTEGRATION — webhooks for subs/gifts/chat (mirror of Twitch EventSub)
 // =====================================================
 
