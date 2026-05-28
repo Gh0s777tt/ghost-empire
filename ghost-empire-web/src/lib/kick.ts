@@ -80,15 +80,28 @@ export async function exchangeUserCode(code: string, redirectUri: string, codeVe
 // Channel / user lookup
 // =====================================================
 
-export type KickUser = { user_id: number; name: string; email?: string | null; profile_picture?: string | null };
+export type KickUser = { userId: string; name: string };
 
+/**
+ * Fetch the authenticated user's Kick profile. Kick's /public/v1/users returns
+ * a `data[]` array; the field for the handle is `username` (NOT `name`), and the
+ * id may come as `user_id` or `id` depending on API version — normalize both.
+ */
 export async function getOwnUser(userAccessToken: string): Promise<KickUser | null> {
   const res = await fetch(`${KICK_API}/users`, {
     headers: { Authorization: `Bearer ${userAccessToken}` },
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error(`[kick] getOwnUser failed: ${res.status} ${await res.text().catch(() => "")}`);
+    return null;
+  }
   const data = await res.json();
-  return Array.isArray(data?.data) ? data.data[0] ?? null : null;
+  const raw = Array.isArray(data?.data) ? data.data[0] : data;
+  if (!raw) return null;
+  const userId = (raw.user_id ?? raw.id)?.toString();
+  const name = raw.username ?? raw.name ?? raw.slug ?? "";
+  if (!userId) return null;
+  return { userId, name };
 }
 
 // =====================================================

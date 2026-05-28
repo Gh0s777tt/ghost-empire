@@ -28,6 +28,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 - **OVERLAY_TOKEN przeniesiony z env do DB** — token overlay'a żył w Vercel env vars co zmuszało admina do ręcznej generacji + redeploya przy każdej rotacji. Teraz token siedzi w `StreamAlertSettings.overlayToken`, auto-generuje się przy pierwszym wejściu na `/admin#alerts`, jest tam widoczny z przyciskami "Pokaż / Kopiuj token / Kopiuj URL OBS / Wygeneruj nowy". Env var pozostaje jako legacy fallback. Wymaga `npm run db:push`.
 
+### Fixed
+
+- **Kick streamer auth "wraca i nic się nie dzieje"** — callback czytał `user.name` z Kick `/users`, ale Kick zwraca `username` (i id jako `user_id` LUB `id`). `name` było `undefined`, a `KickStreamerToken.broadcasterLogin` jest wymagane → `prisma.upsert` rzucał błąd → callback 500 po powrocie z OAuth. `getOwnUser` normalizuje teraz oba pola (`username`/`name`/`slug` + `user_id`/`id`), upsert ma fallback `kick_<id>` + try/catch z czytelnym `kick_error=db_save`. Dodatkowo AdminClient pokazuje teraz toast z wynikiem autoryzacji (kick/twitch/yt success/error z query-paramów) — wcześniej nie było żadnego feedbacku.
+
 ### Performance
 
 - **DB indexes na hot queries** — `User` zyskał indeksy na `tokens`, `totalEarned`, `[level, xp]`, `streak` (sortowane przez ranking + homepage top-users) oraz `Connection` na `[platform, username]` (lookup w webhook handlerach przy każdym subie/cheerze). Zamienia full-table scan+sort na index range scan — kluczowe na free-tier Postgres. Wymaga `npm run db:push`.

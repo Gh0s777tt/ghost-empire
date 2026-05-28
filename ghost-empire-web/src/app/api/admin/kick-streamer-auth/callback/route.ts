@@ -53,36 +53,42 @@ export async function GET(req: Request) {
   }
 
   const expiresAt = tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : null;
+  const broadcasterLogin = user.name || `kick_${user.userId}`;  // never empty — column is required
 
-  await prisma.kickStreamerToken.upsert({
-    where: { id: "default" },
-    create: {
-      id: "default",
-      broadcasterId: String(user.user_id),
-      broadcasterLogin: user.name,
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token ?? null,
-      tokenExpiresAt: expiresAt,
-      scope: tokenData.scope ?? "",
-      connectedById: auth.userId,
-    },
-    update: {
-      broadcasterId: String(user.user_id),
-      broadcasterLogin: user.name,
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token ?? null,
-      tokenExpiresAt: expiresAt,
-      scope: tokenData.scope ?? "",
-      connectedById: auth.userId,
-      connectedAt: new Date(),
-    },
-  });
+  try {
+    await prisma.kickStreamerToken.upsert({
+      where: { id: "default" },
+      create: {
+        id: "default",
+        broadcasterId: user.userId,
+        broadcasterLogin,
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token ?? null,
+        tokenExpiresAt: expiresAt,
+        scope: tokenData.scope ?? "",
+        connectedById: auth.userId,
+      },
+      update: {
+        broadcasterId: user.userId,
+        broadcasterLogin,
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token ?? null,
+        tokenExpiresAt: expiresAt,
+        scope: tokenData.scope ?? "",
+        connectedById: auth.userId,
+        connectedAt: new Date(),
+      },
+    });
+  } catch (e) {
+    console.error("[kick-streamer] DB upsert failed:", e);
+    return NextResponse.redirect(new URL("/admin?kick_error=db_save#kick", BASE));
+  }
 
   await logAdminAction({
     adminId: auth.userId,
     action: "set_user_role",
     targetType: "kick_streamer_auth",
-    details: { broadcasterId: user.user_id, name: user.name },
+    details: { broadcasterId: user.userId, name: broadcasterLogin },
     req,
   });
 

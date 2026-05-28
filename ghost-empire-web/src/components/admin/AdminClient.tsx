@@ -278,6 +278,36 @@ export function AdminClient({
     startTransition(() => router.refresh());
   }
 
+  // Surface OAuth callback results (Twitch/Kick/YouTube streamer auth) as toasts.
+  // The callbacks redirect back to /admin?<provider>_success=1 or ?<provider>_error=...
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const providers = [
+      { ok: "kick_success", err: "kick_error", label: "Kick" },
+      { ok: "twitch_success", err: "twitch_error", label: "Twitch" },
+      { ok: "yt_success", err: "yt_error", label: "YouTube" },
+    ];
+    let matched = false;
+    for (const p of providers) {
+      if (params.has(p.ok)) {
+        setToast({ kind: "ok", msg: `${p.label}: autoryzacja udana ✓` });
+        matched = true;
+      } else if (params.has(p.err)) {
+        setToast({ kind: "err", msg: `${p.label}: błąd autoryzacji — ${params.get(p.err)}` });
+        matched = true;
+      }
+    }
+    if (matched) {
+      setTimeout(() => setToast(null), 7000);
+      const url = new URL(window.location.href);
+      ["kick_success","kick_error","twitch_success","twitch_error","yt_success","yt_error"]
+        .forEach((k) => url.searchParams.delete(k));
+      window.history.replaceState(null, "", url.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const sharedProps = { onToast: showToast, onSuccess: refresh, pending };
 
   return (
