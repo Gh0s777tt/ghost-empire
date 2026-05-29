@@ -24,6 +24,16 @@ type KickProfile = {
   agreed_to_terms?: boolean;
 };
 
+// Shape of provider-specific fields we read off the OAuth `profile` across
+// Twitch/Discord/Google/Kick. next-auth's base `Profile` only guarantees a few
+// fields, so we narrow to exactly what we touch instead of reaching for `as any`.
+type OAuthProfileFields = {
+  login?: string; // Twitch
+  username?: string; // Discord / Kick
+  id?: string | number; // Twitch / Discord / Kick
+  sub?: string; // Google / OIDC
+};
+
 function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfile> {
   return {
     id: "kick",
@@ -42,7 +52,7 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
     },
     token: {
       url: "https://id.kick.com/oauth/token",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // next-auth's OAuth token-request `context` isn't usefully typed by the lib.
       async request(context: any): Promise<any> {
         const body = new URLSearchParams();
         body.set("grant_type", "authorization_code");
@@ -76,7 +86,7 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
     },
     userinfo: {
       url: "https://api.kick.com/public/v1/users",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // Kick's userinfo payload is dynamic; the returned shape is normalized below.
       async request({ tokens }: { tokens: { access_token?: string } }): Promise<any> {
         const res = await fetch("https://api.kick.com/public/v1/users", {
           headers: { Authorization: `Bearer ${tokens.access_token}` },
@@ -166,19 +176,22 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = user.id;
         session.user.isAdmin =
-          (user as any).isAdmin ??
-          (user as any).discordId === process.env.ADMIN_DISCORD_ID;
-        session.user.isModerator = (user as any).isModerator ?? false;
-        session.user.isDonator = (user as any).isDonator ?? false;
-        session.user.tokens = (user as any).tokens ?? 0;
-        session.user.level = (user as any).level ?? 1;
-        session.user.username = (user as any).username ?? null;
+          user.isAdmin ??
+          user.discordId === process.env.ADMIN_DISCORD_ID;
+        session.user.isModerator = user.isModerator ?? false;
+        session.user.isDonator = user.isDonator ?? false;
+        session.user.tokens = user.tokens ?? 0;
+        session.user.level = user.level ?? 1;
+        session.user.username = user.username ?? null;
       }
       return session;
     },
 
     async signIn({ user, account, profile }) {
       if (!account) return true;
+
+      // Narrow the loosely-typed OAuth profile once (see OAuthProfileFields).
+      const p = (profile ?? {}) as OAuthProfileFields;
 
       // === LINK INTENT — process BEFORE the normal flow ===
       // If user initiated /api/profile/connections/link/[provider] while logged in,
@@ -239,8 +252,8 @@ export const authOptions: NextAuthOptions = {
           // Auto-set username if not set yet
           if (!dbUser.username) {
             const rawName =
-              (profile as any)?.login || // Twitch uses login
-              (profile as any)?.username ||
+              p.login || // Twitch uses login
+              p.username ||
               user.name ||
               `ghost_${dbUser.id.slice(-6)}`;
 
@@ -260,13 +273,13 @@ export const authOptions: NextAuthOptions = {
 
           // Save/update connection record
           const platformId =
-            (profile as any)?.id?.toString() ||
-            (profile as any)?.sub ||
+            p.id?.toString() ||
+            p.sub ||
             account.providerAccountId;
 
           const platformUsername =
-            (profile as any)?.login ||
-            (profile as any)?.username ||
+            p.login ||
+            p.username ||
             user.name ||
             "";
 
