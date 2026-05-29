@@ -4,9 +4,27 @@ Things that need either **external account setup by Gh0s77tt** or **bigger engin
 
 ---
 
+## ✅ PHASE 2 — ZAMKNIĘTE (2026-05)
+
+**Wszystkie items E–K zrealizowane i na produkcji.** Ten plik zostaje jako dokumentacja setupu (instrukcje „Co musisz zrobić” są nadal aktualne przy konfiguracji od zera).
+
+| # | Feature | Status |
+|---|---|---|
+| E | Login przez Kick (custom OAuth provider) | ✅ DONE |
+| F | Login przez YouTube/Google | ✅ DONE |
+| G | Donacje (Streamlabs) | ✅ DONE |
+| H | Twitch EventSub (subs/gifts/bits + hype train) | ✅ DONE |
+| I | Kick auto-events (webhooki) | ✅ DONE — *odblokowane, Kick udostępnił webhooki* |
+| J | YouTube super chats / members | ✅ DONE |
+| K | Stream alerts (overlay OBS) | ✅ DONE — *DB-backed kolejka + polling zamiast Pusher/WS (Vercel Hobby)* |
+
+➡️ Następny zakres: [PHASE3.md](PHASE3.md) (chat bot + engagement). Pełne podsumowanie w [README.md](README.md) i [CHANGELOG.md](CHANGELOG.md).
+
+---
+
 ## E. Login przez Kick
 
-### Status: 🟡 Czeka na credentials od KICK
+### Status: ✅ DONE — Kick działa jako logowanie (custom provider)
 
 KICK Developer API jest w **beta** — wymaga rejestracji i weryfikacji aplikacji. Czasem trwa kilka dni.
 
@@ -37,7 +55,7 @@ KICK Developer API jest w **beta** — wymaga rejestracji i weryfikacji aplikacj
 
 ## F. Login przez YouTube (Google)
 
-### Status: 🟡 Czeka na Twój Google Cloud project
+### Status: ✅ DONE — Google/YouTube działa jako logowanie
 
 YouTube używa Google OAuth (od dłuższego czasu). Konfig trwa 5-10 minut.
 
@@ -75,7 +93,7 @@ YouTube używa Google OAuth (od dłuższego czasu). Konfig trwa 5-10 minut.
 
 ## G. Donacje (StreamPay / PayMedia / Streamlabs)
 
-### Status: 🟡 Czeka na Twoją decyzję który system
+### Status: ✅ DONE — wybrany Streamlabs (daily polling cron, auto-match po nicku)
 
 ### Porównanie
 
@@ -109,7 +127,7 @@ YouTube używa Google OAuth (od dłuższego czasu). Konfig trwa 5-10 minut.
 
 ## H. Twitch EventSub — auto-tracking bits/subs/gift subs/follows
 
-### Status: 🔴 Większy projekt — wymaga 2-3h pracy + Twojej autoryzacji
+### Status: ✅ DONE — EventSub łapie suby / gift suby / bity (+ hype train w Phase 3)
 
 Twitch EventSub to system webhooks Twitcha. Pingują nas gdy:
 - Ktoś cheeruje bits
@@ -146,7 +164,7 @@ Twitch EventSub to system webhooks Twitcha. Pingują nas gdy:
 
 ## I. Kick events tracking
 
-### Status: 🔴 Blocked by Kick
+### Status: ✅ DONE — odblokowane. Kick udostępnił webhooki, mamy receiver `/api/webhooks/kick-events`
 
 Kick API jest w **beta** i nie ma jeszcze publicznych webhooks. Co możemy zrobić teraz:
 - Polling `/api/v2/channels/gh0s77tt` co 30s (limit 60 req/min)
@@ -166,7 +184,7 @@ Gdy będzie API → ~2h roboty.
 
 ## J. YouTube super chats / sponsors / members
 
-### Status: 🟡 Możliwe ale działa tylko podczas LIVE
+### Status: ✅ DONE — super chaty + membery podczas live (polling przez cron-job.org)
 
 YouTube Data API v3 ma:
 - `liveChat/messages.list` — czyta super chats podczas live (10s polling)
@@ -194,7 +212,7 @@ YouTube Data API v3 ma:
 
 ## K. Stream notifications (alerty na OBS)
 
-### Status: 🔴 Pełna feature — ~4-6h
+### Status: ✅ DONE — overlay OBS gotowy (DB-backed kolejka + polling 1.2 s zamiast Pusher/WS)
 
 System alertów wyświetlanych przez OBS gdy:
 - User wygra giveaway
@@ -269,14 +287,14 @@ Wszystko trafia do istniejącego endpoint `/api/internal/award` z odpowiednim `r
 
 ---
 
-## Priorytety wg mojej rekomendacji
+## Priorytety (historyczne — wszystko zrealizowane ✅)
 
-| # | Co | Trudność | Kiedy |
+| # | Co | Trudność | Status |
 |---|---|---|---|
-| 1 | F — YouTube OAuth | ★ łatwe | Gdy zrobisz Google Cloud setup |
-| 2 | G — Donacje (Streamlabs) | ★★ | Gdy wybierzesz system |
-| 3 | E — Kick OAuth | ★★ | Gdy KICK zatwierdzi twoją appkę |
-| 4 | K — Stream alerts | ★★★ | Po ustawieniu Pusher |
-| 5 | H — Twitch EventSub (bits/subs) | ★★★★ | Dalsza Phase 2 |
-| 6 | J — YouTube super chats | ★★★ | Po F |
-| 7 | I — Kick auto-events | — | Czekamy na Kick API |
+| 1 | F — YouTube OAuth | ★ łatwe | ✅ DONE |
+| 2 | G — Donacje (Streamlabs) | ★★ | ✅ DONE |
+| 3 | E — Kick OAuth | ★★ | ✅ DONE |
+| 4 | K — Stream alerts | ★★★ | ✅ DONE (DB-backed, nie Pusher) |
+| 5 | H — Twitch EventSub (bits/subs) | ★★★★ | ✅ DONE |
+| 6 | J — YouTube super chats | ★★★ | ✅ DONE |
+| 7 | I — Kick auto-events | — | ✅ DONE (Kick wydał webhooki) |

@@ -4,8 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import {
-  Ghost, ShoppingBag, Trophy, Calendar, Award, MessageCircle, Mic2,
-  Zap, Gift, Sparkles, ArrowRight,
+  Ghost, ShoppingBag, Trophy, Calendar, Award,
+  Zap, Sparkles, ArrowRight, Dice5, Ticket,
 } from "lucide-react";
 import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
 
@@ -34,16 +34,28 @@ const FEATURES = [
     href: "/events",
   },
   {
+    icon: Dice5, color: "#8b5cf6",
+    title: "PREDICTIONS",
+    desc: "Obstawiaj wynik streama Ghost Tokenami. Wygrywający dzielą całą pulę proporcjonalnie do stawek.",
+    href: "/predictions",
+  },
+  {
+    icon: Ticket, color: "#f59e0b",
+    title: "BATTLE PASS",
+    desc: "Miesięczne sezony, 30 tierów. Zbieraj XP za każdą aktywność i odbieraj nagrody z kolejnych poziomów.",
+    href: "/seasons",
+  },
+  {
     icon: Award, color: "#a855f7",
     title: "OSIĄGNIĘCIA",
-    desc: "22 achievementy: common, rare, epic, legendary. Wbij level, streak, milestone tokens.",
-    href: "/profile",
+    desc: "53 achievementy: common, rare, epic, legendary. Za level, streak, suby, donejty, dropy i eventy.",
+    href: "/achievements",
   },
   {
     icon: Zap, color: "#FF4500",
     title: "DAILY QUESTY",
     desc: "Codziennie 3 zadania: czat, voice, drop. Bonus reward za wszystkie naraz.",
-    href: "/profile",
+    href: "/quests",
   },
   {
     icon: Sparkles, color: "#3b82f6",
@@ -57,19 +69,48 @@ const EARN_WAYS = [
   { emoji: "💬", title: "Wiadomości na Discord", desc: "Aktywny czat = tokeny. Daily limit chroni przed spamem." },
   { emoji: "🎤", title: "Voice chat", desc: "Spędź czas na voice channelach z innymi. Tokeny lecą za każdą minutę." },
   { emoji: "🎁", title: "Drop codes podczas live", desc: "Ghost wpisuje sekretne kody na stream. Wpisz pierwszy = bonus reward." },
+  { emoji: "👑", title: "Suby, gifty i bity", desc: "Sub na Twitch/Kick, gifted suby i bity są wykrywane automatycznie i nagradzane GT." },
+  { emoji: "💸", title: "Donacje i Super Chaty", desc: "Donejt przez Streamlabs lub YouTube Super Chat = tokeny + odznaki patrona." },
+  { emoji: "🎲", title: "Predictions", desc: "Dobrze obstawiony zakład na /predictions = część puli przegranych dla Ciebie." },
   { emoji: "⚡", title: "Happy Hours x2", desc: "W trakcie aktywnego Happy Hour wszystkie tokeny lecą podwójnie." },
   { emoji: "🏆", title: "Daily questy", desc: "3 zadania dziennie. Skończ wszystkie = bonus pula." },
-  { emoji: "👑", title: "Subskrypcja Twitch/Kick", desc: "Subowie dostają mnożnik na earnings + dostęp do ekskluzywnych itemów." },
 ];
 
 const STEPS = [
-  { n: 1, title: "Zaloguj się", desc: "Przez Twitch lub Discord — wybór masz na stronie logowania. Pierwsze logowanie = 500 GT welcome bonus." },
-  { n: 2, title: "Połącz drugą platformę", desc: "Wejdź na /profile i dodaj drugą platformę (Twitch + Discord). Subowie na obu = Dual Supporter." },
+  { n: 1, title: "Zaloguj się", desc: "Przez Twitch, Kick, Discord lub Google/YouTube — wybór masz na stronie logowania. Pierwsze logowanie = 500 GT welcome bonus." },
+  { n: 2, title: "Połącz pozostałe platformy", desc: "Wejdź na /profile i dolinkuj resztę kont do jednego profilu. Sub na Twitch i Kick naraz = Dual Supporter." },
   { n: 3, title: "Bądź aktywny", desc: "Pisz na Discord, hańguj na voice, wpisuj drop codes podczas live. Tokeny lecą w tle." },
   { n: 4, title: "Wymień na nagrody", desc: "Wejdź na /shop. Coś dla każdego — od 8,000 GT (kolor nicka) po 1,500,000 GT (legendarny skin)." },
 ];
 
 const CHANGELOG = [
+  {
+    date: "2026-05-29",
+    title: "Phase 3 — Engagement + hardening",
+    items: [
+      "Battle Pass / Sezony — miesięczne sezony, 30 tierów, XP za każdą aktywność, nagrody do odbioru (/seasons)",
+      "Predictions — obstawiaj wynik streama GT, wygrywający dzielą całą pulę (/predictions)",
+      "Stream Goals + Hype Train — cele na żywo z overlayem OBS, auto-inkrementacja z subów/donacji/bitów",
+      "53 achievementy — rozbudowa o donacje, suby, gifty, bity, super chaty, dropy, eventy (auto-przyznawane)",
+      "Kick auto-eventy — webhooki dla subów / gift subów / followów (zamyka Phase 2)",
+      "YouTube Live — Super Chaty i membery wykrywane podczas live (zamyka Phase 2)",
+      "Instalowalna PWA (ikony + manifest), tryb offline-friendly, robots.txt + sitemap.xml",
+      "Szybsze ładowanie — cache publicznych zapytań, indeksy DB, lazy-load sekcji admina",
+      "Twardsze bezpieczeństwo — rate limiting na całej ekonomii, mocniejsze nagłówki CSP/COOP",
+    ],
+  },
+  {
+    date: "2026-05-26",
+    title: "EventSub + Donacje + Alerty OBS",
+    items: [
+      "Twitch EventSub — auto-tracking subów, gifted subów i bitów z mapowaniem na GT",
+      "Donacje Streamlabs — auto-match po nicku, 1 PLN = 100 GT, odznaki donatora",
+      "Stream Alerts — overlay OBS (Browser Source) z animacjami i dźwiękiem alertów",
+      "Łączenie kont z /profile — Twitch/Kick/Discord/Google na jednym koncie",
+      "Merge duplikatów w adminie — scalanie starych zdublowanych kont",
+      "Plansze społeczności (social tiles) na profilu — auto z OAuth",
+    ],
+  },
   {
     date: "2026-05-25",
     title: "Security & Roles update",
@@ -175,7 +216,7 @@ export default async function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm leading-relaxed">
             <div className="md:col-span-2 text-zinc-300 space-y-3">
               <p>
-                <strong className="text-white">Ghost Empire</strong> to portal społeczności łączący Twitch, Kick i Discord
+                <strong className="text-white">Ghost Empire</strong> to portal społeczności łączący Twitch, Kick, YouTube i Discord
                 w jedną ekonomię opartą na <strong className="text-red-400">Ghost Tokens (GT)</strong>.
               </p>
               <p>

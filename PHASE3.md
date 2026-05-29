@@ -1,6 +1,16 @@
 # Phase 3 — Streaming bot ecosystem (Twitch + Kick + YouTube)
 
-**Status:** plan, niezaakceptowany. Niczego z tego pliku jeszcze nie ma w kodzie.
+**Status:** częściowo zrealizowane. Kilka engagement features z 3B/3D jest już na produkcji. **Rdzeń 3A — chat bot na 3 platformach — jeszcze NIE istnieje** i jest następnym dużym krokiem; 3C (hardware) i większość 3D (AI) pozostają planem.
+
+> ### ✅ Już shipped z Phase 3
+> - **Stream Goals + Hype Train** (3B #5) — cele + overlay OBS `/overlay/goals`, auto-inkrementacja z EventSub / donacji / YouTube
+> - **Predictions / Zakłady GT** (3D) — `/predictions`, pula dzielona proporcjonalnie do stawek, refund przy cancelu
+> - **Battle Pass / Sezony** — 30 tierów × 5000 XP, XP z 11 źródeł, `/seasons` + sekcja admina
+> - **Rozbudowa achievementów** — 53 odznaki, auto-grant engine wyzwalany zdarzeniami streamowymi
+> - **Kick auto-events + YouTube super chaty** — domknięcie Phase 2 (patrz [PHASE2.md](PHASE2.md))
+>
+> ### 🚧 Następny duży krok: Phase 3A — chat bot (`ghost-empire-chat`)
+> Bot czatu na Twitch/Kick/YouTube + custom commands + dashboard. **Nic z tego jeszcze nie istnieje.** Wszystko poniżej to plan; sekcje oznaczone ✅ DONE są już zrobione.
 
 ## TL;DR realistyczny zakres
 
@@ -78,7 +88,12 @@ Wszystkie nowe rzeczy (song request widget, stream goal bar, hype train pasek, k
 | Discord OAuth + Discord bot (msg/voice tracking) | ✅ |
 | Streamlabs donacje (polling co 6h) | ✅ |
 | Stream Alerts overlay (OBS Browser Source) + dispatch z 7 endpointów | ✅ |
-| Admin panel z sidebar nav (11 sekcji) | ✅ |
+| Admin panel z sidebar nav (17 sekcji) | ✅ |
+| Stream Goals + Hype Train + overlay | ✅ |
+| Predictions / zakłady GT | ✅ |
+| Battle Pass / Sezony (30 tierów) | ✅ |
+| 53 achievementy + auto-grant engine | ✅ |
+| Kick webhooki + YouTube super chaty | ✅ |
 | Account linking z poziomu profilu | ✅ |
 | Admin merge tool dla duplikatów | ✅ |
 | Social tiles na profilu (auto z OAuth) | ✅ |
@@ -92,12 +107,12 @@ Wszystkie nowe rzeczy (song request widget, stream goal bar, hype train pasek, k
 | YouTube Data API quota | Włącz w Google Cloud Console projekcie Ghost Empire (jeśli planujesz J — super chats) |
 | Kick API beta-access | Czekamy na publiczne webhooks Kicka (nadal blocked) |
 
-### Niezrealizowane z PHASE2 ❌
+### Domknięte z PHASE2 ✅ (wcześniej ❌)
 
-| # | Co | Status | Blocker |
+| # | Co | Status | Jak |
 |---|---|---|---|
-| I | Kick auto-events (subs, kicks) | ❌ | brak public Kick API |
-| J | YouTube super chats / members | ❌ | wymaga polling co live (3h pracy) |
+| I | Kick auto-events (subs, gifty, followy) | ✅ | Kick wydał webhooki → `/api/webhooks/kick-events` (RSA verify) |
+| J | YouTube super chats / members | ✅ | polling `/api/yt/poll-live-chat` podczas live (cron-job.org) |
 
 ---
 
@@ -233,10 +248,11 @@ Nowa sekcja sidebar z lucide icon `MessageSquare`. UI:
    - Schema: `AutoResponse { id, pattern (regex), response, platform, cooldownSec }`
 4. **Welcome system** — pierwsze X wiadomości od nowego viewera → welcome msg + bonus tokens
    - Już mamy welcome_bonus przy first login w portalu. Tu chodzi o pierwszą wiadomość na czacie.
-5. **Stream goals** — DB-backed cele
-   - Schema: `StreamGoal { type: "subs"|"follows"|"donations"|"cheers"|"kicks", current, target, label, active }`
-   - Overlay page `app/overlay/goals/page.tsx` z paskiem postępu
-   - Hype Train = specjalny typ goal, auto-uruchamiany przez Twitch EventSub
+5. **Stream goals** — DB-backed cele — ✅ **DONE**
+   - Schema: `StreamGoal` (6 typów: subs/gift_subs/follows/donations_pln/cheers_bits/yt_members, 5 trybów resetu) + `HypeTrainState`
+   - Overlay page `app/overlay/goals/page.tsx` z animowanym paskiem postępu + banner hype train
+   - Hype Train = osobny tracker, auto-uruchamiany przez Twitch EventSub (`channel.hype_train.*`)
+   - Admin `/admin#goals`: CRUD celów, color picker, ręczny ±1, reset, toggle
 6. **Song Requests** — kolejka utworów
    - Schema: `SongRequest { id, requesterUserId, youtubeUrl, title, duration, status, playedAt }`
    - Bot komenda: `!sr <youtube_url>` lub `!sr <search>`
@@ -406,11 +422,12 @@ model DonationEffect {
 **Top earners / engagement**:
 - Już mamy ranking. Dorzucić engagement score = msgCount * 1 + voiceMinutes * 0.5 + bits * 0.1 + ...
 
-### Predictions / Bets
+### Predictions / Bets — ✅ DONE
 
-- Schema: `Prediction { id, question, options[], opensAt, closesAt, resolvedOption?, totalTokens }`
-- `PredictionEntry { userId, predictionId, optionIndex, tokensWagered }`
-- UI: admin tworzy ("Ile zgonów w tym streamie?"), userzy obstawiają z portalu (sklep ekonomii), po streamie admin rozstrzyga, payout do wygrywających
+- Schema: `Prediction` (2-4 opcje, opcjonalny czas zamknięcia) + `PredictionEntry` (unique predictionId+userId)
+- UI: admin tworzy w `/admin#predictions`, userzy obstawiają na `/predictions` (min 10, max 1M GT, jeden wager per user)
+- Payout: wygrywająca opcja dzieli **całą pulę** proporcjonalnie do stawek; refund przy cancelu lub braku zwycięzców; wszystko atomowo w `$transaction` + audit log + notyfikacje
+- *Zrealizowane wcześniej niż chat bot, bo nie wymaga długo-żyjącego procesu (czysta logika portalu).*
 
 ---
 

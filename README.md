@@ -1,83 +1,149 @@
-# Ghost Empire
+<div align="center">
 
-Community portal + ekosystem botów dla streamera **Gh0s77tt** (Twitch/Kick/Discord/YouTube) z tokenową ekonomią, eventami, alertami OBS i auto-tracking aktywności.
+# 👻 GHOST EMPIRE
 
-🌐 **Production:** https://ghost-empire-web.vercel.app
-📺 **Streams:** [twitch.tv/gh0s77tt](https://twitch.tv/gh0s77tt) · [kick.com/Gh0s77tt](https://kick.com/Gh0s77tt) · [youtube.com/@Gh0s77tt](https://www.youtube.com/@Gh0s77tt)
+**Community portal + ekosystem botów dla streamera [Gh0s77tt](https://twitch.tv/gh0s77tt)**
+
+Twitch · Kick · YouTube · Discord — jedna tokenowa ekonomia, eventy, predictions, battle pass i alerty OBS.
+
+<br/>
+
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?style=flat-square&logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![NextAuth](https://img.shields.io/badge/Auth-NextAuth%20v4-000000?style=flat-square&logo=auth0&logoColor=white)
+![Deploy](https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white)
+![Status](https://img.shields.io/badge/Phase%202-zamknięte-10b981?style=flat-square)
+![Status](https://img.shields.io/badge/Phase%203-w%20toku-E50914?style=flat-square)
+
+<br/>
+
+[**🌐 Live**](https://ghost-empire-web.vercel.app) ·
+[**📜 Changelog**](CHANGELOG.md) ·
+[**🗺️ Roadmap**](ROADMAP.md) ·
+[Twitch](https://twitch.tv/gh0s77tt) ·
+[Kick](https://kick.com/Gh0s77tt) ·
+[YouTube](https://www.youtube.com/@Gh0s77tt)
+
+</div>
 
 ---
 
-## Co to jest
+## ⚡ TL;DR
 
-Portal Next.js + bot Discord, w którym widzowie zarabiają **Ghost Tokens** (GT) za aktywność (Discord chat, voice, Twitch subs/bits/donejty, drop codes, daily questy) i wymieniają je w sklepie na cyfrowe + fizyczne nagrody. Admin steruje całością przez `/admin` (kategorie w sidebarze) — sklep, eventy, losowania, donacje, role moderatorów, alerty OBS, merge duplikatów kont.
+Portal Next.js + boty, w których widzowie zarabiają **Ghost Tokens (GT)** za aktywność na Discordzie i streamach (czat, voice, suby, bity, donejty, drop codes, daily questy, predictions) i wymieniają je w sklepie na nagrody cyfrowe i fizyczne. Streamer steruje wszystkim z panelu `/admin` (17 sekcji): sklep, eventy, losowania, donacje, role, alerty OBS, stream goals, predictions, battle pass, merge duplikatów kont.
 
-## Monorepo layout
+Suby na Twitch/Kick, gifty, bity i donacje (Streamlabs + YouTube Super Chat) są **wykrywane automatycznie** przez webhooki/polling i nagradzane tokenami + odznakami.
+
+---
+
+## 🗂️ Monorepo layout
 
 ```
 ghost-empire-phase1/
-├── ghost-empire-web/        ← Next.js 15 portal (Vercel deploy)
-├── ghost-empire-bot/        ← Discord bot (Node + discord.js) — Railway/VPS/local
-└── ghost-empire-chat/       ← [PLANNED Phase 3] Twitch/Kick/YouTube chat bot
+├── ghost-empire-web/        ← Next.js 15 portal (Vercel deploy)        ✅ aktywny
+├── ghost-empire-bot/        ← Discord bot (Node + discord.js)          ✅ aktywny
+└── ghost-empire-chat/       ← Twitch/Kick/YouTube chat bot             🚧 Phase 3A (planowany)
 ```
 
-| Layer | Tech |
+| Warstwa | Tech |
 |---|---|
-| Frontend | Next.js 15 (App Router), React 18, Tailwind, Lucide icons, next/font |
-| Backend | Next.js API routes, Prisma ORM, PostgreSQL (Supabase) |
-| Auth | NextAuth v4 + PrismaAdapter, 4 OAuth providers (Twitch/Discord/Google/Kick) |
+| Frontend | Next.js 15 (App Router, RSC), React 18, Tailwind CSS, Lucide icons, next/font |
+| Backend | Next.js API routes, Prisma ORM, PostgreSQL (Supabase + pgbouncer) |
+| Auth | NextAuth v4 + PrismaAdapter, 4 OAuth providery (Twitch / Kick / Discord / Google) |
+| Realtime | DB-backed kolejki + polling (Vercel Hobby = brak websocketów) |
 | Bot | discord.js 14, TypeScript, tsx |
-| Deploy | Vercel (web) + lokalny/Railway (bot) |
-
-## Aktualne features (Phase 2 — zrealizowane)
-
-### Dla widzów
-- **Logowanie** przez Twitch / Kick / Discord / Google (linkable — wszystkie na jednym koncie z poziomu `/profile`)
-- **Ghost Tokens** za aktywność: Discord msg/voice, Twitch sub/bits/gift, drop codes, daily questy, donacje (Streamlabs)
-- **Sklep** (`/shop`) — 12 itemów w 5 kategoriach, z requirementami (level, sub tier, dual platform)
-- **Eventy** (`/events`) — giveaway, raffle z biletami, contest, happy hour
-- **Ranking** (`/ranking`) — 4 metryki + podium + quick-actions modal dla adminów
-- **Profil** (`/profile`) — achievementy (22), level/XP, transakcje, social linki (tile UI z auto-OAuth), połączone platformy
-- **Daily quests** (`/quests`) — 3 dziennie, claim rewards
-- **Drops codes** (`/drops`) — kody wpisywane podczas streama, pierwsze N osób = bonus
-- **Achievementy** (`/achievements`) — galeria z filtrami i progressem
-- **Public profile** (`/u/[username]`) — read-only profil dla każdego
-
-### Dla streamera/adminów
-- **Admin panel** (`/admin`) z sidebar nawigacją (11 sekcji):
-  - **Dashboard** — skróty + statystyki + pending orders
-  - **Użytkownicy** — grant tokenów, role userów, role per-platform
-  - **Merge duplikatów** — wykrywa i scala stare zduplikowane konta
-  - **Eventy** — tworzenie, edycja, losowanie zwycięzców
-  - **Sklep** — manage items, dostarczanie zakupów
-  - **Drops** — tworzenie kodów, statystyki claim
-  - **Harmonogram** — slot'y streamu
-  - **Bot Discord** — live config rewards/cooldowns (bez restart bota)
-  - **Donacje** — Streamlabs connection + unmatched donations
-  - **Twitch** — EventSub subskrypcje + log eventów (subs/gifts/bits)
-  - **Stream Alerts** — overlay OBS, token rotacja, customization
-  - **Audit log** — full historia akcji adminów
-
-### Automatyzacja
-- **Twitch EventSub** — auto-tracking subs / gifted subs / cheers, mapowanie na GT
-- **Streamlabs polling** — daily cron sprawdza nowe donacje (Vercel Hobby plan limit)
-- **Stream Alerts overlay** — Browser Source dla OBS, polling 1.2s, syntezowany chime, slide-in animacja
-- **Discord bot** — tracking message + voice activity, slash commands (/link, /portal, /help)
-
-### Bezpieczeństwo
-- HSTS, X-Frame-Options, CSP, Permissions-Policy headers
-- Rate limiting na wszystkich publicznych + internal endpointach (DB-backed sliding window)
-- Bot endpoints: per-user + per-IP rate limits + amount caps (defense-in-depth)
-- Audit log każdej akcji admina (`admin_actions` z IP)
-- Cryptographic randomness dla kodów drops i losowań eventów
-- Session-based auth z fresh DB read (nie ufa cookie)
-- Atomic transactions dla każdej mutacji ekonomicznej (Prisma `$transaction`)
-- HMAC-signed cookies dla account linking flow
+| Deploy | Vercel (web, auto-deploy z `main`) + lokalny/Railway (bot) |
 
 ---
 
-## Setup od zera
+## 🎮 Features
+
+### Phase 1 — Core ✅
+
+- **Logowanie** przez Twitch / Kick / Discord / Google — wszystko linkowalne na jedno konto z poziomu `/profile`
+- **Ghost Tokens** za aktywność: Discord msg/voice, daily questy, drop codes (+ wszystkie źródła streamowe z Phase 2)
+- **Sklep** (`/shop`) — itemy w kategoriach z requirementami (level, sub tier, dual platform)
+- **Eventy** (`/events`) — giveaway, raffle z biletami, contest, happy hour (mnożnik ×2)
+- **Ranking** (`/ranking`) — 4 metryki (balans / lifetime / level / streak) + podium + admin quick-actions
+- **Profil** (`/profile`) — level/XP, transakcje, social tiles (auto z OAuth), połączone platformy
+- **Achievementy** (`/achievements`) — **53 odznaki** w 4 rzadkościach (common/rare/epic/legendary), auto-przyznawane
+- **Daily quests** (`/quests`) — 3 dziennie + bonus za komplet
+- **Drop codes** (`/drops`) — kody podczas live, pierwsze N osób = bonus
+- **Public profile** (`/u/[username]`) — read-only profil + OG image dla social share
+- **Notyfikacje** — bell widget z pollingiem
+- **Discord bot** — tracking message + voice, slash commands (`/link`, `/portal`, `/help`), live config bez restartu
+
+### Phase 2 — Multi-platforma + monetyzacja ✅ (zamknięte)
+
+- **Kick + Google/YouTube OAuth** — custom Kick provider (brak gotowca w next-auth)
+- **Account linking + merge** — dolinkuj platformy z profilu; admin scala stare duplikaty (atomic `$transaction`)
+- **Twitch EventSub** — auto-tracking subów / gifted subów / bitów (HMAC verify, replay protection, idempotency)
+- **Donacje Streamlabs** — daily polling cron, auto-match po nicku, 1 PLN = 100 GT (konfigurowalne)
+- **Kick webhooki** (*item I — domknięty*) — suby / gift suby / followy (RSA-SHA256 verify, replay protection)
+- **YouTube Live** (*item J — domknięty*) — Super Chaty + membery wykrywane podczas live broadcast (polling + quota-aware)
+- **Stream Alerts (OBS)** — `/overlay?token=` jako Browser Source, polling 1.2 s, animacje slide-in + dźwięk, dispatch z 10+ miejsc
+
+### Phase 3 — Engagement 🚧 (w toku)
+
+- **Stream Goals + Hype Train** — cele na żywo (subs/gifts/follows/donations/bits/yt-members), overlay OBS `/overlay/goals`, auto-inkrementacja z EventSub/Streamlabs/YouTube
+- **Predictions / Zakłady GT** (`/predictions`) — obstawiaj wynik streama, wygrywający dzielą całą pulę proporcjonalnie do stawek; pełny refund przy cancelu / braku zwycięzców
+- **Battle Pass / Sezony** (`/seasons`) — miesięcznie-rolujące sezony, 30 tierów × 5000 XP, XP z 11 źródeł aktywności, free + premium track
+- **53 achievementy** — rozbudowa o donacje, suby, gifty, bity, super chaty, dropy, eventy, zakupy, linkowanie (auto-grant engine)
+- **NASTĘPNE → Phase 3A** — `ghost-empire-chat`: bot czatu na 3 platformach + custom commands + dashboard. Szczegóły w [PHASE3.md](PHASE3.md).
+
+---
+
+## 🛡️ Reliability · Security · Performance · DX
+
+Twarda warstwa „top of the top” pod produkcję — wszystko zweryfikowane buildem.
+
+| Obszar | Co |
+|---|---|
+| **Reliability** | `error.tsx` + `global-error.tsx` (brak białych ekranów), `loading.tsx` (instant feedback na nawigacji), atomic `$transaction` na każdej mutacji ekonomii |
+| **PWA / mobile** | instalowalny (manifest + maskable ikony + apple-icon), `theme-color`, `colorScheme: dark`, naprawiony favicon |
+| **SEO** | `robots.ts` + `sitemap.ts` (13 publicznych tras), OG images (Satori), brak indeksacji prywatnych tras |
+| **A11y** | pełne wsparcie `prefers-reduced-motion`, wymiary obrazków (brak CLS) |
+| **Security** | HSTS preload, CSP (`object-src 'none'`, `upgrade-insecure-requests`), COOP, X-Frame-Options, Permissions-Policy; rate limiting (DB sliding-window) na **całej** ekonomii; webhook signature verify (HMAC/RSA); HMAC-signed cookies dla linkowania; crypto-secure RNG dla losowań/dropów; audit log każdej akcji admina z IP |
+| **Performance** | cache publicznych zapytań (`unstable_cache`), indeksy DB na hot queries, lazy-load sekcji admina (18→7 zapytań), Router Cache `staleTimes`, równoległe zapytania (`Promise.all`), `optimizePackageImports`, natywny lazy-load avatarów (oszczędność quoty Vercel) |
+| **DX / Code Quality** | `strict: true` TypeScript, **zero `as any`** w `src`, ESLint (`next/core-web-vitals`) wpięty w build, CHANGELOG + dokumentacja aktualizowane razem z kodem |
+
+> Szczegóły każdej zmiany: [CHANGELOG.md](CHANGELOG.md). Co jeszcze planujemy: [ROADMAP.md](ROADMAP.md).
+
+---
+
+## 🧑‍💻 Admin panel (`/admin`)
+
+Sidebar z **17 sekcjami** (deep-link przez hash, np. `/admin#predictions`), filtrowane wg uprawnień moderatora:
+
+| Sekcja | Co |
+|---|---|
+| **Dashboard** | skróty + statystyki + pending orders / aktywne eventy / dropy |
+| **Użytkownicy** | grant tokenów, role userów, role per-platforma (sub tier / mod / vip) |
+| **Merge duplikatów** | wykrywanie + scalanie zduplikowanych kont |
+| **Eventy** | tworzenie, edycja, losowanie zwycięzców |
+| **Sklep** | manage items, dostarczanie zakupów |
+| **Drops** | tworzenie kodów + statystyki claim |
+| **Harmonogram** | sloty streamów (publiczne) |
+| **Bot Discord** | live config rewards/cooldowns (bez restartu) |
+| **Donacje** | Streamlabs connection + unmatched donations |
+| **Twitch** | EventSub subskrypcje + log eventów (subs/gifts/bits) |
+| **Kick** | autoryzacja + webhook subskrypcje + log eventów |
+| **YouTube** | autoryzacja + setup pollingu super chatów/memberów |
+| **Stream Alerts** | overlay OBS, rotacja tokenu, customizacja per-typ |
+| **Stream Goals** | cele + Hype Train, progress bary, overlay |
+| **Predictions** | tworzenie zakładów, rozstrzyganie, cancel z refundem |
+| **Battle Pass** | zarządzanie sezonem + nagrody per tier |
+| **Audit log** | pełna historia akcji adminów (kto/kiedy/co/IP) |
+
+---
+
+## 🚀 Setup od zera
 
 ### Wymagania
+
 - Node 22+
 - PostgreSQL — najprościej **Supabase** (free tier wystarczy na start)
 - Konto na Vercel (web hosting)
@@ -91,7 +157,7 @@ cp .env.example .env.local
 # Wypełnij wymagane env vars — patrz .env.example dla każdego providera
 npm install
 npm run db:push     # schema → Supabase
-npm run db:seed     # achievementy, daily tasks, shop items, events
+npm run db:seed     # 53 achievementy, daily tasks, shop items, events
 npm run dev         # → http://localhost:3000
 ```
 
@@ -108,14 +174,17 @@ npm run dev
 Bot integracja: szczegóły w [`ghost-empire-bot/README.md`](ghost-empire-bot/README.md).
 
 ### Vercel deploy
+
 1. Push do GitHub
-2. Vercel auto-deploy z main
+2. Vercel auto-deploy z `main`
 3. Env vars w Project Settings → Environment Variables (kopiuj z `.env.example`)
-4. Każdy nowy provider OAuth → dodaj URL callback do panel providera (np. `https://ghost-empire-web.vercel.app/api/auth/callback/twitch`)
+4. Każdy nowy provider OAuth → dodaj URL callback do panelu providera (np. `https://ghost-empire-web.vercel.app/api/auth/callback/twitch`)
+
+> ⚠️ **Po każdym pull sprawdź sekcję „Setup wymagany po pull” w [CHANGELOG.md](CHANGELOG.md)** — niektóre zmiany wymagają `npm run db:push` / `npm run db:seed` albo nowego env var w Vercel.
 
 ---
 
-## Konfiguracja per platforma (OAuth setup)
+## 🔌 Konfiguracja per platforma (OAuth setup)
 
 Każdy provider wymaga konta developera + zarejestrowanej aplikacji z redirect URI:
 - `http://localhost:3000/api/auth/callback/<provider>` (dev)
@@ -123,54 +192,67 @@ Każdy provider wymaga konta developera + zarejestrowanej aplikacji z redirect U
 
 | Provider | Gdzie | Wymagane scopes |
 |---|---|---|
-| Twitch | [dev.twitch.tv/console](https://dev.twitch.tv/console/apps) | `openid user:read:email` (login) + `channel:read:subscriptions bits:read` (EventSub) |
+| Twitch | [dev.twitch.tv/console](https://dev.twitch.tv/console/apps) | `openid user:read:email` (login) + `channel:read:subscriptions bits:read channel:read:hype_train` (EventSub) |
 | Discord | [discord.com/developers](https://discord.com/developers/applications) | `identify email guilds` |
-| Google | [console.cloud.google.com](https://console.cloud.google.com) | `openid email profile` |
-| Kick | [docs.kick.com](https://docs.kick.com/getting-started/kick-developer-api) (beta) | `user:read` |
+| Google | [console.cloud.google.com](https://console.cloud.google.com) | `openid email profile` + `youtube.readonly` (super chaty) |
+| Kick | [docs.kick.com](https://docs.kick.com/getting-started/kick-developer-api) (beta) | `user:read` (login) + `channel:read events:subscribe` (webhooki) |
 | Streamlabs | [streamlabs.com/dashboard](https://streamlabs.com/dashboard#/settings/api-settings) | `donations.read socket.token` |
 
 Env vars dla każdego: `<PROVIDER>_CLIENT_ID` + `<PROVIDER>_CLIENT_SECRET` (patrz `.env.example`).
 
-### Special: Twitch EventSub auth (one-time)
+### Special: Twitch EventSub (one-time)
 
-Po setup OAuth, streamer musi raz autoryzować EventSub:
-1. Login jako admin do portalu
-2. `/admin#twitch` → "Autoryzuj jako streamer"
-3. Po OAuth: kliknij "Utwórz subskrypcje" → tworzy webhook subskrypcje na Twitch
-4. Od tego momentu Twitch hituje `/api/webhooks/twitch-eventsub` przy subach/giftach/bitach
+1. `/admin#twitch` → „Autoryzuj jako streamer” (scopes powyżej)
+2. „Utwórz subskrypcje” → tworzy webhook subskrypcje na Twitchu
+3. Twitch hituje `/api/webhooks/twitch-eventsub` przy subach/giftach/bitach/hype train
 
-### Special: Streamlabs OAuth (one-time)
+### Special: Kick webhooki (one-time)
 
-1. `/admin#donations` → "Połącz Streamlabs"
-2. OAuth flow → polling startuje od następnego daily cron'a (06:00 UTC)
+1. `/admin#kick` → „Autoryzuj Kick” (PKCE flow)
+2. „Utwórz subskrypcje” → backend tworzy webhook subscriptions (sub/renewal/gifts/follow/livestream status)
+3. Kick hituje `/api/webhooks/kick-events`
+
+### Special: YouTube Super Chaty (one-time + cron)
+
+1. `/admin#youtube` → „Autoryzuj YouTube” (osobny flow od loginu, scope `youtube.readonly`)
+2. Vercel Hobby nie obsłuży auto-pollingu — UI pokazuje setup dla **cron-job.org** uderzającego `/api/yt/poll-live-chat` (Bearer `BOT_SECRET`) podczas live
+
+### Special: Streamlabs (one-time)
+
+1. `/admin#donations` → „Połącz Streamlabs”
+2. Polling startuje od następnego daily cron'a (limit Vercel Hobby)
 
 ### Special: Stream Alerts (OBS)
 
-1. `/admin#alerts` — token się auto-generuje przy pierwszym wejściu
-2. Klik **"Kopiuj URL"** → wkleisz do OBS jako **Browser Source**:
-   - Width 1920, Height 1080
-   - ✅ Custom CSS: (zostaw puste)
-   - ✅ "Shutdown source when not visible" — OFF
-   - ✅ "Refresh browser when scene becomes active" — ON
-3. Test: `/admin#alerts` → "Wyślij test alert" — powinno pojawić się na overlayu
+1. `/admin#alerts` — token auto-generuje się przy pierwszym wejściu
+2. „Kopiuj URL” → OBS **Browser Source** (1920×1080, „Shutdown source when not visible” = OFF, „Refresh when scene active” = ON)
+3. „Wyślij test alert” → powinno pojawić się na overlayu
 
 ---
 
-## Dokumenty
+## 📚 Dokumenty
 
 | Plik | Co |
 |---|---|
-| [`CHANGELOG.md`](CHANGELOG.md) | Historia zmian per data + Unreleased section (zawsze aktualizowane razem z kodem) |
-| [`PHASE2.md`](PHASE2.md) | Roadmap Phase 2 — głównie zrealizowane (E/F/G/H/K done, I czeka na Kick API, J otwarte) |
-| [`PHASE3.md`](PHASE3.md) | Plan Phase 3 — **streaming chat bot (Twitch/Kick/YouTube) + engagement features + hardware integrations + AI**. Niezaakceptowane, czeka na zgodę. |
+| [`CHANGELOG.md`](CHANGELOG.md) | Historia zmian per data (aktualizowane razem z kodem) + „Setup wymagany po pull” |
+| [`ROADMAP.md`](ROADMAP.md) | Plany na przyszłość + konsolidacja propozycji optymalizacji i usprawnień |
+| [`PHASE2.md`](PHASE2.md) | Roadmap Phase 2 — **zamknięte** (items E–K wszystkie done) |
+| [`PHASE3.md`](PHASE3.md) | Phase 3 — chat bot (3A) + engagement (3B) + alerts/hardware (3C) + AI/analytics (3D); część shipped, reszta planowana |
 | [`ghost-empire-web/.env.example`](ghost-empire-web/.env.example) | Pełna lista env vars dla web |
 | [`ghost-empire-bot/README.md`](ghost-empire-bot/README.md) | Setup Discord bota |
 
-## Co dalej
+---
 
-- Phase 2 jest zamknięte. Brak items J (YouTube super chats) i I (Kick auto-events — blocked by Kick API).
-- **Phase 3 = nowy zakres** — patrz [PHASE3.md](PHASE3.md). Czeka na decyzję który sub-phase (3A/3B/3C/3D) i które features priorytet.
+## 🗺️ Co dalej
 
-## License
+- **Phase 2 = zamknięte.** Wszystkie items E–K zrealizowane (Kick webhooki i YouTube super chaty domknięte).
+- **Phase 3 w toku** — shipped: Stream Goals + Hype Train, Predictions, Battle Pass/Sezony, rozbudowa achievementów. Następny duży krok: **Phase 3A — chat bot** (`ghost-empire-chat`), patrz [PHASE3.md](PHASE3.md).
+- **Optymalizacje i usprawnienia** — pełna lista propozycji (testy, monitoring, CSP nonces, React Compiler i in.) w [ROADMAP.md](ROADMAP.md).
 
-Private — Gh0s777tt © 2026
+---
+
+<div align="center">
+
+**Private** — Gh0s77tt © 2026
+
+</div>
