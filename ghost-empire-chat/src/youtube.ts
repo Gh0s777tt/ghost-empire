@@ -2,6 +2,7 @@ import { env } from "./env";
 import { matchCommand } from "./commands";
 import { awardChat } from "./portal";
 import { refreshYouTubeToken } from "./youtubeAuth";
+import { registerSender, markActivity } from "./broadcast";
 
 // YouTube Live Chat (Option C: authorized as the channel account).
 // Quota (10k units/day): liveBroadcasts.list = 1, liveChatMessages.list = 1,
@@ -103,6 +104,7 @@ async function pollChat(): Promise<number> {
 }
 
 function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
+  markActivity();
   const text = m.snippet?.displayMessage ?? "";
   const channelId = m.authorDetails?.channelId;
   const username = m.authorDetails?.displayName;
@@ -167,5 +169,8 @@ export async function startYouTube(): Promise<void> {
     return;
   }
   console.log("[youtube] started — watching for live broadcasts");
+  registerSender("youtube", (t) => {
+    void sendMessage(t);
+  });
   void tick();
 }

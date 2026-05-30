@@ -524,6 +524,23 @@ model ChatCommand {
 }
 
 // =====================================================
+// CHAT TIMERS — cyclic auto-messages the bot posts to all active platforms.
+// Managed from /admin#timers, fetched by ghost-empire-chat.
+// =====================================================
+
+model ChatTimer {
+  id              String   @id @default(cuid())
+  message         String   @db.Text          // text broadcast on the interval
+  intervalSeconds Int      @default(900)      // how often to post (min 60s, enforced by the API)
+  enabled         Boolean  @default(true)
+  createdById     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("chat_timers")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 
