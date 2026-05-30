@@ -8,6 +8,7 @@
     "start": "tsx src/index.ts",
     "auth:twitch": "tsx scripts/auth-twitch.ts",
     "auth:kick": "tsx scripts/auth-kick.ts",
+    "auth:youtube": "tsx scripts/auth-youtube.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

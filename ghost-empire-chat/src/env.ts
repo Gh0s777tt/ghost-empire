@@ -30,4 +30,11 @@ export const env = {
     token: process.env.KICK_BOT_TOKEN || undefined, // access token from `npm run auth:kick`
     refreshToken: process.env.KICK_BOT_REFRESH || undefined,
   },
+  // YouTube is optional (Option C: authorized as the channel account). liveBroadcasts.list
+  // auto-detects the active broadcast's liveChatId cheaply; the bot posts as the channel.
+  youtube: {
+    clientId: process.env.GOOGLE_CLIENT_ID || undefined,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || undefined,
+    refreshToken: process.env.YOUTUBE_BOT_REFRESH_TOKEN || undefined, // from `npm run auth:youtube`
+  },
 };
