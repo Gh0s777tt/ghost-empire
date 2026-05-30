@@ -591,6 +591,22 @@ model SongRequest {
 }
 
 // =====================================================
+// CHAT FEED — recent chat messages from all platforms, pushed by the bot and
+// shown on the /overlay/chat OBS browser source. Rolling buffer (old rows pruned).
+// =====================================================
+
+model ChatFeedMessage {
+  id        String   @id @default(cuid())
+  platform  String   // "twitch" | "kick" | "youtube"
+  username  String
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("chat_feed_messages")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 

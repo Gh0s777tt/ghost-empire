@@ -4,6 +4,7 @@ import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
 import { welcomeMessage } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
+import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
 import { refreshAccessToken } from "./twitchAuth";
 import { registerSender, markActivity } from "./broadcast";
@@ -32,6 +33,7 @@ function build(password: string): tmi.Client {
   c.on("message", (_channel, tags, message, self) => {
     if (self) return;
     markActivity();
+    pushChatFeed("twitch", tags.username, message);
 
     if (isSongRequest(message)) {
       void handleSongRequest("twitch", tags.username, message).then((m) => {
