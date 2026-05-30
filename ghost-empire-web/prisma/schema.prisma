@@ -560,6 +560,20 @@ model FaqResponse {
 }
 
 // =====================================================
+// WELCOME — singleton config; bot greets a viewer's first message per stream.
+// Managed from /admin#welcome, fetched by ghost-empire-chat.
+// =====================================================
+
+model WelcomeConfig {
+  id        String   @id @default("default")
+  enabled   Boolean  @default(false)
+  template  String   @default("Witaj {user}! Miło Cię widzieć 👋") @db.Text  // {user} = chatter name
+  updatedAt DateTime @updatedAt
+
+  @@map("welcome_config")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 

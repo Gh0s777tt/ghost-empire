@@ -1,6 +1,7 @@
 import { env } from "./env";
 import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
+import { welcomeMessage } from "./welcome";
 import { awardChat } from "./portal";
 import { refreshKickToken } from "./kickAuth";
 import { registerSender, markActivity } from "./broadcast";
@@ -58,6 +59,10 @@ function handleChat(d: KickChat): void {
   if (reply) void sendKickMessage(reply);
 
   if (userId) {
+    if (userId !== env.kick.broadcasterId) {
+      const greet = welcomeMessage("kick", userId, username);
+      if (greet) void sendKickMessage(greet);
+    }
     const now = Date.now();
     if (now - (lastAward.get(userId) ?? 0) >= AWARD_COOLDOWN_MS) {
       lastAward.set(userId, now);

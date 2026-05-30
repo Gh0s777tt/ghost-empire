@@ -4,6 +4,7 @@ import { awardChat } from "./portal";
 import { refreshYouTubeToken } from "./youtubeAuth";
 import { registerSender, markActivity } from "./broadcast";
 import { matchFaq } from "./faq";
+import { welcomeMessage } from "./welcome";
 
 // YouTube Live Chat (Option C: authorized as the channel account).
 // Quota (10k units/day): liveBroadcasts.list = 1, liveChatMessages.list = 1,
@@ -112,6 +113,8 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
 
   // award GT (skip our own messages so we don't award/loop on the channel account)
   if (channelId && channelId !== ownChannelId) {
+    const greet = welcomeMessage("youtube", channelId, username);
+    if (greet) void sendMessage(greet);
     const now = Date.now();
     if (now - (lastAward.get(channelId) ?? 0) >= AWARD_COOLDOWN_MS) {
       lastAward.set(channelId, now);
