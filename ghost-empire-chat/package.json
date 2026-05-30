@@ -1,0 +1,22 @@
+{
+  "name": "ghost-empire-chat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "auth:twitch": "tsx scripts/auth-twitch.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "tmi.js": "^1.8.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/tmi.js": "^1.8.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5"
+  }
+}
