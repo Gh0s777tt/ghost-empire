@@ -506,6 +506,24 @@ model BotConfig {
 }
 
 // =====================================================
+// CHAT COMMANDS — managed from /admin#chat, fetched by ghost-empire-chat
+// (Twitch/Kick/YouTube bot) periodically. Replaces the bot's hardcoded list.
+// =====================================================
+
+model ChatCommand {
+  id              String   @id @default(cuid())
+  trigger         String   @unique          // first word that triggers it, e.g. "!portal" (lowercased)
+  response        String   @db.Text         // text the bot replies with
+  cooldownSeconds Int      @default(15)      // per-command cooldown across all chatters
+  enabled         Boolean  @default(true)    // disabled commands are not sent to the bot
+  createdById     String?                    // admin user id who created it
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("chat_commands")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 
