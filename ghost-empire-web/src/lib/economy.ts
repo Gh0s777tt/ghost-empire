@@ -1,0 +1,54 @@
+// src/lib/economy.ts
+// Pure economy math — no DB, no side effects, no env. Extracted so the
+// money-critical logic (prediction payouts, season tiers, currency conversion)
+// can be unit-tested in isolation. Callers in predictions.ts / seasons.ts /
+// streamlabs.ts delegate here instead of inlining the arithmetic.
+
+/**
+ * Split a prediction pot among winners, proportional to each winner's stake.
+ *
+ * Each winner gets `floor((stake / totalStake) * pot)`; the LAST winner absorbs
+ * the rounding remainder so the payouts sum to exactly `totalPot` (never over- or
+ * under-pays). Order only decides who gets the remainder — pass a stable order.
+ *
+ * @param winnerStakes tokens each winning entry wagered (length = winner count)
+ * @param totalPot     full pot to distribute (includes losers' absorbed stakes)
+ * @returns            payout per winner, same order as input; sums to `totalPot`
+ */
+export function computePayouts(winnerStakes: number[], totalPot: number): number[] {
+  const stakeSum = winnerStakes.reduce((s, x) => s + x, 0);
+  if (winnerStakes.length === 0 || stakeSum <= 0) {
+    return winnerStakes.map(() => 0);
+  }
+  const payouts: number[] = [];
+  let distributed = 0;
+  for (let i = 0; i < winnerStakes.length; i++) {
+    const isLast = i === winnerStakes.length - 1;
+    const payout = isLast
+      ? totalPot - distributed
+      : Math.floor((winnerStakes[i] / stakeSum) * totalPot);
+    payouts.push(payout);
+    distributed += payout;
+  }
+  return payouts;
+}
+
+/**
+ * Battle-pass tier from accumulated XP. Tier 0 until the first `xpPerTier` is
+ * reached, then +1 per `xpPerTier`, capped at `totalTiers` (the final tier can't
+ * be exceeded). Guards against a zero/negative `xpPerTier`.
+ */
+export function tierFromXp(xp: number, xpPerTier: number, totalTiers: number): number {
+  if (xpPerTier <= 0) return 0;
+  return Math.min(totalTiers, Math.floor(xp / xpPerTier));
+}
+
+/**
+ * Convert a donation / super-chat amount to a PLN-equivalent for goal tracking.
+ * PLN (and the "ZL" alias) pass through unchanged; every other currency uses a
+ * flat ×4 USD-equivalent fallback because we don't pull live FX rates. Shared by
+ * Streamlabs donations and YouTube super chats so both bump goals consistently.
+ */
+export function plnFromCurrency(amount: number, currency: string): number {
+  return ["PLN", "ZL"].includes(currency.toUpperCase()) ? amount : amount * 4;
+}

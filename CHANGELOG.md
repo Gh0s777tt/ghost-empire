@@ -7,7 +7,21 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
-_Brak otwartych zmian — wszystko zmergowane i wypchnięte na produkcję. Nowe zmiany dopisuj tutaj na bieżąco._
+### Added
+
+- **Testy jednostkowe (Vitest)** — pierwsza warstwa testów w projekcie (dotąd jedyną bramą jakości był build). ~30 asercji na czystej logice bez DB: **payout predictions** (proporcjonalny podział całej puli, `Math.floor` + ostatni zwycięzca pochłania resztę → suma zawsze równa puli, brak zysku/straty na zaokrągleniu, brak winnerów, zerowa stawka), **tier battle passa** (XP → tier z capem na `totalTiers`), **konwersja walut** donacji (PLN passthrough, reszta ×4), **poziomy/rangi** (`xpForLevel`/`levelFromXp`/`rankForLevel` na granicach), **polska pluralizacja**, **format pl-PL**, **`timeLeft`**, **weryfikacja podpisu Twitch EventSub** (HMAC-SHA256, wykrywanie manipulacji body, brak sekretu, zła długość) + **świeżość wiadomości** (replay window), **nagłówki rate-limitera** (`Retry-After`). Uruchamianie: `npm test` (CI) / `npm run test:watch` (dev).
+- **GitHub Actions CI** (`.github/workflows/ci.yml`) — na każdy push do `main` i każdy PR: `typecheck` (`tsc --noEmit`) + `lint` (`next lint`) + `test` (`vitest run`). PR robi się czerwony **przed** mergem, zamiast dopiero wywalać build na Vercelu. `next build` celowo zostaje po stronie Vercela (preview deploy na każdym pushu — wymaga realnego `DATABASE_URL`, którego CI nie nosi).
+- **`lib/economy.ts`** — czysta, bezstanowa matematyka ekonomii wyciągnięta z transakcji do osobnego, testowalnego modułu: `computePayouts` (podział puli), `tierFromXp` (tier battle passa), `plnFromCurrency` (konwersja waluty na PLN). Współdzielone i jednoznaczne źródło prawdy.
+
+### Changed
+
+- **Predictions / Seasons / Streamlabs** delegują teraz do `lib/economy.ts` zamiast inline'ować arytmetykę. Zachowanie payoutu i konwersji bez zmian; obliczanie tieru przy tworzeniu progresu dostało brakujący cap na `totalTiers` (drobna poprawność, nie zmienia istniejących danych).
+
+### Fixed
+
+- **Prywatność: imię z Google nie wycieka do publicznego rankingu** — logowanie Google (scope `openid email profile`) zwraca tylko pełne imię+nazwisko (`user.name`), bez handla. Dotąd trafiało ono jako `username`/`displayName` do publicznego rankingu i profilu. Teraz fallback to lokalna część e-maila (samodzielnie wybrany identyfikator), a `displayName` dla Google = wygenerowany slug. Twitch/Discord/Kick mają realny handle → ich nie dotyczy.
+
+> **Setup wymagany po pull:** gdy masz lokalnie Node — `cd ghost-empire-web && npm install` zsynchronizuje `package-lock.json` (doszedł dev-dep `vitest`) i odblokuje `npm test` / `npm run typecheck`. Bez tego CI i tak przejdzie (instaluje zależności samo). Brak zmian schemy/env.
 
 ---
 
