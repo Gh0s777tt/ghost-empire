@@ -69,7 +69,6 @@ export default async function RankingPage({
           id: true,
           username: true,
           displayName: true,
-          name: true,
           image: true,
           tokens: true,
           totalEarned: true,

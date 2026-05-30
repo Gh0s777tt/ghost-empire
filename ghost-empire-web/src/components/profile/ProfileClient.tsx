@@ -127,6 +127,9 @@ export function ProfileClient({
   const xpCurrent = user.xp % 500;
   const xpProgress = Math.min(100, (xpCurrent / 500) * 100);
   const earnedIds = new Set(earnedAchievements.map((ua) => ua.achievement.id));
+  // Map achievement code -> name so transaction reasons like "achievement:linked_2"
+  // render as the real achievement name in the history.
+  const achByCode = new Map(allAchievements.map((a) => [a.code, a.name] as const));
 
   const pendingDeliveries = transactions.filter(
     (t) => t.type === "spend" && t.status === "pending",
@@ -147,7 +150,7 @@ export function ProfileClient({
             {user.image ? (
               <img
                 src={user.image}
-                alt={user.name ?? ""}
+                alt={user.displayName ?? user.username ?? ""}
                 className="w-24 h-24 md:w-28 md:h-28 object-cover border-2"
                 style={{ borderColor: rank.color }}
               />
@@ -173,7 +176,7 @@ export function ProfileClient({
                 className="font-display text-3xl md:text-4xl text-white tracking-wider"
                 style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
               >
-                {user.displayName ?? user.name ?? "Anonymous"}
+                {user.displayName ?? user.username ?? "Anonymous"}
               </h1>
               {user.isAdmin && (
                 <span className="text-[10px] font-bold tracking-widest uppercase border border-red-500 bg-red-600/15 text-red-300 px-2 py-0.5 flex items-center gap-1">
@@ -269,7 +272,7 @@ export function ProfileClient({
                 <span className="text-2xl">{t.shopItem?.imageEmoji ?? "🎁"}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-white font-medium truncate">
-                    {t.shopItem?.name ?? t.reason}
+                    {t.shopItem?.name ?? prettyReason(t.reason, achByCode)}
                   </div>
                   <div className="text-[10px] font-mono text-orange-400 uppercase tracking-widest">
                     Pending · zakup {formatDate(t.createdAt)}
@@ -399,7 +402,7 @@ export function ProfileClient({
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-white truncate">
-                      {t.shopItem?.name ?? prettyReason(t.reason)}
+                      {t.shopItem?.name ?? prettyReason(t.reason, achByCode)}
                     </div>
                     <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
                       {formatDate(t.createdAt)}
@@ -915,13 +918,42 @@ function DiscordLinkCard() {
   );
 }
 
-function prettyReason(reason: string): string {
-  if (reason === "welcome_bonus") return "Bonus powitalny";
-  if (reason === "message") return "Wiadomość Discord";
-  if (reason === "voice") return "Aktywność voice";
-  if (reason.startsWith("daily_task:")) return "Daily quest";
-  if (reason.startsWith("shop:")) return reason.slice(5);
-  return reason;
+function prettyReason(reason: string, achByCode?: Map<string, string>): string {
+  const exact: Record<string, string> = {
+    welcome_bonus: "Bonus powitalny",
+    message: "Wiadomość Discord",
+    voice: "Aktywność voice",
+    kick_follow: "Follow na Kick",
+    kick_sub: "Subskrypcja Kick",
+  };
+  if (exact[reason]) return exact[reason];
+
+  const colon = reason.indexOf(":");
+  const key = colon === -1 ? reason : reason.slice(0, colon);
+  const rest = colon === -1 ? "" : reason.slice(colon + 1);
+
+  switch (key) {
+    case "achievement":       return achByCode?.get(rest) ? `Osiągnięcie: ${achByCode.get(rest)}` : "Osiągnięcie";
+    case "daily_task":        return "Daily quest";
+    case "shop":              return rest || "Zakup w sklepie";
+    case "season":            return "Nagroda sezonowa";
+    case "donation":          return "Donacja";
+    case "drop":              return rest.endsWith("_bonus") ? "Drop (bonus)" : "Drop";
+    case "raffle_tickets":    return rest ? `Bilety: ${rest}` : "Bilety na losowanie";
+    case "twitch_sub":        return "Subskrypcja Twitch";
+    case "twitch_gift_sub":   return "Gift suby (Twitch)";
+    case "twitch_cheer":      return "Bity (Twitch)";
+    case "kick_gift_sub":     return "Gift suby (Kick)";
+    case "yt_superchat":      return "YouTube Super Chat";
+    case "yt_member":         return "YouTube Member";
+    case "paymedia":          return "Płatność";
+    case "prediction_wager":  return "Zakład — postawiono";
+    case "prediction_win":    return "Zakład — wygrana";
+    case "prediction_refund": return "Zakład — zwrot";
+    case "prediction_cancel": return "Zakład — zwrot (anulowano)";
+    case "refund":            return `Zwrot: ${prettyReason(rest, achByCode)}`;
+    default:                  return key.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+  }
 }
 
 // ============== CONNECTED ACCOUNTS (link more platforms) ==============

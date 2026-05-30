@@ -15,7 +15,6 @@ type User = {
   id: string;
   username: string | null;
   displayName: string | null;
-  name: string | null;
   image: string | null;
   tokens: number;
   totalEarned: number;
@@ -214,7 +213,7 @@ export function RankingClient({
 
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="font-bold text-white text-sm truncate max-w-[140px]">
-                        {u.displayName ?? u.name ?? "Anonim"}
+                        {u.displayName ?? u.username ?? "Anonim"}
                       </span>
                       {u.isAdmin && <ShieldCheck className="w-3 h-3 text-red-500" />}
                     </div>
@@ -374,7 +373,7 @@ function UserRow({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-white font-medium truncate">
-                {user.displayName ?? user.name ?? "Anonim"}
+                {user.displayName ?? user.username ?? "Anonim"}
               </span>
               {user.isAdmin && <ShieldCheck className="w-3 h-3 text-red-500 flex-shrink-0" />}
               {user.isBanned && (
@@ -546,7 +545,7 @@ function AdminUserActions({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <h3 className="font-display text-xl text-white tracking-wider truncate">
-                {user.displayName ?? user.name ?? "Anonim"}
+                {user.displayName ?? user.username ?? "Anonim"}
               </h3>
               {user.isAdmin && <ShieldCheck className="w-4 h-4 text-red-500" />}
             </div>
