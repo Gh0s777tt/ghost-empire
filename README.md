@@ -16,7 +16,8 @@ Twitch · Kick · YouTube · Discord — jedna tokenowa ekonomia, eventy, predic
 ![NextAuth](https://img.shields.io/badge/Auth-NextAuth%20v4-000000?style=flat-square&logo=auth0&logoColor=white)
 ![Deploy](https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white)
 ![Status](https://img.shields.io/badge/Phase%202-zamknięte-10b981?style=flat-square)
-![Status](https://img.shields.io/badge/Phase%203-w%20toku-E50914?style=flat-square)
+![Status](https://img.shields.io/badge/Phase%203A%2B3B-done-10b981?style=flat-square)
+![Status](https://img.shields.io/badge/Phase%203C%2F3D-planowane-E50914?style=flat-square)
 
 <br/>
 
@@ -33,7 +34,7 @@ Twitch · Kick · YouTube · Discord — jedna tokenowa ekonomia, eventy, predic
 
 ## ⚡ TL;DR
 
-Portal Next.js + boty, w których widzowie zarabiają **Ghost Tokens (GT)** za aktywność na Discordzie i streamach (czat, voice, suby, bity, donejty, drop codes, daily questy, predictions) i wymieniają je w sklepie na nagrody cyfrowe i fizyczne. Streamer steruje wszystkim z panelu `/admin` (17 sekcji): sklep, eventy, losowania, donacje, role, alerty OBS, stream goals, predictions, battle pass, merge duplikatów kont.
+Portal Next.js + boty, w których widzowie zarabiają **Ghost Tokens (GT)** za aktywność na Discordzie i streamach (czat, voice, suby, bity, donejty, drop codes, daily questy, predictions) i wymieniają je w sklepie na nagrody cyfrowe i fizyczne. Streamer steruje wszystkim z panelu `/admin` (22 sekcje): sklep, eventy, losowania, donacje, role, alerty OBS, stream goals, predictions, battle pass, merge duplikatów kont + **komendy czatu, timery, FAQ, powitania i song requests** dla bota na 3 platformach.
 
 Suby na Twitch/Kick, gifty, bity i donacje (Streamlabs + YouTube Super Chat) są **wykrywane automatycznie** przez webhooki/polling i nagradzane tokenami + odznakami.
 
@@ -45,7 +46,7 @@ Suby na Twitch/Kick, gifty, bity i donacje (Streamlabs + YouTube Super Chat) są
 ghost-empire-phase1/
 ├── ghost-empire-web/        ← Next.js 15 portal (Vercel deploy)        ✅ aktywny
 ├── ghost-empire-bot/        ← Discord bot (Node + discord.js)          ✅ aktywny
-└── ghost-empire-chat/       ← Twitch/Kick/YouTube chat bot             🚧 Phase 3A (planowany)
+└── ghost-empire-chat/       ← Twitch/Kick/YouTube chat bot             ✅ aktywny (3A + 3B)
 ```
 
 | Warstwa | Tech |
@@ -86,13 +87,15 @@ ghost-empire-phase1/
 - **YouTube Live** (*item J — domknięty*) — Super Chaty + membery wykrywane podczas live broadcast (polling + quota-aware)
 - **Stream Alerts (OBS)** — `/overlay?token=` jako Browser Source, polling 1.2 s, animacje slide-in + dźwięk, dispatch z 10+ miejsc
 
-### Phase 3 — Engagement 🚧 (w toku)
+### Phase 3 — Engagement ✅ (3A + 3B zrealizowane)
 
 - **Stream Goals + Hype Train** — cele na żywo (subs/gifts/follows/donations/bits/yt-members), overlay OBS `/overlay/goals`, auto-inkrementacja z EventSub/Streamlabs/YouTube
 - **Predictions / Zakłady GT** (`/predictions`) — obstawiaj wynik streama, wygrywający dzielą całą pulę proporcjonalnie do stawek; pełny refund przy cancelu / braku zwycięzców
 - **Battle Pass / Sezony** (`/seasons`) — miesięcznie-rolujące sezony, 30 tierów × 5000 XP, XP z 11 źródeł aktywności, free + premium track
 - **53 achievementy** — rozbudowa o donacje, suby, gifty, bity, super chaty, dropy, eventy, zakupy, linkowanie (auto-grant engine)
-- **NASTĘPNE → Phase 3A** — `ghost-empire-chat`: bot czatu na 3 platformach + custom commands + dashboard. Szczegóły w [PHASE3.md](PHASE3.md).
+- **Chat bot na Twitch + Kick + YouTube** (`ghost-empire-chat`, *Phase 3A*) — **1 GT/min/widz** na każdej platformie, komendy zarządzane z portalu (`/admin#chat`, koniec hardkodów), auto-refresh tokenów (Twitch reconnect 3h, Kick rotacja, YouTube live-only quota-aware)
+- **Engagement (3B)** — **timery** (cykliczne wiadomości, `#timers`), **FAQ / auto-odpowiedzi** na słowa kluczowe (`#faq`), **powitania** widzów (`#welcome`), **song requests** `!sr` z kolejką (`#songs`), **chat overlay OBS** łączący czat z 3 platform (`/overlay/chat`)
+- **NASTĘPNE → Phase 3C / 3D** — customizacja alertów per-typ, OBS WebSocket (sceny), Philips Hue / Govee (efekty świetlne), AI moderator, analityka per-stream + heatmapy, Subathon. Plan w [PHASE3.md](PHASE3.md).
 
 ---
 
@@ -116,7 +119,7 @@ Twarda warstwa „top of the top” pod produkcję — wszystko zweryfikowane bu
 
 ## 🧑‍💻 Admin panel (`/admin`)
 
-Sidebar z **17 sekcjami** (deep-link przez hash, np. `/admin#predictions`), filtrowane wg uprawnień moderatora:
+Sidebar z **22 sekcjami** (deep-link przez hash, np. `/admin#predictions`), filtrowane wg uprawnień moderatora:
 
 | Sekcja | Co |
 |---|---|
@@ -132,6 +135,11 @@ Sidebar z **17 sekcjami** (deep-link przez hash, np. `/admin#predictions`), filt
 | **Twitch** | EventSub subskrypcje + log eventów (subs/gifts/bits) |
 | **Kick** | autoryzacja + webhook subskrypcje + log eventów |
 | **YouTube** | autoryzacja + setup pollingu super chatów/memberów |
+| **Komendy czatu** | custom commands bota (`#chat`) — bot pobiera co ~2 min |
+| **Timery** | cykliczne wiadomości bota na 3 platformach (`#timers`) |
+| **FAQ / auto** | auto-odpowiedzi na słowa kluczowe (`#faq`) |
+| **Powitania** | powitanie pierwszej wiadomości widza (`#welcome`) |
+| **Song requests** | kolejka `!sr` — play / skip / clear (`#songs`) |
 | **Stream Alerts** | overlay OBS, rotacja tokenu, customizacja per-typ |
 | **Stream Goals** | cele + Hype Train, progress bary, overlay |
 | **Predictions** | tworzenie zakładów, rozstrzyganie, cancel z refundem |
@@ -245,9 +253,9 @@ Env vars dla każdego: `<PROVIDER>_CLIENT_ID` + `<PROVIDER>_CLIENT_SECRET` (patr
 
 ## 🗺️ Co dalej
 
-- **Phase 2 = zamknięte.** Wszystkie items E–K zrealizowane (Kick webhooki i YouTube super chaty domknięte).
-- **Phase 3 w toku** — shipped: Stream Goals + Hype Train, Predictions, Battle Pass/Sezony, rozbudowa achievementów. Następny duży krok: **Phase 3A — chat bot** (`ghost-empire-chat`), patrz [PHASE3.md](PHASE3.md).
-- **Optymalizacje i usprawnienia** — pełna lista propozycji (testy, monitoring, CSP nonces, React Compiler i in.) w [ROADMAP.md](ROADMAP.md).
+- **Phase 2 + Phase 3A + 3B = zrobione.** Portal + Discord bot + **chat bot na Twitch/Kick/YouTube** z komendami z portalu, timerami, FAQ, powitaniami, song requests i chat overlayem OBS. Wszystko live, zmergowane do `main`.
+- **Następny duży krok: Phase 3C / 3D** — customizacja alertów per-typ + hardware (OBS WebSocket, Philips Hue / Govee) oraz AI/analityka (AI moderator, heatmapy czatu, Subathon). Pełen plan w [PHASE3.md](PHASE3.md).
+- **Optymalizacje i usprawnienia** — pełna lista propozycji (testy integracyjne/E2E, monitoring/Sentry, CSP nonces, React Compiler i in.) w [ROADMAP.md](ROADMAP.md).
 
 ---
 

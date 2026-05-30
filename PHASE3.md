@@ -1,16 +1,17 @@
 # Phase 3 — Streaming bot ecosystem (Twitch + Kick + YouTube)
 
-**Status:** częściowo zrealizowane. Kilka engagement features z 3B/3D jest już na produkcji. **Rdzeń 3A — chat bot na 3 platformach — jeszcze NIE istnieje** i jest następnym dużym krokiem; 3C (hardware) i większość 3D (AI) pozostają planem.
+**Status:** **Phase 3A (chat bot) + 3B (engagement) ZREALIZOWANE i na produkcji** (2026-05-30). Bot czatu na Twitch + Kick + YouTube żyje, komendy zarządzane z portalu, plus timery / FAQ / powitania / song requests / chat overlay. **Następny duży krok: 3C (alerts upgrade + hardware) i 3D (AI + analityka)** — pozostają planem poniżej.
 
 > ### ✅ Już shipped z Phase 3
-> - **Stream Goals + Hype Train** (3B #5) — cele + overlay OBS `/overlay/goals`, auto-inkrementacja z EventSub / donacji / YouTube
+> - **Phase 3A — chat bot** (`ghost-empire-chat`) — bot na **Twitch + Kick + YouTube**, 1 GT/min/widz, komendy zarządzane z portalu (`/admin#chat`), auto-refresh tokenów. **DZIAŁA na produkcji** (PR #6–#8).
+> - **Phase 3B — engagement** — **timery** (`#timers`), **FAQ / auto-odpowiedzi** (`#faq`), **powitania** (`#welcome`), **song requests** `!sr` (`#songs`), **chat overlay** OBS (`/overlay/chat`) — PR #9–#13. Plus wcześniejsze: **Stream Goals + Hype Train** (`/overlay/goals`).
 > - **Predictions / Zakłady GT** (3D) — `/predictions`, pula dzielona proporcjonalnie do stawek, refund przy cancelu
 > - **Battle Pass / Sezony** — 30 tierów × 5000 XP, XP z 11 źródeł, `/seasons` + sekcja admina
 > - **Rozbudowa achievementów** — 53 odznaki, auto-grant engine wyzwalany zdarzeniami streamowymi
 > - **Kick auto-events + YouTube super chaty** — domknięcie Phase 2 (patrz [PHASE2.md](PHASE2.md))
 >
-> ### 🚧 Następny duży krok: Phase 3A — chat bot (`ghost-empire-chat`)
-> Bot czatu na Twitch/Kick/YouTube + custom commands + dashboard. **Nic z tego jeszcze nie istnieje.** Wszystko poniżej to plan; sekcje oznaczone ✅ DONE są już zrobione.
+> ### 🚧 Następny duży krok: Phase 3C (alerts + hardware) → 3D (AI + analityka)
+> **3A i 3B są zrobione.** Poniżej zostaje plan 3C / 3D; sekcje 3A/3B zostawione jako referencja i oznaczone ✅ DONE.
 
 ## TL;DR realistyczny zakres
 
@@ -116,7 +117,9 @@ Wszystkie nowe rzeczy (song request widget, stream goal bar, hype train pasek, k
 
 ---
 
-## Phase 3A — Bot foundation (~3-6 sesji)
+## Phase 3A — Bot foundation ✅ ZREALIZOWANE
+
+> **✅ DONE (2026-05-30).** Bot działa na Twitch + Kick + YouTube, komendy zarządzane z portalu (`/admin#chat`) + GT/min. **Różnice względem planu poniżej:** bot chodzi na PC streamera (nie Railway — portable przez env vars, gotowy na host później); commands trzymane w modelu `ChatCommand` + `/admin#chat` (planowane niżej `PlatformBotAccount` / `ChatMessage` / `BotChatLog` NIE zostały zbudowane — tokeny per-platforma w `.env`, pełny log wiadomości pominięto na rzecz lekkiego `ChatFeedMessage` dla overlaya). Reszta tej sekcji = oryginalny plan (referencja).
 
 **Cel:** bot żyje, łączy się z czatem 3 platform, ma podstawowy custom-command system + dashboard w `/admin`.
 
@@ -234,35 +237,36 @@ Nowa sekcja sidebar z lucide icon `MessageSquare`. UI:
 
 ---
 
-## Phase 3B — Engagement core (~5-8 sesji)
+## Phase 3B — Engagement core ✅ (rdzeń zrealizowany)
+
+> **✅ DONE (2026-05-30):** timery (#1), FAQ auto-responses (#3), welcome system (#4), stream goals (#5), song requests (#6), chat overlay (#7) — wszystko na produkcji. **Zostaje:** conditional commands (#2 — częściowo: jest cooldown), dynamiczne daily questy z czatu (#8), pełne cross-platform unified points (#9 — działa GT/min, do dopięcia reszta źródeł).
 
 **Cel:** bot przestaje być "tylko echo" i staje się platformą engagement'u.
 
 ### Sub-features
 
-1. **Scheduled / Timer messages** — bot losowo wybiera z puli co X minut
-   - Schema: `ScheduledMessage { id, message, intervalMin, platform, minViewers?, requireLive=true }`
+1. **Scheduled / Timer messages** ✅ **DONE** (PR #9, `/admin#timers`) — bot broadcastuje co X minut na 3 platformy, tylko gdy czat aktywny (anty-spam offline)
+   - Zaimplementowane jako `ChatTimer { message, intervalSeconds, enabled }` + `broadcast.ts` (rejestr senderów + `recentlyActive`)
 2. **Conditional commands** — np. `!uptime` działa tylko podczas live, `!socials` cap'ed do 1/h
    - Już w `ChatCommand` mamy `cooldownSec`, dodać `requiresLive`, `minViewers`, `activeFromMinute`
-3. **FAQ auto-responses** — kontekstowe (regex/keyword matching, nie tylko `!cmd`)
-   - Schema: `AutoResponse { id, pattern (regex), response, platform, cooldownSec }`
-4. **Welcome system** — pierwsze X wiadomości od nowego viewera → welcome msg + bonus tokens
-   - Już mamy welcome_bonus przy first login w portalu. Tu chodzi o pierwszą wiadomość na czacie.
+3. **FAQ auto-responses** ✅ **DONE** (PR #10, `/admin#faq`) — reakcja gdy wiadomość zawiera słowo kluczowe (tryb *zawiera* / *całe słowo* + cooldown)
+   - Zaimplementowane jako `FaqResponse { keyword, matchType, response, cooldownSeconds }`; `matchFaq()` jako fallback po komendach
+4. **Welcome system** ✅ **DONE** (PR #11, `/admin#welcome`) — bot wita pierwszą wiadomość widza w danej sesji (szablon `{user}`, pomija własne konto/streamera)
+   - Zaimplementowane jako singleton `WelcomeConfig { enabled, template }` + per-sesja seen-set w bocie (bez bonusu tokenów na razie — można dorzucić)
 5. **Stream goals** — DB-backed cele — ✅ **DONE**
    - Schema: `StreamGoal` (6 typów: subs/gift_subs/follows/donations_pln/cheers_bits/yt_members, 5 trybów resetu) + `HypeTrainState`
    - Overlay page `app/overlay/goals/page.tsx` z animowanym paskiem postępu + banner hype train
    - Hype Train = osobny tracker, auto-uruchamiany przez Twitch EventSub (`channel.hype_train.*`)
    - Admin `/admin#goals`: CRUD celów, color picker, ręczny ±1, reset, toggle
-6. **Song Requests** — kolejka utworów
-   - Schema: `SongRequest { id, requesterUserId, youtubeUrl, title, duration, status, playedAt }`
+6. **Song Requests** ✅ **DONE** (PR #12, `/admin#songs`) — `!sr <link>` → kolejka z play/skip/clear (auto-refresh)
+   - Zaimplementowane jako `SongRequest { query, requestedBy, platform, status }` + `/api/internal/song-request` (bot) + `/api/admin/song-requests`. *(Bez walidacji YouTube API / drag-reorder — można dorzucić.)*
    - Bot komenda: `!sr <youtube_url>` lub `!sr <search>`
    - YouTube API do walidacji URL + pobrania tytułu/długości
    - Overlay page `app/overlay/song-request/page.tsx` pokazujący CURRENT playing
    - Admin UI: kolejka z drag-reorder, skip, ban song/user
    - **Wymaga**: YouTube API key (już mamy)
-7. **Chat overlay** — nakładka chatu w OBS
-   - Polling `/api/alerts/chat-overlay/feed?token=` (nowy endpoint) zwracający ostatnie 50 wiadomości z 3 platform
-   - Page `app/overlay/chat/page.tsx` z brand-color per platforma (purple Twitch, green Kick, red YT)
+7. **Chat overlay** ✅ **DONE** (PR #13, `/overlay/chat?token=`) — nakładka OBS łącząca czat z 3 platform, kolory per platforma
+   - Zaimplementowane: bot `pushChatFeed()` → `/api/internal/chat-feed` → rolling buffer `ChatFeedMessage` → token-gated `/api/alerts/chat` → `app/overlay/chat/` (poll 2 s)
 8. **Dynamic Daily Quests** — bot generuje questy oparte na chat activity
    - Schema rozszerzona o `triggerType: "chat_messages" | "song_request_play" | ...`
    - Generator: codziennie cron generuje 3 questy oparte na pulę templates
