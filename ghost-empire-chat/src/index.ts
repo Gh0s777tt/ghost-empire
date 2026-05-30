@@ -1,5 +1,7 @@
 import { startTwitch } from "./twitch";
+import { startKick } from "./kick";
 
 console.log("[ghost-empire-chat] starting…");
 void startTwitch();
-// Kick + YouTube added next.
+void startKick();
+// YouTube added next.
