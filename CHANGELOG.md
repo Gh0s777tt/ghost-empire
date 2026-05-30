@@ -19,7 +19,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Fixed
 
-- **Prywatność: imię z Google nie wycieka do publicznego rankingu** — logowanie Google (scope `openid email profile`) zwraca tylko pełne imię+nazwisko (`user.name`), bez handla. Dotąd trafiało ono jako `username`/`displayName` do publicznego rankingu i profilu. Teraz fallback to lokalna część e-maila (samodzielnie wybrany identyfikator), a `displayName` dla Google = wygenerowany slug. Twitch/Discord/Kick mają realny handle → ich nie dotyczy.
+- **Prywatność: imię z Google nie wycieka do publicznego rankingu/profilu** — logowanie Google (scope `openid email profile`) zwraca tylko pełne imię+nazwisko (`user.name`), bez handla. Dotąd trafiało ono jako `username`/`displayName` do publicznego rankingu i profilu. Teraz fallback to lokalna część e-maila (samodzielnie wybrany identyfikator), a `displayName` dla Google = wygenerowany slug. Twitch/Discord/Kick mają realny handle → ich nie dotyczy. Dodatkowo publiczny profil `/u/[username]` nie używa już `user.name` jako fallbacku (nagłówek + `alt` avatara → `displayName ?? username`), więc imię nie pojawia się nawet w źródle HTML. Jednorazowy skrypt `prisma/fix-google-name-leak.ts` (dry-run domyślnie, `--apply` z backupem do temp) czyści już-zapisane dane: zeruje `User.name` dla kont Google z pełnym imieniem oraz podmienia `username`/`displayName`, jeśli zostały wygenerowane z imienia.
 
 > **Setup wymagany po pull:** gdy masz lokalnie Node — `cd ghost-empire-web && npm install` zsynchronizuje `package-lock.json` (doszedł dev-dep `vitest`) i odblokuje `npm test` / `npm run typecheck`. Bez tego CI i tak przejdzie (instaluje zależności samo). Brak zmian schemy/env.
 
