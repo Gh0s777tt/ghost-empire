@@ -3,6 +3,7 @@ import { env } from "./env";
 import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
 import { welcomeMessage } from "./welcome";
+import { isSongRequest, handleSongRequest } from "./songRequest";
 import { awardChat } from "./portal";
 import { refreshAccessToken } from "./twitchAuth";
 import { registerSender, markActivity } from "./broadcast";
@@ -32,8 +33,14 @@ function build(password: string): tmi.Client {
     if (self) return;
     markActivity();
 
-    const reply = matchCommand(message) ?? matchFaq(message);
-    if (reply) c.say(env.twitch.channel, reply).catch(() => {});
+    if (isSongRequest(message)) {
+      void handleSongRequest("twitch", tags.username, message).then((m) => {
+        if (m) c.say(env.twitch.channel, m).catch(() => {});
+      });
+    } else {
+      const reply = matchCommand(message) ?? matchFaq(message);
+      if (reply) c.say(env.twitch.channel, reply).catch(() => {});
+    }
 
     const userId = tags["user-id"];
     if (userId) {
