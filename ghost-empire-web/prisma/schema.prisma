@@ -541,6 +541,25 @@ model ChatTimer {
 }
 
 // =====================================================
+// FAQ / AUTO-RESPONSES — bot replies when a message CONTAINS a keyword
+// (not just !commands). Managed from /admin#faq, fetched by ghost-empire-chat.
+// =====================================================
+
+model FaqResponse {
+  id              String   @id @default(cuid())
+  keyword         String                          // phrase/word to look for in a message
+  matchType       String   @default("contains")   // "contains" (substring) | "word" (whole word)
+  response        String   @db.Text
+  cooldownSeconds Int      @default(30)
+  enabled         Boolean  @default(true)
+  createdById     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("faq_responses")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 
