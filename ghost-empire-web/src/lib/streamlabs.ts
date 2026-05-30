@@ -5,6 +5,7 @@ import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
+import { plnFromCurrency } from "@/lib/economy";
 
 const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v2.0/authorize";
 const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v2.0/token";
@@ -286,10 +287,8 @@ export async function pollAndProcessDonations(): Promise<{
     }
 
     // Bump donations_pln goal — applies to BOTH matched and unmatched donations.
-    // Currency conversion: PLN passthrough, others * 4 (USD-equivalent fallback, same as YT).
-    const plnAmount = ["PLN", "ZL"].includes(d.currency.toUpperCase())
-      ? amountFloat
-      : amountFloat * 4;
+    // Currency conversion shared with YouTube super chats (see economy.ts).
+    const plnAmount = plnFromCurrency(amountFloat, d.currency);
     await incrementGoals("donations_pln", Math.floor(plnAmount));
   }
 

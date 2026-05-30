@@ -76,7 +76,6 @@ export default async function PublicProfilePage({
       id: true,
       username: true,
       displayName: true,
-      name: true,
       image: true,
       bio: true,
       // Public stats only
@@ -171,7 +170,7 @@ export default async function PublicProfilePage({
                 {user.image ? (
                   <img
                     src={user.image}
-                    alt={user.name ?? ""}
+                    alt={user.displayName ?? user.username ?? ""}
                     className="w-24 h-24 md:w-32 md:h-32 object-cover border-2"
                     style={{ borderColor: rankInfo.color }}
                   />
@@ -197,7 +196,7 @@ export default async function PublicProfilePage({
                     className="font-display text-3xl md:text-4xl text-white tracking-wider"
                     style={{ textShadow: `2px 0 0 ${rankInfo.color}88, -2px 0 0 rgba(139,0,0,0.4)` }}
                   >
-                    {user.displayName ?? user.name ?? "Anonim"}
+                    {user.displayName ?? user.username ?? "Anonim"}
                   </h1>
                   {user.isAdmin && (
                     <span className="text-[10px] font-bold tracking-widest uppercase border border-red-500 bg-red-600/15 text-red-300 px-2 py-0.5 flex items-center gap-1">

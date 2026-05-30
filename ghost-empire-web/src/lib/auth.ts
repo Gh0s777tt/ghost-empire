@@ -249,12 +249,21 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (dbUser) {
+          // Google's OAuth profile (scope: openid email profile) exposes only the
+          // user's real full name (user.name) — it has NO handle/nick. Using that
+          // as the public username/displayName leaks the first+last name into the
+          // ranking. Fall back to the email local-part (the user's self-chosen
+          // identifier) instead. Twitch/Discord/Kick all provide a real handle, so
+          // they never reach this fallback.
+          const isGoogle = account.provider === "google";
+          const emailLocal = user.email?.split("@")[0] || undefined;
+
           // Auto-set username if not set yet
           if (!dbUser.username) {
             const rawName =
               p.login || // Twitch uses login
-              p.username ||
-              user.name ||
+              p.username || // Discord / Kick
+              emailLocal || // Google has no handle → email local-part, NOT full name
               `ghost_${dbUser.id.slice(-6)}`;
 
             const slug = rawName
@@ -266,7 +275,9 @@ export const authOptions: NextAuthOptions = {
               where: { id: dbUser.id },
               data: {
                 username: slug,
-                displayName: user.name ?? slug,
+                // For Google, user.name is the real full name — never expose it.
+                // Use the derived handle (slug) as the display name instead.
+                displayName: isGoogle ? slug : (user.name ?? slug),
               },
             });
           }

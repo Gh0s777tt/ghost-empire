@@ -20,14 +20,14 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 ## 1. Jakość kodu, testy i CI/CD 🔥
 
-Największa luka „top of the top”: **projekt nie ma jeszcze testów ani CI**. Build (`tsc` + `next build`) to jedyna brama jakości.
+Pierwsza warstwa domknięta: **są już testy jednostkowe (Vitest) i CI (GitHub Actions)** — patrz CHANGELOG. Zostają warstwy wyżej: testy integracyjne (API + DB) i E2E.
 
 | Propozycja | Pri | Notatki |
 |---|---|---|
-| **Testy jednostkowe** (Vitest) | 🔥 | Najpierw czysta logika bez DB: payout predictions, mnożniki tokenów, tier battle passa, podpisy webhooków, rate-limiter |
-| **Testy integracyjne** API routes | 🟡 | Prisma na testowej bazie (Supabase branch lub Docker Postgres), kluczowe: ekonomia + webhooki |
+| ~~**Testy jednostkowe** (Vitest)~~ ✅ | — | **Zrobione** — czysta logika bez DB w `lib/economy.ts` + `src/lib/__tests__/`: payout predictions, tier battle passa, konwersja walut, poziomy/rangi, polska pluralizacja, podpisy webhooków + świeżość, nagłówki rate-limitera |
+| **Testy integracyjne** API routes | 🔥 | Następny krok testów: Prisma na testowej bazie (Supabase branch lub Docker Postgres), kluczowe: ekonomia + webhooki |
 | **E2E** (Playwright) | 🟡 | Happy path: login → zarobek → zakup w sklepie; smoke testy publicznych stron |
-| **GitHub Actions CI** | 🔥 | Na każdy PR: `tsc --noEmit` + `npm run lint` + `next build`. Blokada merge gdy czerwone |
+| ~~**GitHub Actions CI**~~ ✅ | — | **Zrobione** — `.github/workflows/ci.yml`: typecheck + lint + test na push/PR. `next build` zostaje po stronie Vercela (preview deploy na każdym pushu) |
 | **Lighthouse CI / performance budget** | 🟡 | Wykrywanie regresji Core Web Vitals na publicznych stronach |
 | **Dependabot / Renovate** | 🟡 | Auto-PR-y na aktualizacje zależności + alerty bezpieczeństwa |
 | **Prettier + import sort** | 🧊 | Spójny styl; dziś tylko ESLint |

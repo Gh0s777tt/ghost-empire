@@ -3,6 +3,7 @@
 // so partial state on errors is impossible.
 import { prisma } from "@/lib/prisma";
 import { awardSeasonXp } from "@/lib/seasons";
+import { computePayouts } from "@/lib/economy";
 
 export const MAX_OPTIONS = 4;
 export const MIN_WAGER = 10;
@@ -191,14 +192,14 @@ export async function resolvePrediction(opts: {
         } as const;
       }
 
-      // Normal payout — each winner gets (their stake / winnersStakeSum) * totalPot
-      // Use Math.floor + track remainder so we never overpay vs totalPot.
+      // Proportional split of the whole pot among winners. Pure math extracted to
+      // economy.ts (computePayouts) so it's unit-tested: floor each share, last
+      // winner absorbs the remainder so the sum is exactly totalPot.
+      const payouts = computePayouts(winners.map((w) => w.tokensWagered), totalPot);
       let distributed = 0;
       for (let i = 0; i < winners.length; i++) {
         const e = winners[i];
-        const share = (e.tokensWagered / winnersStakeSum) * totalPot;
-        // Last winner gets whatever's left to avoid rounding loss
-        const payout = i === winners.length - 1 ? totalPot - distributed : Math.floor(share);
+        const payout = payouts[i];
         distributed += payout;
 
         await tx.user.update({

@@ -6,6 +6,7 @@
 // Seasons auto-roll on the 1st of each month — getOrCreateCurrentSeason() lazily
 // creates the current month's season and deactivates any expired ones.
 import { prisma } from "@/lib/prisma";
+import { tierFromXp } from "@/lib/economy";
 
 // XP awarded per event type — tuned so a casual viewer reaches a few tiers/month,
 // an active supporter most of the pass, and whales can finish.
@@ -108,12 +109,12 @@ export async function awardSeasonXp(userId: string, source: SeasonXpSource, mult
 
     const progress = await prisma.userSeasonProgress.upsert({
       where: { userId_seasonId: { userId, seasonId: season.id } },
-      create: { userId, seasonId: season.id, xp: amount, tier: Math.floor(amount / season.xpPerTier) },
+      create: { userId, seasonId: season.id, xp: amount, tier: tierFromXp(amount, season.xpPerTier, season.totalTiers) },
       update: { xp: { increment: amount } },
     });
 
     // Recompute tier (upsert's create already set it for new rows; update needs recompute)
-    const newTier = Math.min(season.totalTiers, Math.floor(progress.xp / season.xpPerTier));
+    const newTier = tierFromXp(progress.xp, season.xpPerTier, season.totalTiers);
     if (newTier !== progress.tier) {
       await prisma.userSeasonProgress.update({
         where: { id: progress.id },
