@@ -13,7 +13,6 @@ export type RankedUser = {
   id: string;
   username: string | null;
   displayName: string | null;
-  name: string | null;
   image: string | null;
   tokens: number;
   totalEarned: number;
@@ -25,7 +24,7 @@ export type RankedUser = {
 };
 
 const RANK_SELECT = {
-  id: true, username: true, displayName: true, name: true, image: true,
+  id: true, username: true, displayName: true, image: true,
   tokens: true, totalEarned: true, level: true, xp: true, streak: true,
   isAdmin: true, isBanned: true,
 } as const;
