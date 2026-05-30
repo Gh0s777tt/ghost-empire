@@ -3,6 +3,7 @@ import { matchCommand } from "./commands";
 import { awardChat } from "./portal";
 import { refreshYouTubeToken } from "./youtubeAuth";
 import { registerSender, markActivity } from "./broadcast";
+import { matchFaq } from "./faq";
 
 // YouTube Live Chat (Option C: authorized as the channel account).
 // Quota (10k units/day): liveBroadcasts.list = 1, liveChatMessages.list = 1,
@@ -124,7 +125,7 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
     }
   }
 
-  const reply = matchCommand(text);
+  const reply = matchCommand(text) ?? matchFaq(text);
   if (reply) void sendMessage(reply);
 }
 

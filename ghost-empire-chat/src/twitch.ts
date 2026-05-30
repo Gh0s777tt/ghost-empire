@@ -1,6 +1,7 @@
 import tmi from "tmi.js";
 import { env } from "./env";
 import { matchCommand } from "./commands";
+import { matchFaq } from "./faq";
 import { awardChat } from "./portal";
 import { refreshAccessToken } from "./twitchAuth";
 import { registerSender, markActivity } from "./broadcast";
@@ -30,7 +31,7 @@ function build(password: string): tmi.Client {
     if (self) return;
     markActivity();
 
-    const reply = matchCommand(message);
+    const reply = matchCommand(message) ?? matchFaq(message);
     if (reply) c.say(env.twitch.channel, reply).catch(() => {});
 
     const userId = tags["user-id"];

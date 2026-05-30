@@ -1,5 +1,6 @@
 import { env } from "./env";
 import { matchCommand } from "./commands";
+import { matchFaq } from "./faq";
 import { awardChat } from "./portal";
 import { refreshKickToken } from "./kickAuth";
 import { registerSender, markActivity } from "./broadcast";
@@ -53,7 +54,7 @@ function handleChat(d: KickChat): void {
   const userId = d.sender?.id != null ? String(d.sender.id) : undefined;
   const username = d.sender?.username;
 
-  const reply = matchCommand(content);
+  const reply = matchCommand(content) ?? matchFaq(content);
   if (reply) void sendKickMessage(reply);
 
   if (userId) {
