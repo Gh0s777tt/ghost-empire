@@ -2,6 +2,7 @@ import { env } from "./env";
 import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
 import { welcomeMessage } from "./welcome";
+import { isSongRequest, handleSongRequest } from "./songRequest";
 import { awardChat } from "./portal";
 import { refreshKickToken } from "./kickAuth";
 import { registerSender, markActivity } from "./broadcast";
@@ -55,8 +56,14 @@ function handleChat(d: KickChat): void {
   const userId = d.sender?.id != null ? String(d.sender.id) : undefined;
   const username = d.sender?.username;
 
-  const reply = matchCommand(content) ?? matchFaq(content);
-  if (reply) void sendKickMessage(reply);
+  if (isSongRequest(content)) {
+    void handleSongRequest("kick", username, content).then((m) => {
+      if (m) void sendKickMessage(m);
+    });
+  } else {
+    const reply = matchCommand(content) ?? matchFaq(content);
+    if (reply) void sendKickMessage(reply);
+  }
 
   if (userId) {
     if (userId !== env.kick.broadcasterId) {

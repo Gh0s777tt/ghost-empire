@@ -574,6 +574,23 @@ model WelcomeConfig {
 }
 
 // =====================================================
+// SONG REQUESTS — viewers queue songs via "!sr <link>"; managed on /admin#songs.
+// =====================================================
+
+model SongRequest {
+  id          String    @id @default(cuid())
+  query       String    @db.Text           // link or title as typed by the viewer
+  requestedBy String                        // chatter display name
+  platform    String                        // "twitch" | "kick" | "youtube"
+  status      String    @default("queued")  // "queued" | "playing" | "played" | "skipped"
+  createdAt   DateTime  @default(now())
+  playedAt    DateTime?
+
+  @@index([status, createdAt])
+  @@map("song_requests")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 

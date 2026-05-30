@@ -5,6 +5,7 @@ import { refreshYouTubeToken } from "./youtubeAuth";
 import { registerSender, markActivity } from "./broadcast";
 import { matchFaq } from "./faq";
 import { welcomeMessage } from "./welcome";
+import { isSongRequest, handleSongRequest } from "./songRequest";
 
 // YouTube Live Chat (Option C: authorized as the channel account).
 // Quota (10k units/day): liveBroadcasts.list = 1, liveChatMessages.list = 1,
@@ -128,8 +129,14 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
     }
   }
 
-  const reply = matchCommand(text) ?? matchFaq(text);
-  if (reply) void sendMessage(reply);
+  if (isSongRequest(text)) {
+    void handleSongRequest("youtube", username, text).then((m) => {
+      if (m) void sendMessage(m);
+    });
+  } else {
+    const reply = matchCommand(text) ?? matchFaq(text);
+    if (reply) void sendMessage(reply);
+  }
 }
 
 // --- sending: liveChatMessages.insert (50 units) — globally throttled ---
