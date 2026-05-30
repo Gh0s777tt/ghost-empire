@@ -4,8 +4,10 @@ Chat bot for **Twitch + Kick + YouTube** — Phase 3A of Ghost Empire. Long-runn
 Node process (NOT Vercel). Connects to each platform's chat, runs custom commands,
 and awards Ghost Tokens via the portal's internal API.
 
-> **Status:** scaffolding. Bot accounts + OAuth app credentials are in `.env`
-> (gitignored). Platform connections are being built incrementally.
+> **Status:** Twitch LIVE (commands + GT/min + token auto-refresh). Kick wired
+> up — reads chat via Pusher websocket (no auth) and replies via the official API
+> (`chat:write`); needs a dev.kick.com app + `npm run auth:kick`. YouTube next.
+> Bot accounts + OAuth app credentials live in `.env` (gitignored).
 
 ## Architecture (v1 — runs on the streamer's PC, portable to a host later)
 
