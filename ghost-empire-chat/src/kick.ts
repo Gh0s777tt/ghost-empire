@@ -3,6 +3,7 @@ import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
 import { welcomeMessage } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
+import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
 import { refreshKickToken } from "./kickAuth";
 import { registerSender, markActivity } from "./broadcast";
@@ -55,6 +56,7 @@ function handleChat(d: KickChat): void {
   const content = d.content ?? "";
   const userId = d.sender?.id != null ? String(d.sender.id) : undefined;
   const username = d.sender?.username;
+  pushChatFeed("kick", username, content);
 
   if (isSongRequest(content)) {
     void handleSongRequest("kick", username, content).then((m) => {
