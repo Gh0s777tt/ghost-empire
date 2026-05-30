@@ -25,6 +25,37 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ---
 
+## 2026-05-30 — Phase 3A + 3B: ekosystem chat bota na żywo 🎉
+
+`ghost-empire-chat` przeszedł **z planu do produkcji** — bot czatu na **Twitch + Kick + YouTube**, komendy zarządzane z portalu i komplet funkcji engagement (3B). Wszystko zmergowane do `main` (PR #6–#13), tabele wypchnięte na prod (`prisma db push`).
+
+### Added — bot na 3 platformach (Phase 3A)
+
+- **Bot Kick** (#6) — odczyt czatu przez **Pusher WebSocket** (bez auth), odpowiedzi przez oficjalne API (`POST /public/v1/chat`, `type:"user"` + `broadcaster_user_id`), OAuth 2.1 + **PKCE** na `id.kick.com`. Refresh **rotuje** token → trzymany w gitignored `.kick-tokens.json` (reactive 401 + backstop). Odczyt nieautoryzowany działa od ręki; odpowiedzi wymagają `npm run auth:kick`. Konto bota musi być modem/botem na kanale.
+- **Bot YouTube** (#7) — *Option C* (autoryzacja konta kanału). `liveBroadcasts.list?mine=true` (1 j./60 s) auto-wykrywa live → poll `liveChat/messages` (1 j., GT/min) + odpowiedzi `liveChat/messages` insert (50 j., globalny throttle 1/5 s). Scope `youtube.force-ssl`, Google token (bez rotacji). Koszty potwierdzone → brak ryzyka przy limicie 10k j./dzień. ⚠️ token wygasa po 7 dniach jeśli ekran zgody jest w „Testing".
+
+### Added — komendy zarządzane z portalu (#8)
+
+- Model `ChatCommand` (`chat_commands`) + sekcja **`/admin#chat`** (CRUD) + `/api/admin/chat-commands` (admin) + `/api/bot/chat-commands` (publiczny GET dla bota). Bot pobiera komendy co ~2 min — koniec hardkodów (4 domyślne zaseedowane, zostają jako fallback tylko przy błędzie fetcha). Pusta lista z DB = brak komend (respektujemy admina).
+
+### Added — Phase 3B (engagement, #9–#13)
+
+- **Timery** (#9) — cykliczne wiadomości (`/admin#timers`, model `ChatTimer`). Nowy `broadcast.ts` w bocie (rejestr senderów wszystkich platform + sygnał aktywności) broadcastuje na Twitch/Kick/YouTube, **tylko gdy czat był aktywny w ostatnich 15 min** (anty-spam przy offline).
+- **FAQ / auto-odpowiedzi** (#10) — bot reaguje, gdy wiadomość **zawiera** słowo kluczowe (`/admin#faq`, model `FaqResponse`, tryb *zawiera* / *całe słowo* + cooldown). Wpięte jako fallback po komendach.
+- **Powitania** (#11) — bot wita pierwszą wiadomość widza w danej sesji (`/admin#welcome`, singleton `WelcomeConfig`, szablon `{user}`, pomija własne konto/streamera).
+- **Song requests** (#12) — `!sr <link>` → kolejka (`/admin#songs`, model `SongRequest`, akcje play/played/skip/usuń/wyczyść, auto-refresh 10 s). Bot enqueue przez `/api/internal/song-request` (Bearer BOT_SECRET, limit kolejki).
+- **Chat overlay** (#13) — nakładka OBS łącząca czat z 3 platform: **`/overlay/chat?token=<OVERLAY_TOKEN>`** (poll 2 s, transparentne tło, kolory per platforma). Bot `pushChatFeed()` (best-effort) → `/api/internal/chat-feed` → rolling buffer `chat_feed_messages` → token-gated `/api/alerts/chat`.
+
+### Changed
+
+- **Panel admina: +5 sekcji** (#chat, #timers, #faq, #welcome, #songs) → **22 sekcje**.
+- **Bot `commands.ts`** — z hardkodowanej listy na pobieraną z portalu (cache, ~2 min). Każdy handler platformy ujednolicony: `markActivity` → `!sr`/komenda/FAQ → powitanie → GT → feed do overlaya.
+- **Zero nowych zależności w bocie** — użyto globalnego `WebSocket` z Node 26 (Kick/Pusher).
+
+> **Setup wymagany po pull:** tabele już wypchnięte na prod (`prisma db push` — `chat_commands`, `chat_timers`, `faq_responses`, `welcome_config`, `song_requests`, `chat_feed_messages`); nic z bazą. **Zrestartuj `ghost-empire-chat`** (`npm.cmd run dev`) na `main` — załaduje nowe moduły. Skonfiguruj nowe sekcje w `/admin` (startują puste/wyłączone). Chat overlay w OBS: `…/overlay/chat?token=<OVERLAY_TOKEN>` (token z `/admin#alerts`). ⚠️ **YouTube:** ustaw ekran zgody OAuth na „In production" w Google Cloud, inaczej token wygaśnie po 7 dniach.
+
+---
+
 ## 2026-05-29 — Phase 3 (engagement) + reliability/perf/security hardening
 
 ### Docs
