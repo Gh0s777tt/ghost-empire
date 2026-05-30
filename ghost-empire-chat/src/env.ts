@@ -13,5 +13,8 @@ export const env = {
     username: req("TWITCH_BOT_USERNAME"),
     channel: req("TWITCH_CHANNEL"),
     oauth: process.env.TWITCH_BOT_OAUTH || undefined, // "oauth:xxxx" from `npm run auth:twitch`
+    clientId: process.env.TWITCH_CLIENT_ID || undefined,
+    clientSecret: process.env.TWITCH_CLIENT_SECRET || undefined,
+    refreshToken: process.env.TWITCH_BOT_REFRESH || undefined,
   },
 };
