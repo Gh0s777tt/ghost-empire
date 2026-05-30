@@ -2,6 +2,7 @@ import { env } from "./env";
 import { matchCommand } from "./commands";
 import { awardChat } from "./portal";
 import { refreshKickToken } from "./kickAuth";
+import { registerSender, markActivity } from "./broadcast";
 
 const AWARD_AMOUNT = 1;
 const AWARD_COOLDOWN_MS = 60_000; // 1 GT per chatter per minute
@@ -47,6 +48,7 @@ async function resolveChatroomId(): Promise<string | null> {
 }
 
 function handleChat(d: KickChat): void {
+  markActivity();
   const content = d.content ?? "";
   const userId = d.sender?.id != null ? String(d.sender.id) : undefined;
   const username = d.sender?.username;
@@ -177,5 +179,8 @@ export async function startKick(): Promise<void> {
   }
 
   connect(chatroomId);
+  registerSender("kick", (t) => {
+    void sendKickMessage(t);
+  });
   setInterval(() => void refreshSendToken(), REFRESH_EVERY_MS);
 }

@@ -3,6 +3,7 @@ import { env } from "./env";
 import { matchCommand } from "./commands";
 import { awardChat } from "./portal";
 import { refreshAccessToken } from "./twitchAuth";
+import { registerSender, markActivity } from "./broadcast";
 
 const AWARD_AMOUNT = 1;
 const AWARD_COOLDOWN_MS = 60_000; // 1 GT per chatter per minute
@@ -17,12 +18,17 @@ function build(password: string): tmi.Client {
     channels: [env.twitch.channel],
   });
 
+  registerSender("twitch", (t) => {
+    c.say(env.twitch.channel, t).catch(() => {});
+  });
+
   c.on("connected", () =>
     console.log(`[twitch] connected as ${env.twitch.username} in #${env.twitch.channel}`),
   );
 
   c.on("message", (_channel, tags, message, self) => {
     if (self) return;
+    markActivity();
 
     const reply = matchCommand(message);
     if (reply) c.say(env.twitch.channel, reply).catch(() => {});
