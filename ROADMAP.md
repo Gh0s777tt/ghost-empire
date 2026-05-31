@@ -99,10 +99,24 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 
 Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobione:
 
-- **3B:** ✅ **zrobione** (Song Requests, Chat overlay, Timery, FAQ auto-responses, Welcome system); zostaje tylko: dynamiczne daily questy z aktywności czatu, walidacja YouTube w song requests, bonus tokenów przy powitaniu
+- **3B:** ✅ **zrobione w całości** (Song Requests, Chat overlay, Timery, FAQ, Welcome) + ~~dynamiczne daily questy z czatu~~ #19, ~~tytuły song requestów (oEmbed)~~ #18, ~~bonus tokenów przy powitaniu~~ #16
 - **3C:** customizacja alertów per-typ (animacja/font/grafika/dźwięk/threshold), **OBS WebSocket** (sceny/źródła), **Philips Hue / Govee / Lumia** (efekty świetlne na donejty)
 - **3D:** **AI Moderator**, AI auto-responses kontekstowe, AI shoutouts/clip-detection, ~~Subathon/Goalathon~~ ✅ (#17), analityka per-stream + heatmapy czatu, A/B testy komend
 - **Game library** (Steam/Roblox + opcjonalnie Xbox/Battle.net) + voting widget „następna gra”
+
+### Pomysły użytkownika (2026-05-30) — do zrealizowania
+
+- 🔥 **Customizacja alertów + podgląd na stronie** (T16) — per-typ (rozmiar/pozycja/animacja/czas/dźwięk) z **wizualnym preview w panelu** + URL do skopiowania do źródła OBS (zamiast grzebania w plikach)
+- 🔥 **OBS WebSocket — hasło wklejane na stronie** (`/admin`), nie w env → przeżywa zmianę komputera (kopiuj-wklej)
+- 🔥 **Strona startowa (landing)** — ładny pierwszy ekran przy wejściu (wariacja na temat `/about`)
+- 🟡 **Changelog na stronie `/about` jako zwijana lista** — mniej miejsca, rozwijane po szczegóły
+- 🟡 **Opisy uprawnień w UI nadawania rang** (`/admin#users`) — patrz [PERMISSIONS.md](PERMISSIONS.md)
+- 🟡 **Profil: „czas spędzony na streamie"** — wymaga trackingu sesji streamu (Twitch `stream.online/offline`)
+- 🟡 **Wybór dostawcy donacji** — nie tylko Streamlabs; wybór platformy w panelu (każdy dostawca = osobna integracja)
+- 🟡 **AI Moderator — wybór modelu/dostawcy** (Anthropic / OpenAI / Google), nie tylko jeden — abstrakcja providera + setting
+- 🟡 **Ankiety / głosowania** na stronie
+- 🧊 **Integracje:** Rumble, Trovo, Instagram, Facebook, X, TikTok
+- 🧊 **Redesign / lepszy layout** — czytelność, przejrzystość, mniej męczący dla oka + zmiana grafiki
 
 > ✅ Już zrobione z tej puli: **cały chat bot 3A + rdzeń 3B** (timery / FAQ / powitania / song-requests / chat-overlay), Stream Goals + Hype Train, Predictions, Battle Pass/Sezony (patrz [CHANGELOG.md](CHANGELOG.md) + [PHASE3.md](PHASE3.md)).
 
