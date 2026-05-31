@@ -203,12 +203,12 @@ export function RankingClient({
                         style={{ borderColor: style.color }}
                       />
                     ) : (
-                      <div
-                        className="w-16 h-16 sm:w-20 sm:h-20 border-2 bg-zinc-900 flex items-center justify-center text-3xl mb-3"
+                      <img
+                        src="/brand/skull.png"
+                        alt=""
+                        className="w-16 h-16 sm:w-20 sm:h-20 border-2 object-cover bg-black mb-3"
                         style={{ borderColor: style.color }}
-                      >
-                        👻
-                      </div>
+                      />
                     )}
 
                     <div className="flex items-center gap-1.5 mb-1">
@@ -366,9 +366,7 @@ function UserRow({
           {user.image ? (
             <img src={user.image} alt="" width={32} height={32} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-8 h-8 object-cover border border-zinc-800 flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 border border-zinc-800 bg-zinc-900 flex items-center justify-center text-sm flex-shrink-0">
-              👻
-            </div>
+            <img src="/brand/skull.png" alt="" width={32} height={32} className="w-8 h-8 border border-zinc-800 object-cover bg-black flex-shrink-0" />
           )}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -540,7 +538,7 @@ function AdminUserActions({
           {user.image ? (
             <img src={user.image} alt="" width={48} height={48} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-12 h-12 border-2 border-red-700 object-cover flex-shrink-0" />
           ) : (
-            <div className="w-12 h-12 border-2 border-red-700 bg-zinc-900 flex items-center justify-center text-xl flex-shrink-0">👻</div>
+            <img src="/brand/skull.png" alt="" width={48} height={48} className="w-12 h-12 border-2 border-red-700 object-cover bg-black flex-shrink-0" />
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">

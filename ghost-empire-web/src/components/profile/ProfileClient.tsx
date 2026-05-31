@@ -155,12 +155,12 @@ export function ProfileClient({
                 style={{ borderColor: rank.color }}
               />
             ) : (
-              <div
-                className="w-24 h-24 md:w-28 md:h-28 flex items-center justify-center text-4xl border-2 bg-zinc-900"
+              <img
+                src="/brand/skull.png"
+                alt=""
+                className="w-24 h-24 md:w-28 md:h-28 object-cover border-2 bg-black"
                 style={{ borderColor: rank.color }}
-              >
-                👻
-              </div>
+              />
             )}
             <div
               className="absolute -bottom-2 -right-2 px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"

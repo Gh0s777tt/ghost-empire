@@ -18,11 +18,12 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "pl",
     categories: ["entertainment", "social", "games"],
     icons: [
-      // Vector icon scales to every required size; modern browsers/Android accept
-      // SVG manifest icons. `maskable` lets Android render it inside its mask.
-      { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
-      { src: "/apple-icon", sizes: "180x180", type: "image/png" },
+      // Skull brand mark. `any` for the launcher/tab; `maskable` is padded so
+      // Android's circle/squircle mask never clips the skull.
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

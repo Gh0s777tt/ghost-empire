@@ -2,7 +2,7 @@
 // src/components/home/HomeClient.tsx
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Ghost, Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, ArrowUp, ArrowDown, Check, Clock, Users, Zap, Gift, Trophy } from "lucide-react";
+import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, ArrowUp, ArrowDown, Check, Clock, Users, Zap, Gift, Trophy } from "lucide-react";
 import { fmt, timeLeft, rankForLevel } from "@/lib/utils";
 import type { Session } from "next-auth";
 
@@ -149,14 +149,8 @@ function GuestView({ topUsers, hotItems, activeEvents }: any) {
       {/* Hero */}
       <div className="text-center py-16">
         <div className="flex justify-center mb-8">
-          <div
-            className="w-24 h-24 flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, #E50914, #8B0000)",
-              clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-            }}
-          >
-            <Ghost className="w-12 h-12 text-white" strokeWidth={1.5} />
+          <div className="w-28 h-28 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_60px_rgba(229,9,20,0.35)]">
+            <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
           </div>
         </div>
         <h1
@@ -212,7 +206,7 @@ function GuestView({ topUsers, hotItems, activeEvents }: any) {
               <div
                 className="w-10 h-10 border border-zinc-700 overflow-hidden bg-zinc-900 flex items-center justify-center text-lg"
               >
-                {u.image ? <img src={u.image} alt="" width={40} height={40} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" /> : "👻"}
+                {u.image ? <img src={u.image} alt="" width={40} height={40} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" /> : <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />}
               </div>
               <div className="flex-1">
                 <p className="font-bold text-white">{u.displayName ?? u.username}</p>
@@ -257,7 +251,7 @@ function ProfileHero({ user }: { user: any }) {
               {user.image ? (
                 <img src={user.image} alt="" width={80} height={80} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-3xl">👻</div>
+                <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
               )}
             </div>
             <div
