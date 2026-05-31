@@ -567,8 +567,9 @@ model FaqResponse {
 model WelcomeConfig {
   id        String   @id @default("default")
   enabled   Boolean  @default(false)
-  template  String   @default("Witaj {user}! Miło Cię widzieć 👋") @db.Text  // {user} = chatter name
-  updatedAt DateTime @updatedAt
+  template    String   @default("Witaj {user}! Miło Cię widzieć 👋") @db.Text  // {user} = chatter name
+  bonusTokens Int      @default(0)   // GT przyznawane raz/widz/sesję przy pierwszej wiadomości (0 = off)
+  updatedAt   DateTime @updatedAt
 
   @@map("welcome_config")
 }

@@ -4,7 +4,7 @@ import { awardChat } from "./portal";
 import { refreshYouTubeToken } from "./youtubeAuth";
 import { registerSender, markActivity } from "./broadcast";
 import { matchFaq } from "./faq";
-import { welcomeMessage } from "./welcome";
+import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { pushChatFeed } from "./chatFeed";
 
@@ -117,7 +117,11 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
   // award GT (skip our own messages so we don't award/loop on the channel account)
   if (channelId && channelId !== ownChannelId) {
     const greet = welcomeMessage("youtube", channelId, username);
-    if (greet) void sendMessage(greet);
+    if (greet) {
+      void sendMessage(greet);
+      const bonus = welcomeBonus();
+      if (bonus > 0) void awardChat({ platform: "youtube", platformUserId: channelId, username, amount: bonus, reason: "welcome_youtube" });
+    }
     const now = Date.now();
     if (now - (lastAward.get(channelId) ?? 0) >= AWARD_COOLDOWN_MS) {
       lastAward.set(channelId, now);

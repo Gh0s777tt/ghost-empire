@@ -20,6 +20,7 @@ export async function GET() {
     config: {
       enabled: config.enabled,
       template: config.template,
+      bonusTokens: config.bonusTokens,
       updatedAt: config.updatedAt.toISOString(),
     },
   });
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  let body: { enabled?: boolean; template?: string };
+  let body: { enabled?: boolean; template?: string; bonusTokens?: number };
   try {
     body = await req.json();
   } catch {
@@ -44,6 +45,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Szablon: 1-${MAX_TEMPLATE} znaków` }, { status: 400 });
     }
     patch.template = t;
+  }
+  if (typeof body.bonusTokens === "number" && Number.isFinite(body.bonusTokens)) {
+    patch.bonusTokens = Math.min(5000, Math.max(0, Math.floor(body.bonusTokens)));
   }
 
   const config = await prisma.welcomeConfig.upsert({
@@ -61,6 +65,6 @@ export async function POST(req: Request) {
   });
   return NextResponse.json({
     ok: true,
-    config: { enabled: config.enabled, template: config.template, updatedAt: config.updatedAt.toISOString() },
+    config: { enabled: config.enabled, template: config.template, bonusTokens: config.bonusTokens, updatedAt: config.updatedAt.toISOString() },
   });
 }
