@@ -8,6 +8,7 @@ import {
   Zap, Sparkles, ArrowRight, Dice5, Ticket,
 } from "lucide-react";
 import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
+import { ChangelogList } from "@/components/ChangelogList";
 
 export const metadata = {
   title: "O Ghost Empire",
@@ -84,6 +85,23 @@ const STEPS = [
 ];
 
 const CHANGELOG = [
+  {
+    date: "2026-05-30",
+    title: "Chat bot (3 platformy) + engagement + analityka",
+    items: [
+      "Chat bot Twitch + Kick + YouTube — 1 GT/min/widz na każdej platformie, auto-refresh tokenów",
+      "Komendy zarządzane z portalu (/admin#chat) — koniec hardkodów, edycja bez restartu bota",
+      "Timery — cykliczne wiadomości broadcastowane na 3 platformy (tylko gdy czat aktywny)",
+      "FAQ / auto-odpowiedzi na słowa kluczowe (/admin#faq)",
+      "Powitania widzów + opcjonalny bonus GT przy pierwszej wiadomości (/admin#welcome)",
+      "Song requests — kolejka !sr z tytułami z YouTube/Spotify, zarządzanie w /admin#songs",
+      "Chat overlay OBS — czat z 3 platform w jednym oknie (/overlay/chat)",
+      "Subathon / Goalathon — countdown przedłużany subami i donacjami + overlay (/overlay/subathon)",
+      "Heatmapa aktywności czatu w panelu (/admin#analytics)",
+      "Aktywność na czacie liczy się teraz do dziennych questów (tak jak Discord)",
+      "Hosting bota 24/7 (Docker) — niezależny od włączonego PC",
+    ],
+  },
   {
     date: "2026-05-29",
     title: "Phase 3 — Engagement + hardening",
@@ -340,33 +358,8 @@ export default async function AboutPage() {
 
         {/* Changelog */}
         <Section title="Changelog" id="changelog">
-          <div className="space-y-4">
-            {CHANGELOG.map((entry) => (
-              <div
-                key={entry.date}
-                className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-5"
-                style={{
-                  clipPath:
-                    "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
-                }}
-              >
-                <div className="flex items-baseline gap-3 mb-3">
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-red-400 px-2 py-0.5 border border-red-900/50">
-                    {entry.date}
-                  </span>
-                  <h3 className="font-bold text-white text-base">{entry.title}</h3>
-                </div>
-                <ul className="space-y-1.5">
-                  {entry.items.map((item, i) => (
-                    <li key={i} className="text-zinc-400 text-xs flex gap-2">
-                      <span className="text-red-600 flex-shrink-0">▸</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <p className="text-zinc-500 text-xs mb-4">Kliknij wpis, aby rozwinąć szczegóły.</p>
+          <ChangelogList entries={CHANGELOG} />
         </Section>
 
         {/* Legal links */}

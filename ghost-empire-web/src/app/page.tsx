@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { HomeClient } from "@/components/home/HomeClient";
+import { FirstVisitRedirect } from "@/components/FirstVisitRedirect";
 import { today } from "@/lib/utils";
 import { getCachedTopUsers } from "@/lib/cached";
 
@@ -161,6 +162,7 @@ export default async function HomePage() {
       </div>
 
       <Header />
+      <FirstVisitRedirect />
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-6">
         <HomeClient

@@ -9,6 +9,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **Strona startowa `/welcome`** — landing pokazywany przy pierwszej wizycie (flaga w localStorage, potem prosto do portalu) + reachable zawsze pod `/welcome`. **Changelog na `/about`** przerobiony na zwijaną listę (`ChangelogList`, najnowszy wpis otwarty) i odświeżony o cały ekosystem chat-bota.
 - **Analityka — heatmapa aktywności czatu** (`/admin#analytics`) — model `ChatActivityBucket` (7×24, inkrementowany w chat-award, czas Europe/Warsaw) + heatmapa dzień×godzina: kiedy czat jest najbardziej żywy. *(PR #20)*
 - **Czat progresuje daily questy** — aktywność na Twitch/Kick/YouTube liczy się do questów typu „messages" jak Discord (`lib/daily-tasks.ts` współdzielony przez award + chat-award; unifikacja cross-platform points). *(PR #19)*
 - **Tytuły song requestów** — portal pobiera tytuł z YouTube/Spotify oEmbed (bez API key, best-effort) przy `!sr`; kolejka `/admin#songs` pokazuje czytelny tytuł zamiast surowego linku. *(PR #18)*
