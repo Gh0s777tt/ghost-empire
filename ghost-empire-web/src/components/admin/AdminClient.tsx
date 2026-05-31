@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { fmt, formatDate, cn } from "@/lib/utils";
+import { AlertCard } from "@/components/AlertCard";
 
 type Stats = {
   totalUsers: number;
@@ -2887,6 +2888,11 @@ function StreamAlertsManager({
   const [tokenCopied, setTokenCopied] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
 
+  const previewAlerts = [
+    { title: "Nowy sub!", message: "zasubował kanał — dzięki za wsparcie!", icon: "💜", actorName: "Widz_123", amount: 5000, amountLabel: "GT" },
+    { title: "Donacja!", message: "postawił kawę 💸", icon: "💰", actorName: "Anonim", amount: 20, amountLabel: "PLN" },
+  ];
+
   const dirty =
     JSON.stringify([...enabledTypes].sort()) !== JSON.stringify([...data.settings.enabledTypes].sort()) ||
     durationMs !== data.settings.durationMs ||
@@ -2947,6 +2953,21 @@ function StreamAlertsManager({
         Alerty wyświetlane przez OBS Browser Source — pokazują live zakupy, wygrane, suby/bity, donacje.
         Overlay polluje serwer co ~1.2s — alert pojawi się max 1.5s po zdarzeniu.
       </p>
+
+      {/* Live preview — odzwierciedla kolor akcentu wybrany niżej */}
+      <div className="border border-zinc-800 bg-black/40 p-4 mb-3">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-3">
+          Podgląd na żywo — tak alert wygląda na overlayu OBS
+        </div>
+        <div className="space-y-3 mx-auto" style={{ maxWidth: 460, transform: "scale(0.92)", transformOrigin: "top center" }}>
+          {previewAlerts.map((a, i) => (
+            <AlertCard key={i} alert={a} accent={accentColor} />
+          ))}
+        </div>
+        <p className="text-[10px] text-zinc-600 mt-3 text-center">
+          Zmień kolor akcentu poniżej — podgląd zaktualizuje się od razu.
+        </p>
+      </div>
 
       {/* Overlay token + OBS URL */}
       <div className="border border-zinc-800 bg-black/30 p-3 mb-3 space-y-2">
