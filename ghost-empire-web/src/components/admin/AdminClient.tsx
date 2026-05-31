@@ -804,10 +804,10 @@ function GrantTokensCard({
     <SectionCard title="Grant tokenów" icon={Coins}>
       <div className="space-y-3">
         <FieldInput
-          label="User (username lub Discord ID)"
+          label="User (username, Discord ID lub ID konta)"
           value={target}
           onChange={setTarget}
-          placeholder="np. gh0s77tt lub 1500923809522258000"
+          placeholder="gh0s77tt / 1500923809522258000 / cmpq74…"
         />
         <FieldInput
           label="Amount (ujemny = odjąć)"
@@ -2289,10 +2289,10 @@ function UserRolesCard({
     <SectionCard title="Role usera (admin/mod/donator)" icon={UserCog}>
       <div className="space-y-3">
         <FieldInput
-          label="User (username lub Discord ID)"
+          label="User (username, Discord ID lub ID konta)"
           value={target}
           onChange={setTarget}
-          placeholder="np. gh0s77tt lub 1500923809522258000"
+          placeholder="gh0s77tt / 1500923809522258000 / cmpq74…"
         />
 
         <div>
@@ -2442,7 +2442,7 @@ function ConnectionRolesCard({
   return (
     <SectionCard title="Status na platformie (sub/mod/VIP)" icon={ShieldCheck}>
       <div className="space-y-3">
-        <FieldInput label="User" value={target} onChange={setTarget} placeholder="username / Discord ID" />
+        <FieldInput label="User" value={target} onChange={setTarget} placeholder="username / Discord ID / ID konta" />
 
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
