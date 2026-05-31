@@ -30,8 +30,8 @@ Każda wiadomość przechodzi jeden pipeline per platforma: sygnał aktywności 
 - **Portal-managed:** commands / FAQ / timers / welcome / song-requests live in the DB and
   are fetched from `/api/bot/*` every ~2 min; the bot keeps minimal hardcoded fallbacks.
 - **12-factor / portable:** all config via env vars, no hardcoded paths. Moving
-  from PC → Railway / VPS / Cloudflare Containers later = set the same env vars
-  + deploy (a `Dockerfile` will be added for container hosts).
+  from PC → Railway / VPS / container host = set the same env vars + deploy
+  (`Dockerfile` included — see **Hosting (24/7)** below).
 
 ## Setup (local)
 
@@ -43,6 +43,21 @@ npm run auth:kick        # one-time
 npm run auth:youtube     # one-time
 npm run dev              # connect + listen
 ```
+
+## Hosting (24/7)
+
+Na PC bot pada, gdy komputer śpi. Pod całodobowe działanie jest **`Dockerfile`** (outbound-only, brak portów do wystawienia):
+
+```bash
+docker build -t ghost-empire-chat .
+docker run -d --restart unless-stopped --env-file .env \
+  -v ghost-empire-chat-tokens:/app/tokens ghost-empire-chat
+```
+
+- **Railway / Render / Fly.io / VPS** — deploy z repo (root serwisu: `ghost-empire-chat`), ustaw te same env vary co w `.env`. Brak portów.
+- ⚠️ **Kick rotuje refresh token** → bot zapisuje aktualny do `.kick-tokens.json`. Na efemerycznym hoście ten plik ginie przy redeployu i odpowiedzi Kicka przestają działać aż do ponownego `auth:kick`. **Zamontuj wolumen** (`-v …:/app/tokens`) — `Dockerfile` ustawia `KICK_TOKEN_STORE=/app/tokens/.kick-tokens.json`, żeby token przeżył restart.
+- ⚠️ **YouTube:** ekran zgody OAuth w trybie „Testing" → token wygasa po 7 dniach (ustaw „In production" w Google Cloud Console).
+- **Auth (`npm run auth:*`) robisz raz, lokalnie** (wymagają przeglądarki) — potem przenosisz wygenerowane tokeny do env hosta.
 
 ## Security
 

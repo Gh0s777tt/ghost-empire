@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.*
+!.env.example
+.kick-tokens.json
+tokens
+*.log
+dist
+.git
