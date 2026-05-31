@@ -175,12 +175,12 @@ export default async function PublicProfilePage({
                     style={{ borderColor: rankInfo.color }}
                   />
                 ) : (
-                  <div
-                    className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center text-5xl border-2 bg-zinc-900"
+                  <img
+                    src="/brand/skull.png"
+                    alt=""
+                    className="w-24 h-24 md:w-32 md:h-32 object-cover border-2 bg-black"
                     style={{ borderColor: rankInfo.color }}
-                  >
-                    👻
-                  </div>
+                  />
                 )}
                 <div
                   className="absolute -bottom-2 -right-2 px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"

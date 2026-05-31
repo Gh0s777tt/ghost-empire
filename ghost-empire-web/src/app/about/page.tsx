@@ -86,6 +86,16 @@ const STEPS = [
 
 const CHANGELOG = [
   {
+    date: "2026-06-01",
+    title: "Nowy branding — czaszka GHOST77",
+    items: [
+      "Prawdziwe logo (czaszka GHOST77) zamiast placeholdera — w nagłówku, na stronie startowej i głównej.",
+      "Favicon i ikony PWA (instalacja na telefonie / pulpicie) z czaszką.",
+      "Obraz podglądu przy udostępnianiu linku (Discord / Twitter) — baner GHOST77 zamiast generycznego.",
+      "Domyślny avatar (gdy nie masz ustawionego zdjęcia) to teraz czaszka — w rankingu, profilu i eventach.",
+    ],
+  },
+  {
     date: "2026-05-31",
     title: "Poprawka — nadawanie rang i tokenów po ID konta",
     items: [

@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Ghost, ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio, Youtube } from "lucide-react";
+import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio, Youtube } from "lucide-react";
 import { SocialLinksRow } from "@/components/SocialLinks";
 
 export const dynamic = "force-dynamic";
@@ -36,14 +36,8 @@ export default async function WelcomePage() {
 
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 py-16 max-w-4xl mx-auto">
         {/* Logo */}
-        <div
-          className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center mb-6"
-          style={{
-            background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
-            clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-          }}
-        >
-          <Ghost className="w-12 h-12 sm:w-14 sm:h-14 text-white" strokeWidth={2} />
+        <div className="w-24 h-24 sm:w-28 sm:h-28 mb-6 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_60px_rgba(229,9,20,0.35)]">
+          <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
         </div>
 
         <h1

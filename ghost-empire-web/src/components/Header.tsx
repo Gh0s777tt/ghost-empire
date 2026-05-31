@@ -33,15 +33,8 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div
-              className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
-                clipPath:
-                  "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-              }}
-            >
-              <Ghost className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
+            <div className="w-9 h-9 flex-shrink-0 overflow-hidden rounded-md ring-1 ring-red-600/50 bg-black transition-transform group-hover:scale-105">
+              <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
             </div>
             <div className="hidden sm:block leading-none">
               <span
@@ -162,9 +155,11 @@ export function Header() {
                         className="w-8 h-8 border border-red-500/50 object-cover"
                       />
                     ) : (
-                      <div className="w-8 h-8 border border-red-500/50 bg-red-950 flex items-center justify-center text-sm">
-                        👻
-                      </div>
+                      <img
+                        src="/brand/skull.png"
+                        alt=""
+                        className="w-8 h-8 border border-red-500/50 object-cover bg-black"
+                      />
                     )}
                   </button>
                   {/* Dropdown */}
