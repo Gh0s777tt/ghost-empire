@@ -9,6 +9,9 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **Analityka — heatmapa aktywności czatu** (`/admin#analytics`) — model `ChatActivityBucket` (7×24, inkrementowany w chat-award, czas Europe/Warsaw) + heatmapa dzień×godzina: kiedy czat jest najbardziej żywy. *(PR #20)*
+- **Czat progresuje daily questy** — aktywność na Twitch/Kick/YouTube liczy się do questów typu „messages" jak Discord (`lib/daily-tasks.ts` współdzielony przez award + chat-award; unifikacja cross-platform points). *(PR #19)*
+- **Tytuły song requestów** — portal pobiera tytuł z YouTube/Spotify oEmbed (bez API key, best-effort) przy `!sr`; kolejka `/admin#songs` pokazuje czytelny tytuł zamiast surowego linku. *(PR #18)*
 - **Subathon / Goalathon** — odliczanie przedłużane na żywo przez suby/gifty (Twitch + Kick) i donacje (Streamlabs + YouTube). Model `Subathon` (singleton) + `lib/subathon.ts` `extendSubathon()` wpięty obok `incrementGoals` (przedłuża na subach — gifty już je bumpują — i na PLN, bez podwójnego liczenia). Sterowanie w `/admin#subathon` (start / stop / ±czas / tempo, opcjonalny hard-cap); overlay OBS `/overlay/subathon?token=` z drift-corrected countdownem. Pierwsza funkcja Phase 3D.
 - **Hosting 24/7 chat-bota** — `Dockerfile` (node:22-slim, outbound-only) + `.dockerignore` dla `ghost-empire-chat`; bot może chodzić na Railway/VPS/kontenerze zamiast PC. `kickAuth.ts` honoruje env `KICK_TOKEN_STORE` → rotowany refresh token Kicka przeżywa redeploy na zamontowanym wolumenie. README chatu: sekcja „Hosting (24/7)". *(PR #15)*
 - **Welcome bonus GT** — opcjonalny bonus tokenów przy powitaniu (pole `bonusTokens` w `WelcomeConfig`, konfigurowalne w `/admin#welcome`, **domyślnie 0 = off**): bot nalicza go raz na widza na sesję przy pierwszej wiadomości na czacie (Twitch/Kick/YouTube, wymaga połączonego konta GE).
