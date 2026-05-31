@@ -166,6 +166,9 @@ export async function GET(req: Request) {
             durationMs: settings.durationMs,
             accentColor: settings.accentColor,
             soundEnabled: settings.soundEnabled,
+            sizeScale: settings.sizeScale,
+            textScale: settings.textScale,
+            textColor: settings.textColor,
           },
           allTypes: ALL_ALERT_TYPES,
           recent: recentAlerts.map((a) => ({

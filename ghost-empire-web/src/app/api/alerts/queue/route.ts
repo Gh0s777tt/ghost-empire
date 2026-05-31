@@ -60,6 +60,9 @@ export async function GET(req: Request) {
       accentColor: settings.accentColor,
       soundEnabled: settings.soundEnabled,
       enabledTypes: settings.enabledTypes,
+      sizeScale: settings.sizeScale,
+      textScale: settings.textScale,
+      textColor: settings.textColor,
     },
     alerts: alerts.map((a) => ({
       id: a.id,

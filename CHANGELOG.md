@@ -9,7 +9,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
-- **Podgląd alertów na żywo w panelu** (`/admin#alerts`) — `AlertCard` wyciągnięty do współdzielonego komponentu; sekcja Stream Alerts pokazuje teraz **żywy podgląd** (tak alert wygląda na overlayu OBS), reagujący na wybrany kolor akcentu. URL do OBS był już wcześniej. *(Rozmiar i ustawienia per-typ — w ROADMAP; wymagają zmian w renderowaniu nakładki.)*
+- **Podgląd alertów na żywo w panelu** (`/admin#alerts`) — `AlertCard` wyciągnięty do współdzielonego komponentu; sekcja Stream Alerts pokazuje teraz **żywy podgląd** (tak alert wygląda na overlayu OBS), reagujący na wybrany kolor akcentu. URL do OBS był już wcześniej. **Rozmiar alertu + rozmiar i kolor tekstu** — konfigurowalne (suwaki 50–200% + color picker), na żywo w podglądzie **i** na overlayu OBS (`StreamAlertSettings.sizeScale/textScale/textColor`, `AlertCard` sparametryzowany). *(Pełne ustawienia per-typ alertu — nadal w ROADMAP.)*
 - **Strona startowa `/welcome`** — landing pokazywany przy pierwszej wizycie (flaga w localStorage, potem prosto do portalu) + reachable zawsze pod `/welcome`. **Changelog na `/about`** przerobiony na zwijaną listę (`ChangelogList`, najnowszy wpis otwarty) i odświeżony o cały ekosystem chat-bota.
 - **Analityka — heatmapa aktywności czatu** (`/admin#analytics`) — model `ChatActivityBucket` (7×24, inkrementowany w chat-award, czas Europe/Warsaw) + heatmapa dzień×godzina: kiedy czat jest najbardziej żywy. *(PR #20)*
 - **Czat progresuje daily questy** — aktywność na Twitch/Kick/YouTube liczy się do questów typu „messages" jak Discord (`lib/daily-tasks.ts` współdzielony przez award + chat-award; unifikacja cross-platform points). *(PR #19)*

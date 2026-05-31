@@ -106,7 +106,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 ### Pomysły użytkownika (2026-05-30) — do zrealizowania
 
-- 🔥 **Customizacja alertów + podgląd na stronie** (T16) — per-typ (rozmiar/pozycja/animacja/czas/dźwięk) z **wizualnym preview w panelu** + URL do skopiowania do źródła OBS (zamiast grzebania w plikach)
+- **Customizacja alertów** (T16) — ✅ podgląd na żywo w panelu + **rozmiar alertu / rozmiar tekstu / kolor tekstu** (suwaki + picker, na overlayu i w podglądzie) + URL do OBS (#24, #25). Zostaje 🟡: **per-typ** osobno (animacja / pozycja / dźwięk / threshold kwotowy dla każdego typu alertu)
 - 🔥 **OBS WebSocket — hasło wklejane na stronie** (`/admin`), nie w env → przeżywa zmianę komputera (kopiuj-wklej)
 - 🔥 **Strona startowa (landing)** — ładny pierwszy ekran przy wejściu (wariacja na temat `/about`)
 - 🟡 **Changelog na stronie `/about` jako zwijana lista** — mniej miejsca, rozwijane po szczegóły

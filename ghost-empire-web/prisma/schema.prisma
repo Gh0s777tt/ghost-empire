@@ -1065,6 +1065,9 @@ model StreamAlertSettings {
   durationMs      Int      @default(6000)
   accentColor     String   @default("#E50914")
   soundEnabled    Boolean  @default(true)
+  sizeScale       Float    @default(1)         // overall alert size multiplier (0.5–2)
+  textScale       Float    @default(1)         // text size multiplier (0.5–2)
+  textColor       String   @default("#d4d4d8") // message body text color
   overlayToken    String?  // auto-generated on first admin view; rotate via UI to invalidate OBS browser source URLs
   updatedAt       DateTime @updatedAt
 
