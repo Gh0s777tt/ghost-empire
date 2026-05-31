@@ -131,7 +131,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 **🤖 Następne (autonomiczne — priorytet wg kolejności):**
 - ✅ 🤖 **Reset bazy danych z panelu** (`/admin#users`, tylko admin) — **ZROBIONE**: „strefa niebezpieczna" z frazą `USUŃ WSZYSTKO` + natywny `confirm`; kasuje userów i całą ich aktywność (kaskady FK + jawne usuwanie tabel bez FK do User) oraz efemerydy (alerty/feed/logi), zostawia konfigurację, katalog i audit log. Stały admin wraca po ponownym logowaniu. *(Endpointu sam nie uruchamiam.)*
-- 🔥 🤖 **Drops — losowe kody** — pula kodów (np. 50 kluczy do gier); overlay OBS losuje i pokazuje jeden co X czasu (bez powtórzeń aż pula się wyczerpie); **podgląd na stronie** jak w Stream Alerts.
+- ✅ 🤖 **Drops — losowe kody** — **ZROBIONE**: pula kodów w `/admin#drops` (hurtowe wklejanie), overlay `/overlay/codes?token=` losuje i pokazuje jeden co X czasu (każdy wejdzie zanim się powtórzy), z **podglądem na żywo** + URL do OBS. Modele `StreamCode`/`CodeDropConfig`, współdzielony `CodeCard`.
 - 🔥 🤖 **Uniwersalne podglądy „jak w OBS"** — wspólny komponent podglądu dla funkcji, które tego potrzebują: chat overlay, Stream Goals, Subathon, Drops (alerty już mają od #24/#25).
 - 🟡 🤖 **Battle Pass — nagrody rzeczowe** — tier może dawać przedmiot/kod (nie tylko tokeny); odbiór jak nagrody sezonowe (status „do odebrania → odebrane").
 - 🟡 🤖 **Osiągnięcia — własne + nagrody rzeczowe** — admin tworzy własne achievementy w panelu; nagroda = tokeny **lub** przedmiot/kod do gry.

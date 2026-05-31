@@ -1073,3 +1073,34 @@ model StreamAlertSettings {
 
   @@map("stream_alert_settings")
 }
+
+// =====================================================
+// STREAM CODES — pool of giveaway codes (e.g. game keys) displayed one-at-a-time
+// on the /overlay/codes OBS source, rotating every CodeDropConfig.intervalSeconds.
+// =====================================================
+
+model StreamCode {
+  id          String    @id @default(cuid())
+  code        String                          // the actual key/code shown on stream
+  label       String?                         // e.g. "Cyberpunk 2077 (Steam)"
+  active      Boolean   @default(true)         // inactive codes are skipped in rotation
+  shownCount  Int       @default(0)            // how many times it has been displayed
+  lastShownAt DateTime?                        // last time it rotated onto the overlay
+  createdAt   DateTime  @default(now())
+
+  @@index([active, shownCount])
+  @@map("stream_codes")
+}
+
+model CodeDropConfig {
+  id              String    @id @default("default")
+  enabled         Boolean   @default(false)
+  intervalSeconds Int       @default(600)                     // rotate the displayed code every N seconds
+  title           String    @default("Darmowy kod!")          // heading shown above the code
+  accentColor     String    @default("#10b981")
+  currentCodeId   String?                                     // which code is on screen right now
+  currentShownAt  DateTime?                                   // when it was put on screen (drives rotation)
+  updatedAt       DateTime  @updatedAt
+
+  @@map("code_drop_config")
+}
