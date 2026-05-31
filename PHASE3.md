@@ -400,7 +400,9 @@ model DonationEffect {
 - Spike emocji/śmiechu → flag → auto-clip via Twitch API
 - Cost: znaczny — wymaga ML do sentiment analysis (lub LLM)
 
-### Subathon / Goalathon
+### Subathon / Goalathon — ✅ DONE (PR #17)
+
+> Zrealizowane: model `Subathon` (singleton) + `lib/subathon.ts` (`extendSubathon`), przedłużanie z subów/giftów (Twitch+Kick) i donacji (Streamlabs+YouTube) wpięte obok `incrementGoals`, overlay `/overlay/subathon?token=` (drift-corrected countdown), panel `/admin#subathon` (start/stop/±czas/tempo/cap). Poniżej oryginalny plan.
 
 - Wydłużenie streama za każdy sub/donacje
 - Schema: `Subathon { id, startTime, currentEndTime, secondsPerSub, secondsPerDollar, active }`

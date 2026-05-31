@@ -16,7 +16,7 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 **Następny duży krok: Phase 3C → 3D** (pełna specyfikacja w [PHASE3.md](PHASE3.md)):
 - **3C — alerts upgrade + hardware:** customizacja alertów per-typ (animacja/font/grafika/dźwięk/threshold), **OBS WebSocket** (przełączanie scen/źródeł), **Philips Hue / Govee / Lumia** (efekty świetlne na donejty).
-- **3D — AI + analityka:** **AI Moderator**, AI auto-responses kontekstowe, AI shoutouts/clip-detection, **Subathon/Goalathon**, analityka per-stream + heatmapy czatu, A/B testy komend.
+- **3D — AI + analityka:** **AI Moderator**, AI auto-responses kontekstowe, AI shoutouts/clip-detection, ~~Subathon/Goalathon~~ ✅ (#17), analityka per-stream + heatmapy czatu, A/B testy komend.
 - **Drobne dopięcia chat-bota:** dynamiczne daily questy z aktywności czatu, walidacja YouTube API w song requests, bonus tokenów przy powitaniu, **hosting bota 24/7** (Railway/VPS zamiast PC + Dockerfile).
 
 > Decyzja przed 3C: priorytet (alerty vs hardware vs AI). Hardware (Hue/Govee) wymaga kont developerskich + ewentualnie lokalnego mostka.
@@ -101,7 +101,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 - **3B:** ✅ **zrobione** (Song Requests, Chat overlay, Timery, FAQ auto-responses, Welcome system); zostaje tylko: dynamiczne daily questy z aktywności czatu, walidacja YouTube w song requests, bonus tokenów przy powitaniu
 - **3C:** customizacja alertów per-typ (animacja/font/grafika/dźwięk/threshold), **OBS WebSocket** (sceny/źródła), **Philips Hue / Govee / Lumia** (efekty świetlne na donejty)
-- **3D:** **AI Moderator**, AI auto-responses kontekstowe, AI shoutouts/clip-detection, **Subathon/Goalathon**, analityka per-stream + heatmapy czatu, A/B testy komend
+- **3D:** **AI Moderator**, AI auto-responses kontekstowe, AI shoutouts/clip-detection, ~~Subathon/Goalathon~~ ✅ (#17), analityka per-stream + heatmapy czatu, A/B testy komend
 - **Game library** (Steam/Roblox + opcjonalnie Xbox/Battle.net) + voting widget „następna gra”
 
 > ✅ Już zrobione z tej puli: **cały chat bot 3A + rdzeń 3B** (timery / FAQ / powitania / song-requests / chat-overlay), Stream Goals + Hype Train, Predictions, Battle Pass/Sezony (patrz [CHANGELOG.md](CHANGELOG.md) + [PHASE3.md](PHASE3.md)).

@@ -9,6 +9,26 @@ const MAX_QUEUE = 200; // reject if the queue is already huge
 
 const PLATFORMS = new Set(["twitch", "kick", "youtube"]);
 
+// Best-effort title from a YouTube/Spotify link via oEmbed (no API key, no quota).
+async function fetchTitle(query: string): Promise<string | null> {
+  if (!/^https?:\/\//i.test(query)) return null;
+  let url: string | null = null;
+  if (/youtube\.com|youtu\.be/i.test(query)) url = `https://www.youtube.com/oembed?url=${encodeURIComponent(query)}&format=json`;
+  else if (/open\.spotify\.com/i.test(query)) url = `https://open.spotify.com/oembed?url=${encodeURIComponent(query)}`;
+  if (!url) return null;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 2500);
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { title?: string };
+    return data.title ? data.title.slice(0, 200) : null;
+  } catch {
+    return null; // never block the request on a flaky oEmbed
+  }
+}
+
 export async function POST(req: Request) {
   if (!verifyBotSecret(req.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -34,6 +54,7 @@ export async function POST(req: Request) {
   await prisma.songRequest.create({
     data: {
       query,
+      title: await fetchTitle(query),
       requestedBy: (body.requestedBy ?? "widz").slice(0, 80),
       platform: PLATFORMS.has(body.platform ?? "") ? body.platform! : "unknown",
     },

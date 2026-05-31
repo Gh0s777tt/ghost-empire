@@ -3817,6 +3817,7 @@ type HypeTrainData = {
 type SongRow = {
   id: string;
   query: string;
+  title: string | null;
   requestedBy: string;
   platform: string;
   status: string;
@@ -3892,15 +3893,16 @@ function SongQueueManager({
     youtube: "#FF0000",
   };
 
-  function renderQuery(q: string) {
+  function renderQuery(q: string, title?: string | null) {
+    const label = title || q;
     if (/^https?:\/\//i.test(q)) {
       return (
-        <a href={q} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline truncate">
-          {q}
+        <a href={q} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline truncate" title={q}>
+          {label}
         </a>
       );
     }
-    return <span className="text-sm text-zinc-300 truncate">{q}</span>;
+    return <span className="text-sm text-zinc-300 truncate">{label}</span>;
   }
 
   return (
@@ -3936,7 +3938,7 @@ function SongQueueManager({
                           {playing ? "▶" : i + 1}
                         </span>
                         <div className="flex flex-col min-w-0">
-                          {renderQuery(s.query)}
+                          {renderQuery(s.query, s.title)}
                           <span className="text-[10px] text-zinc-500">
                             od <strong className="text-zinc-400">{s.requestedBy}</strong>
                             <span className="ml-1 font-mono uppercase" style={{ color: platformColor[s.platform] ?? "#888" }}>
