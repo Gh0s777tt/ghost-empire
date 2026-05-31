@@ -34,10 +34,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Platform: ${VALID_PLATFORMS.join("|")}` }, { status: 400 });
   }
 
-  const isDigits = /^\d+$/.test(target);
-  const user = isDigits
-    ? await prisma.user.findUnique({ where: { discordId: target } })
-    : await prisma.user.findUnique({ where: { username: target } });
+  // Accept account ID (cuid), username, or Discord ID — admins/mods may paste any of them.
+  const user =
+    (await prisma.user.findUnique({ where: { id: target } })) ??
+    (await prisma.user.findUnique({ where: { username: target } })) ??
+    (/^\d+$/.test(target) ? await prisma.user.findUnique({ where: { discordId: target } }) : null);
 
   if (!user) {
     return NextResponse.json({ error: `User "${target}" nie znaleziony` }, { status: 404 });

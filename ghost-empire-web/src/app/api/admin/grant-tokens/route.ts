@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const amount = Math.floor(Number(body.amount ?? 0));
   const reason = (body.reason ?? "admin_grant").trim().slice(0, 200);
 
-  if (!target) return NextResponse.json({ error: "Brak target (username/discordId)" }, { status: 400 });
+  if (!target) return NextResponse.json({ error: "Brak target (username / Discord ID / ID konta)" }, { status: 400 });
   if (!Number.isFinite(amount) || amount === 0) {
     return NextResponse.json({ error: "Amount musi być liczbą != 0" }, { status: 400 });
   }
@@ -25,15 +25,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Amount musi być w zakresie ±1,000,000" }, { status: 400 });
   }
 
-  // Try discordId first (digits only), then username
-  const isDigits = /^\d+$/.test(target);
-  const user = isDigits
-    ? await prisma.user.findUnique({ where: { discordId: target } })
-    : await prisma.user.findUnique({ where: { username: target } });
+  // Accept account ID (cuid), username, or Discord ID — admins may paste any of them.
+  const user =
+    (await prisma.user.findUnique({ where: { id: target } })) ??
+    (await prisma.user.findUnique({ where: { username: target } })) ??
+    (/^\d+$/.test(target) ? await prisma.user.findUnique({ where: { discordId: target } }) : null);
 
   if (!user) {
     return NextResponse.json(
-      { error: `User "${target}" nie znaleziony (${isDigits ? "discordId" : "username"})` },
+      { error: `User "${target}" nie znaleziony` },
       { status: 404 },
     );
   }

@@ -86,6 +86,14 @@ const STEPS = [
 
 const CHANGELOG = [
   {
+    date: "2026-05-31",
+    title: "Poprawka — nadawanie rang i tokenów po ID konta",
+    items: [
+      "Nadawanie rang (admin / moderator / donator), statusu sub/mod/VIP oraz tokenów przyjmuje teraz username, Discord ID lub ID konta — wcześniej wklejenie ID konta zwracało błąd „user nie znaleziony”.",
+      "Rangę subskrybenta nadaje admin/moderacja w sekcji „Status na platformie (sub/mod/VIP)”; suby z Twitch i Kick oraz członkostwa YouTube ustawiają ją automatycznie.",
+    ],
+  },
+  {
     date: "2026-05-30",
     title: "Chat bot (3 platformy) + engagement + analityka",
     items: [
