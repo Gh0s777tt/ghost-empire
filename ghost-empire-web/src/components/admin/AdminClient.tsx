@@ -14,6 +14,10 @@ import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { fmt, formatDate, cn } from "@/lib/utils";
 import { AlertCard } from "@/components/AlertCard";
 import { CodeCard } from "@/components/CodeCard";
+import { OverlayPreview } from "@/components/admin/OverlayPreview";
+import { GoalBar } from "@/components/GoalBar";
+import { SubathonCard } from "@/components/SubathonCard";
+import { ChatMessageRow } from "@/components/ChatMessageRow";
 
 type Stats = {
   totalUsers: number;
@@ -456,7 +460,19 @@ export function AdminClient({
           )}
 
           {activeSection === "chat" && isAdmin && (
-            <ChatCommandsManager {...sharedProps} />
+            <div className="space-y-6">
+              <ChatCommandsManager {...sharedProps} />
+              <SectionCard title="Chat overlay (OBS)" icon={MessageSquare}>
+                <p className="text-zinc-500 text-xs mb-3">
+                  Czat z Twitch / Kick / YouTube w jednym oknie na streamie. Wklej URL z podglądu jako Browser Source.
+                </p>
+                <OverlayPreview path="/overlay/chat" note="Wiadomości pojawiają się od dołu ekranu; kolor paska wg platformy.">
+                  <ChatMessageRow msg={{ id: "p1", platform: "twitch", username: "ghost_fan", message: "siema, jak leci? 🔥" }} />
+                  <ChatMessageRow msg={{ id: "p2", platform: "kick", username: "kicker99", message: "POG, najlepszy stream!" }} />
+                  <ChatMessageRow msg={{ id: "p3", platform: "youtube", username: "ytviewer", message: "pozdrawiam z YT 👋" }} />
+                </OverlayPreview>
+              </SectionCard>
+            </div>
           )}
 
           {activeSection === "timers" && isAdmin && (
@@ -5286,8 +5302,15 @@ function SubathonManager({
     <SectionCard title="Subathon" icon={Hourglass}>
       <p className="text-zinc-500 text-xs mb-3">
         Odliczanie przedłużane automatycznie przez <strong>suby/gifty</strong> (Twitch + Kick) i <strong>donacje</strong> (Streamlabs + YouTube).
-        Overlay OBS: <code className="text-zinc-300">/overlay/subathon?token=&lt;OVERLAY_TOKEN&gt;</code> (token z sekcji Stream Alerts).
       </p>
+
+      <div className="mb-4">
+        <OverlayPreview path="/overlay/subathon" note="Odliczanie pojawia się u góry ekranu, gdy subathon jest aktywny. Token współdzielony z alertami/goals.">
+          <div className="flex justify-center">
+            <SubathonCard remainingMs={2 * 3600 * 1000 + 34 * 60 * 1000 + 12 * 1000} ended={false} />
+          </div>
+        </OverlayPreview>
+      </div>
 
       {loading ? (
         <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
@@ -5568,9 +5591,15 @@ function StreamGoalsManager({
   return (
     <SectionCard title="Stream Goals + Hype Train" icon={Target}>
       <p className="text-zinc-500 text-xs mb-3">
-        Cele wyświetlane na OBS overlay (URL: <code className="text-zinc-300">/overlay/goals?token=&lt;OVERLAY_TOKEN&gt;</code>).
-        Auto-inkrementowane przez Twitch EventSub (subs/gifts/cheers), Streamlabs (donacje PLN), YouTube super chats + members.
+        Cele wyświetlane na OBS overlay. Auto-inkrementowane przez Twitch EventSub (subs/gifts/cheers), Streamlabs (donacje PLN), YouTube super chats + members.
       </p>
+
+      <div className="mb-4">
+        <OverlayPreview path="/overlay/goals" note="Paski celów pojawiają się w lewym-dolnym rogu; hype train (gdy aktywny) u góry.">
+          <GoalBar goal={{ id: "preview1", type: "subs", label: "500 subów = nowy setup!", current: 327, target: 500, color: null, completedAt: null }} accent="#E50914" />
+          <GoalBar goal={{ id: "preview2", type: "donations_pln", label: "Cel miesiąca", current: 1500, target: 1500, color: "#10b981", completedAt: new Date().toISOString() }} accent="#E50914" />
+        </OverlayPreview>
+      </div>
 
       {/* Hype Train status */}
       <div className="border border-zinc-800 bg-black/30 p-3 mb-3">

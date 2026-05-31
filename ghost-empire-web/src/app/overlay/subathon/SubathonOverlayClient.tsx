@@ -1,8 +1,10 @@
 "use client";
 // src/app/overlay/subathon/SubathonOverlayClient.tsx
 // Polls /api/alerts/subathon every 3s (to catch extensions) and ticks locally every
-// second. Countdown is drift-corrected against server time.
+// second. Countdown is drift-corrected against server time. The card visual lives in
+// @/components/SubathonCard (shared with the /admin#subathon preview).
 import { useEffect, useRef, useState } from "react";
+import { SubathonCard } from "@/components/SubathonCard";
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -66,36 +68,9 @@ export function SubathonOverlayClient() {
         zIndex: 999999,
       }}
     >
-      <div
-        style={{
-          background: "rgba(15, 15, 20, 0.92)",
-          backdropFilter: "blur(10px)",
-          borderRadius: 14,
-          padding: "12px 28px",
-          border: "2px solid #E50914",
-          boxShadow: "0 12px 36px rgba(0,0,0,0.6), 0 0 22px rgba(229,9,20,0.45)",
-          color: "#fff",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 3, color: "#E50914", textTransform: "uppercase" }}>
-          {ended ? "Subathon — koniec!" : "Subathon"}
-        </div>
-        <div style={{ fontSize: 46, fontWeight: 900, fontVariantNumeric: "tabular-nums", lineHeight: 1.1, marginTop: 2 }}>
-          {formatRemaining(remainingMs)}
-        </div>
-      </div>
+      <SubathonCard remainingMs={remainingMs} ended={ended} />
     </div>
   );
-}
-
-function formatRemaining(ms: number): string {
-  const total = Math.floor(ms / 1000);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 
 function StatusBox({ msg }: { msg: string }) {

@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Podglądy overlayów w panelu",
+    items: [
+      "Stream Goals, Subathon i Chat overlay mają teraz podgląd „jak w OBS” oraz gotowy URL do skopiowania — tak jak Stream Alerts.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Drop kodów na streamie",
     items: [
       "Streamer może wrzucić pulę kodów (np. klucze do gier) — overlay pokazuje losowy kod na ekranie i zmienia go co ustawiony czas.",
