@@ -628,6 +628,20 @@ model Subathon {
 }
 
 // =====================================================
+// CHAT ACTIVITY HEATMAP — 7×24 buckets (day-of-week × hour, Europe/Warsaw),
+// incremented by /api/internal/chat-award. Powers /admin#analytics.
+// =====================================================
+
+model ChatActivityBucket {
+  dayOfWeek Int    // 0=Sun .. 6=Sat (Europe/Warsaw)
+  hour      Int    // 0-23
+  count     Int    @default(0)
+
+  @@id([dayOfWeek, hour])
+  @@map("chat_activity_buckets")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 
