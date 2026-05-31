@@ -126,6 +126,9 @@ type StreamAlertsData = {
     durationMs: number;
     accentColor: string;
     soundEnabled: boolean;
+    sizeScale: number;
+    textScale: number;
+    textColor: string;
   };
   allTypes: string[];
   recent: Array<{
@@ -2883,6 +2886,9 @@ function StreamAlertsManager({
   const [durationMs, setDurationMs] = useState(data.settings.durationMs);
   const [accentColor, setAccentColor] = useState(data.settings.accentColor);
   const [soundEnabled, setSoundEnabled] = useState(data.settings.soundEnabled);
+  const [sizeScale, setSizeScale] = useState(data.settings.sizeScale ?? 1);
+  const [textScale, setTextScale] = useState(data.settings.textScale ?? 1);
+  const [textColor, setTextColor] = useState(data.settings.textColor ?? "#d4d4d8");
   const [busy, setBusy] = useState(false);
   const [tokenVisible, setTokenVisible] = useState(false);
   const [tokenCopied, setTokenCopied] = useState(false);
@@ -2897,7 +2903,10 @@ function StreamAlertsManager({
     JSON.stringify([...enabledTypes].sort()) !== JSON.stringify([...data.settings.enabledTypes].sort()) ||
     durationMs !== data.settings.durationMs ||
     accentColor !== data.settings.accentColor ||
-    soundEnabled !== data.settings.soundEnabled;
+    soundEnabled !== data.settings.soundEnabled ||
+    sizeScale !== (data.settings.sizeScale ?? 1) ||
+    textScale !== (data.settings.textScale ?? 1) ||
+    textColor !== (data.settings.textColor ?? "#d4d4d8");
 
   function toggleType(t: string) {
     setEnabledTypes((prev) =>
@@ -2917,6 +2926,9 @@ function StreamAlertsManager({
           durationMs,
           accentColor,
           soundEnabled,
+          sizeScale,
+          textScale,
+          textColor,
         }),
       });
       const result = await res.json();
@@ -2959,9 +2971,9 @@ function StreamAlertsManager({
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-3">
           Podgląd na żywo — tak alert wygląda na overlayu OBS
         </div>
-        <div className="space-y-3 mx-auto" style={{ maxWidth: 460, transform: "scale(0.92)", transformOrigin: "top center" }}>
+        <div className="mx-auto flex flex-col items-center gap-3 overflow-hidden" style={{ maxWidth: 520 }}>
           {previewAlerts.map((a, i) => (
-            <AlertCard key={i} alert={a} accent={accentColor} />
+            <AlertCard key={i} alert={a} accent={accentColor} sizeScale={sizeScale} textScale={textScale} textColor={textColor} />
           ))}
         </div>
         <p className="text-[10px] text-zinc-600 mt-3 text-center">
@@ -3079,6 +3091,56 @@ function StreamAlertsManager({
       </div>
 
       {/* Settings */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
+            Rozmiar alertu
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range" min={50} max={200} step={5}
+              value={Math.round(sizeScale * 100)}
+              onChange={(e) => setSizeScale(parseInt(e.target.value, 10) / 100)}
+              className="flex-1"
+            />
+            <span className="text-xs text-white font-mono tabular-nums w-12 text-right">{Math.round(sizeScale * 100)}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
+            Rozmiar tekstu
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range" min={50} max={200} step={5}
+              value={Math.round(textScale * 100)}
+              onChange={(e) => setTextScale(parseInt(e.target.value, 10) / 100)}
+              className="flex-1"
+            />
+            <span className="text-xs text-white font-mono tabular-nums w-12 text-right">{Math.round(textScale * 100)}%</span>
+          </div>
+        </div>
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
+            Kolor tekstu
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={textColor}
+              onChange={(e) => setTextColor(e.target.value)}
+              className="w-10 h-8 border border-zinc-800 bg-black/30 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={textColor}
+              onChange={(e) => setTextColor(e.target.value)}
+              className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1.5 text-xs font-mono text-white outline-none focus:border-red-600"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div className="md:col-span-1">
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">

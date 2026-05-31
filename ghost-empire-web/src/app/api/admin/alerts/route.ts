@@ -37,6 +37,9 @@ export async function GET() {
       durationMs: settings.durationMs,
       accentColor: settings.accentColor,
       soundEnabled: settings.soundEnabled,
+      sizeScale: settings.sizeScale,
+      textScale: settings.textScale,
+      textColor: settings.textColor,
     },
     allTypes: ALL_TYPES,
     overlayToken: settings.overlayToken,
@@ -65,6 +68,9 @@ export async function POST(req: Request) {
     durationMs?: number;
     accentColor?: string;
     soundEnabled?: boolean;
+    sizeScale?: number;
+    textScale?: number;
+    textColor?: string;
   };
   try {
     body = await req.json();
@@ -108,6 +114,14 @@ export async function POST(req: Request) {
       accentColor = body.accentColor;
     }
     const soundEnabled = typeof body.soundEnabled === "boolean" ? body.soundEnabled : undefined;
+    const clampScale = (v: unknown) =>
+      typeof v === "number" && Number.isFinite(v) ? Math.min(2, Math.max(0.5, Math.round(v * 100) / 100)) : undefined;
+    const sizeScale = clampScale(body.sizeScale);
+    const textScale = clampScale(body.textScale);
+    let textColor: string | undefined;
+    if (typeof body.textColor === "string" && /^#[0-9a-fA-F]{6}$/.test(body.textColor)) {
+      textColor = body.textColor;
+    }
 
     const updated = await prisma.streamAlertSettings.upsert({
       where: { id: "default" },
@@ -117,12 +131,18 @@ export async function POST(req: Request) {
         ...(durationMs !== undefined ? { durationMs } : {}),
         ...(accentColor ? { accentColor } : {}),
         ...(soundEnabled !== undefined ? { soundEnabled } : {}),
+        ...(sizeScale !== undefined ? { sizeScale } : {}),
+        ...(textScale !== undefined ? { textScale } : {}),
+        ...(textColor ? { textColor } : {}),
       },
       update: {
         ...(enabledTypes ? { enabledTypes } : {}),
         ...(durationMs !== undefined ? { durationMs } : {}),
         ...(accentColor ? { accentColor } : {}),
         ...(soundEnabled !== undefined ? { soundEnabled } : {}),
+        ...(sizeScale !== undefined ? { sizeScale } : {}),
+        ...(textScale !== undefined ? { textScale } : {}),
+        ...(textColor ? { textColor } : {}),
       },
     });
 
@@ -145,6 +165,9 @@ export async function POST(req: Request) {
         durationMs: updated.durationMs,
         accentColor: updated.accentColor,
         soundEnabled: updated.soundEnabled,
+        sizeScale: updated.sizeScale,
+        textScale: updated.textScale,
+        textColor: updated.textColor,
       },
     });
   }
