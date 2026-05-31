@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
+import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { plnFromCurrency } from "@/lib/economy";
@@ -290,6 +291,7 @@ export async function pollAndProcessDonations(): Promise<{
     // Currency conversion shared with YouTube super chats (see economy.ts).
     const plnAmount = plnFromCurrency(amountFloat, d.currency);
     await incrementGoals("donations_pln", Math.floor(plnAmount));
+    void extendSubathon({ pln: Math.floor(plnAmount) });
   }
 
   // Update lastSeenDonationId to most recent (donations[0] is newest by default)

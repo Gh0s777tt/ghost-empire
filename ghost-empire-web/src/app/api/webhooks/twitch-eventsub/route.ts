@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyEventSubSignature, isMessageFresh } from "@/lib/twitch";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals, setHypeTrainStart, setHypeTrainProgress, setHypeTrainEnded } from "@/lib/stream-goals";
+import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 
@@ -200,6 +201,7 @@ async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId
 
   // Bump any active "subs" stream goals
   await incrementGoals("subs", 1);
+  void extendSubathon({ subs: 1 });
 
   // Find Ghost Empire user via Connection.username on Twitch
   const connection = await prisma.connection.findFirst({
@@ -274,6 +276,7 @@ async function handleGiftSub(event: Record<string, unknown>): Promise<{ userId: 
   // Bump goals — both gift_subs (count) and subs (because each gift = a sub for someone)
   await incrementGoals("gift_subs", total);
   await incrementGoals("subs", total);
+  void extendSubathon({ subs: total });
 
   if (isAnonymous || !gifterLogin) {
     console.log("[twitch-eventsub] anonymous gift sub — no reward");

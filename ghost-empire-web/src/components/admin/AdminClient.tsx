@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Trash2, Copy, Dice5, Crown, Heart, UserCog, History,
   ShoppingBag, Pencil, Eye, EyeOff, Ban, Bot, CalendarDays, Zap, Link as LinkIcon,
   LayoutDashboard, Bell, Tv, Menu, GitMerge, AlertTriangle, Youtube, Radio,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Play, SkipForward,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Play, SkipForward, Hourglass,
 } from "lucide-react";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { fmt, formatDate, cn } from "@/lib/utils";
@@ -209,7 +209,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "timers" | "faq" | "welcome" | "songs" | "alerts" | "goals" | "predictions" | "seasons" | "audit";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "timers" | "faq" | "welcome" | "songs" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "audit";
 
   const SECTIONS: Array<{
     id: SectionId;
@@ -236,6 +236,7 @@ export function AdminClient({
     { id: "songs",     label: "Song requests", icon: Music,         permission: () => isAdmin },
     { id: "alerts",    label: "Stream Alerts", icon: Bell,          permission: () => isAdmin },
     { id: "goals",     label: "Stream Goals", icon: Target,         permission: () => isAdmin },
+    { id: "subathon",  label: "Subathon",      icon: Hourglass,     permission: () => isAdmin },
     { id: "predictions", label: "Predictions", icon: Dice5,         permission: () => can("create_events") },
     { id: "seasons",   label: "Battle Pass", icon: Ticket,          permission: () => isAdmin },
     { id: "audit",     label: "Audit log",   icon: History,         permission: () => can("view_audit") },
@@ -468,6 +469,10 @@ export function AdminClient({
 
           {activeSection === "goals" && isAdmin && (
             <StreamGoalsManager {...sharedProps} />
+          )}
+
+          {activeSection === "subathon" && isAdmin && (
+            <SubathonManager {...sharedProps} />
           )}
 
           {activeSection === "predictions" && can("create_events") && (
@@ -4810,6 +4815,202 @@ function ChatCommandsManager({
         </div>
       </div>
     </SectionCard>
+  );
+}
+
+type SubathonData = {
+  active: boolean;
+  endsAt: string | null;
+  startedAt: string | null;
+  secondsPerSub: number;
+  secondsPerPln: number;
+  maxEndsAt: string | null;
+  totalAddedSecs: number;
+};
+
+function subathonHMS(ms: number): string {
+  const t = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+function SubathonManager({
+  onToast, onSuccess, pending,
+}: {
+  onToast: (k: "ok" | "err", m: string) => void;
+  onSuccess: () => void;
+  pending: boolean;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<SubathonData | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [, setTick] = useState(0);
+
+  const [minutes, setMinutes] = useState("120");
+  const [perSub, setPerSub] = useState("300");
+  const [perPln, setPerPln] = useState("60");
+  const [maxMinutes, setMaxMinutes] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/subathon");
+      const d = await res.json();
+      if (res.ok && d.subathon) {
+        setData(d.subathon);
+        setPerSub(String(d.subathon.secondsPerSub));
+        setPerPln(String(d.subathon.secondsPerPln));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+    const reSync = setInterval(() => void load(), 10_000);
+    const tick = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => { clearInterval(reSync); clearInterval(tick); };
+  }, [load]);
+
+  async function call(action: string, payload: Record<string, unknown>, okMsg: string) {
+    setBusy(action);
+    try {
+      const res = await fetch("/api/admin/subathon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        onToast("err", d.error ?? "Błąd");
+        return;
+      }
+      if (d.subathon) setData(d.subathon);
+      onToast("ok", okMsg);
+      onSuccess();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const remainingMs = data?.active && data.endsAt ? new Date(data.endsAt).getTime() - Date.now() : 0;
+
+  return (
+    <SectionCard title="Subathon" icon={Hourglass}>
+      <p className="text-zinc-500 text-xs mb-3">
+        Odliczanie przedłużane automatycznie przez <strong>suby/gifty</strong> (Twitch + Kick) i <strong>donacje</strong> (Streamlabs + YouTube).
+        Overlay OBS: <code className="text-zinc-300">/overlay/subathon?token=&lt;OVERLAY_TOKEN&gt;</code> (token z sekcji Stream Alerts).
+      </p>
+
+      {loading ? (
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+      ) : data?.active ? (
+        <div className="space-y-3">
+          <div className="border border-red-800 bg-red-950/20 p-4 text-center">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-red-400">Pozostało</div>
+            <div className="text-5xl font-black text-white tabular-nums my-1">{subathonHMS(remainingMs)}</div>
+            <div className="text-[11px] text-zinc-500">
+              koniec: {data.endsAt ? new Date(data.endsAt).toLocaleString("pl-PL") : "—"}
+              {" · "}dodano łącznie: {Math.round(data.totalAddedSecs / 60)} min
+              {data.maxEndsAt && <> · cap: {new Date(data.maxEndsAt).toLocaleTimeString("pl-PL")}</>}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {[10, 30, 60].map((m) => (
+              <button
+                key={m}
+                onClick={() => call("addTime", { addMinutes: m }, `+${m} min`)}
+                disabled={!!busy || pending}
+                className="border border-zinc-700 hover:border-green-600 text-green-300 px-3 py-1.5 text-xs font-mono disabled:opacity-50"
+              >
+                +{m} min
+              </button>
+            ))}
+            <button
+              onClick={() => call("addTime", { addMinutes: -10 }, "−10 min")}
+              disabled={!!busy || pending}
+              className="border border-zinc-700 hover:border-orange-600 text-orange-300 px-3 py-1.5 text-xs font-mono disabled:opacity-50"
+            >
+              −10 min
+            </button>
+            <button
+              onClick={() => { if (confirm("Zakończyć subathon?")) void call("stop", {}, "Zatrzymano"); }}
+              disabled={!!busy || pending}
+              className="border border-red-800 hover:border-red-600 text-red-300 px-3 py-1.5 text-xs font-mono uppercase tracking-widest disabled:opacity-50 ml-auto"
+            >
+              Stop
+            </button>
+          </div>
+
+          <SubathonRates perSub={perSub} perPln={perPln} setPerSub={setPerSub} setPerPln={setPerPln} busy={!!busy || pending}
+            onSave={() => call("settings", { secondsPerSub: parseInt(perSub, 10) || 0, secondsPerPln: parseInt(perPln, 10) || 0 }, "Tempo zapisane")} />
+        </div>
+      ) : (
+        <div className="border border-zinc-800 bg-black/30 p-3 space-y-2">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Start subathonu</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <label className="text-xs text-zinc-400">Czas startowy (min)
+              <input type="number" value={minutes} onChange={(e) => setMinutes(e.target.value)} min={1}
+                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none" />
+            </label>
+            <label className="text-xs text-zinc-400">Sek / sub
+              <input type="number" value={perSub} onChange={(e) => setPerSub(e.target.value)} min={0}
+                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none" />
+            </label>
+            <label className="text-xs text-zinc-400">Sek / PLN
+              <input type="number" value={perPln} onChange={(e) => setPerPln(e.target.value)} min={0}
+                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none" />
+            </label>
+            <label className="text-xs text-zinc-400">Max (min, opcj.)
+              <input type="number" value={maxMinutes} onChange={(e) => setMaxMinutes(e.target.value)} min={0} placeholder="bez limitu"
+                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none" />
+            </label>
+          </div>
+          <button
+            onClick={() => call("start", {
+              minutes: parseInt(minutes, 10) || 0,
+              secondsPerSub: parseInt(perSub, 10) || 0,
+              secondsPerPln: parseInt(perPln, 10) || 0,
+              ...(parseInt(maxMinutes, 10) > 0 ? { maxMinutes: parseInt(maxMinutes, 10) } : {}),
+            }, "Subathon wystartował")}
+            disabled={!!busy || pending}
+            className="bg-red-900/40 border border-red-800 hover:border-red-600 text-red-200 px-3 py-1.5 text-xs font-mono uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
+          >
+            {busy === "start" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+            Start
+          </button>
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+function SubathonRates({
+  perSub, perPln, setPerSub, setPerPln, busy, onSave,
+}: {
+  perSub: string; perPln: string;
+  setPerSub: (v: string) => void; setPerPln: (v: string) => void;
+  busy: boolean; onSave: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-end gap-2 border border-zinc-900 bg-black/20 p-3">
+      <label className="text-xs text-zinc-400">Sek / sub
+        <input type="number" value={perSub} onChange={(e) => setPerSub(e.target.value)} min={0}
+          className="w-24 mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none block" />
+      </label>
+      <label className="text-xs text-zinc-400">Sek / PLN
+        <input type="number" value={perPln} onChange={(e) => setPerPln(e.target.value)} min={0}
+          className="w-24 mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none block" />
+      </label>
+      <button onClick={onSave} disabled={busy}
+        className="border border-zinc-800 hover:border-zinc-600 text-zinc-300 px-3 py-1.5 text-xs font-mono uppercase tracking-widest disabled:opacity-50">
+        Zapisz tempo
+      </button>
+    </div>
   );
 }
 

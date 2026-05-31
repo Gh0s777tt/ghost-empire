@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyKickSignature, isMessageFresh } from "@/lib/kick";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
+import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 
@@ -132,6 +133,7 @@ async function handleSubscription(
   });
 
   await incrementGoals("subs", 1);
+  void extendSubathon({ subs: 1 });
 
   if (!username) return { userId: null, tokens: null };
 
@@ -203,6 +205,7 @@ async function handleGiftSubs(payload: Record<string, unknown>): Promise<{ userI
 
   await incrementGoals("gift_subs", total);
   await incrementGoals("subs", total);
+  void extendSubathon({ subs: total });
 
   if (isAnonymous) return { userId: null, tokens: null };
 
