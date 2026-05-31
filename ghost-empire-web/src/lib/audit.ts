@@ -20,7 +20,8 @@ type AdminActionType =
   | "merge_users"
   | "create_prediction"
   | "resolve_prediction"
-  | "cancel_prediction";
+  | "cancel_prediction"
+  | "reset_database";
 
 export async function logAdminAction(opts: {
   adminId: string;
