@@ -10,6 +10,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 ### Added
 
 - **Branding GHOST77 (czaszka)** — placeholderowe logo (heksagon + emoji 👻) zastąpione prawdziwą grafiką czaszki: favicon, ikony PWA (z dopełnionym `maskable`, by maska Androida nie obcinała czaszki), logo w nagłówku, na `/welcome` i w hero strony głównej. **Obraz OG/Twitter** (`opengraph-image.jpg` / `twitter-image.jpg`) to teraz szeroki baner GHOST77 — udostępnienia linku na Discord/Twitter/Slack pokazują realną grafikę zamiast rysowanego kodem 👻. **Domyślny avatar** użytkownika bez zdjęcia = czaszka (nagłówek, leaderboard, `/ranking`, `/profile`, publiczny `/u/[username]`, zwycięzcy eventów). Assety generowane `sharp`em ze źródeł do `public/brand` + `public/icons`. Emoji 👻 zostaje tam, gdzie jest symbolem Ghost Tokenów (salda, nagrody).
+- **Stały admin (po emailu)** — konto `dzierzawskii98.dam@gmail.com` jest ZAWSZE administratorem (hardcode w `auth.ts`, przeżywa reset/wipe bazy; dodatkowe maile przez env `ADMIN_EMAILS`). Egzekwowane przy logowaniu (`signIn` persistuje `isAdmin`) i w sesji — nie da się go odebrać przypadkiem.
 - **Podgląd alertów na żywo w panelu** (`/admin#alerts`) — `AlertCard` wyciągnięty do współdzielonego komponentu; sekcja Stream Alerts pokazuje teraz **żywy podgląd** (tak alert wygląda na overlayu OBS), reagujący na wybrany kolor akcentu. URL do OBS był już wcześniej. **Rozmiar alertu + rozmiar i kolor tekstu** — konfigurowalne (suwaki 50–200% + color picker), na żywo w podglądzie **i** na overlayu OBS (`StreamAlertSettings.sizeScale/textScale/textColor`, `AlertCard` sparametryzowany). *(Pełne ustawienia per-typ alertu — nadal w ROADMAP.)*
 - **Strona startowa `/welcome`** — landing pokazywany przy pierwszej wizycie (flaga w localStorage, potem prosto do portalu) + reachable zawsze pod `/welcome`. **Changelog na `/about`** przerobiony na zwijaną listę (`ChangelogList`, najnowszy wpis otwarty) i odświeżony o cały ekosystem chat-bota.
 - **Analityka — heatmapa aktywności czatu** (`/admin#analytics`) — model `ChatActivityBucket` (7×24, inkrementowany w chat-award, czas Europe/Warsaw) + heatmapa dzień×godzina: kiedy czat jest najbardziej żywy. *(PR #20)*
@@ -24,6 +25,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **Szybsze nadawanie rang / statusu / tokenów** — `user-roles`, `connection-roles` i `grant-tokens` szukają usera jednym zapytaniem `findFirst({ OR: [id, username, discordId] })` zamiast do 3 sekwencyjnych `findUnique`, a powiadomienie + wpis audytu lecą równolegle (`Promise.all`). Mniej round-tripów do DB → potwierdzenie w panelu pojawia się wyraźnie szybciej.
+- **Audit log czytelniejszy** — zamiast „etykieta akcji · `#cuid`" pokazuje teraz **nick admina → akcja → nick obiektu**. Nazwy rozwiązywane przy odczycie z `User`/`Connection` (join), więc i historyczne wpisy zyskują nazwy zamiast surowych ID. Redundantne klucze (`targetUsername`/`username`) zniknęły z linii detali.
 - **Predictions / Seasons / Streamlabs** delegują teraz do `lib/economy.ts` zamiast inline'ować arytmetykę. Zachowanie payoutu i konwersji bez zmian; obliczanie tieru przy tworzeniu progresu dostało brakujący cap na `totalTiers` (drobna poprawność, nie zmienia istniejących danych).
 
 ### Fixed

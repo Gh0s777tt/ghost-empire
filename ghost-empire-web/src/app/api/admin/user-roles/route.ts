@@ -32,11 +32,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Role: admin | moderator | donator" }, { status: 400 });
   }
 
-  // Accept account ID (cuid), username, or Discord ID — admins may paste any of them.
-  const user =
-    (await prisma.user.findUnique({ where: { id: target } })) ??
-    (await prisma.user.findUnique({ where: { username: target } })) ??
-    (/^\d+$/.test(target) ? await prisma.user.findUnique({ where: { discordId: target } }) : null);
+  // Accept account ID (cuid), username, or Discord ID — single OR query so the
+  // grant resolves in one DB round-trip instead of up to three (faster feedback).
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ id: target }, { username: target }, { discordId: target }] },
+  });
 
   if (!user) {
     return NextResponse.json(
@@ -80,28 +80,30 @@ export async function POST(req: Request) {
     moderator: "moderatora",
     donator: "donatora",
   };
-  await prisma.notification.create({
-    data: {
-      userId: user.id,
-      type: "system",
-      title: enable
-        ? `Otrzymałeś rolę ${roleLabels[role as string]}`
-        : `Rola ${roleLabels[role as string]} odebrana`,
-      message: enable
-        ? `Admin przyznał Ci rangę ${role}. Gratulacje!`
-        : `Twoja rola ${role} została odebrana.`,
-      icon: enable ? "👑" : "📋",
-    },
-  });
-
-  await logAdminAction({
-    adminId: auth.userId,
-    action: "set_user_role",
-    targetType: "user",
-    targetId: user.id,
-    details: { role, enable, addDonation, targetUsername: user.username },
-    req,
-  });
+  // Notification + audit in parallel — neither blocks the other (faster response).
+  await Promise.all([
+    prisma.notification.create({
+      data: {
+        userId: user.id,
+        type: "system",
+        title: enable
+          ? `Otrzymałeś rolę ${roleLabels[role as string]}`
+          : `Rola ${roleLabels[role as string]} odebrana`,
+        message: enable
+          ? `Admin przyznał Ci rangę ${role}. Gratulacje!`
+          : `Twoja rola ${role} została odebrana.`,
+        icon: enable ? "👑" : "📋",
+      },
+    }),
+    logAdminAction({
+      adminId: auth.userId,
+      action: "set_user_role",
+      targetType: "user",
+      targetId: user.id,
+      details: { role, enable, addDonation, targetUsername: user.username },
+      req,
+    }),
+  ]);
 
   return NextResponse.json({ ok: true, user: updated });
 }

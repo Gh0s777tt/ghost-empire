@@ -13,6 +13,19 @@ import { LINK_COOKIE_NAME, verifyLinkToken, executeAccountLink } from "@/lib/acc
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 
+// Permanent admins by email — these accounts are ALWAYS admin, regardless of DB
+// state (survives a database reset / wipe). The owner's email is hardcoded so the
+// account can never be locked out; extra emails can be added via ADMIN_EMAILS
+// (comma-separated env var).
+const PERMANENT_ADMIN_EMAILS = new Set(
+  ["dzierzawskii98.dam@gmail.com", ...(process.env.ADMIN_EMAILS ?? "").split(",")]
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean),
+);
+export function isPermanentAdminEmail(email?: string | null): boolean {
+  return !!email && PERMANENT_ADMIN_EMAILS.has(email.toLowerCase());
+}
+
 // Custom Kick provider — KICK isn't built into next-auth.
 // API docs: https://docs.kick.com/getting-started/kick-developer-api
 type KickProfile = {
@@ -176,7 +189,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = user.id;
         session.user.isAdmin =
-          user.isAdmin ??
+          Boolean(user.isAdmin) ||
+          isPermanentAdminEmail(user.email) ||
           user.discordId === process.env.ADMIN_DISCORD_ID;
         session.user.isModerator = user.isModerator ?? false;
         session.user.isDonator = user.isDonator ?? false;
@@ -249,6 +263,14 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (dbUser) {
+          // Permanent admin by email — the owner's account is always admin, even
+          // after a database reset. Persisted so isAdmin shows everywhere (not just
+          // this session).
+          if (isPermanentAdminEmail(user.email) && !dbUser.isAdmin) {
+            await prisma.user.update({ where: { id: dbUser.id }, data: { isAdmin: true } });
+            dbUser.isAdmin = true;
+          }
+
           // Google's OAuth profile (scope: openid email profile) exposes only the
           // user's real full name (user.name) — it has NO handle/nick. Using that
           // as the public username/displayName leaks the first+last name into the

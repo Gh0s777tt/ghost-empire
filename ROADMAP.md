@@ -120,6 +120,31 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 > ✅ Już zrobione z tej puli: **cały chat bot 3A + rdzeń 3B** (timery / FAQ / powitania / song-requests / chat-overlay), Stream Goals + Hype Train, Predictions, Battle Pass/Sezony (patrz [CHANGELOG.md](CHANGELOG.md) + [PHASE3.md](PHASE3.md)).
 
+### Pomysły użytkownika (2026-06-01)
+
+> Legenda autonomii: 🤖 = robię sam, bez Twojej interwencji · 🔑 = wymaga Twoich kont deweloperskich / kluczy API.
+
+**✅ Zrobione w tej sesji (admin UX pass):**
+- ✅ **Szybsze nadawanie rang i punktów** — lookup usera jednym zapytaniem `OR` zamiast 3 sekwencyjnych, notyfikacja + audit równolegle (`Promise.all`). Toast z wynikiem pojawia się od razu.
+- ✅ **Stały admin po emailu** — `dzierzawskii98.dam@gmail.com` jest ZAWSZE adminem (hardcode w `auth.ts`, przeżywa reset bazy; dodatkowe maile przez `ADMIN_EMAILS`).
+- ✅ **Czytelniejszy audit log** — „**nick admina → akcja → nick obiektu**" zamiast etykiety + skróconego cuid.
+
+**🤖 Następne (autonomiczne — priorytet wg kolejności):**
+- 🔥 🤖 **Reset bazy danych z panelu** (`/admin`) — przycisk tylko-admin z potwierdzeniem wpisywanym ręcznie (np. „USUŃ WSZYSTKO"); czyści userów + punkty/transakcje/connections/notyfikacje, zostawia konfigurację (sklep/eventy/komendy). Stały admin wraca po ponownym zalogowaniu. *(Buduję ostrożnie — operacja nieodwracalna; sam jej nie uruchamiam.)*
+- 🔥 🤖 **Drops — losowe kody** — pula kodów (np. 50 kluczy do gier); overlay OBS losuje i pokazuje jeden co X czasu (bez powtórzeń aż pula się wyczerpie); **podgląd na stronie** jak w Stream Alerts.
+- 🔥 🤖 **Uniwersalne podglądy „jak w OBS"** — wspólny komponent podglądu dla funkcji, które tego potrzebują: chat overlay, Stream Goals, Subathon, Drops (alerty już mają od #24/#25).
+- 🟡 🤖 **Battle Pass — nagrody rzeczowe** — tier może dawać przedmiot/kod (nie tylko tokeny); odbiór jak nagrody sezonowe (status „do odebrania → odebrane").
+- 🟡 🤖 **Osiągnięcia — własne + nagrody rzeczowe** — admin tworzy własne achievementy w panelu; nagroda = tokeny **lub** przedmiot/kod do gry.
+- 🟡 🤖 **Sklep — zdjęcia + warunki odblokowania** — grafika przedmiotu (URL/upload) + warunek odblokowania nagrody (np. ≥1000 followers, ≥50 subów, dany tier battle passa, osiągnięcie).
+- 🟡 🤖 **Eventy okolicznościowe** — szablony świąteczne (Dzień Kobiet, Wielkanoc, Halloween, Boże Narodzenie, Sylwester) z motywem wizualnym + bonusami; harmonogram dat.
+
+**🔑 Wymaga Twoich kont/creds (zostawiam na koniec):**
+- 🟡 🔑 **Social Linki interaktywne (OAuth)** — łączenie Instagram / TikTok / Facebook / X jednym kliknięciem, tak jak Twitch/Kick. Każda platforma wymaga **zarejestrowanej aplikacji deweloperskiej** (client id + secret), a IG/TikTok dodatkowo przeglądu/akceptacji. Bez tego przygotuję gotowe UI „Połącz" czekające na creds. *(Twitch / Kick / Discord / Google→YouTube już działają interaktywnie.)*
+- 🟡 🔑 **AI Moderator — wybór modelu** (Anthropic / OpenAI / Google) — abstrakcja providera + klucz API.
+- 🟡 🔑 **OBS WebSocket (hasło wklejane na stronie) + Hue / Govee** — hasło/konta deweloperskie hardware.
+
+> Sekrety (klucze API, hasła): **nie wklejaj ich na czacie** — wrzuć je sam do **Vercel → Settings → Environment Variables** (portal) lub gitignored `.env` (bot). Podam dokładne nazwy zmiennych przy każdej funkcji. Cokolwiek już gdziekolwiek wkleiłeś — zrotuj.
+
 ---
 
 ## 7. Moonshot — Phase 4+ 🧊

@@ -34,11 +34,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Platform: ${VALID_PLATFORMS.join("|")}` }, { status: 400 });
   }
 
-  // Accept account ID (cuid), username, or Discord ID — admins/mods may paste any of them.
-  const user =
-    (await prisma.user.findUnique({ where: { id: target } })) ??
-    (await prisma.user.findUnique({ where: { username: target } })) ??
-    (/^\d+$/.test(target) ? await prisma.user.findUnique({ where: { discordId: target } }) : null);
+  // Accept account ID (cuid), username, or Discord ID — single OR query so the
+  // update resolves in one DB round-trip instead of up to three (faster feedback).
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ id: target }, { username: target }, { discordId: target }] },
+  });
 
   if (!user) {
     return NextResponse.json({ error: `User "${target}" nie znaleziony` }, { status: 404 });
@@ -80,25 +80,27 @@ export async function POST(req: Request) {
     data,
   });
 
-  await prisma.notification.create({
-    data: {
-      userId: user.id,
-      type: "system",
-      title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} status zaktualizowany`,
-      message: `Admin zaktualizował Twój status na ${platform}.`,
-      icon: "🔗",
-      link: "/profile",
-    },
-  });
-
-  await logAdminAction({
-    adminId: auth.userId,
-    action: "set_connection_role",
-    targetType: "connection",
-    targetId: connection.id,
-    details: { userId: user.id, platform, ...data },
-    req,
-  });
+  // Notification + audit in parallel — neither blocks the other (faster response).
+  await Promise.all([
+    prisma.notification.create({
+      data: {
+        userId: user.id,
+        type: "system",
+        title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} status zaktualizowany`,
+        message: `Admin zaktualizował Twój status na ${platform}.`,
+        icon: "🔗",
+        link: "/profile",
+      },
+    }),
+    logAdminAction({
+      adminId: auth.userId,
+      action: "set_connection_role",
+      targetType: "connection",
+      targetId: connection.id,
+      details: { userId: user.id, platform, ...data },
+      req,
+    }),
+  ]);
 
   return NextResponse.json({ ok: true, connection: updated });
 }
