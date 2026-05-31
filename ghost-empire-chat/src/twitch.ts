@@ -2,7 +2,7 @@ import tmi from "tmi.js";
 import { env } from "./env";
 import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
-import { welcomeMessage } from "./welcome";
+import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
@@ -47,7 +47,11 @@ function build(password: string): tmi.Client {
     const userId = tags["user-id"];
     if (userId) {
       const greet = welcomeMessage("twitch", userId, tags.username);
-      if (greet) c.say(env.twitch.channel, greet).catch(() => {});
+      if (greet) {
+        c.say(env.twitch.channel, greet).catch(() => {});
+        const bonus = welcomeBonus();
+        if (bonus > 0) void awardChat({ platform: "twitch", platformUserId: userId, username: tags.username, amount: bonus, reason: "welcome_twitch" });
+      }
       const now = Date.now();
       if (now - (lastAward.get(userId) ?? 0) >= AWARD_COOLDOWN_MS) {
         lastAward.set(userId, now);

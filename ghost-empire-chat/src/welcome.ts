@@ -7,15 +7,17 @@ const REFRESH_EVERY_MS = 2 * 60 * 1000;
 
 let enabled = false;
 let template = "Witaj {user}! Miło Cię widzieć 👋";
+let bonusTokens = 0;
 const greeted = new Set<string>(); // `${platform}:${userId}` already welcomed this session
 
 export async function refreshWelcome(): Promise<void> {
   try {
     const res = await fetch(`${env.portalUrl}/api/bot/welcome`);
     if (!res.ok) return;
-    const data = (await res.json()) as { enabled?: boolean; template?: string };
+    const data = (await res.json()) as { enabled?: boolean; template?: string; bonusTokens?: number };
     enabled = !!data.enabled;
     if (data.template) template = data.template;
+    bonusTokens = typeof data.bonusTokens === "number" ? data.bonusTokens : 0;
   } catch {
     /* keep current config */
   }
@@ -24,6 +26,11 @@ export async function refreshWelcome(): Promise<void> {
 export function startWelcomeSync(): void {
   void refreshWelcome();
   setInterval(() => void refreshWelcome(), REFRESH_EVERY_MS);
+}
+
+/** GT to award once per viewer per session on their first message (0 = off). */
+export function welcomeBonus(): number {
+  return bonusTokens;
 }
 
 /** Returns a greeting the first time a viewer speaks this session, else null. */

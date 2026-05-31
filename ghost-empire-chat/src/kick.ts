@@ -1,7 +1,7 @@
 import { env } from "./env";
 import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
-import { welcomeMessage } from "./welcome";
+import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
@@ -70,7 +70,11 @@ function handleChat(d: KickChat): void {
   if (userId) {
     if (userId !== env.kick.broadcasterId) {
       const greet = welcomeMessage("kick", userId, username);
-      if (greet) void sendKickMessage(greet);
+      if (greet) {
+        void sendKickMessage(greet);
+        const bonus = welcomeBonus();
+        if (bonus > 0) void awardChat({ platform: "kick", platformUserId: userId, username, amount: bonus, reason: "welcome_kick" });
+      }
     }
     const now = Date.now();
     if (now - (lastAward.get(userId) ?? 0) >= AWARD_COOLDOWN_MS) {

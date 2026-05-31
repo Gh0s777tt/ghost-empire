@@ -10,5 +10,6 @@ export async function GET() {
   return NextResponse.json({
     enabled: config?.enabled ?? false,
     template: config?.template ?? "Witaj {user}! Miło Cię widzieć 👋",
+    bonusTokens: config?.bonusTokens ?? 0,
   });
 }

@@ -4025,6 +4025,7 @@ function WelcomeManager({
   const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
   const [template, setTemplate] = useState("");
+  const [bonus, setBonus] = useState("0");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -4035,6 +4036,7 @@ function WelcomeManager({
       if (res.ok && data.config) {
         setEnabled(!!data.config.enabled);
         setTemplate(data.config.template ?? "");
+        setBonus(String(data.config.bonusTokens ?? 0));
       }
     } finally {
       setLoading(false);
@@ -4043,7 +4045,7 @@ function WelcomeManager({
 
   useEffect(() => { void load(); }, [load]);
 
-  async function save(next: { enabled?: boolean; template?: string }) {
+  async function save(next: { enabled?: boolean; template?: string; bonusTokens?: number }) {
     setBusy(true);
     try {
       const res = await fetch("/api/admin/welcome", {
@@ -4070,12 +4072,12 @@ function WelcomeManager({
     if (!(await save({ enabled: next }))) setEnabled(!next); // revert on failure
   }
 
-  async function saveTemplate() {
+  async function saveSettings() {
     if (!template.trim()) {
       onToast("err", "Szablon nie może być pusty");
       return;
     }
-    await save({ template });
+    await save({ template, bonusTokens: Math.max(0, parseInt(bonus, 10) || 0) });
   }
 
   return (
@@ -4117,14 +4119,26 @@ function WelcomeManager({
               placeholder="Witaj {user}! Miło Cię widzieć 👋"
               className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none resize-none"
             />
-            <div className="mt-2">
+            <div className="flex items-center gap-2 mt-3">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Bonus GT</span>
+              <input
+                type="number"
+                value={bonus}
+                onChange={(e) => setBonus(e.target.value)}
+                min={0}
+                title="GT przyznawane raz na widza na sesję przy powitaniu (0 = wyłączone)"
+                className="w-24 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+              />
+              <span className="text-[10px] text-zinc-600">0 = bez nagrody (wymaga połączonego konta)</span>
+            </div>
+            <div className="mt-3">
               <button
-                onClick={saveTemplate}
+                onClick={saveSettings}
                 disabled={busy || pending}
                 className="bg-red-900/40 border border-red-800 hover:border-red-600 text-red-200 px-3 py-1.5 text-xs font-mono uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
               >
                 {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                Zapisz szablon
+                Zapisz
               </button>
             </div>
           </div>
