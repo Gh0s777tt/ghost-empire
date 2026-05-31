@@ -87,6 +87,15 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Panel admina — szybciej i czytelniej",
+    items: [
+      "Nadawanie rang, statusu i punktów działa szybciej — efekt widać od razu po kliknięciu.",
+      "Audit log pokazuje teraz czytelnie: kto (nick admina) co zrobił i komu (nick), zamiast surowych identyfikatorów.",
+      "Konto właściciela jest na stałe administratorem (przeżywa nawet reset bazy).",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Nowy branding — czaszka GHOST77",
     items: [
       "Prawdziwe logo (czaszka GHOST77) zamiast placeholdera — w nagłówku, na stronie startowej i głównej.",

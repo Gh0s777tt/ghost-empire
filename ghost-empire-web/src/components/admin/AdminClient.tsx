@@ -169,6 +169,7 @@ type AuditEntry = {
   id: string;
   adminId: string;
   adminName: string | null;
+  targetName: string | null;
   action: string;
   targetType: string | null;
   targetId: string | null;
@@ -2101,7 +2102,8 @@ function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
             try {
               const parsed = JSON.parse(entry.details);
               detailsText = Object.entries(parsed)
-                .filter(([, v]) => v !== null && v !== undefined && v !== "")
+                // Drop keys already shown as the target name (avoids duplication).
+                .filter(([k, v]) => v !== null && v !== undefined && v !== "" && k !== "targetUsername" && k !== "username")
                 .map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`)
                 .join(" · ");
             } catch {
@@ -2112,14 +2114,20 @@ function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
             <div key={entry.id} className="flex items-start gap-3 border-l-2 border-zinc-800 pl-3 py-1.5">
               <span className="text-base flex-shrink-0">{meta.emoji}</span>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-sm text-white" style={{ color: meta.color }}>
+                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-sm">
+                  <span className="font-semibold text-white">
+                    {entry.adminName ?? `#${entry.adminId.slice(-6)}`}
+                  </span>
+                  <span className="font-bold" style={{ color: meta.color }}>
                     {meta.label}
                   </span>
-                  <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
-                    by {entry.adminId.slice(-8)}
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-700 ml-auto">
+                  {entry.targetName && (
+                    <>
+                      <span className="text-zinc-600">→</span>
+                      <span className="font-semibold text-white">{entry.targetName}</span>
+                    </>
+                  )}
+                  <span className="text-[10px] font-mono text-zinc-700 ml-auto whitespace-nowrap">
                     {date.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
                   </span>
                 </div>

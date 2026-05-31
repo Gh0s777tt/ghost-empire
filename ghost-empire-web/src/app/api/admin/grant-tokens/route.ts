@@ -25,11 +25,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Amount musi być w zakresie ±1,000,000" }, { status: 400 });
   }
 
-  // Accept account ID (cuid), username, or Discord ID — admins may paste any of them.
-  const user =
-    (await prisma.user.findUnique({ where: { id: target } })) ??
-    (await prisma.user.findUnique({ where: { username: target } })) ??
-    (/^\d+$/.test(target) ? await prisma.user.findUnique({ where: { discordId: target } }) : null);
+  // Accept account ID (cuid), username, or Discord ID — single OR query so the
+  // grant resolves in one DB round-trip instead of up to three (faster feedback).
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ id: target }, { username: target }, { discordId: target }] },
+  });
 
   if (!user) {
     return NextResponse.json(
@@ -68,26 +68,28 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  await prisma.notification.create({
-    data: {
-      userId: user.id,
-      type: "system",
-      title: isGrant ? "Otrzymałeś tokeny" : "Tokeny odjęte",
-      message: isGrant
-        ? `Admin przyznał Ci ${amount} GT (${reason})`
-        : `Admin odjął ${Math.abs(amount)} GT (${reason})`,
-      icon: isGrant ? "🎁" : "⚠️",
-    },
-  });
-
-  await logAdminAction({
-    adminId: auth.userId,
-    action: "grant_tokens",
-    targetType: "user",
-    targetId: user.id,
-    details: { amount, reason, targetUsername: user.username, newBalance: updatedUser.tokens },
-    req,
-  });
+  // Notification + audit in parallel — neither blocks the other (faster response).
+  await Promise.all([
+    prisma.notification.create({
+      data: {
+        userId: user.id,
+        type: "system",
+        title: isGrant ? "Otrzymałeś tokeny" : "Tokeny odjęte",
+        message: isGrant
+          ? `Admin przyznał Ci ${amount} GT (${reason})`
+          : `Admin odjął ${Math.abs(amount)} GT (${reason})`,
+        icon: isGrant ? "🎁" : "⚠️",
+      },
+    }),
+    logAdminAction({
+      adminId: auth.userId,
+      action: "grant_tokens",
+      targetType: "user",
+      targetId: user.id,
+      details: { amount, reason, targetUsername: user.username, newBalance: updatedUser.tokens },
+      req,
+    }),
+  ]);
 
   return NextResponse.json({
     ok: true,

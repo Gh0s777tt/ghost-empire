@@ -96,9 +96,51 @@ export async function GET(req: Request) {
 
     case "audit": {
       const auditLog = await prisma.adminAction.findMany({ orderBy: { createdAt: "desc" }, take: 30 });
+
+      // Resolve human-readable names so the log shows WHO did it + WHO it affected,
+      // not raw cuids. Admin + user-targets come from User; connection-targets join
+      // through Connection -> User. Older/other entries fall back to details.
+      const userIds = new Set<string>();
+      const connIds: string[] = [];
+      for (const a of auditLog) {
+        userIds.add(a.adminId);
+        if (a.targetId && a.targetType === "user") userIds.add(a.targetId);
+        if (a.targetId && a.targetType === "connection") connIds.push(a.targetId);
+      }
+      const [auditUsers, auditConns] = await Promise.all([
+        prisma.user.findMany({
+          where: { id: { in: [...userIds] } },
+          select: { id: true, username: true, displayName: true },
+        }),
+        connIds.length
+          ? prisma.connection.findMany({
+              where: { id: { in: connIds } },
+              select: { id: true, platform: true, user: { select: { username: true, displayName: true } } },
+            })
+          : Promise.resolve([] as Array<{ id: string; platform: string; user: { username: string | null; displayName: string | null } }>),
+      ]);
+      const nameById = new Map(auditUsers.map((u) => [u.id, u.displayName ?? u.username ?? u.id.slice(-6)]));
+      const connById = new Map(
+        auditConns.map((c) => [c.id, `${c.user.displayName ?? c.user.username ?? "?"} · ${c.platform}`]),
+      );
+      const targetNameFor = (a: { targetType: string | null; targetId: string | null; details: string | null }): string | null => {
+        if (a.targetType === "user" && a.targetId) return nameById.get(a.targetId) ?? null;
+        if (a.targetType === "connection" && a.targetId) return connById.get(a.targetId) ?? null;
+        if (a.details) {
+          try {
+            const d = JSON.parse(a.details) as Record<string, unknown>;
+            return (d.targetUsername as string) ?? (d.username as string) ?? null;
+          } catch { /* not JSON */ }
+        }
+        return null;
+      };
+
       return NextResponse.json({
         auditLog: auditLog.map((a) => ({
-          id: a.id, adminId: a.adminId, adminName: a.adminName, action: a.action,
+          id: a.id, adminId: a.adminId,
+          adminName: nameById.get(a.adminId) ?? a.adminName,
+          targetName: targetNameFor(a),
+          action: a.action,
           targetType: a.targetType, targetId: a.targetId, details: a.details,
           ipAddress: a.ipAddress, createdAt: a.createdAt.toISOString(),
         })),
