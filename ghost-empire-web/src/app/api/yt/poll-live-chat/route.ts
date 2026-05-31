@@ -19,6 +19,7 @@ import {
 } from "@/lib/youtube";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
+import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 
@@ -304,6 +305,7 @@ async function handleSuperChat(input: {
     ? amountFloat
     : amountFloat * 4;
   await incrementGoals("donations_pln", Math.floor(plnAmount));
+  void extendSubathon({ pln: Math.floor(plnAmount) });
 
   // Achievements — both general donation and YT super chat specific
   if (matchedUserId) {

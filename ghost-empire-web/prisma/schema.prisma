@@ -608,6 +608,25 @@ model ChatFeedMessage {
 }
 
 // =====================================================
+// SUBATHON — singleton countdown extended by subs/gifts/donations (lib/subathon.ts).
+// Overlay: /overlay/subathon?token=<OVERLAY_TOKEN>. Managed on /admin#subathon.
+// =====================================================
+
+model Subathon {
+  id             String    @id @default("default")
+  active         Boolean   @default(false)
+  startedAt      DateTime?
+  endsAt         DateTime?                  // current countdown target
+  secondsPerSub  Int       @default(300)    // +time per sub (incl. gifted)
+  secondsPerPln  Int       @default(60)     // +time per 1 PLN donated
+  maxEndsAt      DateTime?                  // optional hard cap (null = uncapped)
+  totalAddedSecs Int       @default(0)      // stat: total seconds added by events
+  updatedAt      DateTime  @updatedAt
+
+  @@map("subathon")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 
