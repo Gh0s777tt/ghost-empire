@@ -92,6 +92,7 @@ const CHANGELOG = [
       "Nadawanie rang, statusu i punktów działa szybciej — efekt widać od razu po kliknięciu.",
       "Audit log pokazuje teraz czytelnie: kto (nick admina) co zrobił i komu (nick), zamiast surowych identyfikatorów.",
       "Konto właściciela jest na stałe administratorem (przeżywa nawet reset bazy).",
+      "Reset bazy z panelu (tylko admin, z potwierdzeniem) — czyści użytkowników i ich dane, zostawia całą konfigurację.",
     ],
   },
   {

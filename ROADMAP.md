@@ -130,7 +130,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 - ✅ **Czytelniejszy audit log** — „**nick admina → akcja → nick obiektu**" zamiast etykiety + skróconego cuid.
 
 **🤖 Następne (autonomiczne — priorytet wg kolejności):**
-- 🔥 🤖 **Reset bazy danych z panelu** (`/admin`) — przycisk tylko-admin z potwierdzeniem wpisywanym ręcznie (np. „USUŃ WSZYSTKO"); czyści userów + punkty/transakcje/connections/notyfikacje, zostawia konfigurację (sklep/eventy/komendy). Stały admin wraca po ponownym zalogowaniu. *(Buduję ostrożnie — operacja nieodwracalna; sam jej nie uruchamiam.)*
+- ✅ 🤖 **Reset bazy danych z panelu** (`/admin#users`, tylko admin) — **ZROBIONE**: „strefa niebezpieczna" z frazą `USUŃ WSZYSTKO` + natywny `confirm`; kasuje userów i całą ich aktywność (kaskady FK + jawne usuwanie tabel bez FK do User) oraz efemerydy (alerty/feed/logi), zostawia konfigurację, katalog i audit log. Stały admin wraca po ponownym logowaniu. *(Endpointu sam nie uruchamiam.)*
 - 🔥 🤖 **Drops — losowe kody** — pula kodów (np. 50 kluczy do gier); overlay OBS losuje i pokazuje jeden co X czasu (bez powtórzeń aż pula się wyczerpie); **podgląd na stronie** jak w Stream Alerts.
 - 🔥 🤖 **Uniwersalne podglądy „jak w OBS"** — wspólny komponent podglądu dla funkcji, które tego potrzebują: chat overlay, Stream Goals, Subathon, Drops (alerty już mają od #24/#25).
 - 🟡 🤖 **Battle Pass — nagrody rzeczowe** — tier może dawać przedmiot/kod (nie tylko tokeny); odbiór jak nagrody sezonowe (status „do odebrania → odebrane").
