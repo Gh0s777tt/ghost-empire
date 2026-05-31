@@ -209,7 +209,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "timers" | "faq" | "welcome" | "songs" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "audit";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "timers" | "faq" | "welcome" | "songs" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "analytics" | "audit";
 
   const SECTIONS: Array<{
     id: SectionId;
@@ -239,6 +239,7 @@ export function AdminClient({
     { id: "subathon",  label: "Subathon",      icon: Hourglass,     permission: () => isAdmin },
     { id: "predictions", label: "Predictions", icon: Dice5,         permission: () => can("create_events") },
     { id: "seasons",   label: "Battle Pass", icon: Ticket,          permission: () => isAdmin },
+    { id: "analytics", label: "Analityka",    icon: TrendingUp,     permission: () => isAdmin },
     { id: "audit",     label: "Audit log",   icon: History,         permission: () => can("view_audit") },
   ];
 
@@ -481,6 +482,10 @@ export function AdminClient({
 
           {activeSection === "seasons" && isAdmin && (
             <SeasonsManager {...sharedProps} />
+          )}
+
+          {activeSection === "analytics" && isAdmin && (
+            <ChatHeatmap />
           )}
 
           {activeSection === "audit" && can("view_audit") && (
@@ -5013,6 +5018,71 @@ function SubathonRates({
         Zapisz tempo
       </button>
     </div>
+  );
+}
+
+function ChatHeatmap() {
+  const [loading, setLoading] = useState(true);
+  const [grid, setGrid] = useState<number[][]>([]);
+  const [peak, setPeak] = useState(0);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/analytics");
+        const d = await res.json();
+        if (!cancelled && res.ok) {
+          setGrid(d.grid ?? []);
+          setPeak(d.peak ?? 0);
+          setTotal(d.total ?? 0);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const days = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"];
+  const cellColor = (v: number) =>
+    v <= 0 || peak <= 0 ? "rgba(255,255,255,0.04)" : `rgba(229,9,20,${(0.15 + (v / peak) * 0.85).toFixed(3)})`;
+
+  return (
+    <SectionCard title="Analityka — heatmapa czatu" icon={TrendingUp}>
+      <p className="text-zinc-500 text-xs mb-3">
+        Kiedy czat jest najbardziej aktywny (dzień tygodnia × godzina, czas Europe/Warsaw). Zliczane z aktywności na Twitch + Kick + YouTube (1/min/widz).
+      </p>
+      {loading ? (
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+      ) : total === 0 ? (
+        <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
+          Brak danych — pojawią się, gdy ktoś napisze na czacie podczas streamu.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <div className="inline-block">
+            <div className="flex items-center gap-[2px] mb-[2px] ml-7">
+              {Array.from({ length: 24 }, (_, h) => (
+                <div key={h} className="w-[14px] text-center text-[8px] text-zinc-600 tabular-nums">{h % 6 === 0 ? h : ""}</div>
+              ))}
+            </div>
+            {grid.map((row, d) => (
+              <div key={d} className="flex items-center gap-[2px] mb-[2px]">
+                <div className="w-6 text-[9px] font-mono text-zinc-500 shrink-0">{days[d]}</div>
+                {row.map((v, h) => (
+                  <div key={h} title={`${days[d]} ${h}:00 — ${v}`} className="w-[14px] h-[14px] rounded-[2px]" style={{ background: cellColor(v) }} />
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="text-[10px] text-zinc-600 mt-2">
+            Łącznie {total.toLocaleString("pl-PL")} aktywnych chatter-minut · szczyt {peak}/slot
+          </div>
+        </div>
+      )}
+    </SectionCard>
   );
 }
 

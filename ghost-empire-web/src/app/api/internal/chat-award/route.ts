@@ -120,6 +120,23 @@ export async function POST(req: Request) {
   const { updateDailyTaskProgress } = await import("@/lib/daily-tasks");
   await updateDailyTaskProgress(connection.userId, "messages");
 
+  // Activity heatmap bucket (Europe/Warsaw day-of-week + hour). Best-effort.
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Warsaw", weekday: "short", hour: "2-digit", hour12: false,
+    }).formatToParts(new Date());
+    const wd = parts.find((p) => p.type === "weekday")?.value ?? "Sun";
+    const dayOfWeek = ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 } as Record<string, number>)[wd] ?? 0;
+    const hour = (parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10) || 0) % 24;
+    await prisma.chatActivityBucket.upsert({
+      where: { dayOfWeek_hour: { dayOfWeek, hour } },
+      create: { dayOfWeek, hour, count: 1 },
+      update: { count: { increment: 1 } },
+    });
+  } catch {
+    /* best-effort analytics — never blocks the award */
+  }
+
   return NextResponse.json(
     { ok: true, awarded: finalAmount, newBalance: updatedUser.tokens },
     { headers: rateLimitHeaders(userLimit) },
