@@ -581,6 +581,7 @@ model WelcomeConfig {
 model SongRequest {
   id          String    @id @default(cuid())
   query       String    @db.Text           // link or title as typed by the viewer
+  title       String?                       // resolved via oEmbed (YouTube/Spotify), if any
   requestedBy String                        // chatter display name
   platform    String                        // "twitch" | "kick" | "youtube"
   status      String    @default("queued")  // "queued" | "playing" | "played" | "skipped"

@@ -6,12 +6,12 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 type Row = {
-  id: string; query: string; requestedBy: string; platform: string;
+  id: string; query: string; title: string | null; requestedBy: string; platform: string;
   status: string; createdAt: Date; playedAt: Date | null;
 };
 function serialize(s: Row) {
   return {
-    id: s.id, query: s.query, requestedBy: s.requestedBy, platform: s.platform,
+    id: s.id, query: s.query, title: s.title, requestedBy: s.requestedBy, platform: s.platform,
     status: s.status, createdAt: s.createdAt.toISOString(),
     playedAt: s.playedAt?.toISOString() ?? null,
   };
