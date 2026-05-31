@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
+import { updateDailyTaskProgress } from "@/lib/daily-tasks";
 
 // Per-user safety caps: even with valid bot secret, no user can earn more than X
 // in a window. Prevents farm attacks if BOT_SECRET leaks.
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
   ]);
 
   if (reason === "message" || reason === "voice") {
-    await updateDailyTaskProgress(user.id, reason);
+    await updateDailyTaskProgress(user.id, reason === "message" ? "messages" : "voice_minutes");
     const { awardSeasonXp } = await import("@/lib/seasons");
     await awardSeasonXp(user.id, reason === "message" ? "chat_message" : "voice_minute");
   }
@@ -117,21 +118,4 @@ export async function POST(req: Request) {
     { ok: true, awarded: finalAmount, newBalance: updatedUser.tokens },
     { headers: rateLimitHeaders(userLimit) },
   );
-}
-
-async function updateDailyTaskProgress(userId: string, reason: string) {
-  const { today } = await import("@/lib/utils");
-  const triggerType = reason === "message" ? "messages" : "voice_minutes";
-
-  const tasks = await prisma.dailyTask.findMany({
-    where: { triggerType, active: true },
-  });
-
-  for (const task of tasks) {
-    await prisma.userTask.upsert({
-      where: { userId_taskId_date: { userId, taskId: task.id, date: today() } },
-      create: { userId, taskId: task.id, date: today(), progress: 1 },
-      update: { progress: { increment: 1 } },
-    });
-  }
 }

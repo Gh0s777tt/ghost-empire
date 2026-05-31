@@ -114,9 +114,11 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  // Chat activity also feeds the battle-pass (best-effort; uses its own queries).
+  // Chat activity also feeds the battle-pass + daily quests (best-effort; own queries).
   const { awardSeasonXp } = await import("@/lib/seasons");
   await awardSeasonXp(connection.userId, "chat_message");
+  const { updateDailyTaskProgress } = await import("@/lib/daily-tasks");
+  await updateDailyTaskProgress(connection.userId, "messages");
 
   return NextResponse.json(
     { ok: true, awarded: finalAmount, newBalance: updatedUser.tokens },
