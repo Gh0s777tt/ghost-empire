@@ -21,7 +21,8 @@ type AdminActionType =
   | "create_prediction"
   | "resolve_prediction"
   | "cancel_prediction"
-  | "reset_database";
+  | "reset_database"
+  | "manage_codes";
 
 export async function logAdminAction(opts: {
   adminId: string;

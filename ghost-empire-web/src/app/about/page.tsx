@@ -87,6 +87,15 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Drop kodów na streamie",
+    items: [
+      "Streamer może wrzucić pulę kodów (np. klucze do gier) — overlay pokazuje losowy kod na ekranie i zmienia go co ustawiony czas.",
+      "Każdy kod wejdzie zanim któryś się powtórzy.",
+      "W panelu: hurtowe dodawanie, podgląd na żywo i gotowy URL do OBS.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Panel admina — szybciej i czytelniej",
     items: [
       "Nadawanie rang, statusu i punktów działa szybciej — efekt widać od razu po kliknięciu.",

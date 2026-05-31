@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, requirePermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getSettings as getAlertSettings } from "@/lib/alerts";
+import { getCodeConfig } from "@/lib/codes";
 import type { ModPermission } from "@/lib/permissions";
 
 const ALL_ALERT_TYPES = [
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
   const section = new URL(req.url).searchParams.get("s");
 
   // Per-section permission gate (mirrors the UI sidebar gating).
-  const adminOnly = ["streamlabs", "twitch", "alerts", "audit_admin"];
+  const adminOnly = ["streamlabs", "twitch", "alerts", "audit_admin", "codes"];
   const permMap: Record<string, ModPermission> = {
     shop: "manage_shop",
     events: "edit_events",
@@ -92,6 +93,25 @@ export async function GET(req: Request) {
         where: { id: "default" }, create: { id: "default" }, update: {},
       });
       return NextResponse.json({ botConfig });
+    }
+
+    case "codes": {
+      const [codes, codeConfig, alertSettings] = await Promise.all([
+        prisma.streamCode.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
+        getCodeConfig(),
+        getAlertSettings(),
+      ]);
+      return NextResponse.json({
+        codes: codes.map((c) => ({
+          id: c.id, code: c.code, label: c.label, active: c.active,
+          shownCount: c.shownCount, lastShownAt: c.lastShownAt?.toISOString() ?? null,
+        })),
+        codeConfig: {
+          enabled: codeConfig.enabled, intervalSeconds: codeConfig.intervalSeconds,
+          title: codeConfig.title, accentColor: codeConfig.accentColor,
+        },
+        overlayToken: alertSettings.overlayToken,
+      });
     }
 
     case "audit": {
