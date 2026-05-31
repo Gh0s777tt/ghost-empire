@@ -244,6 +244,7 @@ Env vars dla każdego: `<PROVIDER>_CLIENT_ID` + `<PROVIDER>_CLIENT_SECRET` (patr
 |---|---|
 | [`CHANGELOG.md`](CHANGELOG.md) | Historia zmian per data (aktualizowane razem z kodem) + „Setup wymagany po pull” |
 | [`ROADMAP.md`](ROADMAP.md) | Plany na przyszłość + konsolidacja propozycji optymalizacji i usprawnień |
+| [`PERMISSIONS.md`](PERMISSIONS.md) | Ściąga uprawnień **admin vs moderator** (przydatne przy nadawaniu rang) |
 | [`PHASE2.md`](PHASE2.md) | Roadmap Phase 2 — **zamknięte** (items E–K wszystkie done) |
 | [`PHASE3.md`](PHASE3.md) | Phase 3 — chat bot (3A) + engagement (3B) + alerts/hardware (3C) + AI/analytics (3D); część shipped, reszta planowana |
 | [`ghost-empire-web/.env.example`](ghost-empire-web/.env.example) | Pełna lista env vars dla web |
