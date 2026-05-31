@@ -6,7 +6,9 @@ import { env } from "./env";
 // Twitch, whose refresh token is static). So we can't rely on the static value
 // from .env after the first refresh — we persist the latest refresh token to a
 // gitignored file and reuse it across restarts.
-const STORE = path.resolve(process.cwd(), ".kick-tokens.json");
+// Path is overridable so container hosts can point it at a mounted volume
+// (the file must survive redeploys — Kick rotates the refresh token each refresh).
+const STORE = process.env.KICK_TOKEN_STORE || path.resolve(process.cwd(), ".kick-tokens.json");
 
 function loadStoredRefresh(): string | undefined {
   try {
