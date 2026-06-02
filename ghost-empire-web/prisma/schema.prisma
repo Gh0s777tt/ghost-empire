@@ -342,6 +342,7 @@ model Achievement {
 
   xpReward     Int @default(0)
   tokenReward  Int @default(0)
+  rewardNote   String?  // optional non-token reward shown when earned (game key / item / role / etc.)
 
   createdAt DateTime @default(now())
 

@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Własne osiągnięcia + nagrody rzeczowe",
+    items: [
+      "Streamer może tworzyć własne osiągnięcia w panelu i przyznawać je ręcznie wybranej osobie.",
+      "Osiągnięcie może dawać nagrodę rzeczową (kod do gry / przedmiot / rola), nie tylko tokeny i XP.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Battle Pass — nagrody rzeczowe",
     items: [
       "Tier w battle passie może dać nie tylko tokeny, ale też przedmiot lub kod (np. klucz do gry).",

@@ -119,9 +119,7 @@ async function runCheck(opts: {
             userId: opts.userId,
             type: "achievement",
             title: `🏆 Nowy achievement: ${a.name}`,
-            message: a.tokenReward > 0
-              ? `${a.description} (+${a.tokenReward.toLocaleString("pl-PL")} GT)`
-              : a.description,
+            message: `${a.description}${a.tokenReward > 0 ? ` (+${a.tokenReward.toLocaleString("pl-PL")} GT)` : ""}${a.rewardNote ? ` 🎁 Nagroda: ${a.rewardNote}` : ""}`,
             icon: a.icon,
             link: "/achievements",
           },
@@ -279,7 +277,7 @@ export async function grantManualAchievement(userId: string, code: string): Prom
         userId,
         type: "achievement",
         title: `🏆 Achievement: ${achievement.name}`,
-        message: achievement.description,
+        message: `${achievement.description}${achievement.tokenReward > 0 ? ` (+${achievement.tokenReward.toLocaleString("pl-PL")} GT)` : ""}${achievement.rewardNote ? ` 🎁 Nagroda: ${achievement.rewardNote}` : ""}`,
         icon: achievement.icon,
         link: "/achievements",
       },
