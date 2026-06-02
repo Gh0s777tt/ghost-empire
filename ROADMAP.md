@@ -120,6 +120,15 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 > ✅ Już zrobione z tej puli: **cały chat bot 3A + rdzeń 3B** (timery / FAQ / powitania / song-requests / chat-overlay), Stream Goals + Hype Train, Predictions, Battle Pass/Sezony (patrz [CHANGELOG.md](CHANGELOG.md) + [PHASE3.md](PHASE3.md)).
 
+### Pomysły użytkownika (2026-06-02) → kolejność i szczegóły w [PLAN.md](PLAN.md)
+
+- 🤖 **Chat overlay — customizacja wiadomości** (rozmiar / kolor / czcionka / tło) + edytor w `/admin#chat` + podgląd na żywo. *(następne w kolejce)*
+- 🤖 **Stream Alerts — własne (customowe) alerty** — admin definiuje typ (ikona / kolor / tekst / dźwięk) + ręczne wyzwolenie / test.
+- 🤖 **Profil — poprawne nicki Kick/YouTube** (Kick z realnego handle przy logowaniu; handle YouTube z YouTube Data API).
+- 🔑 **Interaktywne social linki (OAuth „połącz jednym kliknięciem")** — IG / TikTok / X / Facebook (aplikacje deweloperskie + przegląd); Twitch / Kick / YouTube już mają OAuth.
+- 🎨 **„Repo jak arcydzieło"** — iteracyjny, bezpieczny polish wizualny + wykorzystanie dostarczonych grafik (bez globalnego refactora layoutu — sidebar odrzucony).
+- ✅ **Naprawione bugi:** audit log (nick zamiast imienia + „konto usunięte" zamiast `#cuid`), przycisk wyloguj w profilu, menu konta klik-toggle (wyloguj na mobile), nicki w nagłówku / profilu publicznym.
+
 ### Pomysły użytkownika (2026-06-01)
 
 > Legenda autonomii: 🤖 = robię sam, bez Twojej interwencji · 🔑 = wymaga Twoich kont deweloperskich / kluczy API.

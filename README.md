@@ -242,6 +242,7 @@ Env vars dla każdego: `<PROVIDER>_CLIENT_ID` + `<PROVIDER>_CLIENT_SECRET` (patr
 
 | Plik | Co |
 |---|---|
+| [`PLAN.md`](PLAN.md) | **Analiza + wykonawczy plan ukończenia projektu** — co zostało, kolejność, autonomiczne najpierw |
 | [`CHANGELOG.md`](CHANGELOG.md) | Historia zmian per data (aktualizowane razem z kodem) + „Setup wymagany po pull” |
 | [`ROADMAP.md`](ROADMAP.md) | Plany na przyszłość + konsolidacja propozycji optymalizacji i usprawnień |
 | [`PERMISSIONS.md`](PERMISSIONS.md) | Ściąga uprawnień **admin vs moderator** (przydatne przy nadawaniu rang) |
