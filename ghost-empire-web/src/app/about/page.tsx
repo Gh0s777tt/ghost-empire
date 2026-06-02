@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-02",
+    title: "Własne alerty na streamie",
+    items: [
+      "Możesz stworzyć własne alerty (tytuł, treść, ikona, kolor, liczba) i wyzwalać je ręcznie na overlayu OBS — np. raid czy ogłoszenie.",
+      "Każdy alert ma podgląd na żywo w panelu.",
+    ],
+  },
+  {
+    date: "2026-06-02",
     title: "Chat na streamie — własny wygląd",
     items: [
       "Czat na overlayu OBS można teraz dostosować: rozmiar tekstu, kolor, czcionka, krycie tła i ikona platformy.",

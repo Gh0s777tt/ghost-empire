@@ -17,6 +17,7 @@ type AlertItem = {
   actorImage: string | null;
   amount: number | null;
   amountLabel: string | null;
+  accent?: string | null;
   createdAt: string;
 };
 
@@ -189,7 +190,7 @@ export function OverlayClient() {
         {current && (
           <AlertCard
             alert={current}
-            accent={accent}
+            accent={current.accent ?? accent}
             sizeScale={sizeScale}
             textScale={textScale}
             textColor={textColor}

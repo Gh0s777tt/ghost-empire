@@ -64,17 +64,25 @@ export async function GET(req: Request) {
       textScale: settings.textScale,
       textColor: settings.textColor,
     },
-    alerts: alerts.map((a) => ({
-      id: a.id,
-      type: a.type,
-      title: a.title,
-      message: a.message,
-      icon: a.icon,
-      actorName: a.actorName,
-      actorImage: a.actorImage,
-      amount: a.amount,
-      amountLabel: a.amountLabel,
-      createdAt: a.createdAt.toISOString(),
-    })),
+    alerts: alerts.map((a) => {
+      // Per-alert accent override (custom alerts store it in meta JSON).
+      let accent: string | null = null;
+      if (a.meta) {
+        try { accent = (JSON.parse(a.meta) as { accent?: string }).accent ?? null; } catch { /* ignore */ }
+      }
+      return {
+        id: a.id,
+        type: a.type,
+        title: a.title,
+        message: a.message,
+        icon: a.icon,
+        actorName: a.actorName,
+        actorImage: a.actorImage,
+        amount: a.amount,
+        amountLabel: a.amountLabel,
+        accent,
+        createdAt: a.createdAt.toISOString(),
+      };
+    }),
   });
 }
