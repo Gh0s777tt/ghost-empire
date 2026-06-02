@@ -7,7 +7,7 @@ import {
   Instagram, Twitter, Youtube, Globe, Music2, Flame, MessageCircle, Mic2,
   Copy, ShieldCheck, Heart, Star, Crown, Ban,
 } from "lucide-react";
-import { fmt, formatDate, rankForLevel, xpForLevel, cn } from "@/lib/utils";
+import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
 
 type Achievement = {
   id: string;
@@ -150,7 +150,7 @@ export function ProfileClient({
             {user.image ? (
               <img
                 src={user.image}
-                alt={user.displayName ?? user.username ?? ""}
+                alt={displayNick(user.displayName, user.username)}
                 className="w-24 h-24 md:w-28 md:h-28 object-cover border-2"
                 style={{ borderColor: rank.color }}
               />
@@ -176,7 +176,7 @@ export function ProfileClient({
                 className="font-display text-3xl md:text-4xl text-white tracking-wider"
                 style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
               >
-                {user.displayName ?? user.username ?? "Anonymous"}
+                {displayNick(user.displayName, user.username)}
               </h1>
               {user.isAdmin && (
                 <span className="text-[10px] font-bold tracking-widest uppercase border border-red-500 bg-red-600/15 text-red-300 px-2 py-0.5 flex items-center gap-1">
