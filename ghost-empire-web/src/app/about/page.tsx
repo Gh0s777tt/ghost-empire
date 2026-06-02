@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Eventy okolicznościowe",
+    items: [
+      "Gotowe szablony świąteczne (Dzień Kobiet, Walentynki, Wielkanoc, Halloween, Boże Narodzenie, Sylwester) — streamer odpala event jednym kliknięciem.",
+      "Happy hour z bonusem do tokenów albo giveaway z nagrodą.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Własne osiągnięcia + nagrody rzeczowe",
     items: [
       "Streamer może tworzyć własne osiągnięcia w panelu i przyznawać je ręcznie wybranej osobie.",

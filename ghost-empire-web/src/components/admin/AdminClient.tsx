@@ -395,6 +395,7 @@ export function AdminClient({
 
           {activeSection === "events" && (
             <div className="space-y-6">
+              {can("create_events") && <HolidayEventsCard {...sharedProps} />}
               {can("create_events") && <CreateEventCard {...sharedProps} />}
               {(can("edit_events") || can("draw_events")) && <ActiveEventsList events={events} {...sharedProps} />}
               {can("edit_events") && (
@@ -935,6 +936,100 @@ function CreateDropCard({
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Gift className="w-3.5 h-3.5" />}
           Stwórz drop
         </button>
+      </div>
+    </SectionCard>
+  );
+}
+
+// ============== HOLIDAY / SEASONAL EVENT TEMPLATES ==============
+
+type HolidayTemplate = {
+  key: string;
+  emoji: string;
+  label: string;
+  payload: {
+    type: "happy_hour" | "giveaway";
+    name: string;
+    description: string;
+    durationMinutes: number;
+    multiplier?: number;
+    prize?: string;
+    winnersCount?: number;
+    requirement?: string;
+  };
+};
+
+const HOLIDAY_TEMPLATES: HolidayTemplate[] = [
+  { key: "womens_day", emoji: "💃", label: "Dzień Kobiet",
+    payload: { type: "happy_hour", name: "💃 Dzień Kobiet — x2 GT!", description: "Z okazji Dnia Kobiet wszystkie Ghost Tokens lecą podwójnie!", durationMinutes: 1440, multiplier: 2 } },
+  { key: "valentines", emoji: "❤️", label: "Walentynki",
+    payload: { type: "happy_hour", name: "❤️ Walentynki — x2 GT!", description: "Pokochaj farmienie tokenów — dziś podwójnie!", durationMinutes: 1440, multiplier: 2 } },
+  { key: "easter", emoji: "🐰", label: "Wielkanoc",
+    payload: { type: "giveaway", name: "🐰 Wielkanocne jajo", description: "Świąteczny giveaway — losujemy zwycięzców spośród aktywnych!", durationMinutes: 2880, prize: "Niespodzianka świąteczna", winnersCount: 3, requirement: "Bądź aktywny na czacie" } },
+  { key: "halloween", emoji: "🎃", label: "Halloween",
+    payload: { type: "happy_hour", name: "🎃 Halloween — x3 GT!", description: "Straszna noc — potrójne tokeny dla wszystkich!", durationMinutes: 1440, multiplier: 3 } },
+  { key: "christmas", emoji: "🎄", label: "Boże Narodzenie",
+    payload: { type: "giveaway", name: "🎄 Świąteczny giveaway", description: "Pod choinką czeka nagroda — dołącz do eventu!", durationMinutes: 4320, prize: "Świąteczna nagroda", winnersCount: 5, requirement: "Dołącz do eventu" } },
+  { key: "nye", emoji: "🎆", label: "Sylwester / Nowy Rok",
+    payload: { type: "happy_hour", name: "🎆 Sylwester — x2.5 GT!", description: "Witamy Nowy Rok z bonusem do tokenów!", durationMinutes: 720, multiplier: 2.5 } },
+];
+
+function HolidayEventsCard({
+  onToast, onSuccess, pending,
+}: {
+  onToast: (k: "ok" | "err", m: string) => void;
+  onSuccess: () => void;
+  pending: boolean;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function launch(t: HolidayTemplate) {
+    setBusy(t.key);
+    try {
+      const res = await fetch("/api/admin/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...t.payload, startsInMinutes: 0 }),
+      });
+      const data = await res.json();
+      if (!res.ok) onToast("err", data.error ?? "Błąd");
+      else { onToast("ok", `Event „${t.label}" odpalony!`); onSuccess(); }
+    } catch {
+      onToast("err", "Błąd sieci");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <SectionCard title="Eventy okolicznościowe (szablony)" icon={Calendar}>
+      <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+        Odpal gotowy event świąteczny <strong className="text-zinc-300">jednym kliknięciem</strong> — tworzy aktywny event od teraz
+        (happy hour = bonus mnożnik do GT, giveaway = losowanie nagrody). Szczegóły zmienisz / zakończysz go niżej w „aktywnych eventach".
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        {HOLIDAY_TEMPLATES.map((t) => (
+          <div key={t.key} className="border border-zinc-800 bg-zinc-950 p-3 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{t.emoji}</span>
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-white truncate">{t.label}</div>
+                <div className="text-[10px] font-mono text-zinc-500">
+                  {t.payload.type === "happy_hour" ? `happy hour ×${t.payload.multiplier}` : "giveaway"} · {Math.round(t.payload.durationMinutes / 60)}h
+                </div>
+              </div>
+            </div>
+            <p className="text-[11px] text-zinc-500 leading-snug flex-1">{t.payload.description}</p>
+            <button
+              onClick={() => launch(t)}
+              disabled={busy !== null || pending}
+              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {busy === t.key ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+              Odpal teraz
+            </button>
+          </div>
+        ))}
       </div>
     </SectionCard>
   );
