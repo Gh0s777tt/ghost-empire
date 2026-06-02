@@ -1159,3 +1159,23 @@ model ChatOverlayConfig {
 
   @@map("chat_overlay_config")
 }
+
+// =====================================================
+// CUSTOM ALERTS — admin-defined alert templates. Fired manually into the
+// StreamAlert queue → shown on the /overlay OBS source. Managed in /admin#alerts.
+// =====================================================
+
+model CustomAlert {
+  id          String   @id @default(cuid())
+  label       String                          // admin-facing name (list)
+  title       String                          // heading shown on the overlay
+  message     String                          // body shown on the overlay
+  icon        String?  @default("🔔")
+  accent      String?                          // optional per-alert accent color (else global)
+  amount      Int?                             // optional number badge
+  amountLabel String?                          // e.g. "GT" / "PLN"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("custom_alerts")
+}
