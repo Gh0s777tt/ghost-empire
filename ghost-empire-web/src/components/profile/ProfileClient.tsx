@@ -332,7 +332,10 @@ export function ProfileClient({
                         )}
                       </div>
                     </div>
-                    <div className="text-xs text-zinc-500 font-mono truncate">@{c.username}</div>
+                    <div className="text-xs text-zinc-500 font-mono truncate">
+                      {/* Hide leaked full names (handles never contain spaces). */}
+                      {c.username && !/\s/.test(c.username) ? `@${c.username}` : "połączono"}
+                    </div>
                   </div>
                 );
               })}
@@ -538,13 +541,15 @@ function SocialLinksEditor({
     .filter((c) => AUTO_PLATFORM_META[c.platform])
     .map((c) => {
       const meta = AUTO_PLATFORM_META[c.platform];
+      // Handles never contain spaces; a value with a space is a leaked full name.
+      const handle = c.username && !/\s/.test(c.username) ? c.username : "";
       return {
         key: `auto-${c.platform}`,
         platform: c.platform,
         label: meta.label,
         color: meta.color,
-        handle: c.username,
-        url: meta.urlFor(c.username),
+        handle: handle || meta.label,
+        url: handle ? meta.urlFor(handle) : "#",
         source: "auto" as const,
         Icon: <BrandIcon platform={c.platform as "twitch" | "kick"} className="w-5 h-5" />,
       };

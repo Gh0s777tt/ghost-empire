@@ -313,7 +313,7 @@ export const authOptions: NextAuthOptions = {
           const platformUsername =
             p.login ||
             p.username ||
-            user.name ||
+            emailLocal ||   // email local-part as last resort — NEVER user.name (full name, e.g. Google = leaks real name)
             "";
 
           // Map OAuth provider id → semantic platform name we use in DB

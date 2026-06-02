@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Poprawka prywatności w profilu",
+    items: [
+      "W „połączonych platformach” nie pokazuje się już imię i nazwisko zamiast nicka (dotyczyło m.in. YouTube / Kick).",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Ankiety / głosowania",
     items: [
       "Nowa zakładka „Ankiety” — głosuj w decyzjach społeczności (np. w co gramy w piątek).",
