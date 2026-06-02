@@ -1,5 +1,6 @@
 "use client";
 // src/components/Header.tsx
+import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,6 +22,7 @@ const NAV = [
 export function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header
@@ -146,13 +148,18 @@ export function Header() {
                   </Link>
                 )}
 
-                {/* User avatar + signout */}
-                <div className="relative group">
-                  <button className="flex items-center gap-2">
+                {/* User avatar + account menu (click-toggle — works on mobile/touch too) */}
+                <div className="relative">
+                  <button
+                    onClick={() => setMenuOpen((o) => !o)}
+                    className="flex items-center gap-2"
+                    aria-label="Menu konta"
+                    aria-expanded={menuOpen}
+                  >
                     {session.user.image ? (
                       <img
                         src={session.user.image}
-                        alt={session.user.name ?? ""}
+                        alt=""
                         className="w-8 h-8 border border-red-500/50 object-cover"
                       />
                     ) : (
@@ -163,24 +170,37 @@ export function Header() {
                       />
                     )}
                   </button>
-                  {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-1 w-48 border border-zinc-800 bg-zinc-950 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                    <div className="p-3 border-b border-zinc-800">
-                      <p className="text-xs font-bold text-white truncate">
-                        {displayNick(session.user.name, session.user.username)}
-                      </p>
-                      <p className="text-[10px] text-zinc-500 font-mono">
-                        LVL {session.user.level}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-zinc-400 hover:text-red-400 hover:bg-zinc-900 transition-colors"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      Wyloguj się
-                    </button>
-                  </div>
+                  {menuOpen && (
+                    <>
+                      {/* Backdrop — click anywhere to close */}
+                      <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                      <div className="absolute right-0 top-full mt-1 w-52 border border-zinc-800 bg-zinc-950 shadow-xl z-50">
+                        <div className="p-3 border-b border-zinc-800">
+                          <p className="text-xs font-bold text-white truncate">
+                            {displayNick(session.user.name, session.user.username)}
+                          </p>
+                          <p className="text-[10px] text-zinc-500 font-mono">
+                            LVL {session.user.level}
+                          </p>
+                        </div>
+                        <Link
+                          href="/profile"
+                          onClick={() => setMenuOpen(false)}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+                        >
+                          <Users className="w-3.5 h-3.5" />
+                          Mój profil
+                        </Link>
+                        <button
+                          onClick={() => signOut({ callbackUrl: "/" })}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-zinc-400 hover:text-red-400 hover:bg-zinc-900 transition-colors border-t border-zinc-800"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          Wyloguj się
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </>
             ) : (

@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Menu konta — wyloguj działa na telefonie",
+    items: [
+      "Menu pod avatarem (z opcją Wyloguj się oraz skrótem do profilu) otwiera się teraz kliknięciem — wcześniej na telefonie nie dało się go otworzyć.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Dopięcie brandingu + płynniejszy panel",
     items: [
       "Stopka i ekran logowania dostały logo z czaszką (zostały na starym placeholderze).",
