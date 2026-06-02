@@ -194,14 +194,21 @@ export async function claimSeasonReward(userId: string, rewardId: string): Promi
         return { ok: true, type: "tokens", label: reward.label, tokens: amount } as const;
       }
 
-      // Other reward types (badge/title/color/shop_unlock) — record claim + notify.
-      // Actual cosmetic application is handled elsewhere (or future work).
+      // Other reward types (badge/title/color/shop_unlock/item/code) — record claim
+      // + notify. Cosmetic application is handled elsewhere; for code/item rewards we
+      // surface the actual value (the code) or delivery instructions in the message.
+      const valueSuffix =
+        reward.type === "code"
+          ? ` — Twój kod: ${reward.value}`
+          : reward.type === "item"
+            ? ` — odbiór przez ticket na Discord${reward.value ? ` (${reward.value})` : ""}`
+            : "";
       await tx.notification.create({
         data: {
           userId,
           type: "task_reward",
           title: `🎟️ Nagroda sezonowa odebrana!`,
-          message: `Tier ${reward.tier}: ${reward.label}`,
+          message: `Tier ${reward.tier}: ${reward.label}${valueSuffix}`,
           icon: reward.icon ?? "🎟️",
           link: "/seasons",
         },

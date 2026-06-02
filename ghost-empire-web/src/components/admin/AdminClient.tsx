@@ -6553,7 +6553,8 @@ function SeasonsManager({
                   </div>
                   <div>
                     <label className="text-[9px] text-zinc-500 block">Value</label>
-                    <input value={rValue} onChange={(e) => setRValue(e.target.value)} placeholder="5000"
+                    <input value={rValue} onChange={(e) => setRValue(e.target.value)}
+                      placeholder={rType === "tokens" ? "5000" : rType === "code" ? "KOD-XYZ-123" : rType === "item" ? "opis odbioru" : "wartość"}
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-none focus:border-red-600" />
                   </div>
                   <div>
@@ -6562,6 +6563,9 @@ function SeasonsManager({
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-none focus:border-red-600" />
                   </div>
                 </div>
+                <p className="text-[9px] text-zinc-600 mt-1 leading-relaxed">
+                  <strong className="text-zinc-400">tokens</strong>: ilość GT w „value" · <strong className="text-zinc-400">code</strong>: kod pokazywany graczowi po odebraniu · <strong className="text-zinc-400">item</strong>: nagroda rzeczowa, odbiór przez ticket (w „value" wpisz szczegóły) · reszta = kosmetyka.
+                </p>
                 <div className="flex items-center gap-3 mt-2">
                   <label className="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer">
                     <input type="checkbox" checked={rPremium} onChange={(e) => setRPremium(e.target.checked)} className="accent-yellow-600" />
