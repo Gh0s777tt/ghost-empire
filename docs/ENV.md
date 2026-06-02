@@ -27,6 +27,18 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google → YouTube login + YT API | console.cloud.google.com |
 | `KICK_CLIENT_ID` / `KICK_CLIENT_SECRET` | Kick login + API | dev.kick.com |
 
+> **⚠️ Błąd `OAuthCallback` przy logowaniu (np. Twitch)** — dostawca **przekierował z powrotem, ale odrzucił callback**. To zawsze konfiguracja, nie kod. Sprawdź po kolei:
+>
+> 1. **Redirect URI w konsoli dewelopera** musi być **DOKŁADNIE** (znak w znak, `https`, bez ukośnika na końcu):
+>    - Twitch (dev.twitch.tv/console → Twoja aplikacja → *OAuth Redirect URLs*): `https://<twoja-domena>/api/auth/callback/twitch`
+>    - analogicznie `…/api/auth/callback/kick`, `…/discord`, `…/google`.
+>    - Jeśli używasz domeny `*.vercel.app` **i** własnej domeny — dodaj **oba** URI.
+> 2. **`NEXTAUTH_URL` w Vercel** = ta sama domena, pod którą realnie wchodzisz (np. `https://ghost-empire-web.vercel.app`), **bez** `/` na końcu. Jeśli się różni, `redirect_uri` w wymianie tokenu nie zgodzi się z tym z konsoli → `OAuthCallback`.
+> 3. **`TWITCH_CLIENT_SECRET`** aktualny (po „New Secret" w konsoli stary natychmiast przestaje działać — zaktualizuj w Vercel i **zrób redeploy**).
+> 4. Po zmianie env w Vercel **redeploy** (env wczytuje się przy buildzie).
+>
+> Ekran `/auth/signin` przy tym błędzie **sam wypisuje dokładny Redirect URI do skopiowania** (liczony z aktualnej domeny) + przypomina o `NEXTAUTH_URL`.
+
 ### Admin / role
 | Zmienna | Po co |
 |---|---|

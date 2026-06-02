@@ -59,9 +59,12 @@ export default function SignInPage() {
   const [providers, setProviders] = useState<Record<string, Provider> | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [origin, setOrigin] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     getProviders().then(setProviders);
+    setOrigin(window.location.origin);
     // NextAuth redirects back with ?error=<code> when an OAuth attempt fails.
     const e = new URLSearchParams(window.location.search).get("error");
     if (e) setError(e);
@@ -124,7 +127,41 @@ export default function SignInPage() {
 
           {error && (
             <div className="mb-6 border border-red-700 bg-red-950/40 text-red-200 text-xs p-3 leading-relaxed">
-              {ERROR_MSG[error] ?? `Błąd logowania: ${error}`}
+              <p>{ERROR_MSG[error] ?? `Błąd logowania: ${error}`}</p>
+              {["OAuthSignin", "OAuthCallback", "Callback", "Configuration"].includes(error) && origin && (
+                <div className="mt-3 border-t border-red-800/60 pt-3 space-y-2">
+                  <p className="font-semibold text-red-300/90">
+                    Wklej DOKŁADNIE ten Redirect URI w konsoli dewelopera (Twitch / Kick / Discord / Google):
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="break-all rounded bg-black/50 px-1.5 py-0.5 font-mono text-[11px] text-zinc-200">
+                      {origin}/api/auth/callback/twitch
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(`${origin}/api/auth/callback/twitch`);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 1500);
+                      }}
+                      className="shrink-0 text-red-300 underline hover:text-white"
+                    >
+                      {copied ? "skopiowano ✓" : "kopiuj"}
+                    </button>
+                  </div>
+                  <ul className="space-y-0.5 font-mono text-[11px] text-zinc-400">
+                    <li className="break-all">{origin}/api/auth/callback/kick</li>
+                    <li className="break-all">{origin}/api/auth/callback/discord</li>
+                    <li className="break-all">{origin}/api/auth/callback/google</li>
+                  </ul>
+                  <p className="text-zinc-400">
+                    Sprawdź też w Vercel:{" "}
+                    <code className="rounded bg-black/50 px-1 font-mono">NEXTAUTH_URL</code> ={" "}
+                    <code className="break-all rounded bg-black/50 px-1 font-mono">{origin}</code>{" "}
+                    (bez ukośnika na końcu).
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
