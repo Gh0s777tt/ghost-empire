@@ -84,6 +84,20 @@ export async function POST(req: Request) {
         }
       }
 
+      if (item.requiresAchievement) {
+        const earned = await tx.userAchievement.findFirst({
+          where: { userId, achievement: { code: item.requiresAchievement } },
+          select: { id: true },
+        });
+        if (!earned) {
+          const ach = await tx.achievement.findUnique({
+            where: { code: item.requiresAchievement },
+            select: { name: true },
+          });
+          throw new ShopError(`Wymagane osiągnięcie: ${ach?.name ?? item.requiresAchievement}`, 403);
+        }
+      }
+
       const userUpdate = await tx.user.updateMany({
         where: { id: userId, tokens: { gte: item.price } },
         data: {

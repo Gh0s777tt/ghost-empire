@@ -16,7 +16,7 @@ export default async function ShopPage() {
   const session = await getServerSession(authOptions);
 
   // Shop items and the user's context are independent → fetch in parallel.
-  const [items, user] = await Promise.all([
+  const [items, user, achievementList] = await Promise.all([
     prisma.shopItem.findMany({
       where: { active: true },
       orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
@@ -31,20 +31,29 @@ export default async function ShopPage() {
               where: { isSubscriber: true },
               select: { subTier: true, subMonths: true },
             },
+            userAchievements: { select: { achievement: { select: { code: true } } } },
           },
         })
       : Promise.resolve(null),
+    prisma.achievement.findMany({ select: { code: true, name: true } }),
   ]);
 
-  let userContext: { tokens: number; level: number; subTiers: string[]; maxSubMonths: number } | null = null;
+  let userContext:
+    | { tokens: number; level: number; subTiers: string[]; maxSubMonths: number; achievements: string[] }
+    | null = null;
   if (user) {
     userContext = {
       tokens: user.tokens,
       level: user.level,
       subTiers: user.connections.map((c) => c.subTier ?? "").filter(Boolean),
       maxSubMonths: user.connections.reduce((m, c) => Math.max(m, c.subMonths), 0),
+      achievements: user.userAchievements.map((ua) => ua.achievement.code),
     };
   }
+
+  const achievementNames: Record<string, string> = Object.fromEntries(
+    achievementList.map((a) => [a.code, a.name]),
+  );
 
   return (
     <div className="min-h-screen bg-black">
@@ -66,6 +75,7 @@ export default async function ShopPage() {
           items={items}
           userContext={userContext}
           isAuthenticated={!!session?.user?.id}
+          achievementNames={achievementNames}
         />
       </main>
     </div>

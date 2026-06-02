@@ -45,17 +45,19 @@ export async function GET(req: Request) {
 
   switch (section) {
     case "shop": {
-      const items = await prisma.shopItem.findMany({
-        orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }],
-      });
+      const [items, achievements] = await Promise.all([
+        prisma.shopItem.findMany({ orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }] }),
+        prisma.achievement.findMany({ select: { code: true, name: true }, orderBy: { name: "asc" } }),
+      ]);
       return NextResponse.json({
         allShopItems: items.map((s) => ({
           id: s.id, name: s.name, description: s.description, category: s.category,
-          price: s.price, imageEmoji: s.imageEmoji, stock: s.stock, totalStock: s.totalStock,
+          price: s.price, imageEmoji: s.imageEmoji, imageUrl: s.imageUrl, stock: s.stock, totalStock: s.totalStock,
           hot: s.hot, active: s.active, featured: s.featured,
           requiresSubTier: s.requiresSubTier, requiresMinLevel: s.requiresMinLevel,
-          requiresMinMonths: s.requiresMinMonths,
+          requiresMinMonths: s.requiresMinMonths, requiresAchievement: s.requiresAchievement,
         })),
+        achievements: achievements.map((a) => ({ code: a.code, name: a.name })),
       });
     }
 

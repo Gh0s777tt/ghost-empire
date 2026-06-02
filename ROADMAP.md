@@ -135,7 +135,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 - ✅ 🤖 **Uniwersalne podglądy „jak w OBS"** — **ZROBIONE**: podgląd + URL z kopiowaniem w sekcjach Stream Goals, Subathon i Chat overlay (`OverlayPreview` + współdzielone `GoalBar`/`SubathonCard`/`ChatMessageRow`; żywe overlaye repointowane na te same komponenty). Alerty i drop kodów już miały.
 - 🟡 🤖 **Battle Pass — nagrody rzeczowe** — tier może dawać przedmiot/kod (nie tylko tokeny); odbiór jak nagrody sezonowe (status „do odebrania → odebrane").
 - 🟡 🤖 **Osiągnięcia — własne + nagrody rzeczowe** — admin tworzy własne achievementy w panelu; nagroda = tokeny **lub** przedmiot/kod do gry.
-- 🟡 🤖 **Sklep — zdjęcia + warunki odblokowania** — grafika przedmiotu (URL/upload) + warunek odblokowania nagrody (np. ≥1000 followers, ≥50 subów, dany tier battle passa, osiągnięcie).
+- ✅ 🤖 **Sklep — zdjęcia + warunki odblokowania** — **ZROBIONE**: grafika przedmiotu (`imageUrl`, URL) + odblokowanie przez **osiągnięcie** (`requiresAchievement`, egzekwowane przy zakupie + plakietka na `/shop`) + wyeksponowane wymagania (level / sub tier / mc subskrypcji) w edytorze. *(Upload pliku zamiast URL = wymaga storage; progi liczbowe „followers/subów" jako osobne warunki — opcjonalnie później.)*
 - 🟡 🤖 **Eventy okolicznościowe** — szablony świąteczne (Dzień Kobiet, Wielkanoc, Halloween, Boże Narodzenie, Sylwester) z motywem wizualnym + bonusami; harmonogram dat.
 
 **🔑 Wymaga Twoich kont/creds (zostawiam na koniec):**

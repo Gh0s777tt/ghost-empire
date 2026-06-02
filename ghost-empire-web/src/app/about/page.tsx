@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Sklep: grafiki przedmiotów + odblokowania",
+    items: [
+      "Przedmioty w sklepie mogą mieć własną grafikę / screen zamiast emoji.",
+      "Nagrodę można odblokować przez zdobycie konkretnego osiągnięcia — zablokowane pokazują, czego brakuje.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Podglądy overlayów w panelu",
     items: [
       "Stream Goals, Subathon i Chat overlay mają teraz podgląd „jak w OBS” oraz gotowy URL do skopiowania — tak jak Stream Alerts.",
