@@ -99,6 +99,7 @@ const CHANGELOG = [
     title: "Poprawka prywatności w profilu",
     items: [
       "W „połączonych platformach” nie pokazuje się już imię i nazwisko zamiast nicka (dotyczyło m.in. YouTube / Kick).",
+      "Nagłówek profilu (obok plakietki ADMIN), menu konta w nagłówku i profil publiczny pokazują teraz nick, a nie imię i nazwisko.",
     ],
   },
   {

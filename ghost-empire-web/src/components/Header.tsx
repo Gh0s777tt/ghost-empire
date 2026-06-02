@@ -4,7 +4,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3 } from "lucide-react";
-import { fmt } from "@/lib/utils";
+import { fmt, displayNick } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
 
 const NAV = [
@@ -167,7 +167,7 @@ export function Header() {
                   <div className="absolute right-0 top-full mt-1 w-48 border border-zinc-800 bg-zinc-950 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                     <div className="p-3 border-b border-zinc-800">
                       <p className="text-xs font-bold text-white truncate">
-                        {session.user.name}
+                        {displayNick(session.user.name, session.user.username)}
                       </p>
                       <p className="text-[10px] text-zinc-500 font-mono">
                         LVL {session.user.level}

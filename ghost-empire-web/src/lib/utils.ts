@@ -72,6 +72,15 @@ export function rankForLevel(level: number): {
   return            { name: "GHOSTLING",            color: "#808080", emoji: "🥚" };
 }
 
+/** Public-safe display name: a real handle (displayName without spaces), else the
+ *  username. A displayName containing a space is a leaked full name (e.g. from a
+ *  Google login) and is NEVER shown. */
+export function displayNick(displayName?: string | null, username?: string | null): string {
+  const d = displayName?.trim();
+  if (d && !/\s/.test(d)) return d;
+  return username ?? "Anonim";
+}
+
 export function pluralPL(
   n: number,
   one: string,

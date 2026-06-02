@@ -10,7 +10,7 @@ import {
   ShieldCheck, Heart, Crown, Ban, Star, Instagram, Twitter, Youtube, Music2,
 } from "lucide-react";
 import Link from "next/link";
-import { fmt, formatDate, rankForLevel, xpForLevel, cn } from "@/lib/utils";
+import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -56,8 +56,8 @@ export async function generateMetadata({
   });
   if (!user) return { title: "Nie znaleziono" };
   return {
-    title: `${user.displayName ?? user.username}`,
-    description: user.bio ?? `Profil ${user.displayName ?? user.username} w Ghost Empire`,
+    title: displayNick(user.displayName, user.username),
+    description: user.bio ?? `Profil ${displayNick(user.displayName, user.username)} w Ghost Empire`,
   };
 }
 
@@ -170,7 +170,7 @@ export default async function PublicProfilePage({
                 {user.image ? (
                   <img
                     src={user.image}
-                    alt={user.displayName ?? user.username ?? ""}
+                    alt={displayNick(user.displayName, user.username)}
                     className="w-24 h-24 md:w-32 md:h-32 object-cover border-2"
                     style={{ borderColor: rankInfo.color }}
                   />
@@ -196,7 +196,7 @@ export default async function PublicProfilePage({
                     className="font-display text-3xl md:text-4xl text-white tracking-wider"
                     style={{ textShadow: `2px 0 0 ${rankInfo.color}88, -2px 0 0 rgba(139,0,0,0.4)` }}
                   >
-                    {user.displayName ?? user.username ?? "Anonim"}
+                    {displayNick(user.displayName, user.username)}
                   </h1>
                   {user.isAdmin && (
                     <span className="text-[10px] font-bold tracking-widest uppercase border border-red-500 bg-red-600/15 text-red-300 px-2 py-0.5 flex items-center gap-1">
