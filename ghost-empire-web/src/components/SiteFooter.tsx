@@ -1,7 +1,6 @@
 // src/components/SiteFooter.tsx
 // Persistent footer on every page — quick access to legal pages and streamer socials.
 import Link from "next/link";
-import { Ghost } from "lucide-react";
 import { SocialLinksRow } from "@/components/SocialLinks";
 
 export function SiteFooter() {
@@ -16,14 +15,8 @@ export function SiteFooter() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* Left — branding */}
           <div className="flex items-center gap-3">
-            <div
-              className="w-6 h-6 flex items-center justify-center flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
-                clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-              }}
-            >
-              <Ghost className="w-3 h-3 text-white" strokeWidth={2.5} />
+            <div className="w-6 h-6 flex-shrink-0 overflow-hidden rounded ring-1 ring-red-600/40 bg-black">
+              <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
               GH0ST EMPIRE © 2026 · Portal społeczności Gh0s77tt

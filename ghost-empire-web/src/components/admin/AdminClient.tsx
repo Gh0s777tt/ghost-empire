@@ -361,7 +361,7 @@ export function AdminClient({
           onSelect={goToSection}
         />
 
-        <div className="flex-1 min-w-0 space-y-6">
+        <div key={activeSection} className="flex-1 min-w-0 space-y-6 animate-fade-in-up">
           {activeSection === "dashboard" && (
             <DashboardSection
               stats={stats}
