@@ -80,8 +80,14 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100000] focus:bg-red-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:outline-none"
+        >
+          Przejdź do treści
+        </a>
         <Providers>
-          <div className="flex-1 flex flex-col">{children}</div>
+          <div id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-none">{children}</div>
           <SiteFooter />
         </Providers>
       </body>

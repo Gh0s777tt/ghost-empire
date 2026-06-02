@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-02",
+    title: "Dostępność (a11y)",
+    items: [
+      "Widoczny obrys przy nawigacji klawiaturą, skrót przejścia do treści oraz poszanowanie ustawienia ograniczenia animacji.",
+    ],
+  },
+  {
+    date: "2026-06-02",
     title: "Własne alerty na streamie",
     items: [
       "Możesz stworzyć własne alerty (tytuł, treść, ikona, kolor, liczba) i wyzwalać je ręcznie na overlayu OBS — np. raid czy ogłoszenie.",
