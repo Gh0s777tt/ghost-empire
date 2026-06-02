@@ -2,7 +2,6 @@
 // src/app/auth/signin/page.tsx
 import { signIn, getProviders } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { Ghost } from "lucide-react";
 
 type Provider = {
   id: string;
@@ -46,12 +45,26 @@ const PROVIDER_CONFIG: Record<
   },
 };
 
+const ERROR_MSG: Record<string, string> = {
+  OAuthSignin: "Nie udało się rozpocząć logowania u dostawcy — najczęściej brakujący / zły klucz w env (np. TWITCH_CLIENT_ID/SECRET w Vercel).",
+  OAuthCallback: "Błąd przy powrocie od dostawcy — sprawdź Redirect URI w konsoli dewelopera (musi być /api/auth/callback/<provider>).",
+  OAuthCreateAccount: "Nie udało się utworzyć konta z tego dostawcy.",
+  Callback: "Błąd logowania (callback). Spróbuj ponownie.",
+  OAuthAccountNotLinked: "To konto e-mail jest już powiązane z inną platformą — zaloguj się tą, której użyłeś pierwszy raz.",
+  AccessDenied: "Dostęp odrzucony (konto zbanowane lub brak zgody).",
+  Configuration: "Błąd konfiguracji logowania po stronie serwera.",
+};
+
 export default function SignInPage() {
   const [providers, setProviders] = useState<Record<string, Provider> | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getProviders().then(setProviders);
+    // NextAuth redirects back with ?error=<code> when an OAuth attempt fails.
+    const e = new URLSearchParams(window.location.search).get("error");
+    if (e) setError(e);
   }, []);
 
   const handleSignIn = async (providerId: string) => {
@@ -77,15 +90,8 @@ export default function SignInPage() {
         {/* Logo */}
         <div className="text-center mb-10">
           <div className="flex items-center justify-center mb-5">
-            <div
-              className="w-20 h-20 flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
-                clipPath:
-                  "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-              }}
-            >
-              <Ghost className="w-10 h-10 text-white" strokeWidth={2} />
+            <div className="w-20 h-20 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_50px_rgba(229,9,20,0.35)]">
+              <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
             </div>
           </div>
           <h1
@@ -115,6 +121,12 @@ export default function SignInPage() {
           <p className="text-zinc-500 text-xs mb-8">
             Wybierz platformę, żeby uzyskać dostęp do swojego profilu, sklepu i rankingu.
           </p>
+
+          {error && (
+            <div className="mb-6 border border-red-700 bg-red-950/40 text-red-200 text-xs p-3 leading-relaxed">
+              {ERROR_MSG[error] ?? `Błąd logowania: ${error}`}
+            </div>
+          )}
 
           <div className="space-y-3">
             {providers &&

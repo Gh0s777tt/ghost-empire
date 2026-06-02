@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Dopięcie brandingu + płynniejszy panel",
+    items: [
+      "Stopka i ekran logowania dostały logo z czaszką (zostały na starym placeholderze).",
+      "Przełączanie sekcji w panelu admina ma teraz płynne przejście; ekran logowania pokazuje czytelny błąd, gdy logowanie się nie powiedzie.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Poprawka prywatności w profilu",
     items: [
       "W „połączonych platformach” nie pokazuje się już imię i nazwisko zamiast nicka (dotyczyło m.in. YouTube / Kick).",
