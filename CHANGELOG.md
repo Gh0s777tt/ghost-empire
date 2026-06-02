@@ -41,6 +41,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Fixed
 
+- **Audit log: nick zamiast imienia + czytelniejsze oznaczenie** — wpisy (np. po akcjach z ankietami) pokazywały pełne imię i nazwisko admina; teraz używają `displayNick()` (nick, nigdy nazwiska). Gdy nazwy nie da się rozwiązać → „konto usunięte" zamiast skróconego `#cuid`.
+- **Przycisk wyloguj w profilu** — dodany w nagłówku karty `/profile` (obok danych konta), niezależnie od menu konta w nagłówku strony.
 - **Przycisk „Wyloguj się" znów dostępny** — menu konta (avatar, prawy górny róg) było rozwijane tylko po najechaniu (`group-hover`), więc na telefonie/dotyku w ogóle się nie otwierało (logout znikał). Teraz **klik** otwiera/zamyka menu (klik poza = zamyka), doszedł skrót „Mój profil". Działa na mobile i desktopie. `alt` avatara nie nosi już pełnego imienia.
 - **Prywatność (cd. 3): nagłówek profilu / menu konta / profil publiczny pokazują nick, nie imię** — nagłówek `/profile` (obok plakietki ADMIN), dropdown konta w nagłówku oraz publiczny profil `/u/[username]` (włącznie z `<title>` strony i `alt` avatara) używają teraz wspólnego helpera `displayNick()` (`lib/utils`): pokazuje handle (`displayName` bez spacji) albo `username`, **nigdy** wartości ze spacją (= wyciekłe imię i nazwisko, np. z Google). Działa od razu dla już-zapisanych kont.
 - **Branding (cd. 2): ekran ładowania + strony błędów + hero `/about`** — pozostałe stare logo (heksagon + 👻 / ikona ducha) na **ekranie ładowania** (`loading.tsx` — widoczny przy „Wejdź do portalu" / przełączaniu stron), na 404, error, global-error oraz w hero `/about` → czaszka GHOST77. Pozostaje już tylko generator obrazka OG publicznego profilu (`/u/[username]` — rysowany kodem, wyłącznie do social-share).

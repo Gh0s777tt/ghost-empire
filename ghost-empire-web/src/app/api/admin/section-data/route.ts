@@ -10,6 +10,7 @@ import { requireAdmin, requirePermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getSettings as getAlertSettings } from "@/lib/alerts";
 import { getCodeConfig } from "@/lib/codes";
+import { displayNick } from "@/lib/utils";
 import type { ModPermission } from "@/lib/permissions";
 
 const ALL_ALERT_TYPES = [
@@ -141,9 +142,10 @@ export async function GET(req: Request) {
             })
           : Promise.resolve([] as Array<{ id: string; platform: string; user: { username: string | null; displayName: string | null } }>),
       ]);
-      const nameById = new Map(auditUsers.map((u) => [u.id, u.displayName ?? u.username ?? u.id.slice(-6)]));
+      // displayNick → never a leaked full name (value with a space); shows the nick.
+      const nameById = new Map(auditUsers.map((u) => [u.id, displayNick(u.displayName, u.username)]));
       const connById = new Map(
-        auditConns.map((c) => [c.id, `${c.user.displayName ?? c.user.username ?? "?"} · ${c.platform}`]),
+        auditConns.map((c) => [c.id, `${displayNick(c.user.displayName, c.user.username)} · ${c.platform}`]),
       );
       const targetNameFor = (a: { targetType: string | null; targetId: string | null; details: string | null }): string | null => {
         if (a.targetType === "user" && a.targetId) return nameById.get(a.targetId) ?? null;

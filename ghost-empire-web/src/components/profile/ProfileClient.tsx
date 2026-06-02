@@ -2,10 +2,11 @@
 // src/components/profile/ProfileClient.tsx
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
   Instagram, Twitter, Youtube, Globe, Music2, Flame, MessageCircle, Mic2,
-  Copy, ShieldCheck, Heart, Star, Crown, Ban,
+  Copy, ShieldCheck, Heart, Star, Crown, Ban, LogOut,
 } from "lucide-react";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
 
@@ -139,12 +140,19 @@ export function ProfileClient({
     <div className="space-y-6">
       {/* Hero card */}
       <div
-        className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-sm p-6"
+        className="relative border border-zinc-800 bg-zinc-950/80 backdrop-blur-sm p-6"
         style={{
           clipPath:
             "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
         }}
       >
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="absolute top-3 right-4 z-10 flex items-center gap-1.5 px-2.5 py-1 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase transition-all"
+          title="Wyloguj się"
+        >
+          <LogOut className="w-3 h-3" /> Wyloguj
+        </button>
         <div className="flex flex-col md:flex-row gap-6 items-start">
           <div className="relative flex-shrink-0">
             {user.image ? (

@@ -2282,7 +2282,7 @@ function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-sm">
                   <span className="font-semibold text-white">
-                    {entry.adminName ?? `#${entry.adminId.slice(-6)}`}
+                    {entry.adminName ?? "konto usunięte"}
                   </span>
                   <span className="font-bold" style={{ color: meta.color }}>
                     {meta.label}
