@@ -1,7 +1,7 @@
 // src/app/not-found.tsx
 // Global 404 page (also catches notFound() calls from server components)
 import Link from "next/link";
-import { Ghost, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
@@ -15,14 +15,8 @@ export default function NotFound() {
 
       <div className="relative z-10 max-w-md w-full text-center">
         <div className="inline-flex items-center justify-center mb-6">
-          <div
-            className="w-20 h-20 flex items-center justify-center grayscale opacity-50"
-            style={{
-              background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
-              clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-            }}
-          >
-            <Ghost className="w-10 h-10 text-white" strokeWidth={2} />
+          <div className="w-20 h-20 overflow-hidden rounded-2xl grayscale opacity-60">
+            <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
           </div>
         </div>
 

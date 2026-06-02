@@ -34,22 +34,19 @@ export default function GlobalError({
         }}
       >
         <div style={{ maxWidth: "28rem", width: "100%", textAlign: "center" }}>
-          <div
+          <img
+            src="/brand/skull.png"
+            alt=""
             style={{
               width: "5rem",
               height: "5rem",
               margin: "0 auto 1.5rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
-              clipPath:
-                "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-              fontSize: "2rem",
+              display: "block",
+              objectFit: "cover",
+              borderRadius: "1rem",
+              border: "2px solid rgba(229,9,20,0.4)",
             }}
-          >
-            👻
-          </div>
+          />
           <h1
             style={{
               fontSize: "1.75rem",
