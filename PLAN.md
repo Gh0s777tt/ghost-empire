@@ -32,7 +32,7 @@
 ## 2. Co zostało — pogrupowane wg tego, kto musi działać
 
 ### 🤖 A. Autonomiczne (robię sam — kolejność = priorytet)
-1. **Chat overlay — customizacja wiadomości** *(nowe)* — rozmiar / kolor / czcionka / tło / krycie wiadomości na `/overlay/chat`, sterowane z `/admin#chat`, z podglądem na żywo (jak Stream Alerts). Model: `ChatOverlayConfig` (singleton) + sparametryzowany `ChatMessageRow`.
+1. ✅ **Chat overlay — customizacja wiadomości** — **ZROBIONE**: rozmiar / kolor / czcionka / krycie tła / ikona platformy na `/overlay/chat`, sterowane z `/admin#chat`, z podglądem na żywo. Model `ChatOverlayConfig` + sparametryzowany `ChatMessageRow`.
 2. **Stream Alerts — własne (customowe) alerty** *(nowe)* — admin definiuje własny typ alertu (nazwa, ikona, kolor, tekst, dźwięk) i może go ręcznie wyzwolić / przetestować na overlayu. Model `CustomAlert` + akcja „wyzwól" + integracja z istniejącą kolejką alertów.
 3. **Profil — poprawne nicki platform** *(bug)* — Kick pokazuje local-part e-maila, YouTube nic. Plan: nick Kicka odświeżany z handle przy logowaniu Kickiem; **handle YouTube** dociągany przez YouTube Data API (token streamera już mamy). Naprawia „połączone konta" + „social linki".
 4. **Hardening/polish** — `/api/health` + monitor, więcej testów jednostkowych, a11y (skip-link / kontrast / focus), Prettier.
@@ -51,8 +51,8 @@
 ## 3. Kolejność wykonania
 
 1. ✅ Bugfixy: audit log (nick), przycisk wyloguj w profilu — **zrobione**.
-2. 🤖 **A1 — chat overlay: customizacja wiadomości** ← następne
-3. 🤖 **A2 — Stream Alerts: własne alerty**
+2. ✅ 🤖 **A1 — chat overlay: customizacja wiadomości** — zrobione
+3. 🤖 **A2 — Stream Alerts: własne alerty** ← następne
 4. 🤖 **A3 — poprawne nicki Kick/YouTube w profilu**
 5. 🤖 **A4 — hardening/polish** (health, testy, a11y)
 6. 🔑 **B1 — odblokowanie Twitch** (Ty: env w Vercel) → potem podpięcie Twitch/Kick/YouTube w social linkach

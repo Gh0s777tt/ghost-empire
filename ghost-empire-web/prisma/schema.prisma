@@ -1142,3 +1142,20 @@ model PollVote {
   @@index([pollId, optionIndex])
   @@map("poll_votes")
 }
+
+// =====================================================
+// CHAT OVERLAY CONFIG — singleton; styles the /overlay/chat OBS source.
+// Edited in /admin#chat, applied live by the overlay + the in-panel preview.
+// =====================================================
+
+model ChatOverlayConfig {
+  id               String   @id @default("default")
+  fontSize         Int      @default(15)          // message text size (px)
+  textColor        String   @default("#e4e4e7")   // message body color
+  fontFamily       String   @default("Inter")     // "Inter" | "JetBrains Mono" | "Anton" | "system"
+  bgOpacity        Float    @default(0.85)         // 0..1 — message bubble background darkness
+  showPlatformIcon Boolean  @default(true)         // 🟣🟢🔴 platform dot before the name
+  updatedAt        DateTime @updatedAt
+
+  @@map("chat_overlay_config")
+}
