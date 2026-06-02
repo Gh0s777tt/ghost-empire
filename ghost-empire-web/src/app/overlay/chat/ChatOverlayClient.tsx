@@ -3,7 +3,7 @@
 // Polls /api/alerts/chat every 2s, renders the latest messages bottom-aligned.
 // The row visual lives in @/components/ChatMessageRow (shared with /admin#chat preview).
 import { useEffect, useState } from "react";
-import { ChatMessageRow, type ChatMsg } from "@/components/ChatMessageRow";
+import { ChatMessageRow, DEFAULT_CHAT_CFG, type ChatMsg, type ChatOverlayCfg } from "@/components/ChatMessageRow";
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -11,6 +11,7 @@ export function ChatOverlayClient() {
   const [token, setToken] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [cfg, setCfg] = useState<ChatOverlayCfg>(DEFAULT_CHAT_CFG);
 
   useEffect(() => {
     const t = new URL(window.location.href).searchParams.get("token");
@@ -33,8 +34,9 @@ export function ChatOverlayClient() {
           return;
         }
         if (!res.ok) return;
-        const json: { messages: ChatMsg[] } = await res.json();
+        const json: { messages: ChatMsg[]; config?: ChatOverlayCfg } = await res.json();
         setMessages(json.messages ?? []);
+        if (json.config) setCfg(json.config);
         setAuthStatus("ok");
       } catch {
         /* swallow — retry next tick */
@@ -67,7 +69,7 @@ export function ChatOverlayClient() {
       }}
     >
       {messages.map((m) => (
-        <ChatMessageRow key={m.id} msg={m} />
+        <ChatMessageRow key={m.id} msg={m} cfg={cfg} />
       ))}
     </div>
   );

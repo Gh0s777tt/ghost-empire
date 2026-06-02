@@ -16,12 +16,19 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rows = await prisma.chatFeedMessage.findMany({
-    orderBy: { createdAt: "desc" },
-    take: LIMIT,
-  });
+  const [rows, config] = await Promise.all([
+    prisma.chatFeedMessage.findMany({ orderBy: { createdAt: "desc" }, take: LIMIT }),
+    prisma.chatOverlayConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
+  ]);
 
   return NextResponse.json({
+    config: {
+      fontSize: config.fontSize,
+      textColor: config.textColor,
+      fontFamily: config.fontFamily,
+      bgOpacity: config.bgOpacity,
+      showPlatformIcon: config.showPlatformIcon,
+    },
     messages: rows
       .reverse()
       .map((m) => ({

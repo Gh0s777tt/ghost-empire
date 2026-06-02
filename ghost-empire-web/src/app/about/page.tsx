@@ -86,6 +86,14 @@ const STEPS = [
 
 const CHANGELOG = [
   {
+    date: "2026-06-02",
+    title: "Chat na streamie — własny wygląd",
+    items: [
+      "Czat na overlayu OBS można teraz dostosować: rozmiar tekstu, kolor, czcionka, krycie tła i ikona platformy.",
+      "Wszystko z podglądem na żywo w panelu (/admin#chat).",
+    ],
+  },
+  {
     date: "2026-06-01",
     title: "Profil: przycisk wyloguj + czytelny audit log",
     items: [

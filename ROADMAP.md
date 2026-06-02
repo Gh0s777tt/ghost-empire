@@ -122,7 +122,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 ### Pomysły użytkownika (2026-06-02) → kolejność i szczegóły w [PLAN.md](PLAN.md)
 
-- 🤖 **Chat overlay — customizacja wiadomości** (rozmiar / kolor / czcionka / tło) + edytor w `/admin#chat` + podgląd na żywo. *(następne w kolejce)*
+- ✅ 🤖 **Chat overlay — customizacja wiadomości** — **ZROBIONE**: rozmiar / kolor / czcionka / krycie tła / ikona platformy w `/admin#chat`, na overlayu i w podglądzie na żywo (`ChatOverlayConfig`).
 - 🤖 **Stream Alerts — własne (customowe) alerty** — admin definiuje typ (ikona / kolor / tekst / dźwięk) + ręczne wyzwolenie / test.
 - 🤖 **Profil — poprawne nicki Kick/YouTube** (Kick z realnego handle przy logowaniu; handle YouTube z YouTube Data API).
 - 🔑 **Interaktywne social linki (OAuth „połącz jednym kliknięciem")** — IG / TikTok / X / Facebook (aplikacje deweloperskie + przegląd); Twitch / Kick / YouTube już mają OAuth.
