@@ -78,6 +78,7 @@ model User {
   raffleTickets   RaffleTicket[]
   notifications   Notification[]
   donations       Donation[]
+  pollVotes       PollVote[]
 
   // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
   // turn full-table scan+sort into index range scans on free-tier Postgres.
@@ -1105,4 +1106,39 @@ model CodeDropConfig {
   updatedAt       DateTime  @updatedAt
 
   @@map("code_drop_config")
+}
+
+// =====================================================
+// POLLS — simple community polls / votes (no tokens, free voting).
+// Managed in /admin#polls, shown on /polls. One vote per user (changeable).
+// =====================================================
+
+model Poll {
+  id          String   @id @default(cuid())
+  question    String   @db.Text
+  options     String[]                       // option labels (order = optionIndex)
+  status      String   @default("open")      // "open" | "closed"
+  createdById String?
+  createdAt   DateTime @default(now())
+  closesAt    DateTime?
+
+  votes PollVote[]
+
+  @@index([status, createdAt])
+  @@map("polls")
+}
+
+model PollVote {
+  id          String   @id @default(cuid())
+  pollId      String
+  userId      String
+  optionIndex Int
+  createdAt   DateTime @default(now())
+
+  poll Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+  @@index([pollId, optionIndex])
+  @@map("poll_votes")
 }

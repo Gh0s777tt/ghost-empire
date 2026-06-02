@@ -23,7 +23,8 @@ type AdminActionType =
   | "cancel_prediction"
   | "reset_database"
   | "manage_codes"
-  | "manage_achievements";
+  | "manage_achievements"
+  | "manage_polls";
 
 export async function logAdminAction(opts: {
   adminId: string;
