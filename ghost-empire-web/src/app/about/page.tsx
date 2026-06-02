@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Profil: przycisk wyloguj + czytelny audit log",
+    items: [
+      "W zakładce profil jest teraz przycisk Wyloguj (obok danych konta).",
+      "Audit log w panelu pokazuje nick administratora zamiast imienia i nazwiska.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Menu konta — wyloguj działa na telefonie",
     items: [
       "Menu pod avatarem (z opcją Wyloguj się oraz skrótem do profilu) otwiera się teraz kliknięciem — wcześniej na telefonie nie dało się go otworzyć.",
