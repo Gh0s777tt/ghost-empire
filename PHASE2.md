@@ -8,6 +8,8 @@ Things that need either **external account setup by Gh0s77tt** or **bigger engin
 
 **Wszystkie items E–K zrealizowane i na produkcji.** Ten plik zostaje jako dokumentacja setupu (instrukcje „Co musisz zrobić” są nadal aktualne przy konfiguracji od zera).
 
+> 👉 Bieżący stan i wykonawczy plan dokończenia projektu: [PLAN.md](PLAN.md).
+
 | # | Feature | Status |
 |---|---|---|
 | E | Login przez Kick (custom OAuth provider) | ✅ DONE |

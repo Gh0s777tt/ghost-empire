@@ -1,6 +1,6 @@
 # Phase 3 — Streaming bot ecosystem (Twitch + Kick + YouTube)
 
-**Status:** **Phase 3A (chat bot) + 3B (engagement) ZREALIZOWANE i na produkcji** (2026-05-30). Bot czatu na Twitch + Kick + YouTube żyje, komendy zarządzane z portalu, plus timery / FAQ / powitania / song requests / chat overlay. **Następny duży krok: 3C (alerts upgrade + hardware) i 3D (AI + analityka)** — pozostają planem poniżej.
+**Status:** **Phase 3A (chat bot) + 3B (engagement) ZREALIZOWANE i na produkcji** (2026-05-30). Bot czatu na Twitch + Kick + YouTube żyje, komendy zarządzane z portalu, plus timery / FAQ / powitania / song requests / chat overlay. **Następny duży krok: 3C (alerts upgrade + hardware) i 3D (AI + analityka)** — pozostają planem poniżej. 👉 **Aktualny, wykonawczy plan ukończenia całego projektu: [PLAN.md](PLAN.md).**
 
 > ### ✅ Już shipped z Phase 3
 > - **Phase 3A — chat bot** (`ghost-empire-chat`) — bot na **Twitch + Kick + YouTube**, 1 GT/min/widz, komendy zarządzane z portalu (`/admin#chat`), auto-refresh tokenów. **DZIAŁA na produkcji** (PR #6–#8).
