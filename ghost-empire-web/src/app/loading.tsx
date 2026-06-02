@@ -2,8 +2,6 @@
 // Global route-transition fallback. Next.js shows this instantly (streamed before
 // the server component resolves) on navigation to any segment without its own
 // loading.tsx — turning a blank wait into immediate branded feedback.
-import { Ghost } from "lucide-react";
-
 export default function Loading() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
@@ -21,14 +19,8 @@ export default function Loading() {
             className="absolute inset-0 rounded-full blur-xl animate-ping opacity-40"
             style={{ background: "#E50914" }}
           />
-          <div
-            className="relative w-16 h-16 flex items-center justify-center animate-pulse"
-            style={{
-              background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
-              clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-            }}
-          >
-            <Ghost className="w-8 h-8 text-white" strokeWidth={2} />
+          <div className="relative w-16 h-16 overflow-hidden rounded-2xl ring-2 ring-red-600/40 animate-pulse">
+            <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
           </div>
         </div>
         <p className="font-display text-sm text-zinc-500 tracking-[0.3em] uppercase animate-pulse">

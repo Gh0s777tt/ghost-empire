@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import {
-  Ghost, ShoppingBag, Trophy, Calendar, Award,
+  ShoppingBag, Trophy, Calendar, Award,
   Zap, Sparkles, ArrowRight, Dice5, Ticket,
 } from "lucide-react";
 import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
@@ -91,6 +91,7 @@ const CHANGELOG = [
     items: [
       "Stopka i ekran logowania dostały logo z czaszką (zostały na starym placeholderze).",
       "Przełączanie sekcji w panelu admina ma teraz płynne przejście; ekran logowania pokazuje czytelny błąd, gdy logowanie się nie powiedzie.",
+      "Ekran ładowania (przy przełączaniu stron), strony błędów oraz sekcja O nas też mają już czaszkę zamiast starego logo.",
     ],
   },
   {
@@ -282,14 +283,8 @@ export default async function AboutPage() {
         {/* Hero */}
         <section className="py-12 sm:py-20 text-center">
           <div className="inline-flex items-center justify-center mb-6">
-            <div
-              className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
-                clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-              }}
-            >
-              <Ghost className="w-10 h-10 sm:w-12 sm:h-12 text-white" strokeWidth={2} />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_50px_rgba(229,9,20,0.35)]">
+              <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
             </div>
           </div>
 
