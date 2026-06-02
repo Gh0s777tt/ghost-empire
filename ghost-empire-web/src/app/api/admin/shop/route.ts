@@ -29,6 +29,8 @@ export async function PATCH(req: Request) {
     requiresSubTier?: string | null;
     requiresMinLevel?: number | null;
     requiresMinMonths?: number | null;
+    imageUrl?: string | null;
+    requiresAchievement?: string | null;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -86,6 +88,16 @@ export async function PATCH(req: Request) {
   if (body.requiresMinMonths !== undefined) {
     data.requiresMinMonths = body.requiresMinMonths ? Math.max(0, Math.floor(body.requiresMinMonths)) : null;
   }
+  if (body.imageUrl !== undefined) {
+    const u = (body.imageUrl ?? "").trim();
+    if (u && !/^https?:\/\//i.test(u)) {
+      return NextResponse.json({ error: "imageUrl musi zaczynać się od http(s)://" }, { status: 400 });
+    }
+    data.imageUrl = u ? u.slice(0, 1000) : null;
+  }
+  if (body.requiresAchievement !== undefined) {
+    data.requiresAchievement = body.requiresAchievement ? String(body.requiresAchievement).slice(0, 100) : null;
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "Brak pól do aktualizacji" }, { status: 400 });
@@ -125,6 +137,8 @@ export async function POST(req: Request) {
     requiresSubTier?: string | null;
     requiresMinLevel?: number | null;
     requiresMinMonths?: number | null;
+    imageUrl?: string | null;
+    requiresAchievement?: string | null;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -158,6 +172,8 @@ export async function POST(req: Request) {
       requiresSubTier: body.requiresSubTier && VALID_TIERS.includes(body.requiresSubTier) ? body.requiresSubTier : null,
       requiresMinLevel: body.requiresMinLevel ?? null,
       requiresMinMonths: body.requiresMinMonths ?? null,
+      imageUrl: body.imageUrl && /^https?:\/\//i.test(body.imageUrl) ? body.imageUrl.slice(0, 1000) : null,
+      requiresAchievement: body.requiresAchievement ? String(body.requiresAchievement).slice(0, 100) : null,
     },
   });
 

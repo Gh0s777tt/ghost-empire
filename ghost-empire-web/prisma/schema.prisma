@@ -239,6 +239,7 @@ model ShopItem {
   requiresSubTier  String?  // "T1" | "T2" | "T3" | "DUAL"
   requiresMinLevel Int?
   requiresMinMonths Int?
+  requiresAchievement String?  // Achievement.code that must be earned to unlock this item
 
   sortOrder   Int     @default(0)
 

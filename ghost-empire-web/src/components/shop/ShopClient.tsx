@@ -12,6 +12,7 @@ type UserContext = {
   level: number;
   subTiers: string[];
   maxSubMonths: number;
+  achievements: string[]; // earned achievement codes
 } | null;
 
 const CATEGORIES = [
@@ -33,10 +34,12 @@ export function ShopClient({
   items,
   userContext,
   isAuthenticated,
+  achievementNames = {},
 }: {
   items: ShopItem[];
   userContext: UserContext;
   isAuthenticated: boolean;
+  achievementNames?: Record<string, string>;
 }) {
   const router = useRouter();
   const { update: refreshSession } = useSession();
@@ -70,6 +73,9 @@ export function ShopClient({
     }
     if (item.requiresMinMonths && userContext.maxSubMonths < item.requiresMinMonths) {
       return { ok: false, reason: `${item.requiresMinMonths}+ mc subskrypcji` };
+    }
+    if (item.requiresAchievement && !userContext.achievements.includes(item.requiresAchievement)) {
+      return { ok: false, reason: `🔒 ${achievementNames[item.requiresAchievement] ?? "osiągnięcie"}` };
     }
     return { ok: true };
   }
@@ -212,7 +218,11 @@ export function ShopClient({
 
                 {/* Icon + category */}
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="text-4xl flex-shrink-0">{item.imageEmoji ?? "🎁"}</div>
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt="" className="w-12 h-12 object-cover border border-zinc-800 flex-shrink-0" />
+                  ) : (
+                    <div className="text-4xl flex-shrink-0">{item.imageEmoji ?? "🎁"}</div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mb-0.5">
                       {item.category}
@@ -227,7 +237,7 @@ export function ShopClient({
                 </p>
 
                 {/* Requirements */}
-                {(item.requiresSubTier || item.requiresMinLevel || item.requiresMinMonths) && (
+                {(item.requiresSubTier || item.requiresMinLevel || item.requiresMinMonths || item.requiresAchievement) && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {item.requiresSubTier && (
                       <span className="text-[9px] font-mono tracking-widest uppercase px-2 py-1 border border-purple-900 bg-purple-950/30 text-purple-300 flex items-center gap-1">
@@ -243,6 +253,12 @@ export function ShopClient({
                     {item.requiresMinMonths && (
                       <span className="text-[9px] font-mono tracking-widest uppercase px-2 py-1 border border-emerald-900 bg-emerald-950/30 text-emerald-300">
                         {item.requiresMinMonths}+ mc
+                      </span>
+                    )}
+                    {item.requiresAchievement && (
+                      <span className="text-[9px] font-mono tracking-widest uppercase px-2 py-1 border border-amber-900 bg-amber-950/30 text-amber-300 flex items-center gap-1">
+                        <Lock className="w-2.5 h-2.5" />
+                        {achievementNames[item.requiresAchievement] ?? "Osiągnięcie"}
                       </span>
                     )}
                   </div>
@@ -319,7 +335,11 @@ export function ShopClient({
             }}
           >
             <div className="flex items-start gap-4 mb-5">
-              <div className="text-5xl">{confirmItem.imageEmoji ?? "🎁"}</div>
+              {confirmItem.imageUrl ? (
+                <img src={confirmItem.imageUrl} alt="" className="w-16 h-16 object-cover border border-zinc-800 flex-shrink-0" />
+              ) : (
+                <div className="text-5xl">{confirmItem.imageEmoji ?? "🎁"}</div>
+              )}
               <div>
                 <h3 className="text-white font-bold mb-1">{confirmItem.name}</h3>
                 <p className="text-zinc-500 text-xs leading-relaxed">{confirmItem.description}</p>

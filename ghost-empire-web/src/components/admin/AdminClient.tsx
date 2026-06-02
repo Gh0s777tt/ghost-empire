@@ -55,6 +55,7 @@ type ShopItemRow = {
   category: string;
   price: number;
   imageEmoji: string | null;
+  imageUrl: string | null;
   stock: number;
   totalStock: number;
   hot: boolean;
@@ -63,6 +64,7 @@ type ShopItemRow = {
   requiresSubTier: string | null;
   requiresMinLevel: number | null;
   requiresMinMonths: number | null;
+  requiresAchievement: string | null;
 };
 
 type EventRow = {
@@ -402,8 +404,8 @@ export function AdminClient({
             <div className="space-y-6">
               {can("deliver_orders") && <PendingOrdersList orders={pendingOrders} {...sharedProps} />}
               {can("manage_shop") && (
-                <LazySection<{ allShopItems: ShopItemRow[] }> s="shop">
-                  {(d) => <ShopManager items={d.allShopItems} {...sharedProps} />}
+                <LazySection<{ allShopItems: ShopItemRow[]; achievements: { code: string; name: string }[] }> s="shop">
+                  {(d) => <ShopManager items={d.allShopItems} achievements={d.achievements} {...sharedProps} />}
                 </LazySection>
               )}
             </div>
@@ -1305,9 +1307,10 @@ const CATEGORIES_SHOP = ["games", "skins", "subs", "cosmetic", "experience"] as 
 const TIERS = ["", "T1", "T2", "T3", "Prime", "OG", "DUAL"] as const;
 
 function ShopManager({
-  items, onToast, onSuccess, pending,
+  items, achievements, onToast, onSuccess, pending,
 }: {
   items: ShopItemRow[];
+  achievements: { code: string; name: string }[];
   onToast: (k: "ok" | "err", m: string) => void;
   onSuccess: () => void;
   pending: boolean;
@@ -1401,6 +1404,7 @@ function ShopManager({
         <ShopItemEditor
           item={editing}
           isNew={creating}
+          achievements={achievements}
           onClose={() => { setEditing(null); setCreating(false); }}
           onSaved={() => { setEditing(null); setCreating(false); onSuccess(); }}
           onToast={onToast}
@@ -1411,10 +1415,11 @@ function ShopManager({
 }
 
 function ShopItemEditor({
-  item, isNew, onClose, onSaved, onToast,
+  item, isNew, achievements, onClose, onSaved, onToast,
 }: {
   item: ShopItemRow | null;
   isNew: boolean;
+  achievements: { code: string; name: string }[];
   onClose: () => void;
   onSaved: () => void;
   onToast: (k: "ok" | "err", m: string) => void;
@@ -1430,6 +1435,9 @@ function ShopItemEditor({
   const [featured, setFeatured] = useState(item?.featured ?? false);
   const [requiresSubTier, setRequiresSubTier] = useState(item?.requiresSubTier ?? "");
   const [requiresMinLevel, setRequiresMinLevel] = useState(item?.requiresMinLevel?.toString() ?? "");
+  const [requiresMinMonths, setRequiresMinMonths] = useState(item?.requiresMinMonths?.toString() ?? "");
+  const [requiresAchievement, setRequiresAchievement] = useState(item?.requiresAchievement ?? "");
+  const [imageUrl, setImageUrl] = useState(item?.imageUrl ?? "");
   const [busy, setBusy] = useState(false);
 
   async function save() {
@@ -1438,11 +1446,14 @@ function ShopItemEditor({
       const payload: Record<string, unknown> = {
         name, description, category, price: parseInt(price),
         imageEmoji: imageEmoji || "🎁",
+        imageUrl: imageUrl.trim() || null,
         stock: parseInt(stock),
         totalStock: parseInt(totalStock || stock),
         hot, featured,
         requiresSubTier: requiresSubTier || null,
         requiresMinLevel: requiresMinLevel ? parseInt(requiresMinLevel) : null,
+        requiresMinMonths: requiresMinMonths ? parseInt(requiresMinMonths) : null,
+        requiresAchievement: requiresAchievement || null,
       };
       if (!isNew && item) payload.id = item.id;
 
@@ -1489,6 +1500,11 @@ function ShopItemEditor({
             <FieldInput label="Total stock" value={totalStock} onChange={setTotalStock} type="number" />
           </div>
 
+          <FieldInput label="URL grafiki / screena (opcjonalny, http(s)://)" value={imageUrl} onChange={setImageUrl} placeholder="https://..." />
+          {imageUrl.trim() && (
+            <img src={imageUrl} alt="" className="w-full max-h-40 object-contain border border-zinc-800 bg-black" />
+          )}
+
           <div>
             <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Kategoria</label>
             <div className="grid grid-cols-5 gap-1">
@@ -1521,7 +1537,24 @@ function ShopItemEditor({
             </div>
           </div>
 
-          <FieldInput label="Wymagany min level (opcjonalny)" value={requiresMinLevel} onChange={setRequiresMinLevel} type="number" />
+          <div className="grid grid-cols-2 gap-2">
+            <FieldInput label="Wymagany min level (opcjonalny)" value={requiresMinLevel} onChange={setRequiresMinLevel} type="number" />
+            <FieldInput label="Wymagane mc subskrypcji (opcjonalny)" value={requiresMinMonths} onChange={setRequiresMinMonths} type="number" />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Odblokowane przez osiągnięcie (opcjonalne)</label>
+            <select
+              value={requiresAchievement}
+              onChange={(e) => setRequiresAchievement(e.target.value)}
+              className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white focus:border-red-500 outline-none"
+            >
+              <option value="">— brak (dostępne dla wszystkich) —</option>
+              {achievements.map((a) => (
+                <option key={a.code} value={a.code}>{a.name}</option>
+              ))}
+            </select>
+          </div>
 
           <div className="flex gap-3">
             <label className="flex items-center gap-2 cursor-pointer">
