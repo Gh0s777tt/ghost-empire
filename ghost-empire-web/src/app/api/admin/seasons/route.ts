@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { getOrCreateCurrentSeason } from "@/lib/seasons";
 
-const REWARD_TYPES = ["tokens", "badge", "title", "color", "shop_unlock"];
+const REWARD_TYPES = ["tokens", "badge", "title", "color", "shop_unlock", "item", "code"];
 
 export async function GET() {
   const auth = await requireAdmin();

@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Battle Pass — nagrody rzeczowe",
+    items: [
+      "Tier w battle passie może dać nie tylko tokeny, ale też przedmiot lub kod (np. klucz do gry).",
+      "Kod pokazuje się graczowi po odebraniu nagrody; przedmiot odbierasz przez ticket.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Sklep: grafiki przedmiotów + odblokowania",
     items: [
       "Przedmioty w sklepie mogą mieć własną grafikę / screen zamiast emoji.",
