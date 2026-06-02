@@ -3,7 +3,7 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart } from "lucide-react";
+import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3 } from "lucide-react";
 import { fmt } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
 
@@ -12,6 +12,7 @@ const NAV = [
   { href: "/shop",         label: "SKLEP",       icon: ShoppingBag },
   { href: "/ranking",      label: "RANKING",     icon: Trophy },
   { href: "/events",       label: "EVENTY",      icon: Calendar },
+  { href: "/polls",        label: "ANKIETY",     icon: BarChart3 },
   { href: "/schedule",     label: "PLAN",        icon: Zap },
   { href: "/achievements", label: "OSIĄGNIĘCIA", icon: Award },
   { href: "/profile",      label: "PROFIL",      icon: Users },

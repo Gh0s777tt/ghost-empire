@@ -114,7 +114,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 - 🟡 **Profil: „czas spędzony na streamie"** — wymaga trackingu sesji streamu (Twitch `stream.online/offline`)
 - 🟡 **Wybór dostawcy donacji** — nie tylko Streamlabs; wybór platformy w panelu (każdy dostawca = osobna integracja)
 - 🟡 **AI Moderator — wybór modelu/dostawcy** (Anthropic / OpenAI / Google), nie tylko jeden — abstrakcja providera + setting
-- 🟡 **Ankiety / głosowania** na stronie
+- ✅ **Ankiety / głosowania** na stronie — **ZROBIONE**: `/polls` (głosowanie + wyniki na żywo) + `/admin#polls` (tworzenie/zamykanie/usuwanie). Modele `Poll`/`PollVote`.
 - 🧊 **Integracje:** Rumble, Trovo, Instagram, Facebook, X, TikTok
 - 🧊 **Redesign / lepszy layout** — czytelność, przejrzystość, mniej męczący dla oka + zmiana grafiki
 

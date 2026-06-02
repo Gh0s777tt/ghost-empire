@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-01",
+    title: "Ankiety / głosowania",
+    items: [
+      "Nowa zakładka „Ankiety” — głosuj w decyzjach społeczności (np. w co gramy w piątek).",
+      "Możesz zmienić swój głos, dopóki ankieta jest otwarta; wyniki widać na żywo.",
+    ],
+  },
+  {
+    date: "2026-06-01",
     title: "Eventy okolicznościowe",
     items: [
       "Gotowe szablony świąteczne (Dzień Kobiet, Walentynki, Wielkanoc, Halloween, Boże Narodzenie, Sylwester) — streamer odpala event jednym kliknięciem.",
