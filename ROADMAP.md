@@ -78,7 +78,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 | **CSP nonces — usunięcie `unsafe-inline`/`unsafe-eval`** | 🔥 | Najważniejsze utwardzenie CSP. Wymaga nonce middleware Next.js + przepięcia inline styli/skryptów. Ryzyko regresji → osobna sesja z testami |
 | **2FA / step-up dla akcji admina** | 🟡 | Wrażliwe akcje (grant dużych kwot, merge, ban) za dodatkowym potwierdzeniem |
 | **Audyt zależności** | 🟡 | `npm audit` w CI + Dependabot (patrz §1) |
-| **Rotacja sekretów + skan** | 🟡 | ✅ skan: `secret-scan.yml` (gitleaks na push/PR). Zostaje: udokumentowany proces rotacji `BOT_SECRET`/OAuth |
+| **Rotacja sekretów + skan** | 🟡 | ✅ skan: **GitGuardian** (zintegrowany, przechodzi na PR). Zostaje: udokumentowany proces rotacji `BOT_SECRET`/OAuth |
 | **Rate-limit per-IP na publicznych stronach** | 🧊 | Dziś per-user na ekonomii; dorzucić warstwę edge/IP na publicznych GET-ach |
 
 ---
