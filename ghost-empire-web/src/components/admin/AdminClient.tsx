@@ -92,6 +92,8 @@ type EventRow = {
   endsAt: string | null;
   drawnAt: string | null;
   active: boolean;
+  entriesCount: number;
+  ticketsCount: number;
 };
 
 type BotConfigData = {
@@ -412,10 +414,16 @@ export function AdminClient({
             <div className="space-y-6">
               {can("create_events") && <HolidayEventsCard {...sharedProps} />}
               {can("create_events") && <CreateEventCard {...sharedProps} />}
-              {(can("edit_events") || can("draw_events")) && <ActiveEventsList events={events} {...sharedProps} />}
-              {can("edit_events") && (
+              {(can("edit_events") || can("draw_events")) && (
                 <LazySection<{ allEvents: EventRow[] }> s="events">
-                  {(d) => <EventManager events={d.allEvents} {...sharedProps} />}
+                  {(d) => (
+                    <EventsManager
+                      events={d.allEvents}
+                      canEdit={can("edit_events")}
+                      canDraw={can("draw_events")}
+                      {...sharedProps}
+                    />
+                  )}
                 </LazySection>
               )}
             </div>
@@ -1229,99 +1237,6 @@ function ActiveDropsList({
   );
 }
 
-function ActiveEventsList({
-  events, onToast, onSuccess, pending,
-}: {
-  events: AdminEvent[];
-  onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
-}) {
-  const [drawingId, setDrawingId] = useState<string | null>(null);
-
-  async function deactivate(id: string) {
-    if (!confirm("Dezaktywować event?")) return;
-    const res = await fetch(`/api/admin/events?id=${id}`, { method: "DELETE" });
-    if (res.ok) { onToast("ok", "Event dezaktywowany"); onSuccess(); }
-    else onToast("err", "Błąd");
-  }
-
-  async function draw(id: string, name: string) {
-    if (!confirm(`Wylosować zwycięzców dla "${name}"? Tej operacji nie da się cofnąć.`)) return;
-    setDrawingId(id);
-    try {
-      const res = await fetch("/api/admin/events/draw", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: id }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? "Błąd losowania");
-      } else {
-        const names = data.winners
-          .map((w: { username: string | null; displayName: string | null }) =>
-            w.displayName ?? w.username ?? "Anonim",
-          )
-          .join(", ");
-        onToast("ok", `Wylosowano ${data.actualWinners}: ${names}`);
-        onSuccess();
-      }
-    } finally {
-      setDrawingId(null);
-    }
-  }
-
-  if (events.length === 0) return null;
-  return (
-    <SectionCard title="Aktywne eventy" icon={Calendar}>
-      <div className="space-y-2">
-        {events.map((e) => {
-          const canDraw = e.type !== "happy_hour";
-          const hasParticipants = e.entriesCount > 0 || e.ticketsCount > 0;
-          return (
-            <div key={e.id} className="flex items-center gap-3 border border-zinc-800 bg-black/30 p-3">
-              <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-300">
-                {e.type}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-white font-medium truncate">{e.name}</div>
-                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                  {e.entriesCount > 0 && `${e.entriesCount} uczestników`}
-                  {e.ticketsCount > 0 && ` · ${e.ticketsCount} biletów`}
-                  {e.endsAt && ` · kończy ${formatDate(e.endsAt)}`}
-                </div>
-              </div>
-              {canDraw && (
-                <button
-                  onClick={() => draw(e.id, e.name)}
-                  disabled={pending || drawingId === e.id || !hasParticipants}
-                  className="px-2.5 py-1.5 bg-purple-700 hover:bg-purple-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
-                  title={hasParticipants ? "Wylosuj zwycięzców" : "Brak uczestników"}
-                >
-                  {drawingId === e.id ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Dice5 className="w-3 h-3" />
-                  )}
-                  Wylosuj
-                </button>
-              )}
-              <button
-                onClick={() => deactivate(e.id)}
-                disabled={pending}
-                className="text-zinc-500 hover:text-red-400"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          );
-        })}
-      </div>
-    </SectionCard>
-  );
-}
-
 function PendingOrdersList({
   orders, onToast, onSuccess, pending,
 }: {
@@ -1693,16 +1608,23 @@ function ShopItemEditor({
 
 // ============== EVENT MANAGER (list + edit + activate/deactivate) ==============
 
-function EventManager({
-  events, onToast, onSuccess, pending,
+// Unified events manager — one list of ALL events (active first, deactivated
+// dimmed) with every per-event action inline: draw winners (draw_events),
+// toggle active + edit (edit_events). Replaces the old split between a separate
+// "Aktywne eventy" (draw/deactivate) and "Edycja eventów" (toggle/edit) card.
+function EventsManager({
+  events, canEdit, canDraw, onToast, onSuccess, pending,
 }: {
   events: EventRow[];
+  canEdit: boolean;
+  canDraw: boolean;
   onToast: (k: "ok" | "err", m: string) => void;
   onSuccess: () => void;
   pending: boolean;
 }) {
   const [editing, setEditing] = useState<EventRow | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [drawingId, setDrawingId] = useState<string | null>(null);
 
   async function toggleActive(e: EventRow) {
     setBusyId(e.id);
@@ -1722,51 +1644,103 @@ function EventManager({
     } finally { setBusyId(null); }
   }
 
+  async function draw(id: string, name: string) {
+    if (!confirm(`Wylosować zwycięzców dla "${name}"? Tej operacji nie da się cofnąć.`)) return;
+    setDrawingId(id);
+    try {
+      const res = await fetch("/api/admin/events/draw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onToast("err", data.error ?? "Błąd losowania");
+      } else {
+        const names = data.winners
+          .map((w: { username: string | null; displayName: string | null }) =>
+            w.displayName ?? w.username ?? "Anonim",
+          )
+          .join(", ");
+        onToast("ok", `Wylosowano ${data.actualWinners}: ${names}`);
+        onSuccess();
+      }
+    } finally {
+      setDrawingId(null);
+    }
+  }
+
   if (events.length === 0) return null;
   return (
-    <SectionCard title="Edycja eventów" icon={Calendar}>
-      <div className="space-y-1.5">
-        {events.map((e) => (
-          <div
-            key={e.id}
-            className={cn(
-              "flex items-center gap-3 border px-3 py-2",
-              e.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-zinc-950/60 opacity-50",
-            )}
-          >
-            <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-300 shrink-0">
-              {e.type}
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-white truncate">{e.name}</div>
-              <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                {e.drawnAt && "wylosowany · "}
-                {e.endsAt && new Date(e.endsAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
-              </div>
-            </div>
-            <button
-              onClick={() => toggleActive(e)}
-              disabled={busyId === e.id || pending || !!e.drawnAt}
+    <SectionCard title="Eventy" icon={Calendar}>
+      <div className="space-y-2">
+        {events.map((e) => {
+          const drawable = canDraw && e.active && !e.drawnAt && e.type !== "happy_hour";
+          const hasParticipants = e.entriesCount > 0 || e.ticketsCount > 0;
+          const meta: string[] = [];
+          if (e.drawnAt) meta.push("wylosowany");
+          if (!e.active) meta.push("nieaktywny");
+          if (e.entriesCount > 0) meta.push(`${e.entriesCount} uczestników`);
+          if (e.ticketsCount > 0) meta.push(`${e.ticketsCount} biletów`);
+          if (e.endsAt) meta.push(`kończy ${formatDate(e.endsAt)}`);
+          return (
+            <div
+              key={e.id}
               className={cn(
-                "px-2 py-1.5 border text-[10px] font-bold tracking-widest uppercase flex items-center gap-1",
-                e.active ? "border-green-700 text-green-300 bg-green-950/30" : "border-zinc-700 text-zinc-500",
-                e.drawnAt && "opacity-30 cursor-not-allowed",
+                "flex items-center gap-3 border p-3",
+                e.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-zinc-950/60 opacity-60",
               )}
-              title={e.drawnAt ? "Wylosowany — nie da się zmienić" : (e.active ? "Dezaktywuj" : "Aktywuj")}
             >
-              {busyId === e.id ? <Loader2 className="w-3 h-3 animate-spin" /> : (e.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />)}
-              {e.active ? "ON" : "OFF"}
-            </button>
-            <button
-              onClick={() => setEditing(e)}
-              disabled={pending || !!e.drawnAt}
-              className="px-2 py-1.5 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
-              title={e.drawnAt ? "Wylosowany — nie da się edytować" : "Edytuj"}
-            >
-              <Pencil className="w-3 h-3" /> Edit
-            </button>
-          </div>
-        ))}
+              <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-300 shrink-0">
+                {e.type}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-white font-medium truncate">{e.name}</div>
+                {meta.length > 0 && (
+                  <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate">
+                    {meta.join(" · ")}
+                  </div>
+                )}
+              </div>
+              {drawable && (
+                <button
+                  onClick={() => draw(e.id, e.name)}
+                  disabled={pending || drawingId === e.id || !hasParticipants}
+                  className="px-2.5 py-1.5 bg-purple-700 hover:bg-purple-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
+                  title={hasParticipants ? "Wylosuj zwycięzców" : "Brak uczestników"}
+                >
+                  {drawingId === e.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Dice5 className="w-3 h-3" />}
+                  Wylosuj
+                </button>
+              )}
+              {canEdit && (
+                <>
+                  <button
+                    onClick={() => toggleActive(e)}
+                    disabled={busyId === e.id || pending || !!e.drawnAt}
+                    className={cn(
+                      "px-2 py-1.5 border text-[10px] font-bold tracking-widest uppercase flex items-center gap-1 shrink-0",
+                      e.active ? "border-green-700 text-green-300 bg-green-950/30" : "border-zinc-700 text-zinc-500",
+                      e.drawnAt && "opacity-30 cursor-not-allowed",
+                    )}
+                    title={e.drawnAt ? "Wylosowany — nie da się zmienić" : (e.active ? "Dezaktywuj" : "Aktywuj")}
+                  >
+                    {busyId === e.id ? <Loader2 className="w-3 h-3 animate-spin" /> : (e.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />)}
+                    {e.active ? "ON" : "OFF"}
+                  </button>
+                  <button
+                    onClick={() => setEditing(e)}
+                    disabled={pending || !!e.drawnAt}
+                    className="px-2 py-1.5 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 shrink-0"
+                    title={e.drawnAt ? "Wylosowany — nie da się edytować" : "Edytuj"}
+                  >
+                    <Pencil className="w-3 h-3" /> Edit
+                  </button>
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {editing && (
