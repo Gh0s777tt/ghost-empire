@@ -5875,6 +5875,8 @@ type ChatCommandRow = {
   response: string;
   cooldownSeconds: number;
   enabled: boolean;
+  requiresLive: boolean;
+  activeFromMinute: number;
 };
 
 function ChatCommandsManager({
@@ -5893,6 +5895,8 @@ function ChatCommandsManager({
   const [fTrigger, setFTrigger] = useState("");
   const [fResponse, setFResponse] = useState("");
   const [fCooldown, setFCooldown] = useState("15");
+  const [fRequiresLive, setFRequiresLive] = useState(false);
+  const [fActiveFrom, setFActiveFrom] = useState("0");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -5926,6 +5930,8 @@ function ChatCommandsManager({
     setFTrigger("");
     setFResponse("");
     setFCooldown("15");
+    setFRequiresLive(false);
+    setFActiveFrom("0");
   }
 
   function startEdit(c: ChatCommandRow) {
@@ -5933,20 +5939,24 @@ function ChatCommandsManager({
     setFTrigger(c.trigger);
     setFResponse(c.response);
     setFCooldown(String(c.cooldownSeconds));
+    setFRequiresLive(c.requiresLive);
+    setFActiveFrom(String(c.activeFromMinute));
   }
 
   async function submit() {
     const trigger = fTrigger.trim().toLowerCase();
     const response = fResponse.trim();
     const cooldownSeconds = Math.max(0, parseInt(fCooldown, 10) || 0);
+    const activeFromMinute = Math.max(0, parseInt(fActiveFrom, 10) || 0);
     if (!trigger || !response) {
       onToast("err", "Wpisz trigger i odpowiedź");
       return;
     }
     setBusy("form");
+    const fields = { trigger, response, cooldownSeconds, requiresLive: fRequiresLive, activeFromMinute };
     const ok = editingId
-      ? await call("update", { id: editingId, trigger, response, cooldownSeconds })
-      : await call("create", { trigger, response, cooldownSeconds });
+      ? await call("update", { id: editingId, ...fields })
+      : await call("create", fields);
     if (ok) {
       onToast("ok", editingId ? "Zapisano" : "Komenda dodana");
       resetForm();
@@ -6002,6 +6012,16 @@ function ChatCommandsManager({
                     <span className="text-[11px] font-mono px-1.5 py-0.5 border border-red-800 bg-red-950/30 text-red-300 shrink-0">
                       {c.trigger}
                     </span>
+                    {c.requiresLive && (
+                      <span className="text-[9px] font-mono px-1 py-0.5 border border-green-800 bg-green-950/30 text-green-400 shrink-0" title="Działa tylko, gdy stream jest na żywo">
+                        LIVE
+                      </span>
+                    )}
+                    {c.activeFromMinute > 0 && (
+                      <span className="text-[9px] font-mono px-1 py-0.5 border border-zinc-700 text-zinc-400 shrink-0" title={`Aktywna dopiero po ${c.activeFromMinute} min od startu streamu`}>
+                        ≥{c.activeFromMinute}min
+                      </span>
+                    )}
                     <span className="text-sm text-zinc-300 truncate">{c.response}</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -6064,6 +6084,29 @@ function ChatCommandsManager({
             title="Cooldown (sekundy)"
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
+          <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={fRequiresLive}
+              onChange={(e) => setFRequiresLive(e.target.checked)}
+              className="accent-red-600"
+            />
+            Tylko na żywo
+          </label>
+          <label className="flex items-center gap-1.5 text-xs text-zinc-400">
+            Aktywna od minuty
+            <input
+              type="number"
+              value={fActiveFrom}
+              onChange={(e) => setFActiveFrom(e.target.value)}
+              min={0}
+              title="Komenda zacznie działać dopiero po N minutach od startu streamu (0 = od razu). Implikuje „na żywo”."
+              className="w-16 bg-black border border-zinc-800 px-2 py-1 text-sm text-white focus:border-red-700 outline-hidden"
+            />
+          </label>
+          <span className="text-[10px] text-zinc-600">Wymaga subskrypcji <span className="font-mono">stream.online</span> (/admin#twitch).</span>
         </div>
         <div className="flex items-center gap-2">
           <button

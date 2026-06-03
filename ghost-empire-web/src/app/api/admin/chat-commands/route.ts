@@ -21,14 +21,23 @@ function clampCooldown(v: unknown): number {
   return Math.min(MAX_COOLDOWN, Math.max(0, Math.floor(v)));
 }
 
+const MAX_ACTIVE_FROM_MINUTE = 1440; // 24h
+function clampActiveFrom(v: unknown): number {
+  if (typeof v !== "number" || !Number.isFinite(v)) return 0;
+  return Math.min(MAX_ACTIVE_FROM_MINUTE, Math.max(0, Math.floor(v)));
+}
+
 type Row = {
   id: string; trigger: string; response: string;
-  cooldownSeconds: number; enabled: boolean; createdAt: Date; updatedAt: Date;
+  cooldownSeconds: number; enabled: boolean;
+  requiresLive: boolean; activeFromMinute: number;
+  createdAt: Date; updatedAt: Date;
 };
 function serialize(c: Row) {
   return {
     id: c.id, trigger: c.trigger, response: c.response,
     cooldownSeconds: c.cooldownSeconds, enabled: c.enabled,
+    requiresLive: c.requiresLive, activeFromMinute: c.activeFromMinute,
     createdAt: c.createdAt.toISOString(), updatedAt: c.updatedAt.toISOString(),
   };
 }
@@ -54,6 +63,8 @@ export async function POST(req: Request) {
     response?: string;
     cooldownSeconds?: number;
     enabled?: boolean;
+    requiresLive?: boolean;
+    activeFromMinute?: number;
   };
   try {
     body = await req.json();
@@ -78,6 +89,8 @@ export async function POST(req: Request) {
         trigger,
         response: body.response.trim(),
         cooldownSeconds: clampCooldown(body.cooldownSeconds),
+        requiresLive: body.requiresLive === true,
+        activeFromMinute: clampActiveFrom(body.activeFromMinute),
         createdById: auth.userId,
       },
     });
@@ -115,6 +128,8 @@ export async function POST(req: Request) {
     }
     if (body.cooldownSeconds !== undefined) patch.cooldownSeconds = clampCooldown(body.cooldownSeconds);
     if (typeof body.enabled === "boolean") patch.enabled = body.enabled;
+    if (typeof body.requiresLive === "boolean") patch.requiresLive = body.requiresLive;
+    if (body.activeFromMinute !== undefined) patch.activeFromMinute = clampActiveFrom(body.activeFromMinute);
 
     const updated = await prisma.chatCommand.update({ where: { id: body.id }, data: patch });
     return NextResponse.json({ ok: true, command: serialize(updated) });

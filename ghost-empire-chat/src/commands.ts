@@ -4,20 +4,30 @@
 // fetch fails (offline / portal down) so the bot is never command-less on boot.
 import { env } from "./env";
 
-type Command = { trigger: string; response: string; cooldownSec: number };
+type Command = {
+  trigger: string;
+  response: string;
+  cooldownSec: number;
+  requiresLive: boolean;     // only fires while the stream is live
+  activeFromMinute: number;  // only after the stream has been live N minutes (0 = always)
+};
 
 const REFRESH_EVERY_MS = 2 * 60 * 1000;
 
 const FALLBACK: Command[] = [
-  { trigger: "!portal", response: `Zgarniaj Ghost Tokens: ${env.portalUrl}`, cooldownSec: 15 },
-  { trigger: "!ranking", response: `Ranking widzów: ${env.portalUrl}/ranking`, cooldownSec: 15 },
-  { trigger: "!sklep", response: `Wydaj GT w sklepie: ${env.portalUrl}/shop`, cooldownSec: 15 },
-  { trigger: "!questy", response: `Dzienne questy: ${env.portalUrl}/quests`, cooldownSec: 15 },
+  { trigger: "!portal", response: `Zgarniaj Ghost Tokens: ${env.portalUrl}`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
+  { trigger: "!ranking", response: `Ranking widzów: ${env.portalUrl}/ranking`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
+  { trigger: "!sklep", response: `Wydaj GT w sklepie: ${env.portalUrl}/shop`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
+  { trigger: "!questy", response: `Dzienne questy: ${env.portalUrl}/quests`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
 ];
 
 // Seed with the fallback so there's never an empty window before the first fetch.
 let commands: Command[] = FALLBACK;
 let everLoaded = false;
+// Live status synced from the portal (derived from Twitch StreamSession) — used to
+// gate conditional commands without the bot polling Twitch itself.
+let live = false;
+let liveSince: number | null = null;
 const lastUsed = new Map<string, number>();
 
 /** Fetch the enabled commands from the portal. Keeps the current list on error. */
@@ -29,8 +39,13 @@ export async function refreshCommands(): Promise<void> {
       return;
     }
     const data = (await res.json()) as {
-      commands?: { trigger: string; response: string; cooldownSeconds: number }[];
+      commands?: { trigger: string; response: string; cooldownSeconds: number; requiresLive?: boolean; activeFromMinute?: number }[];
+      live?: boolean;
+      liveSince?: string | null;
     };
+    // Live status travels with the command sync (independent of the commands array).
+    live = data.live ?? false;
+    liveSince = data.liveSince ? new Date(data.liveSince).getTime() : null;
     if (Array.isArray(data.commands)) {
       // Empty list from the portal is intentional (admin disabled/removed all) — respect it,
       // but only once we've successfully loaded at least once.
@@ -38,9 +53,11 @@ export async function refreshCommands(): Promise<void> {
         trigger: c.trigger.toLowerCase(),
         response: c.response,
         cooldownSec: c.cooldownSeconds,
+        requiresLive: c.requiresLive ?? false,
+        activeFromMinute: c.activeFromMinute ?? 0,
       }));
       everLoaded = true;
-      console.log(`[commands] loaded ${commands.length} from portal`);
+      console.log(`[commands] loaded ${commands.length} from portal (live=${live})`);
     }
   } catch (e) {
     console.warn("[commands] fetch failed — keeping current:", (e as Error).message);
@@ -59,6 +76,13 @@ export function matchCommand(message: string): string | null {
   if (!trigger) return null;
   const cmd = commands.find((c) => c.trigger === trigger);
   if (!cmd) return null;
+  // Conditional gating (live status synced from the portal).
+  if (cmd.requiresLive && !live) return null;
+  if (cmd.activeFromMinute > 0) {
+    if (!live || liveSince === null) return null;
+    const minutesLive = (Date.now() - liveSince) / 60_000;
+    if (minutesLive < cmd.activeFromMinute) return null;
+  }
   const now = Date.now();
   if (now - (lastUsed.get(trigger) ?? 0) < cmd.cooldownSec * 1000) return null;
   lastUsed.set(trigger, now);
@@ -67,5 +91,5 @@ export function matchCommand(message: string): string | null {
 
 // Exposed for tests / diagnostics.
 export function _state() {
-  return { count: commands.length, everLoaded };
+  return { count: commands.length, everLoaded, live, liveSince };
 }
