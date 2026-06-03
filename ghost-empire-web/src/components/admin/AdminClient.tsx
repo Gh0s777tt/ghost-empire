@@ -7,7 +7,7 @@ import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
   Users, TrendingUp, Trash2, Copy, Dice5, Crown, Heart, UserCog, History, Award,
   ShoppingBag, Pencil, Eye, EyeOff, Ban, Bot, CalendarDays, Zap, Link as LinkIcon,
-  LayoutDashboard, Bell, Tv, Menu, GitMerge, AlertTriangle, Youtube, Radio,
+  LayoutDashboard, Bell, Tv, Menu, GitMerge, AlertTriangle, Radio, MonitorPlay,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Play, SkipForward, Hourglass, BarChart3,
 } from "lucide-react";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
@@ -241,7 +241,7 @@ export function AdminClient({
     { id: "donations", label: "Donacje",     icon: Heart,           permission: () => isAdmin },
     { id: "twitch",    label: "Twitch",      icon: Tv,              permission: () => isAdmin },
     { id: "kick",      label: "Kick",        icon: Radio,           permission: () => isAdmin },
-    { id: "youtube",   label: "YouTube",     icon: Youtube,         permission: () => isAdmin },
+    { id: "youtube",   label: "YouTube",     icon: MonitorPlay,     permission: () => isAdmin },
     { id: "chat",      label: "Komendy czatu", icon: MessageSquare, permission: () => isAdmin },
     { id: "timers",    label: "Timery",        icon: Clock,         permission: () => isAdmin },
     { id: "faq",       label: "FAQ / auto",    icon: HelpCircle,    permission: () => isAdmin },
@@ -4807,7 +4807,7 @@ function YouTubeLiveManager({
   }
 
   return (
-    <SectionCard title="YouTube Live Chat (Super Chats + Members)" icon={Youtube}>
+    <SectionCard title="YouTube Live Chat (Super Chats + Members)" icon={MonitorPlay}>
       <p className="text-zinc-500 text-xs mb-3">
         Wykrywa Super Chats i nowych członków na YouTube live → grant Ghost Tokens
         donatorowi, zapisuje donejt, triggeruje stream alert na OBS overlay.
@@ -4853,7 +4853,7 @@ function YouTubeLiveManager({
               href="/api/admin/youtube-streamer-auth"
               className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase"
             >
-              <Youtube className="w-3.5 h-3.5" />
+              <MonitorPlay className="w-3.5 h-3.5" />
               Autoryzuj YouTube
             </a>
           </div>

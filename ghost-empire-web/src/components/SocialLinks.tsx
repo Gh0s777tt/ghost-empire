@@ -1,7 +1,7 @@
 "use client";
 // src/components/SocialLinks.tsx
 // Branded social media link cards for streamer's official channels.
-import { Youtube, Instagram } from "lucide-react";
+import { YoutubeIcon, InstagramIcon } from "@/components/BrandIcons";
 
 type SocialPlatform = {
   id: string;
@@ -10,8 +10,8 @@ type SocialPlatform = {
   href: string;
   color: string;        // Brand color
   gradient: string;     // Brand gradient
-  iconType: "lucide" | "svg" | "emoji";
-  icon: typeof Youtube | string;
+  iconType: "svg" | "emoji";
+  icon: string;
   description: string;
 };
 
@@ -56,8 +56,8 @@ export const SOCIALS: SocialPlatform[] = [
     href: "https://www.youtube.com/@Gh0s77tt",
     color: "#FF0000",
     gradient: "linear-gradient(135deg, #FF0000 0%, #B30000 100%)",
-    iconType: "lucide",
-    icon: Youtube,
+    iconType: "svg",
+    icon: "youtube",
     description: "VODy, highlighty",
   },
   {
@@ -78,8 +78,8 @@ export const SOCIALS: SocialPlatform[] = [
     href: "https://www.instagram.com/gh0s77tt/",
     color: "#E4405F",
     gradient: "linear-gradient(135deg, #833AB4 0%, #FD1D1D 50%, #FCB045 100%)",
-    iconType: "lucide",
-    icon: Instagram,
+    iconType: "svg",
+    icon: "instagram",
     description: "Zdjęcia, stories",
   },
   {
@@ -96,14 +96,13 @@ export const SOCIALS: SocialPlatform[] = [
 ];
 
 function PlatformIcon({ platform }: { platform: SocialPlatform }) {
-  if (platform.iconType === "lucide") {
-    const Icon = platform.icon as typeof Youtube;
-    return <Icon className="w-7 h-7 text-white" strokeWidth={2} />;
-  }
-
-  // Custom SVG icons (lucide doesn't have these official brand marks)
+  // All brand marks are self-hosted SVGs (lucide dropped official logos in v1).
   const className = "w-7 h-7 text-white";
   switch (platform.icon) {
+    case "youtube":
+      return <YoutubeIcon className={className} />;
+    case "instagram":
+      return <InstagramIcon className={className} />;
     case "discord":
       return (
         <svg viewBox="0 0 24 24" className={className} fill="currentColor">

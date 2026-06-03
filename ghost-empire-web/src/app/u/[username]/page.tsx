@@ -7,8 +7,10 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import {
   Trophy, Award, Link as LinkIcon, Globe, MessageCircle, Mic2, Flame,
-  ShieldCheck, Heart, Crown, Ban, Star, Instagram, Twitter, Youtube, Music2,
+  ShieldCheck, Heart, Crown, Ban, Star, Music2,
 } from "lucide-react";
+import type { ComponentType, CSSProperties } from "react";
+import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import Link from "next/link";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
 
@@ -28,11 +30,11 @@ const PLATFORM_META: Record<string, { label: string; color: string; emoji: strin
   youtube: { label: "YouTube", color: "#FF0000", emoji: "📺" },
 };
 
-const SOCIAL_ICONS: Record<string, typeof Instagram> = {
-  instagram: Instagram,
-  twitter:   Twitter,
+const SOCIAL_ICONS: Record<string, ComponentType<{ className?: string; style?: CSSProperties; strokeWidth?: number | string }>> = {
+  instagram: InstagramIcon,
+  twitter:   TwitterIcon,
   tiktok:    Music2,
-  youtube:   Youtube,
+  youtube:   YoutubeIcon,
   website:   Globe,
 };
 

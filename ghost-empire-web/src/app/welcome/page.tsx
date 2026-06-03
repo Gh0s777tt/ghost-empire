@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio, Youtube } from "lucide-react";
+import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio } from "lucide-react";
+import { YoutubeIcon } from "@/components/BrandIcons";
 import { SocialLinksRow } from "@/components/SocialLinks";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +58,7 @@ export default async function WelcomePage() {
         <div className="flex items-center gap-4 text-zinc-600 mb-10">
           <Tv className="w-5 h-5 hover:text-[#9146FF] transition-colors" />
           <Radio className="w-5 h-5 hover:text-[#53FC18] transition-colors" />
-          <Youtube className="w-5 h-5 hover:text-[#FF0000] transition-colors" />
+          <YoutubeIcon className="w-5 h-5 hover:text-[#FF0000] transition-colors" />
         </div>
 
         {/* CTAs */}
