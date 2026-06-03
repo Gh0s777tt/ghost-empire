@@ -1,13 +1,14 @@
 "use client";
 // src/components/profile/ProfileClient.tsx
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, type ComponentType, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
-  Instagram, Twitter, Youtube, Globe, Music2, Flame, MessageCircle, Mic2,
+  Globe, Music2, Flame, MessageCircle, Mic2,
   Copy, ShieldCheck, Heart, Star, Crown, Ban, LogOut,
 } from "lucide-react";
+import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
 
 type Achievement = {
@@ -99,11 +100,11 @@ const RARITY_STYLE: Record<string, { border: string; bg: string; text: string; l
 };
 
 // Manual social-link platforms (editable by user)
-const SOCIAL_META: Record<string, { label: string; icon: typeof Instagram; color: string; placeholder: string }> = {
-  instagram: { label: "Instagram", icon: Instagram, color: "#E4405F", placeholder: "twoj_handle" },
-  twitter:   { label: "X (Twitter)", icon: Twitter, color: "#000",    placeholder: "twoj_handle" },
+const SOCIAL_META: Record<string, { label: string; icon: ComponentType<{ className?: string; style?: CSSProperties; strokeWidth?: number | string }>; color: string; placeholder: string }> = {
+  instagram: { label: "Instagram", icon: InstagramIcon, color: "#E4405F", placeholder: "twoj_handle" },
+  twitter:   { label: "X (Twitter)", icon: TwitterIcon, color: "#000",    placeholder: "twoj_handle" },
   tiktok:    { label: "TikTok",    icon: Music2,    color: "#fff",    placeholder: "twoj_handle" },
-  youtube:   { label: "YouTube",   icon: Youtube,   color: "#FF0000", placeholder: "@channel lub link" },
+  youtube:   { label: "YouTube",   icon: YoutubeIcon,   color: "#FF0000", placeholder: "@channel lub link" },
   website:   { label: "Website",   icon: Globe,     color: "#10b981", placeholder: "domena.pl" },
 };
 

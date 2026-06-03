@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-03",
+    title: "Odświeżone ikony social",
+    items: [
+      "Logo marek (YouTube, Instagram, X) jako własne grafiki SVG — spójne i niezależne od biblioteki ikon.",
+    ],
+  },
+  {
+    date: "2026-06-03",
     title: "Poprawne nicki Kick i YouTube",
     items: [
       "Kick pokazuje teraz prawdziwy nick zamiast fragmentu adresu e-mail.",
