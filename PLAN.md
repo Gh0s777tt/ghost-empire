@@ -53,9 +53,9 @@
 1. ✅ Bugfixy: audit log (nick), przycisk wyloguj w profilu — **zrobione**.
 2. ✅ 🤖 **A1 — chat overlay: customizacja wiadomości** — zrobione
 3. ✅ 🤖 **A2 — Stream Alerts: własne alerty** — zrobione
-4. 🤖 **A3 — poprawne nicki Kick/YouTube w profilu** ← następne
+4. 🟡 🤖 **A3 — poprawne nicki Kick/YouTube** — OAuth już działa: nick Kicka zapisuje się przy (prze)logowaniu Kickiem; YouTube handle dalej wymaga scope `youtube.readonly` (Twoja decyzja — re-consent userów).
 5. ✅ 🤖 **A4 — hardening/polish** — health + testy + a11y zrobione (Prettier świadomie odłożony)
-6. 🔑 **B1 — odblokowanie Twitch** (Ty: env w Vercel) → potem podpięcie Twitch/Kick/YouTube w social linkach
+6. ✅ 🔑 **B1 — odblokowanie OAuth** — env Twitch/Kick/Google w Vercel zaktualizowane + redeploy; logowanie Twitch/Kick/YouTube/Google **działa** (zweryfikowane: `/api/health`, `/api/auth/providers`, Google redirect_uri OK).
 7. 🔑 **B2 — social OAuth IG/TikTok/X/FB** (Ty: aplikacje deweloperskie) → ja podpinam
 8. 🔑 **B3/B4 — AI / OBS WS / Hue / Govee** (Ty: klucze) → ja podpinam
 9. 🎨 **C — redesign iteracyjny** (Twój kierunek)
