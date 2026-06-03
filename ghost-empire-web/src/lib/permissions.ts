@@ -3,17 +3,17 @@
 // Set on User.modPermissions: String[] in DB.
 
 export const MOD_PERMISSIONS = [
-  { id: "grant_tokens",    label: "Przyznawanie tokenów",       group: "economy" },
-  { id: "manage_shop",     label: "Edycja sklepu",              group: "economy" },
-  { id: "deliver_orders",  label: "Realizacja zamówień",        group: "economy" },
-  { id: "create_events",   label: "Tworzenie eventów",          group: "events" },
-  { id: "edit_events",     label: "Edycja eventów",             group: "events" },
-  { id: "draw_events",     label: "Losowanie zwycięzców",       group: "events" },
-  { id: "create_drops",    label: "Tworzenie drop codes",       group: "events" },
-  { id: "ban_users",       label: "Banowanie userów",           group: "moderation" },
-  { id: "mute_users",      label: "Mutowanie userów",           group: "moderation" },
-  { id: "mark_subs",       label: "Flagowanie subskrybentów",   group: "moderation" },
-  { id: "view_audit",      label: "Podgląd audit log",          group: "moderation" },
+  { id: "grant_tokens",    label: "Przyznawanie tokenów",       group: "economy",    desc: "Dodawanie / odejmowanie Ghost Tokens userom (sekcja Użytkownicy)." },
+  { id: "manage_shop",     label: "Edycja sklepu",              group: "economy",    desc: "Edycja sklepu, harmonogramu streamów i bota Discord." },
+  { id: "deliver_orders",  label: "Realizacja zamówień",        group: "economy",    desc: "Oznaczanie oczekujących zamówień ze sklepu jako zrealizowane." },
+  { id: "create_events",   label: "Tworzenie eventów",          group: "events",     desc: "Tworzenie eventów i predykcji (zakładów GT)." },
+  { id: "edit_events",     label: "Edycja eventów",             group: "events",     desc: "Edycja istniejących eventów." },
+  { id: "draw_events",     label: "Losowanie zwycięzców",       group: "events",     desc: "Losowanie zwycięzców w eventach / giveawayach." },
+  { id: "create_drops",    label: "Tworzenie drop codes",       group: "events",     desc: "Tworzenie i zarządzanie drop-code'ami (kody na streamie)." },
+  { id: "ban_users",       label: "Banowanie userów",           group: "moderation", desc: "Banowanie userów — blokada konta (czasowa lub stała)." },
+  { id: "mute_users",      label: "Mutowanie userów",           group: "moderation", desc: "Wyciszanie userów." },
+  { id: "mark_subs",       label: "Flagowanie subskrybentów",   group: "moderation", desc: "Nadawanie statusu sub / mod / VIP per platforma." },
+  { id: "view_audit",      label: "Podgląd audit log",          group: "moderation", desc: "Wgląd w log akcji admina i moderacji." },
 ] as const;
 
 export type ModPermission = (typeof MOD_PERMISSIONS)[number]["id"];

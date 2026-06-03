@@ -2376,8 +2376,9 @@ function ModPermissionsPicker({
                   return (
                     <label
                       key={p.id}
+                      title={p.desc}
                       className={cn(
-                        "flex items-center gap-2 px-2 py-1.5 border cursor-pointer transition-all",
+                        "flex items-start gap-2 px-2 py-1.5 border cursor-pointer transition-all",
                         isSet
                           ? "border-blue-700 bg-blue-950/30 text-blue-200"
                           : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700",
@@ -2387,9 +2388,12 @@ function ModPermissionsPicker({
                         type="checkbox"
                         checked={isSet}
                         onChange={() => onToggle(p.id)}
-                        className="accent-blue-500"
+                        className="accent-blue-500 mt-0.5 shrink-0"
                       />
-                      <span className="text-xs">{p.label}</span>
+                      <span className="min-w-0">
+                        <span className="text-xs block font-medium">{p.label}</span>
+                        <span className="text-[10px] text-zinc-500 leading-snug block">{p.desc}</span>
+                      </span>
                     </label>
                   );
                 })}
