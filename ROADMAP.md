@@ -87,8 +87,8 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 
 | Propozycja | Pri | Notatki |
 |---|---|---|
-| **Audyt a11y** (axe / Lighthouse) | 🟡 | Kontrast (czerwień na czerni), focus states, nawigacja klawiaturą, ARIA na modalach/dropdownach |
-| **Skip-to-content + landmarki** | 🟡 | Szybka wygrana dla czytników ekranu |
+| **Audyt a11y** (axe / Lighthouse) | 🟡 | ✅ focus-visible, nawigacja klawiaturą, `aria-label` na navach, `aria-current` na aktywnym linku (A4 + a11y pass). Zostaje: kontrast (czerwień na czerni), ARIA na modalach/dropdownach |
+| ~~**Skip-to-content + landmarki**~~ ✅ | — | **Zrobione** — skip-link „Przejdź do treści" (A4) + `<main>` per-strona + opisane nawigacje/stopka |
 | **i18n (PL/EN)** | 🧊 | W seedzie jest już `textEn` dla questów — fundament pod angielską wersję dla widzów zza granicy |
 | **Empty/error states** | 🧊 | Spójne, brandowane stany pustych list i błędów ładowania sekcji |
 | **OG images — dopieszczenie** | 🧊 | Wzbogacić share-preview (np. dynamiczne tła per ranga/tier) |

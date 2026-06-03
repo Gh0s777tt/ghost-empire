@@ -29,7 +29,7 @@ export function SiteFooter() {
           </div>
 
           {/* Right — legal links */}
-          <nav className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-widest">
+          <nav aria-label="Linki prawne" className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-widest">
             <Link href="/about" className="text-zinc-500 hover:text-red-400 transition-colors">
               O nas
             </Link>
