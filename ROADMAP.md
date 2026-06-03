@@ -34,7 +34,7 @@ Pierwsza warstwa domknięta: **są już testy jednostkowe (Vitest) i CI (GitHub 
 | **E2E** (Playwright) | 🟡 | Happy path: login → zarobek → zakup w sklepie; smoke testy publicznych stron |
 | ~~**GitHub Actions CI**~~ ✅ | — | **Zrobione** — `.github/workflows/ci.yml`: typecheck + lint + test na push/PR. `next build` zostaje po stronie Vercela (preview deploy na każdym pushu) |
 | **Lighthouse CI / performance budget** | 🟡 | Wykrywanie regresji Core Web Vitals na publicznych stronach |
-| **Dependabot / Renovate** | 🟡 | Auto-PR-y na aktualizacje zależności + alerty bezpieczeństwa |
+| ~~**Dependabot**~~ ✅ | — | **Zrobione** — `.github/dependabot.yml`: cotygodniowe zgrupowane PR-y (web/chat/bot + actions), security-updaty natychmiast |
 | **Prettier + import sort** | 🧊 | Spójny styl; dziś tylko ESLint |
 | **`@typescript-eslint` (next/typescript)** | 🧊 | Włączyć surowsze reguły TS w ESLint (dziś tylko `core-web-vitals`) — najpierw przejrzeć szum |
 
@@ -78,7 +78,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 | **CSP nonces — usunięcie `unsafe-inline`/`unsafe-eval`** | 🔥 | Najważniejsze utwardzenie CSP. Wymaga nonce middleware Next.js + przepięcia inline styli/skryptów. Ryzyko regresji → osobna sesja z testami |
 | **2FA / step-up dla akcji admina** | 🟡 | Wrażliwe akcje (grant dużych kwot, merge, ban) za dodatkowym potwierdzeniem |
 | **Audyt zależności** | 🟡 | `npm audit` w CI + Dependabot (patrz §1) |
-| **Rotacja sekretów + skan** | 🟡 | Proces rotacji `BOT_SECRET`/OAuth + secret-scanning w repo (gitleaks) |
+| **Rotacja sekretów + skan** | 🟡 | ✅ skan: `secret-scan.yml` (gitleaks na push/PR). Zostaje: udokumentowany proces rotacji `BOT_SECRET`/OAuth |
 | **Rate-limit per-IP na publicznych stronach** | 🧊 | Dziś per-user na ekonomii; dorzucić warstwę edge/IP na publicznych GET-ach |
 
 ---
