@@ -28,6 +28,20 @@ import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { GoalBar } from "@/components/GoalBar";
 import { SubathonCard } from "@/components/SubathonCard";
 import { ChatMessageRow, DEFAULT_CHAT_CFG, CHAT_FONTS, type ChatOverlayCfg, type ChatMsg } from "@/components/ChatMessageRow";
+import dynamic from "next/dynamic";
+import { SectionCard } from "./shared";
+import type { AuditEntry } from "./types";
+
+// Heavy, rarely-first-viewed admin sections split into their own lazy chunks
+// (keeps the initial /admin client bundle smaller). See components/admin/sections/.
+const AnalyticsSection = dynamic(() => import("./sections/Analytics").then((m) => m.AnalyticsSection), {
+  ssr: false,
+  loading: () => <div className="text-zinc-600 text-sm">Ładowanie…</div>,
+});
+const AuditLogSection = dynamic(() => import("./sections/AuditLog").then((m) => m.AuditLogSection), {
+  ssr: false,
+  loading: () => <div className="text-zinc-600 text-sm">Ładowanie…</div>,
+});
 
 type Stats = {
   totalUsers: number;
@@ -183,19 +197,6 @@ type UnmatchedDonation = {
   amountGrosze: number;
   currency: string;
   donatedAt: string;
-};
-
-type AuditEntry = {
-  id: string;
-  adminId: string;
-  adminName: string | null;
-  targetName: string | null;
-  action: string;
-  targetType: string | null;
-  targetId: string | null;
-  details: string | null;
-  ipAddress: string | null;
-  createdAt: string;
 };
 
 type PendingOrder = {
@@ -538,12 +539,7 @@ export function AdminClient({
             <SeasonsManager {...sharedProps} />
           )}
 
-          {activeSection === "analytics" && isAdmin && (
-            <div className="space-y-6">
-              <StreamSessionsCard />
-              <ChatHeatmap />
-            </div>
-          )}
+          {activeSection === "analytics" && isAdmin && <AnalyticsSection />}
 
           {activeSection === "audit" && can("view_audit") && (
             <LazySection<{ auditLog: AuditEntry[] }> s="audit">
@@ -791,26 +787,6 @@ function StatTile({
         {value}
         {suffix && <span className="text-zinc-500 text-xs ml-1">{suffix}</span>}
       </div>
-    </div>
-  );
-}
-
-function SectionCard({
-  title, icon: Icon, children,
-}: { title: string; icon: typeof Users; children: React.ReactNode }) {
-  return (
-    <div
-      className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs p-5"
-      style={{
-        clipPath:
-          "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
-      }}
-    >
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="w-4 h-4 text-red-500" />
-        <h2 className="font-display text-lg text-white tracking-wider">{title.toUpperCase()}</h2>
-      </div>
-      {children}
     </div>
   );
 }
@@ -2211,91 +2187,6 @@ function StreamlabsManager({
 }
 
 // ============== AUDIT LOG VIEWER ==============
-
-const ACTION_LABEL: Record<string, { label: string; emoji: string; color: string }> = {
-  grant_tokens:        { label: "Grant tokenów",   emoji: "💰", color: "#10b981" },
-  create_drop:         { label: "Nowy drop",       emoji: "🎁", color: "#FF4500" },
-  deactivate_drop:     { label: "Dezakt. drop",    emoji: "🗑️", color: "#71717a" },
-  create_event:        { label: "Nowy event",      emoji: "📅", color: "#3b82f6" },
-  deactivate_event:    { label: "Dezakt. event",   emoji: "🗑️", color: "#71717a" },
-  draw_event:          { label: "Losowanie",       emoji: "🎲", color: "#a855f7" },
-  deliver_order:       { label: "Dostarczone",     emoji: "📦", color: "#10b981" },
-  refund_order:        { label: "Zwrot",           emoji: "↩️", color: "#fbbf24" },
-  set_user_role:       { label: "Rola usera",      emoji: "👑", color: "#ef4444" },
-  set_connection_role: { label: "Status platform", emoji: "🔗", color: "#a855f7" },
-  reset_database:      { label: "Reset bazy",       emoji: "💥", color: "#ef4444" },
-  manage_codes:        { label: "Kody (drop)",      emoji: "🔑", color: "#10b981" },
-  manage_achievements: { label: "Osiągnięcia",      emoji: "🏆", color: "#fbbf24" },
-  manage_polls:        { label: "Ankieta",          emoji: "📊", color: "#3b82f6" },
-};
-
-function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
-  if (auditLog.length === 0) {
-    return (
-      <SectionCard title="Audit log" icon={History}>
-        <p className="text-zinc-500 text-sm">Brak akcji admin w bazie. Tu pojawi się każdy grant/draw/refund kto i kiedy.</p>
-      </SectionCard>
-    );
-  }
-
-  return (
-    <SectionCard title={`Audit log (ostatnie ${auditLog.length})`} icon={History}>
-      <div className="space-y-1 max-h-[500px] overflow-y-auto">
-        {auditLog.map((entry) => {
-          const meta = ACTION_LABEL[entry.action] ?? { label: entry.action, emoji: "•", color: "#71717a" };
-          const date = new Date(entry.createdAt);
-          let detailsText = "";
-          if (entry.details) {
-            try {
-              const parsed = JSON.parse(entry.details);
-              detailsText = Object.entries(parsed)
-                // Drop keys already shown as the target name (avoids duplication).
-                .filter(([k, v]) => v !== null && v !== undefined && v !== "" && k !== "targetUsername" && k !== "username")
-                .map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`)
-                .join(" · ");
-            } catch {
-              detailsText = entry.details;
-            }
-          }
-          return (
-            <div key={entry.id} className="flex items-start gap-3 border-l-2 border-zinc-800 pl-3 py-1.5">
-              <span className="text-base shrink-0">{meta.emoji}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-sm">
-                  <span className="font-semibold text-white">
-                    {entry.adminName ?? "konto usunięte"}
-                  </span>
-                  <span className="font-bold" style={{ color: meta.color }}>
-                    {meta.label}
-                  </span>
-                  {entry.targetName && (
-                    <>
-                      <span className="text-zinc-600">→</span>
-                      <span className="font-semibold text-white">{entry.targetName}</span>
-                    </>
-                  )}
-                  <span className="text-[10px] font-mono text-zinc-700 ml-auto whitespace-nowrap">
-                    {date.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
-                  </span>
-                </div>
-                {detailsText && (
-                  <div className="text-[11px] font-mono text-zinc-500 leading-snug mt-0.5 break-all">
-                    {detailsText}
-                  </div>
-                )}
-                {entry.ipAddress && (
-                  <div className="text-[9px] font-mono text-zinc-700 mt-0.5">
-                    IP: {entry.ipAddress}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </SectionCard>
-  );
-}
 
 // ============== MOD PERMISSIONS PICKER ==============
 
@@ -6332,176 +6223,6 @@ function SubathonRates({
         Zapisz tempo
       </button>
     </div>
-  );
-}
-
-type StreamSessionRow = { id: string; startedAt: string; endedAt: string | null; durationSeconds: number | null };
-
-function fmtBroadcastDuration(sec: number): string {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
-}
-
-// "Czas na streamie" — broadcast sessions from Twitch EventSub stream.online/offline.
-// Measures the STREAMER's broadcast time (not per-viewer — EventSub can't do that).
-function StreamSessionsCard() {
-  const [loading, setLoading] = useState(true);
-  const [streams, setStreams] = useState<{
-    live: { startedAt: string } | null;
-    totalSeconds: number;
-    count: number;
-    recent: StreamSessionRow[];
-  } | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/admin/analytics");
-        const d = await res.json();
-        if (!cancelled && res.ok) setStreams(d.streams ?? null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  // Tick once a second only while live, to advance the uptime counter.
-  useEffect(() => {
-    if (!streams?.live) return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [streams?.live]);
-
-  const liveUptime = streams?.live
-    ? Math.max(0, Math.floor((now - new Date(streams.live.startedAt).getTime()) / 1000))
-    : 0;
-
-  return (
-    <SectionCard title="Czas na streamie" icon={Radio}>
-      <p className="text-zinc-500 text-xs mb-3">
-        Sesje nadawania z Twitch EventSub (<code>stream.online</code>/<code>stream.offline</code>). Mierzy czas <strong>nadawania streamera</strong>, nie czas oglądania per-widz.
-      </p>
-      {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
-      ) : !streams || (streams.count === 0 && !streams.live) ? (
-        <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-          Brak sesji — pojawią się po pierwszym streamie. Wymaga utworzenia subskrypcji <strong>stream.online/offline</strong> w sekcji <span className="font-mono">Twitch</span> (przycisk „Utwórz subskrypcje").
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-            <div className={cn(
-              "border p-3",
-              streams.live ? "border-green-700/60 bg-green-950/20" : "border-zinc-800 bg-black/30",
-            )}>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">Status</div>
-              {streams.live ? (
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-sm font-bold text-green-300 tabular-nums">LIVE · {fmtBroadcastDuration(liveUptime)}</span>
-                </div>
-              ) : (
-                <div className="text-sm font-bold text-zinc-400">Offline</div>
-              )}
-            </div>
-            <div className="border border-zinc-800 bg-black/30 p-3">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">Łączny czas nadawania</div>
-              <div className="text-sm font-bold text-white">{fmtBroadcastDuration(streams.totalSeconds)}</div>
-            </div>
-            <div className="border border-zinc-800 bg-black/30 p-3">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">Liczba streamów</div>
-              <div className="text-sm font-bold text-white">{streams.count}</div>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            {streams.recent.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 border border-zinc-800 bg-black/30 px-3 py-2">
-                <Radio className={cn("w-3.5 h-3.5 shrink-0", s.endedAt === null ? "text-green-500" : "text-zinc-600")} />
-                <div className="flex-1 min-w-0 text-sm text-white truncate">{formatDate(s.startedAt)}</div>
-                <div className="text-[11px] font-mono text-zinc-400 shrink-0">
-                  {s.endedAt === null
-                    ? <span className="text-green-400">trwa…</span>
-                    : (s.durationSeconds != null ? fmtBroadcastDuration(s.durationSeconds) : "—")}
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </SectionCard>
-  );
-}
-
-function ChatHeatmap() {
-  const [loading, setLoading] = useState(true);
-  const [grid, setGrid] = useState<number[][]>([]);
-  const [peak, setPeak] = useState(0);
-  const [total, setTotal] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/admin/analytics");
-        const d = await res.json();
-        if (!cancelled && res.ok) {
-          setGrid(d.grid ?? []);
-          setPeak(d.peak ?? 0);
-          setTotal(d.total ?? 0);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  const days = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"];
-  const cellColor = (v: number) =>
-    v <= 0 || peak <= 0 ? "rgba(255,255,255,0.04)" : `rgba(229,9,20,${(0.15 + (v / peak) * 0.85).toFixed(3)})`;
-
-  return (
-    <SectionCard title="Analityka — heatmapa czatu" icon={TrendingUp}>
-      <p className="text-zinc-500 text-xs mb-3">
-        Kiedy czat jest najbardziej aktywny (dzień tygodnia × godzina, czas Europe/Warsaw). Zliczane z aktywności na Twitch + Kick + YouTube (1/min/widz).
-      </p>
-      {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
-      ) : total === 0 ? (
-        <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-          Brak danych — pojawią się, gdy ktoś napisze na czacie podczas streamu.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <div className="inline-block">
-            <div className="flex items-center gap-[2px] mb-[2px] ml-7">
-              {Array.from({ length: 24 }, (_, h) => (
-                <div key={h} className="w-[14px] text-center text-[8px] text-zinc-600 tabular-nums">{h % 6 === 0 ? h : ""}</div>
-              ))}
-            </div>
-            {grid.map((row, d) => (
-              <div key={d} className="flex items-center gap-[2px] mb-[2px]">
-                <div className="w-6 text-[9px] font-mono text-zinc-500 shrink-0">{days[d]}</div>
-                {row.map((v, h) => (
-                  <div key={h} title={`${days[d]} ${h}:00 — ${v}`} className="w-[14px] h-[14px] rounded-[2px]" style={{ background: cellColor(v) }} />
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="text-[10px] text-zinc-600 mt-2">
-            Łącznie {total.toLocaleString("pl-PL")} aktywnych chatter-minut · szczyt {peak}/slot
-          </div>
-        </div>
-      )}
-    </SectionCard>
   );
 }
 
