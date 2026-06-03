@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import {
+  ALERT_TYPE_LIST,
   ALERT_ANIMATIONS,
   ALERT_POSITIONS,
   ANIMATION_LABELS,
@@ -509,7 +510,6 @@ export function AdminClient({
                 {(d) => <StreamAlertsManager data={d.streamAlerts} {...sharedProps} />}
               </LazySection>
               <CustomAlertsCard {...sharedProps} />
-              <AlertTypesCard {...sharedProps} />
             </div>
           )}
 
@@ -3255,16 +3255,19 @@ type AlertTypeRow = {
   configured: boolean;
 };
 
-function AlertTypesCard({
+function AlertTypeList({
+  enabledTypes,
+  onToggle,
   onToast,
 }: {
+  enabledTypes: string[];
+  onToggle: (t: string) => void;
   onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
 }) {
   const [rows, setRows] = useState<AlertTypeRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [savingType, setSavingType] = useState<string | null>(null);
+  const [openType, setOpenType] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -3304,77 +3307,83 @@ function AlertTypesCard({
   }
 
   return (
-    <SectionCard title="Alerty per-typ (animacja / pozycja / dźwięk / próg)" icon={Bell}>
-      <div className="space-y-4">
-        <p className="text-zinc-500 text-xs leading-relaxed">
-          Dla każdego typu alertu ustaw osobno: <strong>animację</strong> wejścia, <strong>pozycję</strong> na ekranie, własny <strong>dźwięk</strong> (URL pliku audio) i <strong>próg kwotowy</strong> (alert pokaże się tylko gdy kwota ≥ próg — np. donejty od 50). Typy bez własnych ustawień używają domyślnych (slide / dół-prawo / wbudowany dźwięk). Zmiany lecą na <code className="text-zinc-300">/overlay</code> w ~1,5 s.
-        </p>
-        {!loaded && <p className="text-zinc-600 text-xs">Ładowanie…</p>}
-        <div className="space-y-3">
-          {rows.map((row) => (
-            <div key={row.type} className="border border-zinc-800 bg-black/30 p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-bold text-white">{row.label}</span>
-                {row.configured && (
-                  <span className="text-[9px] font-mono uppercase tracking-widest text-green-500">● własne</span>
-                )}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Animacja</label>
-                  <select
-                    value={row.animation}
-                    onChange={(e) => patch(row.type, "animation", e.target.value)}
-                    className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500"
-                  >
-                    {ALERT_ANIMATIONS.map((a) => <option key={a} value={a}>{ANIMATION_LABELS[a]}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Pozycja</label>
-                  <select
-                    value={row.position}
-                    onChange={(e) => patch(row.type, "position", e.target.value)}
-                    className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500"
-                  >
-                    {ALERT_POSITIONS.map((p) => <option key={p} value={p}>{POSITION_LABELS[p]}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Dźwięk (URL, opcjonalnie)</label>
-                  <input
-                    type="text"
-                    value={row.soundUrl ?? ""}
-                    onChange={(e) => patch(row.type, "soundUrl", e.target.value || null)}
-                    placeholder="https://…/sound.mp3"
-                    className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Próg kwoty (≥, opcjonalnie)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={row.minAmount ?? ""}
-                    onChange={(e) => patch(row.type, "minAmount", e.target.value === "" ? null : Math.max(0, parseInt(e.target.value) || 0))}
-                    placeholder="np. 50"
-                    className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500"
-                  />
-                </div>
-              </div>
-              <button
-                onClick={() => save(row)}
-                disabled={savingType === row.type || !loaded}
-                className="mt-2 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
-              >
-                {savingType === row.type ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                Zapisz
-              </button>
-            </div>
-          ))}
-        </div>
+    <div className="mb-4">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
+        Typy alertów — ● włącz/wyłącz · kliknij nazwę, by dostosować ({enabledTypes.length} aktywnych)
       </div>
-    </SectionCard>
+      <div className="space-y-1.5">
+        {ALERT_TYPE_LIST.map(({ type, label }) => {
+          const active = enabledTypes.includes(type);
+          const row = rows.find((r) => r.type === type);
+          const open = openType === type;
+          return (
+            <div key={type} className={cn("border", active ? "border-red-900/60 bg-red-950/10" : "border-zinc-800 bg-black/30")}>
+              <div className="flex items-center gap-2 px-2.5 py-1.5">
+                <button
+                  type="button"
+                  onClick={() => onToggle(type)}
+                  title={active ? "Wyłącz ten typ alertu" : "Włącz ten typ alertu"}
+                  className={cn("text-base leading-none shrink-0", active ? "text-red-400" : "text-zinc-600 hover:text-zinc-400")}
+                >
+                  {active ? "●" : "○"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpenType(open ? null : type)}
+                  className="flex-1 flex items-center justify-between gap-2 text-left"
+                >
+                  <span className={cn("text-xs", active ? "text-zinc-200" : "text-zinc-500")}>{label}</span>
+                  <span className="flex items-center gap-2 shrink-0">
+                    {row?.configured && <span className="text-[9px] font-mono uppercase tracking-widest text-green-500">własne</span>}
+                    <span className="text-zinc-500 text-[10px]">{open ? "▴" : "▾"}</span>
+                  </span>
+                </button>
+              </div>
+              {open && (
+                <div className="border-t border-zinc-800/70 p-2.5">
+                  {!row ? (
+                    <p className="text-zinc-600 text-[10px]">Ładowanie ustawień…</p>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Animacja</label>
+                          <select value={row.animation} onChange={(e) => patch(type, "animation", e.target.value)} className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500">
+                            {ALERT_ANIMATIONS.map((a) => <option key={a} value={a}>{ANIMATION_LABELS[a]}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Pozycja</label>
+                          <select value={row.position} onChange={(e) => patch(type, "position", e.target.value)} className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500">
+                            {ALERT_POSITIONS.map((p) => <option key={p} value={p}>{POSITION_LABELS[p]}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Dźwięk (URL, opcjonalnie)</label>
+                          <input type="text" value={row.soundUrl ?? ""} onChange={(e) => patch(type, "soundUrl", e.target.value || null)} placeholder="https://…/sound.mp3" className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Próg kwoty (≥, opcjonalnie)</label>
+                          <input type="number" min={0} value={row.minAmount ?? ""} onChange={(e) => patch(type, "minAmount", e.target.value === "" ? null : Math.max(0, parseInt(e.target.value) || 0))} placeholder="np. 50" className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500" />
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => save(row)}
+                        disabled={savingType === type || !loaded}
+                        className="mt-2 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
+                      >
+                        {savingType === type ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                        Zapisz ustawienia
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -4416,30 +4425,8 @@ function StreamAlertsManager({
         </div>
       </div>
 
-      {/* Per-type toggles */}
-      <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-        Aktywne typy alertów ({enabledTypes.length} z {data.allTypes.length})
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mb-4">
-        {data.allTypes.map((t) => {
-          const active = enabledTypes.includes(t);
-          return (
-            <button
-              key={t}
-              onClick={() => toggleType(t)}
-              className={cn(
-                "px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-widest border text-left",
-                active
-                  ? "border-red-700 bg-red-950/30 text-red-200"
-                  : "border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-700",
-              )}
-            >
-              {active ? "● " : "○ "}
-              {ALERT_TYPE_LABEL[t] ?? t}
-            </button>
-          );
-        })}
-      </div>
+      {/* Per-type: enable/disable + click to customize (animation/position/sound/threshold) */}
+      <AlertTypeList enabledTypes={enabledTypes} onToggle={toggleType} onToast={onToast} />
 
       {/* Save button */}
       <div className="flex items-center gap-2 mb-4">
@@ -4466,7 +4453,7 @@ function StreamAlertsManager({
                   {ALERT_TYPE_LABEL[a.type] ?? a.type}
                 </span>
                 <span className="text-zinc-300 truncate flex-1">
-                  {a.icon ?? "🔔"} {a.actorName ? <strong>{a.actorName}</strong> : null} {a.message}
+                  {a.icon ?? "🔔"} {a.actorName ? <strong>{a.actorName.includes(" ") ? a.actorName.split(" ")[0] : a.actorName}</strong> : null} {a.message}
                 </span>
                 {a.amount != null && (
                   <span className="text-red-400 shrink-0">
