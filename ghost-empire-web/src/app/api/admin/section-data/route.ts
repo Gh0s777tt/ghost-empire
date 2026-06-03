@@ -6,7 +6,7 @@
 // Returns the exact shapes the section manager components expect (mappings moved
 // here verbatim from the old admin/page.tsx server fetch).
 import { NextResponse } from "next/server";
-import { requireAdmin, requirePermission } from "@/lib/admin";
+import { requireAdmin, requirePermission, requireAnyPermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getSettings as getAlertSettings } from "@/lib/alerts";
 import { getCodeConfig } from "@/lib/codes";
@@ -28,7 +28,6 @@ export async function GET(req: Request) {
   const adminOnly = ["streamlabs", "twitch", "alerts", "audit_admin", "codes"];
   const permMap: Record<string, ModPermission> = {
     shop: "manage_shop",
-    events: "edit_events",
     schedule: "manage_shop",
     bot: "manage_shop",
     audit: "view_audit",
@@ -36,6 +35,10 @@ export async function GET(req: Request) {
 
   if (adminOnly.includes(section ?? "")) {
     const auth = await requireAdmin();
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  } else if (section === "events") {
+    // Events manager bundles edit (toggle/edit) + draw actions → either grants access.
+    const auth = await requireAnyPermission(["edit_events", "draw_events"]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
   } else if (permMap[section ?? ""]) {
     const auth = await requirePermission(permMap[section!]);
@@ -63,10 +66,12 @@ export async function GET(req: Request) {
     }
 
     case "events": {
+      // All events (active first), with participant counts so the merged manager
+      // can show draw eligibility + reactivate deactivated ones in one list.
       const events = await prisma.event.findMany({
-        where: { active: true },
-        orderBy: { createdAt: "desc" },
-        take: 20,
+        orderBy: [{ active: "desc" }, { createdAt: "desc" }],
+        take: 50,
+        include: { _count: { select: { entries: true, raffleTickets: true } } },
       });
       return NextResponse.json({
         allEvents: events.map((e) => ({
@@ -75,6 +80,7 @@ export async function GET(req: Request) {
           requirement: e.requirement, ticketPrice: e.ticketPrice, maxTicketsPerUser: e.maxTicketsPerUser,
           startsAt: e.startsAt?.toISOString() ?? null, endsAt: e.endsAt?.toISOString() ?? null,
           drawnAt: e.drawnAt?.toISOString() ?? null, active: e.active,
+          entriesCount: e._count.entries, ticketsCount: e._count.raffleTickets,
         })),
       });
     }

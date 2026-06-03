@@ -120,6 +120,13 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 > ✅ Już zrobione z tej puli: **cały chat bot 3A + rdzeń 3B** (timery / FAQ / powitania / song-requests / chat-overlay), Stream Goals + Hype Train, Predictions, Battle Pass/Sezony (patrz [CHANGELOG.md](CHANGELOG.md) + [PHASE3.md](PHASE3.md)).
 
+### Pomysły użytkownika (2026-06-03) → świeży podział na fazy w [PLAN.md](PLAN.md)
+
+Po modernizacji stacku do najnowszych majorów rozpisana **Faza A** (autonomiczna, bez kluczy) → B (decyzje techniczne) → C (🔑 creds) → D (🎨 redesign) → E (moonshot). Pełen rozpis: [PLAN.md](PLAN.md).
+
+- ✅ 🤖 **Eventy: „Aktywne" + „Edycja" scalone** *(prośba usera)* — jedna karta „Eventy" w `/admin#events` (lista wszystkich eventów + Wylosuj/ON-OFF/Edit w wierszu, liczniki uczestników, reaktywacja dezaktywowanych). **Faza A #1.**
+- 🤖 **Faza A do zrobienia:** „czas na streamie" + analityka per-stream (`StreamSession`) · komendy warunkowe (`requiresLive`/`minViewers`) · code-split `AdminClient` + bundle-analyzer · dokończenie empty/error states + a11y · i18n PL/EN · testy integracyjne+E2E · structured logging.
+
 ### Pomysły użytkownika (2026-06-02) → kolejność i szczegóły w [PLAN.md](PLAN.md)
 
 - ✅ 🤖 **Chat overlay — customizacja wiadomości** — **ZROBIONE**: rozmiar / kolor / czcionka / krycie tła / ikona platformy w `/admin#chat`, na overlayu i w podglądzie na żywo (`ChatOverlayConfig`).

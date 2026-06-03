@@ -37,6 +37,17 @@
 3. **Profil — poprawne nicki platform** *(bug)* — Kick pokazuje local-part e-maila, YouTube nic. Plan: nick Kicka odświeżany z handle przy logowaniu Kickiem; **handle YouTube** dociągany przez YouTube Data API (token streamera już mamy). Naprawia „połączone konta" + „social linki".
 4. ✅ **Hardening/polish** — ✅ `/api/health` (200/503) + ✅ testy `displayNick` (41 testów) + ✅ a11y (`:focus-visible`, skip-link, `prefers-reduced-motion`). *(Prettier świadomie odłożony — pełny reformat repo = ogromny, ryzykowny diff bez realnej wartości.)*
 
+#### 🤖 Faza A (2026-06-03) — kolejna seria autonomiczna (kolejność = priorytet)
+Po modernizacji stacku do najnowszych majorów (Next 16 · React 19 · TS 6 · Prisma 7 · Tailwind 4 · zod 4 · vitest 4 · ESLint 9). Każde = osobny PR (branch → tsc/lint/test → squash-merge).
+1. ✅ **Eventy: scalenie „Aktywne" + „Edycja"** *(prośba usera)* — **ZROBIONE**: jedna karta „Eventy" (`EventsManager`) z pełną listą (aktywne na górze, nieaktywne wyszarzone) + akcje w wierszu (Wylosuj / ON-OFF / Edit), liczniki uczestników, możliwość reaktywacji. `requireAnyPermission` dla section-data.
+2. **„Czas na streamie" + analityka per-stream** — model `StreamSession`, auto-trigger przez Twitch EventSub `stream.online/offline` (webhook już mamy), pole w profilu + lista streamów w `/admin#analytics`.
+3. **Komendy warunkowe** — `requiresLive` / `minViewers` / `activeFromMinute` w `ChatCommand` (plan 3B #2).
+4. **Code-split `AdminClient.tsx`** — monolit ~7k linii → lazy per-sekcja + `@next/bundle-analyzer`.
+5. **Dokończenie empty/error states + a11y** — pozostałe listy, kontrast czerwień/czerń, reszta modali.
+6. **i18n PL/EN — fundament** — `textEn` już w seedzie; warstwa tłumaczeń stron publicznych.
+7. **Testy integracyjne (API+DB, Docker Postgres) + E2E Playwright** — webhooki/ekonomia + happy-path.
+8. **Structured logging** — JSON + poziomy w webhookach/cron/award.
+
 ### 🔑 B. Wymaga Twoich kluczy/kont (dokładne nazwy w [docs/ENV.md](docs/ENV.md))
 1. **Logowanie/łączenie Twitch — BLOKER** — „klikam i nic": sprawdź w **Vercel** `TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET` (+ redeploy) oraz Redirect URI w dev.twitch.tv = `https://<domena>/api/auth/callback/twitch`. Kod jest OK; ekran logowania pokazuje teraz konkretny błąd.
 2. **Interaktywne social linki (OAuth „połącz jednym kliknięciem")** *(nowe)* — Instagram / TikTok / X / Facebook. Każda platforma wymaga **zarejestrowanej aplikacji deweloperskiej** (client id/secret + redirect URI), a IG/TikTok także **przeglądu aplikacji**. Twitch/Kick/Google(YouTube) OAuth już są — te mogę podpiąć od razu po odblokowaniu Twitcha. Przygotuję UI „Połącz" gotowe pod creds.
