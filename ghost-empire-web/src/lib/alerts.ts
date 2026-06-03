@@ -3,6 +3,7 @@
 // Storage is a DB queue; the overlay polls /api/alerts/queue.
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import type { AlertAnimation, AlertPosition, AlertTypeCfg } from "@/lib/alert-types";
 
 export type AlertType =
   | "shop_purchase"
@@ -119,4 +120,23 @@ export async function isValidOverlayToken(token: string | null | undefined): Pro
     if (mismatch === 0) return true;
   }
   return false;
+}
+
+/**
+ * Per-alert-type overlay overrides, keyed by type. Only types that have a DB
+ * row appear — merge with DEFAULT_ALERT_TYPE_CFG (lib/alert-types) at the use
+ * site so unconfigured types fall back to the default look.
+ */
+export async function getAlertTypeConfigs(): Promise<Record<string, AlertTypeCfg>> {
+  const rows = await prisma.alertTypeConfig.findMany();
+  const map: Record<string, AlertTypeCfg> = {};
+  for (const r of rows) {
+    map[r.type] = {
+      animation: r.animation as AlertAnimation,
+      position: r.position as AlertPosition,
+      soundUrl: r.soundUrl,
+      minAmount: r.minAmount,
+    };
+  }
+  return map;
 }

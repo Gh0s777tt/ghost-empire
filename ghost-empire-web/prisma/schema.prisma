@@ -1076,6 +1076,23 @@ model StreamAlertSettings {
 }
 
 // =====================================================
+// ALERT TYPE CONFIG — per-alert-type overrides for the OBS overlay.
+// A type with NO row falls back to the overlay defaults (slide / bottom-right /
+// synthesized ding / no threshold) — so unconfigured types look exactly as before.
+// =====================================================
+model AlertTypeConfig {
+  id        String   @id @default(cuid())
+  type      String   @unique   // matches AlertType in lib/alerts.ts
+  animation String   @default("slide")        // slide | fade | scale | none
+  position  String   @default("bottom-right") // {top|center|bottom}-{left|center|right}
+  soundUrl  String?                           // custom sound URL; null = synthesized ding
+  minAmount Int?                              // only show alert if amount >= this (null = always)
+  updatedAt DateTime @updatedAt
+
+  @@map("alert_type_config")
+}
+
+// =====================================================
 // STREAM CODES — pool of giveaway codes (e.g. game keys) displayed one-at-a-time
 // on the /overlay/codes OBS source, rotating every CodeDropConfig.intervalSeconds.
 // =====================================================
