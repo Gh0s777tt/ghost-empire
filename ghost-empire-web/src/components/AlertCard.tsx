@@ -50,7 +50,7 @@ export function AlertCard({
         {/* Icon / Avatar */}
         <div style={{ flexShrink: 0 }}>
           {alert.actorImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
+             
             <img
               src={alert.actorImage}
               alt=""
