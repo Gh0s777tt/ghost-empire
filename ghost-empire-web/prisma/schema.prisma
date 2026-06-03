@@ -642,6 +642,22 @@ model ChatActivityBucket {
   @@map("chat_activity_buckets")
 }
 
+// One broadcast session — opened by Twitch EventSub `stream.online`, closed by
+// `stream.offline` (duration computed then). Powers "czas na streamie" + per-stream
+// analytics. NB: EventSub only knows when the broadcaster is live, not per-viewer.
+model StreamSession {
+  id              String    @id @default(cuid())
+  platform        String    @default("twitch")
+  twitchStreamId  String?   @unique               // event.id from stream.online (idempotency)
+  startedAt       DateTime
+  endedAt         DateTime?                        // null = currently live
+  durationSeconds Int?                             // set when the stream goes offline
+  createdAt       DateTime  @default(now())
+
+  @@index([startedAt])
+  @@map("stream_sessions")
+}
+
 // =====================================================
 // STREAM SCHEDULE
 // =====================================================
