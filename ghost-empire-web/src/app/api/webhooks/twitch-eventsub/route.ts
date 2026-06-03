@@ -12,6 +12,9 @@ import { incrementGoals, setHypeTrainStart, setHypeTrainProgress, setHypeTrainEn
 import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("twitch-eventsub");
 
 // Tunable token rewards (env-configurable later if needed)
 const REWARD_SUB_T1 = 5000;
@@ -48,13 +51,13 @@ export async function POST(req: Request) {
 
   // Signature verification (CRITICAL — prevents spoofed events)
   if (!verifyEventSubSignature(messageId, timestamp, body, signature)) {
-    console.warn("[twitch-eventsub] invalid signature");
+    log.warn("invalid signature");
     return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
   }
 
   // Replay protection
   if (!isMessageFresh(timestamp)) {
-    console.warn("[twitch-eventsub] stale message timestamp");
+    log.warn("stale message timestamp");
     return NextResponse.json({ error: "Stale message" }, { status: 403 });
   }
 
@@ -71,7 +74,7 @@ export async function POST(req: Request) {
 
   // === Challenge verification ===
   if (messageType === "webhook_callback_verification" && parsed.challenge) {
-    console.log("[twitch-eventsub] challenge accepted for subscription:", parsed.subscription?.id);
+    log.info("challenge accepted", { subscriptionId: parsed.subscription?.id });
     return new Response(parsed.challenge, {
       status: 200,
       headers: { "Content-Type": "text/plain" },
@@ -80,7 +83,7 @@ export async function POST(req: Request) {
 
   // === Revocation ===
   if (messageType === "revocation") {
-    console.warn(`[twitch-eventsub] subscription revoked:`, parsed.subscription);
+    log.warn("subscription revoked", { subscription: parsed.subscription });
     if (parsed.subscription) {
       await prisma.twitchEventSubscription.update({
         where: { id: parsed.subscription.id },
@@ -139,10 +142,10 @@ export async function POST(req: Request) {
     } else if (eventType === "channel.hype_train.end") {
       await handleHypeTrainEnd(event);
     } else {
-      console.log(`[twitch-eventsub] unhandled event type: ${eventType}`);
+      log.info("unhandled event type", { eventType });
     }
   } catch (e) {
-    console.error(`[twitch-eventsub] handler error for ${eventType}:`, e);
+    log.error("handler error", e, { eventType });
   }
 
   await prisma.twitchEvent.create({
@@ -184,7 +187,7 @@ async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId
 
   // Skip gifted subs here — they're handled by the gifter's `channel.subscription.gift` event
   if (isGift) {
-    console.log(`[twitch-eventsub] subscribe ignored (gifted sub) for ${userLogin}`);
+    log.info("subscribe ignored (gifted sub)", { userLogin });
     return { userId: null, tokens: null };
   }
 
@@ -209,7 +212,7 @@ async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId
     select: { userId: true, id: true },
   });
   if (!connection) {
-    console.log(`[twitch-eventsub] sub from ${userLogin} but no linked Ghost Empire account`);
+    log.info("sub from unlinked account", { userLogin });
     return { userId: null, tokens: null };
   }
 
@@ -279,7 +282,7 @@ async function handleGiftSub(event: Record<string, unknown>): Promise<{ userId: 
   void extendSubathon({ subs: total });
 
   if (isAnonymous || !gifterLogin) {
-    console.log("[twitch-eventsub] anonymous gift sub — no reward");
+    log.info("anonymous gift sub — no reward");
     return { userId: null, tokens: null };
   }
 
