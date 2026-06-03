@@ -128,7 +128,8 @@ Po modernizacji stacku do najnowszych majorów rozpisana **Faza A** (autonomiczn
 - ✅ 🤖 **EmptyState na Sklepie + Home** — sygnaturowy pusty stan na publicznych widokach (`/shop` + widget eventów na stronie głównej). **Faza A #5 (część publiczna).**
 - ✅ 🤖 **a11y — ARIA na popoverach** — dzwonek powiadomień (`role="dialog"`/`aria-expanded`) + menu konta (`aria-haspopup`). **Faza A #5 (a11y).** Zostaje już tylko kontrast czerwień/czerń.
 - ✅ 🤖 **„Czas na streamie" + analityka per-stream** — model `StreamSession` + Twitch EventSub `stream.online/offline` → karta w `/admin#analytics` (LIVE+uptime / łączny czas / liczba / lista sesji). `db push` na żywej bazie. **Faza A #2.** *(Akcja usera: „Utwórz subskrypcje" w `/admin#twitch`. EventSub = czas nadawania, nie per-widz.)*
-- 🤖 **Faza A do zrobienia:** komendy warunkowe (`requiresLive`/`minViewers`) · code-split `AdminClient` + bundle-analyzer · i18n PL/EN · testy integracyjne+E2E · structured logging · kontrast a11y.
+- ✅ 🤖 **Komendy warunkowe** — `requiresLive` + `activeFromMinute` (status live z `StreamSession`; bot bramkuje). **Faza A #3.** *(`minViewers` pominięte — brak trackingu widzów.)*
+- 🤖 **Faza A do zrobienia:** code-split `AdminClient` + bundle-analyzer · i18n PL/EN · testy integracyjne+E2E · kontrast a11y.
 
 ### Pomysły użytkownika (2026-06-02) → kolejność i szczegóły w [PLAN.md](PLAN.md)
 
