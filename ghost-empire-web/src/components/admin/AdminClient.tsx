@@ -610,7 +610,7 @@ function AdminNav<T extends string>({
         className={cn(
           "flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible",
           "lg:sticky lg:top-4",
-          "border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-2",
+          "border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-2",
         )}
         style={{
           clipPath:
@@ -759,7 +759,7 @@ function StatTile({
   return (
     <div
       className={cn(
-        "border bg-zinc-950/70 backdrop-blur-sm p-3",
+        "border bg-zinc-950/70 backdrop-blur-xs p-3",
         accent ? "border-orange-700 bg-orange-950/20" : "border-zinc-800",
       )}
     >
@@ -782,7 +782,7 @@ function SectionCard({
 }: { title: string; icon: typeof Users; children: React.ReactNode }) {
   return (
     <div
-      className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-sm p-5"
+      className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs p-5"
       style={{
         clipPath:
           "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -1358,7 +1358,7 @@ function PendingOrdersList({
         {orders.map((t) => (
           <div key={t.id} className="border border-orange-900/50 bg-orange-950/10 p-3">
             <div className="flex items-start gap-3">
-              <span className="text-2xl flex-shrink-0">{t.shopItem?.imageEmoji ?? "🎁"}</span>
+              <span className="text-2xl shrink-0">{t.shopItem?.imageEmoji ?? "🎁"}</span>
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-white font-medium truncate">
                   {t.shopItem?.name ?? t.reason}
@@ -1373,7 +1373,7 @@ function PendingOrdersList({
                   </div>
                 )}
               </div>
-              <div className="flex gap-1 flex-shrink-0">
+              <div className="flex gap-1 shrink-0">
                 <button
                   onClick={() => act(t.id, "deliver")}
                   disabled={busyId === t.id || pending}
@@ -1454,7 +1454,7 @@ function ShopManager({
               item.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-zinc-950/60 opacity-50",
             )}
           >
-            <span className="text-xl flex-shrink-0">{item.imageEmoji ?? "🎁"}</span>
+            <span className="text-xl shrink-0">{item.imageEmoji ?? "🎁"}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-medium text-white truncate">{item.name}</span>
@@ -1573,7 +1573,7 @@ function ShopItemEditor({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
       onClick={() => !busy && onClose()}
     >
       <div
@@ -1646,7 +1646,7 @@ function ShopItemEditor({
             <select
               value={requiresAchievement}
               onChange={(e) => setRequiresAchievement(e.target.value)}
-              className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white focus:border-red-500 outline-none"
+              className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white focus:border-red-500 outline-hidden"
             >
               <option value="">— brak (dostępne dla wszystkich) —</option>
               {achievements.map((a) => (
@@ -1724,7 +1724,7 @@ function EventManager({
               e.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-zinc-950/60 opacity-50",
             )}
           >
-            <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-300 flex-shrink-0">
+            <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-300 shrink-0">
               {e.type}
             </span>
             <div className="flex-1 min-w-0">
@@ -1821,7 +1821,7 @@ function EventEditor({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => !busy && onClose()}>
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => !busy && onClose()}>
       <div className="bg-zinc-950 border-2 border-zinc-800 max-w-xl w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -2196,7 +2196,7 @@ function StreamlabsManager({
                       placeholder="username lub Discord ID"
                       value={assignTarget[d.id] ?? ""}
                       onChange={(e) => setAssignTarget((s) => ({ ...s, [d.id]: e.target.value }))}
-                      className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1 text-xs text-white font-mono outline-none focus:border-red-600 placeholder:text-zinc-700"
+                      className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600 placeholder:text-zinc-700"
                     />
                     <button
                       onClick={() => matchDonation(d.id, "assign")}
@@ -2272,7 +2272,7 @@ function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
           }
           return (
             <div key={entry.id} className="flex items-start gap-3 border-l-2 border-zinc-800 pl-3 py-1.5">
-              <span className="text-base flex-shrink-0">{meta.emoji}</span>
+              <span className="text-base shrink-0">{meta.emoji}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-sm">
                   <span className="font-semibold text-white">
@@ -2787,7 +2787,7 @@ function PollsManager({
                     <div className="text-sm font-bold text-white">{p.question}</div>
                     <div className="text-[10px] font-mono text-zinc-500">{p.totalVotes} głosów · {p.status === "open" ? "otwarta" : "zamknięta"}</div>
                   </div>
-                  <div className="flex gap-1.5 flex-shrink-0">
+                  <div className="flex gap-1.5 shrink-0">
                     {p.status === "open" ? (
                       <button onClick={async () => { if (await call({ action: "close", id: p.id }, "Zamknięto")) await load(); }} disabled={busy === p.id}
                         className="text-[9px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-300 hover:border-zinc-500 disabled:opacity-50">Zamknij</button>
@@ -2907,7 +2907,7 @@ function AchievementsManager({
             <FieldInput label="User (username / Discord ID / ID konta)" value={awardTarget} onChange={setAwardTarget} placeholder="gh0s77tt" />
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Osiągnięcie</label>
-              <select value={awardCode} onChange={(e) => setAwardCode(e.target.value)} className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-red-500">
+              <select value={awardCode} onChange={(e) => setAwardCode(e.target.value)} className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white outline-hidden focus:border-red-500">
                 <option value="">— wybierz —</option>
                 {list.map((a) => <option key={a.id} value={a.code}>{a.icon} {a.name}</option>)}
               </select>
@@ -2932,7 +2932,7 @@ function AchievementsManager({
             {list.length === 0 && <p className="text-zinc-600 text-sm">Brak osiągnięć — utwórz pierwsze powyżej.</p>}
             {list.map((a) => (
               <div key={a.id} className="flex items-center gap-3 border border-zinc-800 bg-zinc-950 px-3 py-2">
-                <span className="text-xl flex-shrink-0">{a.icon}</span>
+                <span className="text-xl shrink-0">{a.icon}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-bold text-white truncate">{a.name}</span>
@@ -3012,7 +3012,7 @@ function AchievementEditor({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => !busy && onClose()}>
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => !busy && onClose()}>
       <div className="bg-zinc-950 border-2 border-zinc-800 max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display text-xl text-white tracking-wider">{isNew ? "NOWE OSIĄGNIĘCIE" : "EDYCJA OSIĄGNIĘCIA"}</h3>
@@ -3040,13 +3040,13 @@ function AchievementEditor({
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Rzadkość</label>
-              <select value={rarity} onChange={(e) => setRarity(e.target.value)} className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-red-500">
+              <select value={rarity} onChange={(e) => setRarity(e.target.value)} className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white outline-hidden focus:border-red-500">
                 {rarities.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Wyzwalacz (trigger)</label>
-              <select value={triggerType} onChange={(e) => setTriggerType(e.target.value)} className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-red-500">
+              <select value={triggerType} onChange={(e) => setTriggerType(e.target.value)} className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white outline-hidden focus:border-red-500">
                 {triggerTypes.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
@@ -3174,7 +3174,7 @@ function CustomAlertsCard({
 
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Podgląd</label>
-              <div className="border border-zinc-800 rounded p-4" style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}>
+              <div className="border border-zinc-800 rounded-sm p-4" style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}>
                 <AlertCard
                   alert={{ title: title || "Tytuł alertu", message: message || "Treść alertu", icon, actorName: null, actorImage: null, amount: amount ? parseInt(amount) : null, amountLabel: amountLabel || null }}
                   accent={previewAccent}
@@ -3198,12 +3198,12 @@ function CustomAlertsCard({
             {list.length === 0 && <p className="text-zinc-600 text-sm">Brak własnych alertów — utwórz pierwszy powyżej.</p>}
             {list.map((a) => (
               <div key={a.id} className="flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-2 py-1.5">
-                <span className="text-lg flex-shrink-0">{a.icon}</span>
+                <span className="text-lg shrink-0">{a.icon}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-white truncate">{a.label}</div>
                   <div className="text-[10px] text-zinc-500 truncate">{a.title}</div>
                 </div>
-                {a.accent && <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: a.accent }} title={a.accent} />}
+                {a.accent && <span className="w-3 h-3 rounded-full shrink-0" style={{ background: a.accent }} title={a.accent} />}
                 <button
                   onClick={() => call({ action: "fire", id: a.id }, `Wyzwolono: ${a.label}`)}
                   disabled={busy !== null}
@@ -3302,7 +3302,7 @@ function ChatOverlayCard({
           </div>
           <div>
             <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Czcionka</label>
-            <select value={cfg.fontFamily} onChange={(e) => set("fontFamily", e.target.value)} className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-red-500">
+            <select value={cfg.fontFamily} onChange={(e) => set("fontFamily", e.target.value)} className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white outline-hidden focus:border-red-500">
               {Object.keys(CHAT_FONTS).map((f) => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
@@ -3418,7 +3418,7 @@ function CodeDropsCard({
         {/* Live preview */}
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Podgląd (tak wygląda na streamie)</label>
-          <div className="border border-zinc-800 rounded p-6 flex justify-center" style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}>
+          <div className="border border-zinc-800 rounded-sm p-6 flex justify-center" style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}>
             <CodeCard title={title || "Kod"} label="Cyberpunk 2077 (Steam)" code="ABCD-EFGH-IJKL" accent={accent} />
           </div>
         </div>
@@ -3450,7 +3450,7 @@ function CodeDropsCard({
             onChange={(e) => setBulk(e.target.value)}
             rows={4}
             placeholder={"Cyberpunk 2077 (Steam) | ABCD-EFGH-IJKL\nXXXX-YYYY-ZZZZ"}
-            className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white font-mono focus:border-green-600 outline-none"
+            className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white font-mono focus:border-green-600 outline-hidden"
           />
           <button
             onClick={async () => { if (await call({ action: "add", text: bulk }, "Kody dodane")) { setBulk(""); await reload(); } }}
@@ -3590,7 +3590,7 @@ function DatabaseResetCard({
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             placeholder={PHRASE}
-            className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white focus:border-red-500 outline-none"
+            className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white focus:border-red-500 outline-hidden"
           />
         </div>
         <button
@@ -3901,7 +3901,7 @@ function FieldInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-none focus:border-red-600 placeholder:text-zinc-700"
+        className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-red-600 placeholder:text-zinc-700"
       />
     </div>
   );
@@ -3923,7 +3923,7 @@ function FieldTextarea({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={2}
-        className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-red-600 resize-y"
+        className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-hidden focus:border-red-600 resize-y"
       />
     </div>
   );
@@ -4205,7 +4205,7 @@ function StreamAlertsManager({
               type="text"
               value={textColor}
               onChange={(e) => setTextColor(e.target.value)}
-              className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1.5 text-xs font-mono text-white outline-none focus:border-red-600"
+              className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1.5 text-xs font-mono text-white outline-hidden focus:border-red-600"
             />
           </div>
         </div>
@@ -4247,7 +4247,7 @@ function StreamAlertsManager({
               type="text"
               value={accentColor}
               onChange={(e) => setAccentColor(e.target.value)}
-              className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1.5 text-xs font-mono text-white outline-none focus:border-red-600"
+              className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1.5 text-xs font-mono text-white outline-hidden focus:border-red-600"
             />
           </div>
         </div>
@@ -4711,7 +4711,7 @@ function DuplicateGroupCard({
                     value={confirmText}
                     onChange={(e) => setConfirmText(e.target.value)}
                     placeholder={expectedConfirm}
-                    className="flex-1 border border-zinc-700 bg-black/40 px-2.5 py-1.5 text-xs text-white font-mono outline-none focus:border-red-600"
+                    className="flex-1 border border-zinc-700 bg-black/40 px-2.5 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600"
                   />
                   <button
                     onClick={execute}
@@ -5282,7 +5282,7 @@ function WelcomeManager({
               rows={2}
               maxLength={300}
               placeholder="Witaj {user}! Miło Cię widzieć 👋"
-              className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none resize-none"
+              className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden resize-none"
             />
             <div className="flex items-center gap-2 mt-3">
               <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Bonus GT</span>
@@ -5292,7 +5292,7 @@ function WelcomeManager({
                 onChange={(e) => setBonus(e.target.value)}
                 min={0}
                 title="GT przyznawane raz na widza na sesję przy powitaniu (0 = wyłączone)"
-                className="w-24 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+                className="w-24 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
               />
               <span className="text-[10px] text-zinc-600">0 = bez nagrody (wymaga połączonego konta)</span>
             </div>
@@ -5499,12 +5499,12 @@ function FaqManager({
             value={fKeyword}
             onChange={(e) => setFKeyword(e.target.value)}
             placeholder="słowo kluczowe"
-            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
           <select
             value={fMatchType}
             onChange={(e) => setFMatchType(e.target.value)}
-            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           >
             <option value="contains">zawiera</option>
             <option value="word">całe słowo</option>
@@ -5513,7 +5513,7 @@ function FaqManager({
             value={fResponse}
             onChange={(e) => setFResponse(e.target.value)}
             placeholder="Odpowiedź bota…"
-            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
           <input
             type="number"
@@ -5521,7 +5521,7 @@ function FaqManager({
             onChange={(e) => setFCooldown(e.target.value)}
             min={0}
             title="Cooldown (sekundy)"
-            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -5721,7 +5721,7 @@ function ChatTimersManager({
             value={fMessage}
             onChange={(e) => setFMessage(e.target.value)}
             placeholder="Wiadomość (np. Wbijaj na portal po GT!)"
-            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
           <div className="flex items-center gap-1">
             <input
@@ -5729,7 +5729,7 @@ function ChatTimersManager({
               value={fMinutes}
               onChange={(e) => setFMinutes(e.target.value)}
               min={1}
-              className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+              className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
             />
             <span className="text-xs text-zinc-500 shrink-0">min</span>
           </div>
@@ -5937,13 +5937,13 @@ function ChatCommandsManager({
             value={fTrigger}
             onChange={(e) => setFTrigger(e.target.value)}
             placeholder="!komenda"
-            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono focus:border-red-700 outline-none"
+            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono focus:border-red-700 outline-hidden"
           />
           <input
             value={fResponse}
             onChange={(e) => setFResponse(e.target.value)}
             placeholder="Odpowiedź bota…"
-            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
           <input
             type="number"
@@ -5951,7 +5951,7 @@ function ChatCommandsManager({
             onChange={(e) => setFCooldown(e.target.value)}
             min={0}
             title="Cooldown (sekundy)"
-            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none"
+            className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -6122,19 +6122,19 @@ function SubathonManager({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <label className="text-xs text-zinc-400">Czas startowy (min)
               <input type="number" value={minutes} onChange={(e) => setMinutes(e.target.value)} min={1}
-                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none" />
+                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden" />
             </label>
             <label className="text-xs text-zinc-400">Sek / sub
               <input type="number" value={perSub} onChange={(e) => setPerSub(e.target.value)} min={0}
-                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none" />
+                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden" />
             </label>
             <label className="text-xs text-zinc-400">Sek / PLN
               <input type="number" value={perPln} onChange={(e) => setPerPln(e.target.value)} min={0}
-                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none" />
+                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden" />
             </label>
             <label className="text-xs text-zinc-400">Max (min, opcj.)
               <input type="number" value={maxMinutes} onChange={(e) => setMaxMinutes(e.target.value)} min={0} placeholder="bez limitu"
-                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none" />
+                className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden" />
             </label>
           </div>
           <button
@@ -6167,11 +6167,11 @@ function SubathonRates({
     <div className="flex flex-wrap items-end gap-2 border border-zinc-900 bg-black/20 p-3">
       <label className="text-xs text-zinc-400">Sek / sub
         <input type="number" value={perSub} onChange={(e) => setPerSub(e.target.value)} min={0}
-          className="w-24 mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none block" />
+          className="w-24 mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden block" />
       </label>
       <label className="text-xs text-zinc-400">Sek / PLN
         <input type="number" value={perPln} onChange={(e) => setPerPln(e.target.value)} min={0}
-          className="w-24 mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-none block" />
+          className="w-24 mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden block" />
       </label>
       <button onClick={onSave} disabled={busy}
         className="border border-zinc-800 hover:border-zinc-600 text-zinc-300 px-3 py-1.5 text-xs font-mono uppercase tracking-widest disabled:opacity-50">
@@ -6458,7 +6458,7 @@ function StreamGoalsManager({
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 h-1.5 bg-zinc-900 rounded overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-zinc-900 rounded-sm overflow-hidden">
                       <div className="h-full transition-all" style={{ width: `${pct}%`, background: color }} />
                     </div>
                     <span className="text-[11px] font-mono text-white tabular-nums shrink-0">
@@ -6487,7 +6487,7 @@ function StreamGoalsManager({
             <select
               value={newType}
               onChange={(e) => setNewType(e.target.value)}
-              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-none focus:border-red-600"
+              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
             >
               {validTypes.map((t) => (
                 <option key={t} value={t}>{GOAL_TYPE_LABEL[t] ?? t}</option>
@@ -6499,7 +6499,7 @@ function StreamGoalsManager({
             <select
               value={newResetMode}
               onChange={(e) => setNewResetMode(e.target.value)}
-              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-none focus:border-red-600"
+              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
             >
               {validResetModes.map((m) => (
                 <option key={m} value={m}>{RESET_MODE_LABEL[m] ?? m}</option>
@@ -6512,7 +6512,7 @@ function StreamGoalsManager({
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
               placeholder="np. 500 subów = nowy setup!"
-              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-none focus:border-red-600"
+              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
             />
           </div>
           <div>
@@ -6522,7 +6522,7 @@ function StreamGoalsManager({
               min={1}
               value={newTarget}
               onChange={(e) => setNewTarget(e.target.value)}
-              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-none focus:border-red-600"
+              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600"
             />
           </div>
           <div>
@@ -6538,7 +6538,7 @@ function StreamGoalsManager({
                 value={newColor}
                 onChange={(e) => setNewColor(e.target.value)}
                 placeholder="#hex (puste = domyślny)"
-                className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-none focus:border-red-600"
+                className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600"
               />
             </div>
           </div>
@@ -6813,7 +6813,7 @@ function PredictionsManager({
               onChange={(e) => setNewQuestion(e.target.value)}
               placeholder="np. Ile zgonów w tym streamie?"
               maxLength={500}
-              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-sm text-white outline-none focus:border-red-600"
+              className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-sm text-white outline-hidden focus:border-red-600"
             />
           </div>
           <div>
@@ -6833,7 +6833,7 @@ function PredictionsManager({
                     }}
                     placeholder={`Opcja ${idx + 1}`}
                     maxLength={100}
-                    className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-none focus:border-red-600"
+                    className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
                   />
                   {newOptions.length > 2 && (
                     <button
@@ -6866,7 +6866,7 @@ function PredictionsManager({
                 value={newClosesIn}
                 onChange={(e) => setNewClosesIn(e.target.value)}
                 placeholder="np. 30"
-                className="w-24 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-none focus:border-red-600"
+                className="w-24 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600"
               />
             </div>
             <button
@@ -7264,30 +7264,30 @@ function SeasonsManager({
                   <div>
                     <label className="text-[9px] text-zinc-500 block">Tier</label>
                     <input type="number" min={1} max={activeSeason.totalTiers} value={rTier} onChange={(e) => setRTier(e.target.value)}
-                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-none focus:border-red-600" />
+                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600" />
                   </div>
                   <div>
                     <label className="text-[9px] text-zinc-500 block">Typ</label>
                     <select value={rType} onChange={(e) => setRType(e.target.value)}
-                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-none focus:border-red-600">
+                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-hidden focus:border-red-600">
                       {rewardTypes.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div className="col-span-2">
                     <label className="text-[9px] text-zinc-500 block">Label</label>
                     <input value={rLabel} onChange={(e) => setRLabel(e.target.value)} placeholder="np. 5000 Ghost Tokens"
-                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-none focus:border-red-600" />
+                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-hidden focus:border-red-600" />
                   </div>
                   <div>
                     <label className="text-[9px] text-zinc-500 block">Value</label>
                     <input value={rValue} onChange={(e) => setRValue(e.target.value)}
                       placeholder={rType === "tokens" ? "5000" : rType === "code" ? "KOD-XYZ-123" : rType === "item" ? "opis odbioru" : "wartość"}
-                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-none focus:border-red-600" />
+                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600" />
                   </div>
                   <div>
                     <label className="text-[9px] text-zinc-500 block">Ikona</label>
                     <input value={rIcon} onChange={(e) => setRIcon(e.target.value)} placeholder="👻"
-                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-none focus:border-red-600" />
+                      className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-hidden focus:border-red-600" />
                   </div>
                 </div>
                 <p className="text-[9px] text-zinc-600 mt-1 leading-relaxed">

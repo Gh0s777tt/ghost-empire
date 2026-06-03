@@ -15,7 +15,7 @@ export function SiteFooter() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* Left — branding */}
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 flex-shrink-0 overflow-hidden rounded ring-1 ring-red-600/40 bg-black">
+            <div className="w-6 h-6 shrink-0 overflow-hidden rounded-sm ring-1 ring-red-600/40 bg-black">
               <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">

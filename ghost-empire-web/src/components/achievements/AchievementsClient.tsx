@@ -327,7 +327,7 @@ function AchievementCard({
       <div className="flex items-start gap-3 mb-2 mt-1">
         <div
           className={cn(
-            "text-4xl flex-shrink-0",
+            "text-4xl shrink-0",
             earned ? "" : "grayscale opacity-50",
           )}
         >

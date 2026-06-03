@@ -214,19 +214,19 @@ export function QuestsClient({
         <h3 className="font-display text-base text-white tracking-wider mb-3">JAK TO DZIAŁA</h3>
         <ul className="text-xs text-zinc-400 space-y-1.5">
           <li className="flex gap-2">
-            <span className="text-orange-500 flex-shrink-0">▸</span>
+            <span className="text-orange-500 shrink-0">▸</span>
             Bot Discord śledzi Twoją aktywność (wiadomości, voice) i aktualizuje progress automatycznie.
           </li>
           <li className="flex gap-2">
-            <span className="text-orange-500 flex-shrink-0">▸</span>
+            <span className="text-orange-500 shrink-0">▸</span>
             Drop codes wpisujesz podczas live streama (Ghost wrzuca kod na czat → wpisz pierwszy).
           </li>
           <li className="flex gap-2">
-            <span className="text-orange-500 flex-shrink-0">▸</span>
+            <span className="text-orange-500 shrink-0">▸</span>
             Gdy progress dobije do targetu, kliknij <strong className="text-white">CLAIM</strong> — tokeny lecą na Twoje konto.
           </li>
           <li className="flex gap-2">
-            <span className="text-orange-500 flex-shrink-0">▸</span>
+            <span className="text-orange-500 shrink-0">▸</span>
             Wszystko resetuje się o 00:00. Niezclaimowane wczorajsze questy znikają (claim w dniu wygenerowania!).
           </li>
         </ul>
@@ -257,7 +257,7 @@ function StatTile({
   return (
     <div
       className={cn(
-        "border bg-zinc-950/70 backdrop-blur-sm p-3",
+        "border bg-zinc-950/70 backdrop-blur-xs p-3",
         accent ? "border-orange-700 bg-orange-950/20" : "border-zinc-800",
       )}
     >
@@ -299,7 +299,7 @@ function QuestCard({
   return (
     <div
       className={cn(
-        "border bg-zinc-950/80 backdrop-blur-sm p-4 flex flex-col transition-all",
+        "border bg-zinc-950/80 backdrop-blur-xs p-4 flex flex-col transition-all",
         status === "claimed" && "border-zinc-800 opacity-60",
         status === "claimable" && "border-green-700 bg-green-950/10",
         status === "in_progress" && "border-zinc-800",
@@ -312,7 +312,7 @@ function QuestCard({
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <div
-          className="w-10 h-10 flex-shrink-0 flex items-center justify-center"
+          className="w-10 h-10 shrink-0 flex items-center justify-center"
           style={{ background: meta.color + "20", border: `1px solid ${meta.color}50` }}
         >
           <Icon className="w-4 h-4" style={{ color: meta.color }} />

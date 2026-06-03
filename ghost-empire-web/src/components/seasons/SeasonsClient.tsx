@@ -126,9 +126,9 @@ export function SeasonsClient({
               <div className="text-white font-mono font-bold tabular-nums">{fmt(userXp)}</div>
             </div>
           </div>
-          <div className="h-2 bg-zinc-900 rounded overflow-hidden">
+          <div className="h-2 bg-zinc-900 rounded-sm overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-red-700 to-red-500 transition-all"
+              className="h-full bg-linear-to-r from-red-700 to-red-500 transition-all"
               style={{ width: `${tierPct}%` }}
             />
           </div>

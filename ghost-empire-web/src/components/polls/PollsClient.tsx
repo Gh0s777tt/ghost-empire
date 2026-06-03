@@ -69,11 +69,11 @@ export function PollsClient({
             const showResults = voted || !open || !isAuthenticated;
             const isBusy = busy === p.id;
             return (
-              <div key={p.id} className={cn("border bg-zinc-950/70 backdrop-blur-sm p-5", open ? "border-zinc-800" : "border-zinc-900")}>
+              <div key={p.id} className={cn("border bg-zinc-950/70 backdrop-blur-xs p-5", open ? "border-zinc-800" : "border-zinc-900")}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <h2 className="text-white font-bold text-base leading-snug">{p.question}</h2>
                   {!open && (
-                    <span className="text-[9px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-500 flex-shrink-0">
+                    <span className="text-[9px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-500 shrink-0">
                       Zamknięta
                     </span>
                   )}
@@ -108,7 +108,7 @@ export function PollsClient({
                             {opt}
                           </span>
                           {showResults && (
-                            <span className="text-[11px] font-mono text-zinc-400 tabular-nums flex-shrink-0">
+                            <span className="text-[11px] font-mono text-zinc-400 tabular-nums shrink-0">
                               {pct.toFixed(0)}% · {fmt(count)}
                             </span>
                           )}

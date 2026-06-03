@@ -92,7 +92,7 @@ export default async function WelcomePage() {
             return (
               <div
                 key={h.title}
-                className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4 text-left flex items-start gap-3"
+                className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4 text-left flex items-start gap-3"
                 style={{ clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))" }}
               >
                 <div className="w-9 h-9 flex items-center justify-center shrink-0" style={{ background: h.color + "20", border: `1px solid ${h.color}40` }}>

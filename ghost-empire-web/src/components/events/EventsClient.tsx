@@ -277,7 +277,7 @@ function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
         {isActive ? "TRWA!" : "WKRÓTCE"}
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <div
             className="w-16 h-16 flex items-center justify-center"
             style={{ background: meta.color }}
@@ -316,7 +316,7 @@ function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
 
 function WinnersBanner({ event }: { event: EventData }) {
   return (
-    <div className="mt-auto border-2 border-yellow-600 bg-gradient-to-br from-yellow-950/40 to-amber-950/30 p-3">
+    <div className="mt-auto border-2 border-yellow-600 bg-linear-to-br from-yellow-950/40 to-amber-950/30 p-3">
       <div className="flex items-center gap-2 mb-2">
         <Crown className="w-4 h-4 text-yellow-400" />
         <span className="text-[10px] font-bold tracking-widest uppercase text-yellow-300">
@@ -344,7 +344,7 @@ function WinnersBanner({ event }: { event: EventData }) {
                   </div>
                 )}
               </div>
-              <Trophy className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
+              <Trophy className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
             </li>
           ))}
         </ul>
@@ -360,7 +360,7 @@ function EventBase({
   const Icon = meta.icon;
   return (
     <div
-      className={cn("border bg-zinc-950/80 backdrop-blur-sm p-5 flex flex-col", meta.border)}
+      className={cn("border bg-zinc-950/80 backdrop-blur-xs p-5 flex flex-col", meta.border)}
       style={{
         clipPath:
           "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -636,7 +636,7 @@ function RaffleCard({
                 const v = Math.max(1, Math.min(remaining, parseInt(e.target.value) || 1));
                 setQty(v);
               }}
-              className="flex-1 border border-zinc-800 bg-black/30 text-center text-white text-sm font-mono tabular-nums py-2 outline-none focus:border-purple-600"
+              className="flex-1 border border-zinc-800 bg-black/30 text-center text-white text-sm font-mono tabular-nums py-2 outline-hidden focus:border-purple-600"
             />
             <button
               onClick={() => setQty((q) => Math.min(remaining, q + 1))}

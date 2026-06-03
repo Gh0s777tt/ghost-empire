@@ -127,7 +127,7 @@ export default async function DropsPage() {
           {/* History */}
           {isAuthenticated && (
             <div
-              className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-5"
+              className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-5"
               style={{
                 clipPath:
                   "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -187,23 +187,23 @@ export default async function DropsPage() {
             </h3>
             <ul className="text-xs text-zinc-400 space-y-1.5">
               <li className="flex gap-2">
-                <span className="text-orange-500 flex-shrink-0">▸</span>
+                <span className="text-orange-500 shrink-0">▸</span>
                 Ghost podczas live'a wrzuca na czat sekretny kod (np. <code className="font-mono text-white">GHOST24</code>).
               </li>
               <li className="flex gap-2">
-                <span className="text-orange-500 flex-shrink-0">▸</span>
+                <span className="text-orange-500 shrink-0">▸</span>
                 Wpisujesz tutaj. Pierwsze N osób dostaje <strong className="text-orange-300">bonus reward</strong> (czasem ×4 standard reward).
               </li>
               <li className="flex gap-2">
-                <span className="text-orange-500 flex-shrink-0">▸</span>
+                <span className="text-orange-500 shrink-0">▸</span>
                 Każdy kod możesz odebrać tylko raz. Próba claimowania ponownie = 409.
               </li>
               <li className="flex gap-2">
-                <span className="text-orange-500 flex-shrink-0">▸</span>
+                <span className="text-orange-500 shrink-0">▸</span>
                 Kody wygasają (najczęściej po 60 minutach). Spóźnisz się = przepadło.
               </li>
               <li className="flex gap-2">
-                <span className="text-orange-500 flex-shrink-0">▸</span>
+                <span className="text-orange-500 shrink-0">▸</span>
                 Drop też nabija progress daily questa "Odbierz drop code".
               </li>
             </ul>
@@ -220,7 +220,7 @@ function StatTile({
   label: string; value: string; suffix?: string; emoji: string;
 }) {
   return (
-    <div className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-3">
+    <div className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-3">
       <div className="flex items-center gap-1.5 mb-1">
         <span className="text-base">{emoji}</span>
         <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">

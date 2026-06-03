@@ -113,7 +113,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
       {/* Live or countdown banner */}
       {isLive && nextSlot && currentEnd ? (
         <div
-          className="border-2 border-red-500 bg-gradient-to-br from-red-950/40 to-red-900/20 p-5 sm:p-6 relative overflow-hidden"
+          className="border-2 border-red-500 bg-linear-to-br from-red-950/40 to-red-900/20 p-5 sm:p-6 relative overflow-hidden"
           style={{
             clipPath:
               "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
@@ -186,7 +186,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
 
       {/* Weekly grid */}
       <div
-        className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4"
+        className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4"
         style={{
           clipPath:
             "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",

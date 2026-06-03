@@ -36,7 +36,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 flex-shrink-0 overflow-hidden rounded-md ring-1 ring-red-600/50 bg-black transition-transform group-hover:scale-105">
+            <div className="w-9 h-9 shrink-0 overflow-hidden rounded-md ring-1 ring-red-600/50 bg-black transition-transform group-hover:scale-105">
               <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
             </div>
             <div className="hidden sm:block leading-none">
@@ -225,7 +225,7 @@ export function Header() {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex-shrink-0 px-3 py-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase transition-all border ${
+                className={`shrink-0 px-3 py-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase transition-all border ${
                   active
                     ? "border-red-500 bg-red-600/20 text-red-300"
                     : "border-zinc-800 text-zinc-500 hover:text-zinc-300"

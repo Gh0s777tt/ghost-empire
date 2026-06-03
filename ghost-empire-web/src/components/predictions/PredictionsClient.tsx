@@ -261,7 +261,7 @@ function ActivePredictionCard({
             placeholder="GT"
             value={wagerInput}
             onChange={(e) => setWagerInput(e.target.value)}
-            className="w-28 border border-zinc-700 bg-black/40 px-2 py-1.5 text-sm text-white font-mono outline-none focus:border-red-600"
+            className="w-28 border border-zinc-700 bg-black/40 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-red-600"
           />
           <div className="flex gap-1">
             {[100, 500, 1000, 5000].filter((v) => v <= myTokens).map((v) => (

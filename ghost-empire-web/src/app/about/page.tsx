@@ -428,7 +428,7 @@ export default async function AboutPage() {
                 <Link
                   key={f.title}
                   href={f.href}
-                  className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4 hover:border-red-900/50 transition-all group"
+                  className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4 hover:border-red-900/50 transition-all group"
                   style={{
                     clipPath:
                       "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
@@ -458,10 +458,10 @@ export default async function AboutPage() {
             {STEPS.map((s) => (
               <div
                 key={s.n}
-                className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4 flex gap-4"
+                className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4 flex gap-4"
               >
                 <div
-                  className="font-display text-4xl flex-shrink-0 leading-none"
+                  className="font-display text-4xl shrink-0 leading-none"
                   style={{ color: "#E50914", textShadow: "2px 0 0 rgba(139,0,0,0.5)" }}
                 >
                   {s.n}
@@ -481,9 +481,9 @@ export default async function AboutPage() {
             {EARN_WAYS.map((w) => (
               <div
                 key={w.title}
-                className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-3 flex items-start gap-3"
+                className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-3 flex items-start gap-3"
               >
-                <span className="text-2xl flex-shrink-0">{w.emoji}</span>
+                <span className="text-2xl shrink-0">{w.emoji}</span>
                 <div>
                   <h3 className="font-bold text-white text-sm mb-0.5">{w.title}</h3>
                   <p className="text-zinc-500 text-xs leading-relaxed">{w.desc}</p>

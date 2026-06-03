@@ -161,14 +161,14 @@ export default async function PublicProfilePage({
         <div className="space-y-6">
           {/* Hero card */}
           <div
-            className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-sm p-6"
+            className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs p-6"
             style={{
               clipPath:
                 "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
             }}
           >
             <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="relative flex-shrink-0">
+              <div className="relative shrink-0">
                 {user.image ? (
                   <img
                     src={user.image}
@@ -257,7 +257,7 @@ export default async function PublicProfilePage({
               {isOwnProfile && (
                 <Link
                   href="/profile"
-                  className="px-3 py-2 border border-red-700 hover:border-red-500 text-red-400 hover:text-red-300 text-[10px] font-bold tracking-widest uppercase flex-shrink-0"
+                  className="px-3 py-2 border border-red-700 hover:border-red-500 text-red-400 hover:text-red-300 text-[10px] font-bold tracking-widest uppercase shrink-0"
                 >
                   → Twój panel
                 </Link>
@@ -275,7 +275,7 @@ export default async function PublicProfilePage({
 
           {/* Ranking positions */}
           <div
-            className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4"
+            className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4"
             style={{
               clipPath:
                 "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -295,7 +295,7 @@ export default async function PublicProfilePage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Connections */}
             <div
-              className="lg:col-span-1 border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4"
+              className="lg:col-span-1 border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4"
               style={{
                 clipPath:
                   "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -352,7 +352,7 @@ export default async function PublicProfilePage({
 
             {/* Social Links (public) */}
             <div
-              className="lg:col-span-2 border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4"
+              className="lg:col-span-2 border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4"
               style={{
                 clipPath:
                   "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -376,7 +376,7 @@ export default async function PublicProfilePage({
                         rel="noreferrer"
                         className="flex items-center gap-2 border border-zinc-800 bg-black/30 px-3 py-2 hover:border-zinc-700 hover:bg-zinc-900/50 transition-all"
                       >
-                        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: SOCIAL_COLORS[l.platform] }} />
+                        <Icon className="w-4 h-4 shrink-0" style={{ color: SOCIAL_COLORS[l.platform] }} />
                         <div className="min-w-0 flex-1">
                           <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">{l.platform}</div>
                           <div className="text-xs text-white truncate">@{l.handle}</div>
@@ -391,7 +391,7 @@ export default async function PublicProfilePage({
 
           {/* Achievements earned */}
           <div
-            className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4"
+            className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4"
             style={{
               clipPath:
                 "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -442,7 +442,7 @@ export default async function PublicProfilePage({
 
 function StatTile({ label, value, emoji }: { label: string; value: string; emoji: string }) {
   return (
-    <div className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-3">
+    <div className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-3">
       <div className="flex items-center gap-1.5 mb-1">
         <span className="text-base">{emoji}</span>
         <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">

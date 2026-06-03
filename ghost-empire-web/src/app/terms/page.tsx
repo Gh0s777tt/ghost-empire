@@ -143,7 +143,7 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section
-      className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-5"
+      className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-5"
       style={{
         clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
       }}
@@ -165,7 +165,7 @@ function Item({ children }: { children: React.ReactNode }) {
 function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex gap-2">
-      <span className="text-red-500 flex-shrink-0">▸</span>
+      <span className="text-red-500 shrink-0">▸</span>
       <span>{children}</span>
     </li>
   );

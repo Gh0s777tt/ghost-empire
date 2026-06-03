@@ -1,6 +1,239 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --color-ghost-black: #0a0a0a;
+  --color-ghost-charcoal: #1a1a1a;
+  --color-ghost-graphite: #2a2a2a;
+  --color-ghost-smoke: #6b6b6b;
+  --color-ghost-bone: #e8e8e8;
+  --color-ghost-red: #e50914;
+  --color-ghost-red-dark: #8b0000;
+  --color-ghost-gold: #d4af37;
+
+  --font-display: Anton, Impact, sans-serif;
+  --font-mono: var(--font-mono), JetBrains Mono, Consolas, monospace;
+  --font-sans: var(--font-inter), Inter, system-ui, sans-serif;
+
+  --animate-ping-slow: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-glow-pulse: glow-pulse 4s ease-in-out infinite;
+  --animate-pulse-red: pulse-red 2s ease-in-out infinite;
+
+  --background-image-ghost-radial: radial-gradient(
+    circle at 20% 50%,
+    rgba(229, 9, 20, 0.2) 0%,
+    transparent 50%
+  );
+
+  @keyframes glow-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(229, 9, 20, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(229, 9, 20, 0.6);
+    }
+  }
+  @keyframes pulse-red {
+    0%,
+    100% {
+      background: rgba(229, 9, 20, 0.1);
+    }
+    50% {
+      background: rgba(229, 9, 20, 0.25);
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility clip-corner {
+  /* Clip-path corners — Ghost Empire signature shape */
+  clip-path: polygon(
+    0 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% 100%,
+    12px 100%,
+    0 calc(100% - 12px)
+  );
+}
+
+@utility clip-tag {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+@utility clip-tag-reverse {
+  clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+@utility font-display {
+  /* Display font */
+  font-family: 'Anton', Impact, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+@utility font-mono {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+@utility text-glitch {
+  /* Glitch text effect */
+  text-shadow:
+    2px 0 0 rgba(229, 9, 20, 0.7),
+    -2px 0 0 rgba(139, 0, 0, 0.5);
+}
+
+@utility glow-red {
+  /* Glow effects */
+  box-shadow:
+    0 0 20px rgba(229, 9, 20, 0.3),
+    inset 0 0 20px rgba(229, 9, 20, 0.05);
+}
+
+@utility glow-red-strong {
+  box-shadow: 0 0 40px rgba(229, 9, 20, 0.6);
+}
+
+@utility glow-gold {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+@utility scanlines {
+  /* Ghost scanlines overlay */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(229, 9, 20, 0.025) 2px,
+      rgba(229, 9, 20, 0.025) 4px
+    );
+    border-radius: inherit;
+  }
+}
+
+@utility grain {
+  /* Grain texture overlay */
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+}
+
+@utility pulse-live {
+  /* Pulse animation for LIVE indicator */
+  animation: pulse-live 2s ease-in-out infinite;
+}
+
+@utility border-animated {
+  /* Animated gradient border */
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, #e50914, #8b0000, #e50914);
+    z-index: -1;
+    background-size: 200%;
+    animation: border-rotate 3s linear infinite;
+  }
+}
+
+@utility card-ghost {
+  /* Card variants */
+  @apply border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs;
+}
+
+@utility card-ghost-red {
+  @apply border border-red-900/60 bg-linear-to-br from-red-950/30 to-black;
+}
+
+@utility btn-ghost-red {
+  /* Button variants */
+  @apply px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs tracking-widest uppercase transition-all clip-tag;
+}
+
+@utility btn-ghost-outline {
+  @apply px-4 py-2 border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white font-bold text-xs tracking-widest uppercase transition-all;
+}
+
+@utility token-display {
+  /* Token display */
+  @apply font-mono font-bold tabular-nums;
+}
+
+@utility rarity-common {
+  /* Rarity colors */
+  @apply from-zinc-800 to-zinc-900 border-zinc-600;
+}
+
+@utility rarity-rare {
+  @apply from-blue-900 to-blue-950 border-blue-500;
+}
+
+@utility rarity-epic {
+  @apply from-purple-900 to-purple-950 border-purple-500;
+}
+
+@utility rarity-legendary {
+  @apply from-yellow-900 to-orange-950 border-yellow-500;
+}
+
+@utility no-scrollbar {
+  /* Hide scrollbar but keep scroll */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility line-clamp-2 {
+  /* Truncate text utilities */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@utility line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@utility tabular {
+  /* Tabular numbers */
+  font-variant-numeric: tabular-nums;
+}
 
 /* =========================================================
    GHOST EMPIRE — GLOBAL STYLES
@@ -49,179 +282,31 @@
   }
 }
 
-/* a11y — respect "reduce motion": near-instant animations/transitions */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+@layer utilities {
+  /* a11y — respect "reduce motion": near-instant animations/transitions */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
 @layer components {
-  /* Clip-path corners — Ghost Empire signature shape */
-  .clip-corner {
-    clip-path: polygon(
-      0 0,
-      calc(100% - 12px) 0,
-      100% 12px,
-      100% 100%,
-      12px 100%,
-      0 calc(100% - 12px)
-    );
-  }
-
-  .clip-tag {
-    clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-  }
-
-  .clip-tag-reverse {
-    clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%);
-  }
-
-  /* Display font */
-  .font-display {
-    font-family: 'Anton', Impact, sans-serif;
-    letter-spacing: 0.02em;
-  }
-
-  .font-mono {
-    font-family: 'JetBrains Mono', Consolas, monospace;
-  }
-
-  /* Glitch text effect */
-  .text-glitch {
-    text-shadow:
-      2px 0 0 rgba(229, 9, 20, 0.7),
-      -2px 0 0 rgba(139, 0, 0, 0.5);
-  }
-
-  /* Glow effects */
-  .glow-red {
-    box-shadow:
-      0 0 20px rgba(229, 9, 20, 0.3),
-      inset 0 0 20px rgba(229, 9, 20, 0.05);
-  }
-
-  .glow-red-strong {
-    box-shadow: 0 0 40px rgba(229, 9, 20, 0.6);
-  }
-
-  .glow-gold {
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-  }
-
-  /* Ghost scanlines overlay */
-  .scanlines::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(229, 9, 20, 0.025) 2px,
-      rgba(229, 9, 20, 0.025) 4px
-    );
-    border-radius: inherit;
-  }
-
-  /* Grain texture overlay */
-  .grain::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    mix-blend-mode: overlay;
-  }
-
-  /* Pulse animation for LIVE indicator */
-  .pulse-live {
-    animation: pulse-live 2s ease-in-out infinite;
-  }
 
   @keyframes pulse-live {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
   }
 
-  /* Animated gradient border */
-  .border-animated {
-    position: relative;
-  }
-
-  .border-animated::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    background: linear-gradient(45deg, #E50914, #8B0000, #E50914);
-    z-index: -1;
-    background-size: 200%;
-    animation: border-rotate 3s linear infinite;
-  }
-
   @keyframes border-rotate {
     0% { background-position: 0% 50%; }
     100% { background-position: 200% 50%; }
   }
-
-  /* Card variants */
-  .card-ghost {
-    @apply border border-zinc-800 bg-zinc-950/80 backdrop-blur-sm;
-  }
-
-  .card-ghost-red {
-    @apply border border-red-900/60 bg-gradient-to-br from-red-950/30 to-black;
-  }
-
-  /* Button variants */
-  .btn-ghost-red {
-    @apply px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs tracking-widest uppercase transition-all clip-tag;
-  }
-
-  .btn-ghost-outline {
-    @apply px-4 py-2 border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white font-bold text-xs tracking-widest uppercase transition-all;
-  }
-
-  /* Token display */
-  .token-display {
-    @apply font-mono font-bold tabular-nums;
-  }
-
-  /* Rarity colors */
-  .rarity-common   { @apply from-zinc-800 to-zinc-900 border-zinc-600; }
-  .rarity-rare     { @apply from-blue-900 to-blue-950 border-blue-500; }
-  .rarity-epic     { @apply from-purple-900 to-purple-950 border-purple-500; }
-  .rarity-legendary { @apply from-yellow-900 to-orange-950 border-yellow-500; }
-}
-
-@layer utilities {
-  /* Hide scrollbar but keep scroll */
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-  /* Truncate text utilities */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Tabular numbers */
-  .tabular { font-variant-numeric: tabular-nums; }
 }
 
 /* =========================================================
