@@ -46,7 +46,7 @@ Po modernizacji stacku do najnowszych majorów (Next 16 · React 19 · TS 6 · P
 5. 🟡 **Dokończenie empty/error states + a11y** — ✅ publiczne listy (`EmptyState` na Sklepie + widgecie Home) + ✅ ARIA na popoverach (dzwonek powiadomień `role="dialog"`/`aria-expanded`/`aria-controls`, menu konta `aria-haspopup`). Zostaje już tylko: **kontrast czerwień/czerń** (ryzykowne — kolory marki, osobno). *(Pozostałe surowe „Brak…" to sekcje admina + drobne pod-karty — świadomie inline.)*
 6. **i18n PL/EN — fundament** — `textEn` już w seedzie; warstwa tłumaczeń stron publicznych.
 7. **Testy integracyjne (API+DB, Docker Postgres) + E2E Playwright** — webhooki/ekonomia + happy-path.
-8. **Structured logging** — JSON + poziomy w webhookach/cron/award.
+8. 🟡 **Structured logging** — ✅ `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty w `twitch-eventsub`. Zostaje adopcja w `kick-events` / `paymedia` / cron / award (ten sam wzorzec).
 
 ### 🔑 B. Wymaga Twoich kluczy/kont (dokładne nazwy w [docs/ENV.md](docs/ENV.md))
 1. **Logowanie/łączenie Twitch — BLOKER** — „klikam i nic": sprawdź w **Vercel** `TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET` (+ redeploy) oraz Redirect URI w dev.twitch.tv = `https://<domena>/api/auth/callback/twitch`. Kod jest OK; ekran logowania pokazuje teraz konkretny błąd.
