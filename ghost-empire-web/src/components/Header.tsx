@@ -155,6 +155,7 @@ export function Header() {
                     onClick={() => setMenuOpen((o) => !o)}
                     className="flex items-center gap-2"
                     aria-label="Menu konta"
+                    aria-haspopup="true"
                     aria-expanded={menuOpen}
                   >
                     {session.user.image ? (

@@ -126,8 +126,9 @@ Po modernizacji stacku do najnowszych majorów rozpisana **Faza A** (autonomiczn
 
 - ✅ 🤖 **Eventy: „Aktywne" + „Edycja" scalone** *(prośba usera)* — jedna karta „Eventy" w `/admin#events` (lista wszystkich eventów + Wylosuj/ON-OFF/Edit w wierszu, liczniki uczestników, reaktywacja dezaktywowanych). **Faza A #1.**
 - ✅ 🤖 **EmptyState na Sklepie + Home** — sygnaturowy pusty stan na publicznych widokach (`/shop` + widget eventów na stronie głównej). **Faza A #5 (część publiczna).**
+- ✅ 🤖 **a11y — ARIA na popoverach** — dzwonek powiadomień (`role="dialog"`/`aria-expanded`) + menu konta (`aria-haspopup`). **Faza A #5 (a11y).** Zostaje już tylko kontrast czerwień/czerń.
 - ⏸️ 🤖 **„Czas na streamie" + analityka per-stream** — odłożone na prośbę usera (rusza żywą bazę + subskrypcje Twitch; po „czystym kodzie"). EventSub mierzy tylko czas nadawania, nie per-widz.
-- 🤖 **Faza A do zrobienia:** komendy warunkowe (`requiresLive`/`minViewers`) · code-split `AdminClient` + bundle-analyzer · kontrast + reszta modali (a11y) · i18n PL/EN · testy integracyjne+E2E · structured logging.
+- 🤖 **Faza A do zrobienia:** komendy warunkowe (`requiresLive`/`minViewers`) · code-split `AdminClient` + bundle-analyzer · i18n PL/EN · testy integracyjne+E2E · structured logging · kontrast a11y.
 
 ### Pomysły użytkownika (2026-06-02) → kolejność i szczegóły w [PLAN.md](PLAN.md)
 

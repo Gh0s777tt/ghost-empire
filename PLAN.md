@@ -43,7 +43,7 @@ Po modernizacji stacku do najnowszych majorów (Next 16 · React 19 · TS 6 · P
 2. ⏸️ **„Czas na streamie" + analityka per-stream** — model `StreamSession`, auto-trigger przez Twitch EventSub `stream.online/offline` (webhook już mamy), lista streamów + suma godzin + wskaźnik LIVE w `/admin#analytics`. *(Odłożone na prośbę usera — rusza żywą bazę + subskrypcje Twitch; robimy po „czystym kodzie". Uwaga: EventSub mierzy tylko czas nadawania streamera, nie per-widz.)*
 3. **Komendy warunkowe** — `requiresLive` / `minViewers` / `activeFromMinute` w `ChatCommand` (plan 3B #2).
 4. **Code-split `AdminClient.tsx`** — monolit ~7k linii → lazy per-sekcja + `@next/bundle-analyzer`.
-5. 🟡 **Dokończenie empty/error states + a11y** — ✅ publiczne listy domknięte (`EmptyState` na Sklepie + widgecie Home, obok 6 wcześniejszych). Zostaje: kontrast czerwień/czerń, reszta modali/dropdownów. *(Pozostałe surowe „Brak…" to sekcje admina + drobne pod-karty — świadomie inline.)*
+5. 🟡 **Dokończenie empty/error states + a11y** — ✅ publiczne listy (`EmptyState` na Sklepie + widgecie Home) + ✅ ARIA na popoverach (dzwonek powiadomień `role="dialog"`/`aria-expanded`/`aria-controls`, menu konta `aria-haspopup`). Zostaje już tylko: **kontrast czerwień/czerń** (ryzykowne — kolory marki, osobno). *(Pozostałe surowe „Brak…" to sekcje admina + drobne pod-karty — świadomie inline.)*
 6. **i18n PL/EN — fundament** — `textEn` już w seedzie; warstwa tłumaczeń stron publicznych.
 7. **Testy integracyjne (API+DB, Docker Postgres) + E2E Playwright** — webhooki/ekonomia + happy-path.
 8. **Structured logging** — JSON + poziomy w webhookach/cron/award.
