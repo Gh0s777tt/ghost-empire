@@ -319,7 +319,7 @@ export function AdminClient({
         .forEach((k) => url.searchParams.delete(k));
       window.history.replaceState(null, "", url.toString());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const sharedProps = { onToast: showToast, onSuccess: refresh, pending };
@@ -4596,7 +4596,7 @@ function DuplicateGroupCard({
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   {u.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                     
                     <img src={u.image} alt="" width={32} height={32} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full border border-zinc-800" />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800" />
