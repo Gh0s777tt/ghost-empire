@@ -11,6 +11,7 @@ import {
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Play, SkipForward, Hourglass, BarChart3,
 } from "lucide-react";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
+import { ErrorState } from "@/components/EmptyState";
 import {
   ALERT_TYPE_LIST,
   ALERT_ANIMATIONS,
@@ -568,6 +569,7 @@ export function AdminClient({
 function LazySection<T>({ s, children }: { s: string; children: (data: T) => React.ReactNode }) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -584,14 +586,10 @@ function LazySection<T>({ s, children }: { s: string; children: (data: T) => Rea
       .then((d) => { if (!cancelled) setData(d as T); })
       .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Błąd ładowania"); });
     return () => { cancelled = true; };
-  }, [s]);
+  }, [s, reloadKey]);
 
   if (error) {
-    return (
-      <div className="border border-red-800 bg-red-950/30 p-4 text-sm text-red-200">
-        Nie udało się załadować sekcji: {error}
-      </div>
-    );
+    return <ErrorState message={`Sekcja: ${error}`} onRetry={() => setReloadKey((k) => k + 1)} />;
   }
   if (data === null) {
     return (

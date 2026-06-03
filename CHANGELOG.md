@@ -9,6 +9,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **Brandowane error-states + retry** — błąd ładowania sekcji w `/admin` pokazuje teraz spójny `ErrorState` (⚠️ + komunikat) z przyciskiem **„Spróbuj ponownie"** (ponowny fetch bez przeładowania strony) zamiast surowego czerwonego boksu.
 - **README od nowa (cinematic) + sync wersji** — animowany banner (capsule-render), typing-SVG, badge-tagi `for-the-badge`, **wykresy Mermaid** (architektura · ekonomia GT · oś faz), zwijane sekcje setupu/OAuth, GitBook-style spis dokumentów oraz tech-stack z **aktualnymi wersjami** (Next 16 / React 19 / TS 6 / Prisma 7 / Tailwind 4 / zod 4 / vitest 4 / ESLint 9). Odnotowane: **ESLint 10 zablokowany** przez ekosystem (`eslint-config-next` 16 jeszcze go nie wspiera — `scopeManager.addGlobals`), zostajemy na 9.
 - **Więcej empty states + a11y modali** — `EmptyState` także w **Osiągnięciach** i **Predykcjach**; modale edytorów (sklep / event / osiągnięcie) mają teraz `role="dialog"` + `aria-modal` + `aria-label` (poprawna obsługa czytników ekranu).
 - **Stream Alerts — typy scalone z per-typ (klik → rozwija)** — w `/admin#alerts` lista typów łączy włącz/wyłącz (`●`) z konfiguracją: klikasz typ → in-line rozwijają się **animacja / pozycja / dźwięk / próg** (koniec osobnej karty i przewijania). Plus fix prywatności: w **„Ostatnich alertach"** (panel) i w **alercie powitalnym na overlayu** nie pokazuje się już imię i nazwisko (maska / `displayNick`).
