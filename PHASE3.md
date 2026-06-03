@@ -292,6 +292,9 @@ Nowa sekcja sidebar z lucide icon `MessageSquare`. UI:
 
 ### Alerts customization (rozszerzenie istniejących Stream Alerts)
 
+> ✅ **DONE (per-typ):** animacja (slide/fade/scale/none) · pozycja (9 wariantów) · własny dźwięk (URL) · próg kwotowy — **osobno dla każdego typu** alertu (`AlertTypeConfig`, `/admin#alerts` → klik na typ rozwija opcje). Rozmiar/kolor tekstu również gotowe. Zostaje (opcjonalnie): upload grafik/dźwięków do storage zamiast URL.
+
+
 - Per-type customization (sekcja per: shop_purchase, twitch_sub, donation, etc.):
   - Animacja: slide-from-right (jak teraz) / fade / bounce / zoom
   - Czcionka: lista predefiniowanych (Inter, Anton, JetBrains Mono, Bebas Neue, Permanent Marker, etc.)

@@ -36,7 +36,7 @@ Pierwsza warstwa domknięta: **są już testy jednostkowe (Vitest) i CI (GitHub 
 | **Lighthouse CI / performance budget** | 🟡 | Wykrywanie regresji Core Web Vitals na publicznych stronach |
 | ~~**Dependabot**~~ ✅ | — | **Zrobione** — `.github/dependabot.yml`: cotygodniowe zgrupowane PR-y (web/chat/bot + actions), security-updaty natychmiast |
 | **Prettier + import sort** | 🧊 | Spójny styl; dziś tylko ESLint |
-| **`@typescript-eslint` (surowsze reguły TS)** | 🧊 | Po migracji **Next 16** lint = **ESLint 9 flat config** z `eslint-config-next/core-web-vitals` (ma już bazę `typescript-eslint`). Zostaje ewentualne włączenie surowszych reguł TS |
+| **`@typescript-eslint` (surowsze reguły TS)** | 🧊 | Lint = **ESLint 9 flat config** z `eslint-config-next/core-web-vitals`. Zostaje: surowsze reguły TS. ⛔ **ESLint 10** zablokowany — `eslint-config-next` 16 + pluginy jeszcze go nie wspierają (`scopeManager.addGlobals is not a function`); czekamy na release zgodny z ESLint 10 |
 
 ---
 
