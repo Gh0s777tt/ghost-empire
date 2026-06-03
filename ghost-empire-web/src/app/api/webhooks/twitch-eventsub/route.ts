@@ -141,6 +141,10 @@ export async function POST(req: Request) {
       await handleHypeTrainProgress(event);
     } else if (eventType === "channel.hype_train.end") {
       await handleHypeTrainEnd(event);
+    } else if (eventType === "stream.online") {
+      await handleStreamOnline(event);
+    } else if (eventType === "stream.offline") {
+      await handleStreamOffline();
     } else {
       log.info("unhandled event type", { eventType });
     }
@@ -458,6 +462,38 @@ async function handleHypeTrainEnd(event: Record<string, unknown>): Promise<void>
     amount: total,
     amountLabel: "pkt",
   });
+}
+
+// =====================================================
+// Stream sessions ("czas na streamie" — per-stream analytics)
+// =====================================================
+
+/** Close any session left open (e.g. a missed stream.offline), computing duration. */
+async function closeOpenStreamSessions(endedAt: Date): Promise<void> {
+  const open = await prisma.streamSession.findMany({ where: { platform: "twitch", endedAt: null } });
+  for (const s of open) {
+    const durationSeconds = Math.max(0, Math.floor((endedAt.getTime() - s.startedAt.getTime()) / 1000));
+    await prisma.streamSession.update({ where: { id: s.id }, data: { endedAt, durationSeconds } });
+  }
+}
+
+async function handleStreamOnline(event: Record<string, unknown>): Promise<void> {
+  const streamId = (event.id as string | undefined) ?? null;
+  const startedAt = parseDate(event.started_at as string | undefined) ?? new Date();
+  // Idempotent — Twitch may redeliver the same stream.online.
+  if (streamId) {
+    const existing = await prisma.streamSession.findUnique({ where: { twitchStreamId: streamId } });
+    if (existing) return;
+  }
+  // Safety net: close anything left open by a missed stream.offline before opening a new one.
+  await closeOpenStreamSessions(startedAt);
+  await prisma.streamSession.create({ data: { platform: "twitch", twitchStreamId: streamId, startedAt } });
+  log.info("stream online", { streamId, startedAt: startedAt.toISOString() });
+}
+
+async function handleStreamOffline(): Promise<void> {
+  await closeOpenStreamSessions(new Date());
+  log.info("stream offline");
 }
 
 function parseDate(s: string | undefined): Date | null {

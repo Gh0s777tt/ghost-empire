@@ -104,6 +104,9 @@ export const EVENT_TYPES_TO_SUBSCRIBE = [
   { type: "channel.hype_train.begin", version: "1" },
   { type: "channel.hype_train.progress", version: "1" },
   { type: "channel.hype_train.end", version: "1" },
+  // Broadcast on/off → per-stream sessions ("czas na streamie" analytics)
+  { type: "stream.online", version: "1" },
+  { type: "stream.offline", version: "1" },
 ] as const;
 
 type CreateEventSubBody = {
