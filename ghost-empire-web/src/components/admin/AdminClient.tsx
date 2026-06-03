@@ -1586,6 +1586,9 @@ function ShopItemEditor({
       onClick={() => !busy && onClose()}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Edytor itema sklepu"
         className="bg-zinc-950 border-2 border-zinc-800 max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -1831,7 +1834,7 @@ function EventEditor({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => !busy && onClose()}>
-      <div className="bg-zinc-950 border-2 border-zinc-800 max-w-xl w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Edytor eventu" className="bg-zinc-950 border-2 border-zinc-800 max-w-xl w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-display text-xl text-white tracking-wider">EDYCJA EVENTU</h3>
@@ -3026,7 +3029,7 @@ function AchievementEditor({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => !busy && onClose()}>
-      <div className="bg-zinc-950 border-2 border-zinc-800 max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Edytor osiągnięcia" className="bg-zinc-950 border-2 border-zinc-800 max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display text-xl text-white tracking-wider">{isNew ? "NOWE OSIĄGNIĘCIE" : "EDYCJA OSIĄGNIĘCIA"}</h3>
           <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400"><X className="w-5 h-5" /></button>

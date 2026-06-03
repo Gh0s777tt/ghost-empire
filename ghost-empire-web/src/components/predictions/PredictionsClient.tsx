@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Dice5, Coins, Trophy, Clock, Check, X, Loader2, History } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { fmt, cn } from "@/lib/utils";
 
 type ActivePrediction = {
@@ -93,9 +94,11 @@ export function PredictionsClient({
           Aktywne zakłady ({active.length})
         </h2>
         {active.length === 0 ? (
-          <div className="border border-zinc-900 bg-black/30 p-8 text-center text-zinc-500 text-sm">
-            Brak aktywnych zakładów. Streamer doda nowy gdy będzie hyped 🎲
-          </div>
+          <EmptyState
+            icon={<Dice5 className="w-6 h-6" />}
+            title="Brak aktywnych zakładów"
+            message="Streamer doda nowy zakład, gdy będzie hyped 🎲"
+          />
         ) : (
           <div className="space-y-4">
             {active.map((p) => (

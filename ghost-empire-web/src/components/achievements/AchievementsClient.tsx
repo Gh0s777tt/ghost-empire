@@ -2,6 +2,7 @@
 // src/components/achievements/AchievementsClient.tsx
 import { useState, useMemo } from "react";
 import { Award, Lock, Check, Eye, EyeOff } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { fmt, formatDate, timeAgo, cn } from "@/lib/utils";
 
 type Achievement = {
@@ -259,10 +260,11 @@ export function AchievementsClient({
 
       {/* Grid */}
       {visible.length === 0 ? (
-        <div className="border border-zinc-800 bg-zinc-950/50 p-12 text-center">
-          <Award className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500">Brak osiągnięć pasujących do filtrów.</p>
-        </div>
+        <EmptyState
+          icon={<Award className="w-6 h-6" />}
+          title="Brak osiągnięć"
+          message="Żadne osiągnięcie nie pasuje do wybranych filtrów."
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {visible.map((a) => (
