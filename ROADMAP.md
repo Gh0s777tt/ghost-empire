@@ -130,7 +130,8 @@ Po modernizacji stacku do najnowszych majorów rozpisana **Faza A** (autonomiczn
 - ✅ 🤖 **„Czas na streamie" + analityka per-stream** — model `StreamSession` + Twitch EventSub `stream.online/offline` → karta w `/admin#analytics` (LIVE+uptime / łączny czas / liczba / lista sesji). `db push` na żywej bazie. **Faza A #2.** *(Akcja usera: „Utwórz subskrypcje" w `/admin#twitch`. EventSub = czas nadawania, nie per-widz.)*
 - ✅ 🤖 **Komendy warunkowe** — `requiresLive` + `activeFromMinute` (status live z `StreamSession`; bot bramkuje). **Faza A #3.** *(`minViewers` pominięte — brak trackingu widzów.)*
 - ✅ 🤖 **Bundle analyzer** — `@next/bundle-analyzer` + `npm run analyze`. **Faza A #4 (narzędzie).** Sam code-split `AdminClient` zostaje osobnym mierzalnym PR-em.
-- 🤖 **Faza A do zrobienia:** code-split `AdminClient` (split monolitu) · i18n PL/EN · testy integracyjne+E2E · kontrast a11y.
+- ✅ 🤖 **Code-split panelu (start)** — `SectionCard`/typy wyniesione + sekcje Analityka/Audit przez `next/dynamic`. Wzorzec gotowy pod kolejne sekcje. **Faza A #4 cz. 1.**
+- 🤖 **Faza A do zrobienia:** dalsze sekcje admina do `next/dynamic` (iteracyjnie) · i18n PL/EN · testy integracyjne+E2E · kontrast a11y.
 
 ### Pomysły użytkownika (2026-06-02) → kolejność i szczegóły w [PLAN.md](PLAN.md)
 
