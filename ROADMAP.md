@@ -125,7 +125,9 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 Po modernizacji stacku do najnowszych majorów rozpisana **Faza A** (autonomiczna, bez kluczy) → B (decyzje techniczne) → C (🔑 creds) → D (🎨 redesign) → E (moonshot). Pełen rozpis: [PLAN.md](PLAN.md).
 
 - ✅ 🤖 **Eventy: „Aktywne" + „Edycja" scalone** *(prośba usera)* — jedna karta „Eventy" w `/admin#events` (lista wszystkich eventów + Wylosuj/ON-OFF/Edit w wierszu, liczniki uczestników, reaktywacja dezaktywowanych). **Faza A #1.**
-- 🤖 **Faza A do zrobienia:** „czas na streamie" + analityka per-stream (`StreamSession`) · komendy warunkowe (`requiresLive`/`minViewers`) · code-split `AdminClient` + bundle-analyzer · dokończenie empty/error states + a11y · i18n PL/EN · testy integracyjne+E2E · structured logging.
+- ✅ 🤖 **EmptyState na Sklepie + Home** — sygnaturowy pusty stan na publicznych widokach (`/shop` + widget eventów na stronie głównej). **Faza A #5 (część publiczna).**
+- ⏸️ 🤖 **„Czas na streamie" + analityka per-stream** — odłożone na prośbę usera (rusza żywą bazę + subskrypcje Twitch; po „czystym kodzie"). EventSub mierzy tylko czas nadawania, nie per-widz.
+- 🤖 **Faza A do zrobienia:** komendy warunkowe (`requiresLive`/`minViewers`) · code-split `AdminClient` + bundle-analyzer · kontrast + reszta modali (a11y) · i18n PL/EN · testy integracyjne+E2E · structured logging.
 
 ### Pomysły użytkownika (2026-06-02) → kolejność i szczegóły w [PLAN.md](PLAN.md)
 

@@ -9,6 +9,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **EmptyState na publicznych widokach — Sklep + Home** — sygnaturowy „pusty stan" (👻 + `clip-corner`) trafił teraz także na **`/shop`** (pusta kategoria) i widget **„Aktywne eventy"** na stronie głównej, zamiast surowego „Brak…". Domyka publiczne listy (6 wcześniejszych + te 2); pozostałe surowe „Brak…" to świadomie sekcje admina i drobne pod-karty (np. social linki w profilu), gdzie pełny blok byłby za ciężki. Zielone: `tsc` / `eslint` / 41 testów. *(Faza A #5 — część publiczna)*
 - **Brandowane error-states + retry** — błąd ładowania sekcji w `/admin` pokazuje teraz spójny `ErrorState` (⚠️ + komunikat) z przyciskiem **„Spróbuj ponownie"** (ponowny fetch bez przeładowania strony) zamiast surowego czerwonego boksu.
 - **README od nowa (cinematic) + sync wersji** — animowany banner (capsule-render), typing-SVG, badge-tagi `for-the-badge`, **wykresy Mermaid** (architektura · ekonomia GT · oś faz), zwijane sekcje setupu/OAuth, GitBook-style spis dokumentów oraz tech-stack z **aktualnymi wersjami** (Next 16 / React 19 / TS 6 / Prisma 7 / Tailwind 4 / zod 4 / vitest 4 / ESLint 9). Odnotowane: **ESLint 10 zablokowany** przez ekosystem (`eslint-config-next` 16 jeszcze go nie wspiera — `scopeManager.addGlobals`), zostajemy na 9.
 - **Więcej empty states + a11y modali** — `EmptyState` także w **Osiągnięciach** i **Predykcjach**; modale edytorów (sklep / event / osiągnięcie) mają teraz `role="dialog"` + `aria-modal` + `aria-label` (poprawna obsługa czytników ekranu).

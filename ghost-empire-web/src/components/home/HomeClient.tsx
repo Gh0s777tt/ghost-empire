@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, ArrowUp, ArrowDown, Check, Clock, Users, Zap, Gift, Trophy } from "lucide-react";
 import { fmt, timeLeft, rankForLevel } from "@/lib/utils";
+import { EmptyState } from "@/components/EmptyState";
 import type { Session } from "next-auth";
 
 type Props = {
@@ -109,9 +110,13 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
             <EventMiniCard key={ev.id} event={ev} />
           ))}
           {activeEvents.length === 0 && (
-            <p className="text-zinc-600 text-sm text-center py-4 col-span-2">
-              Brak aktywnych eventów. Wkrótce więcej!
-            </p>
+            <div className="col-span-2">
+              <EmptyState
+                icon={<Calendar className="w-7 h-7" />}
+                title="Brak aktywnych eventów"
+                message="Wkrótce więcej — giveawaye, raffle i happy hoursy wracają regularnie."
+              />
+            </div>
           )}
         </div>
       </div>

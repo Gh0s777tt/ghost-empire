@@ -40,10 +40,10 @@
 #### 🤖 Faza A (2026-06-03) — kolejna seria autonomiczna (kolejność = priorytet)
 Po modernizacji stacku do najnowszych majorów (Next 16 · React 19 · TS 6 · Prisma 7 · Tailwind 4 · zod 4 · vitest 4 · ESLint 9). Każde = osobny PR (branch → tsc/lint/test → squash-merge).
 1. ✅ **Eventy: scalenie „Aktywne" + „Edycja"** *(prośba usera)* — **ZROBIONE**: jedna karta „Eventy" (`EventsManager`) z pełną listą (aktywne na górze, nieaktywne wyszarzone) + akcje w wierszu (Wylosuj / ON-OFF / Edit), liczniki uczestników, możliwość reaktywacji. `requireAnyPermission` dla section-data.
-2. **„Czas na streamie" + analityka per-stream** — model `StreamSession`, auto-trigger przez Twitch EventSub `stream.online/offline` (webhook już mamy), pole w profilu + lista streamów w `/admin#analytics`.
+2. ⏸️ **„Czas na streamie" + analityka per-stream** — model `StreamSession`, auto-trigger przez Twitch EventSub `stream.online/offline` (webhook już mamy), lista streamów + suma godzin + wskaźnik LIVE w `/admin#analytics`. *(Odłożone na prośbę usera — rusza żywą bazę + subskrypcje Twitch; robimy po „czystym kodzie". Uwaga: EventSub mierzy tylko czas nadawania streamera, nie per-widz.)*
 3. **Komendy warunkowe** — `requiresLive` / `minViewers` / `activeFromMinute` w `ChatCommand` (plan 3B #2).
 4. **Code-split `AdminClient.tsx`** — monolit ~7k linii → lazy per-sekcja + `@next/bundle-analyzer`.
-5. **Dokończenie empty/error states + a11y** — pozostałe listy, kontrast czerwień/czerń, reszta modali.
+5. 🟡 **Dokończenie empty/error states + a11y** — ✅ publiczne listy domknięte (`EmptyState` na Sklepie + widgecie Home, obok 6 wcześniejszych). Zostaje: kontrast czerwień/czerń, reszta modali/dropdownów. *(Pozostałe surowe „Brak…" to sekcje admina + drobne pod-karty — świadomie inline.)*
 6. **i18n PL/EN — fundament** — `textEn` już w seedzie; warstwa tłumaczeń stron publicznych.
 7. **Testy integracyjne (API+DB, Docker Postgres) + E2E Playwright** — webhooki/ekonomia + happy-path.
 8. **Structured logging** — JSON + poziomy w webhookach/cron/award.

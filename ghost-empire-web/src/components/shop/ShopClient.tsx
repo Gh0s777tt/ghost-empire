@@ -4,6 +4,7 @@ import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { ShoppingBag, Flame, Lock, Check, X, Loader2 } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { fmt, cn } from "@/lib/utils";
 import type { ShopItem } from "@prisma/client";
 
@@ -169,9 +170,11 @@ export function ShopClient({
 
       {/* Items grid */}
       {visible.length === 0 ? (
-        <div className="border border-zinc-800 bg-zinc-950/50 p-12 text-center">
-          <p className="text-zinc-500">Brak itemów w tej kategorii.</p>
-        </div>
+        <EmptyState
+          icon={<ShoppingBag className="w-7 h-7" />}
+          title="Pusto w tej kategorii"
+          message="Nic tu jeszcze nie ma — zajrzyj do innej kategorii albo wróć później. Katalog rośnie razem z empire."
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {visible.map((item) => {
