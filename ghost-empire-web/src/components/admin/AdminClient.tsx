@@ -11,6 +11,14 @@ import {
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Play, SkipForward, Hourglass, BarChart3,
 } from "lucide-react";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
+import {
+  ALERT_ANIMATIONS,
+  ALERT_POSITIONS,
+  ANIMATION_LABELS,
+  POSITION_LABELS,
+  type AlertAnimation,
+  type AlertPosition,
+} from "@/lib/alert-types";
 import { fmt, formatDate, cn } from "@/lib/utils";
 import { AlertCard } from "@/components/AlertCard";
 import { CodeCard } from "@/components/CodeCard";
@@ -501,6 +509,7 @@ export function AdminClient({
                 {(d) => <StreamAlertsManager data={d.streamAlerts} {...sharedProps} />}
               </LazySection>
               <CustomAlertsCard {...sharedProps} />
+              <AlertTypesCard {...sharedProps} />
             </div>
           )}
 
@@ -3231,6 +3240,139 @@ function CustomAlertsCard({
 }
 
 // ============== CHAT OVERLAY APPEARANCE (admin only) ==============
+
+type AlertTypeRow = {
+  type: string;
+  label: string;
+  animation: AlertAnimation;
+  position: AlertPosition;
+  soundUrl: string | null;
+  minAmount: number | null;
+  configured: boolean;
+};
+
+function AlertTypesCard({
+  onToast,
+}: {
+  onToast: (k: "ok" | "err", m: string) => void;
+  onSuccess: () => void;
+  pending: boolean;
+}) {
+  const [rows, setRows] = useState<AlertTypeRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [savingType, setSavingType] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/alert-types")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled) { if (d?.types) setRows(d.types); setLoaded(true); } })
+      .catch(() => { if (!cancelled) setLoaded(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  function patch(type: string, k: keyof AlertTypeRow, v: unknown) {
+    setRows((rs) => rs.map((r) => (r.type === type ? { ...r, [k]: v } : r)));
+  }
+
+  async function save(row: AlertTypeRow) {
+    setSavingType(row.type);
+    try {
+      const res = await fetch("/api/admin/alert-types", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: row.type,
+          animation: row.animation,
+          position: row.position,
+          soundUrl: row.soundUrl,
+          minAmount: row.minAmount,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) onToast("err", d.error ?? "Błąd");
+      else { onToast("ok", `Zapisano: ${row.label}`); patch(row.type, "configured", true); }
+    } catch {
+      onToast("err", "Błąd sieci");
+    } finally {
+      setSavingType(null);
+    }
+  }
+
+  return (
+    <SectionCard title="Alerty per-typ (animacja / pozycja / dźwięk / próg)" icon={Bell}>
+      <div className="space-y-4">
+        <p className="text-zinc-500 text-xs leading-relaxed">
+          Dla każdego typu alertu ustaw osobno: <strong>animację</strong> wejścia, <strong>pozycję</strong> na ekranie, własny <strong>dźwięk</strong> (URL pliku audio) i <strong>próg kwotowy</strong> (alert pokaże się tylko gdy kwota ≥ próg — np. donejty od 50). Typy bez własnych ustawień używają domyślnych (slide / dół-prawo / wbudowany dźwięk). Zmiany lecą na <code className="text-zinc-300">/overlay</code> w ~1,5 s.
+        </p>
+        {!loaded && <p className="text-zinc-600 text-xs">Ładowanie…</p>}
+        <div className="space-y-3">
+          {rows.map((row) => (
+            <div key={row.type} className="border border-zinc-800 bg-black/30 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-white">{row.label}</span>
+                {row.configured && (
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-green-500">● własne</span>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Animacja</label>
+                  <select
+                    value={row.animation}
+                    onChange={(e) => patch(row.type, "animation", e.target.value)}
+                    className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500"
+                  >
+                    {ALERT_ANIMATIONS.map((a) => <option key={a} value={a}>{ANIMATION_LABELS[a]}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Pozycja</label>
+                  <select
+                    value={row.position}
+                    onChange={(e) => patch(row.type, "position", e.target.value)}
+                    className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500"
+                  >
+                    {ALERT_POSITIONS.map((p) => <option key={p} value={p}>{POSITION_LABELS[p]}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Dźwięk (URL, opcjonalnie)</label>
+                  <input
+                    type="text"
+                    value={row.soundUrl ?? ""}
+                    onChange={(e) => patch(row.type, "soundUrl", e.target.value || null)}
+                    placeholder="https://…/sound.mp3"
+                    className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Próg kwoty (≥, opcjonalnie)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={row.minAmount ?? ""}
+                    onChange={(e) => patch(row.type, "minAmount", e.target.value === "" ? null : Math.max(0, parseInt(e.target.value) || 0))}
+                    placeholder="np. 50"
+                    className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => save(row)}
+                disabled={savingType === row.type || !loaded}
+                className="mt-2 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                {savingType === row.type ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                Zapisz
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
 
 function ChatOverlayCard({
   onToast,

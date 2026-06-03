@@ -3,6 +3,13 @@
 // Polls /api/alerts/queue every ~1.2s, queues alerts, shows one at a time.
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AlertCard } from "@/components/AlertCard";
+import {
+  resolveAlertAnchorStyle,
+  scaleOriginFor,
+  DEFAULT_ALERT_TYPE_CFG,
+  type AlertAnimation,
+  type AlertPosition,
+} from "@/lib/alert-types";
 
 const POLL_INTERVAL_MS = 1200;
 const DEFAULT_DURATION = 6000;
@@ -18,6 +25,9 @@ type AlertItem = {
   amount: number | null;
   amountLabel: string | null;
   accent?: string | null;
+  animation?: AlertAnimation;
+  position?: AlertPosition;
+  soundUrl?: string | null;
   createdAt: string;
 };
 
@@ -72,7 +82,14 @@ export function OverlayClient() {
     }
     setCurrent(next);
     setVisible(true);
-    if (soundEnabled) playDing();
+    if (soundEnabled) {
+      if (next.soundUrl) {
+        // Custom per-type sound (URL). Falls back silently if it can't play.
+        try { void new Audio(next.soundUrl).play().catch(() => {}); } catch { /* ignore */ }
+      } else {
+        playDing();
+      }
+    }
 
     if (currentTimerRef.current) clearTimeout(currentTimerRef.current);
     currentTimerRef.current = setTimeout(() => {
@@ -164,6 +181,12 @@ export function OverlayClient() {
     );
   }
 
+  // Position + animation come from the current alert's per-type config (queue),
+  // falling back to the defaults (bottom-right / slide) for unconfigured types.
+  const pos: AlertPosition = current?.position ?? DEFAULT_ALERT_TYPE_CFG.position;
+  const anim: AlertAnimation = current?.animation ?? DEFAULT_ALERT_TYPE_CFG.animation;
+  const { outer, inner } = resolveAlertAnchorStyle(pos, anim, visible);
+
   return (
     <div
       style={{
@@ -175,28 +198,20 @@ export function OverlayClient() {
         zIndex: 999999,
       }}
     >
-      {/* Alert anchor — bottom-right (configurable later) */}
-      <div
-        style={{
-          position: "absolute",
-          right: 32,
-          bottom: 32,
-          width: 460,
-          transform: visible ? "translateX(0)" : "translateX(120%)",
-          opacity: visible ? 1 : 0,
-          transition: "transform 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 280ms ease",
-        }}
-      >
-        {current && (
-          <AlertCard
-            alert={current}
-            accent={current.accent ?? accent}
-            sizeScale={sizeScale}
-            textScale={textScale}
-            textColor={textColor}
-            scaleOrigin="bottom right"
-          />
-        )}
+      {/* Alert anchor — outer places it (per-type position), inner animates it. */}
+      <div style={outer}>
+        <div style={inner}>
+          {current && (
+            <AlertCard
+              alert={current}
+              accent={current.accent ?? accent}
+              sizeScale={sizeScale}
+              textScale={textScale}
+              textColor={textColor}
+              scaleOrigin={scaleOriginFor(pos)}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-03",
+    title: "Alerty na streamie — ustawienia per typ",
+    items: [
+      "Dla każdego typu alertu (sub, donejt, raid, powitanie...) ustawisz osobno animację wejścia, pozycję na ekranie, własny dźwięk i próg kwotowy.",
+    ],
+  },
+  {
+    date: "2026-06-03",
     title: "Odświeżone ikony social",
     items: [
       "Logo marek (YouTube, Instagram, X) jako własne grafiki SVG — spójne i niezależne od biblioteki ikon.",

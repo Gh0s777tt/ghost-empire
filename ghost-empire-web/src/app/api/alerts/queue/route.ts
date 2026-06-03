@@ -7,7 +7,8 @@
 // only newer rows — `shownAt` here is purely for admin debugging.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSettings, isValidOverlayToken } from "@/lib/alerts";
+import { getSettings, isValidOverlayToken, getAlertTypeConfigs } from "@/lib/alerts";
+import { DEFAULT_ALERT_TYPE_CFG } from "@/lib/alert-types";
 
 export const dynamic = "force-dynamic";
 
@@ -33,13 +34,14 @@ export async function GET(req: Request) {
     since = new Date(Date.now() - 10_000);
   }
 
-  const [alerts, settings] = await Promise.all([
+  const [alerts, settings, typeConfigs] = await Promise.all([
     prisma.streamAlert.findMany({
       where: { createdAt: { gt: since } },
       orderBy: { createdAt: "asc" },
       take: MAX_TAKE,
     }),
     getSettings(),
+    getAlertTypeConfigs(),
   ]);
 
   // Mark un-shown alerts as shown (best-effort, single bulk update)
@@ -64,13 +66,16 @@ export async function GET(req: Request) {
       textScale: settings.textScale,
       textColor: settings.textColor,
     },
-    alerts: alerts.map((a) => {
+    alerts: alerts.flatMap((a) => {
+      const cfg = typeConfigs[a.type] ?? DEFAULT_ALERT_TYPE_CFG;
+      // Amount threshold — hide alerts below the type's minAmount (e.g. small donations).
+      if (cfg.minAmount != null && (a.amount ?? 0) < cfg.minAmount) return [];
       // Per-alert accent override (custom alerts store it in meta JSON).
       let accent: string | null = null;
       if (a.meta) {
         try { accent = (JSON.parse(a.meta) as { accent?: string }).accent ?? null; } catch { /* ignore */ }
       }
-      return {
+      return [{
         id: a.id,
         type: a.type,
         title: a.title,
@@ -81,8 +86,11 @@ export async function GET(req: Request) {
         amount: a.amount,
         amountLabel: a.amountLabel,
         accent,
+        animation: cfg.animation,
+        position: cfg.position,
+        soundUrl: cfg.soundUrl,
         createdAt: a.createdAt.toISOString(),
-      };
+      }];
     }),
   });
 }
