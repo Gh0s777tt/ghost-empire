@@ -36,7 +36,7 @@ export function OverlayPreview({
         Podgląd (tak wygląda w OBS)
       </label>
       <div
-        className="border border-zinc-800 rounded p-6 overflow-hidden flex flex-col gap-2"
+        className="border border-zinc-800 rounded-sm p-6 overflow-hidden flex flex-col gap-2"
         style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}
       >
         {children}

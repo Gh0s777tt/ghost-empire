@@ -245,8 +245,8 @@ function ProfileHero({ user }: { user: any }) {
       <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Avatar */}
         <div className="lg:col-span-4 flex items-center gap-4">
-          <div className="relative flex-shrink-0">
-            <div className="absolute -inset-1 bg-gradient-to-br from-red-600 to-red-900 blur-sm opacity-50" />
+          <div className="relative shrink-0">
+            <div className="absolute -inset-1 bg-linear-to-br from-red-600 to-red-900 blur-xs opacity-50" />
             <div className="relative w-20 h-20 border-2 border-red-500 overflow-hidden bg-zinc-900 clip-corner">
               {user.image ? (
                 <img src={user.image} alt="" width={80} height={80} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
@@ -386,7 +386,7 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
       className="relative p-3 border border-zinc-800 hover:border-red-500 bg-zinc-900/40 text-left transition-all group clip-corner w-full"
     >
       <div className="flex items-start gap-3">
-        <div className="text-3xl flex-shrink-0">{item.imageEmoji}</div>
+        <div className="text-3xl shrink-0">{item.imageEmoji}</div>
         <div className="min-w-0 flex-1">
           <h4 className="text-xs font-bold text-white leading-tight truncate group-hover:text-red-300 transition-colors">
             {item.name}
@@ -429,7 +429,7 @@ function EventMiniCard({ event }: { event: any }) {
   return (
     <div className="flex items-start gap-3 p-3 border border-zinc-800 bg-zinc-900/30 hover:border-zinc-600 transition-all">
       <div
-        className="w-10 h-10 flex-shrink-0 flex items-center justify-center border"
+        className="w-10 h-10 shrink-0 flex items-center justify-center border"
         style={{ borderColor: s.color, background: `${s.color}15` }}
       >
         <Icon className="w-5 h-5" style={{ color: s.color }} />
@@ -474,7 +474,7 @@ function AchievementBadgeSmall({ achievement }: { achievement: any }) {
 
   return (
     <div
-      className={`p-3 border bg-gradient-to-br ${bg} text-center clip-corner hover:scale-105 transition-transform`}
+      className={`p-3 border bg-linear-to-br ${bg} text-center clip-corner hover:scale-105 transition-transform`}
       title={achievement.name}
     >
       <div className="text-2xl">{achievement.icon}</div>
@@ -494,7 +494,7 @@ function LiveBanner() {
         style={{ background: "radial-gradient(circle at 20% 50%, #E50914 0%, transparent 50%)" }}
       />
       <div className="relative p-4 flex items-center gap-4">
-        <div className="relative flex-shrink-0">
+        <div className="relative shrink-0">
           <div
             className="w-14 h-14 border-2 border-red-500 flex items-center justify-center clip-corner"
             style={{ background: "linear-gradient(135deg, #1a0000, #000)" }}
@@ -522,7 +522,7 @@ function LiveBanner() {
           href="https://twitch.tv/gh0s77tt"
           target="_blank"
           rel="noreferrer"
-          className="hidden sm:flex flex-shrink-0 items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider transition-colors clip-tag"
+          className="hidden sm:flex shrink-0 items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider transition-colors clip-tag"
         >
           <Eye className="w-3.5 h-3.5" /> Oglądaj
         </a>

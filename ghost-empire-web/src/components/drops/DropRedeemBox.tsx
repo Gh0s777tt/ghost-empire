@@ -66,7 +66,7 @@ export function DropRedeemBox({
     return (
       <div
         className={cn(
-          "border border-zinc-800 bg-zinc-950/80 backdrop-blur-sm p-5 text-center",
+          "border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs p-5 text-center",
           variant === "compact" && "p-4",
         )}
         style={{
@@ -91,7 +91,7 @@ export function DropRedeemBox({
   return (
     <div
       className={cn(
-        "border-2 border-orange-700 bg-gradient-to-br from-orange-950/30 to-red-950/20 backdrop-blur-sm p-5 sm:p-6",
+        "border-2 border-orange-700 bg-linear-to-br from-orange-950/30 to-red-950/20 backdrop-blur-xs p-5 sm:p-6",
         variant === "compact" && "p-4",
       )}
       style={{
@@ -125,7 +125,7 @@ export function DropRedeemBox({
           }}
           placeholder="GHOST24"
           disabled={busy}
-          className="flex-1 min-w-0 bg-black/50 border-2 border-zinc-800 focus:border-orange-500 px-4 py-3 text-lg sm:text-2xl text-white font-mono tracking-[0.3em] uppercase outline-none placeholder:text-zinc-700 placeholder:tracking-normal disabled:opacity-50 transition-colors"
+          className="flex-1 min-w-0 bg-black/50 border-2 border-zinc-800 focus:border-orange-500 px-4 py-3 text-lg sm:text-2xl text-white font-mono tracking-[0.3em] uppercase outline-hidden placeholder:text-zinc-700 placeholder:tracking-normal disabled:opacity-50 transition-colors"
         />
         <button
           onClick={submit}
@@ -156,7 +156,7 @@ function ResultMessage({ result }: { result: RedeemResult }) {
   if ("error" in result) {
     return (
       <div className="border border-red-700 bg-red-950/40 px-3 py-2 flex items-start gap-2">
-        <X className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+        <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
         <span className="text-red-200 text-sm">{result.error}</span>
       </div>
     );
@@ -171,12 +171,12 @@ function ResultMessage({ result }: { result: RedeemResult }) {
           : "border-green-700 bg-green-950/30",
       )}
     >
-      <div className="text-2xl flex-shrink-0">
+      <div className="text-2xl shrink-0">
         {result.gotBonus ? "🌟" : "🎁"}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <Check className={cn("w-4 h-4 flex-shrink-0", result.gotBonus ? "text-yellow-400" : "text-green-400")} />
+          <Check className={cn("w-4 h-4 shrink-0", result.gotBonus ? "text-yellow-400" : "text-green-400")} />
           <span className={cn("font-bold text-sm", result.gotBonus ? "text-yellow-200" : "text-green-200")}>
             {result.gotBonus ? "BONUS!" : "Sukces!"} +{fmt(result.totalReward)} GT
           </span>

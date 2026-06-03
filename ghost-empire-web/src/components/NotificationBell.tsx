@@ -184,7 +184,7 @@ function NotificationItem({
         n.read ? "hover:bg-zinc-900/50" : "bg-red-950/10 hover:bg-red-950/20",
       )}
     >
-      <div className="flex-shrink-0 pt-0.5">
+      <div className="shrink-0 pt-0.5">
         {n.icon ? (
           <span className="text-xl">{n.icon}</span>
         ) : (
@@ -194,7 +194,7 @@ function NotificationItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-0.5">
           <span className="text-sm text-white font-medium leading-tight">{n.title}</span>
-          {!n.read && <span className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0 mt-1.5" />}
+          {!n.read && <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0 mt-1.5" />}
         </div>
         <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">{n.message}</p>
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mt-1">

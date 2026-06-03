@@ -112,7 +112,7 @@ export default function SignInPage() {
 
         {/* Login card */}
         <div
-          className="border border-zinc-800 bg-zinc-950/90 backdrop-blur-sm p-8"
+          className="border border-zinc-800 bg-zinc-950/90 backdrop-blur-xs p-8"
           style={{
             clipPath:
               "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
@@ -134,7 +134,7 @@ export default function SignInPage() {
                     Wklej DOKŁADNIE ten Redirect URI w konsoli dewelopera (Twitch / Kick / Discord / Google):
                   </p>
                   <div className="flex items-center gap-2">
-                    <code className="break-all rounded bg-black/50 px-1.5 py-0.5 font-mono text-[11px] text-zinc-200">
+                    <code className="break-all rounded-sm bg-black/50 px-1.5 py-0.5 font-mono text-[11px] text-zinc-200">
                       {origin}/api/auth/callback/twitch
                     </code>
                     <button
@@ -156,8 +156,8 @@ export default function SignInPage() {
                   </ul>
                   <p className="text-zinc-400">
                     Sprawdź też w Vercel:{" "}
-                    <code className="rounded bg-black/50 px-1 font-mono">NEXTAUTH_URL</code> ={" "}
-                    <code className="break-all rounded bg-black/50 px-1 font-mono">{origin}</code>{" "}
+                    <code className="rounded-sm bg-black/50 px-1 font-mono">NEXTAUTH_URL</code> ={" "}
+                    <code className="break-all rounded-sm bg-black/50 px-1 font-mono">{origin}</code>{" "}
                     (bez ukośnika na końcu).
                   </p>
                 </div>

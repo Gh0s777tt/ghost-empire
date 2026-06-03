@@ -169,7 +169,7 @@ export function RankingClient({
                       }
                     }}
                     className={cn(
-                      "border-2 bg-zinc-950/80 backdrop-blur-sm p-4 sm:p-5 flex flex-col items-center text-center transition-all relative",
+                      "border-2 bg-zinc-950/80 backdrop-blur-xs p-4 sm:p-5 flex flex-col items-center text-center transition-all relative",
                       style.border,
                       center && "sm:-mt-4 sm:scale-105",
                       isMe && "ring-2 ring-red-500/40 ring-offset-2 ring-offset-black",
@@ -249,7 +249,7 @@ export function RankingClient({
           {/* Table (positions 4+) */}
           {rest.length > 0 && (
             <div
-              className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-sm overflow-hidden"
+              className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs overflow-hidden"
               style={{
                 clipPath:
                   "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -287,7 +287,7 @@ export function RankingClient({
                 Twoja pozycja
               </div>
               <div
-                className="border-2 border-red-900/50 bg-red-950/10 backdrop-blur-sm overflow-hidden"
+                className="border-2 border-red-900/50 bg-red-950/10 backdrop-blur-xs overflow-hidden"
                 style={{
                   clipPath:
                     "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -364,23 +364,23 @@ function UserRow({
       <td className="p-3">
         <div className="flex items-center gap-3 min-w-0">
           {user.image ? (
-            <img src={user.image} alt="" width={32} height={32} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-8 h-8 object-cover border border-zinc-800 flex-shrink-0" />
+            <img src={user.image} alt="" width={32} height={32} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-8 h-8 object-cover border border-zinc-800 shrink-0" />
           ) : (
-            <img src="/brand/skull.png" alt="" width={32} height={32} className="w-8 h-8 border border-zinc-800 object-cover bg-black flex-shrink-0" />
+            <img src="/brand/skull.png" alt="" width={32} height={32} className="w-8 h-8 border border-zinc-800 object-cover bg-black shrink-0" />
           )}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-white font-medium truncate">
                 {user.displayName ?? user.username ?? "Anonim"}
               </span>
-              {user.isAdmin && <ShieldCheck className="w-3 h-3 text-red-500 flex-shrink-0" />}
+              {user.isAdmin && <ShieldCheck className="w-3 h-3 text-red-500 shrink-0" />}
               {user.isBanned && (
-                <span className="text-[9px] font-bold tracking-widest uppercase border border-red-700 bg-red-950/50 text-red-300 px-1 flex-shrink-0 flex items-center gap-1">
+                <span className="text-[9px] font-bold tracking-widest uppercase border border-red-700 bg-red-950/50 text-red-300 px-1 shrink-0 flex items-center gap-1">
                   <Ban className="w-2.5 h-2.5" /> BANNED
                 </span>
               )}
               {isMe && (
-                <span className="text-[9px] font-bold tracking-widest uppercase text-red-400 flex-shrink-0">
+                <span className="text-[9px] font-bold tracking-widest uppercase text-red-400 shrink-0">
                   TY
                 </span>
               )}
@@ -522,7 +522,7 @@ function AdminUserActions({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
       onClick={() => !busy && onClose()}
     >
       <div
@@ -536,9 +536,9 @@ function AdminUserActions({
         {/* Header */}
         <div className="flex items-start gap-3 mb-4">
           {user.image ? (
-            <img src={user.image} alt="" width={48} height={48} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-12 h-12 border-2 border-red-700 object-cover flex-shrink-0" />
+            <img src={user.image} alt="" width={48} height={48} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-12 h-12 border-2 border-red-700 object-cover shrink-0" />
           ) : (
-            <img src="/brand/skull.png" alt="" width={48} height={48} className="w-12 h-12 border-2 border-red-700 object-cover bg-black flex-shrink-0" />
+            <img src="/brand/skull.png" alt="" width={48} height={48} className="w-12 h-12 border-2 border-red-700 object-cover bg-black shrink-0" />
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
@@ -551,7 +551,7 @@ function AdminUserActions({
               @{user.username ?? "—"} · LVL {user.level} · {fmt(user.tokens)} GT
             </div>
           </div>
-          <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400 flex-shrink-0">
+          <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400 shrink-0">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -587,14 +587,14 @@ function AdminUserActions({
               placeholder="Custom kwota"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="flex-1 border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-none focus:border-red-600 placeholder:text-zinc-700"
+              className="flex-1 border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-red-600 placeholder:text-zinc-700"
             />
             <input
               type="text"
               placeholder="Powód"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="flex-1 border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-red-600 placeholder:text-zinc-700"
+              className="flex-1 border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-hidden focus:border-red-600 placeholder:text-zinc-700"
             />
             <button
               onClick={() => grantTokens()}

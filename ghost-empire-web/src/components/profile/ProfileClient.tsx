@@ -141,7 +141,7 @@ export function ProfileClient({
     <div className="space-y-6">
       {/* Hero card */}
       <div
-        className="relative border border-zinc-800 bg-zinc-950/80 backdrop-blur-sm p-6"
+        className="relative border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs p-6"
         style={{
           clipPath:
             "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
@@ -155,7 +155,7 @@ export function ProfileClient({
           <LogOut className="w-3 h-3" /> Wyloguj
         </button>
         <div className="flex flex-col md:flex-row gap-6 items-start">
-          <div className="relative flex-shrink-0">
+          <div className="relative shrink-0">
             {user.image ? (
               <img
                 src={user.image}
@@ -409,7 +409,7 @@ export function ProfileClient({
               const isEarn = t.amount > 0;
               return (
                 <div key={t.id} className="flex items-center gap-3 py-2.5">
-                  <span className="text-xl flex-shrink-0">
+                  <span className="text-xl shrink-0">
                     {t.shopItem?.imageEmoji ?? (isEarn ? "📈" : "🛒")}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -449,7 +449,7 @@ function StatTile({
   return (
     <div
       className={cn(
-        "border bg-zinc-950/70 backdrop-blur-sm p-3",
+        "border bg-zinc-950/70 backdrop-blur-xs p-3",
         accent ? "border-red-900/50" : "border-zinc-800",
       )}
     >
@@ -480,7 +480,7 @@ function SectionCard({
   const borderColor = accent === "orange" ? "border-orange-900/50" : "border-zinc-800";
   return (
     <div
-      className={cn("border bg-zinc-950/70 backdrop-blur-sm p-5", borderColor, className)}
+      className={cn("border bg-zinc-950/70 backdrop-blur-xs p-5", borderColor, className)}
       style={{
         clipPath:
           "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -748,7 +748,7 @@ function SocialLinksEditor({
           if (isEditing) {
             return (
               <div key={platform} className="border border-red-900/50 bg-black/40 p-2.5 flex items-center gap-2">
-                <Icon className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
+                <Icon className="w-4 h-4 shrink-0" style={{ color: meta.color }} />
                 <input
                   autoFocus
                   value={draft}
@@ -758,7 +758,7 @@ function SocialLinksEditor({
                     if (e.key === "Escape") { setEditing(null); setDraft(""); }
                   }}
                   placeholder={meta.placeholder}
-                  className="flex-1 bg-transparent text-xs text-white outline-none font-mono min-w-0"
+                  className="flex-1 bg-transparent text-xs text-white outline-hidden font-mono min-w-0"
                 />
                 <button
                   onClick={() => save(platform)}
@@ -785,7 +785,7 @@ function SocialLinksEditor({
                 existing ? "border-zinc-800" : "border-zinc-900",
               )}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
+              <Icon className="w-4 h-4 shrink-0" style={{ color: meta.color }} />
               <div className="flex-1 min-w-0">
                 <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
                   {meta.label}
@@ -867,14 +867,14 @@ function DiscordLinkCard() {
 
   return (
     <div
-      className="border-2 border-indigo-700 bg-gradient-to-br from-indigo-950/40 to-purple-950/20 backdrop-blur-sm p-5"
+      className="border-2 border-indigo-700 bg-linear-to-br from-indigo-950/40 to-purple-950/20 backdrop-blur-xs p-5"
       style={{
         clipPath:
           "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
       }}
     >
       <div className="flex items-start gap-4">
-        <div className="text-4xl flex-shrink-0">👾</div>
+        <div className="text-4xl shrink-0">👾</div>
         <div className="flex-1">
           <h3 className="font-display text-lg text-white tracking-wider mb-1">
             POŁĄCZ DISCORD

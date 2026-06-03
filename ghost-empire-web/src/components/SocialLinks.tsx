@@ -146,7 +146,7 @@ export function SocialLinksGrid() {
           href={s.href}
           target="_blank"
           rel="noreferrer"
-          className="group relative overflow-hidden border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm p-4 hover:border-transparent transition-all"
+          className="group relative overflow-hidden border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4 hover:border-transparent transition-all"
           style={{
             clipPath:
               "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
@@ -165,7 +165,7 @@ export function SocialLinksGrid() {
 
           <div className="relative flex items-center gap-3">
             <div
-              className="w-12 h-12 flex items-center justify-center flex-shrink-0 transition-all group-hover:scale-110"
+              className="w-12 h-12 flex items-center justify-center shrink-0 transition-all group-hover:scale-110"
               style={{ background: s.gradient }}
             >
               <PlatformIcon platform={s} />
@@ -181,7 +181,7 @@ export function SocialLinksGrid() {
                 {s.description}
               </p>
             </div>
-            <div className="text-zinc-600 group-hover:text-white transition-colors flex-shrink-0">
+            <div className="text-zinc-600 group-hover:text-white transition-colors shrink-0">
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M7 17l9.2-9.2M17 17V7H7" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>

@@ -185,7 +185,7 @@ export function ShopClient({
               <div
                 key={item.id}
                 className={cn(
-                  "relative border bg-zinc-950/70 backdrop-blur-sm p-5 flex flex-col transition-all",
+                  "relative border bg-zinc-950/70 backdrop-blur-xs p-5 flex flex-col transition-all",
                   canBuy ? "border-zinc-800 hover:border-red-600/50" : "border-zinc-900",
                 )}
                 style={{
@@ -219,9 +219,9 @@ export function ShopClient({
                 {/* Icon + category */}
                 <div className="flex items-start gap-3 mb-3">
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt="" className="w-12 h-12 object-cover border border-zinc-800 flex-shrink-0" />
+                    <img src={item.imageUrl} alt="" className="w-12 h-12 object-cover border border-zinc-800 shrink-0" />
                   ) : (
-                    <div className="text-4xl flex-shrink-0">{item.imageEmoji ?? "🎁"}</div>
+                    <div className="text-4xl shrink-0">{item.imageEmoji ?? "🎁"}</div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mb-0.5">
@@ -323,7 +323,7 @@ export function ShopClient({
       {/* Confirm modal */}
       {confirmItem && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => busyItem === null && setConfirmItem(null)}
         >
           <div
@@ -336,7 +336,7 @@ export function ShopClient({
           >
             <div className="flex items-start gap-4 mb-5">
               {confirmItem.imageUrl ? (
-                <img src={confirmItem.imageUrl} alt="" className="w-16 h-16 object-cover border border-zinc-800 flex-shrink-0" />
+                <img src={confirmItem.imageUrl} alt="" className="w-16 h-16 object-cover border border-zinc-800 shrink-0" />
               ) : (
                 <div className="text-5xl">{confirmItem.imageEmoji ?? "🎁"}</div>
               )}

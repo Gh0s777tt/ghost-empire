@@ -20,7 +20,7 @@ export function ChangelogList({ entries }: { entries: ChangelogEntry[] }) {
         return (
           <div
             key={entry.date}
-            className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-sm"
+            className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs"
             style={{
               clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
             }}
@@ -29,7 +29,7 @@ export function ChangelogList({ entries }: { entries: ChangelogEntry[] }) {
               type="button"
               onClick={() => setOpenDates((o) => ({ ...o, [entry.date]: !o[entry.date] }))}
               aria-expanded={isOpen}
-              className="w-full flex items-center gap-3 p-4 text-left hover:bg-white/[0.02] transition-colors"
+              className="w-full flex items-center gap-3 p-4 text-left hover:bg-white/2 transition-colors"
             >
               <span className="font-mono text-[10px] uppercase tracking-widest text-red-400 px-2 py-0.5 border border-red-900/50 shrink-0">
                 {entry.date}
@@ -42,7 +42,7 @@ export function ChangelogList({ entries }: { entries: ChangelogEntry[] }) {
               <ul className="space-y-1.5 px-4 pb-4">
                 {entry.items.map((item, i) => (
                   <li key={i} className="text-zinc-400 text-xs flex gap-2">
-                    <span className="text-red-600 flex-shrink-0">▸</span>
+                    <span className="text-red-600 shrink-0">▸</span>
                     <span>{item}</span>
                   </li>
                 ))}
