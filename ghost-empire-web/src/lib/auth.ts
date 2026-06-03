@@ -32,6 +32,8 @@ type KickProfile = {
   id?: number | string;
   user_id?: number | string;
   username?: string;
+  name?: string; // Kick's /public/v1/users returns the handle in `name`
+  slug?: string; // defensive fallback
   email?: string | null;
   profile_picture?: string | null;
   agreed_to_terms?: boolean;
@@ -43,6 +45,8 @@ type KickProfile = {
 type OAuthProfileFields = {
   login?: string; // Twitch
   username?: string; // Discord / Kick
+  name?: string; // Kick (handle is in `name`) — read ONLY for Kick so Google's full name is never used
+  slug?: string; // Kick fallback
   id?: string | number; // Twitch / Discord / Kick
   sub?: string; // Google / OIDC
 };
@@ -118,7 +122,8 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
       const id = profile.user_id?.toString() ?? profile.id?.toString() ?? "";
       return {
         id,
-        name: profile.username ?? null,
+        // Kick returns the handle in `name`; keep username/slug as defensive fallbacks.
+        name: profile.name ?? profile.username ?? profile.slug ?? null,
         email: profile.email ?? null,
         image: profile.profile_picture ?? null,
       };
@@ -168,7 +173,10 @@ export const authOptions: NextAuthOptions = {
       allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
-          scope: "openid email profile",
+          // youtube.readonly → lets us call the YouTube Data API at sign-in to
+          // fetch the real channel @handle/title (Google's OIDC profile has none).
+          // Adding it means existing users re-consent on next Google login.
+          scope: "openid email profile https://www.googleapis.com/auth/youtube.readonly",
         },
       },
     }),
@@ -280,12 +288,49 @@ export const authOptions: NextAuthOptions = {
           const isGoogle = account.provider === "google";
           const emailLocal = user.email?.split("@")[0] || undefined;
 
+          // === YouTube handle — Google's OIDC profile has NO channel handle, so we
+          // call the YouTube Data API (needs the youtube.readonly scope) to fetch the
+          // real channel title + @handle. Fails gracefully if the scope/API isn't
+          // available yet (e.g. user hasn't re-consented) so login never breaks.
+          let ytHandle: string | undefined; // e.g. "@Gh0s77tt"
+          let ytTitle: string | undefined; // e.g. "Gh0s77tt"
+          if (isGoogle && account.access_token) {
+            try {
+              const yt = await fetch(
+                "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true",
+                { headers: { Authorization: `Bearer ${account.access_token}` } },
+              );
+              if (yt.ok) {
+                const data = (await yt.json()) as {
+                  items?: { snippet?: { title?: string; customUrl?: string } }[];
+                };
+                const snip = data.items?.[0]?.snippet;
+                ytTitle = snip?.title || undefined;
+                ytHandle = snip?.customUrl || undefined; // "@handle" for channels that set one
+              } else {
+                console.warn(`[youtube] channels.list ${yt.status} — handle not fetched (scope/API not ready?)`);
+              }
+            } catch (e) {
+              console.error("[youtube] channel fetch failed:", e);
+            }
+          }
+
+          // Per-provider PUBLIC handle. NEVER user.name for Google — that is the real
+          // first+last name and would leak into the ranking / connected accounts.
+          const providerHandle =
+            p.login || // Twitch
+            (account.provider === "kick"
+              ? (p.name || p.username || p.slug) // Kick: handle lives in `name`
+              : p.username) || // Discord
+            ytHandle || // YouTube @handle (fetched above)
+            ytTitle || // YouTube channel title (channel without a set handle)
+            undefined;
+
           // Auto-set username if not set yet
           if (!dbUser.username) {
             const rawName =
-              p.login || // Twitch uses login
-              p.username || // Discord / Kick
-              emailLocal || // Google has no handle → email local-part, NOT full name
+              providerHandle ||
+              emailLocal || // Google with no channel handle → email local-part, NOT full name
               `ghost_${dbUser.id.slice(-6)}`;
 
             const slug = rawName
@@ -298,8 +343,8 @@ export const authOptions: NextAuthOptions = {
               data: {
                 username: slug,
                 // For Google, user.name is the real full name — never expose it.
-                // Use the derived handle (slug) as the display name instead.
-                displayName: isGoogle ? slug : (user.name ?? slug),
+                // Prefer the YouTube channel title, else the derived handle (slug).
+                displayName: isGoogle ? (ytTitle || slug) : (user.name ?? slug),
               },
             });
           }
@@ -311,10 +356,15 @@ export const authOptions: NextAuthOptions = {
             account.providerAccountId;
 
           const platformUsername =
-            p.login ||
-            p.username ||
+            providerHandle ||
             emailLocal ||   // email local-part as last resort — NEVER user.name (full name, e.g. Google = leaks real name)
             "";
+
+          // Connection display name: Google → YouTube channel title (never the full
+          // name); other providers → their platform display name.
+          const connectionDisplayName = isGoogle
+            ? (ytTitle || platformUsername)
+            : (user.name ?? "");
 
           // Map OAuth provider id → semantic platform name we use in DB
           //   google → youtube (because we want one "YouTube" connection per user)
@@ -331,7 +381,7 @@ export const authOptions: NextAuthOptions = {
             update: {
               platformId,
               username: platformUsername,
-              displayName: user.name ?? "",
+              displayName: connectionDisplayName,
               avatar: user.image ?? "",
               accessToken: account.access_token,
               refreshToken: account.refresh_token,
@@ -345,7 +395,7 @@ export const authOptions: NextAuthOptions = {
               platform: platformName,
               platformId,
               username: platformUsername,
-              displayName: user.name ?? "",
+              displayName: connectionDisplayName,
               avatar: user.image ?? "",
               accessToken: account.access_token,
               refreshToken: account.refresh_token,

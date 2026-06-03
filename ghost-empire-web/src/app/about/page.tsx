@@ -86,6 +86,14 @@ const STEPS = [
 
 const CHANGELOG = [
   {
+    date: "2026-06-03",
+    title: "Poprawne nicki Kick i YouTube",
+    items: [
+      "Kick pokazuje teraz prawdziwy nick zamiast fragmentu adresu e-mail.",
+      "YouTube dociąga prawdziwy uchwyt kanału i nazwę — zaloguj się ponownie przez Google, aby odświeżyć.",
+    ],
+  },
+  {
     date: "2026-06-02",
     title: "Dostępność (a11y)",
     items: [

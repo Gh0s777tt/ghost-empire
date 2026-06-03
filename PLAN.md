@@ -53,7 +53,7 @@
 1. ✅ Bugfixy: audit log (nick), przycisk wyloguj w profilu — **zrobione**.
 2. ✅ 🤖 **A1 — chat overlay: customizacja wiadomości** — zrobione
 3. ✅ 🤖 **A2 — Stream Alerts: własne alerty** — zrobione
-4. 🟡 🤖 **A3 — poprawne nicki Kick/YouTube** — OAuth już działa: nick Kicka zapisuje się przy (prze)logowaniu Kickiem; YouTube handle dalej wymaga scope `youtube.readonly` (Twoja decyzja — re-consent userów).
+4. ✅ 🤖 **A3 — poprawne nicki Kick/YouTube** — Kick: fix pola (`name` zamiast `username`); YouTube: scope `youtube.readonly` + dociąganie `@handle`/nazwy kanału z Data API; Google nie wystawia już imienia+nazwiska. Działa po przelogowaniu. *(Twoja akcja: w Google Cloud Console dla apki głównej `129216…` włącz „YouTube Data API v3" + dodaj scope `youtube.readonly` na OAuth consent screen.)*
 5. ✅ 🤖 **A4 — hardening/polish** — health + testy + a11y zrobione (Prettier świadomie odłożony)
 6. ✅ 🔑 **B1 — odblokowanie OAuth** — env Twitch/Kick/Google w Vercel zaktualizowane + redeploy; logowanie Twitch/Kick/YouTube/Google **działa** (zweryfikowane: `/api/health`, `/api/auth/providers`, Google redirect_uri OK).
 7. 🔑 **B2 — social OAuth IG/TikTok/X/FB** (Ty: aplikacje deweloperskie) → ja podpinam
