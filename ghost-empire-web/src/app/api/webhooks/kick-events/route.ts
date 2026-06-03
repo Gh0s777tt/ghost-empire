@@ -11,6 +11,9 @@ import { incrementGoals } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("kick-events");
 
 // Token rewards — mirror of Twitch tunables
 const REWARD_KICK_SUB        = 5000;
@@ -32,13 +35,13 @@ export async function POST(req: Request) {
 
   // Signature verification (CRITICAL — prevents spoofed events)
   if (!(await verifyKickSignature(messageId, timestamp, body, signature))) {
-    console.warn("[kick-events] invalid signature");
+    log.warn("invalid signature");
     return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
   }
 
   // Replay protection
   if (!isMessageFresh(timestamp)) {
-    console.warn("[kick-events] stale message timestamp");
+    log.warn("stale message timestamp");
     return NextResponse.json({ error: "Stale message" }, { status: 403 });
   }
 
@@ -81,10 +84,10 @@ export async function POST(req: Request) {
     } else if (eventType === "livestream.status.updated") {
       await handleLivestreamStatus(payload);
     } else {
-      console.log(`[kick-events] unhandled event type: ${eventType}`);
+      log.info("unhandled event type", { eventType });
     }
   } catch (e) {
-    console.error(`[kick-events] handler error for ${eventType}:`, e);
+    log.error("handler error", e, { eventType });
   }
 
   await prisma.kickEvent.create({
@@ -142,7 +145,7 @@ async function handleSubscription(
     select: { userId: true, id: true },
   });
   if (!connection) {
-    console.log(`[kick-events] sub from ${username} but no linked Ghost Empire account`);
+    log.info("sub from unlinked account", { username });
     return { userId: null, tokens: null };
   }
 
@@ -308,7 +311,7 @@ async function handleFollow(payload: Record<string, unknown>): Promise<{ userId:
 async function handleLivestreamStatus(payload: Record<string, unknown>): Promise<void> {
   const isLive = payload.is_live as boolean | undefined;
   const title = payload.title as string | undefined;
-  console.log(`[kick-events] livestream status: live=${isLive} title="${title}"`);
+  log.info("livestream status", { isLive, title });
   // No reward — just logged. Could feed analytics in Phase 3D.
 }
 

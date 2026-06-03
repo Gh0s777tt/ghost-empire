@@ -48,7 +48,7 @@ Dziś diagnostyka = logi Vercela. Pod produkcję z realnym ruchem to za mało.
 |---|---|---|
 | **Sentry** (error tracking) | 🔥 | Client + server + edge; już mamy `error.digest` w boundary do korelacji |
 | **Vercel Analytics + Speed Insights** | 🟡 | Realne Core Web Vitals z produkcji, mały koszt integracji |
-| **Structured logging** | 🟡 | ✅ `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty w `twitch-eventsub`. Zostaje adopcja w kick-events / paymedia / cron / award (ten sam wzorzec) |
+| **Structured logging** | 🟡 | ✅ `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty we wszystkie 3 webhooki (twitch-eventsub / kick-events / paymedia). Zostaje cron / award (ten sam wzorzec) |
 | **Uptime / health-check** | 🟡 | Endpoint `/api/health` + zewnętrzny monitor (cron-job.org / UptimeRobot) na live + bazę |
 | **Alerty na anomalie ekonomii** | 🧊 | Nietypowe skoki grantów/odbić → notyfikacja admina (anti-abuse) |
 

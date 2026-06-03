@@ -22,6 +22,9 @@ import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { extractIp } from "@/lib/audit";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("paymedia");
 
 const GT_PER_PLN = parseInt(process.env.PAYMEDIA_GT_PER_PLN ?? "100", 10);
 
@@ -41,7 +44,7 @@ function verifySignature(body: string, signature: string | null, secret: string)
 export async function POST(req: Request) {
   const secret = process.env.PAYMEDIA_WEBHOOK_SECRET;
   if (!secret) {
-    console.error("[paymedia] PAYMEDIA_WEBHOOK_SECRET not configured");
+    log.error("PAYMEDIA_WEBHOOK_SECRET not configured");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
   }
 
@@ -49,7 +52,7 @@ export async function POST(req: Request) {
   const signature = req.headers.get("x-paymedia-signature");
 
   if (!verifySignature(body, signature, secret)) {
-    console.warn(`[paymedia] invalid signature from IP ${extractIp(req)}`);
+    log.warn("invalid signature", { ip: extractIp(req) });
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
@@ -101,9 +104,9 @@ export async function POST(req: Request) {
   if (!user) {
     // Donation received but user not matched — log it but don't fail.
     // Manual reconciliation by admin via audit log.
-    console.warn(
-      `[paymedia] payment ${payload.payment_id} for ${amountPLN} PLN — user not matched (username=${metaUsername}, discordId=${metaDiscordId})`,
-    );
+    log.warn("payment — user not matched", {
+      paymentId: payload.payment_id, amountPLN, username: metaUsername, discordId: metaDiscordId,
+    });
     return NextResponse.json({
       ok: true,
       warning: "user_not_matched",
