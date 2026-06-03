@@ -9,6 +9,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **Prisma 5 → 7 (driver adapter)** — migracja na nową architekturę połączenia Prisma 7: `url`/`directUrl` usunięte ze schematu; runtime łączy się przez **`@prisma/adapter-pg`** (pg) z pulą **`max: 3`** (Supabase free / Vercel serverless — jak stary `connection_limit=3`); `prisma.config.ts` obsługuje CLI (`db push`/`migrate`). Prepared statements domyślnie niecache'owane → zgodne z transaction-poolerem Supabase (:6543). **Zweryfikowane na żywej bazie** (`user.count` / `$queryRaw` / `$transaction` ✅) + `tsc` / `eslint` / 41 testów / `next build`.
 - **zod 4 + vitest 4** — `zod` 3 → 4 (walidacja API — podstawowe API zgodne, bez zmian w kodzie, brak łamanych wzorców) i `vitest` 2 → 4 (testy, config bez zmian). Zielone: `tsc` / `eslint` / 41 testów / `next build`.
 - **React 18 → 19** — upgrade `react` / `react-dom` / `@types/react(-dom)` do 19. Next 16, next-auth 4.24.14 i lucide 1.0 oficjalnie wspierają React 19; **kod nie wymagał żadnych zmian** (zero błędów typów). Zielone: `tsc` / `eslint` / 41 testów / `next build`. Otwiera drogę do React Compiler.
 - **Update zależności (bezpieczny batch)** — `lucide-react` 0.454 → **1.x** (możliwe dzięki wcześniejszemu odpięciu ikon marek), `typescript` 5 → **6** w portalu (boty już były na 6), `@auth/prisma-adapter` 2.7 → 2.11, `discord.js` 14.16 → 14.26, `@types/tmi.js` → 1.8.6. Zielone: tsc / lint / 41 testów / `next build` (web) + tsc (boty).
