@@ -9,6 +9,7 @@ import type { Adapter } from "next-auth/adapters";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
 import { cookies } from "next/headers";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { displayNick } from "@/lib/utils";
 import { LINK_COOKIE_NAME, verifyLinkToken, executeAccountLink } from "@/lib/account-linking";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
@@ -479,7 +480,7 @@ export const authOptions: NextAuthOptions = {
           title: "👻 Nowy duch dołączył!",
           message: "wszedł do Ghost Empire",
           icon: "👻",
-          actorName: user.name ?? "Anon",
+          actorName: displayNick(user.name, user.email?.split("@")[0]),
           actorImage: user.image ?? undefined,
           amount: 500,
           amountLabel: "GT",
