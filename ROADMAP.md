@@ -36,7 +36,7 @@ Pierwsza warstwa domknięta: **są już testy jednostkowe (Vitest) i CI (GitHub 
 | **Lighthouse CI / performance budget** | 🟡 | Wykrywanie regresji Core Web Vitals na publicznych stronach |
 | ~~**Dependabot**~~ ✅ | — | **Zrobione** — `.github/dependabot.yml`: cotygodniowe zgrupowane PR-y (web/chat/bot + actions), security-updaty natychmiast |
 | **Prettier + import sort** | 🧊 | Spójny styl; dziś tylko ESLint |
-| **`@typescript-eslint` (next/typescript)** | 🧊 | Włączyć surowsze reguły TS w ESLint (dziś tylko `core-web-vitals`) — najpierw przejrzeć szum |
+| **`@typescript-eslint` (surowsze reguły TS)** | 🧊 | Po migracji **Next 16** lint = **ESLint 9 flat config** z `eslint-config-next/core-web-vitals` (ma już bazę `typescript-eslint`). Zostaje ewentualne włączenie surowszych reguł TS |
 
 ---
 
@@ -60,7 +60,7 @@ Dużo już zrobione (cache, indeksy, lazy admin, `staleTimes`, równoległe zapy
 
 | Propozycja | Pri | Notatki |
 |---|---|---|
-| **React Compiler** | ⛔ | Świadomie odroczony — auto-memoizacja React 19; na 18.3 to eksperyment, ryzyko niewidoczne w buildzie. Wrócić po pokryciu testami |
+| **React Compiler** | ⛔ | Świadomie odroczony — auto-memoizacja. Reguły lintu (`react-hooks` v7) są już w configu po migracji Next 16 (**wyłączone** — flagują nasze wzorce). Wrócić, gdy będzie warto (po testach) |
 | **`next/image` po wyjściu z Hobby** | 🟡 | Dziś natywne lazy `<img>` (oszczędność quoty optymalizatora). Po Pro warto przemierzyć na `next/image` (AVIF/WebP, auto-srcset) |
 | **Audyt rozmiaru bundla** | 🟡 | `@next/bundle-analyzer`; `AdminClient.tsx` jest monolityczny i ciężki — kandydat do code-split per sekcja |
 | **Streaming / Suspense granice** | 🧊 | Progresywny render ciężkich list zamiast pełnego SSR-blokowania |
