@@ -6,6 +6,7 @@ import { useSession, signIn } from "next-auth/react";
 import {
   Calendar, Gift, Ticket, Trophy, Zap, Users, Clock, Check, X, Loader2, Minus, Plus, Crown,
 } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { fmt, cn } from "@/lib/utils";
 
 type Winner = {
@@ -140,10 +141,11 @@ export function EventsClient({
       </div>
 
       {events.length === 0 && (
-        <div className="border border-zinc-800 bg-zinc-950/50 p-12 text-center">
-          <Calendar className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500">Brak aktywnych eventów. Zajrzyj później.</p>
-        </div>
+        <EmptyState
+          icon={<Calendar className="w-6 h-6" />}
+          title="Brak aktywnych eventów"
+          message="Aktualnie nic się nie dzieje — zajrzyj później albo śledź ogłoszenia na streamie."
+        />
       )}
 
       {/* Happy Hour section - banner style */}

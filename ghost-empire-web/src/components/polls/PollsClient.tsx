@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { BarChart3, Check, Loader2, X } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { cn, fmt } from "@/lib/utils";
 
 type Poll = {
@@ -58,9 +59,11 @@ export function PollsClient({
       <p className="text-zinc-500 text-sm">Głosuj w decyzjach społeczności. Możesz zmienić swój głos, dopóki ankieta jest otwarta.</p>
 
       {polls.length === 0 ? (
-        <div className="border border-zinc-800 bg-zinc-950/50 p-12 text-center">
-          <p className="text-zinc-500">Brak ankiet. Zajrzyj później!</p>
-        </div>
+        <EmptyState
+          icon={<BarChart3 className="w-6 h-6" />}
+          title="Brak ankiet"
+          message="Aktualnie nie ma żadnych ankiet. Zajrzyj później!"
+        />
       ) : (
         <div className="space-y-4">
           {polls.map((p) => {

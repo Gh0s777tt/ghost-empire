@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import {
   Zap, Check, Loader2, MessageCircle, Mic2, Gift, Flame, X, Clock,
 } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { fmt, cn } from "@/lib/utils";
 
 type UserTask = {
@@ -192,10 +193,11 @@ export function QuestsClient({
 
       {/* Tasks */}
       {tasks.length === 0 ? (
-        <div className="border border-zinc-800 bg-zinc-950/50 p-12 text-center">
-          <Zap className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500">Brak aktywnych questów na dziś.</p>
-        </div>
+        <EmptyState
+          icon={<Zap className="w-6 h-6" />}
+          title="Brak questów na dziś"
+          message="Questy odświeżają się codziennie — wróć jutro po nową porcję Ghost Tokens."
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {tasks.map((t) => (

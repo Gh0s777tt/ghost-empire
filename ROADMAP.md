@@ -90,7 +90,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 | **Audyt a11y** (axe / Lighthouse) | 🟡 | ✅ focus-visible, nawigacja klawiaturą, `aria-label` na navach, `aria-current` na aktywnym linku (A4 + a11y pass). Zostaje: kontrast (czerwień na czerni), ARIA na modalach/dropdownach |
 | ~~**Skip-to-content + landmarki**~~ ✅ | — | **Zrobione** — skip-link „Przejdź do treści" (A4) + `<main>` per-strona + opisane nawigacje/stopka |
 | **i18n (PL/EN)** | 🧊 | W seedzie jest już `textEn` dla questów — fundament pod angielską wersję dla widzów zza granicy |
-| **Empty/error states** | 🧊 | Spójne, brandowane stany pustych list i błędów ładowania sekcji |
+| **Empty/error states** | 🟡 | ✅ puste stany: wspólny `EmptyState` (Ankiety / Eventy / Questy / Ranking). Zostaje: reszta list + brandowane error-states sekcji |
 | **OG images — dopieszczenie** | 🧊 | Wzbogacić share-preview (np. dynamiczne tła per ranga/tier) |
 
 ---

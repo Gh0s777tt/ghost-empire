@@ -7,6 +7,7 @@ import {
   Trophy, TrendingUp, Sparkles, Flame, Crown, Medal, ShieldCheck,
   X, Loader2, Check, Coins, Heart, UserCog, Ban,
 } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { fmt, rankForLevel, cn } from "@/lib/utils";
 
 type Sort = "tokens" | "totalEarned" | "level" | "streak";
@@ -136,12 +137,11 @@ export function RankingClient({
       </div>
 
       {topUsers.length === 0 ? (
-        <div className="border border-zinc-800 bg-zinc-950/50 p-12 text-center">
-          <Icon className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500">
-            Nikt jeszcze nie ma punktów w kategorii "{meta.label.toLowerCase()}".
-          </p>
-        </div>
+        <EmptyState
+          icon={<Icon className="w-6 h-6" />}
+          title="Pusty ranking"
+          message={`Nikt jeszcze nie ma punktów w kategorii ${meta.label.toLowerCase()}. Bądź pierwszy!`}
+        />
       ) : (
         <>
           {/* Podium */}
