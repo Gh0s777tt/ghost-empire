@@ -1,4 +1,10 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+// Wraps the config so `ANALYZE=true next build` (npm run analyze) emits an
+// interactive treemap of each route's bundle to .next/analyze/*.html. No-op
+// (passthrough) on normal builds, so production is unaffected.
+const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
 // Security headers applied to ALL routes
 const securityHeaders = [
@@ -95,4 +101,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);
