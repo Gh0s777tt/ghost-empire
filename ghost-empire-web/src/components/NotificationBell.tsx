@@ -108,7 +108,10 @@ export function NotificationBell() {
       <button
         onClick={() => setOpen((v) => !v)}
         className="relative w-8 h-8 flex items-center justify-center border border-zinc-800 bg-zinc-950 hover:border-zinc-700 transition-colors"
-        aria-label="Powiadomienia"
+        aria-label={unread > 0 ? `Powiadomienia (${unread} nieprzeczytane)` : "Powiadomienia"}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls="notif-panel"
       >
         <Bell className="w-3.5 h-3.5 text-zinc-400" />
         {unread > 0 && (
@@ -119,7 +122,12 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-80 sm:w-96 max-w-[calc(100vw-2rem)] border border-zinc-800 bg-zinc-950/98 backdrop-blur-md shadow-2xl z-50">
+        <div
+          id="notif-panel"
+          role="dialog"
+          aria-label="Powiadomienia"
+          className="absolute right-0 top-full mt-1 w-80 sm:w-96 max-w-[calc(100vw-2rem)] border border-zinc-800 bg-zinc-950/98 backdrop-blur-md shadow-2xl z-50"
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2.5 border-b border-zinc-800">
             <div className="flex items-center gap-2">
