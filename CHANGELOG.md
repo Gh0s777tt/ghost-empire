@@ -9,6 +9,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **Więcej empty states + a11y modali** — `EmptyState` także w **Osiągnięciach** i **Predykcjach**; modale edytorów (sklep / event / osiągnięcie) mają teraz `role="dialog"` + `aria-modal` + `aria-label` (poprawna obsługa czytników ekranu).
 - **Stream Alerts — typy scalone z per-typ (klik → rozwija)** — w `/admin#alerts` lista typów łączy włącz/wyłącz (`●`) z konfiguracją: klikasz typ → in-line rozwijają się **animacja / pozycja / dźwięk / próg** (koniec osobnej karty i przewijania). Plus fix prywatności: w **„Ostatnich alertach"** (panel) i w **alercie powitalnym na overlayu** nie pokazuje się już imię i nazwisko (maska / `displayNick`).
 - **Brandowane puste stany** — wspólny komponent `EmptyState` (👻 + sygnaturowy `clip-corner` + czerwony akcent) zamiast surowych „Brak…" w Ankietach / Eventach / Questach / Rankingu. Spójny, ładniejszy widok pustych list.
 - **Opisy uprawnień w nadawaniu rang** — w `/admin#users` pod każdym uprawnieniem moderatora jest teraz krótki opis „co daje" + tooltip (`MOD_PERMISSIONS.desc`). Łatwiej świadomie przydzielać granularne uprawnienia.
