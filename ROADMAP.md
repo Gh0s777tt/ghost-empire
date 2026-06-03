@@ -62,7 +62,7 @@ Dużo już zrobione (cache, indeksy, lazy admin, `staleTimes`, równoległe zapy
 |---|---|---|
 | **React Compiler** | ⛔ | Świadomie odroczony — auto-memoizacja. Reguły lintu (`react-hooks` v7) są już w configu po migracji Next 16 (**wyłączone** — flagują nasze wzorce). Wrócić, gdy będzie warto (po testach) |
 | **`next/image` po wyjściu z Hobby** | 🟡 | Dziś natywne lazy `<img>` (oszczędność quoty optymalizatora). Po Pro warto przemierzyć na `next/image` (AVIF/WebP, auto-srcset) |
-| **Audyt rozmiaru bundla** | 🟡 | `@next/bundle-analyzer`; `AdminClient.tsx` jest monolityczny i ciężki — kandydat do code-split per sekcja |
+| **Audyt rozmiaru bundla** | 🟡 | ✅ `@next/bundle-analyzer` wpięty (`npm run analyze` → treemapy `.next/analyze`). Zostaje sam code-split `AdminClient.tsx` (~7k linii) — `/admin` to route on-demand (niski priorytet), rozbicie wymaga wyniesienia inline'owego `SectionCard`+typów do współdzielonego modułu |
 | **Streaming / Suspense granice** | 🧊 | Progresywny render ciężkich list zamiast pełnego SSR-blokowania |
 | **Redis/Upstash dla rate-limit + cache** | 🧊 | Dziś DB-backed (fail-open). Przy skali wynieść do Redisa (mniejszy narzut na Postgres) |
 | **Tuning połączeń DB** | 🟡 | `connection_limit`/`pool_timeout` w Vercel env (patrz CHANGELOG — wymaga ręcznej zmiany przez usera) |
@@ -129,7 +129,8 @@ Po modernizacji stacku do najnowszych majorów rozpisana **Faza A** (autonomiczn
 - ✅ 🤖 **a11y — ARIA na popoverach** — dzwonek powiadomień (`role="dialog"`/`aria-expanded`) + menu konta (`aria-haspopup`). **Faza A #5 (a11y).** Zostaje już tylko kontrast czerwień/czerń.
 - ✅ 🤖 **„Czas na streamie" + analityka per-stream** — model `StreamSession` + Twitch EventSub `stream.online/offline` → karta w `/admin#analytics` (LIVE+uptime / łączny czas / liczba / lista sesji). `db push` na żywej bazie. **Faza A #2.** *(Akcja usera: „Utwórz subskrypcje" w `/admin#twitch`. EventSub = czas nadawania, nie per-widz.)*
 - ✅ 🤖 **Komendy warunkowe** — `requiresLive` + `activeFromMinute` (status live z `StreamSession`; bot bramkuje). **Faza A #3.** *(`minViewers` pominięte — brak trackingu widzów.)*
-- 🤖 **Faza A do zrobienia:** code-split `AdminClient` + bundle-analyzer · i18n PL/EN · testy integracyjne+E2E · kontrast a11y.
+- ✅ 🤖 **Bundle analyzer** — `@next/bundle-analyzer` + `npm run analyze`. **Faza A #4 (narzędzie).** Sam code-split `AdminClient` zostaje osobnym mierzalnym PR-em.
+- 🤖 **Faza A do zrobienia:** code-split `AdminClient` (split monolitu) · i18n PL/EN · testy integracyjne+E2E · kontrast a11y.
 
 ### Pomysły użytkownika (2026-06-02) → kolejność i szczegóły w [PLAN.md](PLAN.md)
 
