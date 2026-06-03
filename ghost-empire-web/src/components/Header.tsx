@@ -56,7 +56,7 @@ export function Header() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-0.5">
+          <nav className="hidden lg:flex items-center gap-0.5" aria-label="Główna nawigacja">
             {NAV.map(({ href, label, icon: Icon }) => {
               const active =
                 href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -64,6 +64,7 @@ export function Header() {
                 <Link
                   key={href}
                   href={href}
+                  aria-current={active ? "page" : undefined}
                   className={`relative px-3 py-2 flex items-center gap-2 text-[11px] font-semibold tracking-widest uppercase transition-all ${
                     active ? "text-white" : "text-zinc-500 hover:text-zinc-300"
                   }`}
@@ -215,7 +216,7 @@ export function Header() {
         </div>
 
         {/* Mobile nav */}
-        <nav className="lg:hidden flex overflow-x-auto no-scrollbar items-center gap-1 pb-2 -mt-1">
+        <nav className="lg:hidden flex overflow-x-auto no-scrollbar items-center gap-1 pb-2 -mt-1" aria-label="Główna nawigacja">
           {NAV.map(({ href, label, icon: Icon }) => {
             const active =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -223,6 +224,7 @@ export function Header() {
               <Link
                 key={href}
                 href={href}
+                aria-current={active ? "page" : undefined}
                 className={`flex-shrink-0 px-3 py-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase transition-all border ${
                   active
                     ? "border-red-500 bg-red-600/20 text-red-300"
