@@ -7,7 +7,7 @@ import {
   Calendar, Gift, Ticket, Trophy, Zap, Users, Clock, Check, X, Loader2, Minus, Plus, Crown,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { fmt, cn } from "@/lib/utils";
+import { fmt, cn, displayNick } from "@/lib/utils";
 
 type Winner = {
   id: string;
@@ -338,9 +338,9 @@ function WinnersBanner({ event }: { event: EventData }) {
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-white font-medium truncate">
-                  {w.displayName ?? w.username ?? "Anonim"}
+                  {displayNick(w.displayName, w.username)}
                 </div>
-                {w.username && w.displayName !== w.username && (
+                {w.username && displayNick(w.displayName, w.username) !== w.username && (
                   <div className="text-[10px] font-mono text-zinc-500 truncate">
                     @{w.username}
                   </div>

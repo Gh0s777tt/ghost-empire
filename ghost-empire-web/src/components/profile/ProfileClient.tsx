@@ -9,7 +9,7 @@ import {
   Copy, ShieldCheck, Heart, Star, Crown, Ban, LogOut,
 } from "lucide-react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
-import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
+import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
 
 type Achievement = {
   id: string;
@@ -342,8 +342,9 @@ export function ProfileClient({
                       </div>
                     </div>
                     <div className="text-xs text-zinc-500 font-mono truncate">
-                      {/* Hide leaked full names (handles never contain spaces). */}
-                      {c.username && !/\s/.test(c.username) ? `@${c.username}` : "połączono"}
+                      {/* Show only real handles — never a leaked full name or an
+                          email local-part fallback (e.g. Google login w/o YT handle). */}
+                      {isPublicHandle(c.username) ? `@${c.username}` : "połączono"}
                     </div>
                   </div>
                 );
@@ -550,8 +551,8 @@ function SocialLinksEditor({
     .filter((c) => AUTO_PLATFORM_META[c.platform])
     .map((c) => {
       const meta = AUTO_PLATFORM_META[c.platform];
-      // Handles never contain spaces; a value with a space is a leaked full name.
-      const handle = c.username && !/\s/.test(c.username) ? c.username : "";
+      // Show only real handles — never a leaked full name or email local-part.
+      const handle = isPublicHandle(c.username) ? c.username : "";
       return {
         key: `auto-${c.platform}`,
         platform: c.platform,

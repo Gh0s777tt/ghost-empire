@@ -8,7 +8,7 @@ import {
   X, Loader2, Check, Coins, Heart, UserCog, Ban,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { fmt, rankForLevel, cn } from "@/lib/utils";
+import { fmt, rankForLevel, cn, displayNick } from "@/lib/utils";
 
 type Sort = "tokens" | "totalEarned" | "level" | "streak";
 
@@ -213,7 +213,7 @@ export function RankingClient({
 
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="font-bold text-white text-sm truncate max-w-[140px]">
-                        {u.displayName ?? u.username ?? "Anonim"}
+                        {displayNick(u.displayName, u.username)}
                       </span>
                       {u.isAdmin && <ShieldCheck className="w-3 h-3 text-red-500" />}
                     </div>
@@ -371,7 +371,7 @@ function UserRow({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-white font-medium truncate">
-                {user.displayName ?? user.username ?? "Anonim"}
+                {displayNick(user.displayName, user.username)}
               </span>
               {user.isAdmin && <ShieldCheck className="w-3 h-3 text-red-500 shrink-0" />}
               {user.isBanned && (
@@ -543,7 +543,7 @@ function AdminUserActions({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <h3 className="font-display text-xl text-white tracking-wider truncate">
-                {user.displayName ?? user.username ?? "Anonim"}
+                {displayNick(user.displayName, user.username)}
               </h3>
               {user.isAdmin && <ShieldCheck className="w-4 h-4 text-red-500" />}
             </div>

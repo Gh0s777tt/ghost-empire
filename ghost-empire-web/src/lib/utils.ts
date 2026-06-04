@@ -81,6 +81,16 @@ export function displayNick(displayName?: string | null, username?: string | nul
   return username ?? "Anonim";
 }
 
+/** Whether a connection username is safe to show publicly as a platform @handle.
+ *  Rejects whitespace (a leaked full name) and dots (an email local-part fallback
+ *  like "john.doe", stored when an OAuth provider returned no real handle — e.g.
+ *  a Google login without the YouTube channel handle). Real handles on Twitch /
+ *  Kick / Discord never contain dots, so this is safe. */
+export function isPublicHandle(username?: string | null): username is string {
+  const u = username?.trim();
+  return !!u && !/[\s.]/.test(u);
+}
+
 export function pluralPL(
   n: number,
   one: string,

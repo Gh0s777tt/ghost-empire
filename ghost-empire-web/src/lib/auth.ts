@@ -356,10 +356,13 @@ export const authOptions: NextAuthOptions = {
             p.sub ||
             account.providerAccountId;
 
-          const platformUsername =
-            providerHandle ||
-            emailLocal ||   // email local-part as last resort — NEVER user.name (full name, e.g. Google = leaks real name)
-            "";
+          // A connection's public username MUST be a real platform handle. We do
+          // NOT fall back to the email local-part here (a Google login without a
+          // YouTube handle) — that would surface the user's email prefix as a
+          // "@handle" in the public profile / connected-accounts list. Empty →
+          // the UI shows a neutral "połączono" until a real handle is fetched
+          // (e.g. after re-login with the youtube.readonly scope).
+          const platformUsername = providerHandle || "";
 
           // Connection display name: Google → YouTube channel title (never the full
           // name); other providers → their platform display name.

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, ArrowUp, ArrowDown, Check, Clock, Users, Zap, Gift, Trophy } from "lucide-react";
-import { fmt, timeLeft, rankForLevel } from "@/lib/utils";
+import { fmt, timeLeft, rankForLevel, displayNick } from "@/lib/utils";
 import { EmptyState } from "@/components/EmptyState";
 import type { Session } from "next-auth";
 
@@ -214,7 +214,7 @@ function GuestView({ topUsers, hotItems, activeEvents }: any) {
                 {u.image ? <img src={u.image} alt="" width={40} height={40} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" /> : <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />}
               </div>
               <div className="flex-1">
-                <p className="font-bold text-white">{u.displayName ?? u.username}</p>
+                <p className="font-bold text-white">{displayNick(u.displayName, u.username)}</p>
                 <p className="text-[10px] text-zinc-500 font-mono">LVL {u.level}</p>
               </div>
               <div className="flex items-center gap-1">
@@ -266,7 +266,7 @@ function ProfileHero({ user }: { user: any }) {
             </div>
           </div>
           <div>
-            <h2 className="font-display text-2xl text-white">{user.displayName ?? user.username}</h2>
+            <h2 className="font-display text-2xl text-white">{displayNick(user.displayName, user.username)}</h2>
             <p className="font-mono text-xs text-zinc-500">@{user.username}</p>
             <div
               className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 border text-[10px] font-mono font-bold tracking-wider"

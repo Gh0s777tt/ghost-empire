@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { displayNick } from "../utils";
+import { displayNick, isPublicHandle } from "../utils";
 
 // displayNick is the privacy helper that decides what name to show publicly.
 // Core rule: a value containing a space is a leaked full name (e.g. from Google)
@@ -33,5 +33,31 @@ describe("displayNick", () => {
 
   it("trims a clean handle", () => {
     expect(displayNick("  ghost  ", null)).toBe("ghost");
+  });
+});
+
+// isPublicHandle decides whether a connection username may be shown as an @handle.
+// It must reject leaked full names (spaces) AND email local-part fallbacks (dots),
+// e.g. a Google login with no YouTube handle stored "dzierzawskii98.dam".
+describe("isPublicHandle", () => {
+  it("accepts real platform handles", () => {
+    expect(isPublicHandle("gh0s77tt")).toBe(true);
+    expect(isPublicHandle("Ghost_77")).toBe(true);
+  });
+
+  it("rejects an email local-part fallback (contains a dot)", () => {
+    expect(isPublicHandle("dzierzawskii98.dam")).toBe(false);
+    expect(isPublicHandle("john.doe")).toBe(false);
+  });
+
+  it("rejects a leaked full name (contains a space)", () => {
+    expect(isPublicHandle("Jan Kowalski")).toBe(false);
+  });
+
+  it("rejects empty / whitespace / null / undefined", () => {
+    expect(isPublicHandle(null)).toBe(false);
+    expect(isPublicHandle(undefined)).toBe(false);
+    expect(isPublicHandle("")).toBe(false);
+    expect(isPublicHandle("   ")).toBe(false);
   });
 });
