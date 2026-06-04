@@ -13,3 +13,25 @@ export type AuditEntry = {
   ipAddress: string | null;
   createdAt: string;
 };
+
+export type BotConfigData = {
+  id: string;
+  messageReward: number;
+  messageCooldownSeconds: number;
+  voiceRewardPerMinute: number;
+  voiceTickSeconds: number;
+  afkGivesReward: boolean;
+  mutedGivesReward: boolean;
+  enabled: boolean;
+};
+
+export type ScheduleSlot = {
+  id: string;
+  dayOfWeek: number;
+  startHour: number;
+  startMinute: number;
+  durationMinutes: number;
+  title: string | null;
+  platform: string | null;
+  active: boolean;
+};
