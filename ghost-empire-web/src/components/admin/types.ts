@@ -76,3 +76,22 @@ export type UnmatchedDonation = {
   currency: string;
   donatedAt: string;
 };
+
+export type ShopItemRow = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  imageEmoji: string | null;
+  imageUrl: string | null;
+  stock: number;
+  totalStock: number;
+  hot: boolean;
+  active: boolean;
+  featured: boolean;
+  requiresSubTier: string | null;
+  requiresMinLevel: number | null;
+  requiresMinMonths: number | null;
+  requiresAchievement: string | null;
+};
