@@ -7,6 +7,46 @@
 
 ---
 
+## 0. 🆕 Wishlist 2026-06-04 — „Studio" (customizacja · widgety · AI · moderacja · bezpieczeństwo)
+
+Duży zrzut pomysłów od usera + moje propozycje. Pogrupowane wg autonomii; kolejność = rekomendowany priorytet. Każda pozycja = osobny PR (branch → tsc/lint/test → squash-merge).
+
+**✅ Najpierw naprawione bugi prywatności (PR #115):** imię/nazwisko zamaskowane (`displayNick`) w rankingu/eventach/home/OG-image; mail (`@…dam`) wyrugowany z „Połączone konta" (`isPublicHandle` + źródło w `auth.ts`); audit log z czytelnymi etykietami (anulowanie predykcji **ma** być w audycie). *(Dane „at-rest" w bazie nietknięte — wszystkie ścieżki renderu maskują; opcjonalny scrub bazy do zrobienia na życzenie.)*
+
+### 🤖 F1 — Customizacja & overlaye (autonomiczne, najpierw)
+1. **Subathon: edytowalny kolor + napis na timerze** — pola `accentColor` + `label` w modelu `Subathon`, edytowalne w `/admin#subathon`, aplikowane na overlayu `/overlay/subathon` (+ podgląd). *(Mały, samodzielny — dobry pierwszy.)*
+2. **Predictions / zakłady / drop kodów / ankiety: podgląd + kolor + „na czat / na OBS" + auto-pin** — (a) każdemu z tych modułów dodać **podgląd** + **wybór koloru akcentu**; (b) przełącznik **gdzie ogłosić**: wiadomość na czacie (bot) i/lub overlay OBS; (c) **auto-pin**: każdy nowy zakład/predykcja bot **przypina na czacie** (Twitch/Kick — `/pin` lub powtarzanie) i odpina po rozstrzygnięciu, żeby nie zniknął.
+3. **Plan streamów jako kalendarz** — widok miesięczny (siatka 7×N) zamiast listy w `/schedule` + `/admin#schedule`; klik w dzień → sloty. Dane już są (`ScheduleSlot`).
+4. **Style picker: HEX / gradient / fonty / Unicode-emoji** — jeden współdzielony komponent (kolor solid+gradient, paleta **Google Fonts self-host**, emoji-picker) reużywany w alertach/overlayach/widgetach. UTF-8/emoji w treści **już działa** (Postgres `text`); brakuje UI palety i fontów.
+
+### 🤖 F2 — Zaawansowana moderacja czatu (autonomiczne, logika bota)
+Najbardziej zaawansowany system, jaki się da bez zewnętrznych usług. Panel `/admin#moderation`, model `ModRule`, egzekucja w bocie (Twitch/Kick/YouTube):
+- **Filtr przekleństw** (słownik PL+EN + warianty/leetspeak), **nadmiar CAPS** (% wielkich liter > próg), **limit długości**, **powtarzający się tekst** (flood/duplikaty/spam emotek), **tekst zalgo** (nadmiar znaków łączących Unicode).
+- Per-reguła: próg + akcja (usuń / timeout Ns / ostrzeż / oznacz) + **whitelist** (mod/sub/vip), licznik wykroczeń, log do audytu.
+
+### 🤖 F3 — Biblioteka widgetów + generator (core autonomiczny)
+- **Biblioteka**: jedno miejsce ze wszystkimi widgetami (URL do OBS + podgląd): istniejące (alerty/goals/subathon/chat/kody) **+ nowe**: **viewer count · last sub · last follower · last donator · emoji combo**.
+- **Zaawansowany generator**: wybór typu danych + layout + styl (kolor/gradient/font/animacja z F1) → gotowy token-URL. Pozwala tworzyć własne widgety bez kodu.
+- Dane: last sub/donator **już mamy** (EventSub/Streamlabs); **viewer count** + **last follower** wymagają Twitch Helix (`channel.follow` v2 / get-streams) — token streamera mamy, więc głównie autonomiczne.
+
+### 🔑 F4 — Moduły AI (wymaga Twoich kluczy API + budżetu)
+- **Postać AI** (`@bot …`): osobowości (Harry Potter / Vader / Catgirl / Trump / Tate / GigaChad / Musk / **własna**) jako system-prompty; **wybór modelu** (Grok / GPT / Gemini / DeepSeek / Anthropic / Bielik) przez wspólny adapter; konfiguracja **limitów** (pytań/odpowiedzi per user/sesja, cooldown, dzienny budżet-guard). Framework + panel zbuduję sam; **potrzebne: klucze API providerów**, których chcesz użyć.
+- **Obrazy AI** (`!imagine <prompt>`): provider obrazów (OpenAI Images / SDXL / Flux…) + moderacja promptu + kolejka na overlay. **Potrzebne: klucz + budżet.**
+
+### 🔑🎨 F5 — Emotki czatu + odznaki + rich-text editor
+- **Emotki + odznaki** w chat overlay/feedzie: Twitch (IRC tags — mamy w bocie) + **7TV / BTTV / FFZ** (publiczne API, część autonomiczna) + odznaki sub/mod/vip/bits.
+- **Zaawansowany edytor tekstu** (kolor/gradient/font/emoji/markdown) do alertów/widgetów/opisów. Lekki edytor autonomiczny; **kierunek wizualny = Twój**.
+
+### 🔒 F6 — Bezpieczeństwo & backup (część autonomiczna, część = decyzje/infra)
+Moje propozycje (otwarte na Twoje):
+- **Uploady (alerty/grafika)**: walidacja **magic-bytes** (nie tylko MIME) + limit rozmiaru, **sanityzacja SVG** (usuń `<script>`/`on*`), **re-enkodowanie** obrazów (`sharp`) by zabić payloady, hosting user-assetów na **osobnym buckecie/domenie** (Supabase Storage / Cloudflare R2) z `Content-Disposition: attachment`, **CSP** na overlayach. Opcjonalny skan AV (ClamAV / VirusTotal API — creds).
+- **Kradzież danych**: **szyfrowanie tokenów OAuth at-rest** w DB, least-privilege scope'y, brak sekretów w kliencie, security headers (CSP/HSTS/X-Frame), rate-limit + audyt (mamy), `npm audit`/Dependabot (mamy).
+- **Backup**: cron **`pg_dump` → osobny, szyfrowany bucket** (Backblaze B2 / R2, retencja N dni) — Supabase PITR jest tylko na płatnym; + **eksport konfiguracji** (sklep/eventy/alerty/komendy) do JSON. **Decyzje: gdzie trzymać backup + budżet.**
+
+**Rekomendowana kolejność:** F1 → F2 → F3 (autonomiczne, od ręki) → potem F4/F5/F6 gdy dasz klucze/decyzje. Szczegóły każdej pozycji rozpisuję przy starcie danego PR.
+
+---
+
 ## 1. Analiza — co JUŻ działa ✅
 
 **Ekonomia & tożsamość**
