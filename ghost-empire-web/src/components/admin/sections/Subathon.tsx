@@ -14,6 +14,8 @@ type SubathonData = {
   secondsPerPln: number;
   maxEndsAt: string | null;
   totalAddedSecs: number;
+  accentColor: string;
+  label: string;
 };
 
 function subathonHMS(ms: number): string {
@@ -41,6 +43,8 @@ export function SubathonManager({
   const [perSub, setPerSub] = useState("300");
   const [perPln, setPerPln] = useState("60");
   const [maxMinutes, setMaxMinutes] = useState("");
+  const [accent, setAccent] = useState("#E50914");
+  const [label, setLabel] = useState("Subathon");
 
   const load = useCallback(async () => {
     try {
@@ -50,6 +54,8 @@ export function SubathonManager({
         setData(d.subathon);
         setPerSub(String(d.subathon.secondsPerSub));
         setPerPln(String(d.subathon.secondsPerPln));
+        if (d.subathon.accentColor) setAccent(d.subathon.accentColor);
+        if (typeof d.subathon.label === "string") setLabel(d.subathon.label);
       }
     } finally {
       setLoading(false);
@@ -95,9 +101,44 @@ export function SubathonManager({
       <div className="mb-4">
         <OverlayPreview path="/overlay/subathon" note="Odliczanie pojawia się u góry ekranu, gdy subathon jest aktywny. Token współdzielony z alertami/goals.">
           <div className="flex justify-center">
-            <SubathonCard remainingMs={2 * 3600 * 1000 + 34 * 60 * 1000 + 12 * 1000} ended={false} />
+            <SubathonCard remainingMs={2 * 3600 * 1000 + 34 * 60 * 1000 + 12 * 1000} ended={false} accent={accent} label={label} />
           </div>
         </OverlayPreview>
+      </div>
+
+      {/* Appearance: heading text + accent color (live in the preview above) */}
+      <div className="mb-4 border border-zinc-800 bg-black/30 p-3">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">Wygląd overlaya</div>
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-end">
+          <label className="text-xs text-zinc-400">Napis na timerze
+            <input
+              type="text"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              maxLength={40}
+              placeholder="Subathon"
+              className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
+            />
+          </label>
+          <label className="text-xs text-zinc-400">Kolor akcentu
+            <div className="flex items-center gap-2 mt-1">
+              <input type="color" value={accent} onChange={(e) => setAccent(e.target.value)} className="w-10 h-9 bg-black border border-zinc-800 cursor-pointer" />
+              <input
+                type="text"
+                value={accent}
+                onChange={(e) => setAccent(e.target.value)}
+                className="w-24 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono focus:border-red-700 outline-hidden"
+              />
+            </div>
+          </label>
+          <button
+            onClick={() => call("appearance", { accentColor: accent, label }, "Wygląd zapisany")}
+            disabled={!!busy || pending}
+            className="border border-zinc-700 hover:border-green-600 text-green-300 px-3 py-2 text-xs font-mono uppercase tracking-widest disabled:opacity-50"
+          >
+            {busy === "appearance" ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "Zapisz wygląd"}
+          </button>
+        </div>
       </div>
 
       {loading ? (

@@ -15,11 +15,14 @@ export function SubathonCard({
   remainingMs,
   ended,
   accent = "#E50914",
+  label = "Subathon",
 }: {
   remainingMs: number;
   ended: boolean;
   accent?: string;
+  label?: string;
 }) {
+  const heading = (label || "Subathon").trim();
   return (
     <div
       style={{
@@ -35,7 +38,7 @@ export function SubathonCard({
       }}
     >
       <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 3, color: accent, textTransform: "uppercase" }}>
-        {ended ? "Subathon — koniec!" : "Subathon"}
+        {ended ? `${heading} — koniec!` : heading}
       </div>
       <div style={{ fontSize: 46, fontWeight: 900, fontVariantNumeric: "tabular-nums", lineHeight: 1.1, marginTop: 2 }}>
         {formatRemaining(remainingMs)}

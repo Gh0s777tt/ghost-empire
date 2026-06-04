@@ -12,6 +12,7 @@ const clampInt = (v: unknown, min: number, max: number, fallback: number) =>
 type Row = {
   active: boolean; endsAt: Date | null; startedAt: Date | null;
   secondsPerSub: number; secondsPerPln: number; maxEndsAt: Date | null; totalAddedSecs: number;
+  accentColor: string; label: string;
 };
 function serialize(s: Row) {
   return {
@@ -22,6 +23,8 @@ function serialize(s: Row) {
     secondsPerPln: s.secondsPerPln,
     maxEndsAt: s.maxEndsAt?.toISOString() ?? null,
     totalAddedSecs: s.totalAddedSecs,
+    accentColor: s.accentColor,
+    label: s.label,
   };
 }
 
@@ -43,6 +46,8 @@ export async function POST(req: Request) {
     secondsPerSub?: number;
     secondsPerPln?: number;
     maxMinutes?: number;
+    accentColor?: string;
+    label?: string;
   };
   try {
     body = await req.json();
@@ -101,5 +106,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, subathon: serialize(updated) });
   }
 
-  return NextResponse.json({ error: "action: start | stop | addTime | settings" }, { status: 400 });
+  if (body.action === "appearance") {
+    const patch: Record<string, string> = {};
+    if (typeof body.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(body.accentColor)) patch.accentColor = body.accentColor;
+    if (typeof body.label === "string") patch.label = body.label.trim().slice(0, 40) || "Subathon";
+    const updated = await prisma.subathon.upsert({ where: { id: "default" }, create: { id: "default", ...patch }, update: patch });
+    return NextResponse.json({ ok: true, subathon: serialize(updated) });
+  }
+
+  return NextResponse.json({ error: "action: start | stop | addTime | settings | appearance" }, { status: 400 });
 }

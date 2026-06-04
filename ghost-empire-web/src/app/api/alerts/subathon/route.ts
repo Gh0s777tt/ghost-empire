@@ -17,6 +17,8 @@ export async function GET(req: Request) {
   return NextResponse.json({
     active: s?.active ?? false,
     endsAt: s?.endsAt?.toISOString() ?? null,
+    accentColor: s?.accentColor ?? "#E50914",
+    label: s?.label ?? "Subathon",
     serverNow: new Date().toISOString(),
   });
 }
