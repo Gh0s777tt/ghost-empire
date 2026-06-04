@@ -54,6 +54,7 @@ export default async function PredictionsPage() {
       status: p.status,
       options: perOption,
       totalPot: p.totalPot,
+      accentColor: p.accentColor,
       opensAt: p.opensAt.toISOString(),
       closesAt: p.closesAt?.toISOString() ?? null,
       myEntry: myEntry ? { optionIndex: myEntry.optionIndex, tokensWagered: myEntry.tokensWagered } : null,

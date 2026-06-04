@@ -15,6 +15,7 @@ type PredictionRow = {
   opensAt: string;
   closesAt: string | null;
   resolvedAt: string | null;
+  accentColor: string;
   entriesCount: number;
   breakdown: Array<{ index: number; total: number; count: number }>;
 };
@@ -34,6 +35,7 @@ export function PredictionsManager({
   const [newQuestion, setNewQuestion] = useState("");
   const [newOptions, setNewOptions] = useState<string[]>(["", ""]);
   const [newClosesIn, setNewClosesIn] = useState("");  // minutes from now, optional
+  const [newAccent, setNewAccent] = useState("#a855f7");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,6 +75,7 @@ export function PredictionsManager({
       question: newQuestion.trim(),
       options: cleanOptions,
       closesAt,
+      accentColor: newAccent,
     });
     if (ok) {
       setNewQuestion("");
@@ -302,6 +305,37 @@ export function PredictionsManager({
               )}
             </div>
           </div>
+          {/* Accent color + live preview */}
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">Kolor akcentu</label>
+            <div className="flex items-center gap-2">
+              <input type="color" value={newAccent} onChange={(e) => setNewAccent(e.target.value)} className="w-10 h-9 bg-black border border-zinc-700 cursor-pointer" />
+              <input
+                type="text"
+                value={newAccent}
+                onChange={(e) => setNewAccent(e.target.value)}
+                className="w-24 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600"
+              />
+              <span className="text-[10px] text-zinc-600">Podgląd jak na stronie „Predykcje" →</span>
+            </div>
+          </div>
+
+          <div className="border bg-black/40 p-3" style={{ borderColor: newAccent }}>
+            <div className="text-[10px] font-mono uppercase tracking-widest mb-1.5" style={{ color: newAccent }}>
+              Zakład · podgląd
+            </div>
+            <div className="text-sm text-white mb-2">{newQuestion.trim() || "Twoje pytanie pojawi się tutaj"}</div>
+            <div className="space-y-1">
+              {(newOptions.some((o) => o.trim()) ? newOptions : ["Opcja 1", "Opcja 2"]).map((opt, idx) => (
+                <div key={idx} className="flex items-center gap-2 px-2 py-1.5 border bg-black/30" style={{ borderColor: `${newAccent}55` }}>
+                  <span className="font-mono text-[10px] text-zinc-500 shrink-0">#{idx + 1}</span>
+                  <span className="text-white text-xs flex-1 truncate">{opt.trim() || `Opcja ${idx + 1}`}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-sm" style={{ background: `${newAccent}22`, color: newAccent }}>Obstaw</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="flex items-end gap-2">
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">

@@ -968,6 +968,7 @@ model Prediction {
   opensAt             DateTime  @default(now())
   closesAt            DateTime?                              // wagers blocked after this (and status auto-flips to "locked")
   resolvedAt          DateTime?
+  accentColor         String    @default("#a855f7")          // card accent (hex) on /predictions + overlay
   createdById         String?                                // admin user id
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

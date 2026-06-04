@@ -46,6 +46,7 @@ export async function GET() {
       opensAt: p.opensAt.toISOString(),
       closesAt: p.closesAt?.toISOString() ?? null,
       resolvedAt: p.resolvedAt?.toISOString() ?? null,
+      accentColor: p.accentColor,
       entriesCount: p._count.entries,
       breakdown: breakdownById.get(p.id) ?? [],
     })),
@@ -63,6 +64,7 @@ export async function POST(req: Request) {
     options?: string[];
     closesAt?: string;
     winningOptionIndex?: number;
+    accentColor?: string;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
@@ -91,12 +93,18 @@ export async function POST(req: Request) {
       closesAt = d;
     }
 
+    const accentColor =
+      typeof body.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(body.accentColor)
+        ? body.accentColor
+        : undefined;
+
     const created = await prisma.prediction.create({
       data: {
         question,
         options,
         closesAt,
         createdById: auth.userId,
+        ...(accentColor ? { accentColor } : {}),
       },
     });
     await logAdminAction({
