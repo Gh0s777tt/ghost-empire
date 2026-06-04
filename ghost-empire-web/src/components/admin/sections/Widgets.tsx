@@ -18,6 +18,7 @@ const WIDGETS: Widget[] = [
   { id: "polls",       name: "Ankiety",            path: "/overlay/polls",       desc: "Aktualna otwarta ankieta: opcje + wyniki na żywo.",                     size: "500×400" },
   { id: "last-sub",    name: "Ostatni sub",        path: "/overlay/last-event",  query: "kind=sub",      desc: "Najnowszy subskrybent (Twitch sub / gift). Mały badge.",        size: "340×90" },
   { id: "last-donator", name: "Ostatni donator",   path: "/overlay/last-event",  query: "kind=donation", desc: "Najnowszy donejt — nick + kwota. Mały badge.",                  size: "340×90" },
+  { id: "viewers",     name: "Liczba widzów",      path: "/overlay/viewers",     desc: "Aktualna liczba widzów na Twitchu (gdy live). Wymaga połączonego Twitcha.", size: "200×70" },
 ];
 
 export function WidgetsLibrary({
