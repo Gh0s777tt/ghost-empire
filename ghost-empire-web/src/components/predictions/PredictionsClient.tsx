@@ -13,6 +13,7 @@ type ActivePrediction = {
   status: string;
   options: Array<{ index: number; label: string; totalWagered: number; wagerCount: number }>;
   totalPot: number;
+  accentColor: string;
   opensAt: string;
   closesAt: string | null;
   myEntry: { optionIndex: number; tokensWagered: number } | null;
@@ -189,10 +190,15 @@ function ActivePredictionCard({
     }
   }
 
+  const accent = prediction.accentColor || "#a855f7";
+
   return (
-    <div className="border border-zinc-800 bg-zinc-950/70 p-5">
+    <div
+      className="border bg-zinc-950/70 p-5"
+      style={{ borderColor: accent, boxShadow: `0 8px 30px -14px ${accent}66` }}
+    >
       <div className="flex items-start justify-between gap-3 mb-4">
-        <h3 className="text-white font-bold text-base sm:text-lg flex-1">{prediction.question}</h3>
+        <h3 className="text-white font-bold text-base sm:text-lg flex-1 border-l-2 pl-2" style={{ borderColor: accent }}>{prediction.question}</h3>
         <div className="text-right shrink-0">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Pula</div>
           <div className="font-mono font-bold text-yellow-500 text-lg tabular-nums">{fmt(prediction.totalPot)} GT</div>
