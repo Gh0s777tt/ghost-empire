@@ -6,7 +6,7 @@ import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
-  LayoutDashboard, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
+  LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3,
 } from "lucide-react";
 import { ErrorState } from "@/components/EmptyState";
@@ -23,6 +23,7 @@ const AnalyticsSection = dynamic(() => import("./sections/Analytics").then((m) =
 const AuditLogSection = dynamic(() => import("./sections/AuditLog").then((m) => m.AuditLogSection), { ssr: false, loading: SectionLoading });
 const PollsManager = dynamic(() => import("./sections/Polls").then((m) => m.PollsManager), { ssr: false, loading: SectionLoading });
 const ModerationManager = dynamic(() => import("./sections/Moderation").then((m) => m.ModerationManager), { ssr: false, loading: SectionLoading });
+const WidgetsLibrary = dynamic(() => import("./sections/Widgets").then((m) => m.WidgetsLibrary), { ssr: false, loading: SectionLoading });
 const AchievementsManager = dynamic(() => import("./sections/Achievements").then((m) => m.AchievementsManager), { ssr: false, loading: SectionLoading });
 const PredictionsManager = dynamic(() => import("./sections/Predictions").then((m) => m.PredictionsManager), { ssr: false, loading: SectionLoading });
 const WelcomeManager = dynamic(() => import("./sections/Welcome").then((m) => m.WelcomeManager), { ssr: false, loading: SectionLoading });
@@ -101,7 +102,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit";
 
   const SECTIONS: Array<{
     id: SectionId;
@@ -127,6 +128,7 @@ export function AdminClient({
     { id: "faq",       label: "FAQ / auto",    icon: HelpCircle,    permission: () => isAdmin },
     { id: "welcome",   label: "Powitania",     icon: UserPlus,      permission: () => isAdmin },
     { id: "songs",     label: "Song requests", icon: Music,         permission: () => isAdmin },
+    { id: "widgets",   label: "Widgety (OBS)", icon: LayoutGrid,    permission: () => isAdmin },
     { id: "alerts",    label: "Stream Alerts", icon: Bell,          permission: () => isAdmin },
     { id: "goals",     label: "Stream Goals", icon: Target,         permission: () => isAdmin },
     { id: "subathon",  label: "Subathon",      icon: Hourglass,     permission: () => isAdmin },
@@ -280,6 +282,10 @@ export function AdminClient({
 
           {activeSection === "moderation" && isAdmin && (
             <ModerationManager {...sharedProps} />
+          )}
+
+          {activeSection === "widgets" && isAdmin && (
+            <WidgetsLibrary {...sharedProps} />
           )}
 
           {activeSection === "events" && (
