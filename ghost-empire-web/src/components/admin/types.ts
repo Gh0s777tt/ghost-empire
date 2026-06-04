@@ -35,3 +35,44 @@ export type ScheduleSlot = {
   platform: string | null;
   active: boolean;
 };
+
+export type TwitchEventSubData = {
+  streamerConnected: boolean;
+  broadcasterLogin: string | null;
+  broadcasterId: string | null;
+  connectedAt: string | null;
+  subscriptions: Array<{
+    id: string;
+    type: string;
+    status: string;
+    lastSeenAt: string | null;
+    createdAt: string;
+  }>;
+  recentEvents: Array<{
+    id: string;
+    type: string;
+    userId: string | null;
+    tokensGranted: number | null;
+    receivedAt: string;
+  }>;
+};
+
+export type StreamlabsConnectionData =
+  | { connected: false }
+  | {
+      connected: true;
+      streamlabsUsername: string | null;
+      connectedAt: string;
+      lastPolledAt: string | null;
+      lastSeenDonationId: string | null;
+    };
+
+export type UnmatchedDonation = {
+  id: string;
+  externalId: string;
+  donorName: string;
+  message: string | null;
+  amountGrosze: number;
+  currency: string;
+  donatedAt: string;
+};

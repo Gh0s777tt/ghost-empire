@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
   Users, TrendingUp, Trash2, Copy, Dice5, Crown, Heart, UserCog, History, Award,
-  ShoppingBag, Pencil, Eye, EyeOff, Ban, Bot, CalendarDays, Zap, Link as LinkIcon,
+  ShoppingBag, Pencil, Eye, EyeOff, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3,
 } from "lucide-react";
@@ -26,7 +26,7 @@ import { CodeCard } from "@/components/CodeCard";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import dynamic from "next/dynamic";
 import { SectionCard, FieldInput, FieldTextarea } from "./shared";
-import type { AuditEntry, BotConfigData, ScheduleSlot } from "./types";
+import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, StreamlabsConnectionData, UnmatchedDonation } from "./types";
 
 // Heavy, rarely-first-viewed admin sections split into their own lazy chunks
 // (keeps the initial /admin client bundle smaller). See components/admin/sections/.
@@ -54,6 +54,8 @@ const SeasonsManager = dynamic(() => import("./sections/Seasons").then((m) => m.
 const MergeUsersSection = dynamic(() => import("./sections/MergeUsers").then((m) => m.MergeUsersSection), { ssr: false, loading: SectionLoading });
 const BotConfigCard = dynamic(() => import("./sections/BotConfig").then((m) => m.BotConfigCard), { ssr: false, loading: SectionLoading });
 const ScheduleManager = dynamic(() => import("./sections/Schedule").then((m) => m.ScheduleManager), { ssr: false, loading: SectionLoading });
+const TwitchEventSubManager = dynamic(() => import("./sections/TwitchEventSub").then((m) => m.TwitchEventSubManager), { ssr: false, loading: SectionLoading });
+const StreamlabsManager = dynamic(() => import("./sections/Streamlabs").then((m) => m.StreamlabsManager), { ssr: false, loading: SectionLoading });
 
 type Stats = {
   totalUsers: number;
@@ -122,27 +124,6 @@ type EventRow = {
   ticketsCount: number;
 };
 
-type TwitchEventSubData = {
-  streamerConnected: boolean;
-  broadcasterLogin: string | null;
-  broadcasterId: string | null;
-  connectedAt: string | null;
-  subscriptions: Array<{
-    id: string;
-    type: string;
-    status: string;
-    lastSeenAt: string | null;
-    createdAt: string;
-  }>;
-  recentEvents: Array<{
-    id: string;
-    type: string;
-    userId: string | null;
-    tokensGranted: number | null;
-    receivedAt: string;
-  }>;
-};
-
 type StreamAlertsData = {
   overlayToken: string | null;
   settings: {
@@ -167,26 +148,6 @@ type StreamAlertsData = {
     createdAt: string;
     shownAt: string | null;
   }>;
-};
-
-type StreamlabsConnectionData =
-  | { connected: false }
-  | {
-      connected: true;
-      streamlabsUsername: string | null;
-      connectedAt: string;
-      lastPolledAt: string | null;
-      lastSeenDonationId: string | null;
-    };
-
-type UnmatchedDonation = {
-  id: string;
-  externalId: string;
-  donorName: string;
-  message: string | null;
-  amountGrosze: number;
-  currency: string;
-  donatedAt: string;
 };
 
 type PendingOrder = {
@@ -1685,355 +1646,7 @@ function EventEditor({
 
 // ============== TWITCH EVENTSUB ==============
 
-const EVENT_TYPE_LABEL: Record<string, string> = {
-  "channel.subscribe": "Subskrypcje",
-  "channel.subscription.gift": "Gifted Suby",
-  "channel.cheer": "Cheery (bits)",
-};
-
-function TwitchEventSubManager({
-  data, onToast, onSuccess, pending,
-}: {
-  data: TwitchEventSubData;
-  onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
-}) {
-  const [busy, setBusy] = useState(false);
-
-  async function setup() {
-    if (!confirm("Utworzyć subskrypcje EventSub (subs/gifts/cheers)?")) return;
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/twitch-eventsub", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "setup" }),
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        onToast("err", result.error ?? "Błąd");
-      } else {
-        const ok = (result.results as Array<{ ok: boolean }>).filter((r) => r.ok).length;
-        const fail = (result.results as Array<{ ok: boolean }>).filter((r) => !r.ok).length;
-        onToast("ok", `Setup: ok=${ok}, fail=${fail}`);
-        onSuccess();
-      }
-    } finally { setBusy(false); }
-  }
-
-  async function deleteSub(id: string, type: string) {
-    if (!confirm(`Usunąć subskrypcję ${type}?`)) return;
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/twitch-eventsub", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id }),
-      });
-      if (res.ok) { onToast("ok", "Subskrypcja usunięta"); onSuccess(); }
-      else onToast("err", "Błąd");
-    } finally { setBusy(false); }
-  }
-
-  return (
-    <SectionCard title="Twitch EventSub (auto subs/gifts/bits)" icon={ShieldCheck}>
-      <p className="text-zinc-500 text-xs mb-3">
-        Automatyczne nagrody Ghost Tokens dla widzów którzy subują, giftują suby albo cheerują bits na Twitch.
-        Wymaga jednorazowej autoryzacji streamera (Gh0s77tt) ze scope&apos;ami: <code className="text-red-400">channel:read:subscriptions</code>, <code className="text-red-400">bits:read</code>.
-      </p>
-
-      {/* Streamer auth status */}
-      <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
-        {data.streamerConnected ? (
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex-1">
-              <div className="text-sm font-bold text-green-300 mb-0.5">
-                ● Streamer autoryzowany: @{data.broadcasterLogin}
-              </div>
-              <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                Broadcaster ID: {data.broadcasterId} · od {data.connectedAt && new Date(data.connectedAt).toLocaleString("pl-PL", { dateStyle: "short" })}
-              </div>
-            </div>
-            <button
-              onClick={setup}
-              disabled={busy || pending}
-              className="px-3 py-1.5 bg-purple-700 hover:bg-purple-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
-            >
-              {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-              {data.subscriptions.length === 0 ? "Utwórz subskrypcje" : "Reset + utwórz"}
-            </button>
-            <a
-              href="/api/admin/twitch-streamer-auth"
-              className="px-3 py-1.5 border border-zinc-700 hover:border-zinc-500 text-zinc-300 text-[10px] font-bold tracking-widest uppercase"
-            >
-              Re-autoryzuj
-            </a>
-          </div>
-        ) : (
-          <div className="text-center py-2">
-            <p className="text-zinc-400 text-sm mb-3">
-              Streamer Twitch jeszcze nie autoryzował. Kliknij i zaloguj jako <strong>Gh0s77tt</strong> żeby nadać Ghost Empire prawo czytania subów i bits.
-            </p>
-            <a
-              href="/api/admin/twitch-streamer-auth"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold tracking-widest uppercase"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Autoryzuj jako streamer
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* Subscriptions list */}
-      {data.streamerConnected && (
-        <>
-          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-            Subskrypcje EventSub ({data.subscriptions.length})
-          </div>
-          {data.subscriptions.length === 0 ? (
-            <p className="text-zinc-500 text-sm py-2 text-center">
-              Brak subskrypcji. Kliknij &quot;Utwórz subskrypcje&quot; powyżej.
-            </p>
-          ) : (
-            <div className="space-y-1.5 mb-4">
-              {data.subscriptions.map((s) => (
-                <div key={s.id} className="flex items-center gap-3 border border-zinc-800 bg-black/30 p-2">
-                  <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 border border-zinc-700 text-zinc-300">
-                    {EVENT_TYPE_LABEL[s.type] ?? s.type}
-                  </span>
-                  <span className={cn(
-                    "text-[10px] font-mono uppercase tracking-widest px-2 py-0.5",
-                    s.status === "enabled" ? "border border-green-700 bg-green-950/30 text-green-300" : "border border-orange-700 bg-orange-950/30 text-orange-300",
-                  )}>
-                    {s.status}
-                  </span>
-                  <div className="flex-1 min-w-0 text-[10px] font-mono text-zinc-500">
-                    {s.lastSeenAt ? `Last: ${new Date(s.lastSeenAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}` : "Jeszcze brak eventów"}
-                  </div>
-                  <button
-                    onClick={() => deleteSub(s.id, s.type)}
-                    disabled={busy || pending}
-                    className="text-zinc-500 hover:text-red-400"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Recent events log */}
-          {data.recentEvents.length > 0 && (
-            <>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-                Ostatnie eventy ({data.recentEvents.length})
-              </div>
-              <div className="space-y-1 text-[10px] font-mono">
-                {data.recentEvents.map((e) => (
-                  <div key={e.id} className="flex items-center gap-2 border-l-2 border-zinc-800 pl-2 py-1">
-                    <span className="text-zinc-500 uppercase tracking-widest w-24 truncate">
-                      {EVENT_TYPE_LABEL[e.type] ?? e.type}
-                    </span>
-                    {e.tokensGranted ? (
-                      <span className="text-green-400">+{e.tokensGranted.toLocaleString("pl-PL")} GT</span>
-                    ) : (
-                      <span className="text-zinc-600">(unmatched)</span>
-                    )}
-                    <span className="text-zinc-700 ml-auto">
-                      {new Date(e.receivedAt).toLocaleTimeString("pl-PL")}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </>
-      )}
-    </SectionCard>
-  );
-}
-
 // ============== STREAMLABS DONATIONS ==============
-
-function StreamlabsManager({
-  connection, unmatchedDonations, onToast, onSuccess, pending,
-}: {
-  connection: StreamlabsConnectionData;
-  unmatchedDonations: UnmatchedDonation[];
-  onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
-}) {
-  const [busy, setBusy] = useState(false);
-  const [assignTarget, setAssignTarget] = useState<Record<string, string>>({});
-
-  async function action(act: "sync" | "disconnect") {
-    if (act === "disconnect" && !confirm("Rozłączyć Streamlabs?")) return;
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/streamlabs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: act }),
-      });
-      const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? "Błąd");
-      else {
-        if (act === "sync") {
-          onToast(
-            "ok",
-            `Sync: fetched ${data.fetched ?? 0}, matched ${data.matched ?? 0}, unmatched ${data.unmatched ?? 0}`,
-          );
-        } else onToast("ok", "Rozłączono Streamlabs");
-        onSuccess();
-      }
-    } finally { setBusy(false); }
-  }
-
-  async function matchDonation(donationId: string, action: "assign" | "skip") {
-    const target = assignTarget[donationId];
-    if (action === "assign" && !target) {
-      onToast("err", "Wpisz username lub Discord ID");
-      return;
-    }
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/donations", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ donationId, action, userTarget: target }),
-      });
-      const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? "Błąd");
-      else {
-        if (action === "assign") onToast("ok", `Dopasowano: ${data.tokensGranted} GT dla ${data.user}`);
-        else onToast("ok", "Pominięto");
-        setAssignTarget((s) => { const copy = { ...s }; delete copy[donationId]; return copy; });
-        onSuccess();
-      }
-    } finally { setBusy(false); }
-  }
-
-  return (
-    <SectionCard title="Streamlabs — donejty" icon={LinkIcon}>
-      {/* Connection status */}
-      <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
-        {connection.connected ? (
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-green-300 mb-0.5">
-                ● Połączono {connection.streamlabsUsername && `(${connection.streamlabsUsername})`}
-              </div>
-              <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                {connection.lastPolledAt
-                  ? `Ostatni sync: ${new Date(connection.lastPolledAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}`
-                  : "Jeszcze nie syncował się"}
-              </div>
-            </div>
-            <button
-              onClick={() => action("sync")}
-              disabled={busy || pending}
-              className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
-            >
-              {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-              Sync now
-            </button>
-            <button
-              onClick={() => action("disconnect")}
-              disabled={busy || pending}
-              className="px-3 py-1.5 border border-red-700 hover:border-red-500 text-red-400 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
-            >
-              Rozłącz
-            </button>
-          </div>
-        ) : (
-          <div className="text-center py-2">
-            <p className="text-zinc-400 text-sm mb-3">
-              Streamlabs jeszcze nie połączony. Po autoryzacji donejty będą automatycznie dopasowywane do userów.
-            </p>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /api/auth/streamlabs is an API route doing a server-side OAuth redirect, not a Next page; <a> is correct here */}
-            <a
-              href="/api/auth/streamlabs"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase"
-            >
-              <LinkIcon className="w-3.5 h-3.5" />
-              Połącz Streamlabs
-            </a>
-            <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest mt-2">
-              Otworzy stronę Streamlabs do autoryzacji
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Unmatched donations */}
-      {connection.connected && (
-        <>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              Nieprzypisane donejty ({unmatchedDonations.length})
-            </span>
-            {unmatchedDonations.length > 0 && (
-              <span className="text-[9px] text-zinc-600 font-mono">
-                Wpisz username lub Discord ID i kliknij Przypisz
-              </span>
-            )}
-          </div>
-
-          {unmatchedDonations.length === 0 ? (
-            <p className="text-zinc-500 text-sm py-2 text-center">
-              Brak nieprzypisanych donejtów 🎉 (auto-match działa albo nie ma jeszcze donejtów)
-            </p>
-          ) : (
-            <div className="space-y-1.5">
-              {unmatchedDonations.map((d) => (
-                <div key={d.id} className="border border-orange-900/50 bg-orange-950/10 p-2.5">
-                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-orange-300">
-                      {(d.amountGrosze / 100).toFixed(2)} {d.currency}
-                    </span>
-                    <span className="text-sm text-white font-medium">{d.donorName}</span>
-                    <span className="text-[10px] font-mono text-zinc-500 ml-auto">
-                      {new Date(d.donatedAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
-                    </span>
-                  </div>
-                  {d.message && (
-                    <div className="text-xs text-zinc-400 italic mb-2">"{d.message}"</div>
-                  )}
-                  <div className="flex gap-1.5">
-                    <input
-                      type="text"
-                      placeholder="username lub Discord ID"
-                      value={assignTarget[d.id] ?? ""}
-                      onChange={(e) => setAssignTarget((s) => ({ ...s, [d.id]: e.target.value }))}
-                      className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600 placeholder:text-zinc-700"
-                    />
-                    <button
-                      onClick={() => matchDonation(d.id, "assign")}
-                      disabled={busy}
-                      className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
-                    >
-                      Przypisz
-                    </button>
-                    <button
-                      onClick={() => matchDonation(d.id, "skip")}
-                      disabled={busy}
-                      className="px-3 py-1 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase"
-                    >
-                      Pomiń
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </SectionCard>
-  );
-}
 
 // ============== AUDIT LOG VIEWER ==============
 
