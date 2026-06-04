@@ -64,6 +64,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **Code-split panelu admina (cz. 5)** — **Timery** (`sections/ChatTimers.tsx`) i **Komendy czatu** (`sections/ChatCommands.tsx`) wyciągnięte do `next/dynamic`. Łącznie 9 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 5)*
 - **Code-split panelu admina (cz. 4)** — **Powitania** (`sections/Welcome.tsx`) i **FAQ / auto-odpowiedzi** (`sections/Faq.tsx`) wyciągnięte do `next/dynamic`. Łącznie 7 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 4)*
 - **Code-split panelu admina (cz. 3)** — **Predictions / Zakłady** (`sections/Predictions.tsx`, ~325 linii) wyciągnięte do `next/dynamic`. Łącznie 5 sekcji już lazy (Analityka, Audit, Ankiety, Osiągnięcia, Predictions). Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 3)*
 - **Code-split panelu admina (cz. 2)** — kolejne sekcje wyciągnięte do `next/dynamic`: **Ankiety** (`sections/Polls.tsx`) i **Osiągnięcia** + edytor (`sections/Achievements.tsx`). Współdzielone `FieldInput`/`FieldTextarea` wyniesione do `admin/shared.tsx` (odblokowuje ekstrakcję kolejnych sekcji). `AdminClient.tsx` chudszy o ~365 linii. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 2)*
