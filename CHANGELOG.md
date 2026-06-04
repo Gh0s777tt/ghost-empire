@@ -64,6 +64,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **Code-split panelu admina (cz. 9)** — **Stream Goals + Hype Train** (`sections/StreamGoals.tsx`) i **Kick — webhook events** (`sections/KickEvents.tsx`) wyciągnięte do `next/dynamic`. Łącznie 18 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 9)*
 - **Code-split panelu admina (cz. 8)** — **Własne alerty** (`sections/CustomAlerts.tsx`) i **Chat overlay — wygląd** (`sections/ChatOverlay.tsx`) wyciągnięte do `next/dynamic`. Łącznie 16 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 8)*
 - **Code-split panelu admina (cz. 7)** — **Grant tokenów** (`sections/GrantTokens.tsx`), **Nowy drop** (`sections/CreateDrop.tsx`) i **Reset bazy** (`sections/DatabaseReset.tsx`) wyciągnięte do `next/dynamic`. Łącznie 14 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 7)*
 - **Code-split panelu admina (cz. 6)** — **Song requests** (`sections/SongQueue.tsx`) i **Subathon** (`sections/Subathon.tsx`) wyciągnięte do `next/dynamic`. Łącznie 11 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 6)*
