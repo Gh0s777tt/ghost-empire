@@ -77,6 +77,9 @@ export type UnmatchedDonation = {
   donatedAt: string;
 };
 
+export type CodeRow = { id: string; code: string; label: string | null; active: boolean; shownCount: number; lastShownAt: string | null };
+export type CodeConfig = { enabled: boolean; intervalSeconds: number; title: string; accentColor: string };
+
 export type ShopItemRow = {
   id: string;
   name: string;
