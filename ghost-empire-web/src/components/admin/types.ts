@@ -99,6 +99,26 @@ export type EventRow = {
   ticketsCount: number;
 };
 
+export type Drop = {
+  id: string;
+  code: string;
+  reward: number;
+  bonusReward: number;
+  bonusSlots: number;
+  expiresAt: string | null;
+  createdAt: string;
+  claimsCount: number;
+};
+
+export type PendingOrder = {
+  id: string;
+  amount: number;
+  reason: string;
+  createdAt: string;
+  shopItem: { name: string; imageEmoji: string | null; category: string } | null;
+  user: { username: string | null; displayName: string | null; discordId: string | null; discordUsername: string | null };
+};
+
 export type ShopItemRow = {
   id: string;
   name: string;
