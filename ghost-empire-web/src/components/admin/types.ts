@@ -119,6 +119,32 @@ export type PendingOrder = {
   user: { username: string | null; displayName: string | null; discordId: string | null; discordUsername: string | null };
 };
 
+export type StreamAlertsData = {
+  overlayToken: string | null;
+  settings: {
+    enabledTypes: string[];
+    durationMs: number;
+    accentColor: string;
+    soundEnabled: boolean;
+    sizeScale: number;
+    textScale: number;
+    textColor: string;
+  };
+  allTypes: string[];
+  recent: Array<{
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    icon: string | null;
+    actorName: string | null;
+    amount: number | null;
+    amountLabel: string | null;
+    createdAt: string;
+    shownAt: string | null;
+  }>;
+};
+
 export type ShopItemRow = {
   id: string;
   name: string;
