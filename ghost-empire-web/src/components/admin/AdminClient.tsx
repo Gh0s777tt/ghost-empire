@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
-  Users, TrendingUp, Trash2, Copy, Dice5, Heart, UserCog, History, Award,
+  Users, TrendingUp, Copy, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Eye, EyeOff, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3,
@@ -24,7 +24,7 @@ import { AlertCard } from "@/components/AlertCard";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import dynamic from "next/dynamic";
 import { SectionCard, FieldInput } from "./shared";
-import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, StreamlabsConnectionData, UnmatchedDonation, ShopItemRow, CodeRow, CodeConfig, EventRow } from "./types";
+import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, StreamlabsConnectionData, UnmatchedDonation, ShopItemRow, CodeRow, CodeConfig, EventRow, Drop, PendingOrder } from "./types";
 
 // Heavy, rarely-first-viewed admin sections split into their own lazy chunks
 // (keeps the initial /admin client bundle smaller). See components/admin/sections/.
@@ -61,6 +61,8 @@ const CodeDropsCard = dynamic(() => import("./sections/CodeDrops").then((m) => m
 const HolidayEventsCard = dynamic(() => import("./sections/Events").then((m) => m.HolidayEventsCard), { ssr: false, loading: SectionLoading });
 const CreateEventCard = dynamic(() => import("./sections/Events").then((m) => m.CreateEventCard), { ssr: false, loading: SectionLoading });
 const EventsManager = dynamic(() => import("./sections/Events").then((m) => m.EventsManager), { ssr: false, loading: SectionLoading });
+const ActiveDropsList = dynamic(() => import("./sections/ActiveDrops").then((m) => m.ActiveDropsList), { ssr: false, loading: SectionLoading });
+const PendingOrdersList = dynamic(() => import("./sections/PendingOrders").then((m) => m.PendingOrdersList), { ssr: false, loading: SectionLoading });
 
 type Stats = {
   totalUsers: number;
@@ -68,17 +70,6 @@ type Stats = {
   totalEverEarned: number;
   eventsActive: number;
   ordersPending: number;
-};
-
-type Drop = {
-  id: string;
-  code: string;
-  reward: number;
-  bonusReward: number;
-  bonusSlots: number;
-  expiresAt: string | null;
-  createdAt: string;
-  claimsCount: number;
 };
 
 type AdminEvent = {
@@ -115,15 +106,6 @@ type StreamAlertsData = {
     createdAt: string;
     shownAt: string | null;
   }>;
-};
-
-type PendingOrder = {
-  id: string;
-  amount: number;
-  reason: string;
-  createdAt: string;
-  shopItem: { name: string; imageEmoji: string | null; category: string } | null;
-  user: { username: string | null; displayName: string | null; discordId: string | null; discordUsername: string | null };
 };
 
 export function AdminClient({
@@ -714,144 +696,6 @@ function StatTile({
 // ============== HOLIDAY / SEASONAL EVENT TEMPLATES ==============
 
 // ============== ACTIVE LISTS ==============
-
-function ActiveDropsList({
-  drops, onToast, onSuccess, pending,
-}: {
-  drops: Drop[];
-  onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
-}) {
-  async function deactivate(id: string) {
-    if (!confirm("Dezaktywować drop?")) return;
-    const res = await fetch(`/api/admin/drops?id=${id}`, { method: "DELETE" });
-    if (res.ok) { onToast("ok", "Drop dezaktywowany"); onSuccess(); }
-    else onToast("err", "Błąd");
-  }
-
-  if (drops.length === 0) return null;
-  return (
-    <SectionCard title="Aktywne dropy" icon={Gift}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-        {drops.map((d) => (
-          <div key={d.id} className="border border-zinc-800 bg-black/30 p-3">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <button
-                onClick={() => { navigator.clipboard.writeText(d.code); onToast("ok", `Skopiowane: ${d.code}`); }}
-                className="font-mono text-base text-white tracking-wider hover:text-red-400 flex items-center gap-1"
-                title="Kopiuj kod"
-              >
-                {d.code}
-                <Copy className="w-3 h-3 opacity-50" />
-              </button>
-              <button
-                onClick={() => deactivate(d.id)}
-                disabled={pending}
-                className="text-zinc-500 hover:text-red-400"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 space-y-0.5">
-              <div>Reward: <span className="text-white">{fmt(d.reward)} GT</span></div>
-              {d.bonusReward > 0 && (
-                <div>Bonus: <span className="text-orange-400">+{fmt(d.bonusReward)} GT × {d.bonusSlots}</span></div>
-              )}
-              <div>Claims: <span className="text-white">{d.claimsCount}</span></div>
-              {d.expiresAt && (
-                <div>Wygasa: <span className="text-white">{formatDate(d.expiresAt)}</span></div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </SectionCard>
-  );
-}
-
-function PendingOrdersList({
-  orders, onToast, onSuccess, pending,
-}: {
-  orders: PendingOrder[];
-  onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
-}) {
-  const [busyId, setBusyId] = useState<string | null>(null);
-
-  async function act(id: string, action: "deliver" | "refund") {
-    if (action === "refund" && !confirm("Zwrócić środki userowi?")) return;
-    setBusyId(id);
-    try {
-      const note = action === "refund" ? prompt("Notatka (opcjonalnie):") ?? undefined : undefined;
-      const res = await fetch("/api/admin/deliver-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionId: id, action, note }),
-      });
-      const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? "Błąd");
-      else {
-        onToast("ok", action === "deliver" ? "Oznaczone jako dostarczone" : `Zwrócono ${data.refunded} GT`);
-        onSuccess();
-      }
-    } finally { setBusyId(null); }
-  }
-
-  if (orders.length === 0) {
-    return (
-      <SectionCard title="Pending orders" icon={Package}>
-        <p className="text-zinc-500 text-sm">Brak zamówień do realizacji 🎉</p>
-      </SectionCard>
-    );
-  }
-
-  return (
-    <SectionCard title="Pending orders" icon={Package}>
-      <div className="space-y-2">
-        {orders.map((t) => (
-          <div key={t.id} className="border border-orange-900/50 bg-orange-950/10 p-3">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl shrink-0">{t.shopItem?.imageEmoji ?? "🎁"}</span>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-white font-medium truncate">
-                  {t.shopItem?.name ?? t.reason}
-                </div>
-                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                  @{t.user.username ?? "?"} · {Math.abs(t.amount)} GT · {formatDate(t.createdAt)}
-                  {t.user.discordUsername && ` · 💬 ${t.user.discordUsername}`}
-                </div>
-                {t.user.discordId && (
-                  <div className="text-[10px] font-mono text-zinc-600 mt-0.5">
-                    Discord ID: {t.user.discordId}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-1 shrink-0">
-                <button
-                  onClick={() => act(t.id, "deliver")}
-                  disabled={busyId === t.id || pending}
-                  className="px-2.5 py-1.5 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1"
-                >
-                  {busyId === t.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                  Done
-                </button>
-                <button
-                  onClick={() => act(t.id, "refund")}
-                  disabled={busyId === t.id || pending}
-                  className="px-2.5 py-1.5 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
-                >
-                  Refund
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </SectionCard>
-  );
-}
 
 // ============== FIELDS ==============
 
