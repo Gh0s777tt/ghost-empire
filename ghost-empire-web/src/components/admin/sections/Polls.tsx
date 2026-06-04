@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { BarChart3, Loader2, Plus, Trash2 } from "lucide-react";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { OverlayPreview } from "@/components/admin/OverlayPreview";
+import { PollOverlayCard } from "@/components/PollOverlayCard";
 
 type PollRow = { id: string; question: string; options: string[]; status: string; accentColor: string; createdAt: string; closesAt: string | null; totalVotes: number; counts: number[] };
 
@@ -53,6 +55,13 @@ export function PollsManager({
     }
   }
 
+  // Sample data for the OBS overlay preview — reflects the picked accent + typed Q/options.
+  const previewLabels = optionsText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+  const previewOptions = (previewLabels.length >= 2 ? previewLabels.slice(0, 10) : ["Opcja A", "Opcja B", "Opcja C"]).map(
+    (label, i) => ({ label, count: [42, 27, 15, 9, 6][i] ?? 3 }),
+  );
+  const previewTotal = previewOptions.reduce((s, o) => s + o.count, 0);
+
   return (
     <SectionCard title="Ankiety / głosowania" icon={BarChart3}>
       <div className="space-y-4">
@@ -60,6 +69,21 @@ export function PollsManager({
           Proste ankiety społeczności (bez tokenów). Widoczne na <code className="text-zinc-400">/polls</code>; zalogowani głosują,
           mogą zmienić głos póki ankieta otwarta. Zamknięta = tylko wyniki.
         </p>
+
+        {/* OBS overlay: shows the active poll on stream (alongside /polls) */}
+        <OverlayPreview
+          path="/overlay/polls"
+          note="Pokazuje aktualną otwartą ankietę u góry ekranu OBS. Token współdzielony z alertami/goals. Ankietę pokazujesz na /polls i/lub tym overlayem."
+        >
+          <div className="flex justify-center">
+            <PollOverlayCard
+              question={question.trim() || "W co gramy w piątek?"}
+              options={previewOptions}
+              total={previewTotal}
+              accent={newAccent}
+            />
+          </div>
+        </OverlayPreview>
 
         {/* Create */}
         <div className="border border-zinc-800 bg-black/30 p-3 space-y-2">
