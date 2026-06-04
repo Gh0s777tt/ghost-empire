@@ -64,6 +64,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **Code-split panelu admina (cz. 7)** — **Grant tokenów** (`sections/GrantTokens.tsx`), **Nowy drop** (`sections/CreateDrop.tsx`) i **Reset bazy** (`sections/DatabaseReset.tsx`) wyciągnięte do `next/dynamic`. Łącznie 14 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 7)*
 - **Code-split panelu admina (cz. 6)** — **Song requests** (`sections/SongQueue.tsx`) i **Subathon** (`sections/Subathon.tsx`) wyciągnięte do `next/dynamic`. Łącznie 11 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 6)*
 - **Code-split panelu admina (cz. 5)** — **Timery** (`sections/ChatTimers.tsx`) i **Komendy czatu** (`sections/ChatCommands.tsx`) wyciągnięte do `next/dynamic`. Łącznie 9 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 5)*
 - **Code-split panelu admina (cz. 4)** — **Powitania** (`sections/Welcome.tsx`) i **FAQ / auto-odpowiedzi** (`sections/Faq.tsx`) wyciągnięte do `next/dynamic`. Łącznie 7 sekcji lazy. Bez zmian wizualnych. Zielone: `tsc` / `eslint` / 46 testów / `next build`. *(Faza A #4 — code-split, część 4)*
