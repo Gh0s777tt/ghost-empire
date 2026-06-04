@@ -107,6 +107,9 @@ export const EVENT_TYPES_TO_SUBSCRIBE = [
   // Broadcast on/off → per-stream sessions ("czas na streamie" analytics)
   { type: "stream.online", version: "1" },
   { type: "stream.offline", version: "1" },
+  // New followers → "last follower" widget. v2 needs moderator_user_id in the
+  // condition + the broadcaster must have granted `moderator:read:followers`.
+  { type: "channel.follow", version: "2" },
 ] as const;
 
 type CreateEventSubBody = {
@@ -129,10 +132,17 @@ export async function createEventSubscription(
   const secret = process.env.TWITCH_EVENTSUB_SECRET;
   if (!secret) throw new Error("TWITCH_EVENTSUB_SECRET not set");
 
+  // channel.follow v2 requires a moderator_user_id alongside the broadcaster
+  // (here the broadcaster moderates their own channel).
+  const condition: Record<string, string> =
+    type === "channel.follow"
+      ? { broadcaster_user_id: broadcasterId, moderator_user_id: broadcasterId }
+      : { broadcaster_user_id: broadcasterId };
+
   const body: CreateEventSubBody = {
     type,
     version,
-    condition: { broadcaster_user_id: broadcasterId },
+    condition,
     transport: {
       method: "webhook",
       callback: WEBHOOK_URL,
