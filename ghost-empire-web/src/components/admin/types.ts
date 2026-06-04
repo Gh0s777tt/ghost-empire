@@ -80,6 +80,25 @@ export type UnmatchedDonation = {
 export type CodeRow = { id: string; code: string; label: string | null; active: boolean; shownCount: number; lastShownAt: string | null };
 export type CodeConfig = { enabled: boolean; intervalSeconds: number; title: string; accentColor: string };
 
+export type EventRow = {
+  id: string;
+  type: string;
+  name: string;
+  description: string | null;
+  multiplier: number | null;
+  prize: string | null;
+  winnersCount: number | null;
+  requirement: string | null;
+  ticketPrice: number | null;
+  maxTicketsPerUser: number | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  drawnAt: string | null;
+  active: boolean;
+  entriesCount: number;
+  ticketsCount: number;
+};
+
 export type ShopItemRow = {
   id: string;
   name: string;
