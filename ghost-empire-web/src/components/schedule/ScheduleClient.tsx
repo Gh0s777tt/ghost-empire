@@ -2,7 +2,7 @@
 // src/components/schedule/ScheduleClient.tsx
 // Public schedule: highlighted upcoming stream + countdown + weekly grid
 import { useEffect, useState, useMemo } from "react";
-import { Calendar, Clock, Sparkles } from "lucide-react";
+import { Calendar, Clock, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Slot = {
@@ -18,6 +18,16 @@ type Slot = {
 
 const DAYS_FULL = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
 const DAYS_SHORT = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"];
+// Monday-first column headers for the month calendar.
+const DOW_HEADERS = ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"];
+const MONTHS_PL = [
+  "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
+  "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień",
+];
+
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
 
 function formatTime(h: number, m: number) {
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
@@ -108,6 +118,44 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
     return map;
   }, [slots]);
 
+  // Week / month view toggle + the displayed month (1st of month, midnight).
+  const [view, setView] = useState<"week" | "month">("week");
+  const [monthCursor, setMonthCursor] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  // Build a Monday-first 6×7 calendar grid for the current month cursor. Slots are
+  // weekly-recurring, so every cell shows the slots for its day-of-week.
+  const monthGrid = useMemo(() => {
+    const year = monthCursor.getFullYear();
+    const month = monthCursor.getMonth();
+    const start = new Date(year, month, 1);
+    const mondayOffset = (start.getDay() + 6) % 7; // 0=Mon … 6=Sun
+    start.setDate(start.getDate() - mondayOffset);
+    const weeks: Date[][] = [];
+    const cur = new Date(start);
+    for (let w = 0; w < 6; w++) {
+      const week: Date[] = [];
+      for (let d = 0; d < 7; d++) {
+        week.push(new Date(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
+      weeks.push(week);
+    }
+    return { weeks, year, month };
+  }, [monthCursor]);
+
+  function shiftMonth(delta: number) {
+    setMonthCursor((c) => new Date(c.getFullYear(), c.getMonth() + delta, 1));
+  }
+  function resetMonth() {
+    const d = new Date();
+    setMonthCursor(new Date(d.getFullYear(), d.getMonth(), 1));
+  }
+
   return (
     <div className="space-y-6">
       {/* Live or countdown banner */}
@@ -192,11 +240,43 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
             "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
         }}
       >
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
           <Calendar className="w-4 h-4 text-red-500" />
-          <h2 className="font-display text-lg text-white tracking-wider">TYDZIEŃ</h2>
+          <h2 className="font-display text-lg text-white tracking-wider">
+            {view === "week" ? "TYDZIEŃ" : `${MONTHS_PL[monthGrid.month]} ${monthGrid.year}`}
+          </h2>
+          {view === "month" && (
+            <div className="flex items-center gap-1 ml-2">
+              <button onClick={() => shiftMonth(-1)} aria-label="Poprzedni miesiąc" className="w-7 h-7 flex items-center justify-center border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button onClick={resetMonth} className="px-2 h-7 text-[10px] font-mono uppercase tracking-widest border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
+                Dziś
+              </button>
+              <button onClick={() => shiftMonth(1)} aria-label="Następny miesiąc" className="w-7 h-7 flex items-center justify-center border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          <div className="ml-auto inline-flex border border-zinc-800" role="tablist" aria-label="Widok planu">
+            {(["week", "month"] as const).map((v) => (
+              <button
+                key={v}
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => setView(v)}
+                className={cn(
+                  "px-3 py-1 text-[10px] font-mono uppercase tracking-widest transition-colors",
+                  view === v ? "bg-red-600 text-white" : "text-zinc-400 hover:text-white",
+                )}
+              >
+                {v === "week" ? "Tydzień" : "Miesiąc"}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {view === "week" ? (
         <div className="grid grid-cols-1 sm:grid-cols-7 gap-2">
           {[1, 2, 3, 4, 5, 6, 0].map((dayIdx) => {
             const isToday = now.getDay() === dayIdx;
@@ -251,6 +331,64 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
             );
           })}
         </div>
+        ) : (
+          <div>
+            {/* Weekday column headers (Monday-first) */}
+            <div className="hidden sm:grid grid-cols-7 gap-2 mb-2">
+              {DOW_HEADERS.map((h) => (
+                <div key={h} className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 text-center">{h}</div>
+              ))}
+            </div>
+            {/* 6-week calendar grid; recurring weekly slots projected onto each date */}
+            <div className="space-y-1 sm:space-y-2">
+              {monthGrid.weeks.map((week, wi) => (
+                <div key={wi} className="grid grid-cols-7 gap-1 sm:gap-2">
+                  {week.map((date) => {
+                    const inMonth = date.getMonth() === monthGrid.month;
+                    const isToday = sameDay(date, now);
+                    const daySlots = slotsByDay[date.getDay()];
+                    return (
+                      <div
+                        key={date.toISOString()}
+                        className={cn(
+                          "border p-1 sm:p-1.5 min-h-[58px] sm:min-h-[84px] overflow-hidden",
+                          isToday
+                            ? "border-red-700 bg-red-950/20"
+                            : !inMonth
+                              ? "border-zinc-900/60 bg-black/10 opacity-40"
+                              : daySlots.length === 0
+                                ? "border-zinc-900 bg-black/20"
+                                : "border-zinc-800 bg-black/30",
+                        )}
+                      >
+                        <div className={cn(
+                          "text-[10px] font-mono mb-1",
+                          isToday ? "text-red-300 font-bold" : inMonth ? "text-zinc-400" : "text-zinc-700",
+                        )}>
+                          {date.getDate()}
+                        </div>
+                        <div className="space-y-0.5">
+                          {daySlots.slice(0, 3).map((s) => (
+                            <div
+                              key={s.id}
+                              className="text-[9px] font-mono text-white bg-red-900/30 border-l border-red-700 px-1 truncate leading-tight"
+                              title={s.title ?? undefined}
+                            >
+                              {formatTime(s.startHour, s.startMinute)}{s.title ? ` ${s.title}` : ""}
+                            </div>
+                          ))}
+                          {daySlots.length > 3 && (
+                            <div className="text-[8px] font-mono text-zinc-500">+{daySlots.length - 3} więcej</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footnote */}
