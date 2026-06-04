@@ -1155,6 +1155,7 @@ model Poll {
   question    String   @db.Text
   options     String[]                       // option labels (order = optionIndex)
   status      String   @default("open")      // "open" | "closed"
+  accentColor String   @default("#3b82f6")   // card accent (hex) on /polls
   createdById String?
   createdAt   DateTime @default(now())
   closesAt    DateTime?

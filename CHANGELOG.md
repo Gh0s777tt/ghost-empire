@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **Ankiety — kolor akcentu + podgląd na żywo** (`/admin#polls`) — przy tworzeniu ankiety wybierasz **kolor akcentu** (color-picker + hex) z **podglądem karty** (pytanie + paski opcji). Kolor (`Poll.accentColor`, `db push`, default `#3b82f6`) leci na publiczną **`/polls`** → ramka karty, wypełnienie pasków wyników i wyróżnienie Twojego głosu w wybranym kolorze (zamiast sztywnego czerwonego); pasek w liście admina też. *(Faza F1 #2b — ankiety.)* Zielone: `tsc` / `eslint` / 91 testów / `next build`.
+
 - **Predykcje / zakłady — kolor akcentu + podgląd na żywo** (`/admin#predictions`) — przy tworzeniu zakładu wybierasz **kolor akcentu** (color-picker + hex) i widzisz **podgląd karty** (pytanie + opcje + przycisk „Obstaw") aktualizowany na żywo. Kolor (`Prediction.accentColor`, `db push`, default `#a855f7`) leci na publiczną stronę **`/predictions`** → karta aktywnego zakładu dostaje ramkę + poświatę + akcent nagłówka w wybranym kolorze. *(Faza F1 #2a — predictions. Ankiety + overlay + „na czat/auto-pin" w kolejnych PR-ach.)* Zielone: `tsc` / `eslint` / 91 testów / `next build`.
 
 - **Subathon — edytowalny napis + kolor akcentu na overlayu** (`/admin#subathon`) — nowe pola `Subathon.accentColor` + `label` (`db push`, addytywne, defaulty `#E50914`/`Subathon`). W panelu: pole **„Napis na timerze"** + **color-picker akcentu** z podglądem na żywo (karta `SubathonCard` reaguje od razu), zapis akcją `appearance`. Overlay `/overlay/subathon` i publiczny feed `/api/alerts/subathon` przekazują kolor+napis → karta na streamie pokazuje własny tytuł i kolor ramki/poświaty. *(Faza F1 #1.)* Zielone: `tsc` / `eslint` / 91 testów / `next build`.

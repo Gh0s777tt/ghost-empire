@@ -28,6 +28,7 @@ export default async function PollsPage() {
       question: p.question,
       options: p.options,
       status: p.status,
+      accentColor: p.accentColor,
       counts: p.options.map((_, i) => p.votes.filter((v) => v.optionIndex === i).length),
       total: p.votes.length,
       yourVote: userId ? (p.votes.find((v) => v.userId === userId)?.optionIndex ?? null) : null,

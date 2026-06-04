@@ -21,6 +21,7 @@ export async function GET() {
       question: p.question,
       options: p.options,
       status: p.status,
+      accentColor: p.accentColor,
       createdAt: p.createdAt.toISOString(),
       closesAt: p.closesAt?.toISOString() ?? null,
       totalVotes: p._count.votes,
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  let body: { action?: string; id?: string; question?: string; options?: unknown };
+  let body: { action?: string; id?: string; question?: string; options?: unknown; accentColor?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
@@ -46,7 +47,11 @@ export async function POST(req: Request) {
         : [];
       if (!question) return NextResponse.json({ error: "Pytanie wymagane" }, { status: 400 });
       if (options.length < 2) return NextResponse.json({ error: "Podaj min. 2 opcje" }, { status: 400 });
-      const poll = await prisma.poll.create({ data: { question, options, createdById: auth.userId } });
+      const accentColor =
+        typeof body.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(body.accentColor)
+          ? body.accentColor
+          : undefined;
+      const poll = await prisma.poll.create({ data: { question, options, createdById: auth.userId, ...(accentColor ? { accentColor } : {}) } });
       await logAdminAction({ adminId: auth.userId, action: "manage_polls", targetType: "poll", targetId: poll.id, details: { create: question }, req });
       return NextResponse.json({ ok: true, id: poll.id });
     }

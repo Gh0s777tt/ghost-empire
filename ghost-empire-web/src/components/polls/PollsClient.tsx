@@ -11,6 +11,7 @@ type Poll = {
   question: string;
   options: string[];
   status: string;
+  accentColor: string;
   counts: number[];
   total: number;
   yourVote: number | null;
@@ -71,8 +72,9 @@ export function PollsClient({
             const voted = p.yourVote != null;
             const showResults = voted || !open || !isAuthenticated;
             const isBusy = busy === p.id;
+            const accent = p.accentColor || "#3b82f6";
             return (
-              <div key={p.id} className={cn("border bg-zinc-950/70 backdrop-blur-xs p-5", open ? "border-zinc-800" : "border-zinc-900")}>
+              <div key={p.id} className="border bg-zinc-950/70 backdrop-blur-xs p-5" style={{ borderColor: open ? accent : "#18181b" }}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <h2 className="text-white font-bold text-base leading-snug">{p.question}</h2>
                   {!open && (
@@ -95,19 +97,19 @@ export function PollsClient({
                         disabled={!clickable}
                         className={cn(
                           "relative w-full text-left border overflow-hidden transition-all",
-                          mine ? "border-red-500" : "border-zinc-800",
-                          clickable ? "hover:border-red-600/60 cursor-pointer" : "cursor-default",
+                          clickable ? "cursor-pointer hover:brightness-110" : "cursor-default",
                         )}
+                        style={{ borderColor: mine ? accent : "#27272a" }}
                       >
                         {showResults && (
                           <div
-                            className={cn("absolute inset-y-0 left-0 transition-all", mine ? "bg-red-600/30" : "bg-zinc-800/50")}
-                            style={{ width: `${pct}%` }}
+                            className="absolute inset-y-0 left-0 transition-all"
+                            style={{ width: `${pct}%`, background: mine ? `${accent}55` : `${accent}22` }}
                           />
                         )}
                         <div className="relative flex items-center justify-between gap-2 px-3 py-2.5">
                           <span className="text-sm text-white flex items-center gap-2">
-                            {mine && <Check className="w-3.5 h-3.5 text-red-400" />}
+                            {mine && <Check className="w-3.5 h-3.5" style={{ color: accent }} />}
                             {opt}
                           </span>
                           {showResults && (
