@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Dice5, Loader2, Trash2, X, Plus } from "lucide-react";
 import { fmt, cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { OverlayPreview } from "@/components/admin/OverlayPreview";
+import { PredictionOverlayCard } from "@/components/PredictionOverlayCard";
 
 type PredictionRow = {
   id: string;
@@ -130,11 +132,35 @@ export function PredictionsManager({
     setBusy(null);
   }
 
+  // Sample data for the OBS overlay preview — reflects the picked accent + typed Q/options.
+  const previewLabels = newOptions.map((o) => o.trim()).filter(Boolean);
+  const previewOptions = (previewLabels.length >= 2 ? previewLabels.slice(0, 4) : ["Mniej niż 5", "5–10", "Więcej niż 10"]).map(
+    (label, i) => ({ label, total: [1400, 900, 450, 200][i] ?? 100, count: 0 }),
+  );
+  const previewPot = previewOptions.reduce((s, o) => s + o.total, 0);
+
   return (
     <SectionCard title="Predictions / Zakłady" icon={Dice5}>
       <p className="text-zinc-500 text-xs mb-3">
         Twórz pytania, widzowie obstawiają Ghost Tokens. Pula = suma wszystkich stawek. Po rozstrzygnięciu wygrywająca opcja dzieli pulę proporcjonalnie do stawek. Brak zwycięzców → zwrot wszystkim.
       </p>
+
+      {/* OBS overlay: shows the active prediction on stream (alongside /predictions) */}
+      <div className="mb-4">
+        <OverlayPreview
+          path="/overlay/predictions"
+          note="Pokazuje aktualny otwarty/zamknięty zakład u góry ekranu OBS. Token współdzielony z alertami/goals. Możesz pokazywać zakład na stronie /predictions i/lub tym overlayem — jak chcesz."
+        >
+          <div className="flex justify-center">
+            <PredictionOverlayCard
+              question={newQuestion.trim() || "Ile zgonów w tym streamie?"}
+              options={previewOptions}
+              totalPot={previewPot}
+              accent={newAccent}
+            />
+          </div>
+        </OverlayPreview>
+      </div>
 
       {/* Active predictions */}
       {loading ? (
