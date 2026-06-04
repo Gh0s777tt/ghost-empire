@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { BarChart3, Loader2, Plus, Trash2 } from "lucide-react";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
 
-type PollRow = { id: string; question: string; options: string[]; status: string; createdAt: string; closesAt: string | null; totalVotes: number; counts: number[] };
+type PollRow = { id: string; question: string; options: string[]; status: string; accentColor: string; createdAt: string; closesAt: string | null; totalVotes: number; counts: number[] };
 
 export function PollsManager({
   onToast,
@@ -18,6 +18,7 @@ export function PollsManager({
   const [busy, setBusy] = useState<string | null>(null);
   const [question, setQuestion] = useState("");
   const [optionsText, setOptionsText] = useState("");
+  const [newAccent, setNewAccent] = useState("#3b82f6");
 
   async function load() {
     try {
@@ -47,7 +48,7 @@ export function PollsManager({
     const options = optionsText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
     if (!question.trim()) { onToast("err", "Pytanie wymagane"); return; }
     if (options.length < 2) { onToast("err", "Podaj min. 2 opcje (po jednej w linii)"); return; }
-    if (await call({ action: "create", question: question.trim(), options }, "Ankieta utworzona")) {
+    if (await call({ action: "create", question: question.trim(), options, accentColor: newAccent }, "Ankieta utworzona")) {
       setQuestion(""); setOptionsText(""); await load();
     }
   }
@@ -65,6 +66,40 @@ export function PollsManager({
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Nowa ankieta</div>
           <FieldInput label="Pytanie" value={question} onChange={setQuestion} placeholder="np. W co gramy w piątek?" />
           <FieldTextarea label="Opcje (po jednej w linii, 2–10)" value={optionsText} onChange={setOptionsText} />
+
+          {/* Accent color */}
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">Kolor akcentu</label>
+            <div className="flex items-center gap-2">
+              <input type="color" value={newAccent} onChange={(e) => setNewAccent(e.target.value)} className="w-10 h-9 bg-black border border-zinc-700 cursor-pointer" />
+              <input type="text" value={newAccent} onChange={(e) => setNewAccent(e.target.value)} className="w-24 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600" />
+              <span className="text-[10px] text-zinc-600">Podgląd jak na „/polls" →</span>
+            </div>
+          </div>
+
+          {/* Live preview */}
+          <div className="border bg-black/40 p-3" style={{ borderColor: newAccent }}>
+            <div className="text-[10px] font-mono uppercase tracking-widest mb-1.5" style={{ color: newAccent }}>Ankieta · podgląd</div>
+            <div className="text-sm text-white mb-2">{question.trim() || "Twoje pytanie pojawi się tutaj"}</div>
+            <div className="space-y-1">
+              {(optionsText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean).length >= 1
+                ? optionsText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+                : ["Opcja 1", "Opcja 2"]
+              ).slice(0, 10).map((opt, i, arr) => {
+                const pct = Math.round(100 / arr.length);
+                return (
+                  <div key={i} className="relative border overflow-hidden" style={{ borderColor: `${newAccent}55` }}>
+                    <div className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, background: `${newAccent}33` }} />
+                    <div className="relative flex items-center justify-between px-2 py-1 text-[11px]">
+                      <span className="text-zinc-200 truncate">{opt}</span>
+                      <span className="font-mono text-zinc-500 tabular-nums">{pct}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <button onClick={create} disabled={busy === "create" || !question.trim()}
             className="w-full px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2">
             {busy === "create" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
@@ -103,7 +138,7 @@ export function PollsManager({
                     const pct = p.totalVotes > 0 ? (count / p.totalVotes) * 100 : 0;
                     return (
                       <div key={i} className="relative border border-zinc-800 overflow-hidden">
-                        <div className="absolute inset-y-0 left-0 bg-blue-900/30" style={{ width: `${pct}%` }} />
+                        <div className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, background: `${p.accentColor}33` }} />
                         <div className="relative flex items-center justify-between px-2 py-1 text-[11px]">
                           <span className="text-zinc-300">{opt}</span>
                           <span className="font-mono text-zinc-500 tabular-nums">{pct.toFixed(0)}% · {count}</span>
