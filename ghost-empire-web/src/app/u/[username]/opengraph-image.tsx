@@ -4,7 +4,7 @@
 // on node runtime; using pure CSS text/shapes for reliability.
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
-import { fmt, rankForLevel } from "@/lib/utils";
+import { fmt, rankForLevel, displayNick } from "@/lib/utils";
 
 export const alt = "Ghost Empire — User Profile";
 export const size = { width: 1200, height: 630 };
@@ -61,7 +61,7 @@ export default async function Image({
   }
 
   const rank = rankForLevel(user.level);
-  const displayName = user.displayName ?? user.username ?? "Anonim";
+  const displayName = displayNick(user.displayName, user.username);
   const initial = displayName.charAt(0).toUpperCase();
 
   return new ImageResponse(

@@ -19,6 +19,12 @@ const ACTION_LABEL: Record<string, { label: string; emoji: string; color: string
   manage_codes:        { label: "Kody (drop)",      emoji: "🔑", color: "#10b981" },
   manage_achievements: { label: "Osiągnięcia",      emoji: "🏆", color: "#fbbf24" },
   manage_polls:        { label: "Ankieta",          emoji: "📊", color: "#3b82f6" },
+  create_prediction:   { label: "Nowa predykcja",   emoji: "🔮", color: "#3b82f6" },
+  resolve_prediction:  { label: "Rozstrzygnięcie",  emoji: "✅", color: "#10b981" },
+  cancel_prediction:   { label: "Anulow. predykcji", emoji: "🚫", color: "#fbbf24" },
+  test_alert:          { label: "Test alert",       emoji: "🔔", color: "#a855f7" },
+  update_alert_settings: { label: "Ustaw. alertów", emoji: "⚙️", color: "#71717a" },
+  merge_users:         { label: "Scalenie kont",    emoji: "🔀", color: "#a855f7" },
 };
 
 export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
