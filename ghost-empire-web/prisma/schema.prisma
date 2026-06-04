@@ -626,6 +626,8 @@ model Subathon {
   secondsPerPln  Int       @default(60)     // +time per 1 PLN donated
   maxEndsAt      DateTime?                  // optional hard cap (null = uncapped)
   totalAddedSecs Int       @default(0)      // stat: total seconds added by events
+  accentColor    String    @default("#E50914") // overlay card accent (hex)
+  label          String    @default("Subathon") // overlay card heading text
   updatedAt      DateTime  @updatedAt
 
   @@map("subathon")

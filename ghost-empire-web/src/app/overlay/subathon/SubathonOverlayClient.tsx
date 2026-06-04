@@ -8,13 +8,15 @@ import { SubathonCard } from "@/components/SubathonCard";
 
 const POLL_INTERVAL_MS = 3000;
 
-type Feed = { active: boolean; endsAt: string | null; serverNow: string };
+type Feed = { active: boolean; endsAt: string | null; accentColor?: string; label?: string; serverNow: string };
 
 export function SubathonOverlayClient() {
   const [token, setToken] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
   const [endsAtMs, setEndsAtMs] = useState<number | null>(null);
   const [active, setActive] = useState(false);
+  const [accent, setAccent] = useState("#E50914");
+  const [label, setLabel] = useState("Subathon");
   const offsetRef = useRef(0); // localNow - serverNow
   const [, setTick] = useState(0); // forces a 1s re-render
 
@@ -37,6 +39,8 @@ export function SubathonOverlayClient() {
         offsetRef.current = Date.now() - new Date(d.serverNow).getTime();
         setActive(d.active);
         setEndsAtMs(d.endsAt ? new Date(d.endsAt).getTime() : null);
+        if (d.accentColor) setAccent(d.accentColor);
+        if (d.label) setLabel(d.label);
         setAuthStatus("ok");
       } catch {
         /* retry next tick */
@@ -68,7 +72,7 @@ export function SubathonOverlayClient() {
         zIndex: 999999,
       }}
     >
-      <SubathonCard remainingMs={remainingMs} ended={ended} />
+      <SubathonCard remainingMs={remainingMs} ended={ended} accent={accent} label={label} />
     </div>
   );
 }
