@@ -2,7 +2,6 @@
 // src/components/admin/AdminClient.tsx
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
   Users, TrendingUp, Trash2, Copy, Dice5, Crown, Heart, UserCog, History, Award,
@@ -45,6 +44,9 @@ const ChatTimersManager = dynamic(() => import("./sections/ChatTimers").then((m)
 const ChatCommandsManager = dynamic(() => import("./sections/ChatCommands").then((m) => m.ChatCommandsManager), { ssr: false, loading: SectionLoading });
 const SongQueueManager = dynamic(() => import("./sections/SongQueue").then((m) => m.SongQueueManager), { ssr: false, loading: SectionLoading });
 const SubathonManager = dynamic(() => import("./sections/Subathon").then((m) => m.SubathonManager), { ssr: false, loading: SectionLoading });
+const GrantTokensCard = dynamic(() => import("./sections/GrantTokens").then((m) => m.GrantTokensCard), { ssr: false, loading: SectionLoading });
+const CreateDropCard = dynamic(() => import("./sections/CreateDrop").then((m) => m.CreateDropCard), { ssr: false, loading: SectionLoading });
+const DatabaseResetCard = dynamic(() => import("./sections/DatabaseReset").then((m) => m.DatabaseResetCard), { ssr: false, loading: SectionLoading });
 
 type Stats = {
   totalUsers: number;
@@ -795,147 +797,6 @@ function StatTile({
 }
 
 // ============== GRANT TOKENS ==============
-
-function GrantTokensCard({
-  onToast, onSuccess, pending,
-}: {
-  onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
-}) {
-  const [target, setTarget] = useState("");
-  const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function submit() {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/grant-tokens", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target, amount: parseInt(amount), reason }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
-      } else {
-        onToast("ok", `${data.amount > 0 ? "+" : ""}${data.amount} GT dla ${data.user.username ?? data.user.id}. Balans: ${data.newBalance}`);
-        setAmount(""); setReason("");
-        onSuccess();
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <SectionCard title="Grant tokenów" icon={Coins}>
-      <div className="space-y-3">
-        <FieldInput
-          label="User (username, Discord ID lub ID konta)"
-          value={target}
-          onChange={setTarget}
-          placeholder="gh0s77tt / 1500923809522258000 / cmpq74…"
-        />
-        <FieldInput
-          label="Amount (ujemny = odjąć)"
-          value={amount}
-          onChange={setAmount}
-          placeholder="np. 1000 lub -500"
-          type="number"
-        />
-        <FieldInput
-          label="Powód (opcjonalnie)"
-          value={reason}
-          onChange={setReason}
-          placeholder="np. konkurs klipów"
-        />
-        <button
-          onClick={submit}
-          disabled={busy || pending || !target || !amount}
-          className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Coins className="w-3.5 h-3.5" />}
-          Przyznaj
-        </button>
-      </div>
-    </SectionCard>
-  );
-}
-
-// ============== CREATE DROP ==============
-
-function CreateDropCard({
-  onToast, onSuccess, pending,
-}: {
-  onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
-}) {
-  const [code, setCode] = useState("");
-  const [reward, setReward] = useState("500");
-  const [bonusReward, setBonusReward] = useState("1000");
-  const [bonusSlots, setBonusSlots] = useState("10");
-  const [expiresInMinutes, setExpiresInMinutes] = useState("60");
-  const [busy, setBusy] = useState(false);
-
-  async function submit() {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/drops", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: code || undefined,
-          reward: parseInt(reward),
-          bonusReward: parseInt(bonusReward),
-          bonusSlots: parseInt(bonusSlots),
-          expiresInMinutes: parseInt(expiresInMinutes),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
-      } else {
-        onToast("ok", `Drop utworzony: ${data.drop.code}`);
-        setCode("");
-        onSuccess();
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <SectionCard title="Nowy drop" icon={Gift}>
-      <div className="space-y-3">
-        <FieldInput
-          label="Kod (puste = autogenerated)"
-          value={code}
-          onChange={(v) => setCode(v.toUpperCase())}
-          placeholder="np. STREAM01"
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <FieldInput label="Reward GT" value={reward} onChange={setReward} type="number" />
-          <FieldInput label="Bonus GT" value={bonusReward} onChange={setBonusReward} type="number" />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <FieldInput label="Bonus slots" value={bonusSlots} onChange={setBonusSlots} type="number" />
-          <FieldInput label="Wygasa za (min)" value={expiresInMinutes} onChange={setExpiresInMinutes} type="number" />
-        </div>
-        <button
-          onClick={submit}
-          disabled={busy || pending || !reward}
-          className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Gift className="w-3.5 h-3.5" />}
-          Stwórz drop
-        </button>
-      </div>
-    </SectionCard>
-  );
-}
 
 // ============== HOLIDAY / SEASONAL EVENT TEMPLATES ==============
 
@@ -3180,88 +3041,6 @@ function CodeDropsCard({
 }
 
 // ============== DATABASE RESET (danger zone — admin only) ==============
-
-function DatabaseResetCard({
-  onToast,
-}: {
-  onToast: (k: "ok" | "err", m: string) => void;
-  onSuccess: () => void;
-  pending: boolean;
-}) {
-  const PHRASE = "USUŃ WSZYSTKO";
-  const [confirm, setConfirm] = useState("");
-  const [busy, setBusy] = useState(false);
-  const armed = confirm.trim() === PHRASE;
-
-  async function submit() {
-    if (!armed) return;
-    if (!window.confirm(
-      "OSTATNIE OSTRZEŻENIE\n\nTo NIEODWRACALNIE usunie WSZYSTKICH użytkowników i ich dane " +
-      "(także Twoje konto — zalogujesz się ponownie). Konfiguracja i katalog zostają.\n\nKontynuować?",
-    )) return;
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/reset-database", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: confirm.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
-        setBusy(false);
-        return;
-      }
-      onToast("ok", `Baza zresetowana — usunięto ${data.deletedUsers} użytkowników. Wylogowuję…`);
-      // The acting admin's account is gone too — sign out and back to landing.
-      setTimeout(() => signOut({ callbackUrl: "/welcome" }), 1800);
-    } catch {
-      onToast("err", "Błąd sieci");
-      setBusy(false);
-    }
-  }
-
-  return (
-    <SectionCard title="Reset bazy danych" icon={AlertTriangle}>
-      <div className="space-y-3 border border-red-800 bg-red-950/20 p-4">
-        <p className="text-sm text-red-300 font-bold flex items-center gap-2">
-          <Trash2 className="w-4 h-4" /> Strefa niebezpieczna — operacja NIEODWRACALNA
-        </p>
-        <p className="text-xs text-zinc-400 leading-relaxed">
-          Usuwa <strong className="text-white">wszystkich użytkowników</strong> i ich dane: konta i logowania,
-          połączone platformy, tokeny i transakcje, osiągnięcia, questy, progres battle passa, zakłady,
-          udziały w eventach, powiadomienia i social linki. Czyści też kolejkę alertów, feed czatu oraz logi
-          zdarzeń (Twitch / Kick / YouTube). Użytkownicy zalogują się od nowa (z bonusem powitalnym).
-        </p>
-        <p className="text-xs text-zinc-400 leading-relaxed">
-          <strong className="text-green-300">Zostaje:</strong> konfiguracja i katalog — sklep, definicje eventów,
-          osiągnięć, questów i dropów, sezony battle passa, komendy / timery / FAQ czatu, harmonogram, ustawienia
-          alertów, integracje (Twitch / Kick / YouTube / Streamlabs) oraz audit log. Konto właściciela wraca jako
-          admin po ponownym zalogowaniu.
-        </p>
-        <div>
-          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Wpisz dokładnie <span className="text-red-400 font-bold">{PHRASE}</span>, aby odblokować
-          </label>
-          <input
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder={PHRASE}
-            className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white focus:border-red-500 outline-hidden"
-          />
-        </div>
-        <button
-          onClick={submit}
-          disabled={busy || !armed}
-          className="w-full px-4 py-2.5 bg-red-700 hover:bg-red-600 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-          Zresetuj bazę danych
-        </button>
-      </div>
-    </SectionCard>
-  );
-}
 
 // ============== BOT CONFIG ==============
 
