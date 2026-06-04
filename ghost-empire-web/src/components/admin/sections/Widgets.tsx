@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { LayoutGrid, Copy, Check, ExternalLink } from "lucide-react";
 import { SectionCard } from "../shared";
 
-type Widget = { id: string; name: string; path: string; desc: string; size: string };
+type Widget = { id: string; name: string; path: string; desc: string; size: string; query?: string };
 
 const WIDGETS: Widget[] = [
   { id: "alerts",      name: "Stream Alerts",      path: "/overlay",             desc: "Alerty na żywo: suby, gifty, bity, donejty, zakupy, eventy, powitania.", size: "1920×1080" },
@@ -16,6 +16,8 @@ const WIDGETS: Widget[] = [
   { id: "codes",       name: "Drop kodów",         path: "/overlay/codes",       desc: "Rotacja kodów (np. klucze do gier) — jeden na ekranie naraz.",          size: "600×300" },
   { id: "predictions", name: "Predykcje / zakłady", path: "/overlay/predictions", desc: "Aktualny otwarty/zamknięty zakład: opcje, % puli, pula.",               size: "500×400" },
   { id: "polls",       name: "Ankiety",            path: "/overlay/polls",       desc: "Aktualna otwarta ankieta: opcje + wyniki na żywo.",                     size: "500×400" },
+  { id: "last-sub",    name: "Ostatni sub",        path: "/overlay/last-event",  query: "kind=sub",      desc: "Najnowszy subskrybent (Twitch sub / gift). Mały badge.",        size: "340×90" },
+  { id: "last-donator", name: "Ostatni donator",   path: "/overlay/last-event",  query: "kind=donation", desc: "Najnowszy donejt — nick + kwota. Mały badge.",                  size: "340×90" },
 ];
 
 export function WidgetsLibrary({
@@ -38,13 +40,13 @@ export function WidgetsLibrary({
   }, []);
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  function urlFor(path: string) { return token ? `${origin}${path}?token=${token}` : null; }
+  function urlFor(w: Widget) { return token ? `${origin}${w.path}?${w.query ? w.query + "&" : ""}token=${token}` : null; }
 
-  function copy(path: string) {
-    const url = urlFor(path);
+  function copy(w: Widget) {
+    const url = urlFor(w);
     if (!url) return;
     navigator.clipboard.writeText(url);
-    setCopied(path);
+    setCopied(w.id);
     setTimeout(() => setCopied(null), 1500);
     onToast("ok", "URL skopiowany");
   }
@@ -61,7 +63,7 @@ export function WidgetsLibrary({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {WIDGETS.map((w) => {
-          const url = urlFor(w.path);
+          const url = urlFor(w);
           return (
             <div key={w.id} className="border border-zinc-800 bg-black/30 p-3 flex flex-col gap-2">
               <div className="flex items-center justify-between gap-2">
@@ -76,12 +78,12 @@ export function WidgetsLibrary({
                   className="flex-1 bg-black border border-zinc-800 px-2 py-1.5 text-[11px] text-zinc-300 font-mono truncate"
                 />
                 <button
-                  onClick={() => copy(w.path)}
+                  onClick={() => copy(w)}
                   disabled={!url}
                   className="px-2.5 border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition-all disabled:opacity-40"
                   title="Kopiuj URL do OBS"
                 >
-                  {copied === w.path ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied === w.id ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
                 {url && (
                   <a
