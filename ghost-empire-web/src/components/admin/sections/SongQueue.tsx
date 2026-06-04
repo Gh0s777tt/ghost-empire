@@ -1,0 +1,214 @@
+"use client";
+// src/components/admin/sections/SongQueue.tsx — lazily-loaded song-request queue.
+import { useState, useEffect, useCallback } from "react";
+import { Music, Loader2, Play, Check, SkipForward, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { SectionCard } from "../shared";
+
+type SongRow = {
+  id: string;
+  query: string;
+  title: string | null;
+  requestedBy: string;
+  platform: string;
+  status: string;
+  createdAt: string;
+};
+
+export function SongQueueManager({
+  onToast, onSuccess, pending,
+}: {
+  onToast: (k: "ok" | "err", m: string) => void;
+  onSuccess: () => void;
+  pending: boolean;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [queue, setQueue] = useState<SongRow[]>([]);
+  const [recent, setRecent] = useState<SongRow[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/song-requests");
+      const data = await res.json();
+      if (res.ok) {
+        setQueue(data.queue ?? []);
+        setRecent(data.recent ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Live-ish queue: refresh every 10s while the section is open.
+  useEffect(() => {
+    void load();
+    const t = setInterval(() => void load(), 10_000);
+    return () => clearInterval(t);
+  }, [load]);
+
+  async function call(action: string, id?: string) {
+    const res = await fetch("/api/admin/song-requests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, id }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      onToast("err", data.error ?? "Błąd");
+      return false;
+    }
+    return true;
+  }
+
+  async function act(action: string, id: string) {
+    setBusy(id);
+    if (await call(action, id)) await load();
+    setBusy(null);
+  }
+
+  async function clearQueue() {
+    if (!confirm("Wyczyścić całą kolejkę?")) return;
+    setBusy("clear");
+    if (await call("clear")) {
+      onToast("ok", "Kolejka wyczyszczona");
+      await load();
+      onSuccess();
+    }
+    setBusy(null);
+  }
+
+  const platformColor: Record<string, string> = {
+    twitch: "#9146FF",
+    kick: "#53FC18",
+    youtube: "#FF0000",
+  };
+
+  function renderQuery(q: string, title?: string | null) {
+    const label = title || q;
+    if (/^https?:\/\//i.test(q)) {
+      return (
+        <a href={q} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline truncate" title={q}>
+          {label}
+        </a>
+      );
+    }
+    return <span className="text-sm text-zinc-300 truncate">{label}</span>;
+  }
+
+  return (
+    <SectionCard title="Song requests (kolejka)" icon={Music}>
+      <p className="text-zinc-500 text-xs mb-3">
+        Widzowie dodają utwory komendą <code className="text-zinc-300">!sr &lt;link lub tytuł&gt;</code> na dowolnej platformie.
+        Tutaj odtwarzasz / pomijasz / czyścisz kolejkę (odświeża się co 10 s).
+      </p>
+
+      {loading ? (
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+      ) : (
+        <>
+          {queue.length === 0 ? (
+            <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20 mb-3">
+              Kolejka pusta.
+            </div>
+          ) : (
+            <div className="space-y-2 mb-3">
+              {queue.map((s, i) => {
+                const playing = s.status === "playing";
+                return (
+                  <div
+                    key={s.id}
+                    className={cn(
+                      "border bg-black/30 p-3",
+                      playing ? "border-green-700 bg-green-950/20" : "border-zinc-800",
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className={cn("text-[11px] font-mono w-5 text-center shrink-0", playing ? "text-green-400" : "text-zinc-600")}>
+                          {playing ? "▶" : i + 1}
+                        </span>
+                        <div className="flex flex-col min-w-0">
+                          {renderQuery(s.query, s.title)}
+                          <span className="text-[10px] text-zinc-500">
+                            od <strong className="text-zinc-400">{s.requestedBy}</strong>
+                            <span className="ml-1 font-mono uppercase" style={{ color: platformColor[s.platform] ?? "#888" }}>
+                              {s.platform}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {!playing && (
+                          <button
+                            onClick={() => act("play", s.id)}
+                            disabled={busy === s.id || pending}
+                            className="text-green-400 hover:text-green-300 border border-zinc-800 hover:border-green-700 w-6 h-6 flex items-center justify-center"
+                            title="Odtwarzaj"
+                          >
+                            <Play className="w-3 h-3" />
+                          </button>
+                        )}
+                        {playing && (
+                          <button
+                            onClick={() => act("played", s.id)}
+                            disabled={busy === s.id || pending}
+                            className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-2 h-6 text-[9px] font-mono uppercase"
+                            title="Oznacz jako odtworzone"
+                          >
+                            <Check className="w-3 h-3" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => act("skip", s.id)}
+                          disabled={busy === s.id || pending}
+                          className="text-zinc-500 hover:text-orange-400 border border-zinc-800 hover:border-orange-700 w-6 h-6 flex items-center justify-center"
+                          title="Pomiń"
+                        >
+                          <SkipForward className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => act("delete", s.id)}
+                          disabled={busy === s.id || pending}
+                          className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"
+                          title="Usuń"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {queue.length > 0 && (
+            <button
+              onClick={clearQueue}
+              disabled={busy === "clear" || pending}
+              className="border border-zinc-800 hover:border-red-700 text-zinc-400 hover:text-red-300 px-3 py-1.5 text-xs font-mono uppercase tracking-widest mb-4 disabled:opacity-50"
+            >
+              Wyczyść kolejkę
+            </button>
+          )}
+
+          {recent.length > 0 && (
+            <div className="border-t border-zinc-900 pt-3">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mb-2">Ostatnie</div>
+              <div className="space-y-1">
+                {recent.map((s) => (
+                  <div key={s.id} className="flex items-center gap-2 text-xs text-zinc-600">
+                    <span className="font-mono uppercase text-[9px] w-12 shrink-0">{s.status === "played" ? "✓ grane" : "pominięte"}</span>
+                    <span className="truncate">{s.query}</span>
+                    <span className="text-zinc-700 shrink-0">— {s.requestedBy}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </SectionCard>
+  );
+}
