@@ -656,30 +656,5 @@ function StatTile({
   );
 }
 
-// ============== GRANT TOKENS ==============
-
-// ============== HOLIDAY / SEASONAL EVENT TEMPLATES ==============
-
-// ============== ACTIVE LISTS ==============
-
-// ============== FIELDS ==============
-
-// ============== SHOP MANAGER (list + inline edit + activate/deactivate) ==============
-
-// ============== EVENT MANAGER (list + edit + activate/deactivate) ==============
-
-// Unified events manager — one list of ALL events (active first, deactivated
-// dimmed) with every per-event action inline: draw winners (draw_events),
-// toggle active + edit (edit_events). Replaces the old split between a separate
-// "Aktywne eventy" (draw/deactivate) and "Edycja eventów" (toggle/edit) card.
-// ============== TWITCH EVENTSUB ==============
-
-// ============== STREAMLABS DONATIONS ==============
-
-// ============== AUDIT LOG VIEWER ==============
-
-// ============== MOD PERMISSIONS PICKER ==============
-
-
-
-
+// All admin sections beyond the shell above (nav / dashboard / lazy-loader)
+// live in ./sections/*.tsx, lazily imported at the top of this file.
