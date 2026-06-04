@@ -22,6 +22,7 @@ const SectionLoading = () => <div className="text-zinc-600 text-sm">Åadowanieâ€
 const AnalyticsSection = dynamic(() => import("./sections/Analytics").then((m) => m.AnalyticsSection), { ssr: false, loading: SectionLoading });
 const AuditLogSection = dynamic(() => import("./sections/AuditLog").then((m) => m.AuditLogSection), { ssr: false, loading: SectionLoading });
 const PollsManager = dynamic(() => import("./sections/Polls").then((m) => m.PollsManager), { ssr: false, loading: SectionLoading });
+const ModerationManager = dynamic(() => import("./sections/Moderation").then((m) => m.ModerationManager), { ssr: false, loading: SectionLoading });
 const AchievementsManager = dynamic(() => import("./sections/Achievements").then((m) => m.AchievementsManager), { ssr: false, loading: SectionLoading });
 const PredictionsManager = dynamic(() => import("./sections/Predictions").then((m) => m.PredictionsManager), { ssr: false, loading: SectionLoading });
 const WelcomeManager = dynamic(() => import("./sections/Welcome").then((m) => m.WelcomeManager), { ssr: false, loading: SectionLoading });
@@ -100,7 +101,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "timers" | "faq" | "welcome" | "songs" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit";
 
   const SECTIONS: Array<{
     id: SectionId;
@@ -121,6 +122,7 @@ export function AdminClient({
     { id: "kick",      label: "Kick",        icon: Radio,           permission: () => isAdmin },
     { id: "youtube",   label: "YouTube",     icon: MonitorPlay,     permission: () => isAdmin },
     { id: "chat",      label: "Komendy czatu", icon: MessageSquare, permission: () => isAdmin },
+    { id: "moderation", label: "Moderacja",    icon: ShieldCheck,   permission: () => isAdmin },
     { id: "timers",    label: "Timery",        icon: Clock,         permission: () => isAdmin },
     { id: "faq",       label: "FAQ / auto",    icon: HelpCircle,    permission: () => isAdmin },
     { id: "welcome",   label: "Powitania",     icon: UserPlus,      permission: () => isAdmin },
@@ -274,6 +276,10 @@ export function AdminClient({
 
           {activeSection === "polls" && isAdmin && (
             <PollsManager {...sharedProps} />
+          )}
+
+          {activeSection === "moderation" && isAdmin && (
+            <ModerationManager {...sharedProps} />
           )}
 
           {activeSection === "events" && (

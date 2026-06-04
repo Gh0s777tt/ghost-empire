@@ -24,7 +24,8 @@ type AdminActionType =
   | "reset_database"
   | "manage_codes"
   | "manage_achievements"
-  | "manage_polls";
+  | "manage_polls"
+  | "update_moderation";
 
 export async function logAdminAction(opts: {
   adminId: string;

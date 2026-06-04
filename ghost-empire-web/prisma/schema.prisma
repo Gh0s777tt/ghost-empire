@@ -634,6 +634,52 @@ model Subathon {
 }
 
 // =====================================================
+// CHAT MODERATION — global automod config (singleton). Pure detectors live in
+// lib/moderation.ts; the bot fetches this via /api/bot/moderation and enforces
+// the action (delete / timeout / warn) on Twitch / Kick / YouTube.
+// =====================================================
+
+model ModerationConfig {
+  id      String  @id @default("default")
+  enabled Boolean @default(false) // master switch
+
+  profanityEnabled     Boolean  @default(false)
+  profanityWords       String[] @default([])
+  profanityAction      String   @default("delete") // delete | timeout | warn
+  profanityTimeoutSecs Int      @default(60)
+
+  capsEnabled     Boolean @default(false)
+  capsMinLetters  Int     @default(8)
+  capsMaxRatioPct Int     @default(70) // percent 0-100
+  capsAction      String  @default("delete")
+  capsTimeoutSecs Int     @default(30)
+
+  lengthEnabled     Boolean @default(false)
+  lengthMax         Int     @default(300)
+  lengthAction      String  @default("delete")
+  lengthTimeoutSecs Int     @default(30)
+
+  repeatEnabled     Boolean @default(false)
+  repeatCharRun     Int     @default(8)
+  repeatWordRun     Int     @default(4)
+  repeatAction      String  @default("delete")
+  repeatTimeoutSecs Int     @default(30)
+
+  zalgoEnabled     Boolean @default(false)
+  zalgoMaxRatioPct Int     @default(20)
+  zalgoAction      String  @default("delete")
+  zalgoTimeoutSecs Int     @default(30)
+
+  exemptSubs Boolean @default(true)
+  exemptVips Boolean @default(true)
+  exemptMods Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("moderation_config")
+}
+
+// =====================================================
 // CHAT ACTIVITY HEATMAP — 7×24 buckets (day-of-week × hour, Europe/Warsaw),
 // incremented by /api/internal/chat-award. Powers /admin#analytics.
 // =====================================================
