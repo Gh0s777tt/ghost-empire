@@ -8,16 +8,18 @@ import { LastEventCard } from "@/components/LastEventCard";
 const POLL_INTERVAL_MS = 5000;
 
 type EventData = { name: string; amount: number | null; amountLabel: string | null; at: string } | null;
-type Feed = { sub: EventData; donation: EventData };
+type Feed = { sub: EventData; donation: EventData; follow: EventData };
+type Kind = "sub" | "donation" | "follow";
 
-const KIND_META: Record<string, { label: string; icon: string; accent: string; showAmount: boolean }> = {
+const KIND_META: Record<Kind, { label: string; icon: string; accent: string; showAmount: boolean }> = {
   sub: { label: "Ostatni sub", icon: "💜", accent: "#a855f7", showAmount: false },
   donation: { label: "Ostatni donator", icon: "💰", accent: "#22c55e", showAmount: true },
+  follow: { label: "Ostatni follower", icon: "⭐", accent: "#3b82f6", showAmount: false },
 };
 
 export function LastEventOverlayClient() {
   const [token, setToken] = useState<string | null>(null);
-  const [kind, setKind] = useState<"sub" | "donation">("sub");
+  const [kind, setKind] = useState<Kind>("sub");
   const [accentOverride, setAccentOverride] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
   const [feed, setFeed] = useState<Feed | null>(null);
@@ -28,7 +30,7 @@ export function LastEventOverlayClient() {
     if (!t) { setAuthStatus("no-token"); return; }
     setToken(t);
     const k = params.get("kind");
-    if (k === "donation" || k === "sub") setKind(k);
+    if (k === "donation" || k === "sub" || k === "follow") setKind(k);
     const a = params.get("accent");
     if (a && /^[0-9a-fA-F]{6}$/.test(a)) setAccentOverride(`#${a}`);
   }, []);
@@ -58,7 +60,7 @@ export function LastEventOverlayClient() {
   if (!feed) return null;
 
   const meta = KIND_META[kind];
-  const data = kind === "donation" ? feed.donation : feed.sub;
+  const data = kind === "donation" ? feed.donation : kind === "follow" ? feed.follow : feed.sub;
   if (!data) return null;
 
   const detail = meta.showAmount && data.amount != null

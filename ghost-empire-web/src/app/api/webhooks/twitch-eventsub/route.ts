@@ -145,6 +145,8 @@ export async function POST(req: Request) {
       await handleStreamOnline(event);
     } else if (eventType === "stream.offline") {
       await handleStreamOffline();
+    } else if (eventType === "channel.follow") {
+      await handleFollow(event);
     } else {
       log.info("unhandled event type", { eventType });
     }
@@ -182,6 +184,23 @@ export async function POST(req: Request) {
 }
 
 // === Handlers ===
+
+// New follower → store a `twitch_follow` StreamAlert directly (bypassing the
+// enabled-type filter in dispatchAlert) so the "last follower" widget always has
+// data. Not shown as an overlay popup unless `twitch_follow` is enabled.
+async function handleFollow(event: Record<string, unknown>): Promise<void> {
+  const userName = (event.user_name as string) || (event.user_login as string) || "Anonim";
+  await prisma.streamAlert.create({
+    data: {
+      type: "twitch_follow",
+      title: "⭐ Nowy follow!",
+      message: "zaobserwował kanał",
+      icon: "⭐",
+      actorName: userName,
+    },
+  });
+  log.info("new follower", { userName });
+}
 
 async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId: string | null; tokens: number | null }> {
   const userLogin = (event.user_login as string)?.toLowerCase();

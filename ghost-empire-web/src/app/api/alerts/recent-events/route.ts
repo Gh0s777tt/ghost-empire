@@ -35,10 +35,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [sub, donation] = await Promise.all([
+  const [sub, donation, follow] = await Promise.all([
     lastOf(["twitch_sub", "twitch_gift_sub"]),
     lastOf(["donation"]),
+    lastOf(["twitch_follow"]),
   ]);
 
-  return NextResponse.json({ sub, donation });
+  return NextResponse.json({ sub, donation, follow });
 }
