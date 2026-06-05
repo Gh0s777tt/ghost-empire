@@ -93,6 +93,7 @@ type Props = {
     provider: string;
     providerAccountId: string;
   }>;
+  duelStats: { wins: number; losses: number };
 };
 
 const RARITY_STYLE: Record<string, { border: string; bg: string; text: string; label: string }> = {
@@ -132,9 +133,11 @@ const PLATFORM_META: Record<string, { label: string; color: string; emoji: strin
 };
 
 export function ProfileClient({
-  user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts,
+  user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelStats,
 }: Props) {
   const rank = rankForLevel(user.level);
+  const duelTotal = duelStats.wins + duelStats.losses;
+  const duelWinrate = duelTotal > 0 ? Math.round((duelStats.wins / duelTotal) * 100) : 0;
   const xpNeeded = xpForLevel(user.level + 1);
   const xpCurrent = user.xp % 500;
   // At the level cap, the XP bar tracks prestige progress (overflow XP past the cap)
@@ -301,6 +304,14 @@ export function ProfileClient({
         <StatTile label="Streak" value={user.streak.toString()} suffix={user.streak === 1 ? "dzień" : "dni"} emoji="🔥" />
         <StatTile label="Wiadomości" value={fmt(user.messageCount)} emoji="💬" />
         <StatTile label="Voice" value={fmt(user.voiceMinutes)} suffix="min" emoji="🎤" />
+        {duelTotal > 0 && (
+          <StatTile
+            label="Pojedynki"
+            value={`${duelStats.wins}W·${duelStats.losses}L`}
+            suffix={`${duelWinrate}% WR`}
+            emoji="⚔️"
+          />
+        )}
       </div>
 
       {/* Pending deliveries */}
