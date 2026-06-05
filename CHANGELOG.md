@@ -15,6 +15,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **Structured logging — dokończone + zasada docs skodyfikowana** **(#160)** — `streamlabs-poll` cron loguje teraz wynik/błędy przez `lib/logger.ts` (jak `prune`); tym samym structured logging jest kompletny (3 webhooki + crony; hot-path `award` świadomie bez logu per-wywołanie). Dodatkowo **żelazna zasada dokumentacji** wpisana wprost do README + `docs/ARCHITECTURE`: każda zmiana funkcjonalna aktualizuje docs (CHANGELOG/README/ROADMAP/PLAN/PHASE/docs/* + on-site `/about`) **w tym samym PR**.
 - **CI — `npm audit` (prod deps, high+)** **(#156)** — krok w workflow CI pokazuje znane podatności produkcyjnych zależności na każdym push/PR; nieblokujący (`continue-on-error`), by świeżo ujawniony CVE w zależności tranzytywnej nie zablokował wszystkich merge'y — Dependabot otwiera PR z fixem.
 
 ### Security

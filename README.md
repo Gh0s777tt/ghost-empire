@@ -249,6 +249,9 @@ Pełny przewodnik (EventSub, Kick webhooki, YouTube polling, OBS Browser Source)
 | 🔑 | [**docs/ENV.md**](docs/ENV.md) — wszystkie zmienne środowiskowe |
 | 📦 | [**PHASE2.md**](PHASE2.md) · [**PHASE3.md**](PHASE3.md) — roadmapy faz |
 
+> ### 📝 Zasada dokumentacji (żelazna)
+> Dokumentacja **nigdy nie zostaje w tyle za kodem.** Każda zmiana funkcjonalna aktualizuje w **tym samym PR**: **CHANGELOG** + (jeśli dotyczy) **README · ROADMAP · PLAN · PHASE2/3 · docs/ARCHITECTURE · docs/ENDPOINTS · docs/ENV · PERMISSIONS** + on-site changelog (`/about`). PR bez odpowiedniej aktualizacji docs jest niekompletny.
+
 ---
 
 ## 🗺️ Status
