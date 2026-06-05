@@ -6,6 +6,7 @@
 // reward without charging.
 import { prisma } from "@/lib/prisma";
 import { pickWeightedIndex } from "@/lib/economy";
+import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
 
 export type WheelSegment = {
   label: string;
@@ -123,6 +124,17 @@ export async function spinWheel(userId: string): Promise<SpinResult> {
       actorImage: fresh?.image ?? null,
     };
   });
+
+  // Notify external webhooks on a winning spin (best-effort).
+  if (seg.rewardTokens > 0) {
+    fireOutgoingWebhooks("wheel_win", {
+      title: "🎡 Wygrana w Kole Fortuny!",
+      message: `${actorName} wygrał ${seg.rewardTokens} GT (${seg.label})`,
+      actorName,
+      amount: seg.rewardTokens,
+      amountLabel: "GT",
+    });
+  }
 
   return {
     spinId,
