@@ -141,8 +141,11 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      # Browser binary only (from Playwright's CDN) — NOT `--with-deps`, which runs
+      # apt-get update incl. the occasionally-flaky Google Chrome repo. ubuntu-latest
+      # already ships the shared libs Chromium needs.
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       # Compose the DB URL from parts (no credential literal in the repo) + a throwaway
       # auth secret, exported for the build, the schema push and the server.
