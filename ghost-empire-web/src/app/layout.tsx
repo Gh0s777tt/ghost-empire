@@ -5,6 +5,8 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // Self-host fonts via next/font (eliminates the previous duplicate <link rel="stylesheet">
 // to Google Fonts in <head> — fewer round-trips, no CLS, automatic preload).
@@ -89,6 +91,10 @@ export default function RootLayout({
           <div id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-hidden">{children}</div>
           <SiteFooter />
         </Providers>
+        {/* Privacy-friendly, cookieless web analytics + Core Web Vitals from real prod
+            traffic. No-ops outside Vercel, so local dev / self-host is unaffected. */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
