@@ -11,6 +11,15 @@
 
 Duży zrzut pomysłów od usera + moje propozycje. Pogrupowane wg autonomii; kolejność = rekomendowany priorytet. Każda pozycja = osobny PR (branch → tsc/lint/test → squash-merge).
 
+> ### ✅ STATUS (2026-06-04, po 36 PR-ach #109–#144)
+> **F1 ✅ · F2 ✅ · F3 ✅ · F5 ✅ · F6 🟡 częściowo · F4 🔑 czeka na klucz API.** Doszła też **„G-faza" UX** (prośby usera): grupowana nawigacja, panel integracji (klucze API na stronie), command palette `Ctrl+K`, checklista statusu, podgląd+edycja per-widget.
+> - **F1 ✅** — Subathon kolor/napis (#119) · predykcje+ankiety: kolor·podgląd·overlay (#120–#123) · auto-pin zakładów na czacie (#131) · kalendarz planu (#117).
+> - **F2 ✅** — rdzeń detektorów (#118) + panel `/admin#moderation` (#119… właśc. moderation panel) + **egzekucja w bocie** Twitch/Kick/YouTube (#130).
+> - **F3 ✅** — biblioteka widgetów (#125) + 6 widgetów (#126–#128, #132) + generator (#129).
+> - **F5 ✅** — czcionki (#133) · emoji-picker (#134) · emotki+odznaki w czacie (#135) · gradienty (#136).
+> - **F6 🟡** — backup JSON (#137) + sanityzacja URL/XSS (#138). **Zostało:** szyfrowanie sekretów at-rest, CSP, auto-backup na osobny serwer (decyzja: dokąd), AV uploadów (jeśli pliki).
+> - **F4 🔑** — gotowy panel integracji (`/admin#integrations`) na klucz AI → po wklejeniu buduję postać `@bot` + `!imagine`.
+
 **✅ Najpierw naprawione bugi prywatności (PR #115):** imię/nazwisko zamaskowane (`displayNick`) w rankingu/eventach/home/OG-image; mail (`@…dam`) wyrugowany z „Połączone konta" (`isPublicHandle` + źródło w `auth.ts`); audit log z czytelnymi etykietami (anulowanie predykcji **ma** być w audycie). *(Dane „at-rest" w bazie nietknięte — wszystkie ścieżki renderu maskują; opcjonalny scrub bazy do zrobienia na życzenie.)*
 
 ### 🤖 F1 — Customizacja & overlaye (autonomiczne, najpierw)

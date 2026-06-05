@@ -11,6 +11,33 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **94** tras
+
+**Admin (`requireAdmin`):**
+| Trasa | Po co |
+|---|---|
+| `…/api/admin/moderation` | Config automoda (przekleństwa/CAPS/długość/flood/zalgo + akcje) |
+| `…/api/admin/integrations` | Klucze API funkcji (AI / Sentry / OBS) — zapis w bazie, maskowane |
+| `…/api/admin/setup-status` | Checklista konfiguracji na dashboardzie |
+| `…/api/admin/backup` | Pobranie backupu JSON (config/katalog/salda, bez sekretów) |
+| `…/api/admin/widgets` | CRUD własnych widgetów (generator) |
+
+**Bot (`botSecret`):**
+| `…/api/bot/moderation` | public GET — config automoda dla bota |
+| `…/api/bot/active-prediction` | public GET — otwarty zakład (auto-pin na czacie) |
+| `…/api/internal/emoji-combo` | POST — bot zgłasza wykryty emoji-combo |
+
+**Overlay feeds (`overlayToken`):**
+| `…/api/alerts/predictions` · `…/api/alerts/polls` | aktywny zakład / ankieta |
+| `…/api/alerts/recent-events` | ostatni sub / donator / follower |
+| `…/api/alerts/viewers` | liczba widzów (Helix, cache 12s) |
+| `…/api/alerts/widget` | pojedynczy custom-widget po `id` |
+| `…/api/alerts/emoji-combo` | świeży emoji-combo |
+
+**Zmienione:** `admin/subathon` (+`appearance`), `admin/predictions`/`admin/polls` (+`accentColor`), `alerts/subathon` (+kolor/napis), `alerts/chat` + `internal/chat-feed` (+`emotes`/`badges`), `webhooks/twitch-eventsub` (+`channel.follow` v2).
+
+---
+
 ## Auth / logowanie
 | Trasa | Auth | Po co |
 |---|---|---|

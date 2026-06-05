@@ -56,10 +56,15 @@ Wzorzec: strona `/overlay/<x>` (transparentna, `pointer-events:none`) **odpytuje
 | `/overlay` | `/api/alerts/queue` | Alerty (zakupy, suby, donacje…) |
 | `/overlay/goals` | `/api/alerts/goals` | Stream Goals + Hype Train |
 | `/overlay/chat` | `/api/alerts/chat` | Czat z 3 platform |
-| `/overlay/subathon` | `/api/alerts/subathon` | Odliczanie (drift-corrected) |
+| `/overlay/subathon` | `/api/alerts/subathon` | Odliczanie (drift-corrected) + kolor/napis |
 | `/overlay/codes` | `/api/codes/current` | Rotacja drop-kodów |
+| `/overlay/predictions` · `/overlay/polls` | `/api/alerts/predictions` · `/api/alerts/polls` | Aktywny zakład / ankieta + kolor |
+| `/overlay/last-event?kind=` | `/api/alerts/recent-events` | Ostatni sub / donator / follower |
+| `/overlay/viewers` | `/api/alerts/viewers` | Liczba widzów (Twitch Helix) |
+| `/overlay/widget?id=` | `/api/alerts/widget` | Własny widget z generatora (tekst/kolor/font/gradient) |
+| `/overlay/emoji-combo` | `/api/alerts/emoji-combo` | Wybuch „×N COMBO" przy spamie emoji |
 
-Jeden wspólny `OVERLAY_TOKEN` (auto-generowany w bazie, rotowalny w `/admin#alerts`). Komponenty prezentacyjne (`AlertCard`, `GoalBar`, `SubathonCard`, `ChatMessageRow`, `CodeCard`) są **współdzielone** przez overlay i podglądy w panelu → podgląd = realny wygląd.
+Jeden wspólny `OVERLAY_TOKEN` (auto-generowany w bazie, rotowalny w `/admin#alerts`). Komponenty prezentacyjne (`AlertCard`, `GoalBar`, `SubathonCard`, `ChatMessageRow`, `CodeCard`, `PredictionOverlayCard`, `PollOverlayCard`, `LastEventCard`, `CustomWidgetCard`) są **współdzielone** przez overlay i podglądy w panelu (w tym **biblioteka widgetów** `/admin#widgets`) → podgląd = realny wygląd. Czat overlay renderuje **prawdziwe emotki + odznaki Twitcha**.
 
 ---
 
@@ -74,8 +79,10 @@ Jeden duży klient (`components/admin/AdminClient.tsx`) z nawigacją sekcji. Dan
 - **Twitch** — tmi.js (IRC), odpowiedzi przez OAuth bota.
 - **Kick** — odczyt przez publiczny **Pusher WebSocket**, odpowiedzi przez oficjalne API (OAuth 2.1 + PKCE, refresh rotowany).
 - **YouTube** — auto-wykrycie live (`liveBroadcasts.list mine=true`) → polling `liveChat/messages`.
-- Konfiguracja (komendy / timery / FAQ / powitania / nagrody) pobierana z portalu (`/api/bot/*`, cache ~2 min) — bez restartu przy zmianach z panelu.
-- Każda wiadomość: `markActivity` → komenda/`!sr`/FAQ → powitanie → GT (`/api/internal/chat-award`) → feed do overlaya czatu.
+- Konfiguracja (komendy / timery / FAQ / powitania / nagrody / **moderacja**) pobierana z portalu (`/api/bot/*`, cache ~2 min) — bez restartu przy zmianach z panelu.
+- Każda wiadomość: `markActivity` → **automod** (`moderation.ts` → delete/timeout/warn, pomija sub/VIP/mod) → komenda/`!sr`/FAQ → powitanie → GT (`/api/internal/chat-award`) → feed do overlaya czatu (+ emotki/odznaki) → `emojiCombo.ts` (detekcja kombosów).
+- **Auto-pin zakładów** (`betAnnounce.ts`): bot przypomina o otwartym zakładzie co 5 min na czacie (Twitch/Kick brak API pin → emulacja). Detektory automoda są **lustrem** `web/src/lib/moderation.ts`.
+- ⚠️ **Egzekucja moderacji wymaga, by konto bota było moderatorem** na danej platformie. Zmiany w bocie → **restart** (`npm start` / Docker).
 
 ---
 
