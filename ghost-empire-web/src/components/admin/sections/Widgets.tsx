@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { LayoutGrid, Copy, Check, ExternalLink, Plus, Trash2, Pencil, X, Loader2, Wand2 } from "lucide-react";
 import { SectionCard } from "../shared";
 import { CustomWidgetCard } from "@/components/CustomWidgetCard";
+import { EmojiPicker } from "@/components/EmojiPicker";
 import { WIDGET_FONTS } from "@/lib/widget-fonts";
 
 const POSITIONS: Array<[string, string]> = [
@@ -217,8 +218,14 @@ function CustomWidgetGenerator({
         <div className="space-y-2">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa (dla Ciebie)" maxLength={80}
             className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white outline-hidden focus:border-red-600" />
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="Tekst na ekranie — emoji ✅ 🎮 ⭐ Unicode ✅" maxLength={500}
-            className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white outline-hidden focus:border-red-600" />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] text-zinc-400">Tekst na ekranie (emoji / Unicode ✅)</span>
+              <EmojiPicker onPick={(e) => setText((t) => (t.length < 500 ? t + e : t))} />
+            </div>
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="np. 🎮 Teraz gram w… · @TwójNick · 🔴 LIVE" maxLength={500}
+              className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white outline-hidden focus:border-red-600" />
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <label className="text-[11px] text-zinc-400">Kolor akcentu
               <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-full h-8 mt-0.5 bg-black border border-zinc-800 cursor-pointer" />

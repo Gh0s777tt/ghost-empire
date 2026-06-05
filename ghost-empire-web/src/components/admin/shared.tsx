@@ -3,6 +3,7 @@
 // components can live in their own (lazily-loaded) modules and import them.
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { EmojiPicker } from "@/components/EmojiPicker";
 
 export function SectionCard({
   title, icon: Icon, children,
@@ -50,17 +51,21 @@ export function FieldInput({
 }
 
 export function FieldTextarea({
-  label, value, onChange,
+  label, value, onChange, emoji = false,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  emoji?: boolean;
 }) {
   return (
     <div>
-      <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-        {label}
-      </label>
+      <div className="flex items-center justify-between mb-1">
+        <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block">
+          {label}
+        </label>
+        {emoji && <EmojiPicker onPick={(e) => onChange(value + e)} />}
+      </div>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
