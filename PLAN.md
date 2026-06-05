@@ -35,10 +35,11 @@ Duży zrzut pomysłów od usera + moje propozycje. Pogrupowane wg autonomii; kol
 > - **Zostało (🔑 Ty / 🎨 kierunek / ⚠️ ryzyko bez builda):** Sentry (DSN + ryzyko build bez weryfikacji `next build`) · CSP nonces (osobna ostrożna sesja) · landing (Twój gust) · AI/`@bot`/`!imagine` (klucz) · OBS WS/Hue/Govee (creds) · social OAuth · i18n · wybór dostawcy donacji · E2E/Lighthouse · code-split AdminClient (nieweryfikowalne bez builda).
 >
 > ### ✅ STATUS (2026-06-05 cd., sesja „zrób wszystko co możesz sam" — od PR #173)
-> *(`next build` działa już lokalnie → weryfikuję zmiany build-affecting; code-split AdminClient wraca do gry.)*
+> *(`next build` działa już lokalnie → weryfikuję zmiany build-affecting. Uwaga: **code-split AdminClient był już zrobiony** — `next/dynamic` per sekcja w `AdminClient.tsx`; wcześniejsza notka „do zrobienia / nieweryfikowalne" była nieaktualna.)*
 > - ✦ **Prestiż (Phantom Ascension)** (#173) — po max levelu (100) dalsze XP daje gwiazdki prestiżu ✦ (co 50 000 XP ponad cap, **bez resetu** — pochodna lifetime XP), perk **+2% GT z czatu / gwiazdkę** (kumulowany z perkiem poziomu), ✦ na profilu (własnym/publicznym) i w rankingu. `User.prestige` + `prestigeFromXp`/`prestigeGtMultiplier` (+5 testów = 125). ✅ `tsc`/`next build`/testy.
 > - 🛒 **Perk lojalnościowy — zniżka w sklepie** (#174) — poziom + prestiż obniżają ceny (−0,15%/lvl + −1%/✦, do −30%); `discountedPrice` naliczany serwerowo (`shop/buy`), `ShopClient` woła tę samą czystą funkcję → spójność karta/modal/affordability. +4 testy = 129. ✅ `tsc`/`next build`/testy.
 > - ⚔️ **Mini-gra PvP `!duel`** (#175) — pojedynki na GT (`!duel`/`!accept`/`!decline`), uczciwy coinflip (crypto-RNG), pula minus 5% rake; atomowy transfer obu stawek w jednej transakcji (`lib/duels.ts`), model `Duel` (`db push`), portal `/api/bot/duel`, bot `gtDuel.ts` ×3 platformy, prune 30 dni. +6 testów = 135. ⚠️ **db push + restart bota.** ✅ web `tsc`/`next build`/testy, bot `tsc`.
+> - ⚔️ **Rekord pojedynków na profilu** (#176) — kafelek „Pojedynki" (W·L + winrate) z modelu `Duel`, pojawia się po pierwszej walce. Dopełnienie #175. ✅ `tsc`/`next build`/testy.
 
 **✅ Najpierw naprawione bugi prywatności (PR #115):** imię/nazwisko zamaskowane (`displayNick`) w rankingu/eventach/home/OG-image; mail (`@…dam`) wyrugowany z „Połączone konta" (`isPublicHandle` + źródło w `auth.ts`); audit log z czytelnymi etykietami (anulowanie predykcji **ma** być w audycie). *(Dane „at-rest" w bazie nietknięte — wszystkie ścieżki renderu maskują; opcjonalny scrub bazy do zrobienia na życzenie.)*
 

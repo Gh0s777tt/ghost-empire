@@ -18,7 +18,7 @@ export default async function ProfilePage() {
 
   const userId = session.user.id;
 
-  const [user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts] =
+  const [user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelWins, duelLosses] =
     await Promise.all([
       prisma.user.findUniqueOrThrow({
         where: { id: userId },
@@ -76,6 +76,15 @@ export default async function ProfilePage() {
         where: { userId },
         select: { provider: true, providerAccountId: true },
       }),
+      // PvP duel record (resolved duels this user took part in).
+      prisma.duel.count({ where: { status: "resolved", winnerId: userId } }),
+      prisma.duel.count({
+        where: {
+          status: "resolved",
+          winnerId: { not: userId },
+          OR: [{ challengerId: userId }, { opponentId: userId }],
+        },
+      }),
     ]);
 
   return (
@@ -117,6 +126,7 @@ export default async function ProfilePage() {
             createdAt: t.createdAt.toISOString(),
           }))}
           linkedAccounts={linkedAccounts}
+          duelStats={{ wins: duelWins, losses: duelLosses }}
         />
       </main>
     </div>
