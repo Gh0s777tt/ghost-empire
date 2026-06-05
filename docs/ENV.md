@@ -99,3 +99,21 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | **OBS WebSocket** | `/admin#integrations` → adres `ws://…` + hasło z OBS |
 | **Social Linki OAuth** (Instagram / TikTok / Facebook / X) | Aplikacja deweloperska u dostawcy → `*_CLIENT_ID` / `*_CLIENT_SECRET` + redirect URI (env) |
 | **Philips Hue / Govee** | Konto/most deweloperski + token API |
+
+---
+
+## 5. Rotacja sekretów (runbook)
+
+Gdy sekret wycieknie lub planowo go zmieniasz — kolejność i skutki:
+
+| Sekret | Jak zrotować | Skutek / co zrobić po |
+|---|---|---|
+| `BOT_SECRET` | Wygeneruj nowy (`openssl rand -hex 32`), ustaw **ten sam** w Vercel **oraz** w obu botach (`.env`), redeploy + restart botów | Do czasu zsynchronizowania `/api/internal/*` i `/api/bot/*` zwracają 401 — rób w jednym oknie czasowym |
+| `NEXTAUTH_SECRET` | Nowy (`openssl rand -base64 32`) w Vercel, redeploy | **Wylogowuje wszystkich** (sesje podpisane starym). ⚠️ Jeśli **nie** masz `ENCRYPTION_KEY`, to ten sekret szyfruje też sekrety at-rest → po zmianie **klucze API trzeba wkleić ponownie** w `/admin#integrations`, a tokeny OAuth/streamer **ponownie autoryzować**. Dlatego w prod ustaw osobny `ENCRYPTION_KEY`. |
+| `ENCRYPTION_KEY` | Nowy w Vercel, redeploy | Stare zaszyfrowane wartości stają się nieczytelne → wklej ponownie klucze API (`/admin#integrations`) i zrób re-auth streamera (Twitch/Kick/YouTube/Streamlabs). Logowanie userów **nietknięte**. |
+| Klucze OAuth logowania (Twitch/Kick/Discord/Google `*_CLIENT_SECRET`) | „New secret" w konsoli dostawcy → zaktualizuj w Vercel → **redeploy** | Stary sekret przestaje działać natychmiast → bez redeployu logowanie pada (`OAuthCallback`) |
+| `TWITCH_EVENTSUB_SECRET` | Nowy w Vercel → **odtwórz subskrypcje** w `/admin#twitch` (klik „Utwórz subskrypcje") | Webhooki podpisane starym sekretem będą odrzucane do odtworzenia subskrypcji |
+| Tokeny botów (Twitch/Kick/YouTube refresh) | Ponowna autoryzacja: `npm run auth:twitch` / `auth:kick` / `auth:youtube` w `ghost-empire-chat` | Kick rotuje refresh-token sam (plik `.kick-tokens.json`) |
+| Sekret webhooka wychodzącego (HMAC) | `/admin#webhooks` → edytuj webhook → wpisz nowy sekret | Zaktualizuj też weryfikację po stronie odbiorcy (Discord/n8n) |
+
+> Sekrety at-rest (klucze API, tokeny OAuth) są szyfrowane AES-256-GCM (`lib/crypto.ts`). Zmiana czystej-tekstowej wartości na zaszyfrowaną dzieje się przy następnym zapisie (prefiks `enc:v1:`).

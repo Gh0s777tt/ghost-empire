@@ -18,7 +18,7 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 - **Postać `@bot`** (osobowości + wybór modelu Grok/GPT/Gemini/DeepSeek/Anthropic/Bielik + limity) + **`!imagine`** (obrazy).
 - **AI-moderacja** (toksyczność przez API) jako rozszerzenie automoda.
 
-> **🆕 Świeżo dowiezione (2026-06-05, PR #146–#153):** 🎰 **Koło Fortuny** (moduł `/wheel` + overlay OBS + panel) · 🔐 **szyfrowanie sekretów at-rest** (klucze API #146, tokeny OAuth #147) + nagłówki overlay #148 · 💬 **prawdziwe odznaki Twitch + emotki 7TV/BTTV/FFZ** #149 · 🧹 cron czyszczący bazę #151 · 🎲 predictions auto-close + announce #152 · 🛡️ **eskalacja moderacji recydywistów + statystyki** #153.
+> **🆕 Świeżo dowiezione (2026-06-05, PR #146–#157):** 🎰 **Koło Fortuny** (moduł `/wheel` + overlay OBS + panel) · 🔐 **szyfrowanie sekretów at-rest** (klucze API #146, tokeny OAuth #147) + nagłówki overlay #148 · 💬 **prawdziwe odznaki Twitch + emotki 7TV/BTTV/FFZ** #149 · 🧹 cron czyszczący bazę #151 · 🎲 predictions auto-close + announce #152 · 🛡️ **eskalacja moderacji recydywistów + statystyki** #153 · 📊 **Vercel Analytics + Speed Insights** #155 · 🔎 `npm audit` w CI #156 · 🔗 **webhooki wychodzące** (Discord/n8n/custom) #157 · 📄 runbook rotacji sekretów.
 
 **Pozostałe duże kierunki:**
 - **F6 — security/backup** (zrobione: backup JSON, sanityzacja URL, ✅ **szyfrowanie sekretów at-rest AES-256-GCM**, ✅ **nagłówki overlay `noindex`/`no-store`**, ✅ **cron czyszczący bazę**). Zostaje: auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
@@ -54,7 +54,7 @@ Dziś diagnostyka = logi Vercela. Pod produkcję z realnym ruchem to za mało.
 | Propozycja | Pri | Notatki |
 |---|---|---|
 | **Sentry** (error tracking) | 🔥 | Client + server + edge; już mamy `error.digest` w boundary do korelacji |
-| **Vercel Analytics + Speed Insights** | 🟡 | Realne Core Web Vitals z produkcji, mały koszt integracji |
+| ~~**Vercel Analytics + Speed Insights**~~ ✅ | — | **Zrobione (#155)** — `@vercel/analytics` + `@vercel/speed-insights` w root layout (real-user Core Web Vitals, cookieless, no-op poza Vercel) |
 | **Structured logging** | 🟡 | ✅ `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty we wszystkie 3 webhooki (twitch-eventsub / kick-events / paymedia). Zostaje cron / award (ten sam wzorzec) |
 | **Uptime / health-check** | 🟡 | Endpoint `/api/health` + zewnętrzny monitor (cron-job.org / UptimeRobot) na live + bazę |
 | **Alerty na anomalie ekonomii** | 🧊 | Nietypowe skoki grantów/odbić → notyfikacja admina (anti-abuse) |
@@ -84,8 +84,8 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 |---|---|---|
 | **CSP nonces — usunięcie `unsafe-inline`/`unsafe-eval`** | 🔥 | Najważniejsze utwardzenie CSP. Wymaga nonce middleware Next.js + przepięcia inline styli/skryptów. Ryzyko regresji → osobna sesja z testami |
 | **2FA / step-up dla akcji admina** | 🟡 | Wrażliwe akcje (grant dużych kwot, merge, ban) za dodatkowym potwierdzeniem |
-| **Audyt zależności** | 🟡 | `npm audit` w CI + Dependabot (patrz §1) |
-| **Rotacja sekretów + skan** | 🟡 | ✅ skan: **GitGuardian** (zintegrowany, przechodzi na PR). Zostaje: udokumentowany proces rotacji `BOT_SECRET`/OAuth |
+| ~~**Audyt zależności**~~ ✅ | — | **Zrobione (#156)** — `npm audit --omit=dev --audit-level=high` w CI (nieblokujący) + Dependabot (patrz §1) |
+| ~~**Rotacja sekretów + skan**~~ ✅ | — | **Zrobione** — skan: **GitGuardian** (na PR) + **runbook rotacji** w [docs/ENV.md §5](docs/ENV.md) (`BOT_SECRET`/`NEXTAUTH_SECRET`/`ENCRYPTION_KEY`/OAuth/EventSub/tokeny botów/webhooki) |
 | **Rate-limit per-IP na publicznych stronach** | 🧊 | Dziś per-user na ekonomii; dorzucić warstwę edge/IP na publicznych GET-ach |
 
 ---

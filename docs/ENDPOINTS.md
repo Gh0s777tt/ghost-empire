@@ -78,6 +78,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/predictions` | perm:create_events | Tworzenie/rozliczanie predykcji (+ `toggle_announce`) |
 | `…/api/admin/wheel` | admin | Konfiguracja Koła Fortuny (koszt, segmenty) + statystyki |
 | `…/api/admin/mod-violations` | admin | Statystyki naruszeń moderacji + top recydywiści |
+| `…/api/admin/webhooks-out` | admin | Webhooki wychodzące — CRUD + test (POST JSON na zewnętrzne URL) |
 | `…/api/admin/donations` | admin | Donacje / dopasowania |
 | `…/api/admin/streamlabs` | admin | Stan połączenia Streamlabs |
 | `…/api/admin/subathon` | admin | Subathon (start/stop/±czas) |
