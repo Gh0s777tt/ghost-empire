@@ -6,11 +6,13 @@ import { useSession, signIn } from "next-auth/react";
 import { ShoppingBag, Flame, Lock, Check, X, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { fmt, cn } from "@/lib/utils";
+import { shopDiscountFraction, discountedPrice } from "@/lib/economy";
 import type { ShopItem } from "@prisma/client";
 
 type UserContext = {
   tokens: number;
   level: number;
+  prestige: number;
   subTiers: string[];
   maxSubMonths: number;
   achievements: string[]; // earned achievement codes
@@ -56,6 +58,14 @@ export function ShopClient({
   );
 
   const balance = userContext?.tokens ?? 0;
+
+  // Loyalty perk: account level + prestige discount shop prices. The server (shop/buy)
+  // charges discountedPrice — we mirror it here so displayed prices match what's charged.
+  const discountPct = userContext
+    ? Math.round(shopDiscountFraction(userContext.level, userContext.prestige) * 100)
+    : 0;
+  const priceFor = (item: ShopItem) =>
+    userContext ? discountedPrice(item.price, userContext.level, userContext.prestige) : item.price;
 
   function meetsRequirements(item: ShopItem): { ok: boolean; reason?: string } {
     if (!userContext) return { ok: true };
@@ -130,14 +140,29 @@ export function ShopClient({
         </div>
 
         {isAuthenticated && userContext && (
-          <div className="flex items-center gap-3 border border-zinc-800 bg-zinc-950/80 px-4 py-2.5">
-            <span className="text-xl">👻</span>
-            <div className="leading-tight">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                Twój balans
+          <div className="flex items-center gap-3">
+            {discountPct > 0 && (
+              <div
+                className="border border-emerald-800/60 bg-emerald-950/30 px-3 py-2.5 leading-tight"
+                title={`Perk lojalnościowy z poziomu konta${userContext.prestige > 0 ? " i prestiżu ✦" : ""} — niższe ceny w sklepie`}
+              >
+                <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-500/80">
+                  Perk sklepu
+                </div>
+                <div className="font-mono text-xl font-bold text-emerald-300 tabular-nums">
+                  −{discountPct}%
+                </div>
               </div>
-              <div className="font-mono text-xl font-bold text-white tabular-nums">
-                {fmt(balance)} <span className="text-zinc-500 text-xs">GT</span>
+            )}
+            <div className="flex items-center gap-3 border border-zinc-800 bg-zinc-950/80 px-4 py-2.5">
+              <span className="text-xl">👻</span>
+              <div className="leading-tight">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                  Twój balans
+                </div>
+                <div className="font-mono text-xl font-bold text-white tabular-nums">
+                  {fmt(balance)} <span className="text-zinc-500 text-xs">GT</span>
+                </div>
               </div>
             </div>
           </div>
@@ -179,7 +204,9 @@ export function ShopClient({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {visible.map((item) => {
             const req = meetsRequirements(item);
-            const affordable = balance >= item.price;
+            const price = priceFor(item);
+            const discounted = price < item.price;
+            const affordable = balance >= price;
             const inStock = item.stock !== 0;
             const canBuy = isAuthenticated && req.ok && affordable && inStock;
             const isBusy = busyItem === item.id || pending;
@@ -273,8 +300,13 @@ export function ShopClient({
                     <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">
                       Cena
                     </div>
-                    <div className="font-mono text-xl font-bold text-white tabular-nums">
-                      {fmt(item.price)} <span className="text-zinc-500 text-xs">GT</span>
+                    <div className="font-mono text-xl font-bold text-white tabular-nums flex items-baseline gap-2">
+                      {discounted && (
+                        <span className="text-zinc-600 text-xs line-through font-normal">{fmt(item.price)}</span>
+                      )}
+                      <span className={discounted ? "text-emerald-300" : undefined}>
+                        {fmt(price)} <span className="text-zinc-500 text-xs">GT</span>
+                      </span>
                     </div>
                   </div>
 
@@ -352,8 +384,21 @@ export function ShopClient({
             <div className="border border-zinc-800 bg-black/40 p-3 mb-5 space-y-2 text-xs font-mono">
               <div className="flex justify-between">
                 <span className="text-zinc-500">CENA</span>
-                <span className="text-white">{fmt(confirmItem.price)} GT</span>
+                <span className="text-white">
+                  {priceFor(confirmItem) < confirmItem.price && (
+                    <span className="text-zinc-600 line-through mr-2">{fmt(confirmItem.price)}</span>
+                  )}
+                  <span className={priceFor(confirmItem) < confirmItem.price ? "text-emerald-300" : undefined}>
+                    {fmt(priceFor(confirmItem))} GT
+                  </span>
+                </span>
               </div>
+              {discountPct > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">PERK LOJALNOŚCIOWY</span>
+                  <span className="text-emerald-300">−{discountPct}%</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-zinc-500">TWÓJ BALANS</span>
                 <span className="text-white">{fmt(balance)} GT</span>
@@ -361,7 +406,7 @@ export function ShopClient({
               <div className="flex justify-between pt-2 border-t border-zinc-800">
                 <span className="text-zinc-500">PO ZAKUPIE</span>
                 <span className="text-red-400 font-bold">
-                  {fmt(Math.max(0, balance - confirmItem.price))} GT
+                  {fmt(Math.max(0, balance - priceFor(confirmItem)))} GT
                 </span>
               </div>
             </div>

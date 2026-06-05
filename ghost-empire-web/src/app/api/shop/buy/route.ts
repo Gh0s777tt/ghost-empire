@@ -7,6 +7,7 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
+import { discountedPrice } from "@/lib/economy";
 
 const TIER_RANK: Record<string, number> = { T1: 1, T2: 2, T3: 3, Prime: 1 };
 
@@ -98,11 +99,14 @@ export async function POST(req: Request) {
         }
       }
 
+      // Loyalty perk: account level + prestige shave a little off the price.
+      const price = discountedPrice(item.price, user.level, user.prestige);
+
       const userUpdate = await tx.user.updateMany({
-        where: { id: userId, tokens: { gte: item.price } },
+        where: { id: userId, tokens: { gte: price } },
         data: {
-          tokens: { decrement: item.price },
-          totalSpent: { increment: item.price },
+          tokens: { decrement: price },
+          totalSpent: { increment: price },
         },
       });
       if (userUpdate.count === 0) {
@@ -126,7 +130,7 @@ export async function POST(req: Request) {
           userId,
           shopItemId: item.id,
           type: "spend",
-          amount: -item.price,
+          amount: -price,
           reason: `shop:${item.name}`,
           status: isDigital ? "completed" : "pending",
         },
@@ -153,7 +157,7 @@ export async function POST(req: Request) {
       return {
         ok: true,
         itemName: item.name,
-        spent: item.price,
+        spent: price,
         newBalance: fresh?.tokens ?? 0,
         deliveryPending: !isDigital,
         // Internal-only fields used after the transaction for alert dispatch
@@ -164,7 +168,7 @@ export async function POST(req: Request) {
         _item: {
           name: item.name,
           emoji: item.imageEmoji,
-          price: item.price,
+          price,
         },
       };
     });

@@ -27,6 +27,7 @@ export default async function ShopPage() {
           select: {
             tokens: true,
             level: true,
+            prestige: true,
             connections: {
               where: { isSubscriber: true },
               select: { subTier: true, subMonths: true },
@@ -39,12 +40,13 @@ export default async function ShopPage() {
   ]);
 
   let userContext:
-    | { tokens: number; level: number; subTiers: string[]; maxSubMonths: number; achievements: string[] }
+    | { tokens: number; level: number; prestige: number; subTiers: string[]; maxSubMonths: number; achievements: string[] }
     | null = null;
   if (user) {
     userContext = {
       tokens: user.tokens,
       level: user.level,
+      prestige: user.prestige,
       subTiers: user.connections.map((c) => c.subTier ?? "").filter(Boolean),
       maxSubMonths: user.connections.reduce((m, c) => Math.max(m, c.subMonths), 0),
       achievements: user.userAchievements.map((ua) => ua.achievement.code),

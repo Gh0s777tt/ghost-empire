@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
-import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier } from "@/lib/economy";
+import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscountFraction } from "@/lib/economy";
 
 type Achievement = {
   id: string;
@@ -284,6 +284,8 @@ export function ProfileClient({
                   Perk: +{Math.round(Math.min(50, (user.level - 1) * 0.5))}% GT z czatu
                   {user.prestige > 0 &&
                     ` · ✦${user.prestige}: +${Math.round((prestigeGtMultiplier(user.prestige) - 1) * 100)}% GT`}
+                  {shopDiscountFraction(user.level, user.prestige) > 0 &&
+                    ` · −${Math.round(shopDiscountFraction(user.level, user.prestige) * 100)}% w sklepie`}
                 </p>
               )}
             </div>

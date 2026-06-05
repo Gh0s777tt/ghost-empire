@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-05",
+    title: "Perk lojalnościowy — taniej w sklepie 🛒",
+    items: [
+      "Im wyższy poziom konta i prestiż, tym niższe ceny w sklepie: −0,15% za poziom i −1% za każdą gwiazdkę ✦, łącznie do −30%.",
+      "Zniżkę widać od razu na karcie przedmiotu (przekreślona cena pełna + zniżkowa) i w okienku potwierdzenia zakupu.",
+    ],
+  },
+  {
+    date: "2026-06-05",
     title: "Prestiż ✦ — wniebowstąpienie po max levelu",
     items: [
       "Po dobiciu do maksymalnego poziomu (100) konta dalej zdobywasz prestiż: każde kolejne 50 000 XP to nowa gwiazdka ✦ — Twój poziom i XP nigdy się nie resetują.",
