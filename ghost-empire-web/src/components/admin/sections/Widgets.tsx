@@ -5,7 +5,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { LayoutGrid, Copy, Check, ExternalLink, Plus, Trash2, Pencil, X, Loader2, Wand2 } from "lucide-react";
 import { SectionCard } from "../shared";
-import { CustomWidgetCard, WIDGET_FONTS } from "@/components/CustomWidgetCard";
+import { CustomWidgetCard } from "@/components/CustomWidgetCard";
+import { WIDGET_FONTS } from "@/lib/widget-fonts";
 
 const POSITIONS: Array<[string, string]> = [
   ["top-left", "Góra-lewo"], ["top-center", "Góra-środek"], ["top-right", "Góra-prawo"],
@@ -232,7 +233,7 @@ function CustomWidgetGenerator({
             </label>
             <label className="text-[11px] text-zinc-400">Czcionka
               <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600">
-                {WIDGET_FONTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                {WIDGET_FONTS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
               </select>
             </label>
           </div>
