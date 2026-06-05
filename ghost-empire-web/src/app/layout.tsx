@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
+import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
 
 // Self-host fonts via next/font (eliminates the previous duplicate <link rel="stylesheet">
 // to Google Fonts in <head> — fewer round-trips, no CLS, automatic preload).
@@ -70,14 +71,12 @@ export default function RootLayout({
   return (
     <html lang="pl" className="dark">
       <head>
-        {/* Anton — display font, not in next/font's bundled Google Fonts set so stays as <link>.
-            Preconnect first so the font request can fire in parallel with HTML. */}
+        {/* Display fonts for widgets / overlays / chat (Anton, Bebas Neue, Oswald, …) —
+            not in next/font's bundled set, so loaded by literal name via one <link>.
+            Files only download when a page renders glyphs in that family. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Anton&display=swap"
-          rel="stylesheet"
-        />
+        <link href={GOOGLE_FONTS_HREF} rel="stylesheet" />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
         <a

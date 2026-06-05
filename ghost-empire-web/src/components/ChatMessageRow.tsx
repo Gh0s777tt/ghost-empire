@@ -1,6 +1,7 @@
 // src/components/ChatMessageRow.tsx
 // Shared presentational chat row for the chat overlay — used by the OBS overlay
 // (/overlay/chat) and the live preview in /admin#chat. Styled by ChatOverlayConfig.
+import { WIDGET_FONTS, fontStack } from "@/lib/widget-fonts";
 
 export type ChatMsg = {
   id: string;
@@ -26,12 +27,8 @@ export const DEFAULT_CHAT_CFG: ChatOverlayCfg = {
   showPlatformIcon: true,
 };
 
-export const CHAT_FONTS: Record<string, string> = {
-  Inter: "'Inter', system-ui, sans-serif",
-  "JetBrains Mono": "'JetBrains Mono', ui-monospace, monospace",
-  Anton: "'Anton', system-ui, sans-serif",
-  system: "system-ui, sans-serif",
-};
+// Same font set as the widget generator (single source of truth in lib/widget-fonts).
+export const CHAT_FONTS: Record<string, string> = Object.fromEntries(WIDGET_FONTS.map((f) => [f.value, f.stack]));
 
 export const PLATFORM_COLOR: Record<string, string> = {
   twitch: "#9146FF",
@@ -47,7 +44,7 @@ export const PLATFORM_ICON: Record<string, string> = {
 
 export function ChatMessageRow({ msg, cfg = DEFAULT_CHAT_CFG }: { msg: ChatMsg; cfg?: ChatOverlayCfg }) {
   const color = PLATFORM_COLOR[msg.platform] ?? "#888888";
-  const font = CHAT_FONTS[cfg.fontFamily] ?? CHAT_FONTS.Inter;
+  const font = fontStack(cfg.fontFamily);
   return (
     <div
       style={{

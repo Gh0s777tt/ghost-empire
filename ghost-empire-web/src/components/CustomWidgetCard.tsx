@@ -1,20 +1,7 @@
 // src/components/CustomWidgetCard.tsx
 // Shared render for a user-built text widget — used by the overlay (/overlay/widget)
 // and the live preview in the admin generator. Inline styles only (OBS).
-
-export const WIDGET_FONTS: Array<[string, string]> = [
-  ["Inter", "Inter (domyślna)"],
-  ["JetBrains Mono", "JetBrains Mono"],
-  ["Anton", "Anton (gruba)"],
-  ["system", "Systemowa"],
-];
-
-const FONT_STACK: Record<string, string> = {
-  "Inter": "'Inter', system-ui, sans-serif",
-  "JetBrains Mono": "'JetBrains Mono', ui-monospace, monospace",
-  "Anton": "'Anton', system-ui, sans-serif",
-  "system": "system-ui, sans-serif",
-};
+import { fontStack } from "@/lib/widget-fonts";
 
 export function CustomWidgetCard({
   text,
@@ -31,7 +18,7 @@ export function CustomWidgetCard({
   fontFamily?: string;
   showCard?: boolean;
 }) {
-  const stack = FONT_STACK[fontFamily] ?? FONT_STACK.Inter;
+  const stack = fontStack(fontFamily);
 
   if (!showCard) {
     return (
