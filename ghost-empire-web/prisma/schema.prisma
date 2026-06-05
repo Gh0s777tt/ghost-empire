@@ -698,6 +698,25 @@ model ModViolationLog {
   @@map("mod_violation_logs")
 }
 
+// Outgoing webhooks — POST a JSON payload to an external URL (Discord, n8n, Zapier,
+// custom) whenever a subscribed stream event fires. Optional HMAC secret signs the
+// body (encrypted at rest). failCount auto-disables a dead endpoint.
+model OutgoingWebhook {
+  id          String    @id @default(cuid())
+  label       String
+  url         String    @db.Text
+  events      String[]  @default([])    // AlertType values, or ["*"] for every event
+  secret      String?                   // optional HMAC signing secret (encrypted at rest)
+  enabled     Boolean   @default(true)
+  failCount   Int       @default(0)     // consecutive failures; auto-disables at threshold
+  lastStatus  Int?                       // last HTTP status (0 = network error)
+  lastFiredAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("outgoing_webhooks")
+}
+
 // =====================================================
 // CHAT ACTIVITY HEATMAP — 7×24 buckets (day-of-week × hour, Europe/Warsaw),
 // incremented by /api/internal/chat-award. Powers /admin#analytics.

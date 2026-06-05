@@ -3,6 +3,7 @@
 // Storage is a DB queue; the overlay polls /api/alerts/queue.
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
 import type { AlertAnimation, AlertPosition, AlertTypeCfg } from "@/lib/alert-types";
 
 export type AlertType =
@@ -57,6 +58,16 @@ export async function dispatchAlert(input: AlertInput): Promise<{ id: string } |
     },
     select: { id: true },
   });
+
+  // Fan out to any external webhooks subscribed to this event (best-effort).
+  fireOutgoingWebhooks(input.type, {
+    title: input.title,
+    message: input.message,
+    actorName: input.actorName ?? null,
+    amount: input.amount ?? null,
+    amountLabel: input.amountLabel ?? null,
+  });
+
   return created;
 }
 

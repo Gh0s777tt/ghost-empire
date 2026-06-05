@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook,
 } from "lucide-react";
 import { ErrorState } from "@/components/EmptyState";
 import { fmt, formatDate, cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ const ModerationManager = dynamic(() => import("./sections/Moderation").then((m)
 const WidgetsLibrary = dynamic(() => import("./sections/Widgets").then((m) => m.WidgetsLibrary), { ssr: false, loading: SectionLoading });
 const IntegrationsManager = dynamic(() => import("./sections/Integrations").then((m) => m.IntegrationsManager), { ssr: false, loading: SectionLoading });
 const WheelManager = dynamic(() => import("./sections/Wheel").then((m) => m.WheelManager), { ssr: false, loading: SectionLoading });
+const WebhooksOutManager = dynamic(() => import("./sections/WebhooksOut").then((m) => m.WebhooksOutManager), { ssr: false, loading: SectionLoading });
 const AchievementsManager = dynamic(() => import("./sections/Achievements").then((m) => m.AchievementsManager), { ssr: false, loading: SectionLoading });
 const PredictionsManager = dynamic(() => import("./sections/Predictions").then((m) => m.PredictionsManager), { ssr: false, loading: SectionLoading });
 const WelcomeManager = dynamic(() => import("./sections/Welcome").then((m) => m.WelcomeManager), { ssr: false, loading: SectionLoading });
@@ -106,7 +107,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit" | "integrations" | "wheel";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit" | "integrations" | "wheel" | "webhooks";
 
   const SECTIONS: Array<{
     id: SectionId;
@@ -118,6 +119,7 @@ export function AdminClient({
     { id: "dashboard", label: "Dashboard",   icon: LayoutDashboard, group: "main",       permission: () => true },
     { id: "analytics", label: "Analityka",    icon: TrendingUp,     group: "main",       permission: () => isAdmin },
     { id: "integrations", label: "Integracje", icon: Plug,          group: "main",       permission: () => isAdmin },
+    { id: "webhooks",  label: "Webhooki",     icon: Webhook,         group: "main",       permission: () => isAdmin },
 
     { id: "users",     label: "Użytkownicy", icon: UserCog,         group: "moderation", permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
     { id: "merge",     label: "Merge duplikatów", icon: GitMerge,   group: "moderation", permission: () => isAdmin },
@@ -308,6 +310,10 @@ export function AdminClient({
 
           {activeSection === "wheel" && isAdmin && (
             <WheelManager {...sharedProps} />
+          )}
+
+          {activeSection === "webhooks" && isAdmin && (
+            <WebhooksOutManager {...sharedProps} />
           )}
 
           {activeSection === "events" && (
