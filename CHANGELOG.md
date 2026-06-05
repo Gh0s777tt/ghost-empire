@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **Dożywotni poziom konta (Account Level) — ożywiony** **(#169)** — pola `User.level`/`xp` były dotąd atrapą (nic ich nie naliczało). Teraz **XP narasta z całej aktywności** (czat / oglądanie / suby / donejty / eventy — wpięte w jeden chokepoint `awardSeasonXp`) i **nigdy się nie resetuje** (osobno od miesięcznego Battle Passa). Na awansie: alert `level_up` (w końcu odpala), powiadomienie i **bonus GT** (50×poziom, sumowany przy przeskoku kilku poziomów). **Perk poziomu:** mnożnik zarobku GT z czatu **+0,5%/poziom (limit +50%)** — pokazywany na profilu. Pasek XP + ranga (`rankForLevel`) na profilu wreszcie żyją. `lib/leveling.ts` + `levelGtMultiplier` (economy.ts, +test). Zielone: `tsc` / `eslint` / 112 testów.
+
 - **Biblioteka gier — PlayStation (PSN)** **(#168)** — `/games` agreguje teraz też **tytuły z PSN** (obok Steam): `lib/psn.ts` przez `psn-api` (npsso → token → trophy titles) + `syncPsnLibrary()` w `lib/games.ts`, przycisk **„Synchronizuj PSN"** w `/admin#games`. Tytuły z nazwą, ikoną i datą ostatniej gry (źródło „PlayStation"). Klucz w `PSN_NPSSO` (Vercel env). **⚠️ npsso wygasa ~60 dni** — odśwież z `ca.account.sony.com/api/v1/ssocookie`, gdy sync zacznie padać. *(GOG/Ubisoft = nadal do zrobienia.)*
 
 - **Rumble — status na żywo (overlay)** **(#167)** — overlay OBS `/overlay/rumble` pokazuje **🔴 LIVE + liczbę widzów** gdy streamujesz na Rumble, albo liczbę **obserwujących/subów** gdy offline. `lib/rumble.ts` (cache 20s) czyta oficjalne Rumble Livestream API z `RUMBLE_API_URL` (Vercel env), token-gated feed `/api/alerts/rumble`. Dodany do biblioteki widgetów (`/admin#widgets`) razem z brakującym tam **Kołem Fortuny**.

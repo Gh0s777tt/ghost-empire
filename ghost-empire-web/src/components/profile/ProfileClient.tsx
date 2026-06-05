@@ -249,6 +249,11 @@ export function ProfileClient({
               <p className="text-[10px] text-zinc-600 font-mono">
                 Łącznie {fmt(user.xp)} XP · do max LVL 100 brakuje {fmt(Math.max(0, xpForLevel(100) - user.xp))} XP
               </p>
+              {user.level > 1 && (
+                <p className="text-[10px] font-mono text-emerald-400/90">
+                  Perk poziomu: +{Math.round(Math.min(50, (user.level - 1) * 0.5))}% GT z czatu
+                </p>
+              )}
             </div>
           </div>
         </div>

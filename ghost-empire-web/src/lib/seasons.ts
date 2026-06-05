@@ -121,6 +121,10 @@ export async function awardSeasonXp(userId: string, source: SeasonXpSource, mult
         data: { tier: newTier },
       });
     }
+
+    // Lifetime account level rides on the same activity (never resets). Best-effort.
+    const { awardAccountXp } = await import("@/lib/leveling");
+    await awardAccountXp(userId, amount);
   } catch (e) {
     console.error("[seasons] awardSeasonXp failed:", source, e);
   }
