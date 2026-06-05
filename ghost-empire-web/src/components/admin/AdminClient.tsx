@@ -108,36 +108,43 @@ export function AdminClient({
     id: SectionId;
     label: string;
     icon: typeof Users;
+    group: string;
     permission: () => boolean;
   }> = [
-    { id: "dashboard", label: "Dashboard",   icon: LayoutDashboard, permission: () => true },
-    { id: "users",     label: "Użytkownicy", icon: UserCog,         permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
-    { id: "merge",     label: "Merge duplikatów", icon: GitMerge,   permission: () => isAdmin },
-    { id: "events",    label: "Eventy",      icon: Calendar,        permission: () => can("create_events") || can("edit_events") || can("draw_events") },
-    { id: "shop",      label: "Sklep",       icon: ShoppingBag,     permission: () => can("manage_shop") || can("deliver_orders") },
-    { id: "drops",     label: "Drops",       icon: Gift,            permission: () => can("create_drops") },
-    { id: "schedule",  label: "Harmonogram", icon: CalendarDays,    permission: () => can("manage_shop") },
-    { id: "bot",       label: "Bot Discord", icon: Bot,             permission: () => can("manage_shop") },
-    { id: "donations", label: "Donacje",     icon: Heart,           permission: () => isAdmin },
-    { id: "twitch",    label: "Twitch",      icon: Tv,              permission: () => isAdmin },
-    { id: "kick",      label: "Kick",        icon: Radio,           permission: () => isAdmin },
-    { id: "youtube",   label: "YouTube",     icon: MonitorPlay,     permission: () => isAdmin },
-    { id: "chat",      label: "Komendy czatu", icon: MessageSquare, permission: () => isAdmin },
-    { id: "moderation", label: "Moderacja",    icon: ShieldCheck,   permission: () => isAdmin },
-    { id: "timers",    label: "Timery",        icon: Clock,         permission: () => isAdmin },
-    { id: "faq",       label: "FAQ / auto",    icon: HelpCircle,    permission: () => isAdmin },
-    { id: "welcome",   label: "Powitania",     icon: UserPlus,      permission: () => isAdmin },
-    { id: "songs",     label: "Song requests", icon: Music,         permission: () => isAdmin },
-    { id: "widgets",   label: "Widgety (OBS)", icon: LayoutGrid,    permission: () => isAdmin },
-    { id: "alerts",    label: "Stream Alerts", icon: Bell,          permission: () => isAdmin },
-    { id: "goals",     label: "Stream Goals", icon: Target,         permission: () => isAdmin },
-    { id: "subathon",  label: "Subathon",      icon: Hourglass,     permission: () => isAdmin },
-    { id: "predictions", label: "Predictions", icon: Dice5,         permission: () => can("create_events") },
-    { id: "seasons",   label: "Battle Pass", icon: Ticket,          permission: () => isAdmin },
-    { id: "achievements", label: "Osiągnięcia", icon: Award,        permission: () => isAdmin },
-    { id: "polls",     label: "Ankiety",     icon: BarChart3,       permission: () => isAdmin },
-    { id: "analytics", label: "Analityka",    icon: TrendingUp,     permission: () => isAdmin },
-    { id: "audit",     label: "Audit log",   icon: History,         permission: () => can("view_audit") },
+    { id: "dashboard", label: "Dashboard",   icon: LayoutDashboard, group: "main",       permission: () => true },
+    { id: "analytics", label: "Analityka",    icon: TrendingUp,     group: "main",       permission: () => isAdmin },
+
+    { id: "users",     label: "Użytkownicy", icon: UserCog,         group: "moderation", permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
+    { id: "merge",     label: "Merge duplikatów", icon: GitMerge,   group: "moderation", permission: () => isAdmin },
+    { id: "moderation", label: "Moderacja",    icon: ShieldCheck,   group: "moderation", permission: () => isAdmin },
+    { id: "audit",     label: "Audit log",   icon: History,         group: "moderation", permission: () => can("view_audit") },
+
+    { id: "twitch",    label: "Twitch",      icon: Tv,              group: "platforms",  permission: () => isAdmin },
+    { id: "kick",      label: "Kick",        icon: Radio,           group: "platforms",  permission: () => isAdmin },
+    { id: "youtube",   label: "YouTube",     icon: MonitorPlay,     group: "platforms",  permission: () => isAdmin },
+
+    { id: "bot",       label: "Bot Discord", icon: Bot,             group: "bot",        permission: () => can("manage_shop") },
+    { id: "chat",      label: "Komendy czatu", icon: MessageSquare, group: "bot",        permission: () => isAdmin },
+    { id: "timers",    label: "Timery",        icon: Clock,         group: "bot",        permission: () => isAdmin },
+    { id: "faq",       label: "FAQ / auto",    icon: HelpCircle,    group: "bot",        permission: () => isAdmin },
+    { id: "welcome",   label: "Powitania",     icon: UserPlus,      group: "bot",        permission: () => isAdmin },
+    { id: "songs",     label: "Song requests", icon: Music,         group: "bot",        permission: () => isAdmin },
+
+    { id: "widgets",   label: "Widgety (OBS)", icon: LayoutGrid,    group: "overlays",   permission: () => isAdmin },
+    { id: "alerts",    label: "Stream Alerts", icon: Bell,          group: "overlays",   permission: () => isAdmin },
+    { id: "goals",     label: "Stream Goals", icon: Target,         group: "overlays",   permission: () => isAdmin },
+    { id: "subathon",  label: "Subathon",      icon: Hourglass,     group: "overlays",   permission: () => isAdmin },
+
+    { id: "shop",      label: "Sklep",       icon: ShoppingBag,     group: "economy",    permission: () => can("manage_shop") || can("deliver_orders") },
+    { id: "drops",     label: "Drops",       icon: Gift,            group: "economy",    permission: () => can("create_drops") },
+    { id: "seasons",   label: "Battle Pass", icon: Ticket,          group: "economy",    permission: () => isAdmin },
+    { id: "donations", label: "Donacje",     icon: Heart,           group: "economy",    permission: () => isAdmin },
+
+    { id: "events",    label: "Eventy",      icon: Calendar,        group: "community",  permission: () => can("create_events") || can("edit_events") || can("draw_events") },
+    { id: "predictions", label: "Predictions", icon: Dice5,         group: "community",  permission: () => can("create_events") },
+    { id: "polls",     label: "Ankiety",     icon: BarChart3,       group: "community",  permission: () => isAdmin },
+    { id: "achievements", label: "Osiągnięcia", icon: Award,        group: "community",  permission: () => isAdmin },
+    { id: "schedule",  label: "Harmonogram", icon: CalendarDays,    group: "community",  permission: () => can("manage_shop") },
   ];
 
   const visibleSections = SECTIONS.filter((s) => s.permission());
@@ -487,20 +494,37 @@ function LazySection<T>({ s, children }: { s: string; children: (data: T) => Rea
 
 // ============== ADMIN NAV ==============
 
+// Sidebar groups (order + labels). Sections carry a `group` key matching these.
+const NAV_GROUPS: Array<{ key: string; label: string }> = [
+  { key: "main",       label: "Pulpit" },
+  { key: "moderation", label: "Moderacja" },
+  { key: "platforms",  label: "Platformy" },
+  { key: "bot",        label: "Bot & czat" },
+  { key: "overlays",   label: "Overlaye OBS" },
+  { key: "economy",    label: "Ekonomia" },
+  { key: "community",  label: "Eventy & społeczność" },
+];
+
 function AdminNav<T extends string>({
   sections, active, onSelect,
 }: {
-  sections: Array<{ id: T; label: string; icon: typeof Users }>;
+  sections: Array<{ id: T; label: string; icon: typeof Users; group: string }>;
   active: T;
   onSelect: (id: T) => void;
 }) {
+  const activeGroup = sections.find((s) => s.id === active)?.group ?? "main";
+  // Collapsed by default except the group holding the active section → no endless scroll.
+  const [open, setOpen] = useState<Record<string, boolean>>({ [activeGroup]: true });
+
+  useEffect(() => {
+    setOpen((prev) => (prev[activeGroup] ? prev : { ...prev, [activeGroup]: true }));
+  }, [activeGroup]);
+
   return (
     <aside className="lg:w-56 lg:shrink-0">
-      {/* Mobile: horizontal scroll. Desktop: vertical sticky sidebar */}
       <nav
         className={cn(
-          "flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible",
-          "lg:sticky lg:top-4",
+          "flex flex-col gap-0.5 lg:sticky lg:top-4 max-h-[80vh] overflow-y-auto",
           "border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-2",
         )}
         style={{
@@ -508,24 +532,55 @@ function AdminNav<T extends string>({
             "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
         }}
       >
-        {sections.map((s) => {
-          const Icon = s.icon;
-          const isActive = s.id === active;
+        {NAV_GROUPS.map((g) => {
+          const items = sections.filter((s) => s.group === g.key);
+          if (items.length === 0) return null;
+          const isOpen = open[g.key] ?? false;
+          const hasActive = items.some((s) => s.id === active);
           return (
-            <button
-              key={s.id}
-              onClick={() => onSelect(s.id)}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 text-[11px] font-mono uppercase tracking-widest transition-all shrink-0 lg:shrink",
-                "border-l-2 lg:border-l-2",
-                isActive
-                  ? "border-red-600 bg-red-950/40 text-white"
-                  : "border-transparent text-zinc-400 hover:text-white hover:bg-zinc-900/60",
+            <div key={g.key}>
+              <button
+                type="button"
+                onClick={() => setOpen((prev) => ({ ...prev, [g.key]: !prev[g.key] }))}
+                className={cn(
+                  "w-full flex items-center justify-between gap-2 px-2 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-colors",
+                  hasActive ? "text-red-300" : "text-zinc-500 hover:text-zinc-300",
+                )}
+                aria-expanded={isOpen}
+              >
+                <span className="flex items-center gap-1.5">
+                  {g.label}
+                  {!isOpen && hasActive && <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />}
+                </span>
+                <span className="flex items-center gap-1.5 text-zinc-600">
+                  <span>{items.length}</span>
+                  <span>{isOpen ? "▾" : "▸"}</span>
+                </span>
+              </button>
+              {isOpen && (
+                <div className="flex flex-col gap-0.5 mb-1">
+                  {items.map((s) => {
+                    const Icon = s.icon;
+                    const isActive = s.id === active;
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => onSelect(s.id)}
+                        className={cn(
+                          "flex items-center gap-2 pl-3.5 pr-3 py-1.5 text-[11px] font-mono uppercase tracking-widest transition-all border-l-2",
+                          isActive
+                            ? "border-red-600 bg-red-950/40 text-white"
+                            : "border-transparent text-zinc-400 hover:text-white hover:bg-zinc-900/60",
+                        )}
+                      >
+                        <Icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-red-400" : "")} />
+                        <span className="whitespace-nowrap">{s.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-            >
-              <Icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-red-400" : "")} />
-              <span className="whitespace-nowrap">{s.label}</span>
-            </button>
+            </div>
           );
         })}
       </nav>
