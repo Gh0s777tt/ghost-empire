@@ -37,6 +37,7 @@ Duży zrzut pomysłów od usera + moje propozycje. Pogrupowane wg autonomii; kol
 > ### ✅ STATUS (2026-06-05 cd., sesja „zrób wszystko co możesz sam" — od PR #173)
 > *(`next build` działa już lokalnie → weryfikuję zmiany build-affecting; code-split AdminClient wraca do gry.)*
 > - ✦ **Prestiż (Phantom Ascension)** (#173) — po max levelu (100) dalsze XP daje gwiazdki prestiżu ✦ (co 50 000 XP ponad cap, **bez resetu** — pochodna lifetime XP), perk **+2% GT z czatu / gwiazdkę** (kumulowany z perkiem poziomu), ✦ na profilu (własnym/publicznym) i w rankingu. `User.prestige` + `prestigeFromXp`/`prestigeGtMultiplier` (+5 testów = 125). ✅ `tsc`/`next build`/testy.
+> - 🛒 **Perk lojalnościowy — zniżka w sklepie** (#174) — poziom + prestiż obniżają ceny (−0,15%/lvl + −1%/✦, do −30%); `discountedPrice` naliczany serwerowo (`shop/buy`), `ShopClient` woła tę samą czystą funkcję → spójność karta/modal/affordability. +4 testy = 129. ✅ `tsc`/`next build`/testy.
 
 **✅ Najpierw naprawione bugi prywatności (PR #115):** imię/nazwisko zamaskowane (`displayNick`) w rankingu/eventach/home/OG-image; mail (`@…dam`) wyrugowany z „Połączone konta" (`isPublicHandle` + źródło w `auth.ts`); audit log z czytelnymi etykietami (anulowanie predykcji **ma** być w audycie). *(Dane „at-rest" w bazie nietknięte — wszystkie ścieżki renderu maskują; opcjonalny scrub bazy do zrobienia na życzenie.)*
 

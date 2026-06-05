@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computePayouts, tierFromXp, plnFromCurrency, pickWeightedIndex, levelGtMultiplier,
   prestigeFromXp, prestigeGtMultiplier, LEVEL_CAP_XP, PRESTIGE_XP,
+  shopDiscountFraction, discountedPrice,
 } from "@/lib/economy";
 
 describe("computePayouts", () => {
@@ -156,5 +157,28 @@ describe("prestigeGtMultiplier (prestige GT perk)", () => {
 
   it("never drops below 1× for nonsense input", () => {
     expect(prestigeGtMultiplier(-5)).toBeCloseTo(1.0);
+  });
+});
+
+describe("shopDiscountFraction / discountedPrice (loyalty perk)", () => {
+  it("is 0 at level 1 / prestige 0 (no discount for newcomers)", () => {
+    expect(shopDiscountFraction(1, 0)).toBe(0);
+    expect(discountedPrice(1000, 1, 0)).toBe(1000);
+  });
+
+  it("grows -0.15%/level and -1%/prestige star", () => {
+    expect(shopDiscountFraction(101, 0)).toBeCloseTo(0.15); // 100 levels * 0.0015
+    expect(shopDiscountFraction(1, 5)).toBeCloseTo(0.05);   // 5 stars * 0.01
+    expect(shopDiscountFraction(101, 5)).toBeCloseTo(0.20);
+  });
+
+  it("caps the combined discount at -30%", () => {
+    expect(shopDiscountFraction(1000, 1000)).toBeCloseTo(0.3);
+    expect(discountedPrice(1000, 1000, 1000)).toBe(700);
+  });
+
+  it("rounds to an integer and never goes below 1 GT", () => {
+    expect(discountedPrice(999, 101, 0)).toBe(Math.round(999 * 0.85)); // 849
+    expect(discountedPrice(1, 1000, 1000)).toBe(1);
   });
 });

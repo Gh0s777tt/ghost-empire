@@ -89,6 +89,23 @@ export function prestigeGtMultiplier(prestige: number): number {
   return 1 + Math.min(0.5, Math.max(0, prestige) * 0.02);
 }
 
+// ---------- SHOP LOYALTY DISCOUNT ----------
+// A loyalty perk: higher account level + prestige shave a little off shop prices. The
+// shop/buy route is the source of truth (charges discountedPrice); ShopClient calls the
+// same pure fns so the displayed price always matches what's charged.
+
+/** Shop price discount as a fraction (0..0.30): -0.15%/level past 1 + -1%/prestige star, capped -30%. */
+export function shopDiscountFraction(level: number, prestige: number): number {
+  const fromLevel = Math.max(0, level - 1) * 0.0015;
+  const fromPrestige = Math.max(0, prestige) * 0.01;
+  return Math.min(0.3, fromLevel + fromPrestige);
+}
+
+/** Apply the loyalty discount to a base price → integer GT, never below 1. */
+export function discountedPrice(price: number, level: number, prestige: number): number {
+  return Math.max(1, Math.round(price * (1 - shopDiscountFraction(level, prestige))));
+}
+
 /**
  * Pick an index into `weights` with probability proportional to each weight
  * (weighted random — used by the Wheel of Fortune). `rng` is a [0,1) random
