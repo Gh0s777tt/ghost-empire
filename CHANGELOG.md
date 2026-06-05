@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Added
+
+- **Panel integracji / klucze API na stronie** (`/admin#integrations`) — wklejasz klucze **funkcji opcjonalnych** wprost w panelu (zapis w bazie, admin-only) zamiast szukać ich w plikach env: **klucz AI** (dostawca: Anthropic / OpenAI / Grok / Gemini / DeepSeek / Bielik + opcjonalny model — **odblokowuje F4**), **Sentry DSN**, **OBS WebSocket** (adres + hasło). Sekrety wracają **zamaskowane** (`sk-…XYZ`) i nie wyciekają do przeglądarki; pole puste = bez zmian, „Wyczyść" = usuwa. `lib/integrations.ts` czyta je w runtime (**baza nadpisuje env** → istniejące env-setupy działają). **Świadomie BEZ infra/auth** (`DATABASE_URL`, `NEXTAUTH_SECRET`, logowanie OAuth, `BOT_SECRET` — zostają w env z powodu bootstrapu/bezpieczeństwa). Audyt `update_integrations`. Przeżywa zmianę komputera. *(Prośba usera #3.)* Zielone: `tsc` / `eslint` / 95 testów / `next build`.
+
 ### Changed
 
 - **Pogrupowana, zwijana nawigacja panelu admina** — zamiast jednej długiej listy ~28 sekcji (ciągłe scrollowanie) menu jest teraz w **7 grupach**: Pulpit · Moderacja (użytkownicy / merge / moderacja / audit) · Platformy (Twitch / Kick / YouTube) · Bot & czat (bot / komendy / timery / FAQ / powitania / song requests) · Overlaye OBS (widgety / alerty / goals / subathon) · Ekonomia (sklep / dropy / battle pass / donacje) · Eventy & społeczność (eventy / predykcje / ankiety / osiągnięcia / harmonogram). **Domyślnie rozwinięta tylko grupa aktywnej sekcji** (reszta zwinięta → koniec nieskończonego scrolla); kliknięcie nagłówka grupy rozwija/zwija, kropka oznacza grupę z aktywną sekcją. Działa też na mobile (pionowo, kompaktowo). Zielone: `tsc` / `eslint` / 95 testów / `next build`.
