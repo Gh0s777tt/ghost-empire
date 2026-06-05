@@ -7,6 +7,7 @@ import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { checkMessage, violationLabel, escalate, logViolation, type ModAction, type ModViolation } from "./moderation";
+import { isAiTrigger, handleAiTrigger } from "./aiCommands";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 
@@ -157,7 +158,11 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
     }
   }
 
-  if (isSongRequest(text)) {
+  if (isAiTrigger(text)) {
+    void handleAiTrigger(username, text).then((r) => {
+      if (r) void sendMessage(r);
+    });
+  } else if (isSongRequest(text)) {
     void handleSongRequest("youtube", username, text).then((m) => {
       if (m) void sendMessage(m);
     });

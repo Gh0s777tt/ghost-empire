@@ -5,6 +5,7 @@ import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { checkMessage, violationLabel, escalate, logViolation } from "./moderation";
+import { isAiTrigger, handleAiTrigger } from "./aiCommands";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
@@ -61,7 +62,11 @@ function build(password: string): tmi.Client {
     pushChatFeed("twitch", tags.username, message, { emotes: tags.emotes, badges: tags.badges });
     trackEmojis(message);
 
-    if (isSongRequest(message)) {
+    if (isAiTrigger(message)) {
+      void handleAiTrigger(tags.username, message).then((r) => {
+        if (r) c.say(env.twitch.channel, r).catch(() => {});
+      });
+    } else if (isSongRequest(message)) {
       void handleSongRequest("twitch", tags.username, message).then((m) => {
         if (m) c.say(env.twitch.channel, m).catch(() => {});
       });
