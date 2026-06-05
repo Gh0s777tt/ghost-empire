@@ -23,7 +23,7 @@
 [![Kick](https://img.shields.io/badge/Kick-Gh0s77tt-53FC18?style=flat-square&logo=kick&logoColor=black)](https://kick.com/Gh0s77tt)
 [![YouTube](https://img.shields.io/badge/YouTube-@Gh0s77tt-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://www.youtube.com/@Gh0s77tt)
 
-`Phase 2 ✅` &nbsp; `Phase 3A+3B ✅` &nbsp; `Phase 3C 🟡 w toku` &nbsp; `Phase 3D 🟡 w toku`
+`Phase 2 ✅` &nbsp; `Phase 3A–3D ✅` &nbsp; `Studio F1–F3 + F5 ✅` &nbsp; `F6 security 🟡` &nbsp; `F4 AI 🔑 czeka na klucz`
 
 </div>
 
@@ -31,7 +31,7 @@
 
 ## ⚡ TL;DR
 
-Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** za aktywność na Discordzie i streamach — czat, voice, suby, gifty, bity, donejty, drop-code'y, daily questy, predictions — i wymieniają je w **sklepie** na nagrody cyfrowe i fizyczne. Streamer steruje wszystkim z panelu **`/admin`** (~24 sekcje): sklep, eventy, losowania, donacje, role, **alerty OBS (per-typ)**, stream goals, predictions, battle pass, ankiety, merge duplikatów + **komendy czatu, timery, FAQ, powitania i song requesty** dla bota na 3 platformach.
+Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** za aktywność na Discordzie i streamach — czat, voice, suby, gifty, bity, donejty, drop-code'y, daily questy, predictions — i wymieniają je w **sklepie** na nagrody cyfrowe i fizyczne. Streamer steruje wszystkim z panelu **`/admin`** (~37 sekcji w 7 grupach, `Ctrl+K` do skoku): sklep, eventy, losowania, donacje, role, **alerty OBS (per-typ)**, stream goals, predictions, battle pass, ankiety, merge duplikatów, **moderacja czatu (automod)**, **biblioteka + generator widgetów**, **panel integracji (klucze API na stronie)** + **komendy czatu, timery, FAQ, powitania i song requesty** dla bota na 3 platformach.
 
 > Suby/gifty/bity (Twitch + Kick), donacje (Streamlabs + YouTube Super Chat) są **wykrywane automatycznie** (webhooki / polling) i nagradzane tokenami + odznakami.
 
@@ -39,7 +39,22 @@ Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** 
 
 ## ✨ W skrócie — co potrafi
 
-`👻 Ekonomia GT` &nbsp; `🛒 Sklep` &nbsp; `🎁 Eventy & raffle` &nbsp; `🎲 Predictions` &nbsp; `🏆 Battle Pass / Sezony` &nbsp; `🗳️ Ankiety` &nbsp; `🏅 53 osiągnięcia` &nbsp; `📅 Daily questy` &nbsp; `🔑 Drop-code'y` &nbsp; `📊 Ranking` &nbsp; `💬 Chat bot ×3 platformy` &nbsp; `⏱️ Timery` &nbsp; `❓ FAQ` &nbsp; `👋 Powitania` &nbsp; `🎵 Song requesty` &nbsp; `🔔 Alerty OBS (per-typ)` &nbsp; `🎯 Stream Goals + Hype Train` &nbsp; `⏳ Subathon` &nbsp; `🖼️ Overlaye z podglądem`
+`👻 Ekonomia GT` &nbsp; `🛒 Sklep` &nbsp; `🎁 Eventy & raffle` &nbsp; `🎲 Predictions` &nbsp; `🏆 Battle Pass / Sezony` &nbsp; `🗳️ Ankiety` &nbsp; `🏅 53 osiągnięcia` &nbsp; `📅 Daily questy` &nbsp; `🔑 Drop-code'y` &nbsp; `📊 Ranking` &nbsp; `💬 Chat bot ×3 platformy` &nbsp; `🛡️ Automod` &nbsp; `⏱️ Timery` &nbsp; `❓ FAQ` &nbsp; `👋 Powitania` &nbsp; `🎵 Song requesty` &nbsp; `🔔 Alerty OBS (per-typ)` &nbsp; `🎯 Stream Goals + Hype Train` &nbsp; `⏳ Subathon` &nbsp; `🧩 Biblioteka + generator widgetów` &nbsp; `🖼️ 11 overlayów z podglądem`
+
+---
+
+## 🆕 Studio (2026-06) — customizacja · widgety · moderacja · UX
+
+Duża seria po Phase 3D (36 PR-ów):
+
+- **🎨 F1 — customizacja:** Subathon (edytowalny kolor + napis) · predykcje + ankiety (kolor akcentu, **podgląd na żywo**, overlay OBS, **auto-pin zakładu na czacie**) · **plan streamów jako kalendarz miesięczny**.
+- **🛡️ F2 — moderacja czatu (automod):** panel `/admin#moderation` (przekleństwa z leetspeak · CAPS · długość · powtórzenia/flood · zalgo, akcje delete/timeout/warn, whitelista sub/VIP/mod) + **egzekucja w bocie** na Twitch/Kick/YouTube.
+- **🧩 F3 — widgety:** **biblioteka** wszystkich overlayów (URL + **podgląd**) + 6 nowych (ostatni sub/donator/follower, viewer count, **emoji combo**) + **generator własnych widgetów** (tekst / kolor / font / gradient / emoji).
+- **✍️ F5 — wygląd:** **13 czcionek** · emoji-picker · **emotki + odznaki Twitcha w overlayu czatu** · gradienty.
+- **🔒 F6 — security (część):** **backup do JSON** · sanityzacja URL (XSS).
+- **🧭 UX:** **grupowana, zwijana nawigacja** · **command palette `Ctrl+K`** · **checklista statusu** na dashboardzie · **panel integracji** (klucze API wklejasz na stronie, nie w plikach) · podgląd + edycja per-widget.
+
+> 🔑 **Następny duży krok: F4 — AI** (postać `@bot` + `!imagine`). Czeka tylko na wklejenie klucza API w `/admin#integrations`.
 
 ---
 

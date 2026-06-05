@@ -12,14 +12,19 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 ## 0. Następny duży krok
 
-**Phase 3A (chat bot) + 3B (engagement) = ✅ ZROBIONE** (2026-05-30) — bot na Twitch/Kick/YouTube z komendami z portalu, timerami, FAQ, powitaniami, song requests i chat overlayem OBS. Szczegóły: [CHANGELOG.md](CHANGELOG.md) + [PHASE3.md](PHASE3.md).
+**Phase 3A–3D + „Studio" (F1–F3, F5) = ✅ ZROBIONE.** Bot na Twitch/Kick/YouTube (komendy/timery/FAQ/powitania/song requests/chat overlay), alerty per-typ, subathon, analityka+heatmapy, **moderacja czatu (automod)**, **biblioteka+generator widgetów**, customizacja (kolory/czcionki/gradienty/emotki), UX (grupowana nawigacja, `Ctrl+K`, checklista, panel integracji). Szczegóły: [CHANGELOG.md](CHANGELOG.md) + [PLAN.md](PLAN.md).
 
-**Następny duży krok: Phase 3C → 3D** (pełna specyfikacja w [PHASE3.md](PHASE3.md)):
-- **3C — alerts upgrade + hardware:** customizacja alertów per-typ (animacja/font/grafika/dźwięk/threshold), **OBS WebSocket** (przełączanie scen/źródeł), **Philips Hue / Govee / Lumia** (efekty świetlne na donejty).
-- **3D — AI + analityka:** **AI Moderator**, AI auto-responses kontekstowe, AI shoutouts/clip-detection, ~~Subathon/Goalathon~~ ✅ (#17), analityka per-stream + heatmapy czatu, A/B testy komend.
-- **Drobne dopięcia chat-bota:** dynamiczne daily questy z aktywności czatu, walidacja YouTube API w song requests, bonus tokenów przy powitaniu, **hosting bota 24/7** (Railway/VPS zamiast PC + Dockerfile).
+**Następny duży krok: F4 — AI** 🔑 (czeka na klucz API w `/admin#integrations`):
+- **Postać `@bot`** (osobowości + wybór modelu Grok/GPT/Gemini/DeepSeek/Anthropic/Bielik + limity) + **`!imagine`** (obrazy).
+- **AI-moderacja** (toksyczność przez API) jako rozszerzenie automoda.
 
-> Decyzja przed 3C: priorytet (alerty vs hardware vs AI). Hardware (Hue/Govee) wymaga kont developerskich + ewentualnie lokalnego mostka.
+**Pozostałe duże kierunki:**
+- **F6 — security/backup** (część zrobiona: backup JSON, sanityzacja URL): **szyfrowanie sekretów at-rest**, CSP/headers, auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
+- **Hardware (3C):** OBS WebSocket (panel integracji już przyjmuje adres+hasło), Philips Hue / Govee (efekty świetlne na donejty) — konta dev.
+- **Emotki 7TV/BTTV/FFZ** + prawdziwe grafiki odznak (teraz emoji-zamienniki).
+- **i18n PL/EN**, testy integracyjne (Docker Postgres) + E2E (Playwright), Lighthouse CI.
+
+> Decyzja: priorytet (AI vs security vs hardware vs emotki). Hardware (Hue/Govee) + AI wymagają kont/kluczy.
 
 ---
 

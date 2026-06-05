@@ -87,11 +87,14 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 
 ## 4. Czego potrzebujesz pod funkcje „creds-gated" z ROADMAP
 
-| Funkcja | Klucze do zdobycia |
-|---|---|
-| **Social Linki OAuth** (Instagram / TikTok / Facebook / X) | Zarejestrowana aplikacja deweloperska u każdego dostawcy → `*_CLIENT_ID` / `*_CLIENT_SECRET` + redirect URI. IG/TikTok wymagają przeglądu aplikacji. |
-| **AI Moderator** | Klucz API wybranego dostawcy: `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_AI_API_KEY` |
-| **OBS WebSocket** | Hasło z OBS → wklejane na stronie (planowane), nie env |
-| **Philips Hue / Govee** | Konto/most deweloperski + token API |
+> 🆕 **Klucze funkcyjne wklejasz teraz NA STRONIE** w `/admin#integrations` (zapis w bazie `IntegrationConfig`, admin-only, maskowane) — przeżywają zmianę komputera. **Wartość z bazy nadpisuje env.** Dotyczy: **klucz AI** (+ dostawca + model), **Sentry DSN**, **OBS WebSocket** (adres + hasło). Można też nadal użyć env jako fallbacku (`AI_API_KEY`, `SENTRY_DSN`).
+>
+> 🔒 **Sekrety infrastruktury ZOSTAJĄ w env** (nie w bazie — bootstrap/bezpieczeństwo): `DATABASE_URL`, `NEXTAUTH_SECRET`, klucze logowania OAuth (Twitch/Kick/Discord/Google), `BOT_SECRET`, `TWITCH_EVENTSUB_SECRET`.
 
-> Gdy zdobędziesz klucz — wrzuć go do **Vercel env** (portal) lub `.env` (bot), a my podepniemy funkcję.
+| Funkcja | Jak podać |
+|---|---|
+| **AI** (postać `@bot` + `!imagine`) | `/admin#integrations` → dostawca (Anthropic/OpenAI/Grok/Gemini/DeepSeek/Bielik) + klucz + opcjonalny model. *(env fallback: `AI_API_KEY`)* |
+| **Sentry** (monitoring) | `/admin#integrations` → DSN. *(env fallback: `SENTRY_DSN`)* |
+| **OBS WebSocket** | `/admin#integrations` → adres `ws://…` + hasło z OBS |
+| **Social Linki OAuth** (Instagram / TikTok / Facebook / X) | Aplikacja deweloperska u dostawcy → `*_CLIENT_ID` / `*_CLIENT_SECRET` + redirect URI (env) |
+| **Philips Hue / Govee** | Konto/most deweloperski + token API |
