@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
-import { getGameLibraryConfig, syncSteamLibrary } from "@/lib/games";
+import { getGameLibraryConfig, syncSteamLibrary, syncPsnLibrary } from "@/lib/games";
 import { coerceSteamId } from "@/lib/steam";
 
 export async function GET() {
@@ -22,6 +22,7 @@ export async function GET() {
     steamId: cfg.steamId,
     steamSyncedAt: cfg.steamSyncedAt?.toISOString() ?? null,
     hasKey: !!process.env.STEAM_API_KEY,
+    hasNpsso: !!process.env.PSN_NPSSO,
     count,
     totalHours: Math.round((totals._sum.playtimeMin ?? 0) / 60),
     games: games.map((g) => ({
@@ -58,6 +59,13 @@ export async function POST(req: Request) {
     const result = await syncSteamLibrary();
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "game_library", targetId: "sync", details: result, req });
+    return NextResponse.json(result);
+  }
+
+  if (body.action === "sync_psn") {
+    const result = await syncPsnLibrary();
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
+    await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "game_library", targetId: "sync_psn", details: result, req });
     return NextResponse.json(result);
   }
 
