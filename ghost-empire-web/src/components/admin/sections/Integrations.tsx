@@ -84,11 +84,10 @@ export function IntegrationsManager({
     setSaving(true);
     try {
       const body: Record<string, unknown> = { aiProvider, aiModel, obsWebsocketUrl: obsUrl };
-      // Only send a secret when it changed: a typed value sets it, explicit null clears.
+      // Only send a field when it changed: a typed value sets it, explicit null clears.
       const touched = (v: string | null) => v === null || (typeof v === "string" && v.trim().length > 0);
-      if (touched(aiKey)) body.aiApiKey = aiKey;
-      if (touched(sentry)) body.sentryDsn = sentry;
-      if (touched(obsPass)) body.obsWebsocketPassword = obsPass;
+      const fields: Array<[string, string | null]> = [["aiApiKey", aiKey], ["sentryDsn", sentry], ["obsWebsocketPassword", obsPass]];
+      for (const [k, v] of fields) if (touched(v)) body[k] = v;
 
       const res = await fetch("/api/admin/integrations", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
