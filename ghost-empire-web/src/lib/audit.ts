@@ -26,7 +26,8 @@ type AdminActionType =
   | "manage_achievements"
   | "manage_polls"
   | "update_moderation"
-  | "update_integrations";
+  | "update_integrations"
+  | "update_wheel";
 
 export async function logAdminAction(opts: {
   adminId: string;

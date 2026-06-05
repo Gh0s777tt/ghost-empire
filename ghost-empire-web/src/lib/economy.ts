@@ -52,3 +52,22 @@ export function tierFromXp(xp: number, xpPerTier: number, totalTiers: number): n
 export function plnFromCurrency(amount: number, currency: string): number {
   return ["PLN", "ZL"].includes(currency.toUpperCase()) ? amount : amount * 4;
 }
+
+/**
+ * Pick an index into `weights` with probability proportional to each weight
+ * (weighted random — used by the Wheel of Fortune). `rng` is a [0,1) random
+ * source, injectable so the selection can be unit-tested deterministically.
+ * Negative weights are clamped to 0; a non-positive total returns index 0.
+ */
+export function pickWeightedIndex(weights: number[], rng: number): number {
+  if (weights.length === 0) return 0;
+  const total = weights.reduce((s, w) => s + Math.max(0, w), 0);
+  if (total <= 0) return 0;
+  const clamped = Math.min(Math.max(rng, 0), 0.9999999);
+  let target = clamped * total;
+  for (let i = 0; i < weights.length; i++) {
+    target -= Math.max(0, weights[i]);
+    if (target < 0) return i;
+  }
+  return weights.length - 1;
+}

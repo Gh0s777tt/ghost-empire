@@ -77,6 +77,7 @@ model User {
   notifications   Notification[]
   donations       Donation[]
   pollVotes       PollVote[]
+  wheelSpins      WheelSpin[]
 
   // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
   // turn full-table scan+sort into index range scans on free-tier Postgres.
@@ -709,6 +710,34 @@ model StreamSession {
 
   @@index([startedAt])
   @@map("stream_sessions")
+}
+
+// =====================================================
+// WHEEL OF FORTUNE (Koło Fortuny) — viewers spend GT to spin a weighted wheel
+// =====================================================
+
+model WheelConfig {
+  id          String   @id @default("default")  // singleton
+  enabled     Boolean  @default(false)
+  costPerSpin Int      @default(100)             // GT charged per spin
+  segments    Json?                              // [{ label, weight, rewardTokens, color }]
+  updatedAt   DateTime @updatedAt
+
+  @@map("wheel_config")
+}
+
+model WheelSpin {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segmentLabel String                            // label of the segment landed on
+  rewardTokens Int                               // GT won (0 = no reward)
+  cost         Int                               // GT spent to spin
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("wheel_spins")
 }
 
 // =====================================================
