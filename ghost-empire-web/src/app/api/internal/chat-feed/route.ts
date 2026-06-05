@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { platform?: string; username?: string; message?: string };
+  let body: { platform?: string; username?: string; message?: string; emotes?: unknown; badges?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -27,11 +27,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid message" }, { status: 400 });
   }
 
+  // Twitch passes its emote/badge maps so the overlay can render real emote images.
+  const emotes = body.emotes && typeof body.emotes === "object" ? JSON.stringify(body.emotes).slice(0, 4000) : null;
+  const badges = body.badges && typeof body.badges === "object" ? JSON.stringify(body.badges).slice(0, 1000) : null;
+
   await prisma.chatFeedMessage.create({
     data: {
       platform: body.platform!,
       username: (body.username ?? "widz").slice(0, MAX_USERNAME),
       message: message.slice(0, MAX_MESSAGE),
+      emotes,
+      badges,
     },
   });
 

@@ -9,6 +9,11 @@ export const dynamic = "force-dynamic";
 
 const LIMIT = 40;
 
+function safeParse(s: string | null): unknown {
+  if (!s) return null;
+  try { return JSON.parse(s); } catch { return null; }
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
@@ -36,6 +41,8 @@ export async function GET(req: Request) {
         platform: m.platform,
         username: m.username,
         message: m.message,
+        emotes: safeParse(m.emotes),
+        badges: safeParse(m.badges),
         createdAt: m.createdAt.toISOString(),
       })),
   });
