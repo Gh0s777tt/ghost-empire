@@ -109,7 +109,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 - **3B:** ✅ **zrobione w całości** (Song Requests, Chat overlay, Timery, FAQ, Welcome) + ~~dynamiczne daily questy z czatu~~ #19, ~~tytuły song requestów (oEmbed)~~ #18, ~~bonus tokenów przy powitaniu~~ #16
 - **3C:** customizacja alertów per-typ (animacja/font/grafika/dźwięk/threshold), **OBS WebSocket** (sceny/źródła), **Philips Hue / Govee / Lumia** (efekty świetlne na donejty)
 - **3D:** **AI Moderator**, AI auto-responses kontekstowe, AI shoutouts/clip-detection, ~~Subathon/Goalathon~~ ✅ (#17), analityka per-stream + heatmapy czatu, A/B testy komend
-- **Game library** (Steam/Roblox + opcjonalnie Xbox/Battle.net) + voting widget „następna gra”
+- **Game library** — ✅ **Steam zrobiony (#165)** (`/games` + `/admin#games`, oficjalne API, sync biblioteki). **Zostaje:** GOG/PSN/Ubisoft/Xbox (nieoficjalne API — `psn-api` npsso, GOG licences, demux Ubisoft) + voting widget „następna gra”
 
 ### Pomysły użytkownika (2026-05-30) — do zrealizowania
 

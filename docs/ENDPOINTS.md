@@ -51,6 +51,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/polls/vote` | POST | Głos w ankiecie (1/usera, zmienialny; rate-limit) |
 | `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT (auto-zamykanie po `closesAt`) |
 | `…/api/wheel` · `…/api/wheel/spin` | GET/POST | Koło Fortuny — stan + zakręcenie (wydaje GT, rate-limit 20/min) |
+| `…/api/games` | GET | Publiczna biblioteka gier (widoczne, wg czasu gry) |
 | `…/api/events/join` · `…/api/events/raffle-tickets` | POST | Dołączenie do eventu / kupno losów raffle |
 | `…/api/drops/claim` | POST | Odbiór drop-code z czatu |
 | `…/api/seasons/claim` | POST | Odbiór nagrody Battle Pass |
@@ -78,6 +79,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/predictions` | perm:create_events | Tworzenie/rozliczanie predykcji (+ `toggle_announce`) |
 | `…/api/admin/wheel` | admin | Konfiguracja Koła Fortuny (koszt, segmenty) + statystyki |
 | `…/api/admin/mod-violations` | admin | Statystyki naruszeń moderacji + top recydywiści |
+| `…/api/admin/games` | admin | Biblioteka gier — konfiguracja SteamID + sync + ukrywanie |
 | `…/api/admin/webhooks-out` | admin | Webhooki wychodzące — CRUD + test (POST JSON na zewnętrzne URL) |
 | `…/api/admin/donations` | admin | Donacje / dopasowania |
 | `…/api/admin/streamlabs` | admin | Stan połączenia Streamlabs |

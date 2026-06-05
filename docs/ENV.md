@@ -54,6 +54,8 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `DONATION_GT_PER_PLN` | Ile GT za 1 PLN donacji (default w kodzie) |
 | `PAYMEDIA_WEBHOOK_SECRET` / `PAYMEDIA_GT_PER_PLN` | Webhook dostawcy płatności PayMedia (alternatywa donacji) |
 | `OVERLAY_TOKEN` | **Legacy/fallback** — token overlayów OBS. Domyślnie token jest auto-generowany w bazie i widoczny/rotowalny w `/admin#alerts`; ten env nie jest potrzebny |
+| `AI_API_KEY` / `AI_PROVIDER` / `AI_MODEL` (O) | Klucz AI + dostawca (`openai`/`anthropic`/`grok`/`gemini`/`deepseek`/`bielik`) + model — fallback dla `/admin#integrations`. Ustawione w Vercelu (OpenAI · `gpt-4o-mini`) |
+| `STEAM_API_KEY` (O) | Steam Web API key (biblioteka gier `/games`). Z [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Ustawione w Vercelu |
 | `CRON_SECRET` | Bearer chroniący crony Vercel: `/api/cron/streamlabs-poll` (polling donacji) i `/api/cron/prune` (czyszczenie starych rekordów) |
 | `NODE_ENV` | Ustawiane przez platformę (`production`/`development`) — nie ustawiasz ręcznie |
 

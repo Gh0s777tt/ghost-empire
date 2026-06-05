@@ -17,9 +17,9 @@ export type IntegrationConfig = {
 export async function getIntegrationConfig(): Promise<IntegrationConfig> {
   const c = await prisma.integrationConfig.findUnique({ where: { id: "default" } });
   return {
-    aiProvider: c?.aiProvider ?? "anthropic",
+    aiProvider: c?.aiProvider ?? process.env.AI_PROVIDER ?? "anthropic",
     aiApiKey: decryptSecret(c?.aiApiKey) || process.env.AI_API_KEY || null,
-    aiModel: c?.aiModel || null,
+    aiModel: c?.aiModel || process.env.AI_MODEL || null,
     sentryDsn: decryptSecret(c?.sentryDsn) || process.env.SENTRY_DSN || null,
     obsWebsocketUrl: c?.obsWebsocketUrl || null,
     obsWebsocketPassword: decryptSecret(c?.obsWebsocketPassword) || null,
