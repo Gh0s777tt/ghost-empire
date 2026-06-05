@@ -32,6 +32,7 @@ const WIDGETS: Widget[] = [
   { id: "last-donator", name: "Ostatni donator",   path: "/overlay/last-event",  query: "kind=donation", desc: "Najnowszy donejt — nick + kwota. Mały badge.",                  size: "340×90" },
   { id: "last-follower", name: "Ostatni follower", path: "/overlay/last-event",  query: "kind=follow",   desc: "Najnowszy obserwujący. Wymaga re-auth Twitcha (scope followers) + subskrypcji.", size: "340×90" },
   { id: "viewers",     name: "Liczba widzów",      path: "/overlay/viewers",     desc: "Aktualna liczba widzów na Twitchu (gdy live). Wymaga połączonego Twitcha.", size: "200×70" },
+  { id: "emoji-combo", name: "Emoji combo",        path: "/overlay/emoji-combo", desc: "Gdy widzowie spamują to samo emoji — wybucha ×N COMBO. Wymaga restartu bota.", size: "400×260" },
 ];
 
 export function WidgetsLibrary({

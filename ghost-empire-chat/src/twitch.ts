@@ -5,6 +5,7 @@ import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { checkMessage, violationLabel } from "./moderation";
+import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
 import { refreshAccessToken } from "./twitchAuth";
@@ -55,6 +56,7 @@ function build(password: string): tmi.Client {
     }
 
     pushChatFeed("twitch", tags.username, message);
+    trackEmojis(message);
 
     if (isSongRequest(message)) {
       void handleSongRequest("twitch", tags.username, message).then((m) => {

@@ -7,6 +7,7 @@ import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { checkMessage, violationLabel, type ModAction, type ModViolation } from "./moderation";
+import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 
 // YouTube Live Chat (Option C: authorized as the channel account).
@@ -131,6 +132,7 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
   }
 
   pushChatFeed("youtube", username, text);
+  trackEmojis(text);
 
   // award GT (skip our own messages so we don't award/loop on the channel account)
   if (channelId && channelId !== ownChannelId) {

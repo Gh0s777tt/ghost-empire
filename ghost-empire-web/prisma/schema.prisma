@@ -1283,3 +1283,16 @@ model CustomWidget {
 
   @@map("custom_widgets")
 }
+
+// =====================================================
+// EMOJI COMBO — singleton bridge: the bot detects an emoji combo in chat and POSTs
+// it here; the /overlay/emoji-combo OBS source reads it (active only if fresh).
+// =====================================================
+model EmojiComboState {
+  id        String   @id @default("default")
+  emoji     String   @default("")
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@map("emoji_combo_state")
+}
