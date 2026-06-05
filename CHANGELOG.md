@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Changed
+
+- **Pogrupowana, zwijana nawigacja panelu admina** — zamiast jednej długiej listy ~28 sekcji (ciągłe scrollowanie) menu jest teraz w **7 grupach**: Pulpit · Moderacja (użytkownicy / merge / moderacja / audit) · Platformy (Twitch / Kick / YouTube) · Bot & czat (bot / komendy / timery / FAQ / powitania / song requests) · Overlaye OBS (widgety / alerty / goals / subathon) · Ekonomia (sklep / dropy / battle pass / donacje) · Eventy & społeczność (eventy / predykcje / ankiety / osiągnięcia / harmonogram). **Domyślnie rozwinięta tylko grupa aktywnej sekcji** (reszta zwinięta → koniec nieskończonego scrolla); kliknięcie nagłówka grupy rozwija/zwija, kropka oznacza grupę z aktywną sekcją. Działa też na mobile (pionowo, kompaktowo). Zielone: `tsc` / `eslint` / 95 testów / `next build`.
+
 ### Added
 
 - **Sanityzacja URL-i (F6 — bezpieczeństwo)** — wspólny `lib/url-safe.ts` `safeMediaUrl()` przepuszcza **tylko prawdziwe `http(s)`** (blokuje `javascript:` / `data:` / `vbscript:` / względne / śmieci). Wpięty w **dźwięk alertów** (`/api/admin/alert-types` — wcześniej bez kontroli schematu) i obronnie w **social linki** (`/api/profile/social-links` — renderowane jako `<a href>`, więc realny wektor XSS). Sklep `imageUrl` był już walidowany. **+4 testy** (suite 91 → **95**). Zielone: `tsc` / `eslint` / 95 testów / `next build`. *(Faza F6 — security.)*
