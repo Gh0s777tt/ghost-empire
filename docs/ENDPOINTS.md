@@ -106,6 +106,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/bot/moderation` | Konfiguracja automod (reguły + akcje) |
 | `…/api/bot/active-prediction` | Otwarty zakład do re-anonsu na czacie (tylko `announceToChat`) |
 | `…/api/bot/ai-reply` · `…/api/bot/imagine` | AI: odpowiedź `@bot` + generowanie obrazka `!imagine` (klucz server-side) |
+| `…/api/bot/gt-game` | Mini-gra GT (`!slots` / `!coinflip`) — atomowa gra, zwraca gotową wiadomość |
+| `…/api/bot/duel` | Pojedynki PvP (`!duel` / `!accept` / `!decline`) — atomowy transfer puli, zwraca wiadomość |
 
 ## Internal (botSecret) — boty wysyłają zdarzenia
 | Trasa | Po co |

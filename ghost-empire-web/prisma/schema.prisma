@@ -80,6 +80,9 @@ model User {
   pollVotes       PollVote[]
   wheelSpins      WheelSpin[]
   gtGamePlays     GtGamePlay[]
+  duelsChallenged Duel[]      @relation("DuelChallenger")
+  duelsOpposed    Duel[]      @relation("DuelOpponent")
+  duelsWon        Duel[]      @relation("DuelWinner")
 
   // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
   // turn full-table scan+sort into index range scans on free-tier Postgres.
@@ -803,6 +806,33 @@ model GtGamePlay {
   @@index([createdAt])
   @@index([net])
   @@map("gt_game_plays")
+}
+
+// PvP duel: two viewers stake the same bet, a fair coinflip decides the winner who takes
+// the pot (minus a small rake = GT sink). Created by !duel, resolved by !accept. Both
+// stakes are charged atomically at accept time (a throw rolls the whole transfer back).
+model Duel {
+  id            String   @id @default(cuid())
+  platform      String                           // chat platform the duel lives on (twitch/kick/youtube)
+  challengerId  String
+  challengerName String                          // chat handle, stored so the result can @-mention correctly
+  opponentId    String?                           // null = open challenge (first !accept takes it)
+  opponentName  String?                           // chat handle of the targeted opponent (null for open)
+  bet          Int
+  status       String    @default("pending")     // pending | resolved | cancelled | expired
+  winnerId     String?
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime                          // unaccepted duels expire (default 2 min)
+  resolvedAt   DateTime?
+
+  challenger   User      @relation("DuelChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
+  opponent     User?     @relation("DuelOpponent",   fields: [opponentId],   references: [id], onDelete: Cascade)
+  winner       User?     @relation("DuelWinner",     fields: [winnerId],     references: [id], onDelete: SetNull)
+
+  @@index([platform, status])
+  @@index([challengerId])
+  @@index([createdAt])
+  @@map("duels")
 }
 
 // =====================================================

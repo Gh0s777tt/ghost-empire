@@ -106,6 +106,26 @@ export function discountedPrice(price: number, level: number, prestige: number):
   return Math.max(1, Math.round(price * (1 - shopDiscountFraction(level, prestige))));
 }
 
+// ---------- DUEL (PvP) ----------
+// Two viewers stake the same bet; a fair 50/50 coinflip picks the winner, who takes the
+// pot minus a small rake (a GT sink, like the casino house edge). Pure + unit-tested; the
+// atomic GT transfer lives in lib/duels.ts.
+
+/** House rake on a duel pot — 5%, the GT sink. */
+export const DUEL_RAKE = 0.05;
+
+/** Pot split for a per-player `bet`: pot = 2×bet, winner takes pot minus floored rake. */
+export function duelPayout(bet: number, rake: number = DUEL_RAKE): { pot: number; rake: number; winnerTakes: number } {
+  const pot = bet * 2;
+  const rakeAmt = Math.floor(pot * Math.min(Math.max(rake, 0), 1));
+  return { pot, rake: rakeAmt, winnerTakes: pot - rakeAmt };
+}
+
+/** Pick the duel winner: 0 = challenger, 1 = opponent (fair 50/50). `rng` is a [0,1) source. */
+export function pickDuelWinner(rng: () => number = Math.random): 0 | 1 {
+  return rng() < 0.5 ? 0 : 1;
+}
+
 /**
  * Pick an index into `weights` with probability proportional to each weight
  * (weighted random — used by the Wheel of Fortune). `rng` is a [0,1) random

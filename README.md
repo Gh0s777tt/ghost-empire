@@ -48,6 +48,7 @@ Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** 
 Duża seria po Phase 3D (44+ PR-ów):
 
 - **🎰 Koło Fortuny:** widzowie wydają GT, kręcą ważonym kołem i wygrywają nagrody — strona `/wheel` + animowany overlay OBS `/overlay/wheel` + panel admina (segmenty, koszt, bilans domu).
+- **⚔️ Pojedynki PvP `!duel`:** dwóch widzów stawia GT, uczciwy coinflip (crypto-RNG) wyłania zwycięzcę biorącego pulę minus 5% rake. `!duel 100` (otwarte) / `!duel @nick 100` / `!accept` / `!decline` — atomowy transfer w jednej transakcji (`lib/duels.ts`), na Twitch/Kick/YouTube.
 - **✦ Prestiż (Phantom Ascension):** po max poziomie (100) dalsze XP daje **gwiazdki prestiżu** (co 50 000 XP ponad cap, bez resetu) — perk **+2% GT z czatu / gwiazdkę** (kumulowany z perkiem poziomu), ✦ na profilu i w rankingu. Czysta pochodna lifetime XP (`prestigeFromXp`).
 - **🛒 Perk lojalnościowy w sklepie:** poziom konta + prestiż **obniżają ceny** (−0,15%/lvl + −1%/✦, do **−30%**) — zniżka naliczana serwerowo (`discountedPrice`, źródło prawdy), pokazywana na karcie (oryginał przekreślony), w modalu i podsumowaniu perków.
 - **🔐 Bezpieczeństwo:** **szyfrowanie sekretów at-rest** (AES-256-GCM) — klucze API i wszystkie tokeny OAuth/streamer w bazie · nagłówki `noindex`/`no-store` na overlayach · cron czyszczący stare rekordy.
