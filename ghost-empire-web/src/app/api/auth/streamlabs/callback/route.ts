@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { exchangeCode, fetchUserInfo } from "@/lib/streamlabs";
 import { logAdminAction } from "@/lib/audit";
+import { encryptSecret } from "@/lib/crypto";
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
@@ -67,8 +68,8 @@ export async function GET(req: Request) {
     where: { id: "default" },
     create: {
       id: "default",
-      accessToken: token.access_token,
-      refreshToken: token.refresh_token,
+      accessToken: encryptSecret(token.access_token),
+      refreshToken: encryptSecret(token.refresh_token),
       tokenExpiresAt: expiresAt,
       scope: token.scope,
       streamlabsUserId,
@@ -76,8 +77,8 @@ export async function GET(req: Request) {
       connectedById: auth.userId,
     },
     update: {
-      accessToken: token.access_token,
-      refreshToken: token.refresh_token,
+      accessToken: encryptSecret(token.access_token),
+      refreshToken: encryptSecret(token.refresh_token),
       tokenExpiresAt: expiresAt,
       scope: token.scope,
       streamlabsUserId,

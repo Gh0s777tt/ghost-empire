@@ -9,6 +9,7 @@
 // Polling math: 5 units * 6 polls/min * 60 min * 3h = 5400 units → ~half daily quota for one 3h stream.
 // Caller (cron / admin) is responsible for not polling when not live.
 import { prisma } from "@/lib/prisma";
+import { encryptSecret, decryptSecret } from "@/lib/crypto";
 
 const YT_API = "https://www.googleapis.com/youtube/v3";
 const YT_OAUTH_TOKEN = "https://oauth2.googleapis.com/token";
@@ -25,17 +26,21 @@ export async function getValidAccessToken(): Promise<string> {
 
   // Refresh if expiring within 2 minutes
   if (tok.tokenExpiresAt.getTime() < Date.now() + 2 * 60_000) {
-    const refreshed = await refreshAccessToken(tok.refreshToken);
+    const refreshToken = decryptSecret(tok.refreshToken);
+    if (!refreshToken) throw new Error("YouTube refresh token unreadable — re-auth at /admin#youtube");
+    const refreshed = await refreshAccessToken(refreshToken);
     await prisma.youTubeStreamerToken.update({
       where: { id: "default" },
       data: {
-        accessToken: refreshed.access_token,
+        accessToken: encryptSecret(refreshed.access_token),
         tokenExpiresAt: new Date(Date.now() + (refreshed.expires_in ?? 3600) * 1000),
       },
     });
     return refreshed.access_token;
   }
-  return tok.accessToken;
+  const access = decryptSecret(tok.accessToken);
+  if (!access) throw new Error("YouTube access token unreadable — re-auth at /admin#youtube");
+  return access;
 }
 
 async function refreshAccessToken(refreshToken: string): Promise<{ access_token: string; expires_in?: number }> {

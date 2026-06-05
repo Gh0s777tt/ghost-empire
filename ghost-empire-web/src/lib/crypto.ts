@@ -18,6 +18,9 @@ function key(): Buffer {
 }
 
 /** Encrypt a secret for storage. null/empty pass through unchanged. Never throws. */
+export function encryptSecret(plaintext: string): string;
+export function encryptSecret(plaintext: null | undefined): null;
+export function encryptSecret(plaintext: string | null | undefined): string | null;
 export function encryptSecret(plaintext: string | null | undefined): string | null {
   if (plaintext == null || plaintext === "") return plaintext ?? null;
   try {

@@ -1,6 +1,7 @@
 // src/lib/streamlabs.ts
 // Streamlabs API integration — OAuth + donation polling + auto-matching.
 import { prisma } from "@/lib/prisma";
+import { decryptSecret } from "@/lib/crypto";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
@@ -154,7 +155,7 @@ export async function pollAndProcessDonations(): Promise<{
   let donations: StreamlabsDonation[];
   try {
     donations = await fetchDonations({
-      accessToken: conn.accessToken,
+      accessToken: decryptSecret(conn.accessToken) ?? "",
       afterDonationId: conn.lastSeenDonationId ?? undefined,
       limit: 50,
     });

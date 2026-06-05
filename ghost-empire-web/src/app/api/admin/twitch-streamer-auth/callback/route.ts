@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { encryptSecret } from "@/lib/crypto";
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
@@ -80,8 +81,8 @@ export async function GET(req: Request) {
       id: "default",
       broadcasterId: user.id,
       broadcasterLogin: user.login,
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
+      accessToken: encryptSecret(tokenData.access_token),
+      refreshToken: encryptSecret(tokenData.refresh_token),
       tokenExpiresAt: expiresAt,
       scope: Array.isArray(tokenData.scope) ? tokenData.scope.join(" ") : (tokenData.scope ?? ""),
       connectedById: auth.userId,
@@ -89,8 +90,8 @@ export async function GET(req: Request) {
     update: {
       broadcasterId: user.id,
       broadcasterLogin: user.login,
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
+      accessToken: encryptSecret(tokenData.access_token),
+      refreshToken: encryptSecret(tokenData.refresh_token),
       tokenExpiresAt: expiresAt,
       scope: Array.isArray(tokenData.scope) ? tokenData.scope.join(" ") : (tokenData.scope ?? ""),
       connectedById: auth.userId,
