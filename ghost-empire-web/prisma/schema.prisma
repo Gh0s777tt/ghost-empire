@@ -78,6 +78,7 @@ model User {
   donations       Donation[]
   pollVotes       PollVote[]
   wheelSpins      WheelSpin[]
+  gtGamePlays     GtGamePlay[]
 
   // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
   // turn full-table scan+sort into index range scans on free-tier Postgres.
@@ -781,6 +782,26 @@ model WheelSpin {
   @@index([createdAt])
   @@index([userId])
   @@map("wheel_spins")
+}
+
+// =====================================================
+// GT MINI-GAMES — slots / coinflip gambling with Ghost Tokens (GT sink + engagement)
+// =====================================================
+
+model GtGamePlay {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game      String                              // "slots" | "coinflip"
+  bet       Int
+  payout    Int                                 // GT returned (0 = lost)
+  net       Int                                 // payout - bet
+  detail    String?                             // e.g. slot symbols "🍒🍒🍒"
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([net])
+  @@map("gt_game_plays")
 }
 
 // =====================================================

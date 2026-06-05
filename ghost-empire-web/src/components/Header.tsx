@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2 } from "lucide-react";
+import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5 } from "lucide-react";
 import { fmt, displayNick } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
 
@@ -12,6 +12,7 @@ const NAV = [
   { href: "/",             label: "HOME",        icon: Ghost },
   { href: "/shop",         label: "SKLEP",       icon: ShoppingBag },
   { href: "/wheel",        label: "KOŁO",        icon: Disc3 },
+  { href: "/kasyno",       label: "KASYNO",      icon: Dice5 },
   { href: "/games",        label: "GRY",         icon: Gamepad2 },
   { href: "/ranking",      label: "RANKING",     icon: Trophy },
   { href: "/events",       label: "EVENTY",      icon: Calendar },
