@@ -10,6 +10,10 @@ export function CustomWidgetCard({
   fontSizePx = 28,
   fontFamily = "Inter",
   showCard = true,
+  bgGradient = false,
+  bgColor1 = "#7928ca",
+  bgColor2 = "#ff0080",
+  bgAngle = 135,
 }: {
   text: string;
   accentColor?: string;
@@ -17,8 +21,13 @@ export function CustomWidgetCard({
   fontSizePx?: number;
   fontFamily?: string;
   showCard?: boolean;
+  bgGradient?: boolean;
+  bgColor1?: string;
+  bgColor2?: string;
+  bgAngle?: number;
 }) {
   const stack = fontStack(fontFamily);
+  const cardBg = bgGradient ? `linear-gradient(${bgAngle}deg, ${bgColor1}, ${bgColor2})` : "rgba(15, 15, 20, 0.92)";
 
   if (!showCard) {
     return (
@@ -42,8 +51,8 @@ export function CustomWidgetCard({
     <div
       style={{
         display: "inline-block",
-        background: "rgba(15, 15, 20, 0.92)",
-        backdropFilter: "blur(10px)",
+        background: cardBg,
+        backdropFilter: bgGradient ? undefined : "blur(10px)",
         border: `2px solid ${accentColor}`,
         borderRadius: 12,
         padding: "10px 18px",

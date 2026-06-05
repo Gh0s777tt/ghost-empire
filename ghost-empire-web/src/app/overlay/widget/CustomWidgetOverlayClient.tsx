@@ -19,6 +19,10 @@ type Feed =
       fontFamily: string;
       position: string;
       showCard: boolean;
+      bgGradient: boolean;
+      bgColor1: string;
+      bgColor2: string;
+      bgAngle: number;
     };
 
 function positionStyle(position: string): CSSProperties {
@@ -85,6 +89,10 @@ export function CustomWidgetOverlayClient() {
         fontSizePx={feed.fontSizePx}
         fontFamily={feed.fontFamily}
         showCard={feed.showCard}
+        bgGradient={feed.bgGradient}
+        bgColor1={feed.bgColor1}
+        bgColor2={feed.bgColor2}
+        bgAngle={feed.bgAngle}
       />
     </div>
   );

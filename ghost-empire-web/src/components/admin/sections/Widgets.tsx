@@ -18,6 +18,7 @@ const POSITIONS: Array<[string, string]> = [
 type CustomWidget = {
   id: string; name: string; text: string; accentColor: string; textColor: string;
   fontSizePx: number; fontFamily: string; position: string; showCard: boolean;
+  bgGradient: boolean; bgColor1: string; bgColor2: string; bgAngle: number;
 };
 
 type Widget = { id: string; name: string; path: string; desc: string; size: string; query?: string };
@@ -148,6 +149,10 @@ function CustomWidgetGenerator({
   const [fontFamily, setFontFamily] = useState("Inter");
   const [position, setPosition] = useState("top-left");
   const [showCard, setShowCard] = useState(true);
+  const [bgGradient, setBgGradient] = useState(false);
+  const [bgColor1, setBgColor1] = useState("#7928ca");
+  const [bgColor2, setBgColor2] = useState("#ff0080");
+  const [bgAngle, setBgAngle] = useState(135);
 
   const load = useCallback(async () => {
     try {
@@ -161,12 +166,14 @@ function CustomWidgetGenerator({
     setEditingId(null); setName(""); setText("");
     setAccentColor("#E50914"); setTextColor("#ffffff");
     setFontSizePx(28); setFontFamily("Inter"); setPosition("top-left"); setShowCard(true);
+    setBgGradient(false); setBgColor1("#7928ca"); setBgColor2("#ff0080"); setBgAngle(135);
   }
 
   function startEdit(w: CustomWidget) {
     setEditingId(w.id); setName(w.name); setText(w.text);
     setAccentColor(w.accentColor); setTextColor(w.textColor);
     setFontSizePx(w.fontSizePx); setFontFamily(w.fontFamily); setPosition(w.position); setShowCard(w.showCard);
+    setBgGradient(w.bgGradient); setBgColor1(w.bgColor1); setBgColor2(w.bgColor2); setBgAngle(w.bgAngle);
   }
 
   async function save() {
@@ -180,6 +187,7 @@ function CustomWidgetGenerator({
           action: editingId ? "update" : "create",
           id: editingId ?? undefined,
           name, text, accentColor, textColor, fontSizePx, fontFamily, position, showCard,
+          bgGradient, bgColor1, bgColor2, bgAngle,
         }),
       });
       const d = await res.json();
@@ -255,6 +263,29 @@ function CustomWidgetGenerator({
               Tło (karta)
             </label>
           </div>
+
+          {showCard && (
+            <div className="border border-zinc-800 bg-black/20 p-2 space-y-2">
+              <label className="flex items-center gap-2 text-[11px] text-zinc-300 cursor-pointer">
+                <input type="checkbox" checked={bgGradient} onChange={(e) => setBgGradient(e.target.checked)} className="accent-red-500" />
+                Tło gradientowe 🌈
+              </label>
+              {bgGradient && (
+                <div className="grid grid-cols-[auto_auto_1fr] gap-3 items-end">
+                  <label className="text-[10px] text-zinc-400">Kolor 1
+                    <input type="color" value={bgColor1} onChange={(e) => setBgColor1(e.target.value)} className="block w-12 h-7 mt-0.5 bg-black border border-zinc-800 cursor-pointer" />
+                  </label>
+                  <label className="text-[10px] text-zinc-400">Kolor 2
+                    <input type="color" value={bgColor2} onChange={(e) => setBgColor2(e.target.value)} className="block w-12 h-7 mt-0.5 bg-black border border-zinc-800 cursor-pointer" />
+                  </label>
+                  <label className="text-[10px] text-zinc-400">Kąt: {bgAngle}°
+                    <input type="range" min={0} max={360} value={bgAngle} onChange={(e) => setBgAngle(parseInt(e.target.value, 10))} className="w-full" />
+                  </label>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button onClick={save} disabled={busy || !text.trim()}
               className="flex-1 px-3 py-2 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center justify-center gap-1.5">
@@ -274,7 +305,7 @@ function CustomWidgetGenerator({
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Podgląd</label>
           <div className="border border-zinc-800 rounded-sm p-6 min-h-[120px] flex items-center justify-center"
             style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}>
-            <CustomWidgetCard text={text || "Twój tekst…"} accentColor={accentColor} textColor={textColor} fontSizePx={fontSizePx} fontFamily={fontFamily} showCard={showCard} />
+            <CustomWidgetCard text={text || "Twój tekst…"} accentColor={accentColor} textColor={textColor} fontSizePx={fontSizePx} fontFamily={fontFamily} showCard={showCard} bgGradient={bgGradient} bgColor1={bgColor1} bgColor2={bgColor2} bgAngle={bgAngle} />
           </div>
         </div>
       </div>
