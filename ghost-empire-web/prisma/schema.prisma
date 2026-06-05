@@ -1280,6 +1280,10 @@ model CustomWidget {
   fontFamily  String   @default("Inter")          // Inter | JetBrains Mono | Anton | system
   position    String   @default("top-left")       // {top|center|bottom}-{left|center|right}
   showCard    Boolean  @default(true)             // card background vs bare text
+  bgGradient  Boolean  @default(false)            // when showCard: gradient background instead of dark card
+  bgColor1    String   @default("#7928ca")        // gradient stop 1 (hex)
+  bgColor2    String   @default("#ff0080")        // gradient stop 2 (hex)
+  bgAngle     Int      @default(135)              // gradient angle in degrees (0-360)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

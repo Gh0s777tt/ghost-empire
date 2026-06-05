@@ -27,5 +27,9 @@ export async function GET(req: Request) {
     fontFamily: w.fontFamily,
     position: w.position,
     showCard: w.showCard,
+    bgGradient: w.bgGradient,
+    bgColor1: w.bgColor1,
+    bgColor2: w.bgColor2,
+    bgAngle: w.bgAngle,
   });
 }

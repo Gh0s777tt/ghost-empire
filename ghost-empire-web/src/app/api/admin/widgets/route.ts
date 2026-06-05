@@ -37,6 +37,10 @@ export async function POST(req: Request) {
       fontFamily: typeof body.fontFamily === "string" ? body.fontFamily.slice(0, 40) : "Inter",
       position: typeof body.position === "string" && POSITIONS.includes(body.position) ? body.position : "top-left",
       showCard: typeof body.showCard === "boolean" ? body.showCard : true,
+      bgGradient: typeof body.bgGradient === "boolean" ? body.bgGradient : false,
+      bgColor1: hex(body.bgColor1, "#7928ca"),
+      bgColor2: hex(body.bgColor2, "#ff0080"),
+      bgAngle: clampInt(body.bgAngle, 0, 360, 135),
     };
     if (body.action === "update") {
       if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
