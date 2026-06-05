@@ -82,7 +82,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 
 | Propozycja | Pri | Notatki |
 |---|---|---|
-| **CSP nonces — usunięcie `unsafe-inline`/`unsafe-eval`** | 🔥 | Najważniejsze utwardzenie CSP. Wymaga nonce middleware Next.js + przepięcia inline styli/skryptów. Ryzyko regresji → osobna sesja z testami |
+| **CSP — `'unsafe-eval'` usunięte** ✅ / nonce dla `'unsafe-inline'` 🔥 | częściowo | ✅ **(#164)** `'unsafe-eval'` wycięte ze `script-src` (prod React/Next go nie potrzebuje; zweryfikowane E2E ze strażnikiem naruszeń CSP w konsoli). **Zostaje:** usunięcie `'unsafe-inline'` ze `script-src` przez nonce middleware (inline `style=` w overlayach wymusza pozostawienie `style-src 'unsafe-inline'`) — osobna sesja z testami w przeglądarce |
 | **2FA / step-up dla akcji admina** | 🟡 | Wrażliwe akcje (grant dużych kwot, merge, ban) za dodatkowym potwierdzeniem |
 | ~~**Audyt zależności**~~ ✅ | — | **Zrobione (#156)** — `npm audit --omit=dev --audit-level=high` w CI (nieblokujący) + Dependabot (patrz §1) |
 | ~~**Rotacja sekretów + skan**~~ ✅ | — | **Zrobione** — skan: **GitGuardian** (na PR) + **runbook rotacji** w [docs/ENV.md §5](docs/ENV.md) (`BOT_SECRET`/`NEXTAUTH_SECRET`/`ENCRYPTION_KEY`/OAuth/EventSub/tokeny botów/webhooki) |
