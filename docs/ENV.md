@@ -18,6 +18,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `DATABASE_URL` | Postgres (Supabase, **transaction pooler 6543**, `connection_limit=3`) | Supabase → Database → Connection string |
 | `DIRECT_URL` | Postgres bezpośredni (port 5432) — migracje / `db push` | Supabase (Session) |
 | `BOT_SECRET` | Bearer dla `/api/internal/*` i `/api/bot/*` — **ten sam** w obu botach | `openssl rand -hex 32` |
+| `ENCRYPTION_KEY` (O) | Klucz do szyfrowania sekretów at-rest (AES-256-GCM): klucze API + tokeny OAuth w bazie. **Opcjonalny** — gdy brak, używany jest `NEXTAUTH_SECRET`. W prod warto ustawić dedykowany, by odpiąć szyfrowanie od auth. ⚠️ Po zmianie klucza stare zaszyfrowane wartości stają się nieczytelne (klucze API → wklej ponownie w `/admin#integrations`, tokeny → ponowna autoryzacja). | `openssl rand -hex 32` |
 
 ### Logowanie (OAuth) — R dla danego dostawcy
 | Zmienna | Dostawca | Skąd |
@@ -53,7 +54,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `DONATION_GT_PER_PLN` | Ile GT za 1 PLN donacji (default w kodzie) |
 | `PAYMEDIA_WEBHOOK_SECRET` / `PAYMEDIA_GT_PER_PLN` | Webhook dostawcy płatności PayMedia (alternatywa donacji) |
 | `OVERLAY_TOKEN` | **Legacy/fallback** — token overlayów OBS. Domyślnie token jest auto-generowany w bazie i widoczny/rotowalny w `/admin#alerts`; ten env nie jest potrzebny |
-| `CRON_SECRET` | Bearer chroniący `/api/cron/streamlabs-poll` (Vercel Cron) |
+| `CRON_SECRET` | Bearer chroniący crony Vercel: `/api/cron/streamlabs-poll` (polling donacji) i `/api/cron/prune` (czyszczenie starych rekordów) |
 | `NODE_ENV` | Ustawiane przez platformę (`production`/`development`) — nie ustawiasz ręcznie |
 
 ---

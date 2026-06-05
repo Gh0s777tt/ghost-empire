@@ -86,6 +86,44 @@ const STEPS = [
 
 const CHANGELOG = [
   {
+    date: "2026-06-05",
+    title: "Koło Fortuny 🎡",
+    items: [
+      "Nowa zabawa: wydaj Ghost Tokens, zakręć kołem i wygraj nagrody GT — wejdź w zakładkę „Koło”.",
+      "Każde zakręcenie pokazuje się też na streamie z animacją koła i ogłoszeniem zwycięzcy.",
+    ],
+  },
+  {
+    date: "2026-06-05",
+    title: "Czat na streamie: prawdziwe odznaki i emotki",
+    items: [
+      "Overlay czatu pokazuje teraz prawdziwe grafiki odznak Twitcha oraz emotki 7TV / BetterTTV / FrankerFaceZ (kanałowe i globalne).",
+    ],
+  },
+  {
+    date: "2026-06-05",
+    title: "Zakłady: auto-zamykanie + ogłaszanie na czacie",
+    items: [
+      "Zakład sam zamyka się o ustawionej godzinie — status na stronie i overlayu zgadza się z czasem obstawiania.",
+      "Możesz włączyć lub wyłączyć przypominanie o konkretnym zakładzie na czacie przez bota.",
+    ],
+  },
+  {
+    date: "2026-06-05",
+    title: "Moderacja: surowsze kary dla recydywistów",
+    items: [
+      "Powtarzające się naruszenia są karane mocniej (ostrzeżenie → usunięcie → timeout, z rosnącym czasem).",
+      "Panel pokazuje statystyki naruszeń i najczęstszych sprawców.",
+    ],
+  },
+  {
+    date: "2026-06-05",
+    title: "Bezpieczeństwo: szyfrowanie danych",
+    items: [
+      "Wszystkie klucze API i tokeny logowania platform są teraz szyfrowane w bazie danych.",
+    ],
+  },
+  {
     date: "2026-06-03",
     title: "Alerty na streamie — ustawienia per typ",
     items: [

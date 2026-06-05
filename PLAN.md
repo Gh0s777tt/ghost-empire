@@ -17,8 +17,15 @@ Duży zrzut pomysłów od usera + moje propozycje. Pogrupowane wg autonomii; kol
 > - **F2 ✅** — rdzeń detektorów (#118) + panel `/admin#moderation` (#119… właśc. moderation panel) + **egzekucja w bocie** Twitch/Kick/YouTube (#130).
 > - **F3 ✅** — biblioteka widgetów (#125) + 6 widgetów (#126–#128, #132) + generator (#129).
 > - **F5 ✅** — czcionki (#133) · emoji-picker (#134) · emotki+odznaki w czacie (#135) · gradienty (#136).
-> - **F6 🟡** — backup JSON (#137) + sanityzacja URL/XSS (#138). **Zostało:** szyfrowanie sekretów at-rest, CSP, auto-backup na osobny serwer (decyzja: dokąd), AV uploadów (jeśli pliki).
+> - **F6 ✅ (rozszerzone)** — backup JSON (#137) + sanityzacja URL/XSS (#138) + ✅ **szyfrowanie sekretów at-rest AES-256-GCM** (klucze API #146, tokeny OAuth #147) + ✅ **nagłówki overlay `noindex`/`no-store`** (#148) + ✅ **cron czyszczący bazę** (#151). **Zostało:** auto-backup `pg_dump` na osobny serwer (decyzja: dokąd), AV uploadów (jeśli pliki).
 > - **F4 🔑** — gotowy panel integracji (`/admin#integrations`) na klucz AI → po wklejeniu buduję postać `@bot` + `!imagine`.
+>
+> ### ✅ STATUS (2026-06-05, po 8 PR-ach #146–#153 — „zrób 1/2/3 + moje pomysły")
+> - 🔐 **#1 Bezpieczeństwo** — szyfrowanie kluczy API (#146) + tokenów OAuth/streamer (#147) + nagłówki overlay (#148).
+> - 💬 **#2 Czat** — prawdziwe odznaki Twitch + emotki 7TV/BTTV/FFZ (#149).
+> - 🎰 **#3 Nowy moduł** — **Koło Fortuny** (`/wheel` + overlay OBS + panel admina) (#150).
+> - ➕ **Moje pomysły:** cron czyszczący bazę (#151) · predictions auto-close + announce-to-chat (#152) · eskalacja moderacji recydywistów + statystyki naruszeń (#153, ⚠️ aktywne po restarcie bota).
+> - **Świadomie odroczone (z powodem):** E2E Playwright / Lighthouse CI (wymagają `next build` + serwera — niedostępne lokalnie) · Prettier (ogromny diff formatu vs. ustalony styl ESLint) · widgety zapis pozycji/rozmiaru (OBS sam pozycjonuje Browser Source) · AI-moderacja (czeka na klucz API).
 
 **✅ Najpierw naprawione bugi prywatności (PR #115):** imię/nazwisko zamaskowane (`displayNick`) w rankingu/eventach/home/OG-image; mail (`@…dam`) wyrugowany z „Połączone konta" (`isPublicHandle` + źródło w `auth.ts`); audit log z czytelnymi etykietami (anulowanie predykcji **ma** być w audycie). *(Dane „at-rest" w bazie nietknięte — wszystkie ścieżki renderu maskują; opcjonalny scrub bazy do zrobienia na życzenie.)*
 

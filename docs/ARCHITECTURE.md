@@ -63,8 +63,11 @@ Wzorzec: strona `/overlay/<x>` (transparentna, `pointer-events:none`) **odpytuje
 | `/overlay/viewers` | `/api/alerts/viewers` | Liczba widzów (Twitch Helix) |
 | `/overlay/widget?id=` | `/api/alerts/widget` | Własny widget z generatora (tekst/kolor/font/gradient) |
 | `/overlay/emoji-combo` | `/api/alerts/emoji-combo` | Wybuch „×N COMBO" przy spamie emoji |
+| `/overlay/wheel` | `/api/alerts/wheel` | Koło Fortuny — animacja zakręcenia + zwycięzca |
 
-Jeden wspólny `OVERLAY_TOKEN` (auto-generowany w bazie, rotowalny w `/admin#alerts`). Komponenty prezentacyjne (`AlertCard`, `GoalBar`, `SubathonCard`, `ChatMessageRow`, `CodeCard`, `PredictionOverlayCard`, `PollOverlayCard`, `LastEventCard`, `CustomWidgetCard`) są **współdzielone** przez overlay i podglądy w panelu (w tym **biblioteka widgetów** `/admin#widgets`) → podgląd = realny wygląd. Czat overlay renderuje **prawdziwe emotki + odznaki Twitcha**.
+Jeden wspólny `OVERLAY_TOKEN` (auto-generowany w bazie, rotowalny w `/admin#alerts`). Trasy `/overlay/*` dostają nagłówki `noindex`/`no-store`. Komponenty prezentacyjne (`AlertCard`, `GoalBar`, `SubathonCard`, `ChatMessageRow`, `CodeCard`, `PredictionOverlayCard`, `PollOverlayCard`, `LastEventCard`, `CustomWidgetCard`, `WheelGraphic`) są **współdzielone** przez overlay i podglądy w panelu (w tym **biblioteka widgetów** `/admin#widgets`) → podgląd = realny wygląd. Czat overlay renderuje **prawdziwe odznaki Twitcha + emotki 7TV/BTTV/FFZ** (`lib/chat-assets.ts`, cache, `/api/chat/assets`).
+
+> **🔐 Sekrety at-rest:** klucze API (`IntegrationConfig`) i tokeny OAuth/streamer (`Connection`, `TwitchStreamerToken`, `KickStreamerToken`, `YouTubeStreamerToken`, `StreamlabsConnection`) są szyfrowane AES-256-GCM przez `lib/crypto.ts` (klucz z `ENCRYPTION_KEY`/`NEXTAUTH_SECRET`). Odczyt deszyfruje transparentnie; legacy plaintext działa i szyfruje się przy następnym zapisie.
 
 ---
 

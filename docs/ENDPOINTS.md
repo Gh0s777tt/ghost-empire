@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **94** tras
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **102** trasy
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -49,7 +49,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 |---|---|---|
 | `…/api/shop/buy` | POST | Zakup przedmiotu (sprawdza wymagania: level/sub/mc/osiągnięcie) |
 | `…/api/polls/vote` | POST | Głos w ankiecie (1/usera, zmienialny; rate-limit) |
-| `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT |
+| `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT (auto-zamykanie po `closesAt`) |
+| `…/api/wheel` · `…/api/wheel/spin` | GET/POST | Koło Fortuny — stan + zakręcenie (wydaje GT, rate-limit 20/min) |
 | `…/api/events/join` · `…/api/events/raffle-tickets` | POST | Dołączenie do eventu / kupno losów raffle |
 | `…/api/drops/claim` | POST | Odbiór drop-code z czatu |
 | `…/api/seasons/claim` | POST | Odbiór nagrody Battle Pass |
@@ -74,7 +75,9 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/events` · `/events/draw` | perm:create_events / draw_events | Eventy + losowanie |
 | `…/api/admin/drops` | perm:create_drops | Drop-code'y |
 | `…/api/admin/stream-goals` | admin | Stream Goals (overlay) |
-| `…/api/admin/predictions` | perm:create_events | Tworzenie/rozliczanie predykcji |
+| `…/api/admin/predictions` | perm:create_events | Tworzenie/rozliczanie predykcji (+ `toggle_announce`) |
+| `…/api/admin/wheel` | admin | Konfiguracja Koła Fortuny (koszt, segmenty) + statystyki |
+| `…/api/admin/mod-violations` | admin | Statystyki naruszeń moderacji + top recydywiści |
 | `…/api/admin/donations` | admin | Donacje / dopasowania |
 | `…/api/admin/streamlabs` | admin | Stan połączenia Streamlabs |
 | `…/api/admin/subathon` | admin | Subathon (start/stop/±czas) |
@@ -97,6 +100,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 |---|---|
 | `…/api/bot/config` | Parametry nagród (message/voice) |
 | `…/api/bot/chat-commands` · `chat-timers` · `faq` · `welcome` | Komendy / timery / FAQ / powitania |
+| `…/api/bot/moderation` | Konfiguracja automod (reguły + akcje) |
+| `…/api/bot/active-prediction` | Otwarty zakład do re-anonsu na czacie (tylko `announceToChat`) |
 
 ## Internal (botSecret) — boty wysyłają zdarzenia
 | Trasa | Po co |
@@ -106,6 +111,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/internal/chat-feed` | Push wiadomości do overlaya czatu |
 | `…/api/internal/song-request` | Dodanie utworu do kolejki `!sr` |
 | `…/api/internal/link-discord` | Powiązanie konta Discord kodem |
+| `…/api/internal/mod-violation` | Log naruszenia automod (po egzekucji) — statystyki + eskalacja |
 
 ## Źródła OBS (overlayToken, odczyt)
 | Trasa | Overlay |
@@ -114,6 +120,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/alerts/goals` | `/overlay/goals` (cele + hype train) |
 | `…/api/alerts/chat` | `/overlay/chat` (czat 3 platform) |
 | `…/api/alerts/subathon` | `/overlay/subathon` (odliczanie) |
+| `…/api/alerts/wheel` | `/overlay/wheel` (Koło Fortuny — animacja zakręcenia) |
+| `…/api/chat/assets` | `/overlay/chat` (odznaki Twitch + emotki 7TV/BTTV/FFZ) |
 | `…/api/codes/current` | `/overlay/codes` (rotacja kodów) |
 
 ## Webhooki / polling / cron (public + własny podpis)
@@ -124,6 +132,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/webhooks/paymedia` | Webhook płatności PayMedia (sekret) |
 | `…/api/yt/poll-live-chat` | Polling YouTube Live Chat (super chaty / membery) |
 | `…/api/cron/streamlabs-poll` | Cron (Vercel) — polling donacji Streamlabs (`CRON_SECRET`) |
+| `…/api/cron/prune` | Cron (Vercel, 04:00) — czyszczenie starych rekordów transientowych (`CRON_SECRET`) |
 
 ---
 

@@ -18,10 +18,12 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 - **Postać `@bot`** (osobowości + wybór modelu Grok/GPT/Gemini/DeepSeek/Anthropic/Bielik + limity) + **`!imagine`** (obrazy).
 - **AI-moderacja** (toksyczność przez API) jako rozszerzenie automoda.
 
+> **🆕 Świeżo dowiezione (2026-06-05, PR #146–#153):** 🎰 **Koło Fortuny** (moduł `/wheel` + overlay OBS + panel) · 🔐 **szyfrowanie sekretów at-rest** (klucze API #146, tokeny OAuth #147) + nagłówki overlay #148 · 💬 **prawdziwe odznaki Twitch + emotki 7TV/BTTV/FFZ** #149 · 🧹 cron czyszczący bazę #151 · 🎲 predictions auto-close + announce #152 · 🛡️ **eskalacja moderacji recydywistów + statystyki** #153.
+
 **Pozostałe duże kierunki:**
-- **F6 — security/backup** (część zrobiona: backup JSON, sanityzacja URL): **szyfrowanie sekretów at-rest**, CSP/headers, auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
+- **F6 — security/backup** (zrobione: backup JSON, sanityzacja URL, ✅ **szyfrowanie sekretów at-rest AES-256-GCM**, ✅ **nagłówki overlay `noindex`/`no-store`**, ✅ **cron czyszczący bazę**). Zostaje: auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
 - **Hardware (3C):** OBS WebSocket (panel integracji już przyjmuje adres+hasło), Philips Hue / Govee (efekty świetlne na donejty) — konta dev.
-- **Emotki 7TV/BTTV/FFZ** + prawdziwe grafiki odznak (teraz emoji-zamienniki).
+- ✅ **Emotki 7TV/BTTV/FFZ + prawdziwe grafiki odznak** — zrobione (#149).
 - **i18n PL/EN**, testy integracyjne (Docker Postgres) + E2E (Playwright), Lighthouse CI.
 
 > Decyzja: priorytet (AI vs security vs hardware vs emotki). Hardware (Hue/Govee) + AI wymagają kont/kluczy.

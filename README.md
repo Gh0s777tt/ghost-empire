@@ -45,8 +45,13 @@ Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** 
 
 ## 🆕 Studio (2026-06) — customizacja · widgety · moderacja · UX
 
-Duża seria po Phase 3D (36 PR-ów):
+Duża seria po Phase 3D (44+ PR-ów):
 
+- **🎰 Koło Fortuny:** widzowie wydają GT, kręcą ważonym kołem i wygrywają nagrody — strona `/wheel` + animowany overlay OBS `/overlay/wheel` + panel admina (segmenty, koszt, bilans domu).
+- **🔐 Bezpieczeństwo:** **szyfrowanie sekretów at-rest** (AES-256-GCM) — klucze API i wszystkie tokeny OAuth/streamer w bazie · nagłówki `noindex`/`no-store` na overlayach · cron czyszczący stare rekordy.
+- **💬 Czat:** **prawdziwe odznaki Twitch** + **emotki 7TV / BTTV / FFZ** w overlayu czatu (kanałowe i globalne).
+- **🛡️ Moderacja:** **eskalacja recydywistów** (ostrzeżenie → usuń → timeout ×2) + **statystyki naruszeń** (top sprawcy, wykres typów).
+- **🎲 Predictions:** **auto-zamykanie** po czasie + toggle „ogłaszaj na czacie" per zakład.
 - **🎨 F1 — customizacja:** Subathon (edytowalny kolor + napis) · predykcje + ankiety (kolor akcentu, **podgląd na żywo**, overlay OBS, **auto-pin zakładu na czacie**) · **plan streamów jako kalendarz miesięczny**.
 - **🛡️ F2 — moderacja czatu (automod):** panel `/admin#moderation` (przekleństwa z leetspeak · CAPS · długość · powtórzenia/flood · zalgo, akcje delete/timeout/warn, whitelista sub/VIP/mod) + **egzekucja w bocie** na Twitch/Kick/YouTube.
 - **🧩 F3 — widgety:** **biblioteka** wszystkich overlayów (URL + **podgląd**) + 6 nowych (ostatni sub/donator/follower, viewer count, **emoji combo**) + **generator własnych widgetów** (tekst / kolor / font / gradient / emoji).
@@ -144,7 +149,7 @@ flowchart LR
 
 - **Chat bot Twitch + Kick + YouTube** — 1 GT/min/widz, komendy z portalu (`/admin#chat`), auto-refresh tokenów
 - **Engagement (3B)** — timery, FAQ, powitania, song requesty `!sr`, **chat overlay** (kolory per platforma, customizacja)
-- **Stream Goals + Hype Train**, **Predictions** (`/predictions`), **Battle Pass / Sezony** (30 tierów, nagrody tokenowe i rzeczowe), **Subathon**
+- **Stream Goals + Hype Train**, **Predictions** (`/predictions`, auto-zamykanie), **Battle Pass / Sezony** (30 tierów, nagrody tokenowe i rzeczowe), **Subathon**, **Koło Fortuny** (`/wheel` + overlay)
 - **Alerty per-typ (3C)** — animacja / pozycja / dźwięk / próg kwotowy **osobno dla każdego typu** (`/admin#alerts`, klik → rozwija)
 - **NASTĘPNE (3C/3D):** OBS WebSocket (sceny), Philips Hue / Govee (światła), AI moderator, analityka per-stream — plan w [PHASE3.md](PHASE3.md)
 </details>
@@ -156,19 +161,19 @@ flowchart LR
 | Obszar | Co |
 |---|---|
 | **Reliability** | `error.tsx` / `global-error.tsx` / `loading.tsx`, atomic `$transaction` na każdej mutacji ekonomii, `/api/health` (200/503) |
-| **Security** | HSTS, CSP, COOP, X-Frame-Options, Permissions-Policy · rate-limit (DB sliding-window) · webhook verify (HMAC/RSA) · HMAC-signed cookies · audit log z IP · skan sekretów (GitGuardian) |
+| **Security** | **szyfrowanie sekretów at-rest (AES-256-GCM)** — klucze API + tokeny OAuth · HSTS, CSP, COOP, X-Frame-Options, Permissions-Policy · `noindex`/`no-store` na overlayach · rate-limit (DB sliding-window) · webhook verify (HMAC/RSA) · HMAC-signed cookies · audit log z IP · skan sekretów (GitGuardian) |
 | **Performance** | `unstable_cache`, indeksy DB, lazy-load sekcji admina, Router `staleTimes`, `Promise.all`, pula DB `max:3` pod Supabase |
 | **a11y** | `:focus-visible`, skip-link, `prefers-reduced-motion`, `aria-label`/`aria-current` na nav, `role="dialog"` na modalach |
-| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest (41) · Dependabot · dokumentacja na bieżąco |
+| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest (111) · Dependabot · dokumentacja na bieżąco |
 
 ---
 
 ## 🧑‍💻 Panel admina (`/admin`)
 
 <details>
-<summary><b>~24 sekcji (deep-link przez hash, filtrowane wg uprawnień moderatora)</b></summary>
+<summary><b>~26 sekcji (deep-link przez hash, filtrowane wg uprawnień moderatora)</b></summary>
 
-Dashboard · Użytkownicy (grant GT, role, opisy uprawnień) · Merge duplikatów · Eventy · Sklep · Drops · Harmonogram · Bot Discord · Donacje · Twitch / Kick / YouTube (autoryzacja + eventy) · Komendy czatu · Timery · FAQ · Powitania · Song requesty · **Stream Alerts (typy + per-typ)** · Stream Goals · Subathon · Predictions · Battle Pass · **Ankiety** · **Analityka (heatmapa czatu)** · Audit log · **Reset bazy** (strefa niebezpieczna).
+Dashboard · Użytkownicy (grant GT, role, opisy uprawnień) · Merge duplikatów · **Moderacja (automod + statystyki naruszeń)** · Eventy · Sklep · Drops · **Koło Fortuny** · Harmonogram · Bot Discord · Donacje · Twitch / Kick / YouTube (autoryzacja + eventy) · Komendy czatu · Timery · FAQ · Powitania · Song requesty · **Stream Alerts (typy + per-typ)** · Stream Goals · Subathon · Predictions · Battle Pass · **Ankiety** · **Analityka (heatmapa czatu)** · **Integracje (klucze API)** · Audit log · **Reset bazy** (strefa niebezpieczna).
 </details>
 
 ---
