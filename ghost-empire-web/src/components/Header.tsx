@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3 } from "lucide-react";
+import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3 } from "lucide-react";
 import { fmt, displayNick } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
 
 const NAV = [
   { href: "/",             label: "HOME",        icon: Ghost },
   { href: "/shop",         label: "SKLEP",       icon: ShoppingBag },
+  { href: "/wheel",        label: "KOŁO",        icon: Disc3 },
   { href: "/ranking",      label: "RANKING",     icon: Trophy },
   { href: "/events",       label: "EVENTY",      icon: Calendar },
   { href: "/polls",        label: "ANKIETY",     icon: BarChart3 },

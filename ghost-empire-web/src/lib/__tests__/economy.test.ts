@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computePayouts, tierFromXp, plnFromCurrency } from "@/lib/economy";
+import { computePayouts, tierFromXp, plnFromCurrency, pickWeightedIndex } from "@/lib/economy";
 
 describe("computePayouts", () => {
   it("gives the whole pot to a single winner", () => {
@@ -68,5 +68,48 @@ describe("plnFromCurrency", () => {
   it("applies the ×4 USD-equivalent fallback to other currencies", () => {
     expect(plnFromCurrency(10, "USD")).toBe(40);
     expect(plnFromCurrency(10, "eur")).toBe(40);
+  });
+});
+
+describe("pickWeightedIndex", () => {
+  const weights = [40, 25, 18, 10, 5, 2]; // wheel-of-fortune style distribution
+
+  it("lands in the first segment at the bottom of the range", () => {
+    expect(pickWeightedIndex(weights, 0)).toBe(0);
+  });
+
+  it("lands in the last segment at the top of the range", () => {
+    expect(pickWeightedIndex(weights, 0.999999)).toBe(weights.length - 1);
+  });
+
+  it("respects the cumulative boundaries", () => {
+    // total = 100. rng 0.40 → exactly the boundary into segment 1; 0.39 still in 0.
+    expect(pickWeightedIndex(weights, 0.39)).toBe(0);
+    expect(pickWeightedIndex(weights, 0.41)).toBe(1);
+    expect(pickWeightedIndex(weights, 0.66)).toBe(2); // 40+25=65 .. 83
+  });
+
+  it("skips zero-weight segments entirely", () => {
+    // segment 1 has weight 0 → never selected; 0.0 and 0.99 both avoid index 1
+    const w = [1, 0, 1];
+    expect(pickWeightedIndex(w, 0)).toBe(0);
+    expect(pickWeightedIndex(w, 0.99)).toBe(2);
+  });
+
+  it("clamps negative weights to zero and falls back to 0 on an all-zero total", () => {
+    expect(pickWeightedIndex([0, 0, 0], 0.5)).toBe(0);
+    expect(pickWeightedIndex([-5, -5], 0.5)).toBe(0);
+  });
+
+  it("roughly matches the distribution over many samples", () => {
+    const counts = new Array(weights.length).fill(0);
+    const N = 60_000;
+    for (let i = 0; i < N; i++) counts[pickWeightedIndex(weights, Math.random())]++;
+    const total = weights.reduce((a, b) => a + b, 0);
+    weights.forEach((w, i) => {
+      const expected = w / total;
+      const actual = counts[i] / N;
+      expect(Math.abs(actual - expected)).toBeLessThan(0.03); // within 3pp
+    });
   });
 });

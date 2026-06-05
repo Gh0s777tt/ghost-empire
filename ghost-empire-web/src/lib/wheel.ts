@@ -1,0 +1,138 @@
+// src/lib/wheel.ts
+// Wheel of Fortune (Koło Fortuny). Viewers spend Ghost Tokens to spin a weighted
+// wheel and win GT back. Config (cost + segments) is a singleton; each spin is
+// recorded in WheelSpin and drives the /overlay/wheel animation. The token math
+// runs in a single transaction so a spin can never charge without recording, or
+// reward without charging.
+import { prisma } from "@/lib/prisma";
+import { pickWeightedIndex } from "@/lib/economy";
+
+export type WheelSegment = {
+  label: string;
+  weight: number;       // relative probability (>0)
+  rewardTokens: number; // GT won when landed on (0 = no reward)
+  color: string;        // hex for the overlay slice
+};
+
+// Sensible starter wheel — house-favoured but with a juicy jackpot.
+export const DEFAULT_SEGMENTS: WheelSegment[] = [
+  { label: "Pudło", weight: 40, rewardTokens: 0, color: "#3f3f46" },
+  { label: "50 GT", weight: 25, rewardTokens: 50, color: "#6366f1" },
+  { label: "100 GT", weight: 18, rewardTokens: 100, color: "#8b5cf6" },
+  { label: "250 GT", weight: 10, rewardTokens: 250, color: "#ec4899" },
+  { label: "500 GT", weight: 5, rewardTokens: 500, color: "#f59e0b" },
+  { label: "JACKPOT 1000 GT", weight: 2, rewardTokens: 1000, color: "#10b981" },
+];
+
+export class WheelError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+  }
+}
+
+/** Coerce a stored/incoming segments blob into a safe WheelSegment[]. */
+export function parseSegments(raw: unknown): WheelSegment[] {
+  if (!Array.isArray(raw)) return DEFAULT_SEGMENTS;
+  const out: WheelSegment[] = [];
+  for (const s of raw) {
+    if (!s || typeof s !== "object") continue;
+    const rec = s as Record<string, unknown>;
+    const label = String(rec.label ?? "").trim().slice(0, 40);
+    const weight = Math.max(0, Math.floor(Number(rec.weight) || 0));
+    const rewardTokens = Math.max(0, Math.min(1_000_000, Math.floor(Number(rec.rewardTokens) || 0)));
+    const color = typeof rec.color === "string" && /^#[0-9a-fA-F]{3,8}$/.test(rec.color) ? rec.color : "#6366f1";
+    if (label && weight > 0) out.push({ label, weight, rewardTokens, color });
+  }
+  // Need at least 2 valid segments to make a wheel; otherwise fall back to defaults.
+  return out.length >= 2 ? out.slice(0, 12) : DEFAULT_SEGMENTS;
+}
+
+export type WheelConfigView = { enabled: boolean; costPerSpin: number; segments: WheelSegment[] };
+
+export async function getWheelConfig(): Promise<WheelConfigView> {
+  const c = await prisma.wheelConfig.upsert({
+    where: { id: "default" },
+    create: { id: "default" },
+    update: {},
+  });
+  return {
+    enabled: c.enabled,
+    costPerSpin: c.costPerSpin,
+    segments: parseSegments(c.segments),
+  };
+}
+
+export type SpinResult = {
+  spinId: string;
+  segmentIndex: number;
+  segmentLabel: string;
+  rewardTokens: number;
+  cost: number;
+  net: number;       // rewardTokens - cost
+  newBalance: number;
+  actorName: string;
+  actorImage: string | null;
+};
+
+/** Charge a spin, pick a weighted segment, grant any reward, record it — atomically. */
+export async function spinWheel(userId: string): Promise<SpinResult> {
+  const cfg = await getWheelConfig();
+  if (!cfg.enabled) throw new WheelError("Koło Fortuny jest aktualnie wyłączone", 403);
+  if (cfg.segments.length < 2) throw new WheelError("Koło nie jest skonfigurowane", 409);
+
+  const idx = pickWeightedIndex(cfg.segments.map((s) => s.weight), Math.random());
+  const seg = cfg.segments[idx];
+  const cost = cfg.costPerSpin;
+
+  const { spinId, balance, actorName, actorImage } = await prisma.$transaction(async (tx) => {
+    // Charge atomically — only succeeds if the user can afford the spin.
+    const charged = await tx.user.updateMany({
+      where: { id: userId, tokens: { gte: cost } },
+      data: { tokens: { decrement: cost }, totalSpent: { increment: cost } },
+    });
+    if (charged.count === 0) throw new WheelError("Za mało Ghost Tokens na zakręcenie", 402);
+
+    await tx.transaction.create({
+      data: { userId, type: "spend", amount: -cost, reason: "wheel:spin", status: "completed" },
+    });
+
+    if (seg.rewardTokens > 0) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { tokens: { increment: seg.rewardTokens }, totalEarned: { increment: seg.rewardTokens } },
+      });
+      await tx.transaction.create({
+        data: { userId, type: "earn", amount: seg.rewardTokens, reason: `wheel:win:${seg.label}`.slice(0, 200), status: "completed" },
+      });
+    }
+
+    const spin = await tx.wheelSpin.create({
+      data: { userId, segmentLabel: seg.label, rewardTokens: seg.rewardTokens, cost },
+      select: { id: true },
+    });
+
+    const fresh = await tx.user.findUnique({
+      where: { id: userId },
+      select: { tokens: true, username: true, displayName: true, image: true },
+    });
+
+    return {
+      spinId: spin.id,
+      balance: fresh?.tokens ?? 0,
+      actorName: fresh?.displayName || fresh?.username || "Anon",
+      actorImage: fresh?.image ?? null,
+    };
+  });
+
+  return {
+    spinId,
+    segmentIndex: idx,
+    segmentLabel: seg.label,
+    rewardTokens: seg.rewardTokens,
+    cost,
+    net: seg.rewardTokens - cost,
+    newBalance: balance,
+    actorName,
+    actorImage,
+  };
+}
