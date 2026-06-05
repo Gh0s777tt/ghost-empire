@@ -123,7 +123,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 - 🟡 **Wybór dostawcy donacji** — nie tylko Streamlabs; wybór platformy w panelu (każdy dostawca = osobna integracja)
 - 🟡 **AI Moderator — wybór modelu/dostawcy** (Anthropic / OpenAI / Google), nie tylko jeden — abstrakcja providera + setting
 - ✅ **Ankiety / głosowania** na stronie — **ZROBIONE**: `/polls` (głosowanie + wyniki na żywo) + `/admin#polls` (tworzenie/zamykanie/usuwanie). Modele `Poll`/`PollVote`.
-- 🧊 **Integracje:** Rumble, Trovo, Instagram, Facebook, X, TikTok
+- **Integracje:** ✅ **Rumble status (#167)** (overlay `/overlay/rumble` — LIVE/widzowie/followers). 🧊 Trovo, Instagram, Facebook, X (X wymaga płatnego planu API), TikTok
 - 🧊 **Redesign / lepszy layout** — czytelność, przejrzystość, mniej męczący dla oka + zmiana grafiki
 
 > ✅ Już zrobione z tej puli: **cały chat bot 3A + rdzeń 3B** (timery / FAQ / powitania / song-requests / chat-overlay), Stream Goals + Hype Train, Predictions, Battle Pass/Sezony (patrz [CHANGELOG.md](CHANGELOG.md) + [PHASE3.md](PHASE3.md)).
