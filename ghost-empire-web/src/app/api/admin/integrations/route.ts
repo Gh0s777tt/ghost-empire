@@ -5,10 +5,13 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { encryptSecret, decryptSecret } from "@/lib/crypto";
 
 const AI_PROVIDERS = ["anthropic", "openai", "grok", "gemini", "deepseek", "bielik"];
 
-function mask(s: string | null): string | null {
+// Stored values are encrypted — decrypt before building the masked preview.
+function mask(stored: string | null): string | null {
+  const s = decryptSecret(stored);
   if (!s) return null;
   if (s.length <= 8) return "••••";
   return `${s.slice(0, 4)}…${s.slice(-4)}`;
@@ -36,7 +39,7 @@ export async function GET() {
 // absent/empty leaves the stored value untouched (so the masked UI never wipes keys).
 function setSecret(data: Record<string, unknown>, key: string, val: unknown) {
   if (val === null) { data[key] = null; return; }
-  if (typeof val === "string" && val.trim()) data[key] = val.trim().slice(0, 4000);
+  if (typeof val === "string" && val.trim()) data[key] = encryptSecret(val.trim().slice(0, 4000));
 }
 
 export async function POST(req: Request) {
