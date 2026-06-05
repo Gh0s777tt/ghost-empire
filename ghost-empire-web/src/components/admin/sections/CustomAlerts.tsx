@@ -88,7 +88,7 @@ export function CustomAlertsCard({
               <FieldInput label="Ikona (emoji)" value={icon} onChange={setIcon} placeholder="🔔" />
             </div>
             <FieldInput label="Tytuł (na overlayu)" value={title} onChange={setTitle} placeholder="🚨 RAID!" />
-            <FieldTextarea label="Treść" value={message} onChange={setMessage} />
+            <FieldTextarea label="Treść" value={message} onChange={setMessage} emoji />
             <div className="grid grid-cols-2 gap-2">
               <FieldInput label="Liczba (opcjonalna)" value={amount} onChange={setAmount} type="number" />
               <FieldInput label="Etykieta liczby (np. GT)" value={amountLabel} onChange={setAmountLabel} />
