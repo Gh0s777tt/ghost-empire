@@ -3,10 +3,15 @@
 // Best-effort, fire-and-forget: never blocks or throws into the message handler.
 import { env } from "./env";
 
-export function pushChatFeed(platform: string, username: string | undefined, message: string): void {
+export function pushChatFeed(
+  platform: string,
+  username: string | undefined,
+  message: string,
+  extra?: { emotes?: unknown; badges?: unknown },
+): void {
   void fetch(`${env.portalUrl}/api/internal/chat-feed`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${env.botSecret}` },
-    body: JSON.stringify({ platform, username: username ?? "widz", message }),
+    body: JSON.stringify({ platform, username: username ?? "widz", message, emotes: extra?.emotes, badges: extra?.badges }),
   }).catch(() => {});
 }

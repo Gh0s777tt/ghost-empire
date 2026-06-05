@@ -606,6 +606,8 @@ model ChatFeedMessage {
   platform  String   // "twitch" | "kick" | "youtube"
   username  String
   message   String   @db.Text
+  emotes    String?  @db.Text // JSON: Twitch emote map { emoteId: ["start-end", …] } (code-point indices)
+  badges    String?  // JSON: Twitch badge map { broadcaster:"1", moderator:"1", subscriber:"12", vip:"1", … }
   createdAt DateTime @default(now())
 
   @@index([createdAt])

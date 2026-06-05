@@ -55,7 +55,7 @@ function build(password: string): tmi.Client {
       return;
     }
 
-    pushChatFeed("twitch", tags.username, message);
+    pushChatFeed("twitch", tags.username, message, { emotes: tags.emotes, badges: tags.badges });
     trackEmojis(message);
 
     if (isSongRequest(message)) {
