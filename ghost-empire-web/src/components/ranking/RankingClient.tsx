@@ -21,6 +21,7 @@ type User = {
   totalEarned: number;
   level: number;
   xp: number;
+  prestige?: number;
   streak: number;
   isAdmin: boolean;
   isBanned?: boolean;
@@ -232,7 +233,7 @@ export function RankingClient({
                       className="text-[10px] font-mono uppercase tracking-widest mt-1.5"
                       style={{ color: rank.color }}
                     >
-                      {rank.emoji} LVL {u.level} · {rank.name}
+                      {rank.emoji} LVL {u.level}{u.prestige ? ` ✦${u.prestige}` : ""} · {rank.name}
                     </div>
 
                     {isMe && (
@@ -396,7 +397,7 @@ function UserRow({
           className="text-[10px] font-mono uppercase tracking-widest"
           style={{ color: rank.color }}
         >
-          {rank.emoji} LVL {user.level}
+          {rank.emoji} LVL {user.level}{user.prestige ? ` ✦${user.prestige}` : ""}
         </span>
       </td>
       <td className="p-3 text-right">
@@ -548,7 +549,7 @@ function AdminUserActions({
               {user.isAdmin && <ShieldCheck className="w-4 h-4 text-red-500" />}
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              @{user.username ?? "—"} · LVL {user.level} · {fmt(user.tokens)} GT
+              @{user.username ?? "—"} · LVL {user.level}{user.prestige ? ` ✦${user.prestige}` : ""} · {fmt(user.tokens)} GT
             </div>
           </div>
           <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400 shrink-0">

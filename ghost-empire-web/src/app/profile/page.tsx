@@ -34,6 +34,7 @@ export default async function ProfilePage() {
           totalSpent: true,
           level: true,
           xp: true,
+          prestige: true,
           streak: true,
           messageCount: true,
           voiceMinutes: true,

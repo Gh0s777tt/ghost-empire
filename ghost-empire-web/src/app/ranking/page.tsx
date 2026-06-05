@@ -74,6 +74,7 @@ export default async function RankingPage({
           totalEarned: true,
           level: true,
           xp: true,
+          prestige: true,
           streak: true,
           isAdmin: true,
           isBanned: true,

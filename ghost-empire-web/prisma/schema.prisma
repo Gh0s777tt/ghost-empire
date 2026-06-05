@@ -33,6 +33,7 @@ model User {
   // Progression
   level         Int       @default(1)
   xp            Int       @default(0)
+  prestige      Int       @default(0)    // Phantom Ascension: +1 per PRESTIGE_XP of lifetime XP past the level cap (never resets)
   streak        Int       @default(0)
   lastStreakDate String?   // "YYYY-MM-DD"
   lastDaily     DateTime?

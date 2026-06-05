@@ -34,7 +34,7 @@ Donacje (Streamlabs) ───────┤→ cron /api/cron/streamlabs-poll 
         wydatki: sklep, predykcje, raffle  ·  progresja: XP/level, Battle Pass, osiągnięcia, streak, daily questy
 ```
 
-Czysta matematyka ekonomii (payouty predykcji, tier battle passa, konwersja walut) żyje w `lib/economy.ts` (testowana, bez DB).
+Czysta matematyka ekonomii (payouty predykcji, tier battle passa, konwersja walut, **perki poziomu i prestiżu** — `levelGtMultiplier` / `prestigeFromXp` / `prestigeGtMultiplier`) żyje w `lib/economy.ts` (testowana, bez DB).
 
 ---
 

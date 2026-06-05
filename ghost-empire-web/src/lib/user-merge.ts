@@ -429,6 +429,7 @@ export async function executeMerge(opts: {
         voiceMinutes: { increment: secondary.voiceMinutes },
         level: Math.max(primary.level, secondary.level),
         xp:    Math.max(primary.xp, secondary.xp),
+        prestige: Math.max(primary.prestige, secondary.prestige), // monotonic in xp, stays consistent with xp:max
         streak: Math.max(primary.streak, secondary.streak),
         isDonator: primary.isDonator || secondary.isDonator,
       },

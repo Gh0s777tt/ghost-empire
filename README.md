@@ -48,6 +48,7 @@ Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** 
 Duża seria po Phase 3D (44+ PR-ów):
 
 - **🎰 Koło Fortuny:** widzowie wydają GT, kręcą ważonym kołem i wygrywają nagrody — strona `/wheel` + animowany overlay OBS `/overlay/wheel` + panel admina (segmenty, koszt, bilans domu).
+- **✦ Prestiż (Phantom Ascension):** po max poziomie (100) dalsze XP daje **gwiazdki prestiżu** (co 50 000 XP ponad cap, bez resetu) — perk **+2% GT z czatu / gwiazdkę** (kumulowany z perkiem poziomu), ✦ na profilu i w rankingu. Czysta pochodna lifetime XP (`prestigeFromXp`).
 - **🔐 Bezpieczeństwo:** **szyfrowanie sekretów at-rest** (AES-256-GCM) — klucze API i wszystkie tokeny OAuth/streamer w bazie · nagłówki `noindex`/`no-store` na overlayach · cron czyszczący stare rekordy.
 - **💬 Czat:** **prawdziwe odznaki Twitch** + **emotki 7TV / BTTV / FFZ** w overlayu czatu (kanałowe i globalne).
 - **🛡️ Moderacja:** **eskalacja recydywistów** (ostrzeżenie → usuń → timeout ×2) + **statystyki naruszeń** (top sprawcy, wykres typów).

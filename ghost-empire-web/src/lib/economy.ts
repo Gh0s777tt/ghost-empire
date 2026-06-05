@@ -64,6 +64,31 @@ export function levelGtMultiplier(level: number): number {
   return 1 + Math.min(0.5, Math.max(0, level - 1) * 0.005);
 }
 
+// ---------- PRESTIGE (Phantom Ascension) ----------
+// Prestige is earned by accumulating lifetime XP *beyond* the level cap, so it respects
+// the "account level never resets" rule — nothing is wiped. Every PRESTIGE_XP of overflow
+// XP past the cap grants one prestige star. Pure + unit-tested; the per-level XP step (500)
+// is the same one xpForLevel() uses in lib/utils.ts.
+
+/** Lifetime XP required to reach MAX_LEVEL (mirrors xpForLevel(MAX_LEVEL) in lib/utils.ts). */
+export const LEVEL_CAP_XP = MAX_LEVEL * 500;
+
+/** Overflow XP (past the cap) needed per prestige star — one full "climb to 100" again. */
+export const PRESTIGE_XP = LEVEL_CAP_XP;
+
+/** Prestige stars for a lifetime XP total: 0 until the cap, then +1 per PRESTIGE_XP of overflow. */
+export function prestigeFromXp(xp: number): number {
+  const overflow = xp - LEVEL_CAP_XP;
+  if (overflow < PRESTIGE_XP) return 0;
+  return Math.floor(overflow / PRESTIGE_XP);
+}
+
+/** GT earn multiplier granted by prestige: +2%/star, capped at +50% (25 stars). Stacks
+ *  multiplicatively with levelGtMultiplier in the chat-award path. */
+export function prestigeGtMultiplier(prestige: number): number {
+  return 1 + Math.min(0.5, Math.max(0, prestige) * 0.02);
+}
+
 /**
  * Pick an index into `weights` with probability proportional to each weight
  * (weighted random — used by the Wheel of Fortune). `rng` is a [0,1) random
