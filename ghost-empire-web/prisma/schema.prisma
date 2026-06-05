@@ -682,6 +682,22 @@ model ModerationConfig {
   @@map("moderation_config")
 }
 
+// Per-violation log written by the bot after it enforces an automod action. Powers
+// the moderation stats + top-offenders view, and records the escalation level.
+model ModViolationLog {
+  id         String   @id @default(cuid())
+  platform   String   // "twitch" | "kick" | "youtube"
+  username   String   // lowercased login/handle of the offender
+  violation  String   // "profanity" | "caps" | "length" | "repeat" | "zalgo"
+  action     String   // enforced action AFTER escalation: "delete" | "timeout" | "warn"
+  priorCount Int      @default(0)  // offenses already in the window before this one
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([platform, username])
+  @@map("mod_violation_logs")
+}
+
 // =====================================================
 // CHAT ACTIVITY HEATMAP — 7×24 buckets (day-of-week × hour, Europe/Warsaw),
 // incremented by /api/internal/chat-award. Powers /admin#analytics.

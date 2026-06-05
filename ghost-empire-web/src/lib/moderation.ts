@@ -147,3 +147,22 @@ export function evaluateMessage(text: string, cfg: ModRuleConfig): ModViolation 
   if (cfg.repeat?.enabled && isRepeatSpam(text, cfg.repeat.charRun ?? 8, cfg.repeat.wordRun ?? 4)) return "repeat";
   return null;
 }
+
+// ---------- ESCALATION (repeat offenders) ----------
+// Pure functions so the bot and web compute the same escalated punishment. Kept in
+// sync with ghost-empire-chat/src/moderation.ts.
+
+/** Escalate the action for a repeat offender: after a couple of strikes in the
+ *  window, anything softer than a timeout becomes a timeout; a lone "warn" first
+ *  hardens to "delete". `priorCount` = offenses already counted in the window. */
+export function escalateAction(base: ModAction, priorCount: number): ModAction {
+  if (priorCount >= 2 && base !== "timeout") return "timeout";
+  if (priorCount >= 1 && base === "warn") return "delete";
+  return base;
+}
+
+/** Escalate a timeout duration: doubles per prior offense, capped at 24h. */
+export function escalateTimeout(baseSecs: number, priorCount: number): number {
+  const scaled = baseSecs * Math.pow(2, Math.max(0, priorCount));
+  return Math.min(Math.round(scaled), 86_400);
+}

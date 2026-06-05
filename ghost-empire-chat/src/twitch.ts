@@ -4,7 +4,7 @@ import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
-import { checkMessage, violationLabel } from "./moderation";
+import { checkMessage, violationLabel, escalate, logViolation } from "./moderation";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
@@ -45,13 +45,16 @@ function build(password: string): tmi.Client {
     });
     if (verdict) {
       const u = tags.username ?? "";
-      if (verdict.action === "delete" && tags.id) {
+      // Escalate repeat offenders (harsher action / longer timeout), then log for stats.
+      const v = escalate("twitch", u, verdict);
+      if (v.action === "delete" && tags.id) {
         c.deletemessage(env.twitch.channel, tags.id).catch(() => {});
-      } else if (verdict.action === "timeout" && u) {
-        c.timeout(env.twitch.channel, u, verdict.timeoutSecs, violationLabel(verdict.violation)).catch(() => {});
-      } else if (verdict.action === "warn" && u) {
-        c.say(env.twitch.channel, `@${u} ⚠️ ${violationLabel(verdict.violation)}`).catch(() => {});
+      } else if (v.action === "timeout" && u) {
+        c.timeout(env.twitch.channel, u, v.timeoutSecs, violationLabel(v.violation)).catch(() => {});
+      } else if (u) {
+        c.say(env.twitch.channel, `@${u} ⚠️ ${violationLabel(v.violation)}`).catch(() => {});
       }
+      logViolation("twitch", u, v.violation, v.action, v.priorCount);
       return;
     }
 
