@@ -125,6 +125,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/alerts/chat` | `/overlay/chat` (czat 3 platform) |
 | `…/api/alerts/subathon` | `/overlay/subathon` (odliczanie) |
 | `…/api/alerts/wheel` | `/overlay/wheel` (Koło Fortuny — animacja zakręcenia) |
+| `…/api/alerts/rumble` | `/overlay/rumble` (Rumble — LIVE / widzowie / followers) |
 | `…/api/chat/assets` | `/overlay/chat` (odznaki Twitch + emotki 7TV/BTTV/FFZ) |
 | `…/api/codes/current` | `/overlay/codes` (rotacja kodów) |
 
