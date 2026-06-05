@@ -26,6 +26,13 @@ Duży zrzut pomysłów od usera + moje propozycje. Pogrupowane wg autonomii; kol
 > - 🎰 **#3 Nowy moduł** — **Koło Fortuny** (`/wheel` + overlay OBS + panel admina) (#150).
 > - ➕ **Moje pomysły:** cron czyszczący bazę (#151) · predictions auto-close + announce-to-chat (#152) · eskalacja moderacji recydywistów + statystyki naruszeń (#153, ⚠️ aktywne po restarcie bota).
 > - **Świadomie odroczone (z powodem):** E2E Playwright / Lighthouse CI (wymagają `next build` + serwera — niedostępne lokalnie) · Prettier (ogromny diff formatu vs. ustalony styl ESLint) · widgety zapis pozycji/rozmiaru (OBS sam pozycjonuje Browser Source) · AI-moderacja (czeka na klucz API).
+>
+> ### ✅ STATUS (2026-06-05 cd., po PR #155–#160 — „zrób wszystko co możesz sam")
+> - 📊 **Obserwowalność** — Vercel Analytics + Speed Insights (#155) · `npm audit` w CI (#156) · structured logging dokończony (crony #151/#160).
+> - 🔗 **Webhooki wychodzące** (Discord/n8n/custom, sekret HMAC, auto-disable) (#157).
+> - 🧪 **Testy integracyjne API+realny Postgres** — `tests/integration/` + job CI `integration · postgres` (predictions/wheel/pruning end-to-end). **111 unit + 11 integration** (#159).
+> - 📄 **Docs:** runbook rotacji sekretów (`docs/ENV.md §5`) + sync wszystkich plików (#158) + **kodyfikacja zasady „docs zawsze z changelogiem"** w README/ARCHITECTURE (#160).
+> - **Zostało (🔑 Ty / 🎨 kierunek / ⚠️ ryzyko bez builda):** Sentry (DSN + ryzyko build bez weryfikacji `next build`) · CSP nonces (osobna ostrożna sesja) · landing (Twój gust) · AI/`@bot`/`!imagine` (klucz) · OBS WS/Hue/Govee (creds) · social OAuth · i18n · wybór dostawcy donacji · E2E/Lighthouse · code-split AdminClient (nieweryfikowalne bez builda).
 
 **✅ Najpierw naprawione bugi prywatności (PR #115):** imię/nazwisko zamaskowane (`displayNick`) w rankingu/eventach/home/OG-image; mail (`@…dam`) wyrugowany z „Połączone konta" (`isPublicHandle` + źródło w `auth.ts`); audit log z czytelnymi etykietami (anulowanie predykcji **ma** być w audycie). *(Dane „at-rest" w bazie nietknięte — wszystkie ścieżki renderu maskują; opcjonalny scrub bazy do zrobienia na życzenie.)*
 

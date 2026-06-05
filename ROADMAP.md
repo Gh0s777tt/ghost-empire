@@ -55,7 +55,7 @@ Dziś diagnostyka = logi Vercela. Pod produkcję z realnym ruchem to za mało.
 |---|---|---|
 | **Sentry** (error tracking) | 🔥 | Client + server + edge; już mamy `error.digest` w boundary do korelacji |
 | ~~**Vercel Analytics + Speed Insights**~~ ✅ | — | **Zrobione (#155)** — `@vercel/analytics` + `@vercel/speed-insights` w root layout (real-user Core Web Vitals, cookieless, no-op poza Vercel) |
-| **Structured logging** | 🟡 | ✅ `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty we wszystkie 3 webhooki (twitch-eventsub / kick-events / paymedia). Zostaje cron / award (ten sam wzorzec) |
+| ~~**Structured logging**~~ ✅ | — | **Zrobione** — `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty w 3 webhooki (twitch-eventsub / kick-events / paymedia) + crony (`prune` #151, `streamlabs-poll` #160). *(Hot-path `award` świadomie bez logu na wywołanie — byłby szum; błędy łapie boundary.)* |
 | **Uptime / health-check** | 🟡 | Endpoint `/api/health` + zewnętrzny monitor (cron-job.org / UptimeRobot) na live + bazę |
 | **Alerty na anomalie ekonomii** | 🧊 | Nietypowe skoki grantów/odbić → notyfikacja admina (anti-abuse) |
 
@@ -115,7 +115,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 - ✅ **Customizacja alertów** (T16) — podgląd na żywo + rozmiar/kolor tekstu (#24, #25) **oraz per-typ**: animacja / pozycja / własny dźwięk / próg kwotowy osobno dla każdego typu alertu (`AlertTypeConfig`, `/admin#alerts`). **ZROBIONE w całości.**
 - 🔥 **OBS WebSocket — hasło wklejane na stronie** (`/admin`), nie w env → przeżywa zmianę komputera (kopiuj-wklej)
-- 🔥 **Strona startowa (landing)** — ładny pierwszy ekran przy wejściu (wariacja na temat `/about`)
+- 🔥🎨 **Strona startowa (landing)** — ładny pierwszy ekran przy wejściu. *(Wymaga Twojego kierunku wizualnego — robię świadomie po Twoim feedbacku, by nie zgadywać gustu i nie generować churnu.)*
 - ✅ **Changelog na stronie `/about` jako zwijana lista** — **ZROBIONE** (`ChangelogList` — klik→rozwija, najnowszy wpis otwarty, `aria-expanded`).
 - ✅ **Opisy uprawnień w UI nadawania rang** (`/admin#users`) — opis „co daje" + tooltip pod każdym uprawnieniem (`MOD_PERMISSIONS.desc`). **ZROBIONE.**
 - ✅ **„Czas na streamie"** — zrobione jako **analityka nadawania** w `/admin#analytics` (`StreamSession` + EventSub `stream.online/offline`). *(Świadomie NIE per-widz: EventSub mierzy tylko czas, gdy streamer jest na żywo — per-widz wymagałby osobnego systemu obecności.)*
