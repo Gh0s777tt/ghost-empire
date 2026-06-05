@@ -2,7 +2,7 @@
 // src/components/admin/sections/DatabaseReset.tsx — lazily-loaded danger-zone DB reset.
 import { useState } from "react";
 import { signOut } from "next-auth/react";
-import { AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import { AlertTriangle, Trash2, Loader2, Download } from "lucide-react";
 import { SectionCard } from "../shared";
 
 export function DatabaseResetCard({
@@ -47,6 +47,23 @@ export function DatabaseResetCard({
 
   return (
     <SectionCard title="Reset bazy danych" icon={AlertTriangle}>
+      {/* Backup — grab a copy before doing anything destructive */}
+      <div className="mb-3 border border-zinc-800 bg-black/30 p-4">
+        <p className="text-xs text-zinc-200 font-bold mb-1 flex items-center gap-2">
+          <Download className="w-4 h-4 text-green-400" /> Backup (JSON)
+        </p>
+        <p className="text-[11px] text-zinc-500 leading-relaxed mb-2.5">
+          Pobiera kopię <strong className="text-zinc-300">konfiguracji, katalogu i sald użytkowników</strong> jako plik JSON —
+          <strong className="text-zinc-300"> bez sekretów</strong> (maile, tokeny OAuth, sesje, logi pominięte). Zrób backup zanim cokolwiek skasujesz.
+        </p>
+        <a
+          href="/api/admin/backup"
+          className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 hover:border-green-600 text-green-300 text-xs font-bold tracking-widest uppercase transition-all"
+        >
+          <Download className="w-3.5 h-3.5" /> Pobierz backup
+        </a>
+      </div>
+
       <div className="space-y-3 border border-red-800 bg-red-950/20 p-4">
         <p className="text-sm text-red-300 font-bold flex items-center gap-2">
           <Trash2 className="w-4 h-4" /> Strefa niebezpieczna — operacja NIEODWRACALNA
