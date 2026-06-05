@@ -1263,3 +1263,23 @@ model CustomAlert {
 
   @@map("custom_alerts")
 }
+
+// =====================================================
+// CUSTOM WIDGETS — user-built text overlays (the "widget generator"). Each gets a
+// token-gated /overlay/widget?id= URL. Supports emoji / Unicode in the text.
+// =====================================================
+model CustomWidget {
+  id          String   @id @default(cuid())
+  name        String                              // admin-facing label
+  text        String   @db.Text                   // displayed text (emoji/Unicode ok)
+  accentColor String   @default("#E50914")        // card border / accent
+  textColor   String   @default("#ffffff")
+  fontSizePx  Int      @default(28)
+  fontFamily  String   @default("Inter")          // Inter | JetBrains Mono | Anton | system
+  position    String   @default("top-left")       // {top|center|bottom}-{left|center|right}
+  showCard    Boolean  @default(true)             // card background vs bare text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("custom_widgets")
+}
