@@ -6,6 +6,7 @@ import { registerSender, markActivity } from "./broadcast";
 import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
+import { checkMessage, violationLabel, type ModAction, type ModViolation } from "./moderation";
 import { pushChatFeed } from "./chatFeed";
 
 // YouTube Live Chat (Option C: authorized as the channel account).
@@ -32,8 +33,9 @@ type ChatList = {
   nextPageToken?: string;
   pollingIntervalMillis?: number;
   items?: {
+    id?: string;
     snippet?: { displayMessage?: string };
-    authorDetails?: { channelId?: string; displayName?: string };
+    authorDetails?: { channelId?: string; displayName?: string; isChatModerator?: boolean; isChatOwner?: boolean; isChatSponsor?: boolean };
   }[];
 };
 
@@ -112,6 +114,22 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
   const text = m.snippet?.displayMessage ?? "";
   const channelId = m.authorDetails?.channelId;
   const username = m.authorDetails?.displayName;
+
+  // Automod — YouTube (force-ssl scope) supports delete + temporary ban. Offending
+  // messages skip the feed + GT award. Bot account must be a moderator of the chat.
+  if (channelId && channelId !== ownChannelId) {
+    const ad = m.authorDetails;
+    const verdict = checkMessage(text, {
+      isSub: Boolean(ad?.isChatSponsor),
+      isVip: false,
+      isMod: Boolean(ad?.isChatModerator) || Boolean(ad?.isChatOwner),
+    });
+    if (verdict) {
+      void enforceYouTube(m.id, channelId, username, verdict);
+      return;
+    }
+  }
+
   pushChatFeed("youtube", username, text);
 
   // award GT (skip our own messages so we don't award/loop on the channel account)
@@ -163,6 +181,32 @@ async function sendMessage(text: string): Promise<void> {
     }),
   });
   if (res && !res.ok) console.warn(`[youtube] send ${res.status}: ${(await res.text()).slice(0, 160)}`);
+}
+
+// --- moderation enforcement: delete (50 units) or temporary ban; else warn ---
+async function enforceYouTube(
+  messageId: string | undefined,
+  channelId: string,
+  username: string | undefined,
+  verdict: { action: ModAction; timeoutSecs: number; violation: ModViolation },
+): Promise<void> {
+  try {
+    if (verdict.action === "delete" && messageId) {
+      await api(`liveChat/messages?id=${encodeURIComponent(messageId)}`, { method: "DELETE" });
+    } else if (verdict.action === "timeout") {
+      await api("liveChat/bans?part=snippet", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          snippet: { liveChatId, type: "temporary", banDurationSeconds: verdict.timeoutSecs, bannedUserDetails: { channelId } },
+        }),
+      });
+    } else if (verdict.action === "warn" && username) {
+      void sendMessage(`@${username} ⚠️ ${violationLabel(verdict.violation)}`);
+    }
+  } catch (e) {
+    console.warn("[youtube] moderation enforce failed:", (e as Error).message);
+  }
 }
 
 async function tick(): Promise<void> {

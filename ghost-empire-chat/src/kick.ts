@@ -3,6 +3,7 @@ import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
+import { checkMessage, violationLabel } from "./moderation";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
 import { refreshKickToken } from "./kickAuth";
@@ -20,7 +21,7 @@ let sendToken: string | null = null;
 
 type KickChat = {
   content?: string;
-  sender?: { id?: number; username?: string };
+  sender?: { id?: number; username?: string; identity?: { badges?: Array<{ type?: string }> } };
 };
 
 // --- reading: unauthenticated Pusher websocket (same outbound pattern as Twitch IRC) ---
@@ -56,6 +57,20 @@ function handleChat(d: KickChat): void {
   const content = d.content ?? "";
   const userId = d.sender?.id != null ? String(d.sender.id) : undefined;
   const username = d.sender?.username;
+
+  // Automod — Kick's public bot API (chat:write) can't delete/timeout, so we warn
+  // and skip the feed + GT award (the offending message earns nothing).
+  const badges = d.sender?.identity?.badges ?? [];
+  const verdict = checkMessage(content, {
+    isSub: badges.some((b) => b.type === "subscriber"),
+    isVip: badges.some((b) => b.type === "vip" || b.type === "og"),
+    isMod: badges.some((b) => b.type === "moderator" || b.type === "broadcaster"),
+  });
+  if (verdict) {
+    if (username) void sendKickMessage(`@${username} ⚠️ ${violationLabel(verdict.violation)}`);
+    return;
+  }
+
   pushChatFeed("kick", username, content);
 
   if (isSongRequest(content)) {
