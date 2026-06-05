@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
+import { levelGtMultiplier } from "@/lib/economy";
 
 // Per-user caps: even with a valid secret, no single viewer can be farmed.
 const PER_USER_HITS = 30;
@@ -74,11 +75,11 @@ export async function POST(req: Request) {
   const connection = platformUserId
     ? await prisma.connection.findUnique({
         where: { platform_platformId: { platform, platformId: String(platformUserId) } },
-        select: { userId: true },
+        select: { userId: true, user: { select: { level: true } } },
       })
     : await prisma.connection.findFirst({
         where: { platform, username: { equals: username!, mode: "insensitive" } },
-        select: { userId: true },
+        select: { userId: true, user: { select: { level: true } } },
       });
 
   if (!connection) {
@@ -98,7 +99,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const finalAmount = Math.round(amount * multiplier);
+  // Account-level perk: higher level = bigger GT earn multiplier (+0.5%/level, cap +50%).
+  const levelMult = levelGtMultiplier(connection.user?.level ?? 1);
+  const finalAmount = Math.round(amount * multiplier * levelMult);
 
   const [, updatedUser] = await prisma.$transaction([
     prisma.transaction.create({

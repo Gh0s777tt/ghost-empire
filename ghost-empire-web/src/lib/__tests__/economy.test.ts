@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computePayouts, tierFromXp, plnFromCurrency, pickWeightedIndex } from "@/lib/economy";
+import { computePayouts, tierFromXp, plnFromCurrency, pickWeightedIndex, levelGtMultiplier } from "@/lib/economy";
 
 describe("computePayouts", () => {
   it("gives the whole pot to a single winner", () => {
@@ -111,5 +111,14 @@ describe("pickWeightedIndex", () => {
       const actual = counts[i] / N;
       expect(Math.abs(actual - expected)).toBeLessThan(0.03); // within 3pp
     });
+  });
+});
+
+describe("levelGtMultiplier (account-level GT perk)", () => {
+  it("grows +0.5%/level capped at +50%", () => {
+    expect(levelGtMultiplier(1)).toBeCloseTo(1.0);
+    expect(levelGtMultiplier(11)).toBeCloseTo(1.05);
+    expect(levelGtMultiplier(101)).toBeCloseTo(1.5);
+    expect(levelGtMultiplier(1000)).toBeCloseTo(1.5); // capped
   });
 });

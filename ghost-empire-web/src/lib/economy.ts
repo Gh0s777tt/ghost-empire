@@ -53,6 +53,17 @@ export function plnFromCurrency(amount: number, currency: string): number {
   return ["PLN", "ZL"].includes(currency.toUpperCase()) ? amount : amount * 4;
 }
 
+// ---------- ACCOUNT LEVELING PERK ----------
+// The level curve itself lives in lib/utils.ts (xpForLevel / levelFromXp / rankForLevel,
+// already wired into the profile). This is just the GT earn perk granted by level.
+
+export const MAX_LEVEL = 100;
+
+/** GT earn multiplier granted by account level: +0.5%/level, capped at +50%. */
+export function levelGtMultiplier(level: number): number {
+  return 1 + Math.min(0.5, Math.max(0, level - 1) * 0.005);
+}
+
 /**
  * Pick an index into `weights` with probability proportional to each weight
  * (weighted random — used by the Wheel of Fortune). `rng` is a [0,1) random
