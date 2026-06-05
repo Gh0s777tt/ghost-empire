@@ -6,6 +6,7 @@ import { isSongRequest, handleSongRequest } from "./songRequest";
 import { checkMessage, violationLabel, escalate, logViolation } from "./moderation";
 import { isAiTrigger, handleAiTrigger } from "./aiCommands";
 import { isGtGameTrigger, handleGtGame } from "./gtGames";
+import { isDuelTrigger, handleDuel } from "./gtDuel";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
@@ -87,6 +88,10 @@ function handleChat(d: KickChat): void {
     });
   } else if (isGtGameTrigger(content)) {
     void handleGtGame("kick", userId, username, content).then((r) => {
+      if (r) void sendKickMessage(r);
+    });
+  } else if (isDuelTrigger(content)) {
+    void handleDuel("kick", userId, username, content).then((r) => {
       if (r) void sendKickMessage(r);
     });
   } else if (isSongRequest(content)) {

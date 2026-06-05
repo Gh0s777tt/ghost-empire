@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computePayouts, tierFromXp, plnFromCurrency, pickWeightedIndex, levelGtMultiplier,
   prestigeFromXp, prestigeGtMultiplier, LEVEL_CAP_XP, PRESTIGE_XP,
-  shopDiscountFraction, discountedPrice,
+  shopDiscountFraction, discountedPrice, duelPayout, pickDuelWinner, DUEL_RAKE,
 } from "@/lib/economy";
 
 describe("computePayouts", () => {
@@ -180,5 +180,42 @@ describe("shopDiscountFraction / discountedPrice (loyalty perk)", () => {
   it("rounds to an integer and never goes below 1 GT", () => {
     expect(discountedPrice(999, 101, 0)).toBe(Math.round(999 * 0.85)); // 849
     expect(discountedPrice(1, 1000, 1000)).toBe(1);
+  });
+});
+
+describe("duelPayout (PvP pot split)", () => {
+  it("winner takes the pot minus the default 5% rake", () => {
+    expect(duelPayout(100)).toEqual({ pot: 200, rake: 10, winnerTakes: 190 });
+    expect(duelPayout(1000)).toEqual({ pot: 2000, rake: 100, winnerTakes: 1900 });
+  });
+
+  it("rake is floored (winner never overpaid)", () => {
+    // pot 50, 5% = 2.5 → floor 2 → winner 48
+    expect(duelPayout(25)).toEqual({ pot: 50, rake: 2, winnerTakes: 48 });
+  });
+
+  it("supports a zero-rake (winner-takes-all) override", () => {
+    expect(duelPayout(100, 0)).toEqual({ pot: 200, rake: 0, winnerTakes: 200 });
+  });
+
+  it("DUEL_RAKE is a sane sink fraction (0..1)", () => {
+    expect(DUEL_RAKE).toBeGreaterThan(0);
+    expect(DUEL_RAKE).toBeLessThan(1);
+  });
+});
+
+describe("pickDuelWinner (fairness)", () => {
+  it("returns 0 for challenger when rng < 0.5, else 1", () => {
+    expect(pickDuelWinner(() => 0.0)).toBe(0);
+    expect(pickDuelWinner(() => 0.49)).toBe(0);
+    expect(pickDuelWinner(() => 0.5)).toBe(1);
+    expect(pickDuelWinner(() => 0.99)).toBe(1);
+  });
+
+  it("is ~50/50 over many flips", () => {
+    let challengerWins = 0;
+    const N = 20_000;
+    for (let i = 0; i < N; i++) if (pickDuelWinner() === 0) challengerWins++;
+    expect(Math.abs(challengerWins / N - 0.5)).toBeLessThan(0.03); // within 3pp
   });
 });

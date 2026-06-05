@@ -14,6 +14,7 @@ export const RETENTION_DAYS = {
   kickEvents: 30,
   notifications: 30,     // only READ notifications are pruned
   wheelSpins: 90,        // bounds the wheel history (stats stay meaningful)
+  duels: 30,             // resolved/cancelled/expired PvP duels (anything this old is done)
 } as const;
 
 export type PruneResult = Record<keyof typeof RETENTION_DAYS, number> & { totalDeleted: number };
@@ -22,13 +23,14 @@ export type PruneResult = Record<keyof typeof RETENTION_DAYS, number> & { totalD
 export async function pruneOldRecords(now: number = Date.now()): Promise<PruneResult> {
   const before = (days: number) => new Date(now - days * DAY_MS);
 
-  const [chat, alerts, twitch, kick, notifs, wheel] = await Promise.all([
+  const [chat, alerts, twitch, kick, notifs, wheel, duels] = await Promise.all([
     prisma.chatFeedMessage.deleteMany({ where: { createdAt: { lt: before(RETENTION_DAYS.chatFeedMessages) } } }),
     prisma.streamAlert.deleteMany({ where: { createdAt: { lt: before(RETENTION_DAYS.streamAlerts) } } }),
     prisma.twitchEvent.deleteMany({ where: { receivedAt: { lt: before(RETENTION_DAYS.twitchEvents) } } }),
     prisma.kickEvent.deleteMany({ where: { receivedAt: { lt: before(RETENTION_DAYS.kickEvents) } } }),
     prisma.notification.deleteMany({ where: { read: true, createdAt: { lt: before(RETENTION_DAYS.notifications) } } }),
     prisma.wheelSpin.deleteMany({ where: { createdAt: { lt: before(RETENTION_DAYS.wheelSpins) } } }),
+    prisma.duel.deleteMany({ where: { createdAt: { lt: before(RETENTION_DAYS.duels) } } }),
   ]);
 
   const result = {
@@ -38,6 +40,7 @@ export async function pruneOldRecords(now: number = Date.now()): Promise<PruneRe
     kickEvents: kick.count,
     notifications: notifs.count,
     wheelSpins: wheel.count,
+    duels: duels.count,
   };
   return { ...result, totalDeleted: Object.values(result).reduce((a, b) => a + b, 0) };
 }

@@ -86,6 +86,15 @@ const STEPS = [
 
 const CHANGELOG = [
   {
+    date: "2026-06-06",
+    title: "Pojedynki PvP ⚔️ — graj o GT z innymi",
+    items: [
+      "Nowa mini-gra: wyzwij kogoś na pojedynek o Ghost Tokeny. Otwarte wyzwanie „!duel 100” (pierwszy chętny wpisuje !accept) albo konkretną osobę „!duel @nick 100”.",
+      "Obaj stawiacie tyle samo, uczciwy rzut monetą (50/50) wyłania zwycięzcę, który bierze pulę pomniejszoną o 5% prowizji.",
+      "Stawki pobierane są dopiero w chwili przyjęcia walki — wszystko atomowo, więc tokeny nie znikną ani nie powstaną przez przypadek.",
+    ],
+  },
+  {
     date: "2026-06-05",
     title: "Perk lojalnościowy — taniej w sklepie 🛒",
     items: [
