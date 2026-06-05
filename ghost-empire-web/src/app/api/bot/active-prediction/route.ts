@@ -4,12 +4,16 @@
 // reminder while a bet is open). Returns the most recent OPEN prediction only.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { lockExpiredPredictions } from "@/lib/predictions";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Auto-close first so an expired bet stops being re-announced.
+  await lockExpiredPredictions();
+
   const p = await prisma.prediction.findFirst({
-    where: { status: "open" },
+    where: { status: "open", announceToChat: true },
     orderBy: { opensAt: "desc" },
     select: { id: true, question: true, options: true, totalPot: true },
   });

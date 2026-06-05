@@ -9,6 +9,20 @@ export const MAX_OPTIONS = 4;
 export const MIN_WAGER = 10;
 export const MAX_WAGER = 1_000_000;
 
+/**
+ * Auto-close: flip any still-"open" prediction whose `closesAt` has passed to
+ * "locked", so the public page / overlay status matches the wager-blocking that
+ * placeWager already enforces. Idempotent, cheap (single conditional updateMany);
+ * call it at the start of prediction read paths. Returns how many were locked.
+ */
+export async function lockExpiredPredictions(now: Date = new Date()): Promise<number> {
+  const res = await prisma.prediction.updateMany({
+    where: { status: "open", closesAt: { not: null, lt: now } },
+    data: { status: "locked" },
+  });
+  return res.count;
+}
+
 export type WagerResult =
   | { ok: true; newBalance: number; entry: { optionIndex: number; tokensWagered: number } }
   | { ok: false; status: number; error: string };

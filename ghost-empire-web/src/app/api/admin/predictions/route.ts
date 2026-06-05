@@ -4,11 +4,13 @@ import { NextResponse } from "next/server";
 import { requirePermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
-import { resolvePrediction, cancelPrediction, MAX_OPTIONS } from "@/lib/predictions";
+import { resolvePrediction, cancelPrediction, lockExpiredPredictions, MAX_OPTIONS } from "@/lib/predictions";
 
 export async function GET() {
   const auth = await requirePermission("create_events"); // reuse — same trust level as event creators
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  await lockExpiredPredictions();
 
   const all = await prisma.prediction.findMany({
     include: { _count: { select: { entries: true } } },
@@ -46,6 +48,7 @@ export async function GET() {
       opensAt: p.opensAt.toISOString(),
       closesAt: p.closesAt?.toISOString() ?? null,
       resolvedAt: p.resolvedAt?.toISOString() ?? null,
+      announceToChat: p.announceToChat,
       accentColor: p.accentColor,
       entriesCount: p._count.entries,
       breakdown: breakdownById.get(p.id) ?? [],
@@ -65,6 +68,7 @@ export async function POST(req: Request) {
     closesAt?: string;
     winningOptionIndex?: number;
     accentColor?: string;
+    announceToChat?: boolean;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
@@ -104,6 +108,7 @@ export async function POST(req: Request) {
         options,
         closesAt,
         createdById: auth.userId,
+        announceToChat: body.announceToChat !== false, // default on
         ...(accentColor ? { accentColor } : {}),
       },
     });
@@ -123,6 +128,17 @@ export async function POST(req: Request) {
     const updated = await prisma.prediction.update({
       where: { id: body.id },
       data: { status: "locked" },
+    });
+    return NextResponse.json({ ok: true, prediction: updated });
+  }
+
+  if (body.action === "toggle_announce") {
+    if (!body.id || typeof body.announceToChat !== "boolean") {
+      return NextResponse.json({ error: "id + announceToChat wymagane" }, { status: 400 });
+    }
+    const updated = await prisma.prediction.update({
+      where: { id: body.id },
+      data: { announceToChat: body.announceToChat },
     });
     return NextResponse.json({ ok: true, prediction: updated });
   }
@@ -183,5 +199,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  return NextResponse.json({ error: "action: create | lock | resolve | cancel | delete" }, { status: 400 });
+  return NextResponse.json({ error: "action: create | lock | toggle_announce | resolve | cancel | delete" }, { status: 400 });
 }

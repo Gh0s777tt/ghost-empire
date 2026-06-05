@@ -1,7 +1,7 @@
 "use client";
 // src/components/admin/sections/Predictions.tsx — lazily-loaded predictions/bets manager.
 import { useState, useEffect, useCallback } from "react";
-import { Dice5, Loader2, Trash2, X, Plus } from "lucide-react";
+import { Dice5, Loader2, Trash2, X, Plus, Megaphone, MegaphoneOff } from "lucide-react";
 import { fmt, cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
@@ -17,6 +17,7 @@ type PredictionRow = {
   opensAt: string;
   closesAt: string | null;
   resolvedAt: string | null;
+  announceToChat: boolean;
   accentColor: string;
   entriesCount: number;
   breakdown: Array<{ index: number; total: number; count: number }>;
@@ -38,6 +39,7 @@ export function PredictionsManager({
   const [newOptions, setNewOptions] = useState<string[]>(["", ""]);
   const [newClosesIn, setNewClosesIn] = useState("");  // minutes from now, optional
   const [newAccent, setNewAccent] = useState("#a855f7");
+  const [newAnnounce, setNewAnnounce] = useState(true); // bot re-announces in chat while open
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,11 +80,13 @@ export function PredictionsManager({
       options: cleanOptions,
       closesAt,
       accentColor: newAccent,
+      announceToChat: newAnnounce,
     });
     if (ok) {
       setNewQuestion("");
       setNewOptions(["", ""]);
       setNewClosesIn("");
+      setNewAnnounce(true);
       onToast("ok", "Zakład utworzony");
       await load();
       onSuccess();
@@ -122,6 +126,15 @@ export function PredictionsManager({
     if (!confirm(`Anulować zakład i zwrócić wszystkim stawki?`)) return;
     setBusy(p.id);
     if (await call("cancel", { id: p.id })) { onToast("ok", "Anulowano + zwrot"); await load(); }
+    setBusy(null);
+  }
+
+  async function toggleAnnounce(p: PredictionRow) {
+    setBusy(p.id);
+    if (await call("toggle_announce", { id: p.id, announceToChat: !p.announceToChat })) {
+      onToast("ok", p.announceToChat ? "Bot nie będzie ogłaszał" : "Bot będzie ogłaszał na czacie");
+      await load();
+    }
     setBusy(null);
   }
 
@@ -251,6 +264,22 @@ export function PredictionsManager({
                     )}
                     {(isOpen || isLocked) && (
                       <button
+                        onClick={() => toggleAnnounce(p)}
+                        disabled={isBusy}
+                        title={p.announceToChat ? "Bot ogłasza ten zakład na czacie — kliknij, by wyłączyć" : "Bot nie ogłasza — kliknij, by włączyć"}
+                        className={cn(
+                          "text-[10px] font-mono uppercase tracking-widest border px-2 py-1 disabled:opacity-50 flex items-center gap-1",
+                          p.announceToChat
+                            ? "text-violet-300 hover:text-violet-200 border-violet-900 hover:border-violet-700"
+                            : "text-zinc-500 hover:text-zinc-300 border-zinc-800 hover:border-zinc-600",
+                        )}
+                      >
+                        {p.announceToChat ? <Megaphone className="w-3 h-3" /> : <MegaphoneOff className="w-3 h-3" />}
+                        {p.announceToChat ? "Czat: on" : "Czat: off"}
+                      </button>
+                    )}
+                    {(isOpen || isLocked) && (
+                      <button
                         onClick={() => cancel(p)}
                         disabled={isBusy}
                         className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-2 py-1 disabled:opacity-50"
@@ -362,7 +391,7 @@ export function PredictionsManager({
             </div>
           </div>
 
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-2 flex-wrap">
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">
                 Zamknij za (min, opcjonalne)
@@ -376,6 +405,10 @@ export function PredictionsManager({
                 className="w-24 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600"
               />
             </div>
+            <label className="flex items-center gap-1.5 text-[11px] text-zinc-300 cursor-pointer pb-1.5" title="Bot będzie cyklicznie przypominał o tym zakładzie na czacie, dopóki jest otwarty">
+              <input type="checkbox" checked={newAnnounce} onChange={(e) => setNewAnnounce(e.target.checked)} className="accent-violet-600 w-3.5 h-3.5" />
+              <Megaphone className="w-3 h-3 text-violet-400" /> Ogłaszaj na czacie
+            </label>
             <button
               onClick={createPrediction}
               disabled={busy === "create" || pending}

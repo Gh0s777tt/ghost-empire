@@ -4,12 +4,15 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { lockExpiredPredictions } from "@/lib/predictions";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
+
+  await lockExpiredPredictions();
 
   const [active, recent] = await Promise.all([
     prisma.prediction.findMany({

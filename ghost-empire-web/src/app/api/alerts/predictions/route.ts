@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidOverlayToken } from "@/lib/alerts";
+import { lockExpiredPredictions } from "@/lib/predictions";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,8 @@ export async function GET(req: Request) {
   if (!(await isValidOverlayToken(token))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  await lockExpiredPredictions();
 
   const p = await prisma.prediction.findFirst({
     where: { status: { in: ["open", "locked"] } },
