@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2,
 } from "lucide-react";
 import { ErrorState } from "@/components/EmptyState";
 import { fmt, formatDate, cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ const WidgetsLibrary = dynamic(() => import("./sections/Widgets").then((m) => m.
 const IntegrationsManager = dynamic(() => import("./sections/Integrations").then((m) => m.IntegrationsManager), { ssr: false, loading: SectionLoading });
 const WheelManager = dynamic(() => import("./sections/Wheel").then((m) => m.WheelManager), { ssr: false, loading: SectionLoading });
 const WebhooksOutManager = dynamic(() => import("./sections/WebhooksOut").then((m) => m.WebhooksOutManager), { ssr: false, loading: SectionLoading });
+const GamesLibraryManager = dynamic(() => import("./sections/GamesLibrary").then((m) => m.GamesLibraryManager), { ssr: false, loading: SectionLoading });
 const AchievementsManager = dynamic(() => import("./sections/Achievements").then((m) => m.AchievementsManager), { ssr: false, loading: SectionLoading });
 const PredictionsManager = dynamic(() => import("./sections/Predictions").then((m) => m.PredictionsManager), { ssr: false, loading: SectionLoading });
 const WelcomeManager = dynamic(() => import("./sections/Welcome").then((m) => m.WelcomeManager), { ssr: false, loading: SectionLoading });
@@ -107,7 +108,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit" | "integrations" | "wheel" | "webhooks";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit" | "integrations" | "wheel" | "webhooks" | "games";
 
   const SECTIONS: Array<{
     id: SectionId;
@@ -153,6 +154,7 @@ export function AdminClient({
     { id: "polls",     label: "Ankiety",     icon: BarChart3,       group: "community",  permission: () => isAdmin },
     { id: "achievements", label: "Osiągnięcia", icon: Award,        group: "community",  permission: () => isAdmin },
     { id: "schedule",  label: "Harmonogram", icon: CalendarDays,    group: "community",  permission: () => can("manage_shop") },
+    { id: "games",     label: "Biblioteka gier", icon: Gamepad2,    group: "community",  permission: () => isAdmin },
   ];
 
   const visibleSections = SECTIONS.filter((s) => s.permission());
@@ -314,6 +316,10 @@ export function AdminClient({
 
           {activeSection === "webhooks" && isAdmin && (
             <WebhooksOutManager {...sharedProps} />
+          )}
+
+          {activeSection === "games" && isAdmin && (
+            <GamesLibraryManager {...sharedProps} />
           )}
 
           {activeSection === "events" && (

@@ -776,6 +776,36 @@ model WheelSpin {
 }
 
 // =====================================================
+// GAME LIBRARY — aggregate owned games from platforms (Steam first; GOG/PSN later)
+// =====================================================
+
+model GameLibraryConfig {
+  id            String    @id @default("default")  // singleton
+  steamId       String?                            // SteamID64 (resolve vanity in admin)
+  steamSyncedAt DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@map("game_library_config")
+}
+
+model Game {
+  id           String    @id @default(cuid())
+  source       String                              // "steam" | "gog" | "psn" | "xbox"
+  externalId   String                              // platform id (Steam appid, …)
+  name         String
+  imageUrl     String?
+  playtimeMin  Int       @default(0)               // total minutes played
+  lastPlayedAt DateTime?
+  hidden       Boolean   @default(false)           // admin can hide a game from /games
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([source, externalId])
+  @@index([source, playtimeMin])
+  @@map("games")
+}
+
+// =====================================================
 // STREAM SCHEDULE
 // =====================================================
 

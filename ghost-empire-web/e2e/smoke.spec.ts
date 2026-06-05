@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 // Smoke tests: every public page must render without a server error and show the
 // shared chrome (nav + footer). Catches a broken build / crashing page before deploy.
-const PUBLIC_PAGES = ["/", "/shop", "/ranking", "/about", "/wheel", "/predictions", "/polls", "/schedule", "/achievements"];
+const PUBLIC_PAGES = ["/", "/shop", "/ranking", "/about", "/wheel", "/games", "/predictions", "/polls", "/schedule", "/achievements"];
 
 test.describe("public pages smoke", () => {
   for (const path of PUBLIC_PAGES) {
@@ -40,7 +40,7 @@ test.describe("public pages smoke", () => {
       }
     });
     for (const path of ["/", "/wheel", "/shop"]) {
-      await page.goto(path, { waitUntil: "networkidle" });
+      await page.goto(path, { waitUntil: "load" });
     }
     expect(violations, violations.join("\n")).toHaveLength(0);
   });
