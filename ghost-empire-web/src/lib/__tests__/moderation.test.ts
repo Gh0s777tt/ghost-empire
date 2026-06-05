@@ -7,6 +7,7 @@ import {
   normalizeForProfanity, containsProfanity,
   evaluateMessage,
   escalateAction, escalateTimeout,
+  containsLink, hasDisallowedLink, matchesAnyRegex,
 } from "@/lib/moderation";
 
 describe("caps", () => {
@@ -111,6 +112,32 @@ describe("evaluateMessage", () => {
 
   it("respects enabled flags (disabled rule is skipped)", () => {
     expect(evaluateMessage("THIS IS WAY TOO LOUD", { caps: { enabled: false } })).toBeNull();
+  });
+});
+
+describe("links", () => {
+  it("detects http(s) URLs and bare domains", () => {
+    expect(containsLink("wejdź na https://evil.com/free")).toBe(true);
+    expect(containsLink("kup tanio na scam-site.net")).toBe(true);
+    expect(containsLink("bit.ly/abcd")).toBe(true);
+    expect(containsLink("zwykła wiadomość bez linka")).toBe(false);
+    expect(containsLink("to kosztuje 3.50 zł i tyle")).toBe(false); // numeric, not a TLD
+  });
+
+  it("hasDisallowedLink respects the whitelist by domain", () => {
+    expect(hasDisallowedLink("klip: https://clips.twitch.tv/xyz", ["twitch.tv"])).toBe(false);
+    expect(hasDisallowedLink("klip: https://clips.twitch.tv/xyz", [])).toBe(true);
+    expect(hasDisallowedLink("https://twitch.tv/gh0s i https://evil.com", ["twitch.tv"])).toBe(true);
+    expect(hasDisallowedLink("brak linków tutaj", ["twitch.tv"])).toBe(false);
+  });
+});
+
+describe("regex rules", () => {
+  it("matches admin regex, ignores invalid/oversized patterns", () => {
+    expect(matchesAnyRegex("FREE V-BUCKS now", ["v-?bucks"])).toBe(true);
+    expect(matchesAnyRegex("hello world", ["^\\d{4}$"])).toBe(false);
+    expect(matchesAnyRegex("anything", ["(((("])).toBe(false); // invalid regex → skipped
+    expect(matchesAnyRegex("anything", ["a".repeat(300)])).toBe(false); // oversized → skipped
   });
 });
 

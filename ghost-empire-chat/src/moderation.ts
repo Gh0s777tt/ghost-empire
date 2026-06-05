@@ -5,7 +5,7 @@
 import { env } from "./env";
 
 export type ModAction = "delete" | "timeout" | "warn";
-export type ModViolation = "profanity" | "caps" | "length" | "repeat" | "zalgo";
+export type ModViolation = "profanity" | "link" | "caps" | "length" | "repeat" | "zalgo";
 
 const REFRESH_EVERY_MS = 2 * 60 * 1000;
 
@@ -82,6 +82,26 @@ export function containsProfanity(text: string, words: string[]): boolean {
   return false;
 }
 
+// ---------- links + regex (mirror of web src/lib/moderation.ts) ----------
+
+const LINK_RE = /(?:https?:\/\/)?(?:www\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?:\/\S*)?/gi;
+export function hasDisallowedLink(text: string, whitelist: string[]): boolean {
+  const links = text.match(LINK_RE) ?? [];
+  if (links.length === 0) return false;
+  const wl = (whitelist ?? []).map((w) => w.toLowerCase().trim()).filter(Boolean);
+  return links.some((link) => {
+    const host = link.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0].toLowerCase();
+    return !wl.some((w) => host.includes(w));
+  });
+}
+export function matchesAnyRegex(text: string, patterns: string[]): boolean {
+  for (const p of patterns ?? []) {
+    if (!p || p.length > 200) continue;
+    try { if (new RegExp(p, "i").test(text)) return true; } catch { /* invalid */ }
+  }
+  return false;
+}
+
 // ---------- config (synced from the portal) ----------
 
 type Rule<T> = (T & { action: ModAction; timeoutSecs: number }) | null;
@@ -89,7 +109,8 @@ type ModConfig = {
   enabled: boolean;
   exempt: { subs: boolean; vips: boolean; mods: boolean };
   rules: {
-    profanity: Rule<{ words: string[] }>;
+    profanity: Rule<{ words: string[]; regex?: string[] }>;
+    link: Rule<{ whitelist: string[]; allowSubs: boolean }>;
     caps: Rule<{ minLetters: number; maxRatio: number }>;
     length: Rule<{ maxChars: number }>;
     repeat: Rule<{ charRun: number; wordRun: number }>;
@@ -97,10 +118,12 @@ type ModConfig = {
   };
 };
 
+const EMPTY_RULES: ModConfig["rules"] = { profanity: null, link: null, caps: null, length: null, repeat: null, zalgo: null };
+
 let config: ModConfig = {
   enabled: false,
   exempt: { subs: true, vips: true, mods: true },
-  rules: { profanity: null, caps: null, length: null, repeat: null, zalgo: null },
+  rules: { ...EMPTY_RULES },
 };
 
 export async function refreshModeration(): Promise<void> {
@@ -109,13 +132,13 @@ export async function refreshModeration(): Promise<void> {
     if (!res.ok) { console.warn(`[moderation] fetch ${res.status} — keeping current`); return; }
     const data = (await res.json()) as Partial<ModConfig>;
     if (!data.enabled) {
-      config = { enabled: false, exempt: { subs: true, vips: true, mods: true }, rules: { profanity: null, caps: null, length: null, repeat: null, zalgo: null } };
+      config = { enabled: false, exempt: { subs: true, vips: true, mods: true }, rules: { ...EMPTY_RULES } };
       return;
     }
     config = {
       enabled: true,
       exempt: data.exempt ?? { subs: true, vips: true, mods: true },
-      rules: data.rules ?? { profanity: null, caps: null, length: null, repeat: null, zalgo: null },
+      rules: { ...EMPTY_RULES, ...(data.rules ?? {}) },
     };
     const active = Object.entries(config.rules).filter(([, v]) => v).map(([k]) => k);
     console.log(`[moderation] enabled — rules: ${active.join(", ") || "(none)"}`);
@@ -140,8 +163,14 @@ export function checkMessage(
   if (config.exempt.mods && ctx.isMod) return null;
 
   const r = config.rules;
-  if (r.profanity && containsProfanity(message, r.profanity.words)) {
+  if (r.profanity && (containsProfanity(message, r.profanity.words) || matchesAnyRegex(message, r.profanity.regex ?? []))) {
     return { action: r.profanity.action, timeoutSecs: r.profanity.timeoutSecs, violation: "profanity" };
+  }
+  if (r.link) {
+    const linkExempt = r.link.allowSubs && (ctx.isSub || ctx.isVip || ctx.isMod);
+    if (!linkExempt && hasDisallowedLink(message, r.link.whitelist)) {
+      return { action: r.link.action, timeoutSecs: r.link.timeoutSecs, violation: "link" };
+    }
   }
   if (r.zalgo && isZalgo(message, r.zalgo.maxRatio)) {
     return { action: r.zalgo.action, timeoutSecs: r.zalgo.timeoutSecs, violation: "zalgo" };
@@ -160,6 +189,7 @@ export function checkMessage(
 
 const VIOLATION_PL: Record<ModViolation, string> = {
   profanity: "wulgaryzmy",
+  link: "niedozwolony link",
   caps: "za dużo CAPS",
   length: "za długa wiadomość",
   repeat: "spam / powtórzenia",

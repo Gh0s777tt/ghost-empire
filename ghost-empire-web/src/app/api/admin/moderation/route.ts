@@ -39,6 +39,12 @@ export async function POST(req: Request) {
   const words = Array.isArray(body.profanityWords)
     ? body.profanityWords.map((w) => String(w).trim().toLowerCase()).filter(Boolean).slice(0, 1000)
     : cur.profanityWords;
+  const regex = Array.isArray(body.profanityRegex)
+    ? body.profanityRegex.map((w) => String(w).trim()).filter(Boolean).slice(0, 200)
+    : cur.profanityRegex;
+  const linkWhitelist = Array.isArray(body.linkWhitelist)
+    ? body.linkWhitelist.map((w) => String(w).trim().toLowerCase()).filter(Boolean).slice(0, 200)
+    : cur.linkWhitelist;
 
   const updated = await prisma.moderationConfig.update({
     where: { id: "default" },
@@ -47,8 +53,15 @@ export async function POST(req: Request) {
 
       profanityEnabled: pickBool(body.profanityEnabled, cur.profanityEnabled),
       profanityWords: words,
+      profanityRegex: regex,
       profanityAction: pickAction(body.profanityAction, cur.profanityAction),
       profanityTimeoutSecs: clampInt(body.profanityTimeoutSecs, 1, MAX_TIMEOUT, cur.profanityTimeoutSecs),
+
+      linkEnabled: pickBool(body.linkEnabled, cur.linkEnabled),
+      linkWhitelist,
+      linkAllowSubs: pickBool(body.linkAllowSubs, cur.linkAllowSubs),
+      linkAction: pickAction(body.linkAction, cur.linkAction),
+      linkTimeoutSecs: clampInt(body.linkTimeoutSecs, 1, MAX_TIMEOUT, cur.linkTimeoutSecs),
 
       capsEnabled: pickBool(body.capsEnabled, cur.capsEnabled),
       capsMinLetters: clampInt(body.capsMinLetters, 1, 200, cur.capsMinLetters),

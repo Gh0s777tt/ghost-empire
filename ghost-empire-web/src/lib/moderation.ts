@@ -4,7 +4,7 @@
 // action (delete / timeout / warn). Keeping detection pure makes the whole system
 // unit-testable and identical across Twitch / Kick / YouTube.
 
-export type ModViolation = "profanity" | "caps" | "length" | "repeat" | "zalgo";
+export type ModViolation = "profanity" | "link" | "caps" | "length" | "repeat" | "zalgo";
 
 export type ModAction = "delete" | "timeout" | "warn";
 
@@ -127,10 +127,52 @@ export function containsProfanity(text: string, words: string[]): boolean {
   return false;
 }
 
+// ---------- LINKS / URLS ----------
+
+// Matches http(s) URLs and bare domains (example.com, bit.ly/x). TLD must be ≥2
+// letters so "e.g" / "3.5" don't false-positive.
+const LINK_RE = /(?:https?:\/\/)?(?:www\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?:\/\S*)?/gi;
+
+/** All link-like tokens in the message. */
+export function extractLinks(text: string): string[] {
+  return text.match(LINK_RE) ?? [];
+}
+
+export function containsLink(text: string): boolean {
+  return extractLinks(text).length > 0;
+}
+
+/** True when the message contains a link whose domain isn't in the whitelist. */
+export function hasDisallowedLink(text: string, whitelist: string[]): boolean {
+  const links = extractLinks(text);
+  if (links.length === 0) return false;
+  const wl = (whitelist ?? []).map((w) => w.toLowerCase().trim()).filter(Boolean);
+  return links.some((link) => {
+    const host = link.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0].toLowerCase();
+    return !wl.some((w) => host.includes(w));
+  });
+}
+
+// ---------- REGEX RULES ----------
+
+/** True when any admin-supplied regex matches. Invalid / oversized patterns are skipped. */
+export function matchesAnyRegex(text: string, patterns: string[]): boolean {
+  for (const p of patterns ?? []) {
+    if (!p || p.length > 200) continue;
+    try {
+      if (new RegExp(p, "i").test(text)) return true;
+    } catch {
+      /* invalid regex — ignore */
+    }
+  }
+  return false;
+}
+
 // ---------- ORCHESTRATOR ----------
 
 export type ModRuleConfig = {
-  profanity?: { enabled: boolean; words: string[] };
+  profanity?: { enabled: boolean; words: string[]; regex?: string[] };
+  link?: { enabled: boolean; whitelist?: string[] };
   caps?: { enabled: boolean; minLetters?: number; maxRatio?: number };
   length?: { enabled: boolean; maxChars: number };
   repeat?: { enabled: boolean; charRun?: number; wordRun?: number };
@@ -138,9 +180,10 @@ export type ModRuleConfig = {
 };
 
 /** Evaluate a message against the enabled rules; returns the FIRST violation found
- *  (priority: profanity → zalgo → length → caps → repeat) or null if it's clean. */
+ *  (priority: profanity → link → zalgo → length → caps → repeat) or null if clean. */
 export function evaluateMessage(text: string, cfg: ModRuleConfig): ModViolation | null {
-  if (cfg.profanity?.enabled && containsProfanity(text, cfg.profanity.words)) return "profanity";
+  if (cfg.profanity?.enabled && (containsProfanity(text, cfg.profanity.words) || matchesAnyRegex(text, cfg.profanity.regex ?? []))) return "profanity";
+  if (cfg.link?.enabled && hasDisallowedLink(text, cfg.link.whitelist ?? [])) return "link";
   if (cfg.zalgo?.enabled && isZalgo(text, cfg.zalgo.maxRatio ?? 0.2, cfg.zalgo.maxRun ?? 3)) return "zalgo";
   if (cfg.length?.enabled && isTooLong(text, cfg.length.maxChars)) return "length";
   if (cfg.caps?.enabled && isExcessiveCaps(text, cfg.caps.minLetters ?? 8, cfg.caps.maxRatio ?? 0.7)) return "caps";
