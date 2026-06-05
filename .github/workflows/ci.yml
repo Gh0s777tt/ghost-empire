@@ -47,3 +47,11 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      # Surface known vulnerabilities in production dependencies. Non-blocking
+      # (continue-on-error) so a freshly-disclosed transitive CVE can't wedge every
+      # merge — it shows a ⚠️ on the job and Dependabot opens the fix PR. Tighten to
+      # a hard gate later if desired.
+      - name: Audit production dependencies
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
