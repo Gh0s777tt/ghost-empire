@@ -7,11 +7,12 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search,
 } from "lucide-react";
 import { ErrorState } from "@/components/EmptyState";
 import { fmt, formatDate, cn } from "@/lib/utils";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
+import { CommandPalette, openCommandPalette } from "./CommandPalette";
 import dynamic from "next/dynamic";
 import { SectionCard, FieldInput } from "./shared";
 import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, StreamlabsConnectionData, UnmatchedDonation, ShopItemRow, CodeRow, CodeConfig, EventRow, Drop, PendingOrder, StreamAlertsData } from "./types";
@@ -251,6 +252,7 @@ export function AdminClient({
           active={activeSection}
           onSelect={goToSection}
         />
+        <CommandPalette sections={visibleSections} onSelect={goToSection} />
 
         <div key={activeSection} className="flex-1 min-w-0 space-y-6 animate-fade-in-up">
           {activeSection === "dashboard" && (
@@ -538,6 +540,16 @@ function AdminNav<T extends string>({
             "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
         }}
       >
+        <button
+          type="button"
+          onClick={() => openCommandPalette()}
+          className="flex items-center gap-2 px-2.5 py-2 mb-1 text-[11px] text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 transition-colors"
+          title="Szybkie wyszukiwanie (Ctrl+K)"
+        >
+          <Search className="w-3.5 h-3.5 shrink-0" />
+          <span className="flex-1 text-left">Szukaj…</span>
+          <kbd className="text-[9px] font-mono text-zinc-600 border border-zinc-800 px-1 py-0.5">Ctrl K</kbd>
+        </button>
         {NAV_GROUPS.map((g) => {
           const items = sections.filter((s) => s.group === g.key);
           if (items.length === 0) return null;
