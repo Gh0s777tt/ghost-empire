@@ -53,7 +53,7 @@ Dziś diagnostyka = logi Vercela. Pod produkcję z realnym ruchem to za mało.
 
 | Propozycja | Pri | Notatki |
 |---|---|---|
-| **Sentry** (error tracking) | 🔥 | Client + server + edge; już mamy `error.digest` w boundary do korelacji |
+| ~~**Sentry** (error tracking)~~ ✅ | — | **Zrobione (#162)** — `@sentry/nextjs` server + edge przez `instrumentation.ts` + `onRequestError` (bez `withSentryConfig` = zero zmian w `next build`). **No-op bez `SENTRY_DSN`** → ustaw env w Vercel, by aktywować. *(Client SDK + source-maps = opcjonalny kolejny krok.)* |
 | ~~**Vercel Analytics + Speed Insights**~~ ✅ | — | **Zrobione (#155)** — `@vercel/analytics` + `@vercel/speed-insights` w root layout (real-user Core Web Vitals, cookieless, no-op poza Vercel) |
 | ~~**Structured logging**~~ ✅ | — | **Zrobione** — `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty w 3 webhooki (twitch-eventsub / kick-events / paymedia) + crony (`prune` #151, `streamlabs-poll` #160). *(Hot-path `award` świadomie bez logu na wywołanie — byłby szum; błędy łapie boundary.)* |
 | **Uptime / health-check** | 🟡 | Endpoint `/api/health` + zewnętrzny monitor (cron-job.org / UptimeRobot) na live + bazę |

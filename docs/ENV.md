@@ -95,7 +95,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | Funkcja | Jak podać |
 |---|---|
 | **AI** (postać `@bot` + `!imagine`) | `/admin#integrations` → dostawca (Anthropic/OpenAI/Grok/Gemini/DeepSeek/Bielik) + klucz + opcjonalny model. *(env fallback: `AI_API_KEY`)* |
-| **Sentry** (monitoring) | `/admin#integrations` → DSN. *(env fallback: `SENTRY_DSN`)* |
+| **Sentry** (monitoring) | ⚠️ **SDK inicjuje się przy starcie z `SENTRY_DSN` w env Vercela** (`instrumentation.ts`), nie z bazy — ustaw env, by aktywować error-tracking. Pole DSN w `/admin#integrations` służy innym ścieżkom runtime. Bez `SENTRY_DSN` Sentry jest no-op. |
 | **OBS WebSocket** | `/admin#integrations` → adres `ws://…` + hasło z OBS |
 | **Social Linki OAuth** (Instagram / TikTok / Facebook / X) | Aplikacja deweloperska u dostawcy → `*_CLIENT_ID` / `*_CLIENT_SECRET` + redirect URI (env) |
 | **Philips Hue / Govee** | Konto/most deweloperski + token API |
