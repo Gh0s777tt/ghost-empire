@@ -4,6 +4,7 @@ import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
+import { checkMessage, violationLabel } from "./moderation";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
 import { refreshAccessToken } from "./twitchAuth";
@@ -33,6 +34,26 @@ function build(password: string): tmi.Client {
   c.on("message", (_channel, tags, message, self) => {
     if (self) return;
     markActivity();
+
+    // Automod first — offending messages are removed/timed-out and skip the chat
+    // feed, commands and the GT award. Requires the bot to be a Twitch moderator.
+    const verdict = checkMessage(message, {
+      isSub: Boolean(tags.subscriber) || tags.badges?.subscriber != null,
+      isVip: tags.badges?.vip != null,
+      isMod: Boolean(tags.mod) || tags.badges?.broadcaster != null,
+    });
+    if (verdict) {
+      const u = tags.username ?? "";
+      if (verdict.action === "delete" && tags.id) {
+        c.deletemessage(env.twitch.channel, tags.id).catch(() => {});
+      } else if (verdict.action === "timeout" && u) {
+        c.timeout(env.twitch.channel, u, verdict.timeoutSecs, violationLabel(verdict.violation)).catch(() => {});
+      } else if (verdict.action === "warn" && u) {
+        c.say(env.twitch.channel, `@${u} ⚠️ ${violationLabel(verdict.violation)}`).catch(() => {});
+      }
+      return;
+    }
+
     pushChatFeed("twitch", tags.username, message);
 
     if (isSongRequest(message)) {
