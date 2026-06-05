@@ -160,7 +160,8 @@ flowchart LR
 
 | Obszar | Co |
 |---|---|
-| **Reliability** | `error.tsx` / `global-error.tsx` / `loading.tsx`, atomic `$transaction` na każdej mutacji ekonomii, `/api/health` (200/503) |
+| **Reliability** | `error.tsx` / `global-error.tsx` / `loading.tsx`, atomic `$transaction` na każdej mutacji ekonomii, `/api/health` (200/503), **webhooki wychodzące** (Discord/n8n/custom) |
+| **Observability** | **Vercel Analytics + Speed Insights** (real-user Core Web Vitals), structured logging (`lib/logger.ts`), **`npm audit` w CI** |
 | **Security** | **szyfrowanie sekretów at-rest (AES-256-GCM)** — klucze API + tokeny OAuth · HSTS, CSP, COOP, X-Frame-Options, Permissions-Policy · `noindex`/`no-store` na overlayach · rate-limit (DB sliding-window) · webhook verify (HMAC/RSA) · HMAC-signed cookies · audit log z IP · skan sekretów (GitGuardian) |
 | **Performance** | `unstable_cache`, indeksy DB, lazy-load sekcji admina, Router `staleTimes`, `Promise.all`, pula DB `max:3` pod Supabase |
 | **a11y** | `:focus-visible`, skip-link, `prefers-reduced-motion`, `aria-label`/`aria-current` na nav, `role="dialog"` na modalach |
@@ -173,7 +174,7 @@ flowchart LR
 <details>
 <summary><b>~26 sekcji (deep-link przez hash, filtrowane wg uprawnień moderatora)</b></summary>
 
-Dashboard · Użytkownicy (grant GT, role, opisy uprawnień) · Merge duplikatów · **Moderacja (automod + statystyki naruszeń)** · Eventy · Sklep · Drops · **Koło Fortuny** · Harmonogram · Bot Discord · Donacje · Twitch / Kick / YouTube (autoryzacja + eventy) · Komendy czatu · Timery · FAQ · Powitania · Song requesty · **Stream Alerts (typy + per-typ)** · Stream Goals · Subathon · Predictions · Battle Pass · **Ankiety** · **Analityka (heatmapa czatu)** · **Integracje (klucze API)** · Audit log · **Reset bazy** (strefa niebezpieczna).
+Dashboard · Użytkownicy (grant GT, role, opisy uprawnień) · Merge duplikatów · **Moderacja (automod + statystyki naruszeń)** · Eventy · Sklep · Drops · **Koło Fortuny** · Harmonogram · Bot Discord · Donacje · Twitch / Kick / YouTube (autoryzacja + eventy) · Komendy czatu · Timery · FAQ · Powitania · Song requesty · **Stream Alerts (typy + per-typ)** · Stream Goals · Subathon · Predictions · Battle Pass · **Ankiety** · **Analityka (heatmapa czatu)** · **Integracje (klucze API)** · **Webhooki wychodzące** · Audit log · **Reset bazy** (strefa niebezpieczna).
 </details>
 
 ---

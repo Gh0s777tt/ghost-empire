@@ -7,6 +7,15 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Added
+
+- **Webhooki wychodzące** **(#157)** — zdarzenia streamu (suby, gifty, bity, donacje, zakupy w sklepie, wygrane w eventach, dropy, level-upy, powitania, **wygrana w Kole Fortuny**) wysyłają teraz **POST JSON** na dowolny URL: **Discord webhook**, n8n, Zapier, własny backend. Sekcja admina **„Webhooki"** (`/admin#webhooks`): dodaj/edytuj/włącz/usuń/**test**, wybór eventów (lub wszystkie). Opcjonalny **sekret HMAC** podpisuje treść (`X-GhostEmpire-Signature: sha256=…`, sekret **szyfrowany at-rest**); martwy endpoint **auto-wyłącza się** po 20 błędach z rzędu, timeout 5s. `lib/webhooks-out.ts` wpięte w `dispatchAlert` (jeden chokepoint = wszystkie typy alertów) + model `OutgoingWebhook` (`db push`). Zielone: `tsc` / `eslint` / 111 testów.
+- **Vercel Analytics + Speed Insights** **(#155)** — cookieless analytics ruchu + realne Core Web Vitals z produkcji przez oficjalne komponenty `@vercel/*` w root layout (no-op poza Vercel).
+
+### Changed
+
+- **CI — `npm audit` (prod deps, high+)** **(#156)** — krok w workflow CI pokazuje znane podatności produkcyjnych zależności na każdym push/PR; nieblokujący (`continue-on-error`), by świeżo ujawniony CVE w zależności tranzytywnej nie zablokował wszystkich merge'y — Dependabot otwiera PR z fixem.
+
 ### Security
 
 - **Szyfrowanie sekretów at-rest (AES-256-GCM)** — wszystkie wrażliwe wartości w bazie są teraz szyfrowane zamiast trzymane czystym tekstem. Klucz pochodzi z `ENCRYPTION_KEY` (preferowany) lub `NEXTAUTH_SECRET` (SHA-256), więc działa bez nowej zmiennej env. Wstecznie kompatybilne — istniejące wiersze plaintext działają i są szyfrowane przy następnym zapisie (prefiks `enc:v1:`). Objęte: **klucze API** `IntegrationConfig` (AI / Sentry DSN / hasło OBS) **(#146)** oraz **wszystkie tokeny OAuth/streamer** — `Connection`, Twitch/Kick/YouTube/Streamlabs **(#147)**. Bot niezmieniony (czyta tokeny z env + `.kick-tokens.json`, nie z DB). Reużywalny `lib/crypto.ts` + 5 testów. Zielone: `tsc` / `eslint` / testy.
