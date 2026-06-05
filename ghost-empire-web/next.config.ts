@@ -56,6 +56,15 @@ const apiHeaders = [
   { key: "X-Robots-Tag", value: "noindex, nofollow" },
 ];
 
+// Overlay-specific headers. Overlays are token-gated OBS browser sources — they
+// should never be indexed by search engines (the token sits in the URL) and the
+// HTML shell shouldn't be cached by shared proxies. OBS loads them as a top-level
+// document, so the global frame-ancestors 'none' doesn't affect rendering there.
+const overlayHeaders = [
+  { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+  { key: "Cache-Control", value: "no-store, max-age=0" },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false, // Don't leak "X-Powered-By: Next.js"
   reactStrictMode: true,
@@ -97,6 +106,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/(.*)", headers: securityHeaders },
       { source: "/api/(.*)", headers: apiHeaders },
+      { source: "/overlay/(.*)", headers: overlayHeaders },
     ];
   },
 };
