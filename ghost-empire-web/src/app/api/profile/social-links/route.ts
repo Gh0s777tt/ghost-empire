@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { safeMediaUrl } from "@/lib/url-safe";
 
 const ALLOWED_PLATFORMS = ["instagram", "twitter", "tiktok", "youtube", "website"] as const;
 type AllowedPlatform = (typeof ALLOWED_PLATFORMS)[number];
@@ -41,7 +42,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Handle 1-100 znaków" }, { status: 400 });
   }
 
-  const url = buildUrl(platform, handle);
+  // Defensive: the stored url is rendered as an <a href> on profiles — guarantee
+  // it's a real http(s) URL (blocks javascript:/data: even if buildUrl is bypassed).
+  const url = safeMediaUrl(buildUrl(platform, handle));
+  if (!url) {
+    return NextResponse.json({ error: "Nieprawidłowy URL" }, { status: 400 });
+  }
 
   const link = await prisma.socialLink.upsert({
     where: { userId_platform: { userId: session.user.id, platform } },

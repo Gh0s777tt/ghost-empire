@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
+import { safeMediaUrl } from "@/lib/url-safe";
 import {
   ALERT_TYPE_LIST,
   ALERT_ANIMATIONS,
@@ -62,10 +63,8 @@ export async function POST(req: Request) {
     ? (posRaw as AlertPosition)
     : DEFAULT_ALERT_TYPE_CFG.position;
 
-  const soundUrl =
-    typeof body.soundUrl === "string" && body.soundUrl.trim()
-      ? body.soundUrl.trim().slice(0, 500)
-      : null;
+  // Only allow real http(s) URLs (blocks javascript:/data:/relative).
+  const soundUrl = safeMediaUrl(typeof body.soundUrl === "string" ? body.soundUrl : null);
 
   let minAmount: number | null = null;
   if (body.minAmount !== undefined && body.minAmount !== null && body.minAmount !== "") {
