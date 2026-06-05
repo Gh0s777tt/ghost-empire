@@ -33,6 +33,10 @@ Duży zrzut pomysłów od usera + moje propozycje. Pogrupowane wg autonomii; kol
 > - 🧪 **Testy integracyjne API+realny Postgres** — `tests/integration/` + job CI `integration · postgres` (predictions/wheel/pruning end-to-end). **111 unit + 11 integration** (#159).
 > - 📄 **Docs:** runbook rotacji sekretów (`docs/ENV.md §5`) + sync wszystkich plików (#158) + **kodyfikacja zasady „docs zawsze z changelogiem"** w README/ARCHITECTURE (#160).
 > - **Zostało (🔑 Ty / 🎨 kierunek / ⚠️ ryzyko bez builda):** Sentry (DSN + ryzyko build bez weryfikacji `next build`) · CSP nonces (osobna ostrożna sesja) · landing (Twój gust) · AI/`@bot`/`!imagine` (klucz) · OBS WS/Hue/Govee (creds) · social OAuth · i18n · wybór dostawcy donacji · E2E/Lighthouse · code-split AdminClient (nieweryfikowalne bez builda).
+>
+> ### ✅ STATUS (2026-06-05 cd., sesja „zrób wszystko co możesz sam" — od PR #173)
+> *(`next build` działa już lokalnie → weryfikuję zmiany build-affecting; code-split AdminClient wraca do gry.)*
+> - ✦ **Prestiż (Phantom Ascension)** (#173) — po max levelu (100) dalsze XP daje gwiazdki prestiżu ✦ (co 50 000 XP ponad cap, **bez resetu** — pochodna lifetime XP), perk **+2% GT z czatu / gwiazdkę** (kumulowany z perkiem poziomu), ✦ na profilu (własnym/publicznym) i w rankingu. `User.prestige` + `prestigeFromXp`/`prestigeGtMultiplier` (+5 testów = 125). ✅ `tsc`/`next build`/testy.
 
 **✅ Najpierw naprawione bugi prywatności (PR #115):** imię/nazwisko zamaskowane (`displayNick`) w rankingu/eventach/home/OG-image; mail (`@…dam`) wyrugowany z „Połączone konta" (`isPublicHandle` + źródło w `auth.ts`); audit log z czytelnymi etykietami (anulowanie predykcji **ma** być w audycie). *(Dane „at-rest" w bazie nietknięte — wszystkie ścieżki renderu maskują; opcjonalny scrub bazy do zrobienia na życzenie.)*
 

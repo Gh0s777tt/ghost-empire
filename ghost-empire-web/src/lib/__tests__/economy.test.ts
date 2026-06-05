@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { computePayouts, tierFromXp, plnFromCurrency, pickWeightedIndex, levelGtMultiplier } from "@/lib/economy";
+import {
+  computePayouts, tierFromXp, plnFromCurrency, pickWeightedIndex, levelGtMultiplier,
+  prestigeFromXp, prestigeGtMultiplier, LEVEL_CAP_XP, PRESTIGE_XP,
+} from "@/lib/economy";
 
 describe("computePayouts", () => {
   it("gives the whole pot to a single winner", () => {
@@ -120,5 +123,38 @@ describe("levelGtMultiplier (account-level GT perk)", () => {
     expect(levelGtMultiplier(11)).toBeCloseTo(1.05);
     expect(levelGtMultiplier(101)).toBeCloseTo(1.5);
     expect(levelGtMultiplier(1000)).toBeCloseTo(1.5); // capped
+  });
+});
+
+describe("prestigeFromXp (Phantom Ascension)", () => {
+  it("is 0 until the level cap is reached", () => {
+    expect(prestigeFromXp(0)).toBe(0);
+    expect(prestigeFromXp(LEVEL_CAP_XP - 1)).toBe(0);
+    expect(prestigeFromXp(LEVEL_CAP_XP)).toBe(0); // hit level 100, prestige not yet earned
+  });
+
+  it("grants +1 star per PRESTIGE_XP of overflow past the cap", () => {
+    expect(prestigeFromXp(LEVEL_CAP_XP + PRESTIGE_XP - 1)).toBe(0);
+    expect(prestigeFromXp(LEVEL_CAP_XP + PRESTIGE_XP)).toBe(1);
+    expect(prestigeFromXp(LEVEL_CAP_XP + 2 * PRESTIGE_XP)).toBe(2);
+    expect(prestigeFromXp(LEVEL_CAP_XP + 5 * PRESTIGE_XP + 123)).toBe(5);
+  });
+
+  it("never goes negative for tiny XP totals", () => {
+    expect(prestigeFromXp(-100)).toBe(0);
+  });
+});
+
+describe("prestigeGtMultiplier (prestige GT perk)", () => {
+  it("grows +2%/star capped at +50%", () => {
+    expect(prestigeGtMultiplier(0)).toBeCloseTo(1.0);
+    expect(prestigeGtMultiplier(1)).toBeCloseTo(1.02);
+    expect(prestigeGtMultiplier(10)).toBeCloseTo(1.2);
+    expect(prestigeGtMultiplier(25)).toBeCloseTo(1.5);
+    expect(prestigeGtMultiplier(1000)).toBeCloseTo(1.5); // capped
+  });
+
+  it("never drops below 1× for nonsense input", () => {
+    expect(prestigeGtMultiplier(-5)).toBeCloseTo(1.0);
   });
 });

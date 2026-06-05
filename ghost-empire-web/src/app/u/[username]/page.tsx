@@ -13,6 +13,7 @@ import type { ComponentType, CSSProperties } from "react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import Link from "next/link";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
+import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP } from "@/lib/economy";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,7 @@ export default async function PublicProfilePage({
       // Public stats only
       level: true,
       xp: true,
+      prestige: true,
       totalEarned: true,
       streak: true,
       messageCount: true,
@@ -144,7 +146,11 @@ export default async function PublicProfilePage({
   const [aheadByEarned, aheadByLevel, aheadByStreak] = rankPositions;
   const rankInfo = rankForLevel(user.level);
   const xpCurrent = user.xp % 500;
-  const xpProgress = Math.min(100, (xpCurrent / 500) * 100);
+  const atMax = user.level >= MAX_LEVEL;
+  const prestigeProgress = atMax ? Math.max(0, user.xp - LEVEL_CAP_XP) % PRESTIGE_XP : 0;
+  const xpProgress = atMax
+    ? Math.min(100, (prestigeProgress / PRESTIGE_XP) * 100)
+    : Math.min(100, (xpCurrent / 500) * 100);
 
   return (
     <div className="min-h-screen bg-black">
@@ -227,6 +233,14 @@ export default async function PublicProfilePage({
                   <span style={{ color: rankInfo.color }}>
                     {rankInfo.emoji} {rankInfo.name}
                   </span>
+                  {user.prestige > 0 && (
+                    <span
+                      className="text-[10px] font-bold tracking-widest uppercase border border-amber-600/60 bg-amber-950/30 text-amber-300 px-1.5 py-0.5"
+                      title={`Prestiż ${user.prestige} — Phantom Ascension`}
+                    >
+                      ✦ {user.prestige}
+                    </span>
+                  )}
                   <span>·</span>
                   <span>Od {formatDate(user.createdAt)}</span>
                 </div>
@@ -236,20 +250,28 @@ export default async function PublicProfilePage({
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
-                    <span className="text-zinc-500">XP do LVL {user.level + 1}</span>
-                    <span className="text-white">{fmt(xpCurrent)} / 500</span>
+                    <span className="text-zinc-500">
+                      {atMax ? `XP do prestiżu ✦${user.prestige + 1}` : `XP do LVL ${user.level + 1}`}
+                    </span>
+                    <span className="text-white">
+                      {atMax ? `${fmt(prestigeProgress)} / ${fmt(PRESTIGE_XP)}` : `${fmt(xpCurrent)} / 500`}
+                    </span>
                   </div>
                   <div className="h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">
                     <div
                       className="h-full transition-all"
                       style={{
                         width: `${xpProgress}%`,
-                        background: `linear-gradient(90deg, ${rankInfo.color}, #E50914)`,
+                        background: atMax
+                          ? "linear-gradient(90deg, #f59e0b, #E50914)"
+                          : `linear-gradient(90deg, ${rankInfo.color}, #E50914)`,
                       }}
                     />
                   </div>
                   <p className="text-[10px] text-zinc-600 font-mono">
-                    Łącznie {fmt(user.xp)} XP / {fmt(xpForLevel(100))} XP do max LVL
+                    {atMax
+                      ? `Łącznie ${fmt(user.xp)} XP · max LVL — XP buduje prestiż ✦`
+                      : `Łącznie ${fmt(user.xp)} XP / ${fmt(xpForLevel(100))} XP do max LVL`}
                   </p>
                 </div>
               </div>

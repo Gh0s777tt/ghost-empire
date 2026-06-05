@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
+import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier } from "@/lib/economy";
 
 type Achievement = {
   id: string;
@@ -37,6 +38,7 @@ type Props = {
     totalSpent: number;
     level: number;
     xp: number;
+    prestige: number;
     streak: number;
     messageCount: number;
     voiceMinutes: number;
@@ -135,7 +137,13 @@ export function ProfileClient({
   const rank = rankForLevel(user.level);
   const xpNeeded = xpForLevel(user.level + 1);
   const xpCurrent = user.xp % 500;
-  const xpProgress = Math.min(100, (xpCurrent / 500) * 100);
+  // At the level cap, the XP bar tracks prestige progress (overflow XP past the cap)
+  // instead of the cosmetic 0-499 cycle.
+  const atMax = user.level >= MAX_LEVEL;
+  const prestigeProgress = atMax ? Math.max(0, user.xp - LEVEL_CAP_XP) % PRESTIGE_XP : 0;
+  const xpProgress = atMax
+    ? Math.min(100, (prestigeProgress / PRESTIGE_XP) * 100)
+    : Math.min(100, (xpCurrent / 500) * 100);
   const earnedIds = new Set(earnedAchievements.map((ua) => ua.achievement.id));
   // Map achievement code -> name so transaction reasons like "achievement:linked_2"
   // render as the real achievement name in the history.
@@ -223,12 +231,20 @@ export function ProfileClient({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3 text-zinc-500 font-mono text-xs mb-3">
+            <div className="flex items-center gap-3 text-zinc-500 font-mono text-xs mb-3 flex-wrap">
               <span>@{user.username ?? "unset"}</span>
               <span>·</span>
               <span style={{ color: rank.color }}>
                 {rank.emoji} {rank.name}
               </span>
+              {user.prestige > 0 && (
+                <span
+                  className="text-[10px] font-bold tracking-widest uppercase border border-amber-600/60 bg-amber-950/30 text-amber-300 px-1.5 py-0.5"
+                  title={`Prestiż ${user.prestige} — Phantom Ascension`}
+                >
+                  ✦ {user.prestige}
+                </span>
+              )}
               <span>·</span>
               <span>Od {formatDate(user.createdAt)}</span>
             </div>
@@ -237,12 +253,14 @@ export function ProfileClient({
               <p className="text-zinc-400 text-sm mb-4 italic">"{user.bio}"</p>
             )}
 
-            {/* XP progress */}
+            {/* XP progress — tracks prestige once the level is maxed */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
-                <span className="text-zinc-500">XP do LVL {user.level + 1}</span>
+                <span className="text-zinc-500">
+                  {atMax ? `XP do prestiżu ✦${user.prestige + 1}` : `XP do LVL ${user.level + 1}`}
+                </span>
                 <span className="text-white">
-                  {fmt(xpCurrent)} / 500
+                  {atMax ? `${fmt(prestigeProgress)} / ${fmt(PRESTIGE_XP)}` : `${fmt(xpCurrent)} / 500`}
                 </span>
               </div>
               <div className="h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">
@@ -250,16 +268,22 @@ export function ProfileClient({
                   className="h-full transition-all"
                   style={{
                     width: `${xpProgress}%`,
-                    background: `linear-gradient(90deg, ${rank.color}, #E50914)`,
+                    background: atMax
+                      ? "linear-gradient(90deg, #f59e0b, #E50914)"
+                      : `linear-gradient(90deg, ${rank.color}, #E50914)`,
                   }}
                 />
               </div>
               <p className="text-[10px] text-zinc-600 font-mono">
-                Łącznie {fmt(user.xp)} XP · do max LVL 100 brakuje {fmt(Math.max(0, xpForLevel(100) - user.xp))} XP
+                {atMax
+                  ? `Łącznie ${fmt(user.xp)} XP · max LVL osiągnięty — XP buduje teraz prestiż ✦`
+                  : `Łącznie ${fmt(user.xp)} XP · do max LVL 100 brakuje ${fmt(Math.max(0, xpForLevel(100) - user.xp))} XP`}
               </p>
-              {user.level > 1 && (
+              {(user.level > 1 || user.prestige > 0) && (
                 <p className="text-[10px] font-mono text-emerald-400/90">
-                  Perk poziomu: +{Math.round(Math.min(50, (user.level - 1) * 0.5))}% GT z czatu
+                  Perk: +{Math.round(Math.min(50, (user.level - 1) * 0.5))}% GT z czatu
+                  {user.prestige > 0 &&
+                    ` · ✦${user.prestige}: +${Math.round((prestigeGtMultiplier(user.prestige) - 1) * 100)}% GT`}
                 </p>
               )}
             </div>

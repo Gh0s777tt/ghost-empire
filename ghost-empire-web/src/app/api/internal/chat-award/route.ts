@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
-import { levelGtMultiplier } from "@/lib/economy";
+import { levelGtMultiplier, prestigeGtMultiplier } from "@/lib/economy";
 
 // Per-user caps: even with a valid secret, no single viewer can be farmed.
 const PER_USER_HITS = 30;
@@ -75,11 +75,11 @@ export async function POST(req: Request) {
   const connection = platformUserId
     ? await prisma.connection.findUnique({
         where: { platform_platformId: { platform, platformId: String(platformUserId) } },
-        select: { userId: true, user: { select: { level: true } } },
+        select: { userId: true, user: { select: { level: true, prestige: true } } },
       })
     : await prisma.connection.findFirst({
         where: { platform, username: { equals: username!, mode: "insensitive" } },
-        select: { userId: true, user: { select: { level: true } } },
+        select: { userId: true, user: { select: { level: true, prestige: true } } },
       });
 
   if (!connection) {
@@ -99,9 +99,11 @@ export async function POST(req: Request) {
     );
   }
 
-  // Account-level perk: higher level = bigger GT earn multiplier (+0.5%/level, cap +50%).
+  // Account-level + prestige perks: higher level/prestige = bigger GT earn multiplier
+  // (level +0.5%/lvl cap +50%; prestige +2%/star cap +50%), stacked multiplicatively.
   const levelMult = levelGtMultiplier(connection.user?.level ?? 1);
-  const finalAmount = Math.round(amount * multiplier * levelMult);
+  const prestigeMult = prestigeGtMultiplier(connection.user?.prestige ?? 0);
+  const finalAmount = Math.round(amount * multiplier * levelMult * prestigeMult);
 
   const [, updatedUser] = await prisma.$transaction([
     prisma.transaction.create({

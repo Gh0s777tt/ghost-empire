@@ -18,6 +18,7 @@ export type RankedUser = {
   totalEarned: number;
   level: number;
   xp: number;
+  prestige: number;
   streak: number;
   isAdmin: boolean;
   isBanned: boolean;
@@ -25,7 +26,7 @@ export type RankedUser = {
 
 const RANK_SELECT = {
   id: true, username: true, displayName: true, image: true,
-  tokens: true, totalEarned: true, level: true, xp: true, streak: true,
+  tokens: true, totalEarned: true, level: true, xp: true, prestige: true, streak: true,
   isAdmin: true, isBanned: true,
 } as const;
 
