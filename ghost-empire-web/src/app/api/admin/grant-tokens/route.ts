@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
+import { checkGrantAnomaly } from "@/lib/economy-anomaly";
 
 export async function POST(req: Request) {
   const auth = await requirePermission("grant_tokens");
@@ -90,6 +91,11 @@ export async function POST(req: Request) {
       req,
     }),
   ]);
+
+  // Anti-abuse anomaly check (fire-and-forget — never blocks the response).
+  if (isGrant) {
+    void checkGrantAnomaly({ adminId: auth.userId, amount, targetUsername: user.username });
+  }
 
   return NextResponse.json({
     ok: true,

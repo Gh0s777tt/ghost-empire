@@ -57,7 +57,7 @@ Dziś diagnostyka = logi Vercela. Pod produkcję z realnym ruchem to za mało.
 | ~~**Vercel Analytics + Speed Insights**~~ ✅ | — | **Zrobione (#155)** — `@vercel/analytics` + `@vercel/speed-insights` w root layout (real-user Core Web Vitals, cookieless, no-op poza Vercel) |
 | ~~**Structured logging**~~ ✅ | — | **Zrobione** — `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty w 3 webhooki (twitch-eventsub / kick-events / paymedia) + crony (`prune` #151, `streamlabs-poll` #160). *(Hot-path `award` świadomie bez logu na wywołanie — byłby szum; błędy łapie boundary.)* |
 | **Uptime / health-check** | 🟡 | Endpoint `/api/health` + zewnętrzny monitor (cron-job.org / UptimeRobot) na live + bazę |
-| **Alerty na anomalie ekonomii** | 🧊 | Nietypowe skoki grantów/odbić → notyfikacja admina (anti-abuse) |
+| ~~**Alerty na anomalie ekonomii**~~ ✅ | — | **Zrobione (#161)** — `lib/economy-anomaly.ts`: pojedynczy grant ≥100k GT lub ≥500k GT/godz. → powiadomienie wszystkich adminów (link do audit logu) + `log.warn`. Fire-and-forget w `/api/admin/grant-tokens` |
 
 ---
 
