@@ -55,3 +55,50 @@ jobs:
       - name: Audit production dependencies
         continue-on-error: true
         run: npm audit --omit=dev --audit-level=high
+
+  # Integration tests hit a REAL Postgres (service container) via Prisma, exercising
+  # the money-critical paths (predictions payouts, wheel spins, pruning) end to end.
+  integration:
+    name: integration · postgres
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ghost-empire-web
+    services:
+      postgres:
+        image: postgres:16-alpine
+        # Throwaway CI database — trust auth (no password) keeps any credential out
+        # of the workflow file entirely.
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: ghost_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    # The test DB URL is composed by tests/integration/db-url.ts from these parts
+    # (its defaults already match this service), so no full URI literal is committed.
+    # Empty TEST_DB_PASS = trust auth (matches POSTGRES_HOST_AUTH_METHOD above).
+    env:
+      TEST_DB_HOST: localhost:5433
+      TEST_DB_USER: postgres
+      TEST_DB_PASS: ""
+      TEST_DB_NAME: ghost_test
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ghost-empire-web/package-lock.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      # globalSetup runs `prisma db push` against the service DB before the suite.
+      - name: Integration tests
+        run: npm run test:integration

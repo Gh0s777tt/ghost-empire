@@ -37,7 +37,7 @@ Pierwsza warstwa domknięta: **są już testy jednostkowe (Vitest) i CI (GitHub 
 | Propozycja | Pri | Notatki |
 |---|---|---|
 | ~~**Testy jednostkowe** (Vitest)~~ ✅ | — | **Zrobione** — czysta logika bez DB w `lib/economy.ts` + `src/lib/__tests__/`: payout predictions, tier battle passa, konwersja walut, poziomy/rangi, polska pluralizacja, podpisy webhooków + świeżość, nagłówki rate-limitera |
-| **Testy integracyjne** API routes | 🔥 | Następny krok testów: Prisma na testowej bazie (Supabase branch lub Docker Postgres), kluczowe: ekonomia + webhooki |
+| ~~**Testy integracyjne** API routes~~ ✅ | — | **Zrobione (#159)** — Prisma na **realnym Postgresie** (Docker lokalnie / service container w CI): `tests/integration/` + `vitest.integration.config.ts` + `npm run test:integration`. Pokrywają ścieżki money-critical end-to-end: **predictions** (wager/resolve/refund/cancel/auto-lock), **Koło Fortuny** (spin/koszt/saldo), **pruning** (retencja). Osobny job CI `integration · postgres`. **11 testów** |
 | **E2E** (Playwright) | 🟡 | Happy path: login → zarobek → zakup w sklepie; smoke testy publicznych stron |
 | ~~**GitHub Actions CI**~~ ✅ | — | **Zrobione** — `.github/workflows/ci.yml`: typecheck + lint + test na push/PR. `next build` zostaje po stronie Vercela (preview deploy na każdym pushu) |
 | **Lighthouse CI / performance budget** | 🟡 | Wykrywanie regresji Core Web Vitals na publicznych stronach |
@@ -116,7 +116,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 - ✅ **Customizacja alertów** (T16) — podgląd na żywo + rozmiar/kolor tekstu (#24, #25) **oraz per-typ**: animacja / pozycja / własny dźwięk / próg kwotowy osobno dla każdego typu alertu (`AlertTypeConfig`, `/admin#alerts`). **ZROBIONE w całości.**
 - 🔥 **OBS WebSocket — hasło wklejane na stronie** (`/admin`), nie w env → przeżywa zmianę komputera (kopiuj-wklej)
 - 🔥 **Strona startowa (landing)** — ładny pierwszy ekran przy wejściu (wariacja na temat `/about`)
-- 🟡 **Changelog na stronie `/about` jako zwijana lista** — mniej miejsca, rozwijane po szczegóły
+- ✅ **Changelog na stronie `/about` jako zwijana lista** — **ZROBIONE** (`ChangelogList` — klik→rozwija, najnowszy wpis otwarty, `aria-expanded`).
 - ✅ **Opisy uprawnień w UI nadawania rang** (`/admin#users`) — opis „co daje" + tooltip pod każdym uprawnieniem (`MOD_PERMISSIONS.desc`). **ZROBIONE.**
 - ✅ **„Czas na streamie"** — zrobione jako **analityka nadawania** w `/admin#analytics` (`StreamSession` + EventSub `stream.online/offline`). *(Świadomie NIE per-widz: EventSub mierzy tylko czas, gdy streamer jest na żywo — per-widz wymagałby osobnego systemu obecności.)*
 - 🟡 **Wybór dostawcy donacji** — nie tylko Streamlabs; wybór platformy w panelu (każdy dostawca = osobna integracja)

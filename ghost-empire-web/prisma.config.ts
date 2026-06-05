@@ -21,6 +21,8 @@ for (const file of [".env", ".env.local"]) {
 export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
   datasource: {
-    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
+    // TEST_DATABASE_URL wins so integration tests / CI push to a throwaway DB
+    // (set only in those environments) without touching prod .env.local values.
+    url: process.env.TEST_DATABASE_URL ?? process.env.DIRECT_URL ?? process.env.DATABASE_URL,
   },
 });
