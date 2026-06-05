@@ -28,4 +28,20 @@ test.describe("public pages smoke", () => {
     const res = await page.goto("/this-route-does-not-exist-xyz");
     expect(res?.status()).toBe(404);
   });
+
+  test("no Content-Security-Policy violations on key pages", async ({ page }) => {
+    // Genuine CSP violations name the policy / a disallowed source. (We don't match
+    // the generic "Refused to execute" — locally that also fires for the Vercel
+    // Analytics scripts, which only exist on Vercel's infra, not under `next start`.)
+    const violations: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error" && /content security policy|unsafe-eval|unsafe-inline/i.test(msg.text())) {
+        violations.push(msg.text());
+      }
+    });
+    for (const path of ["/", "/wheel", "/shop"]) {
+      await page.goto(path, { waitUntil: "networkidle" });
+    }
+    expect(violations, violations.join("\n")).toHaveLength(0);
+  });
 });

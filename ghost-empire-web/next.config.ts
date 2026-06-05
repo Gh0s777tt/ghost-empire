@@ -29,14 +29,17 @@ const securityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
   // Stop legacy Flash/Acrobat from loading cross-domain policy files.
   { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
-  // Light CSP — does not block inline styles/scripts (Next.js uses them);
-  // blocks plugins (object-src) and upgrades any http subresource to https.
-  // Tightening script-src (drop unsafe-inline/eval) needs Next.js nonces — deferred.
+  // Light CSP — keeps inline STYLE attributes working (overlays/cards rely on them)
+  // and blocks plugins (object-src) + upgrades http subresources to https.
+  // `'unsafe-eval'` dropped from script-src: production React/Next don't eval, so
+  // this closes a common XSS sink with no functional change (verified via E2E that
+  // exercises client-side rendering). Removing the remaining `'unsafe-inline'` from
+  // script-src needs nonce middleware — deferred to a dedicated, browser-tested pass.
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",
