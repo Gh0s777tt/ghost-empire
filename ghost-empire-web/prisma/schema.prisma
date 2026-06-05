@@ -1302,3 +1302,24 @@ model EmojiComboState {
 
   @@map("emoji_combo_state")
 }
+
+// =====================================================
+// INTEGRATION CONFIG — runtime/feature API keys pasted in /admin#integrations
+// (admin-only). Read at runtime via lib/integrations.ts (DB value overrides env).
+// Infra/auth secrets (DATABASE_URL, NEXTAUTH_SECRET, OAuth login, BOT_SECRET) stay
+// in env — they bootstrap the app and must not live in the DB.
+// =====================================================
+model IntegrationConfig {
+  id         String  @id @default("default")
+  aiProvider String  @default("anthropic") // anthropic | openai | grok | gemini | deepseek | bielik
+  aiApiKey   String?                        // key for the AI character + !imagine (F4)
+  aiModel    String?                        // optional model override
+
+  sentryDsn            String? // error monitoring DSN
+  obsWebsocketUrl      String? // ws://host:port for OBS control
+  obsWebsocketPassword String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("integration_config")
+}

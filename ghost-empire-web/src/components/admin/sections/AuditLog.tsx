@@ -26,6 +26,7 @@ const ACTION_LABEL: Record<string, { label: string; emoji: string; color: string
   update_alert_settings: { label: "Ustaw. alertów", emoji: "⚙️", color: "#71717a" },
   merge_users:         { label: "Scalenie kont",    emoji: "🔀", color: "#a855f7" },
   update_moderation:   { label: "Moderacja (auto)", emoji: "🛡️", color: "#3b82f6" },
+  update_integrations: { label: "Integracje / klucze", emoji: "🔌", color: "#10b981" },
 };
 
 export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
