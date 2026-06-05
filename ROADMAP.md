@@ -14,9 +14,10 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 **Phase 3A–3D + „Studio" (F1–F3, F5) = ✅ ZROBIONE.** Bot na Twitch/Kick/YouTube (komendy/timery/FAQ/powitania/song requests/chat overlay), alerty per-typ, subathon, analityka+heatmapy, **moderacja czatu (automod)**, **biblioteka+generator widgetów**, customizacja (kolory/czcionki/gradienty/emotki), UX (grupowana nawigacja, `Ctrl+K`, checklista, panel integracji). Szczegóły: [CHANGELOG.md](CHANGELOG.md) + [PLAN.md](PLAN.md).
 
-**Następny duży krok: F4 — AI** 🔑 (czeka na klucz API w `/admin#integrations`):
-- **Postać `@bot`** (osobowości + wybór modelu Grok/GPT/Gemini/DeepSeek/Anthropic/Bielik + limity) + **`!imagine`** (obrazy).
-- **AI-moderacja** (toksyczność przez API) jako rozszerzenie automoda.
+**F4 — AI** (klucz w Vercel env / `/admin#integrations`):
+- ✅ **Postać `@bot` + `!imagine`** **(#166)** — zbudowane (`lib/ai.ts` multi-provider, endpointy `/api/bot/ai-reply`+`/api/bot/imagine`, bot `aiCommands.ts`). **⚠️ Klucze AI ważne, ale konta bez quota na completions (OpenAI/Gemini/Deepseek 429/400)** → aktywne po doładowaniu dostawcy + restarcie bota.
+- 🟡 **AI-moderacja** (toksyczność przez API) jako rozszerzenie automoda — następny krok (ten sam `lib/ai.ts`).
+- 🟡 Wybór persony/modelu w panelu (dziś persona w kodzie, model/dostawca w `IntegrationConfig`).
 
 > **🆕 Świeżo dowiezione (2026-06-05, PR #146–#157):** 🎰 **Koło Fortuny** (moduł `/wheel` + overlay OBS + panel) · 🔐 **szyfrowanie sekretów at-rest** (klucze API #146, tokeny OAuth #147) + nagłówki overlay #148 · 💬 **prawdziwe odznaki Twitch + emotki 7TV/BTTV/FFZ** #149 · 🧹 cron czyszczący bazę #151 · 🎲 predictions auto-close + announce #152 · 🛡️ **eskalacja moderacji recydywistów + statystyki** #153 · 📊 **Vercel Analytics + Speed Insights** #155 · 🔎 `npm audit` w CI #156 · 🔗 **webhooki wychodzące** (Discord/n8n/custom) #157 · 📄 runbook rotacji sekretów.
 

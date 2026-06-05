@@ -105,6 +105,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/bot/chat-commands` · `chat-timers` · `faq` · `welcome` | Komendy / timery / FAQ / powitania |
 | `…/api/bot/moderation` | Konfiguracja automod (reguły + akcje) |
 | `…/api/bot/active-prediction` | Otwarty zakład do re-anonsu na czacie (tylko `announceToChat`) |
+| `…/api/bot/ai-reply` · `…/api/bot/imagine` | AI: odpowiedź `@bot` + generowanie obrazka `!imagine` (klucz server-side) |
 
 ## Internal (botSecret) — boty wysyłają zdarzenia
 | Trasa | Po co |
