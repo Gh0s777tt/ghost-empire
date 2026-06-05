@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Changed
+
+- **Biblioteka widgetów — klik → podgląd + edycja** (`/admin#widgets`) — koniec „pustego" podglądu (overlaye były czarne bez danych na żywo). Każdy widget jest teraz **rozwijaną kartą**: klik → **podgląd na żywo** (renderowany współdzieloną kartą overlaya z przykładowymi danymi — alerty, czat, goals, subathon, kody, predykcje, ankiety, ostatni sub/donator/follower, liczba widzów, emoji combo) + URL do OBS (kopiuj/otwórz) + przycisk **„Edytuj wygląd (kolory / czcionka / rozmiar) →"** skaczący wprost do sekcji konfiguracji danego widgetu (custom-widgety mają pełny edytor inline w generatorze niżej). *(Prośba usera #1.)* Zielone: `tsc` / `eslint` / 95 testów / `next build`.
+
 ### Added
 
 - **Checklista / status konfiguracji na dashboardzie** (`/admin`) — od razu po wejściu widać, **co jest skonfigurowane, a co nie**: klucz AI, Twitch (EventSub) + subskrypcje, Kick, YouTube, moderacja, token overlayu OBS. ✓ zielone / ⚠ pomarańczowe (wymagane) / „opcjonalne", licznik „gotowe X/Y" + „wszystko wymagane gotowe". Przy każdym brakującym — przycisk **„Konfiguruj →"** skaczący wprost do właściwej sekcji. Koniec zgadywania, czego brakuje. Endpoint `GET /api/admin/setup-status`. *(Prośba usera #4.)* Zielone: `tsc` / `eslint` / 95 testów / `next build`.

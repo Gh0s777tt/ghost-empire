@@ -8,6 +8,58 @@ import { SectionCard } from "../shared";
 import { CustomWidgetCard } from "@/components/CustomWidgetCard";
 import { EmojiPicker } from "@/components/EmojiPicker";
 import { WIDGET_FONTS } from "@/lib/widget-fonts";
+import { AlertCard } from "@/components/AlertCard";
+import { ChatMessageRow } from "@/components/ChatMessageRow";
+import { SubathonCard } from "@/components/SubathonCard";
+import { CodeCard } from "@/components/CodeCard";
+import { GoalBar } from "@/components/GoalBar";
+import { PredictionOverlayCard } from "@/components/PredictionOverlayCard";
+import { PollOverlayCard } from "@/components/PollOverlayCard";
+import { LastEventCard } from "@/components/LastEventCard";
+import type { ReactNode } from "react";
+
+// Sample in-panel preview per widget (so you SEE how it looks without live data).
+function widgetPreview(id: string): ReactNode {
+  switch (id) {
+    case "alerts":
+      return <AlertCard alert={{ title: "Nowy sub!", message: "zasubował kanał — dzięki!", icon: "💜", actorName: "Widz_123", amount: 5000, amountLabel: "GT" }} accent="#E50914" />;
+    case "chat":
+      return (
+        <div className="flex flex-col gap-1.5 w-full" style={{ maxWidth: 360 }}>
+          <ChatMessageRow msg={{ id: "1", platform: "twitch", username: "Widz_77", message: "hej! pozdrawiam 🔥" }} />
+          <ChatMessageRow msg={{ id: "2", platform: "kick", username: "KickoViewer", message: "siema ekipa 👋" }} />
+        </div>
+      );
+    case "goals":
+      return <div style={{ width: 360 }}><GoalBar goal={{ id: "g", type: "subs", label: "Cel: suby", current: 34, target: 50, color: "#E50914", completedAt: null }} accent="#E50914" /></div>;
+    case "subathon":
+      return <SubathonCard remainingMs={2 * 3600 * 1000 + 34 * 60 * 1000} ended={false} accent="#E50914" label="Subathon" />;
+    case "codes":
+      return <CodeCard title="Darmowy kod!" label="Cyberpunk 2077 (Steam)" code="ABCD-EFGH-IJKL" accent="#16a34a" />;
+    case "predictions":
+      return <PredictionOverlayCard question="Ile zgonów w tym streamie?" options={[{ label: "Mniej niż 5", total: 1400, count: 3 }, { label: "5–10", total: 900, count: 2 }, { label: "Więcej niż 10", total: 450, count: 1 }]} totalPot={2750} accent="#a855f7" />;
+    case "polls":
+      return <PollOverlayCard question="W co gramy w piątek?" options={[{ label: "Opcja A", count: 42 }, { label: "Opcja B", count: 27 }, { label: "Opcja C", count: 15 }]} total={84} accent="#3b82f6" />;
+    case "last-sub":
+      return <LastEventCard label="Ostatni sub" name="Widz_123" icon="💜" accent="#a855f7" />;
+    case "last-donator":
+      return <LastEventCard label="Ostatni donator" name="Anonim" detail="20 PLN" icon="💰" accent="#22c55e" />;
+    case "last-follower":
+      return <LastEventCard label="Ostatni follower" name="NowyWidz" icon="⭐" accent="#3b82f6" />;
+    case "viewers":
+      return <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(15,15,20,0.92)", border: "2px solid #E50914", borderRadius: 999, padding: "7px 14px", color: "#fff", fontWeight: 800 }}>👁 1 234</div>;
+    case "emoji-combo":
+      return <div style={{ textAlign: "center", color: "#fff" }}><div style={{ fontSize: 64, lineHeight: 1 }}>🔥</div><div style={{ fontSize: 28, fontWeight: 900, textShadow: "0 0 12px #E50914" }}>×12 COMBO!</div></div>;
+    default:
+      return null;
+  }
+}
+
+// Which admin section configures this widget's look (null = automatic, no config).
+const CONFIG_SECTION: Record<string, string> = {
+  alerts: "alerts", chat: "chat", goals: "goals", subathon: "subathon",
+  codes: "drops", predictions: "predictions", polls: "polls",
+};
 
 const POSITIONS: Array<[string, string]> = [
   ["top-left", "Góra-lewo"], ["top-center", "Góra-środek"], ["top-right", "Góra-prawo"],
@@ -47,6 +99,12 @@ export function WidgetsLibrary({
 }) {
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  // Jump to the section that configures a widget's look (uses the hashchange nav in AdminClient).
+  function jump(section: string) {
+    if (typeof window !== "undefined") window.location.hash = section;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -79,42 +137,59 @@ export function WidgetsLibrary({
 
       {!token && <p className="text-[11px] text-zinc-600 mb-3">Ładowanie tokenu overlayu…</p>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <p className="text-[11px] text-zinc-600 mb-2">Kliknij widget, by zobaczyć <strong className="text-zinc-400">podgląd</strong>, skopiować URL i przejść do edycji wyglądu.</p>
+
+      <div className="space-y-2">
         {WIDGETS.map((w) => {
           const url = urlFor(w);
+          const isOpen = expanded === w.id;
+          const cfg = CONFIG_SECTION[w.id];
           return (
-            <div key={w.id} className="border border-zinc-800 bg-black/30 p-3 flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-bold text-white">{w.name}</span>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 shrink-0">{w.size}</span>
-              </div>
-              <p className="text-[11px] text-zinc-500 leading-snug flex-1">{w.desc}</p>
-              <div className="flex gap-1.5">
-                <input
-                  readOnly
-                  value={url ?? "—"}
-                  className="flex-1 bg-black border border-zinc-800 px-2 py-1.5 text-[11px] text-zinc-300 font-mono truncate"
-                />
-                <button
-                  onClick={() => copy(w)}
-                  disabled={!url}
-                  className="px-2.5 border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition-all disabled:opacity-40"
-                  title="Kopiuj URL do OBS"
-                >
-                  {copied === w.id ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-                {url && (
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-2.5 border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition-all flex items-center"
-                    title="Otwórz podgląd w nowej karcie"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </div>
+            <div key={w.id} className="border border-zinc-800 bg-black/30">
+              <button
+                type="button"
+                onClick={() => setExpanded(isOpen ? null : w.id)}
+                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-zinc-900/40 transition-colors"
+                aria-expanded={isOpen}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-bold text-white truncate">{w.name}</span>
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 shrink-0">{w.size}</span>
+                </span>
+                <span className="text-zinc-500 shrink-0 text-xs">{isOpen ? "▾" : "▸"}</span>
+              </button>
+              {isOpen && (
+                <div className="px-3 pb-3 space-y-2.5 border-t border-zinc-800/70 pt-2.5">
+                  <p className="text-[11px] text-zinc-500 leading-snug">{w.desc}</p>
+                  <div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">Podgląd (tak wygląda na streamie)</div>
+                    <div
+                      className="border border-zinc-800 rounded-sm p-5 flex items-center justify-center overflow-hidden"
+                      style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px", minHeight: 96 }}
+                    >
+                      {widgetPreview(w.id)}
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input readOnly value={url ?? "—"} className="flex-1 bg-black border border-zinc-800 px-2 py-1.5 text-[11px] text-zinc-300 font-mono truncate" />
+                    <button onClick={() => copy(w)} disabled={!url} className="px-2.5 border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition-all disabled:opacity-40" title="Kopiuj URL do OBS">
+                      {copied === w.id ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                    {url && (
+                      <a href={url} target="_blank" rel="noreferrer" className="px-2.5 border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition-all flex items-center" title="Otwórz w nowej karcie">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                  {cfg ? (
+                    <button onClick={() => jump(cfg)} className="w-full text-[10px] font-mono uppercase tracking-widest text-zinc-300 hover:text-white border border-zinc-700 hover:border-red-600 px-2 py-1.5 flex items-center justify-center gap-1.5 transition-colors">
+                      <Pencil className="w-3 h-3" /> Edytuj wygląd (kolory / czcionka / rozmiar) →
+                    </button>
+                  ) : (
+                    <p className="text-[10px] text-zinc-600">Działa automatycznie — brak ustawień wyglądu.</p>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
