@@ -5,7 +5,13 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { safeMediaUrl } from "@/lib/url-safe";
 
-const ALLOWED_PLATFORMS = ["instagram", "twitter", "tiktok", "youtube", "website"] as const;
+// Manual links — no OAuth needed. Socials + streaming + gaming handles. For platforms
+// without a public profile URL by handle (PSN / Xbox) we link a well-known lookup site.
+const ALLOWED_PLATFORMS = [
+  "instagram", "twitter", "tiktok", "youtube", "website",
+  "twitch", "kick", "rumble", "trovo", "github",
+  "steam", "psn", "xbox", "discord",
+] as const;
 type AllowedPlatform = (typeof ALLOWED_PLATFORMS)[number];
 
 function buildUrl(platform: AllowedPlatform, handle: string): string {
@@ -15,6 +21,15 @@ function buildUrl(platform: AllowedPlatform, handle: string): string {
     case "twitter":   return `https://x.com/${h}`;
     case "tiktok":    return `https://tiktok.com/@${h}`;
     case "youtube":   return h.startsWith("http") ? h : `https://youtube.com/@${h}`;
+    case "twitch":    return `https://twitch.tv/${h}`;
+    case "kick":      return `https://kick.com/${h}`;
+    case "rumble":    return h.startsWith("http") ? h : `https://rumble.com/c/${h}`;
+    case "trovo":     return `https://trovo.live/s/${h}`;
+    case "github":    return `https://github.com/${h}`;
+    case "steam":     return h.startsWith("http") ? h : `https://steamcommunity.com/id/${h}`;
+    case "psn":       return `https://psnprofiles.com/${h}`;
+    case "xbox":      return `https://www.xboxgamertag.com/search/${h}`;
+    case "discord":   return h.startsWith("http") ? h : `https://discord.gg/${h}`;
     case "website":   return h.startsWith("http") ? h : `https://${h}`;
   }
 }

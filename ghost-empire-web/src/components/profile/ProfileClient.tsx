@@ -7,6 +7,7 @@ import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
   Globe, Music2, Flame, MessageCircle, Mic2,
   Copy, ShieldCheck, Heart, Star, Crown, Ban, LogOut,
+  Gamepad2, Radio, MessageSquare, Code2,
 } from "lucide-react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
@@ -105,6 +106,13 @@ const SOCIAL_META: Record<string, { label: string; icon: ComponentType<{ classNa
   twitter:   { label: "X (Twitter)", icon: TwitterIcon, color: "#000",    placeholder: "twoj_handle" },
   tiktok:    { label: "TikTok",    icon: Music2,    color: "#fff",    placeholder: "twoj_handle" },
   youtube:   { label: "YouTube",   icon: YoutubeIcon,   color: "#FF0000", placeholder: "@channel lub link" },
+  rumble:    { label: "Rumble",    icon: Radio,     color: "#85c742", placeholder: "kanał lub link" },
+  trovo:     { label: "Trovo",     icon: Radio,     color: "#19d66c", placeholder: "nick" },
+  github:    { label: "GitHub",    icon: Code2,     color: "#fafafa", placeholder: "user" },
+  steam:     { label: "Steam",     icon: Gamepad2,  color: "#66c0f4", placeholder: "vanity lub link" },
+  psn:       { label: "PlayStation", icon: Gamepad2, color: "#0070d1", placeholder: "PSN ID" },
+  xbox:      { label: "Xbox",      icon: Gamepad2,  color: "#107C10", placeholder: "Gamertag" },
+  discord:   { label: "Discord (zaproszenie)", icon: MessageSquare, color: "#5865F2", placeholder: "discord.gg/..." },
   website:   { label: "Website",   icon: Globe,     color: "#10b981", placeholder: "domena.pl" },
 };
 
