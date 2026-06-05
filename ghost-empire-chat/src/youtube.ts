@@ -8,6 +8,7 @@ import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { checkMessage, violationLabel, escalate, logViolation, type ModAction, type ModViolation } from "./moderation";
 import { isAiTrigger, handleAiTrigger } from "./aiCommands";
+import { isGtGameTrigger, handleGtGame } from "./gtGames";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 
@@ -160,6 +161,10 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
 
   if (isAiTrigger(text)) {
     void handleAiTrigger(username, text).then((r) => {
+      if (r) void sendMessage(r);
+    });
+  } else if (isGtGameTrigger(text)) {
+    void handleGtGame("youtube", channelId, username, text).then((r) => {
       if (r) void sendMessage(r);
     });
   } else if (isSongRequest(text)) {
