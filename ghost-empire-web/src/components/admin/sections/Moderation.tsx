@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ShieldCheck, Loader2, Check } from "lucide-react";
 import { SectionCard } from "../shared";
+import { ModViolationStats } from "./ModViolationStats";
 
 type ModConfig = {
   id: string;
@@ -128,7 +129,10 @@ export function ModerationManager({
       <p className="text-zinc-500 text-xs mb-3">
         Automatyczna moderacja na Twitch / Kick / YouTube. Bot sprawdza każdą wiadomość i wykonuje akcję (usuń / timeout / ostrzeż).
         Wymaga uprawnień moderatora dla konta bota na danej platformie. <strong className="text-zinc-300">Po zmianach zrestartuj bota.</strong>
+        Recydywiści dostają ostrzejsze kary automatycznie (eskalacja: ostrzeżenie → usuń → timeout ×2 za każde kolejne naruszenie w oknie 30 min).
       </p>
+
+      <ModViolationStats />
 
       {/* Master switch */}
       <label className="flex items-center gap-2 border border-zinc-800 bg-black/30 p-2.5 mb-3 cursor-pointer">

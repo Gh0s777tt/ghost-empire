@@ -6,6 +6,7 @@ import {
   combiningRatio, maxCombiningRun, isZalgo,
   normalizeForProfanity, containsProfanity,
   evaluateMessage,
+  escalateAction, escalateTimeout,
 } from "@/lib/moderation";
 
 describe("caps", () => {
@@ -110,5 +111,35 @@ describe("evaluateMessage", () => {
 
   it("respects enabled flags (disabled rule is skipped)", () => {
     expect(evaluateMessage("THIS IS WAY TOO LOUD", { caps: { enabled: false } })).toBeNull();
+  });
+});
+
+describe("escalation", () => {
+  it("keeps the base action for a first offense", () => {
+    expect(escalateAction("warn", 0)).toBe("warn");
+    expect(escalateAction("delete", 0)).toBe("delete");
+    expect(escalateAction("timeout", 0)).toBe("timeout");
+  });
+
+  it("hardens a warn to delete on the second offense", () => {
+    expect(escalateAction("warn", 1)).toBe("delete");
+  });
+
+  it("escalates anything softer than timeout to a timeout for repeat offenders", () => {
+    expect(escalateAction("warn", 2)).toBe("timeout");
+    expect(escalateAction("delete", 2)).toBe("timeout");
+    expect(escalateAction("delete", 5)).toBe("timeout");
+    expect(escalateAction("timeout", 3)).toBe("timeout");
+  });
+
+  it("doubles the timeout per prior offense", () => {
+    expect(escalateTimeout(60, 0)).toBe(60);
+    expect(escalateTimeout(60, 1)).toBe(120);
+    expect(escalateTimeout(60, 2)).toBe(240);
+    expect(escalateTimeout(30, 3)).toBe(240);
+  });
+
+  it("caps the timeout at 24h", () => {
+    expect(escalateTimeout(3600, 10)).toBe(86_400);
   });
 });

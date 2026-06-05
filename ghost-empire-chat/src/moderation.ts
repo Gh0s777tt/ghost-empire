@@ -168,3 +168,49 @@ const VIOLATION_PL: Record<ModViolation, string> = {
 export function violationLabel(v: ModViolation): string {
   return VIOLATION_PL[v];
 }
+
+// ---------- escalation + stats logging (mirror of web src/lib/moderation.ts) ----------
+
+/** Escalate the action for a repeat offender: after a couple of strikes anything
+ *  softer than a timeout becomes a timeout; a lone "warn" first hardens to "delete". */
+export function escalateAction(base: ModAction, priorCount: number): ModAction {
+  if (priorCount >= 2 && base !== "timeout") return "timeout";
+  if (priorCount >= 1 && base === "warn") return "delete";
+  return base;
+}
+
+/** Escalate a timeout duration: doubles per prior offense, capped at 24h. */
+export function escalateTimeout(baseSecs: number, priorCount: number): number {
+  const scaled = baseSecs * Math.pow(2, Math.max(0, priorCount));
+  return Math.min(Math.round(scaled), 86_400);
+}
+
+export type Verdict = { action: ModAction; timeoutSecs: number; violation: ModViolation };
+
+// Rolling per-user strike window. In-memory (resets on restart) — fine for a short
+// escalation window. Keyed by `${platform}:${username}`.
+const ESCALATION_WINDOW_MS = 30 * 60 * 1000;
+const offenders = new Map<string, { count: number; first: number }>();
+
+/** Bump the offender's strike count and return the escalated verdict + prior count. */
+export function escalate(platform: string, username: string | undefined, verdict: Verdict): Verdict & { priorCount: number } {
+  const key = `${platform}:${(username ?? "anon").toLowerCase()}`;
+  const now = Date.now();
+  const prev = offenders.get(key);
+  const inWindow = prev !== undefined && now - prev.first < ESCALATION_WINDOW_MS;
+  const prior = inWindow ? prev.count : 0;
+  offenders.set(key, { count: prior + 1, first: inWindow ? prev.first : now });
+
+  const action = escalateAction(verdict.action, prior);
+  const timeoutSecs = action === "timeout" ? escalateTimeout(verdict.timeoutSecs, prior) : verdict.timeoutSecs;
+  return { action, timeoutSecs, violation: verdict.violation, priorCount: prior };
+}
+
+/** Fire-and-forget log of an enforced violation to the portal for stats. */
+export function logViolation(platform: string, username: string | undefined, violation: ModViolation, action: ModAction, priorCount: number): void {
+  void fetch(`${env.portalUrl}/api/internal/mod-violation`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${env.botSecret}` },
+    body: JSON.stringify({ platform, username, violation, action, priorCount }),
+  }).catch(() => {});
+}

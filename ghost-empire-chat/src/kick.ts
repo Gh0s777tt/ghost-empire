@@ -3,7 +3,7 @@ import { matchCommand } from "./commands";
 import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
-import { checkMessage, violationLabel } from "./moderation";
+import { checkMessage, violationLabel, escalate, logViolation } from "./moderation";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
@@ -68,7 +68,11 @@ function handleChat(d: KickChat): void {
     isMod: badges.some((b) => b.type === "moderator" || b.type === "broadcaster"),
   });
   if (verdict) {
-    if (username) void sendKickMessage(`@${username} ⚠️ ${violationLabel(verdict.violation)}`);
+    // Kick's public bot API can only warn, but we still escalate the strike count
+    // (shared across platforms) and log it for stats.
+    const v = escalate("kick", username, verdict);
+    if (username) void sendKickMessage(`@${username} ⚠️ ${violationLabel(v.violation)}`);
+    logViolation("kick", username, v.violation, "warn", v.priorCount);
     return;
   }
 

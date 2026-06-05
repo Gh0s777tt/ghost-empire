@@ -6,7 +6,7 @@ import { registerSender, markActivity } from "./broadcast";
 import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
-import { checkMessage, violationLabel, type ModAction, type ModViolation } from "./moderation";
+import { checkMessage, violationLabel, escalate, logViolation, type ModAction, type ModViolation } from "./moderation";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 
@@ -126,7 +126,9 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
       isMod: Boolean(ad?.isChatModerator) || Boolean(ad?.isChatOwner),
     });
     if (verdict) {
-      void enforceYouTube(m.id, channelId, username, verdict);
+      const v = escalate("youtube", username, verdict);
+      void enforceYouTube(m.id, channelId, username, v);
+      logViolation("youtube", username, v.violation, v.action, v.priorCount);
       return;
     }
   }
