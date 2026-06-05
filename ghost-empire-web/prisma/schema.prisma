@@ -648,8 +648,16 @@ model ModerationConfig {
 
   profanityEnabled     Boolean  @default(false)
   profanityWords       String[] @default([])
+  profanityRegex       String[] @default([])  // power-user regex patterns (profanity action)
   profanityAction      String   @default("delete") // delete | timeout | warn
   profanityTimeoutSecs Int      @default(60)
+
+  // Link / URL filter — blocks links unless their domain is whitelisted.
+  linkEnabled     Boolean  @default(false)
+  linkWhitelist   String[] @default([])  // allowed domain substrings (e.g. "twitch.tv")
+  linkAllowSubs   Boolean  @default(true) // subs/VIP/mods may post links even if rule on
+  linkAction      String   @default("delete")
+  linkTimeoutSecs Int      @default(60)
 
   capsEnabled     Boolean @default(false)
   capsMinLetters  Int     @default(8)

@@ -20,7 +20,10 @@ export async function GET() {
     exempt: { subs: c.exemptSubs, vips: c.exemptVips, mods: c.exemptMods },
     rules: {
       profanity: c.profanityEnabled
-        ? { words: c.profanityWords, action: c.profanityAction, timeoutSecs: c.profanityTimeoutSecs }
+        ? { words: c.profanityWords, regex: c.profanityRegex, action: c.profanityAction, timeoutSecs: c.profanityTimeoutSecs }
+        : null,
+      link: c.linkEnabled
+        ? { whitelist: c.linkWhitelist, allowSubs: c.linkAllowSubs, action: c.linkAction, timeoutSecs: c.linkTimeoutSecs }
         : null,
       caps: c.capsEnabled
         ? { minLetters: c.capsMinLetters, maxRatio: c.capsMaxRatioPct / 100, action: c.capsAction, timeoutSecs: c.capsTimeoutSecs }

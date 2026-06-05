@@ -9,7 +9,8 @@ import { ModViolationStats } from "./ModViolationStats";
 type ModConfig = {
   id: string;
   enabled: boolean;
-  profanityEnabled: boolean; profanityWords: string[]; profanityAction: string; profanityTimeoutSecs: number;
+  profanityEnabled: boolean; profanityWords: string[]; profanityRegex: string[]; profanityAction: string; profanityTimeoutSecs: number;
+  linkEnabled: boolean; linkWhitelist: string[]; linkAllowSubs: boolean; linkAction: string; linkTimeoutSecs: number;
   capsEnabled: boolean; capsMinLetters: number; capsMaxRatioPct: number; capsAction: string; capsTimeoutSecs: number;
   lengthEnabled: boolean; lengthMax: number; lengthAction: string; lengthTimeoutSecs: number;
   repeatEnabled: boolean; repeatCharRun: number; repeatWordRun: number; repeatAction: string; repeatTimeoutSecs: number;
@@ -82,6 +83,8 @@ export function ModerationManager({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [wordsText, setWordsText] = useState("");
+  const [regexText, setRegexText] = useState("");
+  const [linkWlText, setLinkWlText] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -90,6 +93,8 @@ export function ModerationManager({
         const d = await r.json();
         setCfg(d.config);
         setWordsText((d.config.profanityWords ?? []).join("\n"));
+        setRegexText((d.config.profanityRegex ?? []).join("\n"));
+        setLinkWlText((d.config.linkWhitelist ?? []).join("\n"));
       }
     } finally { setLoading(false); }
   }, []);
@@ -102,15 +107,19 @@ export function ModerationManager({
     setSaving(true);
     try {
       const words = wordsText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+      const profanityRegex = regexText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+      const linkWhitelist = linkWlText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
       const res = await fetch("/api/admin/moderation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...cfg, profanityWords: words }),
+        body: JSON.stringify({ ...cfg, profanityWords: words, profanityRegex, linkWhitelist }),
       });
       const d = await res.json();
       if (!res.ok) { onToast("err", d.error ?? "Błąd"); return; }
       setCfg(d.config);
       setWordsText((d.config.profanityWords ?? []).join("\n"));
+      setRegexText((d.config.profanityRegex ?? []).join("\n"));
+      setLinkWlText((d.config.linkWhitelist ?? []).join("\n"));
       onToast("ok", "Moderacja zapisana");
       onSuccess();
     } finally { setSaving(false); }
@@ -154,6 +163,34 @@ export function ModerationManager({
               placeholder={"slowo1\nslowo2"}
               className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-blue-600"
             />
+          </label>
+          <label className="text-[11px] text-zinc-400 block w-full mt-2">
+            Wzorce regex (jeden na linię, opcjonalnie — np. <code className="text-zinc-500">v-?bucks</code>)
+            <textarea
+              value={regexText} onChange={(e) => setRegexText(e.target.value)} rows={2}
+              placeholder={"darmow\\w* gt\nv-?bucks"}
+              className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-blue-600"
+            />
+          </label>
+        </RuleBlock>
+
+        <RuleBlock
+          title="Linki / URL" desc="Blokuje linki, chyba że domena jest na białej liście. Wykrywa też gołe domeny (scam.com) i skracacze (bit.ly)."
+          enabled={cfg.linkEnabled} onToggle={(b) => patch({ linkEnabled: b })}
+          action={cfg.linkAction} onAction={(a) => patch({ linkAction: a })}
+          timeoutSecs={cfg.linkTimeoutSecs} onTimeout={(n) => patch({ linkTimeoutSecs: n })}
+        >
+          <label className="text-[11px] text-zinc-400 block w-full">
+            Biała lista domen (jedna na linię — np. <code className="text-zinc-500">twitch.tv</code>, <code className="text-zinc-500">youtube.com</code>)
+            <textarea
+              value={linkWlText} onChange={(e) => setLinkWlText(e.target.value)} rows={3}
+              placeholder={"twitch.tv\nyoutube.com\nclips.twitch.tv"}
+              className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-blue-600"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-[11px] text-zinc-300 mt-1.5 cursor-pointer">
+            <input type="checkbox" checked={cfg.linkAllowSubs} onChange={(e) => patch({ linkAllowSubs: e.target.checked })} className="accent-blue-500" />
+            Subskrybenci / VIP / mod mogą wrzucać linki
           </label>
         </RuleBlock>
 
