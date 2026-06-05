@@ -9,6 +9,7 @@ type Data = {
   steamId: string | null;
   steamSyncedAt: string | null;
   hasKey: boolean;
+  hasNpsso: boolean;
   count: number;
   totalHours: number;
   games: Array<{ id: string; source: string; name: string; imageUrl: string | null; hours: number; hidden: boolean }>;
@@ -52,7 +53,14 @@ export function GamesLibraryManager({
   async function sync() {
     setBusy("sync");
     const r = (await call({ action: "sync" })) as { synced?: number; removed?: number } | null;
-    if (r) { onToast("ok", `Zsynchronizowano ${r.synced ?? 0} gier`); await load(); onSuccess(); }
+    if (r) { onToast("ok", `Steam: zsynchronizowano ${r.synced ?? 0} gier`); await load(); onSuccess(); }
+    setBusy(null);
+  }
+
+  async function syncPsn() {
+    setBusy("psn");
+    const r = (await call({ action: "sync_psn" })) as { synced?: number } | null;
+    if (r) { onToast("ok", `PSN: zsynchronizowano ${r.synced ?? 0} tytułów`); await load(); onSuccess(); }
     setBusy(null);
   }
 
@@ -97,7 +105,12 @@ export function GamesLibraryManager({
             className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
             {busy === "sync" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Synchronizuj Steam
           </button>
+          <button onClick={syncPsn} disabled={busy === "psn" || pending || !data.hasNpsso} title={data.hasNpsso ? "Synchronizuj bibliotekę PSN (npsso)" : "Brak PSN_NPSSO w env"}
+            className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+            {busy === "psn" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Synchronizuj PSN
+          </button>
         </div>
+        <p className="text-[10px] text-zinc-600">PSN: gra wymaga ważnego <code className="text-zinc-500">PSN_NPSSO</code> (wygasa ~60 dni — odśwież z ssocookie). {data.hasNpsso ? "✅ ustawiony" : "⚠️ brak w env"}</p>
       </div>
 
       {data.games.length > 0 && (
