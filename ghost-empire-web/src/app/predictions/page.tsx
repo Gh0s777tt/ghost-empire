@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { PredictionsClient } from "@/components/predictions/PredictionsClient";
+import { lockExpiredPredictions } from "@/lib/predictions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ export const metadata = {
 export default async function PredictionsPage() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
+
+  await lockExpiredPredictions();
 
   const [active, recent, me] = await Promise.all([
     prisma.prediction.findMany({
