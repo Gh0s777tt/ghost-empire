@@ -13,6 +13,7 @@ import { ErrorState } from "@/components/EmptyState";
 import { fmt, formatDate, cn } from "@/lib/utils";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { CommandPalette, openCommandPalette } from "./CommandPalette";
+import { SetupStatusCard } from "./SetupStatusCard";
 import dynamic from "next/dynamic";
 import { SectionCard, FieldInput } from "./shared";
 import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, StreamlabsConnectionData, UnmatchedDonation, ShopItemRow, CodeRow, CodeConfig, EventRow, Drop, PendingOrder, StreamAlertsData } from "./types";
@@ -261,7 +262,7 @@ export function AdminClient({
               drops={drops}
               events={events}
               pendingOrders={pendingOrders}
-              onJump={goToSection}
+              onJump={(id) => goToSection(id as SectionId)}
             />
           )}
 
@@ -615,10 +616,11 @@ function DashboardSection({
   drops: Drop[];
   events: AdminEvent[];
   pendingOrders: PendingOrder[];
-  onJump: (id: "shop" | "events" | "drops" | "alerts") => void;
+  onJump: (id: string) => void;
 }) {
   return (
     <div className="space-y-6">
+      <SetupStatusCard onJump={onJump} />
       <SectionCard title="Skrót — co wymaga uwagi" icon={LayoutDashboard}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
