@@ -5,6 +5,7 @@ import TwitchProvider from "next-auth/providers/twitch";
 import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
+import { encryptSecret } from "@/lib/crypto";
 import type { Adapter } from "next-auth/adapters";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
 import { cookies } from "next/headers";
@@ -387,8 +388,8 @@ export const authOptions: NextAuthOptions = {
               username: platformUsername,
               displayName: connectionDisplayName,
               avatar: user.image ?? "",
-              accessToken: account.access_token,
-              refreshToken: account.refresh_token,
+              accessToken: encryptSecret(account.access_token),
+              refreshToken: encryptSecret(account.refresh_token),
               tokenExpiry: account.expires_at
                 ? new Date(account.expires_at * 1000)
                 : null,
@@ -401,8 +402,8 @@ export const authOptions: NextAuthOptions = {
               username: platformUsername,
               displayName: connectionDisplayName,
               avatar: user.image ?? "",
-              accessToken: account.access_token,
-              refreshToken: account.refresh_token,
+              accessToken: encryptSecret(account.access_token),
+              refreshToken: encryptSecret(account.refresh_token),
               tokenExpiry: account.expires_at
                 ? new Date(account.expires_at * 1000)
                 : null,

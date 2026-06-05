@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { encryptSecret } from "@/lib/crypto";
 import { exchangeUserCode, getOwnUser } from "@/lib/kick";
 
 // Must byte-match the redirect_uri used in the authorize step — strip trailing slash too.
@@ -63,8 +64,8 @@ export async function GET(req: Request) {
         id: "default",
         broadcasterId: user.userId,
         broadcasterLogin,
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token ?? null,
+        accessToken: encryptSecret(tokenData.access_token),
+        refreshToken: encryptSecret(tokenData.refresh_token ?? null),
         tokenExpiresAt: expiresAt,
         scope: tokenData.scope ?? "",
         connectedById: auth.userId,
@@ -72,8 +73,8 @@ export async function GET(req: Request) {
       update: {
         broadcasterId: user.userId,
         broadcasterLogin,
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token ?? null,
+        accessToken: encryptSecret(tokenData.access_token),
+        refreshToken: encryptSecret(tokenData.refresh_token ?? null),
         tokenExpiresAt: expiresAt,
         scope: tokenData.scope ?? "",
         connectedById: auth.userId,

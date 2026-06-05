@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { decryptSecret } from "@/lib/crypto";
 import {
   getAppAccessToken,
   listEventSubscriptions,
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
     try {
       const resp = await createEventSubscriptions(
         toCreate.map((t) => ({ name: t.name, version: t.version })),
-        streamerToken.accessToken,
+        decryptSecret(streamerToken.accessToken) ?? "",
       );
       kickStatus = resp.status;
       kickRaw = resp.rawBody.slice(0, 800);
@@ -147,7 +148,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Brak Kick streamer tokenu" }, { status: 400 });
     }
     try {
-      await deleteEventSubscription(body.id, streamerToken.accessToken);
+      await deleteEventSubscription(body.id, decryptSecret(streamerToken.accessToken) ?? "");
       await prisma.kickEventSubscription.delete({ where: { id: body.id } }).catch(() => {});
       return NextResponse.json({ ok: true });
     } catch (e) {
