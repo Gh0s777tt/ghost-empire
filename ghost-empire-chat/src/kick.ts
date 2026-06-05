@@ -4,6 +4,7 @@ import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
 import { checkMessage, violationLabel } from "./moderation";
+import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
 import { refreshKickToken } from "./kickAuth";
@@ -72,6 +73,7 @@ function handleChat(d: KickChat): void {
   }
 
   pushChatFeed("kick", username, content);
+  trackEmojis(content);
 
   if (isSongRequest(content)) {
     void handleSongRequest("kick", username, content).then((m) => {
