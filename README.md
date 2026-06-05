@@ -165,7 +165,7 @@ flowchart LR
 | **Security** | **szyfrowanie sekretów at-rest (AES-256-GCM)** — klucze API + tokeny OAuth · HSTS, CSP, COOP, X-Frame-Options, Permissions-Policy · `noindex`/`no-store` na overlayach · rate-limit (DB sliding-window) · webhook verify (HMAC/RSA) · HMAC-signed cookies · audit log z IP · skan sekretów (GitGuardian) |
 | **Performance** | `unstable_cache`, indeksy DB, lazy-load sekcji admina, Router `staleTimes`, `Promise.all`, pula DB `max:3` pod Supabase |
 | **a11y** | `:focus-visible`, skip-link, `prefers-reduced-motion`, `aria-label`/`aria-current` na nav, `role="dialog"` na modalach |
-| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest (111) · Dependabot · dokumentacja na bieżąco |
+| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest **111 unit + 11 integration** (realny Postgres w CI) · Dependabot · dokumentacja na bieżąco |
 
 ---
 
