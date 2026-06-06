@@ -1,6 +1,7 @@
 // src/app/api/drops/claim/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
@@ -13,21 +14,18 @@ const CODE_REGEX = /^[A-Z0-9_-]{3,24}$/;
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
+    return jsonError("Musisz być zalogowany", 401);
   }
 
   let body: { code?: string };
   try { body = await req.json(); } catch {
-    return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
+    return jsonError("Nieprawidłowe dane", 400);
   }
 
   const code = (body.code ?? "").trim().toUpperCase();
-  if (!code) return NextResponse.json({ error: "Brak kodu" }, { status: 400 });
+  if (!code) return jsonError("Brak kodu", 400);
   if (!CODE_REGEX.test(code)) {
-    return NextResponse.json(
-      { error: "Kod: 3-24 znaków A-Z, 0-9, _, -" },
-      { status: 400 },
-    );
+    return jsonError("Kod: 3-24 znaków A-Z, 0-9, _, -", 400);
   }
 
   const userId = session.user.id;
@@ -35,17 +33,14 @@ export async function POST(req: Request) {
   // Anti-brute-force: max 30 attempts per minute per user (trying random codes)
   const rl = await rateLimit(`drop:claim:${userId}`, 30, 60_000);
   if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Za dużo prób. Poczekaj chwilę." },
-      { status: 429, headers: rateLimitHeaders(rl) },
-    );
+    return jsonError("Za dużo prób. Poczekaj chwilę.", 429, rateLimitHeaders(rl));
   }
 
   const drop = await prisma.streamDrop.findUnique({ where: { code } });
-  if (!drop) return NextResponse.json({ error: "Kod nie istnieje" }, { status: 404 });
-  if (!drop.active) return NextResponse.json({ error: "Kod nieaktywny" }, { status: 410 });
+  if (!drop) return jsonError("Kod nie istnieje", 404);
+  if (!drop.active) return jsonError("Kod nieaktywny", 410);
   if (drop.expiresAt && drop.expiresAt < new Date()) {
-    return NextResponse.json({ error: "Kod wygasł" }, { status: 410 });
+    return jsonError("Kod wygasł", 410);
   }
 
   // Determine reward: first `bonusSlots` claimers get reward + bonusReward.
@@ -149,12 +144,9 @@ export async function POST(req: Request) {
       typeof e === "object" && e !== null && "code" in e &&
       (e as { code: string }).code === "P2002"
     ) {
-      return NextResponse.json(
-        { error: "Już odebrałeś ten kod" },
-        { status: 409 },
-      );
+      return jsonError("Już odebrałeś ten kod", 409);
     }
     console.error("drops/claim error:", e);
-    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
+    return jsonError("Błąd serwera", 500);
   }
 }

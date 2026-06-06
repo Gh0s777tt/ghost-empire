@@ -1,36 +1,34 @@
 // src/app/api/events/raffle-tickets/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
+    return jsonError("Musisz być zalogowany", 401);
   }
 
   const rl = await rateLimit(`raffle:tickets:${session.user.id}`, 10, 60_000);
   if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Zbyt wiele żądań. Spróbuj ponownie za chwilę." },
-      { status: 429, headers: rateLimitHeaders(rl) },
-    );
+    return jsonError("Zbyt wiele żądań. Spróbuj ponownie za chwilę.", 429, rateLimitHeaders(rl));
   }
 
   let body: { eventId?: string; count?: number };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
+    return jsonError("Nieprawidłowe dane", 400);
   }
 
   const eventId = body.eventId;
   const count = Math.floor(Number(body.count ?? 0));
 
-  if (!eventId) return NextResponse.json({ error: "Brak eventId" }, { status: 400 });
+  if (!eventId) return jsonError("Brak eventId", 400);
   if (!Number.isFinite(count) || count < 1 || count > 100) {
-    return NextResponse.json({ error: "Liczba biletów musi być 1-100" }, { status: 400 });
+    return jsonError("Liczba biletów musi być 1-100", 400);
   }
 
   const userId = session.user.id;
@@ -118,10 +116,10 @@ export async function POST(req: Request) {
     return NextResponse.json(result);
   } catch (e) {
     if (e instanceof HttpError) {
-      return NextResponse.json({ error: e.message }, { status: e.status });
+      return jsonError(e.message, e.status);
     }
     console.error("raffle-tickets error:", e);
-    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
+    return jsonError("Błąd serwera", 500);
   }
 }
 
