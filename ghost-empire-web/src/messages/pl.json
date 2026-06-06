@@ -107,5 +107,50 @@
     "errBuy": "Błąd zakupu",
     "boughtPending": "Kupione: {name} — czeka na dostawę (ticket Discord)",
     "boughtDone": "Kupione: {name} — gotowe!"
+  },
+  "authError": {
+    "title": "BŁĄD LOGOWANIA",
+    "retry": "SPRÓBUJ PONOWNIE",
+    "errConfiguration": "Błąd konfiguracji serwera. Skontaktuj się z administratorem.",
+    "errAccessDenied": "Odmowa dostępu. Twoje konto może być zablokowane — skontaktuj się z administratorem przez Discord.",
+    "errVerification": "Link weryfikacyjny wygasł lub jest nieprawidłowy.",
+    "errOAuthSignin": "Błąd podczas logowania przez OAuth.",
+    "errOAuthCallback": "Błąd w odpowiedzi OAuth.",
+    "errOAuthCreateAccount": "Nie udało się stworzyć konta.",
+    "errEmailCreateAccount": "Nie udało się stworzyć konta email.",
+    "errCallback": "Błąd wywołania zwrotnego.",
+    "errOAuthAccountNotLinked": "Konto z tym emailem jest już połączone z innym providerem.",
+    "errDefault": "Wystąpił nieznany błąd."
+  },
+  "polls": {
+    "title": "ANKIETY",
+    "subtitle": "Głosuj w decyzjach społeczności. Możesz zmienić swój głos, dopóki ankieta jest otwarta.",
+    "emptyTitle": "Brak ankiet",
+    "emptyMsg": "Aktualnie nie ma żadnych ankiet. Zajrzyj później!",
+    "closed": "Zamknięta",
+    "votes": "{count} głosów",
+    "loginToVote": "Zaloguj, by głosować",
+    "canChange": "Możesz zmienić głos",
+    "voteSaved": "Głos zapisany!",
+    "err": "Błąd",
+    "errNet": "Błąd sieci"
+  },
+  "welcome": {
+    "metaTitle": "Witaj w Ghost Empire",
+    "metaDesc": "Jedna tokenowa ekonomia dla Twitch, Kick, YouTube i Discord. Zbieraj Ghost Tokens, wymieniaj na nagrody.",
+    "sub1pre": "Jedna ekonomia dla",
+    "sub2": "Zbieraj <b>Ghost Tokens</b> za aktywność, wymieniaj na realne nagrody, rywalizuj i wygrywaj eventy.",
+    "signIn": "Zaloguj się",
+    "browse": "Rozejrzyj się",
+    "enter": "Wejdź do portalu",
+    "hlTokens": "Ghost Tokens",
+    "hlTokensDesc": "Zarabiaj GT za czat, voice, suby, donejty i questy — na każdej platformie.",
+    "hlRewards": "Prawdziwe nagrody",
+    "hlRewardsDesc": "Wymieniaj tokeny w sklepie: klucze Steam, skiny, gifted suby, voice z Ghostem.",
+    "hlCompete": "Rywalizacja",
+    "hlCompeteDesc": "Rankingi, eventy, predictions, battle pass i sezonowe nagrody.",
+    "hlBot": "Bot na 3 platformach",
+    "hlBotDesc": "Twitch + Kick + YouTube: komendy, timery, powitania, song requests, overlay.",
+    "learnMore": "Dowiedz się więcej →"
   }
 }

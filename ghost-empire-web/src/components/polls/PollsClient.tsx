@@ -2,6 +2,7 @@
 // src/components/polls/PollsClient.tsx
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { BarChart3, Check, Loader2, X } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { cn, fmt } from "@/lib/utils";
@@ -24,6 +25,7 @@ export function PollsClient({
   polls: Poll[];
   isAuthenticated: boolean;
 }) {
+  const t = useTranslations("polls");
   const [polls, setPolls] = useState<Poll[]>(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -37,11 +39,11 @@ export function PollsClient({
         body: JSON.stringify({ pollId, optionIndex }),
       });
       const d = await res.json();
-      if (!res.ok) { setToast({ kind: "err", msg: d.error ?? "Błąd" }); return; }
+      if (!res.ok) { setToast({ kind: "err", msg: d.error ?? t("err") }); return; }
       setPolls((ps) => ps.map((p) => (p.id === pollId ? { ...p, counts: d.counts, total: d.total, yourVote: d.yourVote } : p)));
-      setToast({ kind: "ok", msg: "Głos zapisany!" });
+      setToast({ kind: "ok", msg: t("voteSaved") });
     } catch {
-      setToast({ kind: "err", msg: "Błąd sieci" });
+      setToast({ kind: "err", msg: t("errNet") });
     } finally {
       setBusy(null);
       setTimeout(() => setToast(null), 3000);
@@ -54,16 +56,16 @@ export function PollsClient({
         <BarChart3 className="w-6 h-6 text-red-500" />
         <h1 className="font-display text-4xl text-white tracking-wider"
           style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}>
-          ANKIETY
+          {t("title")}
         </h1>
       </div>
-      <p className="text-zinc-500 text-sm">Głosuj w decyzjach społeczności. Możesz zmienić swój głos, dopóki ankieta jest otwarta.</p>
+      <p className="text-zinc-500 text-sm">{t("subtitle")}</p>
 
       {polls.length === 0 ? (
         <EmptyState
           icon={<BarChart3 className="w-6 h-6" />}
-          title="Brak ankiet"
-          message="Aktualnie nie ma żadnych ankiet. Zajrzyj później!"
+          title={t("emptyTitle")}
+          message={t("emptyMsg")}
         />
       ) : (
         <div className="space-y-4">
@@ -79,7 +81,7 @@ export function PollsClient({
                   <h2 className="text-white font-bold text-base leading-snug">{p.question}</h2>
                   {!open && (
                     <span className="text-[9px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-500 shrink-0">
-                      Zamknięta
+                      {t("closed")}
                     </span>
                   )}
                 </div>
@@ -124,13 +126,13 @@ export function PollsClient({
                 </div>
 
                 <div className="flex items-center justify-between mt-3 text-[11px] font-mono text-zinc-600">
-                  <span>{fmt(p.total)} głosów</span>
+                  <span>{t("votes", { count: fmt(p.total) })}</span>
                   {!isAuthenticated && open && (
                     <button onClick={() => signIn()} className="text-red-400 hover:text-red-300 uppercase tracking-widest">
-                      Zaloguj, by głosować
+                      {t("loginToVote")}
                     </button>
                   )}
-                  {isAuthenticated && open && voted && <span>Możesz zmienić głos</span>}
+                  {isAuthenticated && open && voted && <span>{t("canChange")}</span>}
                   {isBusy && <Loader2 className="w-3 h-3 animate-spin" />}
                 </div>
               </div>

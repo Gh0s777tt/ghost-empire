@@ -9,7 +9,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
-- **i18n — tłumaczenie treści stron (partiami)** — kolejne strony przełączane na `t()` po angielsku (każda = osobny namespace w `messages/{pl,en}.json`). Dotychczas: **sklep** (`shop` — kategorie, ceny, wymagania, modal zakupu, toasty). Kolejne dochodzą przyrostowo.
+- **i18n — tłumaczenie treści stron (partiami)** — kolejne strony przełączane na `t()` po angielsku (każda = osobny namespace w `messages/{pl,en}.json`). Dotychczas: **sklep** (`shop`), **strona powitalna `/welcome`** (`welcome` — hero, highlighty, CTA, `generateMetadata` po locale, `t.rich` dla pogrubienia), **błąd logowania `/auth/error`** (`authError` — mapa komunikatów per kod OAuth + tytuł/„spróbuj ponownie"), **ankiety `/polls`** (`polls` — tytuł/podtytuł, pusty stan, „zamknięta", licznik głosów z interpolacją `{count}`, toasty, „zaloguj by głosować"). Kolejne dochodzą przyrostowo.
 
 - **i18n — flagi w przełączniku + tłumaczenie strony głównej** **(#196)** — przełącznik języka to teraz **segmentowany przełącznik z flagami** (PL 🇵🇱 / EN 🇺🇸) — flagi jako **inline SVG** (emoji-flagi nie renderują się na Windows — pokazują „PL"/„US"). **Strona główna w pełni przetłumaczona** (`HomeClient`: guest hero/CTA/statystyki/top gracze + widok zalogowany: daily questy, gorące w sklepie, eventy, osiągnięcia, profil-hero, daily-task, live-banner) przez namespace `home` w `messages/{pl,en}.json` + `t()` (z interpolacją `{level}`/`{count}`). Smoke: `/` = PL, `/en` = EN. Czysto frontend, bez `db push`. Zielone: `tsc`/`eslint`/`build`/**158 testów**. *(Kolejne strony — shop/ranking/profil/… — tłumaczone przyrostowo.)*
 
