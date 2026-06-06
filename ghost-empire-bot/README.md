@@ -1,5 +1,13 @@
 # Ghost Empire — Discord Bot
 
+> # ⚠️ ZASTĄPIONY (DEPRECATED) — nie uruchamiaj
+>
+> Ten bot **przestał być używany**. Discordem GH0ST EMPIRE zajmuje się teraz osobny projekt **E-Bot** (`Gh0s777tt/E-Bot`), który przejął całą ekonomię GT (nagrody za wiadomości + voice) oraz linkowanie kont i woła te same endpointy portalu (`/api/internal/award`, `/api/internal/link-discord`).
+>
+> **Podział ról:** `ghost-empire-chat` = streaming (Twitch/Kick/YouTube/Rumble) · **E-Bot** = Discord + społeczność.
+>
+> Uruchomienie **dwóch** botów Discord naraz (ten + E-Bot) podwoiłoby naliczanie GT — trzymaj włączony **tylko E-Bota**. Ten katalog zostaje wyłącznie jako referencja historyczna. Włączenie ekonomii w E-Bocie: patrz jego `README.md` (sekcja „Integracja GH0ST EMPIRE").
+
 Bot tracking aktywności Discord (wiadomości + voice) i obsługa slash commands. Komunikuje się z portalem `ghost-empire-web` przez bearer-auth internal API.
 
 ## Architektura

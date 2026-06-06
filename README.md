@@ -79,8 +79,8 @@ flowchart LR
     subgraph A["🧩 Ghost Empire — monorepo"]
       WEB["🌐 ghost-empire-web<br/>Next.js 16 · Vercel"]
       CHAT["💬 ghost-empire-chat<br/>bot Twitch/Kick/YT"]
-      BOT["🤖 ghost-empire-bot<br/>bot Discord"]
     end
+    BOT["🤖 E-Bot<br/>Discord · osobne repo<br/>(zastępuje ghost-empire-bot)"]
     DB[("🗄️ PostgreSQL<br/>Supabase")]
     OBS["📺 Overlaye OBS<br/>/overlay/*"]
 
@@ -202,14 +202,11 @@ Wymagania: **Node 22+**, PostgreSQL (Supabase), konto Vercel + konta dev OAuth.
 </details>
 
 <details>
-<summary><b>🤖 Bot Discord</b></summary>
+<summary><b>🤖 Bot Discord (E-Bot — osobne repo)</b></summary>
 
-```powershell
-cd ghost-empire-bot
-cp .env.example .env              # DISCORD_BOT_TOKEN, BOT_SECRET (= web BOT_SECRET)
-npm install && npm run dev
-```
-Szczegóły: [`ghost-empire-bot/README.md`](ghost-empire-bot/README.md).
+Discordem zajmuje się teraz **E-Bot** (`Gh0s777tt/E-Bot`) — osobny projekt, który przejął ekonomię GT (nagrody za wiadomości + voice) i linkowanie kont. Katalog **`ghost-empire-bot/` jest zastąpiony (deprecated)** — nie uruchamiaj go (dwa boty Discord = podwójne naliczanie GT).
+
+Włączenie ekonomii w E-Bocie (opt-in): `GHOST_ECONOMY=1` + `GHOST_BOT_SECRET` (= `BOT_SECRET` portalu) w jego `.env`, privileged intents (Message Content + Server Members) w Discord Dev Portal, `npm run deploy`, restart. Szczegóły w `README.md` E-Bota oraz w [`ghost-empire-bot/README.md`](ghost-empire-bot/README.md) (notka o zastąpieniu).
 </details>
 
 <details>
