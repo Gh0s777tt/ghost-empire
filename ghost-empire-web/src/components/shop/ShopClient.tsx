@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { ShoppingBag, Flame, Lock, Check, X, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { fmt, cn } from "@/lib/utils";
@@ -19,12 +20,12 @@ type UserContext = {
 } | null;
 
 const CATEGORIES = [
-  { id: "all",        label: "WSZYSTKO",      emoji: "🌍" },
-  { id: "games",      label: "GRY",           emoji: "🎮" },
-  { id: "skins",      label: "SKINY",         emoji: "🎯" },
-  { id: "subs",       label: "SUBY",          emoji: "💜" },
-  { id: "cosmetic",   label: "COSMETIC",      emoji: "🎨" },
-  { id: "experience", label: "EXPERIENCE",    emoji: "🎙️" },
+  { id: "all",        tk: "catAll",        emoji: "🌍" },
+  { id: "games",      tk: "catGames",      emoji: "🎮" },
+  { id: "skins",      tk: "catSkins",      emoji: "🎯" },
+  { id: "subs",       tk: "catSubs",       emoji: "💜" },
+  { id: "cosmetic",   tk: "catCosmetic",   emoji: "🎨" },
+  { id: "experience", tk: "catExperience", emoji: "🎙️" },
 ] as const;
 
 const TIER_RANK: Record<string, number> = { T1: 1, T2: 2, T3: 3, Prime: 1 };
@@ -45,6 +46,7 @@ export function ShopClient({
   achievementNames?: Record<string, string>;
 }) {
   const router = useRouter();
+  const t = useTranslations("shop");
   const { update: refreshSession } = useSession();
   const [category, setCategory] = useState<string>("all");
   const [pending, startTransition] = useTransition();
@@ -71,22 +73,22 @@ export function ShopClient({
     if (!userContext) return { ok: true };
 
     if (item.requiresMinLevel && userContext.level < item.requiresMinLevel) {
-      return { ok: false, reason: `Wymagany LVL ${item.requiresMinLevel}` };
+      return { ok: false, reason: t("reqLevel", { level: item.requiresMinLevel }) };
     }
     if (item.requiresSubTier === "DUAL") {
       if (userContext.subTiers.length < 2) {
-        return { ok: false, reason: "Dual Supporter only" };
+        return { ok: false, reason: t("reqDual") };
       }
     } else if (item.requiresSubTier) {
       const required = TIER_RANK[item.requiresSubTier] ?? 0;
-      const ok = userContext.subTiers.some((t) => (TIER_RANK[t] ?? 0) >= required);
-      if (!ok) return { ok: false, reason: `Wymagany ${item.requiresSubTier}` };
+      const ok = userContext.subTiers.some((tier) => (TIER_RANK[tier] ?? 0) >= required);
+      if (!ok) return { ok: false, reason: t("reqTier", { tier: item.requiresSubTier }) };
     }
     if (item.requiresMinMonths && userContext.maxSubMonths < item.requiresMinMonths) {
-      return { ok: false, reason: `${item.requiresMinMonths}+ mc subskrypcji` };
+      return { ok: false, reason: t("reqMonths", { months: item.requiresMinMonths }) };
     }
     if (item.requiresAchievement && !userContext.achievements.includes(item.requiresAchievement)) {
-      return { ok: false, reason: `🔒 ${achievementNames[item.requiresAchievement] ?? "osiągnięcie"}` };
+      return { ok: false, reason: `🔒 ${achievementNames[item.requiresAchievement] ?? t("achievementLower")}` };
     }
     return { ok: true };
   }
@@ -101,15 +103,15 @@ export function ShopClient({
       });
       const data: BuyResponse = await res.json();
       if (!res.ok || "error" in data) {
-        const err = "error" in data ? data.error : "Błąd zakupu";
+        const err = "error" in data ? data.error : t("errBuy");
         setToast({ kind: "err", msg: err });
         return;
       }
       setToast({
         kind: "ok",
         msg: data.deliveryPending
-          ? `Kupione: ${data.itemName} — czeka na dostawę (ticket Discord)`
-          : `Kupione: ${data.itemName} — gotowe!`,
+          ? t("boughtPending", { name: data.itemName })
+          : t("boughtDone", { name: data.itemName }),
       });
       await refreshSession();
       startTransition(() => router.refresh());
@@ -131,11 +133,11 @@ export function ShopClient({
               className="font-display text-4xl text-white tracking-wider"
               style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
             >
-              SKLEP
+              {t("title")}
             </h1>
           </div>
           <p className="text-zinc-500 text-sm">
-            Wymień Ghost Tokens na klucze, skiny, suby i nagrody niedostępne nigdzie indziej.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -147,7 +149,7 @@ export function ShopClient({
                 title={`Perk lojalnościowy z poziomu konta${userContext.prestige > 0 ? " i prestiżu ✦" : ""} — niższe ceny w sklepie`}
               >
                 <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-500/80">
-                  Perk sklepu
+                  {t("perk")}
                 </div>
                 <div className="font-mono text-xl font-bold text-emerald-300 tabular-nums">
                   −{discountPct}%
@@ -158,7 +160,7 @@ export function ShopClient({
               <span className="text-xl">👻</span>
               <div className="leading-tight">
                 <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                  Twój balans
+                  {t("balance")}
                 </div>
                 <div className="font-mono text-xl font-bold text-white tabular-nums">
                   {fmt(balance)} <span className="text-zinc-500 text-xs">GT</span>
@@ -186,7 +188,7 @@ export function ShopClient({
               )}
             >
               <span>{c.emoji}</span>
-              <span>{c.label}</span>
+              <span>{t(c.tk)}</span>
               <span className="text-zinc-600 font-mono">{count}</span>
             </button>
           );
@@ -197,8 +199,8 @@ export function ShopClient({
       {visible.length === 0 ? (
         <EmptyState
           icon={<ShoppingBag className="w-7 h-7" />}
-          title="Pusto w tej kategorii"
-          message="Nic tu jeszcze nie ma — zajrzyj do innej kategorii albo wróć później. Katalog rośnie razem z empire."
+          title={t("emptyTitle")}
+          message={t("emptyMsg")}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -241,7 +243,7 @@ export function ShopClient({
                             : "border-zinc-700 bg-zinc-950 text-zinc-400",
                       )}
                     >
-                      {item.stock === 0 ? "BRAK" : `${item.stock}/${item.totalStock}`}
+                      {item.stock === 0 ? t("outShort") : `${item.stock}/${item.totalStock}`}
                     </span>
                   )}
                 </div>
@@ -282,13 +284,13 @@ export function ShopClient({
                     )}
                     {item.requiresMinMonths && (
                       <span className="text-[9px] font-mono tracking-widest uppercase px-2 py-1 border border-emerald-900 bg-emerald-950/30 text-emerald-300">
-                        {item.requiresMinMonths}+ mc
+                        {t("badgeMonths", { months: item.requiresMinMonths })}
                       </span>
                     )}
                     {item.requiresAchievement && (
                       <span className="text-[9px] font-mono tracking-widest uppercase px-2 py-1 border border-amber-900 bg-amber-950/30 text-amber-300 flex items-center gap-1">
                         <Lock className="w-2.5 h-2.5" />
-                        {achievementNames[item.requiresAchievement] ?? "Osiągnięcie"}
+                        {achievementNames[item.requiresAchievement] ?? t("achievement")}
                       </span>
                     )}
                   </div>
@@ -298,7 +300,7 @@ export function ShopClient({
                 <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-zinc-900">
                   <div>
                     <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">
-                      Cena
+                      {t("price")}
                     </div>
                     <div className="font-mono text-xl font-bold text-white tabular-nums flex items-baseline gap-2">
                       {discounted && (
@@ -315,14 +317,14 @@ export function ShopClient({
                       onClick={() => signIn()}
                       className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px] font-bold tracking-widest uppercase transition-all"
                     >
-                      Zaloguj
+                      {t("login")}
                     </button>
                   ) : !inStock ? (
                     <button
                       disabled
                       className="px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-600 text-[10px] font-bold tracking-widest uppercase cursor-not-allowed"
                     >
-                      Brak
+                      {t("out")}
                     </button>
                   ) : !req.ok ? (
                     <button
@@ -337,7 +339,7 @@ export function ShopClient({
                       disabled
                       className="px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-500 text-[10px] font-bold tracking-widest uppercase cursor-not-allowed"
                     >
-                      Za mało GT
+                      {t("notEnough")}
                     </button>
                   ) : (
                     <button
@@ -345,7 +347,7 @@ export function ShopClient({
                       disabled={isBusy}
                       className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold tracking-widest uppercase transition-all disabled:opacity-50"
                     >
-                      {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : "Kup"}
+                      {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : t("buy")}
                     </button>
                   )}
                 </div>
@@ -383,7 +385,7 @@ export function ShopClient({
 
             <div className="border border-zinc-800 bg-black/40 p-3 mb-5 space-y-2 text-xs font-mono">
               <div className="flex justify-between">
-                <span className="text-zinc-500">CENA</span>
+                <span className="text-zinc-500">{t("mPrice")}</span>
                 <span className="text-white">
                   {priceFor(confirmItem) < confirmItem.price && (
                     <span className="text-zinc-600 line-through mr-2">{fmt(confirmItem.price)}</span>
@@ -395,16 +397,16 @@ export function ShopClient({
               </div>
               {discountPct > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">PERK LOJALNOŚCIOWY</span>
+                  <span className="text-zinc-500">{t("mPerk")}</span>
                   <span className="text-emerald-300">−{discountPct}%</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-zinc-500">TWÓJ BALANS</span>
+                <span className="text-zinc-500">{t("mBalance")}</span>
                 <span className="text-white">{fmt(balance)} GT</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-zinc-800">
-                <span className="text-zinc-500">PO ZAKUPIE</span>
+                <span className="text-zinc-500">{t("mAfter")}</span>
                 <span className="text-red-400 font-bold">
                   {fmt(Math.max(0, balance - priceFor(confirmItem)))} GT
                 </span>
@@ -417,7 +419,7 @@ export function ShopClient({
                 disabled={busyItem === confirmItem.id}
                 className="flex-1 px-4 py-2.5 border border-zinc-800 hover:border-zinc-700 text-zinc-400 text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50"
               >
-                Anuluj
+                {t("cancel")}
               </button>
               <button
                 onClick={() => buy(confirmItem)}
@@ -426,10 +428,10 @@ export function ShopClient({
               >
                 {busyItem === confirmItem.id ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Kupowanie...
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t("buying")}
                   </>
                 ) : (
-                  "Potwierdź zakup"
+                  t("confirm")
                 )}
               </button>
             </div>
