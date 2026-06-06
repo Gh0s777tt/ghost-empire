@@ -2,7 +2,8 @@
 // src/components/seasons/SeasonsClient.tsx
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Ticket, Lock, Check, Loader2, Clock, Sparkles, X } from "lucide-react";
 import { fmt, cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ export function SeasonsClient({
   isPremium: boolean;
   rewards: Reward[];
 }) {
+  const t = useTranslations("seasons");
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
@@ -55,9 +57,9 @@ export function SeasonsClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast("err", data.error ?? "Błąd");
+        showToast("err", data.error ?? t("err"));
       } else {
-        showToast("ok", data.tokens ? `+${fmt(data.tokens)} GT — ${data.label}` : `Odebrano: ${data.label}`);
+        showToast("ok", data.tokens ? t("claimedTokens", { tokens: fmt(data.tokens), label: data.label }) : t("claimedItem", { label: data.label }));
         startTransition(() => router.refresh());
       }
     } finally {
@@ -95,7 +97,7 @@ export function SeasonsClient({
         <div className="flex items-center gap-3 flex-wrap text-sm">
           <span className="text-white font-bold">{season.name}</span>
           <span className="text-zinc-500 flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" /> {daysLeft} dni do końca
+            <Clock className="w-3.5 h-3.5" /> {t("daysLeft", { days: daysLeft })}
           </span>
         </div>
         {season.description && <p className="text-zinc-500 text-sm mt-1">{season.description}</p>}
@@ -103,8 +105,8 @@ export function SeasonsClient({
 
       {!isAuthenticated && (
         <div className="border border-blue-700 bg-blue-950/30 p-4 text-sm text-blue-200">
-          Zaloguj się żeby zbierać XP sezonowe i odbierać nagrody.{" "}
-          <Link href="/auth/signin?callbackUrl=/seasons" className="text-white underline">Login</Link>
+          {t("loginPrompt")}{" "}
+          <Link href="/auth/signin?callbackUrl=/seasons" className="text-white underline">{t("login")}</Link>
         </div>
       )}
 
@@ -117,7 +119,7 @@ export function SeasonsClient({
                 {userTier}
               </div>
               <div>
-                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Twój tier</div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("yourTier")}</div>
                 <div className="text-white font-bold">{userTier} / {maxTier}</div>
               </div>
             </div>
@@ -134,11 +136,11 @@ export function SeasonsClient({
           </div>
           <div className="flex justify-between text-[10px] text-zinc-500 mt-1 font-mono">
             <span>Tier {userTier}</span>
-            <span>{fmt(xpIntoTier)} / {fmt(season.xpPerTier)} XP do tier {Math.min(maxTier, userTier + 1)}</span>
+            <span>{t("xpToTier", { cur: fmt(xpIntoTier), max: fmt(season.xpPerTier), next: Math.min(maxTier, userTier + 1) })}</span>
           </div>
           {!isPremium && (
             <div className="mt-2 text-[11px] text-zinc-500">
-              💡 Zbieraj XP za aktywność: chat, voice, suby, donacje, bity, dropy, eventy, zakupy.
+              {t("earnHint")}
             </div>
           )}
         </div>
@@ -148,11 +150,11 @@ export function SeasonsClient({
       <div>
         <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-red-500" />
-          Nagrody ({rewards.length})
+          {t("rewardsTitle", { count: rewards.length })}
         </h2>
         {tiersWithRewards.length === 0 ? (
           <div className="border border-zinc-900 bg-black/30 p-8 text-center text-zinc-500 text-sm">
-            Nagrody tego sezonu nie zostały jeszcze skonfigurowane.
+            {t("noRewards")}
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -186,7 +188,7 @@ export function SeasonsClient({
 
                     {r.claimed ? (
                       <div className="text-[10px] font-mono uppercase tracking-widest text-green-400 flex items-center gap-1">
-                        <Check className="w-3 h-3" /> Odebrano
+                        <Check className="w-3 h-3" /> {t("claimed")}
                       </div>
                     ) : lockedByPremium ? (
                       <div className="text-[10px] font-mono uppercase tracking-widest text-yellow-500 flex items-center gap-1">
@@ -202,7 +204,7 @@ export function SeasonsClient({
                         disabled={busy === r.id}
                         className="text-[10px] font-mono uppercase tracking-widest bg-red-700 hover:bg-red-600 text-white px-2 py-1 disabled:opacity-50 flex items-center justify-center gap-1"
                       >
-                        {busy === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Odbierz"}
+                        {busy === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : t("claim")}
                       </button>
                     )}
                   </div>

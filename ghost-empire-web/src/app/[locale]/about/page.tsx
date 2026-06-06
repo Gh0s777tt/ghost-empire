@@ -86,6 +86,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Drop codes i battle pass po angielsku 🌍",
+    items: [
+      "Box drop code'ów i strona battle passa (sezony) są już dostępne po angielsku. Tłumaczymy portal strona po stronie.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Logowanie i predykcje po angielsku 🌍",
     items: [
       "Ekran logowania i strona predykcji (zakładów) są już dostępne po angielsku. Tłumaczymy portal strona po stronie.",

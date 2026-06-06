@@ -208,5 +208,32 @@
     "alreadyWagered": "Obstawiłeś <b>{gt} GT</b> na opcję #{n}. Czekaj na rozstrzygnięcie.",
     "winningOption": "Wygrana opcja:",
     "you": "Ty:"
+  },
+  "drops": {
+    "loginPrompt": "Zaloguj się żeby wpisywać drop codes podczas streama.",
+    "login": "Zaloguj",
+    "hint": "Wpisz kod który Ghost wrzucił na czat podczas streama. Pierwszy łapie bonus!",
+    "footer": "Każdy kod = 1× claim. Bonus dla pierwszych N osób.",
+    "bonus": "BONUS!",
+    "success": "Sukces!",
+    "code": "Kod",
+    "breakdown": "Regular {reward} + bonus {bonus}",
+    "balance": "Balans:",
+    "bonusGone": "Bonusy zostały już rozdane innym 🐢"
+  },
+  "seasons": {
+    "daysLeft": "{days, plural, one {# dzień} few {# dni} many {# dni} other {# dni}} do końca",
+    "loginPrompt": "Zaloguj się żeby zbierać XP sezonowe i odbierać nagrody.",
+    "login": "Login",
+    "yourTier": "Twój tier",
+    "xpToTier": "{cur} / {max} XP do tier {next}",
+    "earnHint": "💡 Zbieraj XP za aktywność: chat, voice, suby, donacje, bity, dropy, eventy, zakupy.",
+    "rewardsTitle": "Nagrody ({count})",
+    "noRewards": "Nagrody tego sezonu nie zostały jeszcze skonfigurowane.",
+    "claimed": "Odebrano",
+    "claim": "Odbierz",
+    "err": "Błąd",
+    "claimedTokens": "+{tokens} GT — {label}",
+    "claimedItem": "Odebrano: {label}"
   }
 }
