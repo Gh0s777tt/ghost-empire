@@ -86,6 +86,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Eventy po angielsku 🌍",
+    items: [
+      "Eventy — giveawaye, raffle, happy hours i konkursy — są już dostępne po angielsku. Tłumaczymy portal strona po stronie.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Ranking po angielsku 🌍",
     items: [
       "Ranking (podium, tabela, sortowanie) jest już dostępny po angielsku. Tłumaczymy portal strona po stronie.",
