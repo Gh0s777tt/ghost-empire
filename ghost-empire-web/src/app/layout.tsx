@@ -8,6 +8,13 @@ import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+// The CSP nonce (src/proxy.ts) is per-request, so every route must render
+// dynamically to receive it — a statically-prerendered page ships build-time
+// scripts WITHOUT the nonce and they'd be blocked by script-src. The app is
+// already almost entirely dynamic (auth()), so this only opts in the handful of
+// remaining static pages (/auth/signin, /privacy, /terms, …).
+export const dynamic = "force-dynamic";
+
 // Self-host fonts via next/font (eliminates the previous duplicate <link rel="stylesheet">
 // to Google Fonts in <head> — fewer round-trips, no CLS, automatic preload).
 const inter = Inter({

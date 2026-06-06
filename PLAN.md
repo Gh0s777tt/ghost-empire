@@ -32,7 +32,7 @@ Duży zrzut pomysłów od usera + moje propozycje. Pogrupowane wg autonomii; kol
 > - 🔗 **Webhooki wychodzące** (Discord/n8n/custom, sekret HMAC, auto-disable) (#157).
 > - 🧪 **Testy integracyjne API+realny Postgres** — `tests/integration/` + job CI `integration · postgres` (predictions/wheel/pruning end-to-end). **111 unit + 11 integration** (#159).
 > - 📄 **Docs:** runbook rotacji sekretów (`docs/ENV.md §5`) + sync wszystkich plików (#158) + **kodyfikacja zasady „docs zawsze z changelogiem"** w README/ARCHITECTURE (#160).
-> - **Zostało (🔑 Ty / 🎨 kierunek / ⚠️ ryzyko bez builda):** Sentry (DSN + ryzyko build bez weryfikacji `next build`) · CSP nonces (osobna ostrożna sesja) · landing (Twój gust) · AI/`@bot`/`!imagine` (klucz) · OBS WS/Hue/Govee (creds) · social OAuth · i18n · wybór dostawcy donacji · E2E/Lighthouse · code-split AdminClient (nieweryfikowalne bez builda).
+> - **Zostało (🔑 Ty / 🎨 kierunek / ⚠️ ryzyko bez builda):** Sentry (DSN + ryzyko build bez weryfikacji `next build`) · ~~CSP nonces~~ ✅ #192 · landing (Twój gust) · AI/`@bot`/`!imagine` (klucz) · OBS WS/Hue/Govee (creds) · social OAuth · i18n · wybór dostawcy donacji · E2E/Lighthouse · code-split AdminClient (nieweryfikowalne bez builda).
 >
 > ### ✅ STATUS (2026-06-05 cd., sesja „zrób wszystko co możesz sam" — od PR #173)
 > *(`next build` działa już lokalnie → weryfikuję zmiany build-affecting. Uwaga: **code-split AdminClient był już zrobiony** — `next/dynamic` per sekcja w `AdminClient.tsx`; wcześniejsza notka „do zrobienia / nieweryfikowalne" była nieaktualna.)*
