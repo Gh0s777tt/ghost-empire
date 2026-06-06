@@ -10,6 +10,7 @@ import { checkMessage, violationLabel, escalate, logViolation, type ModAction, t
 import { isAiTrigger, handleAiTrigger } from "./aiCommands";
 import { isGtGameTrigger, handleGtGame } from "./gtGames";
 import { isDuelTrigger, handleDuel } from "./gtDuel";
+import { isHeistTrigger, handleHeist } from "./heist";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 
@@ -173,6 +174,10 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
     });
   } else if (isDuelTrigger(text)) {
     void handleDuel("youtube", channelId, username, text).then((r) => {
+      if (r) void sendMessage(r);
+    });
+  } else if (isHeistTrigger(text)) {
+    void handleHeist("youtube", channelId, username, text).then((r) => {
       if (r) void sendMessage(r);
     });
   } else if (isSongRequest(text)) {

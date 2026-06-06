@@ -11,6 +11,17 @@ export function registerSender(platform: string, fn: Sender): void {
   senders.set(platform, fn);
 }
 
+/** Send to a single platform (e.g. a delayed heist resolution back to its own chat). */
+export async function sendTo(platform: string, text: string): Promise<void> {
+  const fn = senders.get(platform);
+  if (!fn) return;
+  try {
+    await fn(text);
+  } catch {
+    /* a single platform's send failure must not block anything */
+  }
+}
+
 export async function broadcast(text: string): Promise<void> {
   await Promise.all(
     [...senders.values()].map(async (fn) => {

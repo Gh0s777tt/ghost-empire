@@ -15,6 +15,7 @@ export const RETENTION_DAYS = {
   notifications: 30,     // only READ notifications are pruned
   wheelSpins: 90,        // bounds the wheel history (stats stay meaningful)
   duels: 30,             // resolved/cancelled/expired PvP duels (anything this old is done)
+  heists: 30,            // resolved/cancelled co-op heists (entries cascade)
 } as const;
 
 export type PruneResult = Record<keyof typeof RETENTION_DAYS, number> & { totalDeleted: number };
@@ -23,7 +24,7 @@ export type PruneResult = Record<keyof typeof RETENTION_DAYS, number> & { totalD
 export async function pruneOldRecords(now: number = Date.now()): Promise<PruneResult> {
   const before = (days: number) => new Date(now - days * DAY_MS);
 
-  const [chat, alerts, twitch, kick, notifs, wheel, duels] = await Promise.all([
+  const [chat, alerts, twitch, kick, notifs, wheel, duels, heists] = await Promise.all([
     prisma.chatFeedMessage.deleteMany({ where: { createdAt: { lt: before(RETENTION_DAYS.chatFeedMessages) } } }),
     prisma.streamAlert.deleteMany({ where: { createdAt: { lt: before(RETENTION_DAYS.streamAlerts) } } }),
     prisma.twitchEvent.deleteMany({ where: { receivedAt: { lt: before(RETENTION_DAYS.twitchEvents) } } }),
@@ -31,6 +32,7 @@ export async function pruneOldRecords(now: number = Date.now()): Promise<PruneRe
     prisma.notification.deleteMany({ where: { read: true, createdAt: { lt: before(RETENTION_DAYS.notifications) } } }),
     prisma.wheelSpin.deleteMany({ where: { createdAt: { lt: before(RETENTION_DAYS.wheelSpins) } } }),
     prisma.duel.deleteMany({ where: { createdAt: { lt: before(RETENTION_DAYS.duels) } } }),
+    prisma.heist.deleteMany({ where: { startedAt: { lt: before(RETENTION_DAYS.heists) } } }),
   ]);
 
   const result = {
@@ -41,6 +43,7 @@ export async function pruneOldRecords(now: number = Date.now()): Promise<PruneRe
     notifications: notifs.count,
     wheelSpins: wheel.count,
     duels: duels.count,
+    heists: heists.count,
   };
   return { ...result, totalDeleted: Object.values(result).reduce((a, b) => a + b, 0) };
 }

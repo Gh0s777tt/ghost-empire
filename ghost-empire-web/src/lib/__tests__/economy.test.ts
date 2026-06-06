@@ -3,6 +3,7 @@ import {
   computePayouts, tierFromXp, plnFromCurrency, pickWeightedIndex, levelGtMultiplier,
   prestigeFromXp, prestigeGtMultiplier, LEVEL_CAP_XP, PRESTIGE_XP,
   shopDiscountFraction, discountedPrice, duelPayout, pickDuelWinner, DUEL_RAKE,
+  heistSuccessChance, rollHeist, HEIST_WIN_MULT,
 } from "@/lib/economy";
 
 describe("computePayouts", () => {
@@ -217,5 +218,33 @@ describe("pickDuelWinner (fairness)", () => {
     const N = 20_000;
     for (let i = 0; i < N; i++) if (pickDuelWinner() === 0) challengerWins++;
     expect(Math.abs(challengerWins / N - 0.5)).toBeLessThan(0.03); // within 3pp
+  });
+});
+
+describe("heistSuccessChance / rollHeist (co-op odds)", () => {
+  it("is 30% base, +4%/member, monotonic", () => {
+    expect(heistSuccessChance(0)).toBeCloseTo(0.30);
+    expect(heistSuccessChance(1)).toBeCloseTo(0.34);
+    expect(heistSuccessChance(5)).toBeCloseTo(0.50);
+    expect(heistSuccessChance(2)).toBeGreaterThan(heistSuccessChance(1)); // bigger crew = better
+  });
+
+  it("caps at 60% no matter how big the crew", () => {
+    expect(heistSuccessChance(8)).toBeCloseTo(0.60);
+    expect(heistSuccessChance(1000)).toBeCloseTo(0.60);
+  });
+
+  it("never negative for nonsense input", () => {
+    expect(heistSuccessChance(-5)).toBeCloseTo(0.30);
+  });
+
+  it("rollHeist resolves against the chance threshold", () => {
+    expect(rollHeist(5, () => 0.49)).toBe(true);  // 0.49 < 0.50
+    expect(rollHeist(5, () => 0.50)).toBe(false); // 0.50 not < 0.50
+    expect(rollHeist(1, () => 0.33)).toBe(true);  // 0.33 < 0.34
+  });
+
+  it("WIN_MULT is a clean double", () => {
+    expect(HEIST_WIN_MULT).toBe(2);
   });
 });

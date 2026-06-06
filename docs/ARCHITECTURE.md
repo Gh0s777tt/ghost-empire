@@ -83,7 +83,7 @@ Jeden duży klient (`components/admin/AdminClient.tsx`) z nawigacją sekcji. Dan
 - **Kick** — odczyt przez publiczny **Pusher WebSocket**, odpowiedzi przez oficjalne API (OAuth 2.1 + PKCE, refresh rotowany).
 - **YouTube** — auto-wykrycie live (`liveBroadcasts.list mine=true`) → polling `liveChat/messages`.
 - Konfiguracja (komendy / timery / FAQ / powitania / nagrody / **moderacja**) pobierana z portalu (`/api/bot/*`, cache ~2 min) — bez restartu przy zmianach z panelu.
-- Każda wiadomość: `markActivity` → **automod** (`moderation.ts` → delete/timeout/warn, pomija sub/VIP/mod) → `@bot`/`!imagine` → gry GT (`!slots`/`!coinflip`) / pojedynki PvP (`!duel`/`!accept`) → `!sr` → komenda/FAQ → powitanie → GT (`/api/internal/chat-award`) → feed do overlaya czatu (+ emotki/odznaki) → `emojiCombo.ts` (detekcja kombosów).
+- Każda wiadomość: `markActivity` → **automod** (`moderation.ts` → delete/timeout/warn, pomija sub/VIP/mod) → `@bot`/`!imagine` → gry GT (`!slots`/`!coinflip`) / pojedynki PvP (`!duel`/`!accept`) / napad (`!heist`) → `!sr` → komenda/FAQ → powitanie → GT (`/api/internal/chat-award`) → feed do overlaya czatu (+ emotki/odznaki) → `emojiCombo.ts` (detekcja kombosów).
 - **Auto-pin zakładów** (`betAnnounce.ts`): bot przypomina o otwartym zakładzie co 5 min na czacie (Twitch/Kick brak API pin → emulacja). Detektory automoda są **lustrem** `web/src/lib/moderation.ts`.
 - ⚠️ **Egzekucja moderacji wymaga, by konto bota było moderatorem** na danej platformie. Zmiany w bocie → **restart** (`npm start` / Docker).
 

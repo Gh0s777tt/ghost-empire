@@ -87,6 +87,15 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Napad kooperacyjny 🏦 (!heist)",
+    items: [
+      "Nowa mini-gra dla całej widowni: wpisz „!heist 100”, żeby zebrać ekipę na napad na skarbiec Ghost Tokenów.",
+      "Im więcej osób w ekipie, tym większa szansa powodzenia (do 60%). Sukces = każdy zgarnia 2× stawki, wpadka = ekipa traci stawki.",
+      "Macie ~90 sekund na zebranie ekipy od pierwszego „!heist”.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Czytanie alertów na głos 🔊 (TTS)",
     items: [
       "Overlay alertów może teraz czytać donejty, suby i wygrane na głos — głosem przeglądarki, za darmo, bez żadnego zewnętrznego dostawcy.",

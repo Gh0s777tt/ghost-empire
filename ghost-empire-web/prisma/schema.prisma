@@ -83,6 +83,7 @@ model User {
   duelsChallenged Duel[]      @relation("DuelChallenger")
   duelsOpposed    Duel[]      @relation("DuelOpponent")
   duelsWon        Duel[]      @relation("DuelWinner")
+  heistEntries    HeistEntry[]
 
   // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
   // turn full-table scan+sort into index range scans on free-tier Postgres.
@@ -833,6 +834,41 @@ model Duel {
   @@index([challengerId])
   @@index([createdAt])
   @@map("duels")
+}
+
+// Co-op heist: viewers join a crew with !heist <bet> over a short window; a collective
+// success roll (chance scales with crew size) pays everyone WIN_MULT× on success, else the
+// crew loses their stakes. Stakes are escrowed at join (atomic), so resolution only pays out
+// the winners (atomic). Result math lives in lib/economy.ts; orchestration in lib/heist.ts.
+model Heist {
+  id          String       @id @default(cuid())
+  platform    String                                  // chat platform the heist lives on
+  status      String       @default("open")           // open | resolved | cancelled
+  startedById String                                  // user who opened the heist
+  startedAt   DateTime     @default(now())
+  resolvesAt  DateTime                                // join window closes / resolution time
+  resolvedAt  DateTime?
+  success     Boolean?                                // null until resolved
+  entries     HeistEntry[]
+
+  @@index([platform, status])
+  @@index([resolvesAt])
+  @@index([startedAt])
+  @@map("heists")
+}
+
+model HeistEntry {
+  id      String @id @default(cuid())
+  heistId String
+  heist   Heist  @relation(fields: [heistId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name    String                                      // chat handle (for the result message)
+  bet     Int                                         // escrowed at join
+
+  @@unique([heistId, userId])                         // one entry per user per heist
+  @@index([userId])
+  @@map("heist_entries")
 }
 
 // =====================================================
