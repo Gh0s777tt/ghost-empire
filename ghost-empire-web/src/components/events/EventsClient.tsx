@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import {
   Calendar, Gift, Ticket, Trophy, Zap, Users, Clock, Check, X, Loader2, Minus, Plus, Crown,
 } from "lucide-react";
@@ -38,12 +39,17 @@ type EventData = {
 
 const TYPE_META: Record<
   string,
-  { label: string; icon: typeof Gift; color: string; bg: string; border: string }
+  { icon: typeof Gift; color: string; bg: string; border: string }
 > = {
-  happy_hour: { label: "HAPPY HOUR", icon: Zap,    color: "#FF4500", bg: "bg-orange-950/30", border: "border-orange-700" },
-  giveaway:   { label: "GIVEAWAY",   icon: Gift,   color: "#10b981", bg: "bg-emerald-950/30", border: "border-emerald-700" },
-  raffle:     { label: "RAFFLE",     icon: Ticket, color: "#8b5cf6", bg: "bg-purple-950/30",  border: "border-purple-700" },
-  contest:    { label: "KONKURS",    icon: Trophy, color: "#3b82f6", bg: "bg-blue-950/30",    border: "border-blue-700" },
+  happy_hour: { icon: Zap,    color: "#FF4500", bg: "bg-orange-950/30", border: "border-orange-700" },
+  giveaway:   { icon: Gift,   color: "#10b981", bg: "bg-emerald-950/30", border: "border-emerald-700" },
+  raffle:     { icon: Ticket, color: "#8b5cf6", bg: "bg-purple-950/30",  border: "border-purple-700" },
+  contest:    { icon: Trophy, color: "#3b82f6", bg: "bg-blue-950/30",    border: "border-blue-700" },
+};
+
+// Type labels are resolved at render via translations (see EventBase).
+const TYPE_LABEL_KEY: Record<string, "typeHappyHour" | "typeGiveaway" | "typeRaffle" | "typeContest"> = {
+  happy_hour: "typeHappyHour", giveaway: "typeGiveaway", raffle: "typeRaffle", contest: "typeContest",
 };
 
 export function EventsClient({
@@ -55,6 +61,7 @@ export function EventsClient({
   userTokens: number;
   isAuthenticated: boolean;
 }) {
+  const t = useTranslations("events");
   const router = useRouter();
   const { update: refreshSession } = useSession();
   const [pending, startTransition] = useTransition();
@@ -83,9 +90,9 @@ export function EventsClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast("err", data.error ?? "Błąd");
+        showToast("err", data.error ?? t("err"));
       } else {
-        showToast("ok", "Dołączyłeś! Losowanie wkrótce.");
+        showToast("ok", t("joined"));
         startTransition(() => router.refresh());
       }
     } finally {
@@ -103,11 +110,11 @@ export function EventsClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast("err", data.error ?? "Błąd");
+        showToast("err", data.error ?? t("err"));
       } else {
         showToast(
           "ok",
-          `Kupione ${data.bought} ${data.bought === 1 ? "bilet" : "biletów"} (#${data.firstTicket}-${data.lastTicket})`,
+          t("boughtTickets", { count: data.bought, first: data.firstTicket, last: data.lastTicket }),
         );
         await refreshSession();
         startTransition(() => router.refresh());
@@ -132,19 +139,19 @@ export function EventsClient({
             className="font-display text-4xl text-white tracking-wider"
             style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
           >
-            EVENTY
+            {t("title")}
           </h1>
         </div>
         <p className="text-zinc-500 text-sm">
-          Aktualne giveawaye, raffle, happy hours i konkursy. Bierz udział, wygrywaj nagrody.
+          {t("subtitle")}
         </p>
       </div>
 
       {events.length === 0 && (
         <EmptyState
           icon={<Calendar className="w-6 h-6" />}
-          title="Brak aktywnych eventów"
-          message="Aktualnie nic się nie dzieje — zajrzyj później albo śledź ogłoszenia na streamie."
+          title={t("emptyTitle")}
+          message={t("emptyMsg")}
         />
       )}
 
@@ -159,7 +166,7 @@ export function EventsClient({
 
       {/* Giveaways */}
       {giveaways.length > 0 && (
-        <Section title="Giveaways" count={giveaways.length}>
+        <Section title={t("secGiveaways")} count={giveaways.length}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {giveaways.map((e) => (
               <GiveawayCard
@@ -178,7 +185,7 @@ export function EventsClient({
 
       {/* Raffles */}
       {raffles.length > 0 && (
-        <Section title="Raffles" count={raffles.length}>
+        <Section title={t("secRaffles")} count={raffles.length}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {raffles.map((e) => (
               <RaffleCard
@@ -198,7 +205,7 @@ export function EventsClient({
 
       {/* Contests */}
       {contests.length > 0 && (
-        <Section title="Konkursy" count={contests.length}>
+        <Section title={t("secContests")} count={contests.length}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {contests.map((e) => (
               <ContestCard
@@ -234,21 +241,22 @@ export function EventsClient({
 }
 
 function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+  const t = useTranslations("events");
   return (
     <div>
       <div className="flex items-baseline gap-2 mb-3">
         <h2 className="font-display text-2xl text-white tracking-wider">{title.toUpperCase()}</h2>
-        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{count} aktywnych</span>
+        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("activeCount", { count })}</span>
       </div>
       {children}
     </div>
   );
 }
 
-function formatCountdown(target: string | null, now: number): string {
+function formatCountdown(target: string | null, now: number, endedLabel: string): string {
   if (!target) return "—";
   const ms = new Date(target).getTime() - now;
-  if (ms <= 0) return "Zakończony";
+  if (ms <= 0) return endedLabel;
   const days = Math.floor(ms / 86_400_000);
   const h = Math.floor((ms % 86_400_000) / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
@@ -259,11 +267,12 @@ function formatCountdown(target: string | null, now: number): string {
 }
 
 function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
+  const t = useTranslations("events");
   const startsIn = event.startsAt ? new Date(event.startsAt).getTime() - now : 0;
   const isActive = startsIn <= 0 && (!event.endsAt || new Date(event.endsAt).getTime() > now);
   const countdown = isActive
-    ? formatCountdown(event.endsAt, now)
-    : formatCountdown(event.startsAt, now);
+    ? formatCountdown(event.endsAt, now, t("ended"))
+    : formatCountdown(event.startsAt, now, t("ended"));
   const meta = TYPE_META.happy_hour;
 
   return (
@@ -276,7 +285,7 @@ function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
     >
       <div className="absolute top-0 right-0 px-3 py-1 text-[9px] font-bold tracking-widest uppercase text-white"
         style={{ background: meta.color }}>
-        {isActive ? "TRWA!" : "WKRÓTCE"}
+        {isActive ? t("hhLive") : t("hhSoon")}
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="shrink-0">
@@ -307,7 +316,7 @@ function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
         </div>
         <div className="text-right">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
-            {isActive ? "Kończy się za" : "Zaczyna się za"}
+            {isActive ? t("hhEndsIn") : t("hhStartsIn")}
           </div>
           <div className="font-mono text-2xl text-white tabular-nums">{countdown}</div>
         </div>
@@ -317,16 +326,17 @@ function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
 }
 
 function WinnersBanner({ event }: { event: EventData }) {
+  const t = useTranslations("events");
   return (
     <div className="mt-auto border-2 border-yellow-600 bg-linear-to-br from-yellow-950/40 to-amber-950/30 p-3">
       <div className="flex items-center gap-2 mb-2">
         <Crown className="w-4 h-4 text-yellow-400" />
         <span className="text-[10px] font-bold tracking-widest uppercase text-yellow-300">
-          Wylosowano {event.winners.length === 1 ? "zwycięzcę" : `${event.winners.length} zwycięzców`}
+          {t("winnersDrawn", { count: event.winners.length })}
         </span>
       </div>
       {event.winners.length === 0 ? (
-        <p className="text-xs text-zinc-500 italic">Nikt nie wziął udziału — brak zwycięzców.</p>
+        <p className="text-xs text-zinc-500 italic">{t("noWinners")}</p>
       ) : (
         <ul className="space-y-1.5">
           {event.winners.map((w) => (
@@ -358,8 +368,10 @@ function WinnersBanner({ event }: { event: EventData }) {
 function EventBase({
   event, badge, children,
 }: { event: EventData; badge: React.ReactNode; children: React.ReactNode }) {
+  const t = useTranslations("events");
   const meta = TYPE_META[event.type] ?? TYPE_META.giveaway;
   const Icon = meta.icon;
+  const label = t(TYPE_LABEL_KEY[event.type] ?? "typeGiveaway");
   return (
     <div
       className={cn("border bg-zinc-950/80 backdrop-blur-xs p-5 flex flex-col", meta.border)}
@@ -375,7 +387,7 @@ function EventBase({
             className="text-[10px] font-bold tracking-widest uppercase"
             style={{ color: meta.color }}
           >
-            {meta.label}
+            {label}
           </span>
         </div>
         {badge}
@@ -395,7 +407,8 @@ function GiveawayCard({
   event: EventData; now: number; isAuthenticated: boolean;
   joined: boolean; busy: boolean; onJoin: () => void;
 }) {
-  const countdown = formatCountdown(event.endsAt, now);
+  const t = useTranslations("events");
+  const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
   const drawn = !!event.drawnAt;
 
@@ -409,19 +422,19 @@ function GiveawayCard({
             drawn ? "text-yellow-400" : "text-zinc-500",
           )}
         >
-          {drawn ? "✓ WYLOSOWANO" : ended ? "ZAKOŃCZONY" : countdown}
+          {drawn ? t("drawnBadge") : ended ? t("endedBadge") : countdown}
         </span>
       }
     >
       {event.prize && (
         <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
-            Nagroda
+            {t("prize")}
           </div>
           <div className="text-sm text-white font-bold">🎁 {event.prize}</div>
           {event.winnersCount && event.winnersCount > 1 && (
             <div className="text-[10px] text-zinc-500 mt-1">
-              {event.winnersCount} zwycięzców
+              {t("winnersCount", { count: event.winnersCount })}
             </div>
           )}
         </div>
@@ -439,22 +452,22 @@ function GiveawayCard({
         <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-zinc-900">
           <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
             <Users className="w-3.5 h-3.5" />
-            <span>{fmt(event.entriesCount)} uczestników</span>
+            <span>{t("participants", { count: fmt(event.entriesCount) })}</span>
           </div>
           {!isAuthenticated ? (
             <button
               onClick={() => signIn()}
               className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px] font-bold tracking-widest uppercase"
             >
-              Zaloguj
+              {t("login")}
             </button>
           ) : ended ? (
             <button disabled className="px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-500 text-[10px] font-bold tracking-widest uppercase cursor-not-allowed">
-              Zakończone
+              {t("endedBtn")}
             </button>
           ) : joined ? (
             <button disabled className="px-3 py-2 bg-emerald-950 border border-emerald-700 text-emerald-300 text-[10px] font-bold tracking-widest uppercase flex items-center gap-1.5">
-              <Check className="w-3 h-3" /> Dołączono
+              <Check className="w-3 h-3" /> {t("joinedBtn")}
             </button>
           ) : (
             <button
@@ -463,7 +476,7 @@ function GiveawayCard({
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
             >
               {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Gift className="w-3 h-3" />}
-              Dołącz
+              {t("joinBtn")}
             </button>
           )}
         </div>
@@ -478,7 +491,8 @@ function ContestCard({
   event: EventData; now: number; isAuthenticated: boolean;
   joined: boolean; busy: boolean; onJoin: () => void;
 }) {
-  const countdown = formatCountdown(event.endsAt, now);
+  const t = useTranslations("events");
+  const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
   const drawn = !!event.drawnAt;
 
@@ -492,14 +506,14 @@ function ContestCard({
             drawn ? "text-yellow-400" : "text-zinc-500",
           )}
         >
-          {drawn ? "✓ WYLOSOWANO" : ended ? "ZAKOŃCZONY" : countdown}
+          {drawn ? t("drawnBadge") : ended ? t("endedBadge") : countdown}
         </span>
       }
     >
       {event.prize && (
         <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
-            Pula nagród
+            {t("prizePool")}
           </div>
           <div className="text-xs text-white leading-relaxed whitespace-pre-line">
             🏆 {event.prize}
@@ -513,24 +527,24 @@ function ContestCard({
         <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-zinc-900">
           <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
             <Users className="w-3.5 h-3.5" />
-            <span>{fmt(event.entriesCount)} zgłoszeń</span>
+            <span>{t("submissions", { count: fmt(event.entriesCount) })}</span>
           </div>
           {!isAuthenticated ? (
             <button onClick={() => signIn()} className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px] font-bold tracking-widest uppercase">
-              Zaloguj
+              {t("login")}
             </button>
           ) : ended ? (
             <button disabled className="px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-500 text-[10px] font-bold tracking-widest uppercase cursor-not-allowed">
-              Zakończony
+              {t("endedBtnM")}
             </button>
           ) : joined ? (
             <button disabled className="px-3 py-2 bg-blue-950 border border-blue-700 text-blue-300 text-[10px] font-bold tracking-widest uppercase flex items-center gap-1.5">
-              <Check className="w-3 h-3" /> Zgłoszony
+              <Check className="w-3 h-3" /> {t("submittedBtn")}
             </button>
           ) : (
             <button onClick={onJoin} disabled={busy} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5">
               {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trophy className="w-3 h-3" />}
-              Zgłoś się
+              {t("submitBtn")}
             </button>
           )}
         </div>
@@ -545,8 +559,9 @@ function RaffleCard({
   event: EventData; now: number; isAuthenticated: boolean;
   myTickets: number; userTokens: number; busy: boolean; onBuy: (count: number) => void;
 }) {
+  const t = useTranslations("events");
   const [qty, setQty] = useState(1);
-  const countdown = formatCountdown(event.endsAt, now);
+  const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
   const price = event.ticketPrice ?? 0;
   const maxPerUser = event.maxTicketsPerUser ?? 999;
@@ -568,14 +583,14 @@ function RaffleCard({
             drawn ? "text-yellow-400" : "text-zinc-500",
           )}
         >
-          {drawn ? "✓ WYLOSOWANO" : ended ? "ZAKOŃCZONY" : countdown}
+          {drawn ? t("drawnBadge") : ended ? t("endedBadge") : countdown}
         </span>
       }
     >
       {event.prize && (
         <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
-            Nagroda
+            {t("prize")}
           </div>
           <div className="text-sm text-white font-bold">🎯 {event.prize}</div>
         </div>
@@ -583,11 +598,11 @@ function RaffleCard({
 
       <div className="grid grid-cols-2 gap-2 mb-3 text-[10px] font-mono uppercase tracking-widest">
         <div className="border border-zinc-800 bg-black/30 p-2">
-          <div className="text-zinc-500">Pula biletów</div>
+          <div className="text-zinc-500">{t("ticketPool")}</div>
           <div className="text-white text-base normal-case font-bold">{fmt(event.ticketsCount)}</div>
         </div>
         <div className="border border-zinc-800 bg-black/30 p-2">
-          <div className="text-zinc-500">Twoje bilety</div>
+          <div className="text-zinc-500">{t("yourTickets")}</div>
           <div className="text-white text-base normal-case font-bold">
             {fmt(myTickets)}{" "}
             {myTickets > 0 && (
@@ -599,7 +614,7 @@ function RaffleCard({
 
       {!drawn && (
         <div className="flex items-center justify-between gap-2 text-[10px] font-mono uppercase tracking-widest mb-3">
-          <span className="text-zinc-500">Cena za bilet</span>
+          <span className="text-zinc-500">{t("ticketPrice")}</span>
           <span className="text-white text-sm normal-case font-bold">{fmt(price)} GT</span>
         </div>
       )}
@@ -611,13 +626,13 @@ function RaffleCard({
           onClick={() => signIn()}
           className="w-full px-3 py-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px] font-bold tracking-widest uppercase mt-auto"
         >
-          Zaloguj się żeby kupić bilety
+          {t("loginToBuy")}
         </button>
       ) : ended ? (
-        <div className="text-center text-zinc-500 text-xs py-2 mt-auto">Losowanie zakończone</div>
+        <div className="text-center text-zinc-500 text-xs py-2 mt-auto">{t("raffleEnded")}</div>
       ) : remaining <= 0 ? (
         <div className="text-center text-purple-400 text-xs py-2 mt-auto">
-          Osiągnąłeś limit ({maxPerUser} biletów)
+          {t("limitReached", { max: maxPerUser })}
         </div>
       ) : (
         <div className="mt-auto space-y-2">
@@ -658,15 +673,15 @@ function RaffleCard({
               )}
             >
               {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Ticket className="w-3 h-3" />}
-              {!canAfford ? "Za mało" : `Kup ${qty}`}
+              {!canAfford ? t("notEnough") : t("buyQty", { qty })}
             </button>
           </div>
           <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
             <span className="text-zinc-500">
-              Limit: {fmt(remaining)} pozostało
+              {t("limitRemaining", { count: fmt(remaining) })}
             </span>
             <span className={canAfford ? "text-white" : "text-red-400"}>
-              Koszt: {fmt(totalCost)} GT
+              {t("cost", { cost: fmt(totalCost) })}
             </span>
           </div>
         </div>
