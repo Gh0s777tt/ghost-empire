@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-07",
+    title: "Panel obsługi po angielsku 🌍",
+    items: [
+      "Wewnętrzny panel administracyjny (dla obsługi streamu) jest tłumaczony na angielski — partiami. (Ten dziennik zmian zostaje po polsku.)",
+    ],
+  },
+  {
+    date: "2026-06-07",
     title: "Profil i powiadomienia po angielsku 🌍",
     items: [
       "Twój profil (statystyki, osiągnięcia, historia, połączone konta) oraz dzwonek powiadomień są już w pełni dostępne po angielsku. (Ten dziennik zmian zostaje po polsku.)",
