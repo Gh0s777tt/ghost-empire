@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Szybszy, nowocześniejszy silnik ⚡",
+    items: [
+      "Portal przeszedł na React Compiler (automatyczne optymalizacje renderowania) i szybszy build (Turbopack) — płynniej i sprawniej, bez zmian w wyglądzie.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Linki na profilu jak karty 🔗",
     items: [
       "Edytor linków na profilu działa teraz jak panel integracji: każda platforma to zwijana karta — widzisz status (@handle / brak / OAuth), a po kliknięciu rozwijasz edycję.",

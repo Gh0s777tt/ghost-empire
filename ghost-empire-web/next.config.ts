@@ -72,6 +72,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false, // Don't leak "X-Powered-By: Next.js"
   reactStrictMode: true,
 
+  // React Compiler (React 19) — automatyczna memoizacja komponentów/hooków:
+  // mniej ręcznych useMemo/useCallback i mniej zbędnych re-renderów.
+  // W Next 16 to klucz top-level (był chwilowo pod `experimental`).
+  reactCompiler: true,
+
   images: {
     // remotePatterns replaces the deprecated `images.domains` (removed in a future
     // Next major). Pin protocol to https so we never proxy plaintext-http images.
