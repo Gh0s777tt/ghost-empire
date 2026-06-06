@@ -2,6 +2,7 @@
 // src/components/schedule/ScheduleClient.tsx
 // Public schedule: highlighted upcoming stream + countdown + weekly grid
 import { useEffect, useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Calendar, Clock, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,15 +16,6 @@ type Slot = {
   title: string | null;
   platform: string | null;
 };
-
-const DAYS_FULL = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
-const DAYS_SHORT = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"];
-// Monday-first column headers for the month calendar.
-const DOW_HEADERS = ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"];
-const MONTHS_PL = [
-  "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
-  "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień",
-];
 
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -51,8 +43,8 @@ function nextOccurrence(slot: Slot, from: Date): Date {
   return result;
 }
 
-function formatCountdown(ms: number): string {
-  if (ms <= 0) return "TERAZ LIVE";
+function formatCountdown(ms: number, nowLiveLabel: string): string {
+  if (ms <= 0) return nowLiveLabel;
   const d = Math.floor(ms / 86_400_000);
   const h = Math.floor((ms % 86_400_000) / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
@@ -63,6 +55,12 @@ function formatCountdown(ms: number): string {
 }
 
 export function ScheduleClient({ slots }: { slots: Slot[] }) {
+  const t = useTranslations("schedule");
+  const daysFull = t.raw("daysFull") as string[];
+  const daysShort = t.raw("daysShort") as string[];
+  const months = t.raw("months") as string[];
+  // Monday-first column headers for the month calendar (reorder Sunday-first short days).
+  const dowHeaders = [1, 2, 3, 4, 5, 6, 0].map((i) => daysShort[i]);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -168,24 +166,24 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
           }}
         >
           <div className="absolute top-0 right-0 px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-white bg-red-600 animate-pulse">
-            ● LIVE TERAZ
+            {t("liveNow")}
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="text-5xl">🔴</div>
             <div className="flex-1 text-center sm:text-left">
               <div className="font-display text-2xl sm:text-3xl text-white tracking-wider">
-                {nextSlot.title ?? "Stream trwa!"}
+                {nextSlot.title ?? t("streamOn")}
               </div>
               <div className="text-zinc-400 text-sm mt-1">
-                Kończy się o {formatTime(currentEnd.getHours(), currentEnd.getMinutes())}
+                {t("endsAt", { time: formatTime(currentEnd.getHours(), currentEnd.getMinutes()) })}
               </div>
             </div>
             <div className="text-right">
               <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
-                Pozostało
+                {t("remaining")}
               </div>
               <div className="font-mono text-2xl text-white tabular-nums">
-                {formatCountdown(currentEnd.getTime() - now.getTime())}
+                {formatCountdown(currentEnd.getTime() - now.getTime(), t("nowLive"))}
               </div>
             </div>
           </div>
@@ -200,15 +198,15 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
         >
           <div className="flex items-center gap-2 mb-3 text-[10px] font-mono uppercase tracking-widest text-zinc-500">
             <Sparkles className="w-3 h-3" />
-            Najbliższy stream
+            {t("nextStream")}
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="flex-1 text-center sm:text-left">
               <div className="font-display text-2xl sm:text-3xl text-white tracking-wider mb-1">
-                {nextSlot.title ?? `Stream — ${DAYS_FULL[nextSlot.dayOfWeek]}`}
+                {nextSlot.title ?? t("streamDay", { day: daysFull[nextSlot.dayOfWeek] })}
               </div>
               <div className="text-zinc-400 text-sm">
-                {DAYS_FULL[nextSlot.dayOfWeek]} o{" "}
+                {daysFull[nextSlot.dayOfWeek]} {t("at")}{" "}
                 <span className="text-red-400 font-mono">
                   {formatTime(nextSlot.startHour, nextSlot.startMinute)}
                 </span>
@@ -222,10 +220,10 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
             </div>
             <div className="text-right">
               <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
-                Za
+                {t("inLabel")}
               </div>
               <div className="font-mono text-2xl text-white tabular-nums">
-                {formatCountdown(nextStart.getTime() - now.getTime())}
+                {formatCountdown(nextStart.getTime() - now.getTime(), t("nowLive"))}
               </div>
             </div>
           </div>
@@ -243,22 +241,22 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <Calendar className="w-4 h-4 text-red-500" />
           <h2 className="font-display text-lg text-white tracking-wider">
-            {view === "week" ? "TYDZIEŃ" : `${MONTHS_PL[monthGrid.month]} ${monthGrid.year}`}
+            {view === "week" ? t("weekUpper") : `${months[monthGrid.month]} ${monthGrid.year}`}
           </h2>
           {view === "month" && (
             <div className="flex items-center gap-1 ml-2">
-              <button onClick={() => shiftMonth(-1)} aria-label="Poprzedni miesiąc" className="w-7 h-7 flex items-center justify-center border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
+              <button onClick={() => shiftMonth(-1)} aria-label={t("prevMonth")} className="w-7 h-7 flex items-center justify-center border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button onClick={resetMonth} className="px-2 h-7 text-[10px] font-mono uppercase tracking-widest border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
-                Dziś
+                {t("today")}
               </button>
-              <button onClick={() => shiftMonth(1)} aria-label="Następny miesiąc" className="w-7 h-7 flex items-center justify-center border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
+              <button onClick={() => shiftMonth(1)} aria-label={t("nextMonth")} className="w-7 h-7 flex items-center justify-center border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
-          <div className="ml-auto inline-flex border border-zinc-800" role="tablist" aria-label="Widok planu">
+          <div className="ml-auto inline-flex border border-zinc-800" role="tablist" aria-label={t("viewLabel")}>
             {(["week", "month"] as const).map((v) => (
               <button
                 key={v}
@@ -270,7 +268,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
                   view === v ? "bg-red-600 text-white" : "text-zinc-400 hover:text-white",
                 )}
               >
-                {v === "week" ? "Tydzień" : "Miesiąc"}
+                {v === "week" ? t("weekTab") : t("monthTab")}
               </button>
             ))}
           </div>
@@ -299,13 +297,13 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
                     isToday ? "text-red-300 border-red-900" : "text-zinc-500 border-zinc-800",
                   )}
                 >
-                  {DAYS_SHORT[dayIdx]}
-                  {isToday && <span className="ml-1 text-[8px]">DZIŚ</span>}
+                  {daysShort[dayIdx]}
+                  {isToday && <span className="ml-1 text-[8px]">{t("todayBadge")}</span>}
                 </div>
 
                 {daySlots.length === 0 ? (
                   <div className="text-[10px] font-mono text-zinc-700 italic">
-                    Wolne
+                    {t("free")}
                   </div>
                 ) : (
                   <div className="space-y-1.5">
@@ -335,7 +333,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
           <div>
             {/* Weekday column headers (Monday-first) */}
             <div className="hidden sm:grid grid-cols-7 gap-2 mb-2">
-              {DOW_HEADERS.map((h) => (
+              {dowHeaders.map((h) => (
                 <div key={h} className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 text-center">{h}</div>
               ))}
             </div>
@@ -378,7 +376,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
                             </div>
                           ))}
                           {daySlots.length > 3 && (
-                            <div className="text-[8px] font-mono text-zinc-500">+{daySlots.length - 3} więcej</div>
+                            <div className="text-[8px] font-mono text-zinc-500">{t("more", { count: daySlots.length - 3 })}</div>
                           )}
                         </div>
                       </div>
@@ -393,7 +391,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
 
       {/* Footnote */}
       <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 text-center">
-        Harmonogram może się zmienić — sprawdź Discord po aktualne info
+        {t("footnote")}
       </p>
     </div>
   );
