@@ -14,6 +14,24 @@ import {
 const POLL_INTERVAL_MS = 1200;
 const DEFAULT_DURATION = 6000;
 
+// TTS (text-to-speech) is opt-in via URL params on the OBS source — no server/admin
+// config needed: ?token=…&tts=1 (optionally &ttsTypes=donation,twitch_sub | all,
+// &ttsLang=pl-PL, &ttsRate=1, &ttsVolume=1, &ttsVoice=<name>). Uses the browser's
+// built-in speechSynthesis (works in OBS' embedded browser), so it's free.
+type TtsCfg = {
+  enabled: boolean;
+  types: Set<string> | "all";
+  lang: string;
+  rate: number;
+  volume: number;
+  voice: string | null;
+};
+
+// Default spoken alert types when ?tts=1 with no explicit ?ttsTypes — the "celebration"
+// alerts (money + wins). Noisy/low-value types (level_up, welcome, shop, test) stay silent
+// unless the streamer opts them in with ?ttsTypes=all or an explicit list.
+const DEFAULT_TTS_TYPES = ["donation", "twitch_sub", "twitch_gift_sub", "twitch_cheer", "event_win"];
+
 type AlertItem = {
   id: string;
   type: string;
@@ -61,11 +79,33 @@ export function OverlayClient() {
   const seenIdsRef = useRef<Set<string>>(new Set());
   const lastSinceRef = useRef<string | null>(null);
   const currentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ttsRef = useRef<TtsCfg | null>(null);
 
-  // Read token from URL on mount
+  // Read token + TTS config from URL on mount
   useEffect(() => {
     const url = new URL(window.location.href);
-    const t = url.searchParams.get("token");
+    const p = url.searchParams;
+
+    // TTS config (URL-driven; no server/admin needed).
+    if (["1", "true", "yes", "on"].includes((p.get("tts") ?? "").toLowerCase())) {
+      const raw = (p.get("ttsTypes") ?? "").trim().toLowerCase();
+      const types: Set<string> | "all" =
+        raw === "all" ? "all" : raw ? new Set(raw.split(",").map((s) => s.trim()).filter(Boolean)) : new Set(DEFAULT_TTS_TYPES);
+      const num = (k: string, def: number, min: number, max: number) => {
+        const v = parseFloat(p.get(k) ?? "");
+        return Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : def;
+      };
+      ttsRef.current = {
+        enabled: true,
+        types,
+        lang: p.get("ttsLang") || "pl-PL",
+        rate: num("ttsRate", 1, 0.5, 2),
+        volume: num("ttsVolume", 1, 0, 1),
+        voice: p.get("ttsVoice"),
+      };
+    }
+
+    const t = p.get("token");
     if (!t) {
       setAuthStatus("no-token");
       return;
@@ -90,6 +130,8 @@ export function OverlayClient() {
         playDing();
       }
     }
+    // Optional spoken alert (?tts=1 on the OBS URL) — independent of the ding.
+    if (ttsRef.current?.enabled) speakAlert(next, ttsRef.current);
 
     if (currentTimerRef.current) clearTimeout(currentTimerRef.current);
     currentTimerRef.current = setTimeout(() => {
@@ -264,5 +306,39 @@ function playDing() {
     }
   } catch {
     /* sound is optional */
+  }
+}
+
+// --- TTS (browser speechSynthesis) — opt-in via ?tts=1 on the OBS URL ---
+
+/** Spoken text for an alert: "<actor> <message>", tidied for Polish speech. */
+function buildTtsText(a: AlertItem): string {
+  const base = `${a.actorName ?? ""} ${a.message ?? ""}`.trim() || a.title || "";
+  return base
+    .replace(/\s+/g, " ")
+    .replace(/\bGT\b/g, "Ghost Tokenów")
+    .replace(/\bPLN\b/gi, "złotych")
+    .trim();
+}
+
+function speakAlert(a: AlertItem, cfg: TtsCfg) {
+  try {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (cfg.types !== "all" && !cfg.types.has(a.type)) return;
+    const text = buildTtsText(a);
+    if (!text) return;
+    const synth = window.speechSynthesis;
+    synth.cancel(); // don't let alerts pile up mid-sentence
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = cfg.lang;
+    u.rate = cfg.rate;
+    u.volume = cfg.volume;
+    if (cfg.voice) {
+      const v = synth.getVoices().find((vo) => vo.name === cfg.voice || vo.voiceURI === cfg.voice);
+      if (v) u.voice = v;
+    }
+    synth.speak(u);
+  } catch {
+    /* TTS is optional — never break the overlay */
   }
 }

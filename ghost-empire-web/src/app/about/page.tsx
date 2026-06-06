@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Czytanie alertów na głos 🔊 (TTS)",
+    items: [
+      "Overlay alertów może teraz czytać donejty, suby i wygrane na głos — głosem przeglądarki, za darmo, bez żadnego zewnętrznego dostawcy.",
+      "Streamer włącza to dopisując &tts=1 do adresu źródła alertów w OBS; zakres i głos można dostroić dodatkowymi parametrami (&ttsTypes, &ttsRate, &ttsVoice).",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Nowe osiągnięcia 🏆 — prestiż, pojedynki, kasyno",
     items: [
       "Doszło 7 nowych achievementów (jest ich teraz 60): za zdobycie gwiazdek prestiżu ✦, wygrane pojedynki !duel oraz granie w kasynie GT.",
