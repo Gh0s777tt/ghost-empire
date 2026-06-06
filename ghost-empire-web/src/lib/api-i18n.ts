@@ -1,0 +1,103 @@
+// src/lib/api-i18n.ts
+// Locale-aware API error responses, boundary-translation style.
+//
+// Player-facing route handlers return Polish error messages. This helper turns
+// those into a `{ error }` JSON response, translating the message to English when
+// the request locale is English. Locale comes from the `NEXT_LOCALE` cookie that
+// next-intl's middleware sets on document navigations — the browser sends it on
+// same-origin /api/* fetches even though /api is outside the locale routing.
+//
+// Translation is a plain PL->EN dictionary keyed by the exact Polish string.
+// Anything not listed (server-only messages, interpolated ones like
+// `Wymagany Level 5`) falls back to the original Polish — never an error, just
+// untranslated. The Discord bot / cron callers have no cookie -> always Polish.
+//
+// Deliberately NOT covered (separate follow-up): admin/bot/webhook/internal
+// endpoints, and interpolated messages.
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+
+const EN: Record<string, string> = {
+  // Shared
+  "Musisz być zalogowany": "You must be logged in",
+  "Nieprawidłowe dane": "Invalid request",
+  "Błąd serwera": "Server error",
+  "Za szybko. Spróbuj za chwilę.": "Too fast. Try again in a moment.",
+  "Zbyt wiele żądań. Spróbuj ponownie za chwilę.": "Too many requests. Try again in a moment.",
+  "Za dużo prób. Poczekaj chwilę.": "Too many attempts. Please wait a moment.",
+  "Za mało Ghost Tokens": "Not enough Ghost Tokens",
+
+  // Shop
+  "Brak itemId": "Missing item id",
+  "Item nie istnieje": "Item does not exist",
+  "Item niedostępny": "Item unavailable",
+  "Brak na stanie": "Out of stock",
+  "Brak usera": "User not found",
+  "Wymagany Dual Supporter (sub na 2 platformach)": "Dual Supporter required (sub on 2 platforms)",
+
+  // Drop codes
+  "Brak kodu": "No code provided",
+  "Kod: 3-24 znaków A-Z, 0-9, _, -": "Code: 3-24 chars A-Z, 0-9, _, -",
+  "Kod nie istnieje": "Code does not exist",
+  "Kod nieaktywny": "Code inactive",
+  "Kod wygasł": "Code expired",
+  "Już odebrałeś ten kod": "You already claimed this code",
+
+  // Polls
+  "Brak pollId / optionIndex": "Missing pollId / optionIndex",
+  "Ankieta nie istnieje": "Poll does not exist",
+  "Ankieta jest zamknięta": "Poll is closed",
+  "Nieprawidłowa opcja": "Invalid option",
+
+  // Events
+  "Brak eventId": "Missing event id",
+  "Event nie istnieje": "Event does not exist",
+  "Event nieaktywny": "Event inactive",
+  "Event się zakończył": "Event has ended",
+  "Tego eventu nie da się joinować": "This event can't be joined",
+  "Już dołączyłeś do tego eventu": "You already joined this event",
+  "Liczba biletów musi być 1-100": "Ticket count must be 1-100",
+  "To nie jest raffle": "This is not a raffle",
+  "Bilet nie ma ceny": "Ticket has no price",
+
+  // Predictions (wager)
+  "Wymagane: optionIndex (number) + tokensWagered (number)": "Required: optionIndex (number) + tokensWagered (number)",
+  "Niepoprawna opcja": "Invalid option",
+  "Zakład nie istnieje": "Prediction does not exist",
+  "Zakład jest już zamknięty": "Prediction is already closed",
+  "Czas obstawiania minął": "Betting is closed",
+  "Opcja poza zakresem": "Option out of range",
+  "Już obstawiłeś ten zakład": "You already bet on this prediction",
+
+  // GT games (casino)
+  "Nieznana gra": "Unknown game",
+  "Wybierz: red / black / liczba 0-36": "Choose: red / black / number 0-36",
+
+  // Battle Pass / seasons
+  "Brak rewardId": "Missing reward id",
+  "Nagroda nie istnieje": "Reward does not exist",
+  "Brak progresu w tym sezonie": "No progress this season",
+  "Ta nagroda wymaga Premium Pass": "This reward requires the Premium Pass",
+  "Już odebrane": "Already claimed",
+
+  // Wheel of Fortune
+  "Koło Fortuny jest aktualnie wyłączone": "The Wheel of Fortune is currently disabled",
+  "Koło nie jest skonfigurowane": "The wheel is not configured",
+  "Za mało Ghost Tokens na zakręcenie": "Not enough Ghost Tokens to spin",
+};
+
+async function localizeError(message: string): Promise<string> {
+  const store = await cookies();
+  if (store.get("NEXT_LOCALE")?.value !== "en") return message;
+  return EN[message] ?? message;
+}
+
+/**
+ * Build a localized `{ error }` JSON response. Drop-in for
+ * `NextResponse.json({ error: msg }, { status })` in player-facing routes —
+ * pass rate-limit headers as the optional third arg.
+ */
+export async function jsonError(message: string, status: number, headers?: HeadersInit) {
+  const error = await localizeError(message);
+  return NextResponse.json({ error }, headers ? { status, headers } : { status });
+}

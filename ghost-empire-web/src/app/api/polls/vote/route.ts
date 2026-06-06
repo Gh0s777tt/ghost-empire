@@ -2,37 +2,38 @@
 // Logged-in user casts (or changes) their vote in an open poll. One vote per user.
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
+    return jsonError("Musisz być zalogowany", 401);
   }
 
   let body: { pollId?: string; optionIndex?: number };
   try { body = await req.json(); } catch {
-    return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
+    return jsonError("Nieprawidłowe dane", 400);
   }
 
   const pollId = String(body.pollId ?? "");
   const optionIndex = Math.floor(Number(body.optionIndex));
   if (!pollId || !Number.isFinite(optionIndex)) {
-    return NextResponse.json({ error: "Brak pollId / optionIndex" }, { status: 400 });
+    return jsonError("Brak pollId / optionIndex", 400);
   }
 
   const userId = session.user.id;
   const rl = await rateLimit(`poll:vote:${userId}`, 30, 60_000);
   if (!rl.allowed) {
-    return NextResponse.json({ error: "Za szybko. Spróbuj za chwilę." }, { status: 429, headers: rateLimitHeaders(rl) });
+    return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
   }
 
   const poll = await prisma.poll.findUnique({ where: { id: pollId } });
-  if (!poll) return NextResponse.json({ error: "Ankieta nie istnieje" }, { status: 404 });
-  if (poll.status !== "open") return NextResponse.json({ error: "Ankieta jest zamknięta" }, { status: 409 });
+  if (!poll) return jsonError("Ankieta nie istnieje", 404);
+  if (poll.status !== "open") return jsonError("Ankieta jest zamknięta", 409);
   if (optionIndex < 0 || optionIndex >= poll.options.length) {
-    return NextResponse.json({ error: "Nieprawidłowa opcja" }, { status: 400 });
+    return jsonError("Nieprawidłowa opcja", 400);
   }
 
   await prisma.pollVote.upsert({

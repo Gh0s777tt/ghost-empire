@@ -1,6 +1,7 @@
 // src/app/api/shop/buy/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -13,19 +14,19 @@ const TIER_RANK: Record<string, number> = { T1: 1, T2: 2, T3: 3, Prime: 1 };
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
+    return jsonError("Musisz być zalogowany", 401);
   }
 
   let body: { itemId?: string };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
+    return jsonError("Nieprawidłowe dane", 400);
   }
 
   const itemId = body.itemId;
   if (!itemId || typeof itemId !== "string") {
-    return NextResponse.json({ error: "Brak itemId" }, { status: 400 });
+    return jsonError("Brak itemId", 400);
   }
 
   const userId = session.user.id;
@@ -33,10 +34,7 @@ export async function POST(req: Request) {
   // Max 10 buys per minute (prevents scripted abuse / double-clicks)
   const rl = await rateLimit(`shop:buy:${userId}`, 10, 60_000);
   if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Za szybko. Spróbuj za chwilę." },
-      { status: 429, headers: rateLimitHeaders(rl) },
-    );
+    return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
   }
 
   try {
@@ -194,10 +192,10 @@ export async function POST(req: Request) {
     return NextResponse.json(publicResult);
   } catch (e) {
     if (e instanceof ShopError) {
-      return NextResponse.json({ error: e.message }, { status: e.status });
+      return jsonError(e.message, e.status);
     }
     console.error("shop/buy error:", e);
-    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
+    return jsonError("Błąd serwera", 500);
   }
 }
 

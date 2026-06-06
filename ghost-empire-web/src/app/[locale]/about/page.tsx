@@ -19,6 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 const CHANGELOG = [
   {
+    date: "2026-06-07",
+    title: "Błędy w grach i akcjach po angielsku 🌍",
+    items: [
+      "Komunikaty błędów w akcjach (sklep, drop kody, sezony, predykcje, eventy, kasyno, koło fortuny, ankiety) pokazują się teraz po angielsku, gdy grasz w wersji EN. (Ten dziennik zmian zostaje po polsku.)",
+    ],
+  },
+  {
     date: "2026-06-06",
     title: "Daty po angielsku 🌍",
     items: [
