@@ -5,12 +5,17 @@ import { Header } from "@/components/Header";
 import { Calendar, Clock } from "lucide-react";
 import { ScheduleClient } from "@/components/schedule/ScheduleClient";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Plan streamów",
-  description: "Tygodniowy plan streamów Gh0s77tt — Twitch + Kick.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "schedule" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/schedule", locale) };
+}
 
 const DAYS_PL = ["niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"];
 

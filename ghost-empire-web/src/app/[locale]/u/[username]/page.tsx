@@ -2,6 +2,7 @@
 // Public profile — visible to anyone (no auth required). Shows only public stats.
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
@@ -63,6 +64,7 @@ export async function generateMetadata({
   return {
     title: name,
     description: user.bio ?? t("metaDesc", { name }),
+    alternates: localeAlternates(`/u/${username}`, locale),
   };
 }
 

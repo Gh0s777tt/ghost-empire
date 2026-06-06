@@ -5,12 +5,17 @@ import { Header } from "@/components/Header";
 import { PredictionsClient } from "@/components/predictions/PredictionsClient";
 import { lockExpiredPredictions } from "@/lib/predictions";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Predictions",
-  description: "Obstawiaj wydarzenia streamowe za Ghost Tokens — wygrywający dzielą się pulą.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "predictions" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/predictions", locale) };
+}
 
 export default async function PredictionsPage() {
   const session = await auth();

@@ -6,12 +6,17 @@ import { DropRedeemBox } from "@/components/drops/DropRedeemBox";
 import { Gift, Trophy, Clock, Sparkles } from "lucide-react";
 import { fmt, formatDate, timeAgo } from "@/lib/utils";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Drop codes",
-  description: "Wpisuj sekretne kody z live'a — zgarniaj Ghost Tokens. Pierwszy łapie bonus.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "drops" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/drops", locale) };
+}
 
 export default async function DropsPage() {
   const session = await auth();

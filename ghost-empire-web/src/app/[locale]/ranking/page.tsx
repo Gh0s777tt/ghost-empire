@@ -5,12 +5,17 @@ import { Header } from "@/components/Header";
 import { RankingClient } from "@/components/ranking/RankingClient";
 import { getCachedRanking } from "@/lib/cached";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Ranking",
-  description: "Najlepsi członkowie Ghost Empire — top tokeny, level, streak.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "ranking" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/ranking", locale) };
+}
 
 const VALID_SORTS = ["tokens", "totalEarned", "level", "streak"] as const;
 type Sort = (typeof VALID_SORTS)[number];

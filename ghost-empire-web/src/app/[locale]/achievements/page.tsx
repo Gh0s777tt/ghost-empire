@@ -5,12 +5,17 @@ import { Header } from "@/components/Header";
 import { AchievementsClient } from "@/components/achievements/AchievementsClient";
 import { getCachedAchievementsMeta } from "@/lib/cached";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Osiągnięcia",
-  description: "Wszystkie 22 osiągnięcia Ghost Empire — common, rare, epic, legendary.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "achievements" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/achievements", locale) };
+}
 
 export default async function AchievementsPage() {
   const session = await auth();

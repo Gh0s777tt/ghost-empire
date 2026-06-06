@@ -2,6 +2,7 @@
 // Polityka prywatności — wymóg RODO przy zbieraniu danych osobowych przez OAuth
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { Header } from "@/components/Header";
 import { Shield } from "lucide-react";
@@ -9,7 +10,7 @@ import { Shield } from "lucide-react";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "privacy" });
-  return { title: t("metaTitle"), description: t("metaDesc") };
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/privacy", locale) };
 }
 
 const S2B = ["s2b1", "s2b2", "s2b3", "s2b4", "s2b5", "s2b6"];

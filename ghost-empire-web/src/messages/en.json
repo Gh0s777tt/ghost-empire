@@ -41,6 +41,7 @@
     "switchTo": "Switch language to Polish"
   },
   "home": {
+    "metaDesc": "The official GH0ST EMPIRE community hub. Earn Ghost Tokens, redeem rewards and climb the ranking.",
     "dailyQuests": "DAILY QUESTS",
     "resetMidnight": "RESET: MIDNIGHT",
     "loadingTasks": "Loading tasks…",
@@ -73,6 +74,8 @@
     "watch": "Watch"
   },
   "shop": {
+    "metaTitle": "Shop",
+    "metaDesc": "Spend Ghost Tokens on Steam keys, CS2 skins, gifted subs and more.",
     "title": "SHOP",
     "subtitle": "Exchange Ghost Tokens for keys, skins, subs and rewards you won't find anywhere else.",
     "perk": "Shop perk",
@@ -187,6 +190,8 @@
     "learnMore": "Learn more about Ghost Empire"
   },
   "predictions": {
+    "metaTitle": "Predictions",
+    "metaDesc": "Bet Ghost Tokens on stream events — winners split the pool.",
     "subtitle": "Bet on stream events with Ghost Tokens. The winning option splits <b>the entire pot</b> (including losers' stakes) proportionally to the GT wagered.",
     "balance": "Your balance:",
     "loginPrompt": "Sign in to place bets.",
@@ -211,6 +216,8 @@
     "you": "You:"
   },
   "drops": {
+    "metaTitle": "Drop codes",
+    "metaDesc": "Enter secret codes from the live stream to grab Ghost Tokens — first to claim gets a bonus.",
     "loginPrompt": "Sign in to enter drop codes during the stream.",
     "login": "Sign in",
     "hint": "Enter the code Ghost drops in chat during the stream. First to grab it gets a bonus!",
@@ -223,6 +230,8 @@
     "bonusGone": "Bonuses have already been claimed by others 🐢"
   },
   "seasons": {
+    "metaTitle": "Battle Pass",
+    "metaDesc": "Earn seasonal XP through activity and unlock rewards across tiers.",
     "daysLeft": "{days, plural, one {# day} other {# days}} left",
     "loginPrompt": "Sign in to earn seasonal XP and claim rewards.",
     "login": "Sign in",
@@ -238,6 +247,8 @@
     "claimedItem": "Claimed: {label}"
   },
   "schedule": {
+    "metaTitle": "Stream schedule",
+    "metaDesc": "Gh0s77tt's weekly stream schedule — Twitch + Kick.",
     "daysFull": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     "daysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
@@ -263,6 +274,8 @@
     "footnote": "The schedule may change — check Discord for the latest info"
   },
   "quests": {
+    "metaTitle": "Daily Quests",
+    "metaDesc": "Daily tasks in Ghost Empire — complete them and claim your rewards.",
     "title": "DAILY QUESTS",
     "subtitle": "3 tasks every day. Complete them, claim, grab Ghost Tokens.",
     "resetIn": "Reset in",
@@ -462,6 +475,8 @@
     "s9p": "We publish changes on this page. Major changes are announced on Discord. Using the Portal after changes take effect means accepting them."
   },
   "achievements": {
+    "metaTitle": "Achievements",
+    "metaDesc": "Every Ghost Empire achievement — common, rare, epic and legendary.",
     "title": "ACHIEVEMENTS",
     "progressNote": "Your progress: {earned} of {total} earned ({pct}%)",
     "galleryNote": "Full gallery of {count} achievements. Sign in to track your progress.",
@@ -491,6 +506,8 @@
     "trgManual": "Manual"
   },
   "ranking": {
+    "metaTitle": "Ranking",
+    "metaDesc": "The top Ghost Empire members — leading tokens, level and streak.",
     "subtitle": "The top members of Ghost Empire. Re-sort by metric.",
     "rankedLabel": "Ranked",
     "emptyTitle": "Empty ranking",
@@ -537,6 +554,8 @@
     "admFullAdmin": "→ Full admin"
   },
   "events": {
+    "metaTitle": "Events",
+    "metaDesc": "Giveaways, raffles, happy hours and contests in Ghost Empire.",
     "title": "EVENTS",
     "subtitle": "Current giveaways, raffles, happy hours and contests. Take part, win prizes.",
     "emptyTitle": "No active events",

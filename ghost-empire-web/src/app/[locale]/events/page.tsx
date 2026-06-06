@@ -4,12 +4,17 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { EventsClient } from "@/components/events/EventsClient";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Eventy",
-  description: "Giveawaye, raffle, happy hours i konkursy w Ghost Empire.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "events" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/events", locale) };
+}
 
 export default async function EventsPage() {
   const session = await auth();
