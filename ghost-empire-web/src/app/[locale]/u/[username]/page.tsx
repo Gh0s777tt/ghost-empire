@@ -1,6 +1,7 @@
 // src/app/u/[username]/page.tsx
 // Public profile — visible to anyone (no auth required). Shows only public stats.
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
@@ -10,7 +11,7 @@ import {
 } from "lucide-react";
 import type { ComponentType, CSSProperties } from "react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP } from "@/lib/economy";
 
@@ -49,17 +50,19 @@ const SOCIAL_COLORS: Record<string, string> = {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ username: string }>;
+  params: Promise<{ username: string; locale: string }>;
 }) {
-  const { username } = await params;
+  const { username, locale } = await params;
+  const t = await getTranslations({ locale, namespace: "userProfile" });
   const user = await prisma.user.findUnique({
     where: { username },
     select: { displayName: true, username: true, bio: true },
   });
-  if (!user) return { title: "Nie znaleziono" };
+  if (!user) return { title: t("notFound") };
+  const name = displayNick(user.displayName, user.username);
   return {
-    title: displayNick(user.displayName, user.username),
-    description: user.bio ?? `Profil ${displayNick(user.displayName, user.username)} w Ghost Empire`,
+    title: name,
+    description: user.bio ?? t("metaDesc", { name }),
   };
 }
 
@@ -69,6 +72,7 @@ export default async function PublicProfilePage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
+  const t = await getTranslations("userProfile");
   const session = await auth();
   const isOwnProfile = session?.user?.username === username;
 
@@ -235,13 +239,13 @@ export default async function PublicProfilePage({
                   {user.prestige > 0 && (
                     <span
                       className="text-[10px] font-bold tracking-widest uppercase border border-amber-600/60 bg-amber-950/30 text-amber-300 px-1.5 py-0.5"
-                      title={`Prestiż ${user.prestige} — Phantom Ascension`}
+                      title={t("prestigeTooltip", { n: user.prestige })}
                     >
                       ✦ {user.prestige}
                     </span>
                   )}
                   <span>·</span>
-                  <span>Od {formatDate(user.createdAt)}</span>
+                  <span>{t("since", { date: formatDate(user.createdAt) })}</span>
                 </div>
                 {user.bio && (
                   <p className="text-zinc-400 text-sm mb-4 italic">"{user.bio}"</p>
@@ -250,7 +254,7 @@ export default async function PublicProfilePage({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
                     <span className="text-zinc-500">
-                      {atMax ? `XP do prestiżu ✦${user.prestige + 1}` : `XP do LVL ${user.level + 1}`}
+                      {atMax ? t("xpToPrestige", { n: user.prestige + 1 }) : t("xpToLevel", { n: user.level + 1 })}
                     </span>
                     <span className="text-white">
                       {atMax ? `${fmt(prestigeProgress)} / ${fmt(PRESTIGE_XP)}` : `${fmt(xpCurrent)} / 500`}
@@ -269,8 +273,8 @@ export default async function PublicProfilePage({
                   </div>
                   <p className="text-[10px] text-zinc-600 font-mono">
                     {atMax
-                      ? `Łącznie ${fmt(user.xp)} XP · max LVL — XP buduje prestiż ✦`
-                      : `Łącznie ${fmt(user.xp)} XP / ${fmt(xpForLevel(100))} XP do max LVL`}
+                      ? t("xpTotalMax", { xp: fmt(user.xp) })
+                      : t("xpTotal", { xp: fmt(user.xp), max: fmt(xpForLevel(100)) })}
                   </p>
                 </div>
               </div>
@@ -280,7 +284,7 @@ export default async function PublicProfilePage({
                   href="/profile"
                   className="px-3 py-2 border border-red-700 hover:border-red-500 text-red-400 hover:text-red-300 text-[10px] font-bold tracking-widest uppercase shrink-0"
                 >
-                  → Twój panel
+                  {t("ownPanel")}
                 </Link>
               )}
             </div>
@@ -288,10 +292,10 @@ export default async function PublicProfilePage({
 
           {/* Public stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatTile label="Lifetime GT" value={fmt(user.totalEarned)} emoji="📈" />
-            <StatTile label="Streak" value={`${user.streak} ${user.streak === 1 ? "dzień" : "dni"}`} emoji="🔥" />
-            <StatTile label="Wiadomości" value={fmt(user.messageCount)} emoji="💬" />
-            <StatTile label="Voice" value={`${fmt(user.voiceMinutes)} min`} emoji="🎤" />
+            <StatTile label={t("statLifetime")} value={fmt(user.totalEarned)} emoji="📈" />
+            <StatTile label={t("statStreak")} value={`${user.streak} ${t("streakUnit", { count: user.streak })}`} emoji="🔥" />
+            <StatTile label={t("statMessages")} value={fmt(user.messageCount)} emoji="💬" />
+            <StatTile label={t("statVoice")} value={`${fmt(user.voiceMinutes)} min`} emoji="🎤" />
           </div>
 
           {/* Ranking positions */}
@@ -304,12 +308,12 @@ export default async function PublicProfilePage({
           >
             <div className="flex items-center gap-2 mb-3">
               <Trophy className="w-4 h-4 text-red-500" />
-              <h2 className="font-display text-base text-white tracking-wider">POZYCJA W RANKINGU</h2>
+              <h2 className="font-display text-base text-white tracking-wider">{t("rankingPosition")}</h2>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <RankPosition label="Lifetime GT" position={aheadByEarned + 1} hrefSort="totalEarned" />
-              <RankPosition label="Level" position={aheadByLevel + 1} hrefSort="level" />
-              <RankPosition label="Streak" position={aheadByStreak + 1} hrefSort="streak" />
+              <RankPosition label={t("statLifetime")} position={aheadByEarned + 1} hrefSort="totalEarned" />
+              <RankPosition label={t("rankLevel")} position={aheadByLevel + 1} hrefSort="level" />
+              <RankPosition label={t("statStreak")} position={aheadByStreak + 1} hrefSort="streak" />
             </div>
           </div>
 
@@ -324,10 +328,10 @@ export default async function PublicProfilePage({
             >
               <div className="flex items-center gap-2 mb-3">
                 <LinkIcon className="w-4 h-4 text-red-500" />
-                <h2 className="font-display text-base text-white tracking-wider">PLATFORMY</h2>
+                <h2 className="font-display text-base text-white tracking-wider">{t("platforms")}</h2>
               </div>
               {connections.length === 0 ? (
-                <p className="text-zinc-500 text-sm">Brak połączeń.</p>
+                <p className="text-zinc-500 text-sm">{t("noConnections")}</p>
               ) : (
                 <div className="space-y-2">
                   {connections.map((c) => {
@@ -358,7 +362,7 @@ export default async function PublicProfilePage({
                                 className="text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5"
                                 style={{ background: meta.color + "30", color: meta.color, border: `1px solid ${meta.color}` }}
                               >
-                                SUB {c.subTier ?? "?"} · {c.subMonths}mc
+                                {t("subLabel", { tier: c.subTier ?? "?", months: c.subMonths })}
                               </span>
                             )}
                           </div>
@@ -381,10 +385,10 @@ export default async function PublicProfilePage({
             >
               <div className="flex items-center gap-2 mb-3">
                 <Globe className="w-4 h-4 text-red-500" />
-                <h2 className="font-display text-base text-white tracking-wider">SOCIAL LINKI</h2>
+                <h2 className="font-display text-base text-white tracking-wider">{t("social")}</h2>
               </div>
               {socialLinks.length === 0 ? (
-                <p className="text-zinc-500 text-sm">{isOwnProfile ? "Brak — dodaj na /profile" : "User nie podał social linków."}</p>
+                <p className="text-zinc-500 text-sm">{isOwnProfile ? t("socialEmptyOwn") : t("socialEmptyOther")}</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {socialLinks.map((l) => {
@@ -421,17 +425,17 @@ export default async function PublicProfilePage({
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 text-red-500" />
-                <h2 className="font-display text-base text-white tracking-wider">OSIĄGNIĘCIA</h2>
+                <h2 className="font-display text-base text-white tracking-wider">{t("achievements")}</h2>
               </div>
               <Link
                 href="/achievements"
                 className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 hover:text-red-400"
               >
-                Wszystkie →
+                {t("seeAll")}
               </Link>
             </div>
             {earnedAchievements.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Brak zdobytych osiągnięć.</p>
+              <p className="text-zinc-500 text-sm">{t("noAchievements")}</p>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {earnedAchievements.map((ua) => {
@@ -452,7 +456,7 @@ export default async function PublicProfilePage({
               </div>
             )}
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mt-3 text-center">
-              {earnedAchievements.length} osiągnięć zdobytych
+              {t("achievementsCount", { count: earnedAchievements.length })}
             </div>
           </div>
         </div>

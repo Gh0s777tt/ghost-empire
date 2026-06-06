@@ -582,5 +582,33 @@
     "buyQty": "Kup {qty}",
     "limitRemaining": "Limit: {count} pozostało",
     "cost": "Koszt: {cost} GT"
+  },
+  "userProfile": {
+    "notFound": "Nie znaleziono",
+    "metaDesc": "Profil {name} w Ghost Empire",
+    "prestigeTooltip": "Prestiż {n} — Phantom Ascension",
+    "since": "Od {date}",
+    "xpToPrestige": "XP do prestiżu ✦{n}",
+    "xpToLevel": "XP do LVL {n}",
+    "xpTotalMax": "Łącznie {xp} XP · max LVL — XP buduje prestiż ✦",
+    "xpTotal": "Łącznie {xp} XP / {max} XP do max LVL",
+    "ownPanel": "→ Twój panel",
+    "statLifetime": "Lifetime GT",
+    "statStreak": "Streak",
+    "statMessages": "Wiadomości",
+    "statVoice": "Voice",
+    "streakUnit": "{count, plural, one {dzień} few {dni} many {dni} other {dni}}",
+    "rankingPosition": "POZYCJA W RANKINGU",
+    "rankLevel": "Level",
+    "platforms": "PLATFORMY",
+    "noConnections": "Brak połączeń.",
+    "subLabel": "SUB {tier} · {months}mc",
+    "social": "SOCIAL LINKI",
+    "socialEmptyOwn": "Brak — dodaj na /profile",
+    "socialEmptyOther": "User nie podał social linków.",
+    "achievements": "OSIĄGNIĘCIA",
+    "seeAll": "Wszystkie →",
+    "noAchievements": "Brak zdobytych osiągnięć.",
+    "achievementsCount": "{count} osiągnięć zdobytych"
   }
 }
