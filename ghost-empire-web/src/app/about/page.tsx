@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Czytelniejszy panel integracji 🔌",
+    items: [
+      "W panelu admina integracje (AI, Sentry, OBS) są teraz zwijane: widzisz status (skonfigurowane / brak), a po kliknięciu rozwijają się pola do edycji — koniec ze ścianą pól naraz.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Discord przeniesiony do E-Bota 💬",
     items: [
       "Naszym Discordem zajmuje się teraz osobny bot — E-Bot — a Empire Bot skupia się na streamie (Twitch/Kick/YouTube/Rumble).",
