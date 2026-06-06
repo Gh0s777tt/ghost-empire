@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Changed
+
+- **Helper `auth:youtube` — konfigurowalny port redirectu** — `scripts/auth-youtube.ts` czyta teraz `YT_AUTH_REDIRECT` (fallback `http://localhost:3000`), więc gdy domyślny port jest zajęty (np. inny lokalny dev-server), re-auth YouTube można odpalić na innym porcie bez edycji kodu. Bez wpływu na produkcję.
+
 ### Added
 
 - **Rekord pojedynków na profilu** **(#176)** — profil pokazuje teraz kafelek **„Pojedynki" (W·L + winrate)** liczony z modelu `Duel` (rozstrzygnięte walki, w których brałeś udział) — dopełnienie `!duel` z #175, które wyszło chat-only. Kafelek pojawia się dopiero po pierwszym pojedynku (bez zaśmiecania profilu zerami). Dwa indeksowane `count` dołożone do równoległego `Promise.all` strony profilu. *Przy okazji: notka „code-split AdminClient do zrobienia" w PLAN była nieaktualna — panel admina jest już w pełni lazy-loadowany (`next/dynamic` per sekcja w `AdminClient.tsx`); skorygowane.* Zielone: `tsc` / `next build` / 135 testów.
