@@ -208,5 +208,32 @@
     "alreadyWagered": "You wagered <b>{gt} GT</b> on option #{n}. Wait for the resolution.",
     "winningOption": "Winning option:",
     "you": "You:"
+  },
+  "drops": {
+    "loginPrompt": "Sign in to enter drop codes during the stream.",
+    "login": "Sign in",
+    "hint": "Enter the code Ghost drops in chat during the stream. First to grab it gets a bonus!",
+    "footer": "Each code = 1× claim. Bonus for the first N people.",
+    "bonus": "BONUS!",
+    "success": "Success!",
+    "code": "Code",
+    "breakdown": "Regular {reward} + bonus {bonus}",
+    "balance": "Balance:",
+    "bonusGone": "Bonuses have already been claimed by others 🐢"
+  },
+  "seasons": {
+    "daysLeft": "{days, plural, one {# day} other {# days}} left",
+    "loginPrompt": "Sign in to earn seasonal XP and claim rewards.",
+    "login": "Sign in",
+    "yourTier": "Your tier",
+    "xpToTier": "{cur} / {max} XP to tier {next}",
+    "earnHint": "💡 Earn XP for activity: chat, voice, subs, donations, bits, drops, events, purchases.",
+    "rewardsTitle": "Rewards ({count})",
+    "noRewards": "This season's rewards haven't been configured yet.",
+    "claimed": "Claimed",
+    "claim": "Claim",
+    "err": "Error",
+    "claimedTokens": "+{tokens} GT — {label}",
+    "claimedItem": "Claimed: {label}"
   }
 }

@@ -3,6 +3,7 @@
 import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Gift, Sparkles, Loader2, Check, X, Zap } from "lucide-react";
 import { fmt, cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export function DropRedeemBox({
   variant?: "full" | "compact";
   isAuthenticated: boolean;
 }) {
+  const t = useTranslations("drops");
   const router = useRouter();
   const { update: refreshSession } = useSession();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,13 +78,13 @@ export function DropRedeemBox({
       >
         <Gift className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
         <p className="text-zinc-400 text-sm mb-3">
-          Zaloguj się żeby wpisywać drop codes podczas streama.
+          {t("loginPrompt")}
         </p>
         <button
           onClick={() => signIn()}
           className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase"
         >
-          Zaloguj
+          {t("login")}
         </button>
       </div>
     );
@@ -108,7 +110,7 @@ export function DropRedeemBox({
       </div>
       {variant === "full" && (
         <p className="text-zinc-400 text-xs mb-4">
-          Wpisz kod który Ghost wrzucił na czat podczas streama. Pierwszy łapie bonus!
+          {t("hint")}
         </p>
       )}
 
@@ -145,7 +147,7 @@ export function DropRedeemBox({
       {variant === "full" && !lastResult && (
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 flex items-center gap-1.5">
           <Sparkles className="w-3 h-3" />
-          <span>Każdy kod = 1× claim. Bonus dla pierwszych N osób.</span>
+          <span>{t("footer")}</span>
         </div>
       )}
     </div>
@@ -153,6 +155,7 @@ export function DropRedeemBox({
 }
 
 function ResultMessage({ result }: { result: RedeemResult }) {
+  const t = useTranslations("drops");
   if ("error" in result) {
     return (
       <div className="border border-red-700 bg-red-950/40 px-3 py-2 flex items-start gap-2">
@@ -178,23 +181,23 @@ function ResultMessage({ result }: { result: RedeemResult }) {
         <div className="flex items-center gap-2">
           <Check className={cn("w-4 h-4 shrink-0", result.gotBonus ? "text-yellow-400" : "text-green-400")} />
           <span className={cn("font-bold text-sm", result.gotBonus ? "text-yellow-200" : "text-green-200")}>
-            {result.gotBonus ? "BONUS!" : "Sukces!"} +{fmt(result.totalReward)} GT
+            {result.gotBonus ? t("bonus") : t("success")} +{fmt(result.totalReward)} GT
           </span>
         </div>
         <div className="text-xs text-zinc-400 mt-0.5">
-          Kod <span className="font-mono text-white">{result.code}</span>
+          {t("code")} <span className="font-mono text-white">{result.code}</span>
           {result.gotBonus && (
             <>
               {" · "}
-              Regular {fmt(result.reward)} + bonus {fmt(result.bonusReward)}
+              {t("breakdown", { reward: fmt(result.reward), bonus: fmt(result.bonusReward) })}
             </>
           )}
           {" · "}
-          Balans: <span className="text-white font-mono">{fmt(result.newBalance)} GT</span>
+          {t("balance")} <span className="text-white font-mono">{fmt(result.newBalance)} GT</span>
         </div>
         {!result.gotBonus && result.bonusSlotsLeft === 0 && (
           <div className="text-[10px] text-zinc-500 mt-1">
-            Bonus zostały już rozdane innym 🐢
+            {t("bonusGone")}
           </div>
         )}
       </div>
