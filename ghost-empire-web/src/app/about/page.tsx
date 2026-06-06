@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Szybsze widżety na żywo (cache) ⚡",
+    items: [
+      "Widżety OBS (np. licznik widzów) korzystają teraz ze współdzielonego cache (Redis) — mniej zapytań do platform, sprawniejsze odświeżanie i mniejsze ryzyko limitów.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Szybszy, nowocześniejszy silnik ⚡",
     items: [
       "Portal przeszedł na React Compiler (automatyczne optymalizacje renderowania) i szybszy build (Turbopack) — płynniej i sprawniej, bez zmian w wyglądzie.",
