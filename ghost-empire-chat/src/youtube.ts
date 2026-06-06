@@ -70,7 +70,10 @@ async function api(path: string, init: RequestInit = {}, retry = true): Promise<
 
 // --- discovery: find the channel's active broadcast + its liveChatId (cheap, owner-only) ---
 async function discover(): Promise<void> {
-  const res = await api("liveBroadcasts?part=snippet&broadcastStatus=active&broadcastType=all&mine=true");
+  // NB: liveBroadcasts.list filters are mutually exclusive — `broadcastStatus` and `mine`
+  // together return 400 incompatibleParameters. `broadcastStatus=active` already scopes to
+  // the authenticated channel's active broadcasts, so `mine=true` must NOT be added.
+  const res = await api("liveBroadcasts?part=snippet&broadcastStatus=active&broadcastType=all");
   if (!res) return;
   if (!res.ok) {
     console.warn(`[youtube] broadcasts ${res.status}`);

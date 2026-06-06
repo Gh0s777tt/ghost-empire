@@ -11,6 +11,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 - **Helper `auth:youtube` — konfigurowalny port redirectu** — `scripts/auth-youtube.ts` czyta teraz `YT_AUTH_REDIRECT` (fallback `http://localhost:3000`), więc gdy domyślny port jest zajęty (np. inny lokalny dev-server), re-auth YouTube można odpalić na innym porcie bez edycji kodu. Bez wpływu na produkcję.
 
+### Fixed
+
+- **Bot YouTube — naprawiona detekcja transmisji na żywo** — `youtube.ts` łączył w zapytaniu `liveBroadcasts.list` parametry `broadcastStatus=active` **i** `mine=true`, które YouTube API odrzuca jako wzajemnie wykluczające (`400 incompatibleParameters`) — przez co bot **nigdy nie wykrywał transmisji** i nie wchodził na czat YouTube (po stronie czatu nic nie działało: brak GT/min, komend, moderacji). `broadcastStatus=active` samodzielnie scope'uje do kanału zalogowanego konta → usunięto `mine=true`. Zweryfikowane na żywym tokenie (200 OK, kanał `Gh0stt77`). Bot `tsc` zielony.
+
 ### Added
 
 - **Rekord pojedynków na profilu** **(#176)** — profil pokazuje teraz kafelek **„Pojedynki" (W·L + winrate)** liczony z modelu `Duel` (rozstrzygnięte walki, w których brałeś udział) — dopełnienie `!duel` z #175, które wyszło chat-only. Kafelek pojawia się dopiero po pierwszym pojedynku (bez zaśmiecania profilu zerami). Dwa indeksowane `count` dołożone do równoległego `Promise.all` strony profilu. *Przy okazji: notka „code-split AdminClient do zrobienia" w PLAN była nieaktualna — panel admina jest już w pełni lazy-loadowany (`next/dynamic` per sekcja w `AdminClient.tsx`); skorygowane.* Zielone: `tsc` / `next build` / 135 testów.
