@@ -13,7 +13,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 ### Rdzeń (R)
 | Zmienna | Po co | Skąd |
 |---|---|---|
-| `NEXTAUTH_SECRET` | Podpis sesji NextAuth | `openssl rand -base64 32` |
+| `NEXTAUTH_SECRET` | Podpis sesji. Auth.js v5 czyta `AUTH_SECRET`, a gdy brak — `NEXTAUTH_SECRET`; **zostaw bez zmian** (z niego liczony jest też klucz szyfrowania `crypto.ts`, jeśli nie ma `ENCRYPTION_KEY`). | `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Bazowy URL (OAuth callbacki, sitemap, robots) | np. `https://ghost-empire-web.vercel.app` |
 | `DATABASE_URL` | Postgres (Supabase, **transaction pooler 6543**, `connection_limit=3`) | Supabase → Database → Connection string |
 | `DIRECT_URL` | Postgres bezpośredni (port 5432) — migracje / `db push` | Supabase (Session) |

@@ -1,7 +1,6 @@
 // src/app/about/page.tsx
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import {
   ShoppingBag, Trophy, Calendar, Award,
@@ -481,7 +480,7 @@ const CHANGELOG = [
 ];
 
 export default async function AboutPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const isAuthed = !!session?.user?.id;
 
   return (

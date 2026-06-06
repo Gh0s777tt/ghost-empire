@@ -6,8 +6,7 @@
 // 3. Redirect to NextAuth's signin URL — the signIn callback later reads the
 //    cookie and re-routes the resulting Account to the original user.
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { createLinkToken, LINK_COOKIE_NAME, linkCookieAttrs } from "@/lib/account-linking";
 
 const ALLOWED_PROVIDERS = new Set(["twitch", "kick", "discord", "google"]);
@@ -21,7 +20,7 @@ export async function GET(
     return NextResponse.json({ error: "Unsupported provider" }, { status: 400 });
   }
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     const signInUrl = new URL("/auth/signin", req.url);
     signInUrl.searchParams.set("callbackUrl", `/api/profile/connections/link/${provider}`);

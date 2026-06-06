@@ -1,6 +1,5 @@
 // src/app/events/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { EventsClient } from "@/components/events/EventsClient";
@@ -13,7 +12,7 @@ export const metadata = {
 };
 
 export default async function EventsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const events = await prisma.event.findMany({

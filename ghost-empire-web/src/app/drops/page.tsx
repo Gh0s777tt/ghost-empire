@@ -1,6 +1,5 @@
 // src/app/drops/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { DropRedeemBox } from "@/components/drops/DropRedeemBox";
@@ -15,7 +14,7 @@ export const metadata = {
 };
 
 export default async function DropsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const isAuthenticated = !!session?.user?.id;
 
   let myClaims: Array<{

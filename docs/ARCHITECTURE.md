@@ -8,7 +8,7 @@ Przegląd architektury ekosystemu Ghost Empire: 3 pakiety, jeden wspólny model 
 
 | Pakiet | Co to | Stack | Hosting |
 |---|---|---|---|
-| **`ghost-empire-web`** | Portal + API + panel admina + overlaye OBS | Next.js 15 (App Router), React 18, Prisma 5, NextAuth v4, Tailwind | Vercel |
+| **`ghost-empire-web`** | Portal + API + panel admina + overlaye OBS | Next.js 16 (App Router), React 19, Prisma 7, Auth.js v5 (next-auth 5), Tailwind 4 | Vercel |
 | **`ghost-empire-chat`** | Bot czatu na żywo (Twitch + Kick + YouTube + Rumble) | Node + `tsx` (tmi.js / Pusher WS / YouTube polling) | Docker / VPS 24/7 |
 | **E-Bot** (osobne repo `Gh0s777tt/E-Bot`) | Bot Discord — ekonomia GT (wiadomości/voice) + linkowanie kont. **Zastępuje `ghost-empire-bot`** | Node (discord.js v14, natywne `.mts`) | lokalnie / VPS |
 | ~~`ghost-empire-bot`~~ *(deprecated)* | Dawny bot Discord w monorepo — **wyłączony**, przejęty przez E-Bot. Katalog zostaje jako referencja | Node (discord.js) | — |

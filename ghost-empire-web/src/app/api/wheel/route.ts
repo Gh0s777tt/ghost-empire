@@ -2,8 +2,7 @@
 // Public-ish wheel state for the /wheel page: config (cost + segments), the
 // logged-in user's balance, and a short feed of recent winners.
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getWheelConfig } from "@/lib/wheel";
 import { displayNick } from "@/lib/utils";
@@ -11,7 +10,7 @@ import { displayNick } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const [cfg, session] = await Promise.all([getWheelConfig(), getServerSession(authOptions)]);
+  const [cfg, session] = await Promise.all([getWheelConfig(), auth()]);
 
   let balance: number | null = null;
   if (session?.user?.id) {

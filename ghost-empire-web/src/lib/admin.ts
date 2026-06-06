@@ -1,6 +1,5 @@
 // src/lib/admin.ts
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { ModPermission } from "@/lib/permissions";
 import { hasPermission } from "@/lib/permissions";
@@ -12,7 +11,7 @@ type AuthResult =
 /** Strict admin check — for endpoints that should NEVER be exposed to mods
  *  (e.g. role management — granting admin/mod roles to others). */
 export async function requireAdmin(): Promise<AuthResult> {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, status: 401, error: "Musisz być zalogowany" };
   }
@@ -32,7 +31,7 @@ export async function requireAdmin(): Promise<AuthResult> {
 /** Permission check — passes for admins (implicit grant) and moderators
  *  whose `modPermissions` array contains the requested permission. */
 export async function requirePermission(permission: ModPermission): Promise<AuthResult> {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, status: 401, error: "Musisz być zalogowany" };
   }
@@ -59,7 +58,7 @@ export async function requirePermission(permission: ModPermission): Promise<Auth
  *  permissions (admins always pass). For sections that bundle actions guarded
  *  by different permissions — e.g. the events manager (edit + draw). */
 export async function requireAnyPermission(permissions: ModPermission[]): Promise<AuthResult> {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, status: 401, error: "Musisz być zalogowany" };
   }

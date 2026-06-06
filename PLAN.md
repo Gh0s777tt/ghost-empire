@@ -86,7 +86,7 @@ Moje propozycje (otwarte na Twoje):
 ## 1. Analiza — co JUŻ działa ✅
 
 **Ekonomia & tożsamość**
-- Logowanie Twitch / Discord / Google→YouTube / Kick (NextAuth, łączenie kont, jedno konto = wiele platform).
+- Logowanie Twitch / Discord / Google→YouTube / Kick (Auth.js v5 / next-auth 5, łączenie kont, jedno konto = wiele platform).
 - Ghost Tokens: zarobek z czatu/voice/subów/donacji/questów, wydatki w sklepie/predykcjach/raffle, log transakcji.
 - Role: admin / moderator (z granularnymi `modPermissions`) / donator. Stały admin po e-mailu (przeżywa reset bazy).
 

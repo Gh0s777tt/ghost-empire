@@ -1,6 +1,5 @@
 // src/app/kasyno/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { KasynoClient } from "@/components/kasyno/KasynoClient";
@@ -9,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Kasyno GT", description: "Sloty i coinflip za Ghost Tokens. Graj rozsądnie." };
 
 export default async function KasynoPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   let balance: number | null = null;
   if (session?.user?.id) {
     const u = await prisma.user.findUnique({ where: { id: session.user.id }, select: { tokens: true } });
