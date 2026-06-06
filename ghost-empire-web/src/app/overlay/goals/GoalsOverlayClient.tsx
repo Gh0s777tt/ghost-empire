@@ -1,11 +1,9 @@
 "use client";
 // src/app/overlay/goals/GoalsOverlayClient.tsx
-// Polls /api/alerts/goals every 2s, renders animated progress bars + hype train banner.
-// Visual pieces live in @/components/GoalBar (shared with the /admin#goals preview).
-import { useEffect, useState } from "react";
+// Realtime goals via SSE (/api/overlay/stream/goals) + polling fallback; renders
+// animated progress bars + hype train banner. Visual pieces in @/components/GoalBar.
 import { GoalBar, HypeTrainBanner, type OverlayGoal, type OverlayHypeTrain } from "@/components/GoalBar";
-
-const POLL_INTERVAL_MS = 2000;
+import { useOverlayStream } from "@/lib/use-overlay-stream";
 
 type FeedResponse = {
   accentColor: string;
@@ -14,40 +12,10 @@ type FeedResponse = {
 };
 
 export function GoalsOverlayClient() {
-  const [token, setToken] = useState<string | null>(null);
-  const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
-  const [data, setData] = useState<FeedResponse | null>(null);
+  const { data, status } = useOverlayStream<FeedResponse>({ feed: "goals", intervalMs: 2000 });
 
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const t = url.searchParams.get("token");
-    if (!t) { setAuthStatus("no-token"); return; }
-    setToken(t);
-  }, []);
-
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/alerts/goals?token=${encodeURIComponent(token)}`, { cache: "no-store" });
-        if (cancelled) return;
-        if (res.status === 401) { setAuthStatus("unauthorized"); return; }
-        if (!res.ok) return;
-        const json: FeedResponse = await res.json();
-        setData(json);
-        setAuthStatus("ok");
-      } catch {
-        /* swallow — try next tick */
-      }
-    };
-    void poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [token]);
-
-  if (authStatus === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
-  if (authStatus === "unauthorized") return <StatusBox msg="Invalid token" />;
+  if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
+  if (status === "unauthorized") return <StatusBox msg="Invalid token" />;
   if (!data) return null;
 
   const accent = data.accentColor;

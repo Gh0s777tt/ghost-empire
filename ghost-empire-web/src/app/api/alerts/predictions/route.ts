@@ -1,45 +1,19 @@
 // src/app/api/alerts/predictions/route.ts
-// Token-gated public feed for the OBS active-prediction overlay. Returns the most
-// recent open/locked prediction with its per-option totals + accent color.
+// Polled fallback for the active-prediction OBS overlay — the realtime path is the
+// generic SSE streamer /api/overlay/stream/predictions. Both share the
+// lib/overlay-feeds producer (which also auto-locks expired predictions) so the
+// payload is identical regardless of transport. Token-gated.
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { isValidOverlayToken } from "@/lib/alerts";
-import { lockExpiredPredictions } from "@/lib/predictions";
+import { OVERLAY_FEEDS } from "@/lib/overlay-feeds";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const token = new URL(req.url).searchParams.get("token");
+  const url = new URL(req.url);
+  const token = url.searchParams.get("token");
   if (!(await isValidOverlayToken(token))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  await lockExpiredPredictions();
-
-  const p = await prisma.prediction.findFirst({
-    where: { status: { in: ["open", "locked"] } },
-    orderBy: { opensAt: "desc" },
-    include: { entries: { select: { optionIndex: true, tokensWagered: true } } },
-  });
-
-  if (!p) return NextResponse.json({ active: false });
-
-  const options = p.options.map((label, idx) => {
-    const entries = p.entries.filter((e) => e.optionIndex === idx);
-    return {
-      label,
-      total: entries.reduce((s, e) => s + e.tokensWagered, 0),
-      count: entries.length,
-    };
-  });
-
-  return NextResponse.json({
-    active: true,
-    id: p.id,
-    question: p.question,
-    status: p.status,
-    accentColor: p.accentColor,
-    totalPot: p.totalPot,
-    options,
-  });
+  return NextResponse.json(await OVERLAY_FEEDS.predictions.producer(url.searchParams));
 }

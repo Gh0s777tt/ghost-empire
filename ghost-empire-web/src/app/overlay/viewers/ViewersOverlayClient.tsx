@@ -1,50 +1,24 @@
 "use client";
 // src/app/overlay/viewers/ViewersOverlayClient.tsx
-// Polls /api/alerts/viewers every 20s and shows a small "👁 N" badge while the
-// streamer is live. Hidden when offline / not configured.
+// Realtime viewer count via SSE (/api/overlay/stream/viewers) + polling fallback;
+// shows a small "👁 N" badge while live. Hidden when offline / not configured.
 import { useEffect, useState } from "react";
-
-const POLL_INTERVAL_MS = 20_000;
+import { useOverlayStream } from "@/lib/use-overlay-stream";
 
 type Feed = { live: boolean; configured?: boolean; viewers?: number; game?: string | null };
 
 export function ViewersOverlayClient() {
-  const [token, setToken] = useState<string | null>(null);
+  const { data: feed, status } = useOverlayStream<Feed>({ feed: "viewers", intervalMs: 20_000 });
   const [accent, setAccent] = useState("#E50914");
-  const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
-  const [feed, setFeed] = useState<Feed | null>(null);
 
+  // Accent is a client-only display override from the URL (not sent to the server).
   useEffect(() => {
-    const params = new URL(window.location.href).searchParams;
-    const t = params.get("token");
-    if (!t) { setAuthStatus("no-token"); return; }
-    setToken(t);
-    const a = params.get("accent");
+    const a = new URL(window.location.href).searchParams.get("accent");
     if (a && /^[0-9a-fA-F]{6}$/.test(a)) setAccent(`#${a}`);
   }, []);
 
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/alerts/viewers?token=${encodeURIComponent(token)}`, { cache: "no-store" });
-        if (cancelled) return;
-        if (res.status === 401) { setAuthStatus("unauthorized"); return; }
-        if (!res.ok) return;
-        setFeed(await res.json());
-        setAuthStatus("ok");
-      } catch {
-        /* retry next tick */
-      }
-    };
-    void poll();
-    const id = setInterval(poll, POLL_INTERVAL_MS);
-    return () => { cancelled = true; clearInterval(id); };
-  }, [token]);
-
-  if (authStatus === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
-  if (authStatus === "unauthorized") return <StatusBox msg="Invalid token" />;
+  if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
+  if (status === "unauthorized") return <StatusBox msg="Invalid token" />;
   if (!feed || !feed.live || typeof feed.viewers !== "number") return null;
 
   return (

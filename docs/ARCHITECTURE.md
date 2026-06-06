@@ -52,7 +52,7 @@ Czysta matematyka ekonomii (payouty predykcji, tier battle passa, konwersja walu
 
 ## 4. Overlaye OBS (Browser Source)
 
-Wzorzec: strona `/overlay/<x>` (transparentna, `pointer-events:none`) czyta token-gated `/api/alerts/<x>?token=`. Większość overlayów = **polling**; overlay alertów (`/overlay`) działa **realtime przez SSE** (`/api/alerts/stream`, `EventSource`) z automatycznym **fallbackiem do pollingu** (`/api/alerts/queue`) — oba transporty dzielą `lib/alert-feed` (identyczny payload).
+Wzorzec: strona `/overlay/<x>` (transparentna, `pointer-events:none`) pobiera dane token-gated **realtime przez SSE** z automatycznym **fallbackiem do pollingu** (zero ryzyka na wizji). Alerty mają dedykowany strumień `/api/alerts/stream`; pozostałe overlaye idą przez **generyczny** `/api/overlay/stream/[feed]`. Oba transporty (push i fallback `/api/alerts/<x>`) dzielą producery payloadu (`lib/overlay-feeds`, alerty: `lib/alert-feed`) → identyczne dane niezależnie od transportu. Klient: hook `lib/use-overlay-stream` (SSE→polling), serwer: wspólny `sseStreamResponse()` (`lib/sse`). *(Wyjątek: `/overlay/codes` wciąż polling.)*
 
 | Overlay | Feed | Treść |
 |---|---|---|

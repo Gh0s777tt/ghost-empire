@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Wszystkie nakładki na żywo ⚡",
+    items: [
+      "Po alertach realtime dostały też pozostałe nakładki OBS — czat, cele, subathon, koło fortuny, ankiety, predykcje, licznik widzów i więcej: aktualizują się natychmiast, bez czekania na odświeżanie.",
+      "Każda nakładka ma bezpieczny tryb awaryjny — jeśli połączenie na żywo nie zadziała, wraca do sprawdzonego trybu i nigdy nie gaśnie na streamie.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Alerty na żywo, bez opóźnień ⚡",
     items: [
       "Overlay alertów (donejty, suby, bity…) dostaje zdarzenia w czasie rzeczywistym — alert pojawia się na streamie od razu, gdy tylko wpadnie, zamiast czekać na kolejne odświeżenie.",
