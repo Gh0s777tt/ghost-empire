@@ -1,6 +1,8 @@
 "use client";
 // src/app/overlay/OverlayClient.tsx
-// Polls /api/alerts/queue every ~1.2s, queues alerts, shows one at a time.
+// Receives stream alerts and shows them one at a time. Realtime transport is SSE
+// (/api/alerts/stream); if that's unreachable it transparently falls back to
+// polling /api/alerts/queue every ~1.2s — so the overlay never goes dark on air.
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AlertCard } from "@/components/AlertCard";
 import {
@@ -140,62 +142,149 @@ export function OverlayClient() {
     }, duration);
   }, [duration, soundEnabled]);
 
-  // Polling loop
+  // Live ref to showNext so the connection effect can call the latest version
+  // without re-subscribing (and tearing down the stream) on every settings change.
+  const showNextRef = useRef(showNext);
+  useEffect(() => {
+    showNextRef.current = showNext;
+  }, [showNext]);
+
+  // Realtime connection — SSE first, automatic fallback to polling.
+  // The overlay is live on stream, so every path here is defensive: any SSE
+  // hiccup (unreachable endpoint, old deploy, bad token, dropped socket) quietly
+  // drops to the proven /api/alerts/queue polling transport.
   useEffect(() => {
     if (!token) return;
+
+    let mode: "connecting" | "sse" | "polling" = "connecting";
+    let es: EventSource | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
 
-    const poll = async () => {
-      try {
-        const params = new URLSearchParams({ token });
-        if (lastSinceRef.current) params.set("since", lastSinceRef.current);
-        const res = await fetch(`/api/alerts/queue?${params.toString()}`, {
-          cache: "no-store",
-        });
-        if (cancelled) return;
-        if (res.status === 401) {
-          setAuthStatus("unauthorized");
-          return;
-        }
-        if (!res.ok) return;
-        const data: QueueResponse = await res.json();
-        setAuthStatus("ok");
-        setAccent(data.settings.accentColor);
-        setDuration(data.settings.durationMs);
-        setSoundEnabled(data.settings.soundEnabled);
-        setSizeScale(data.settings.sizeScale ?? 1);
-        setTextScale(data.settings.textScale ?? 1);
-        setTextColor(data.settings.textColor ?? "#d4d4d8");
-        lastSinceRef.current = data.now;
+    const applySettings = (s: QueueResponse["settings"]) => {
+      setAuthStatus("ok");
+      setAccent(s.accentColor);
+      setDuration(s.durationMs);
+      setSoundEnabled(s.soundEnabled);
+      setSizeScale(s.sizeScale ?? 1);
+      setTextScale(s.textScale ?? 1);
+      setTextColor(s.textColor ?? "#d4d4d8");
+    };
 
-        // Add new alerts to queue (dedupe by id — defensive against overlap)
-        for (const a of data.alerts) {
-          if (seenIdsRef.current.has(a.id)) continue;
-          seenIdsRef.current.add(a.id);
-          queueRef.current.push(a);
-        }
-
-        // Start showing if nothing currently on screen
-        if (!currentTimerRef.current && queueRef.current.length > 0) {
-          showNext();
-        } else if (queueRef.current.length === 0 && !visible) {
-          // nothing to do
-        }
-      } catch (e) {
-        // Network blip — try again next tick
-        console.error("[overlay] poll failed", e);
+    const enqueueAlerts = (alerts: AlertItem[]) => {
+      // Dedupe by id — defensive against the SSE reconnect look-back window and
+      // any poll overlap.
+      for (const a of alerts) {
+        if (seenIdsRef.current.has(a.id)) continue;
+        seenIdsRef.current.add(a.id);
+        queueRef.current.push(a);
+      }
+      if (!currentTimerRef.current && queueRef.current.length > 0) {
+        showNextRef.current();
       }
     };
 
-    poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    // --- Polling fallback (original transport) ---
+    const startPolling = () => {
+      if (cancelled || mode === "polling") return;
+      mode = "polling";
+      if (es) {
+        es.close();
+        es = null;
+      }
+      const poll = async () => {
+        try {
+          const params = new URLSearchParams({ token });
+          if (lastSinceRef.current) params.set("since", lastSinceRef.current);
+          const res = await fetch(`/api/alerts/queue?${params.toString()}`, {
+            cache: "no-store",
+          });
+          if (cancelled) return;
+          if (res.status === 401) {
+            setAuthStatus("unauthorized");
+            return;
+          }
+          if (!res.ok) return;
+          const data: QueueResponse = await res.json();
+          lastSinceRef.current = data.now;
+          applySettings(data.settings);
+          enqueueAlerts(data.alerts);
+        } catch (e) {
+          // Network blip — try again next tick.
+          console.error("[overlay] poll failed", e);
+        }
+      };
+      poll();
+      pollTimer = setInterval(poll, POLL_INTERVAL_MS);
+    };
+
+    // --- SSE (preferred transport) ---
+    const startSse = () => {
+      if (typeof window === "undefined" || typeof EventSource === "undefined") {
+        startPolling();
+        return;
+      }
+      try {
+        es = new EventSource(`/api/alerts/stream?token=${encodeURIComponent(token)}`);
+      } catch {
+        startPolling();
+        return;
+      }
+
+      // Watchdog: if SSE hasn't connected within 6s, drop to polling.
+      fallbackTimer = setTimeout(() => {
+        if (!cancelled && mode === "connecting") startPolling();
+      }, 6000);
+
+      es.onopen = () => {
+        if (cancelled) return;
+        mode = "sse";
+        setAuthStatus("ok");
+        if (fallbackTimer) {
+          clearTimeout(fallbackTimer);
+          fallbackTimer = null;
+        }
+      };
+      es.addEventListener("settings", (ev) => {
+        try {
+          applySettings(JSON.parse((ev as MessageEvent).data));
+        } catch {
+          /* ignore malformed frame */
+        }
+      });
+      es.addEventListener("alerts", (ev) => {
+        try {
+          enqueueAlerts(JSON.parse((ev as MessageEvent).data) as AlertItem[]);
+        } catch {
+          /* ignore malformed frame */
+        }
+      });
+      es.onerror = () => {
+        if (cancelled || mode === "polling") return;
+        // readyState CONNECTING → EventSource is auto-reconnecting (e.g. after our
+        // server-side self-close) — leave it. CLOSED → it gave up permanently
+        // (endpoint unreachable / old deploy / 401 / token rotated on air) and
+        // won't retry, so fall back to the proven polling transport.
+        if (es && es.readyState === EventSource.CLOSED) {
+          startPolling();
+        }
+      };
+    };
+
+    startSse();
+
     return () => {
       cancelled = true;
-      clearInterval(interval);
-      if (currentTimerRef.current) clearTimeout(currentTimerRef.current);
-      currentTimerRef.current = null;
+      if (es) es.close();
+      if (pollTimer) clearInterval(pollTimer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (currentTimerRef.current) {
+        clearTimeout(currentTimerRef.current);
+        currentTimerRef.current = null;
+      }
     };
-  }, [token, showNext, visible]);
+  }, [token]);
 
   if (authStatus === "no-token") {
     return (

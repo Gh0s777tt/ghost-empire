@@ -125,7 +125,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 ## Źródła OBS (overlayToken, odczyt)
 | Trasa | Overlay |
 |---|---|
-| `…/api/alerts/queue` | `/overlay` (alerty) |
+| `…/api/alerts/stream` | `/overlay` (alerty) — **SSE realtime** (push, długie połączenie + heartbeat, self-close 50 s) |
+| `…/api/alerts/queue` | `/overlay` (alerty) — polling **fallback** (ten sam payload co SSE; współdzielony `lib/alert-feed`) |
 | `…/api/alerts/goals` | `/overlay/goals` (cele + hype train) |
 | `…/api/alerts/chat` | `/overlay/chat` (czat 3 platform) |
 | `…/api/alerts/subathon` | `/overlay/subathon` (odliczanie) |
