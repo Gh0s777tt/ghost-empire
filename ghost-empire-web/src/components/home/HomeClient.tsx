@@ -2,7 +2,8 @@
 // src/components/home/HomeClient.tsx
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, ArrowUp, ArrowDown, Check, Clock, Users, Zap, Gift, Trophy } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, Check, Clock, Zap, Gift, Trophy } from "lucide-react";
 import { fmt, timeLeft, rankForLevel, displayNick } from "@/lib/utils";
 import { EmptyState } from "@/components/EmptyState";
 import type { Session } from "next-auth";
@@ -24,6 +25,7 @@ const STREAM_STATUS = {
 
 export function HomeClient({ session, userData, hotItems, activeEvents, topUsers }: Props) {
   const router = useRouter();
+  const t = useTranslations("home");
   const user = userData?.user;
   const tasks = userData?.tasks ?? [];
   const achievements = userData?.achievements ?? [];
@@ -35,9 +37,7 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Live banner */}
-      {STREAM_STATUS.isLive && (
-        <LiveBanner />
-      )}
+      {STREAM_STATUS.isLive && <LiveBanner />}
 
       {/* Profile hero */}
       {user && <ProfileHero user={user} />}
@@ -49,13 +49,13 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
           <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-red-500" />
-              <h3 className="font-display text-lg tracking-wider text-white">DAILY QUESTS</h3>
+              <h3 className="font-display text-lg tracking-wider text-white">{t("dailyQuests")}</h3>
             </div>
-            <span className="font-mono text-[10px] text-zinc-500">RESET: PÓŁNOC</span>
+            <span className="font-mono text-[10px] text-zinc-500">{t("resetMidnight")}</span>
           </div>
           <div className="p-4 space-y-3">
             {tasks.length === 0 ? (
-              <p className="text-sm text-zinc-500 text-center py-4">Ładowanie zadań...</p>
+              <p className="text-sm text-zinc-500 text-center py-4">{t("loadingTasks")}</p>
             ) : (
               tasks.map((ut: any) => (
                 <DailyTaskCard key={ut.id} userTask={ut} userId={user?.id} />
@@ -69,13 +69,13 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
           <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Flame className="w-4 h-4 text-orange-500" />
-              <h3 className="font-display text-lg tracking-wider text-white">GORĄCE W SKLEPIE</h3>
+              <h3 className="font-display text-lg tracking-wider text-white">{t("hotInShop")}</h3>
             </div>
             <button
               onClick={() => router.push("/shop")}
               className="text-[10px] font-bold tracking-wider text-zinc-400 hover:text-red-400 flex items-center gap-1"
             >
-              WSZYSTKO <ChevronRight className="w-3 h-3" />
+              {t("seeAll")} <ChevronRight className="w-3 h-3" />
             </button>
           </div>
           <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -96,13 +96,13 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
         <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-red-500" />
-            <h3 className="font-display text-lg tracking-wider text-white">AKTYWNE EVENTY</h3>
+            <h3 className="font-display text-lg tracking-wider text-white">{t("activeEvents")}</h3>
           </div>
           <button
             onClick={() => router.push("/events")}
             className="text-[10px] font-bold tracking-wider text-zinc-400 hover:text-red-400 flex items-center gap-1"
           >
-            WSZYSTKIE <ChevronRight className="w-3 h-3" />
+            {t("seeAllPlural")} <ChevronRight className="w-3 h-3" />
           </button>
         </div>
         <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -113,8 +113,8 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
             <div className="col-span-2">
               <EmptyState
                 icon={<Calendar className="w-7 h-7" />}
-                title="Brak aktywnych eventów"
-                message="Wkrótce więcej — giveawaye, raffle i happy hoursy wracają regularnie."
+                title={t("noEvents")}
+                message={t("noEventsMsg")}
               />
             </div>
           )}
@@ -127,13 +127,13 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
           <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-yellow-500" />
-              <h3 className="font-display text-lg tracking-wider text-white">OSTATNIE OSIĄGNIĘCIA</h3>
+              <h3 className="font-display text-lg tracking-wider text-white">{t("recentAchievements")}</h3>
             </div>
             <button
               onClick={() => router.push("/achievements")}
               className="text-[10px] font-bold tracking-wider text-zinc-400 hover:text-red-400 flex items-center gap-1"
             >
-              WSZYSTKIE <ChevronRight className="w-3 h-3" />
+              {t("seeAllPlural")} <ChevronRight className="w-3 h-3" />
             </button>
           </div>
           <div className="p-4 grid grid-cols-3 sm:grid-cols-6 gap-3">
@@ -148,7 +148,14 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
 }
 
 // ---- GUEST VIEW ----
-function GuestView({ topUsers, hotItems, activeEvents }: any) {
+function GuestView({ topUsers }: any) {
+  const t = useTranslations("home");
+  const stats = [
+    { label: t("statPlayers"), value: "847+" },
+    { label: t("statTokens"), value: "12M+" },
+    { label: t("statRewards"), value: "12" },
+    { label: t("statEvents"), value: "34" },
+  ];
   return (
     <div className="space-y-12 animate-fade-in">
       {/* Hero */}
@@ -165,15 +172,14 @@ function GuestView({ topUsers, hotItems, activeEvents }: any) {
           GH0ST EMPIRE
         </h1>
         <p className="text-zinc-400 text-lg mb-8 max-w-xl mx-auto">
-          Zbieraj Ghost Tokens, wymieniaj na realne nagrody, rywalizuj w rankingu.
-          Oficjalny portal społeczności streamera Gh0s77tt.
+          {t("heroSubtitle")}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => signIn()}
             className="px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-bold tracking-widest uppercase transition-all text-sm clip-tag"
           >
-            👻 DOŁĄCZ DO IMPERIUM
+            {t("join")}
           </button>
           <a
             href="https://twitch.tv/gh0s77tt"
@@ -181,19 +187,14 @@ function GuestView({ topUsers, hotItems, activeEvents }: any) {
             rel="noreferrer"
             className="px-8 py-4 border border-zinc-700 hover:border-zinc-500 text-zinc-300 font-bold tracking-widest uppercase transition-all text-sm"
           >
-            💜 OGLĄDAJ NA TWITCH
+            {t("watchTwitch")}
           </a>
         </div>
       </div>
 
       {/* Stats teaser */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "AKTYWNYCH GRACZY", value: "847+" },
-          { label: "GHOST TOKENS ROZDANYCH", value: "12M+" },
-          { label: "NAGRÓD W SKLEPIE", value: "12" },
-          { label: "EVENTÓW ŁĄCZNIE", value: "34" },
-        ].map((s) => (
+        {stats.map((s) => (
           <div key={s.label} className="border border-zinc-800 bg-zinc-950/60 p-4 text-center clip-corner">
             <div className="font-display text-3xl text-red-500">{s.value}</div>
             <div className="font-mono text-[10px] tracking-widest text-zinc-500 mt-1">{s.label}</div>
@@ -203,14 +204,12 @@ function GuestView({ topUsers, hotItems, activeEvents }: any) {
 
       {/* Top 3 preview */}
       <div>
-        <h2 className="font-display text-2xl text-white mb-4">TOP GRACZE</h2>
+        <h2 className="font-display text-2xl text-white mb-4">{t("topPlayers")}</h2>
         <div className="space-y-2">
           {topUsers.map((u: any, i: number) => (
             <div key={u.id} className="flex items-center gap-4 p-4 border border-zinc-800 bg-zinc-950/60">
               <span className="font-display text-3xl text-zinc-600">#{i + 1}</span>
-              <div
-                className="w-10 h-10 border border-zinc-700 overflow-hidden bg-zinc-900 flex items-center justify-center text-lg"
-              >
+              <div className="w-10 h-10 border border-zinc-700 overflow-hidden bg-zinc-900 flex items-center justify-center text-lg">
                 {u.image ? <img src={u.image} alt="" width={40} height={40} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" /> : <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />}
               </div>
               <div className="flex-1">
@@ -231,8 +230,8 @@ function GuestView({ topUsers, hotItems, activeEvents }: any) {
 
 // ---- PROFILE HERO ----
 function ProfileHero({ user }: { user: any }) {
+  const t = useTranslations("home");
   const rank = rankForLevel(user.level);
-  const xpForNext = user.level * 500;
   const xpPct = Math.min((user.xp % 500) / 500 * 100, 100);
 
   return (
@@ -259,9 +258,7 @@ function ProfileHero({ user }: { user: any }) {
                 <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
               )}
             </div>
-            <div
-              className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 bg-red-600 text-white font-mono text-[9px] font-bold clip-tag"
-            >
+            <div className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 bg-red-600 text-white font-mono text-[9px] font-bold clip-tag">
               LVL {user.level}
             </div>
           </div>
@@ -280,16 +277,16 @@ function ProfileHero({ user }: { user: any }) {
         {/* Stats */}
         <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatBox icon="👻" label="GHOST TOKENS" value={fmt(user.tokens)} accent />
-          <StatBox icon="⬆️" label="ZAROBIONE" value={fmt(user.totalEarned)} />
-          <StatBox icon="🛍️" label="WYDANE" value={fmt(user.totalSpent)} />
-          <StatBox icon="💬" label="WIADOMOŚCI" value={fmt(user.messageCount)} />
+          <StatBox icon="⬆️" label={t("phEarned")} value={fmt(user.totalEarned)} />
+          <StatBox icon="🛍️" label={t("phSpent")} value={fmt(user.totalSpent)} />
+          <StatBox icon="💬" label={t("phMessages")} value={fmt(user.messageCount)} />
         </div>
 
         {/* XP bar */}
         <div className="lg:col-span-12">
           <div className="flex items-end justify-between mb-1.5">
             <span className="font-mono text-[10px] tracking-widest text-zinc-500">
-              POSTĘP DO LVL {user.level + 1}
+              {t("progressTo", { level: user.level + 1 })}
             </span>
             <span className="font-mono text-xs text-zinc-400">
               <span className="text-white font-bold">{user.xp % 500}</span>/{500} XP
@@ -300,8 +297,7 @@ function ProfileHero({ user }: { user: any }) {
               className="absolute inset-y-0 left-0 transition-all duration-700"
               style={{
                 width: `${xpPct}%`,
-                background:
-                  "linear-gradient(90deg, #8B0000 0%, #E50914 50%, #FF4500 100%)",
+                background: "linear-gradient(90deg, #8B0000 0%, #E50914 50%, #FF4500 100%)",
                 boxShadow: "0 0 12px rgba(229,9,20,0.5)",
               }}
             />
@@ -327,8 +323,9 @@ function StatBox({ icon, label, value, accent = false }: any) {
 }
 
 // ---- DAILY TASK CARD ----
-function DailyTaskCard({ userTask, userId }: { userTask: any; userId: string }) {
-  const { task, progress, done, claimed } = userTask;
+function DailyTaskCard({ userTask }: { userTask: any; userId: string }) {
+  const t = useTranslations("home");
+  const { task, progress, claimed } = userTask;
   const pct = Math.min((progress / task.target) * 100, 100);
   const ready = progress >= task.target && !claimed;
 
@@ -365,17 +362,17 @@ function DailyTaskCard({ userTask, userId }: { userTask: any; userId: string }) 
         </span>
         {claimed ? (
           <span className="text-[10px] font-bold tracking-wider text-green-400 flex items-center gap-1">
-            <Check className="w-3 h-3" /> ODEBRANE
+            <Check className="w-3 h-3" /> {t("taskClaimed")}
           </span>
         ) : ready ? (
           <button
             onClick={handleClaim}
             className="text-[10px] font-bold tracking-wider text-red-400 hover:text-red-300 px-2 py-0.5 border border-red-500/50 hover:border-red-500 transition-all"
           >
-            ODBIERZ
+            {t("taskClaim")}
           </button>
         ) : (
-          <span className="text-[10px] font-bold tracking-wider text-zinc-600">W TRAKCIE</span>
+          <span className="text-[10px] font-bold tracking-wider text-zinc-600">{t("taskInProgress")}</span>
         )}
       </div>
     </div>
@@ -384,6 +381,7 @@ function DailyTaskCard({ userTask, userId }: { userTask: any; userId: string }) 
 
 // ---- MINI SHOP CARD ----
 function MiniShopCard({ item, userTokens, onClick }: any) {
+  const t = useTranslations("home");
   const canAfford = userTokens >= item.price;
   return (
     <button
@@ -398,17 +396,13 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
           </h4>
           <div className="flex items-center gap-1 mt-1.5">
             <span className="text-xs">👻</span>
-            <span
-              className={`font-mono text-xs font-bold tabular-nums ${
-                canAfford ? "text-white" : "text-zinc-600"
-              }`}
-            >
+            <span className={`font-mono text-xs font-bold tabular-nums ${canAfford ? "text-white" : "text-zinc-600"}`}>
               {fmt(item.price)}
             </span>
           </div>
           {item.stock !== -1 && (
             <div className="font-mono text-[9px] text-zinc-500 mt-0.5">
-              Pula: {item.stock}/{item.totalStock}
+              {t("stock")}: {item.stock}/{item.totalStock}
             </div>
           )}
         </div>
@@ -422,11 +416,12 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
 
 // ---- EVENT MINI CARD ----
 function EventMiniCard({ event }: { event: any }) {
+  const t = useTranslations("home");
   const typeStyles: Record<string, any> = {
     happy_hour: { icon: Zap,    color: "#E50914", label: "HAPPY HOUR" },
     giveaway:   { icon: Gift,   color: "#FFD700", label: "GIVEAWAY" },
     raffle:     { icon: Trophy, color: "#FF9500", label: "RAFFLE" },
-    contest:    { icon: Target, color: "#00BFFF", label: "KONKURS" },
+    contest:    { icon: Target, color: "#00BFFF", label: t("evContest") },
   };
   const s = typeStyles[event.type] ?? typeStyles.giveaway;
   const Icon = s.icon;
@@ -441,16 +436,11 @@ function EventMiniCard({ event }: { event: any }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span
-            className="font-mono text-[9px] font-bold tracking-widest"
-            style={{ color: s.color }}
-          >
+          <span className="font-mono text-[9px] font-bold tracking-widest" style={{ color: s.color }}>
             {s.label}
           </span>
           {event.multiplier && (
-            <span className="font-mono text-[10px] font-bold text-red-300">
-              ×{event.multiplier}
-            </span>
+            <span className="font-mono text-[10px] font-bold text-red-300">×{event.multiplier}</span>
           )}
         </div>
         <h4 className="text-sm font-bold text-white leading-tight">{event.name}</h4>
@@ -489,6 +479,7 @@ function AchievementBadgeSmall({ achievement }: { achievement: any }) {
 
 // ---- LIVE BANNER ----
 function LiveBanner() {
+  const t = useTranslations("home");
   return (
     <div
       className="relative overflow-hidden border border-red-900/60 clip-corner"
@@ -514,10 +505,10 @@ function LiveBanner() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="font-mono text-[10px] tracking-widest text-red-400 font-bold">
-              ● LIVE NA TWITCH
+              {t("liveOnTwitch")}
             </span>
             <span className="font-mono text-[10px] text-zinc-500">
-              {fmt(STREAM_STATUS.viewers)} oglądających
+              {t("watching", { count: fmt(STREAM_STATUS.viewers) })}
             </span>
           </div>
           <h2 className="font-display text-xl text-white truncate">{STREAM_STATUS.title}</h2>
@@ -529,7 +520,7 @@ function LiveBanner() {
           rel="noreferrer"
           className="hidden sm:flex shrink-0 items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider transition-colors clip-tag"
         >
-          <Eye className="w-3.5 h-3.5" /> Oglądaj
+          <Eye className="w-3.5 h-3.5" /> {t("watch")}
         </a>
       </div>
     </div>

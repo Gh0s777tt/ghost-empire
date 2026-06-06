@@ -38,5 +38,37 @@
   },
   "locale": {
     "switchTo": "Zmień język na angielski"
+  },
+  "home": {
+    "dailyQuests": "DAILY QUESTY",
+    "resetMidnight": "RESET: PÓŁNOC",
+    "loadingTasks": "Ładowanie zadań…",
+    "hotInShop": "GORĄCE W SKLEPIE",
+    "activeEvents": "AKTYWNE EVENTY",
+    "recentAchievements": "OSTATNIE OSIĄGNIĘCIA",
+    "seeAll": "WSZYSTKO",
+    "seeAllPlural": "WSZYSTKIE",
+    "noEvents": "Brak aktywnych eventów",
+    "noEventsMsg": "Wkrótce więcej — giveawaye, raffle i happy hoursy wracają regularnie.",
+    "taskClaimed": "ODEBRANE",
+    "taskClaim": "ODBIERZ",
+    "taskInProgress": "W TRAKCIE",
+    "stock": "Pula",
+    "evContest": "KONKURS",
+    "heroSubtitle": "Zbieraj Ghost Tokens, wymieniaj na realne nagrody, rywalizuj w rankingu. Oficjalny portal społeczności streamera Gh0s77tt.",
+    "join": "👻 DOŁĄCZ DO IMPERIUM",
+    "watchTwitch": "💜 OGLĄDAJ NA TWITCH",
+    "statPlayers": "AKTYWNYCH GRACZY",
+    "statTokens": "GHOST TOKENS ROZDANYCH",
+    "statRewards": "NAGRÓD W SKLEPIE",
+    "statEvents": "EVENTÓW ŁĄCZNIE",
+    "topPlayers": "TOP GRACZE",
+    "phEarned": "ZAROBIONE",
+    "phSpent": "WYDANE",
+    "phMessages": "WIADOMOŚCI",
+    "progressTo": "POSTĘP DO LVL {level}",
+    "liveOnTwitch": "● LIVE NA TWITCH",
+    "watching": "{count} oglądających",
+    "watch": "Oglądaj"
   }
 }
