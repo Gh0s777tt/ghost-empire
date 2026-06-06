@@ -86,6 +86,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Wersja angielska (EN) 🌍",
+    items: [
+      "Portal ma teraz wersję angielską — przełącznik PL/EN w nagłówku, a angielskie strony żyją pod adresami /en. Polskie adresy zostają bez zmian.",
+      "Na start przetłumaczona jest nawigacja i stopka; reszta treści dochodzi stopniowo.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Wszystkie nakładki na żywo ⚡",
     items: [
       "Po alertach realtime dostały też pozostałe nakładki OBS — czat, cele, subathon, koło fortuny, ankiety, predykcje, licznik widzów i więcej: aktualizują się natychmiast, bez czekania na odświeżanie.",

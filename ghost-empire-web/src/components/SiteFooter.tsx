@@ -1,15 +1,15 @@
 // src/components/SiteFooter.tsx
 // Persistent footer on every page — quick access to legal pages and streamer socials.
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 import { SocialLinksRow } from "@/components/SocialLinks";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const t = await getTranslations("footer");
   return (
     <footer
       className="relative z-30 border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-md mt-auto"
-      style={{
-        boxShadow: "0 -4px 30px rgba(0,0,0,0.6)",
-      }}
+      style={{ boxShadow: "0 -4px 30px rgba(0,0,0,0.6)" }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -19,7 +19,7 @@ export function SiteFooter() {
               <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              GH0ST EMPIRE © 2026 · Portal społeczności Gh0s77tt
+              GH0ST EMPIRE © 2026 · {t("community")}
             </div>
           </div>
 
@@ -29,17 +29,17 @@ export function SiteFooter() {
           </div>
 
           {/* Right — legal links */}
-          <nav aria-label="Linki prawne" className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-widest">
+          <nav aria-label={t("legalNav")} className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-widest">
             <Link href="/about" className="text-zinc-500 hover:text-red-400 transition-colors">
-              O nas
+              {t("about")}
             </Link>
             <span className="text-zinc-800">·</span>
             <Link href="/privacy" className="text-zinc-500 hover:text-red-400 transition-colors">
-              Polityka prywatności
+              {t("privacy")}
             </Link>
             <span className="text-zinc-800">·</span>
             <Link href="/terms" className="text-zinc-500 hover:text-red-400 transition-colors">
-              Regulamin
+              {t("terms")}
             </Link>
           </nav>
         </div>

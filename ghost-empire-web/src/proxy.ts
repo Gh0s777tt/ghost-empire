@@ -1,25 +1,21 @@
 // src/proxy.ts
-// Per-request CSP nonce so script-src can drop 'unsafe-inline' (XSS hardening).
-// (Next 16 renamed the `middleware` file convention to `proxy`.)
+// Composes TWO concerns in one Next 16 proxy (ex-"middleware"):
+//   1. CSP nonce (XSS hardening) — per-request nonce + 'strict-dynamic' in script-src,
+//      dropping 'unsafe-inline'. Next reads the nonce from the request CSP header to
+//      stamp its <script> tags; style-src keeps 'unsafe-inline' (inline overlay styles).
+//   2. next-intl locale routing — PL unprefixed ("/"), English under "/en".
 //
-// Each request gets a fresh nonce injected into the Content-Security-Policy header.
-// Next.js reads that nonce from the REQUEST's CSP header and stamps it onto its own
-// <script> tags — including the streaming RSC inline scripts and next/script
-// (Vercel Analytics / Speed Insights). 'strict-dynamic' then lets those nonce'd
-// scripts load the rest of the bundle, so 'self'/host allowlists aren't needed for
-// scripts in CSP3 browsers.
-//
-// style-src KEEPS 'unsafe-inline' on purpose — the overlays/cards render with inline
-// `style={{…}}` attributes (and a few <style> tags), which a nonce can't cover.
-// CSP is intentionally NOT applied to /api (JSON/SSE responses execute no scripts),
-// which also keeps the SSE overlay streams untouched.
-import { NextResponse, type NextRequest } from "next/server";
+// /overlay/* is EXCLUDED from locale routing (OBS browser-source URLs must stay
+// /overlay/*) but STILL gets the CSP nonce. /api/* is excluded from both (JSON/SSE
+// execute no scripts → SSE overlay streams untouched).
+import createMiddleware from "next-intl/middleware";
+import { NextRequest, NextResponse } from "next/server";
+import { routing } from "@/i18n/routing";
 
-export function proxy(request: NextRequest) {
-  // Edge-safe nonce (no Node Buffer): base64 of a random UUID.
-  const nonce = btoa(crypto.randomUUID());
+const handleI18n = createMiddleware(routing);
 
-  const csp = [
+function buildCsp(nonce: string): string {
+  return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -32,13 +28,26 @@ export function proxy(request: NextRequest) {
     "object-src 'none'",
     "upgrade-insecure-requests",
   ].join("; ");
+}
 
-  // Next reads the nonce from the request's CSP header to stamp its <script> tags.
+export function proxy(request: NextRequest) {
+  const nonce = btoa(crypto.randomUUID());
+  const csp = buildCsp(nonce);
+
+  // Forward the nonce to the rendered route (Next stamps <script> from the request CSP header).
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("content-security-policy", csp);
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  let response: NextResponse;
+  if (request.nextUrl.pathname.startsWith("/overlay")) {
+    // OBS overlays: CSP only, no locale prefixing.
+    response = NextResponse.next({ request: { headers: requestHeaders } });
+  } else {
+    // Localized routes: next-intl handles locale, carrying the nonce'd request headers.
+    response = handleI18n(new NextRequest(request, { headers: requestHeaders }));
+  }
+
   response.headers.set("content-security-policy", csp);
   return response;
 }
@@ -47,8 +56,7 @@ export const config = {
   matcher: [
     {
       // All document routes except API, Next internals and static assets. Skipping
-      // prefetch requests stops a prefetched RSC payload's nonce going stale vs the
-      // real navigation (which would block its scripts).
+      // prefetch requests keeps a prefetched RSC payload's nonce from going stale.
       source:
         "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|map)$).*)",
       missing: [
