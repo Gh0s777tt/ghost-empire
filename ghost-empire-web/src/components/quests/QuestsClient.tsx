@@ -8,7 +8,8 @@ import {
   Zap, Check, Loader2, MessageCircle, Mic2, Gift, Flame, X, Clock,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { fmt, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
 type UserTask = {
   id: string;
@@ -60,6 +61,7 @@ export function QuestsClient({
   balance: number;
 }) {
   const t = useTranslations("quests");
+  const fmt = useLocaleFmt();
   const router = useRouter();
   const { update: refreshSession } = useSession();
   const [tasks, setTasks] = useState(initialTasks);
@@ -290,6 +292,7 @@ function QuestCard({
 }) {
   const t = useTranslations("quests");
   const locale = useLocale();
+  const fmt = useLocaleFmt();
   const { task, progress, claimed } = userTask;
   const done = progress >= task.target;
   const ratio = Math.min(100, (progress / task.target) * 100);

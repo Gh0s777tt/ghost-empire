@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Gift, Sparkles, Loader2, Check, X, Zap } from "lucide-react";
-import { fmt, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
 type RedeemResult =
   | {
@@ -156,6 +157,7 @@ export function DropRedeemBox({
 
 function ResultMessage({ result }: { result: RedeemResult }) {
   const t = useTranslations("drops");
+  const fmt = useLocaleFmt();
   if ("error" in result) {
     return (
       <div className="border border-red-700 bg-red-950/40 px-3 py-2 flex items-start gap-2">

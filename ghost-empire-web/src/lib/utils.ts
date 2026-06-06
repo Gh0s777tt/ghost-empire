@@ -6,8 +6,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function fmt(n: number): string {
-  return n.toLocaleString("pl-PL");
+export function fmt(n: number, locale: string = "pl"): string {
+  return n.toLocaleString(locale === "en" ? "en-US" : "pl-PL");
 }
 
 export function timeLeft(iso: string | Date, locale: string = "pl"): string {

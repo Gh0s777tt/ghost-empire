@@ -3,6 +3,7 @@
 // Slots + coinflip played for Ghost Tokens, with a recent-wins / top-net leaderboard.
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { Link } from "@/i18n/navigation";
 
 type PlayResult = { ok?: boolean; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; error?: string };
@@ -13,6 +14,7 @@ type Leaderboard = {
 
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
+  const fmt = useLocaleFmt();
   const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   const [bet, setBet] = useState(100);
@@ -56,7 +58,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               <div className={`text-center ${result.payout > 0 ? "text-emerald-300" : "text-zinc-400"}`}>
                 <div className="text-4xl tracking-widest">{result.reels ? result.reels.join(" ") : result.detail}</div>
                 <div className="font-bold mt-1">
-                  {result.payout > 0 ? `+${result.payout.toLocaleString("pl-PL")} GT 🎉` : `−${result.bet.toLocaleString("pl-PL")} GT`}
+                  {result.payout > 0 ? `+${fmt(result.payout)} GT 🎉` : `−${fmt(result.bet)} GT`}
                 </div>
               </div>
             ) : <div className="text-zinc-700 text-4xl tracking-widest">❔ ❔ ❔</div>}
@@ -89,7 +91,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 disabled:opacity-40 transition-all">{t("number")}</button>
           </div>
 
-          <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{(balance ?? 0).toLocaleString("pl-PL")} GT</span></div>
+          <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} GT</span></div>
         </>
       )}
 
@@ -102,7 +104,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               {lb.bigWins.map((w) => (
                 <li key={w.id} className="flex items-center justify-between text-sm bg-zinc-950 border border-zinc-900 px-3 py-1.5">
                   <span className="text-zinc-300 truncate">{w.name} <span className="text-zinc-600">{gameLabel[w.game] ?? w.game}</span></span>
-                  <span className="text-emerald-400 font-bold">+{w.net.toLocaleString("pl-PL")}</span>
+                  <span className="text-emerald-400 font-bold">+{fmt(w.net)}</span>
                 </li>
               ))}
             </ul>
@@ -113,7 +115,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               {lb.topNet.map((t, i) => (
                 <li key={i} className="flex items-center justify-between text-sm bg-zinc-950 border border-zinc-900 px-3 py-1.5">
                   <span className="text-zinc-300 truncate">{t.name}</span>
-                  <span className={t.net >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>{t.net >= 0 ? "+" : ""}{t.net.toLocaleString("pl-PL")}</span>
+                  <span className={t.net >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>{t.net >= 0 ? "+" : ""}{fmt(t.net)}</span>
                 </li>
               ))}
             </ul>

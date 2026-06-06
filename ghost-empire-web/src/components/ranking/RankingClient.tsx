@@ -9,7 +9,8 @@ import {
   X, Loader2, Check, Coins, Heart, UserCog, Ban,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { fmt, rankForLevel, cn, displayNick } from "@/lib/utils";
+import { rankForLevel, cn, displayNick } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
 type Sort = "tokens" | "totalEarned" | "level" | "streak";
 
@@ -70,6 +71,7 @@ export function RankingClient({
   permissions?: Permissions;
 }) {
   const t = useTranslations("ranking");
+  const fmt = useLocaleFmt();
   const [adminTarget, setAdminTarget] = useState<User | null>(null);
   const meta = SORT_META[sort];
   const Icon = meta.icon;
@@ -346,6 +348,7 @@ function UserRow({
   onAdminClick?: () => void;
 }) {
   const t = useTranslations("ranking");
+  const fmt = useLocaleFmt();
   const router = useRouter();
   const rank = rankForLevel(user.level);
   // Clickable: admin → modal, else navigate to public profile (if username exists)
@@ -432,6 +435,7 @@ function AdminUserActions({
   onClose: () => void;
 }) {
   const t = useTranslations("ranking");
+  const fmt = useLocaleFmt();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);

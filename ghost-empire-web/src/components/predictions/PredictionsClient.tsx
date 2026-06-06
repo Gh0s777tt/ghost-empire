@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Dice5, Coins, Trophy, Clock, Check, X, Loader2, History } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { fmt, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
 type ActivePrediction = {
   id: string;
@@ -45,6 +46,7 @@ export function PredictionsClient({
   recent: RecentPrediction[];
 }) {
   const t = useTranslations("predictions");
+  const fmt = useLocaleFmt();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -160,6 +162,7 @@ function ActivePredictionCard({
   onSuccess: () => void;
 }) {
   const t = useTranslations("predictions");
+  const fmt = useLocaleFmt();
   const [pickedOption, setPickedOption] = useState<number | null>(prediction.myEntry?.optionIndex ?? null);
   const [wagerInput, setWagerInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -320,6 +323,7 @@ function ActivePredictionCard({
 
 function RecentPredictionRow({ prediction }: { prediction: RecentPrediction }) {
   const t = useTranslations("predictions");
+  const fmt = useLocaleFmt();
   const isCancelled = prediction.status === "cancelled";
   const winningLabel =
     prediction.resolvedOptionIndex != null ? prediction.options[prediction.resolvedOptionIndex] : null;

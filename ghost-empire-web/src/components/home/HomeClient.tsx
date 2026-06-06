@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, Check, Clock, Zap, Gift, Trophy } from "lucide-react";
-import { fmt, timeLeft, rankForLevel, displayNick } from "@/lib/utils";
+import { timeLeft, rankForLevel, displayNick } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { EmptyState } from "@/components/EmptyState";
 import type { Session } from "next-auth";
 
@@ -150,6 +151,7 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
 // ---- GUEST VIEW ----
 function GuestView({ topUsers }: any) {
   const t = useTranslations("home");
+  const fmt = useLocaleFmt();
   const stats = [
     { label: t("statPlayers"), value: "847+" },
     { label: t("statTokens"), value: "12M+" },
@@ -231,6 +233,7 @@ function GuestView({ topUsers }: any) {
 // ---- PROFILE HERO ----
 function ProfileHero({ user }: { user: any }) {
   const t = useTranslations("home");
+  const fmt = useLocaleFmt();
   const rank = rankForLevel(user.level);
   const xpPct = Math.min((user.xp % 500) / 500 * 100, 100);
 
@@ -325,6 +328,7 @@ function StatBox({ icon, label, value, accent = false }: any) {
 // ---- DAILY TASK CARD ----
 function DailyTaskCard({ userTask }: { userTask: any; userId: string }) {
   const t = useTranslations("home");
+  const fmt = useLocaleFmt();
   const { task, progress, claimed } = userTask;
   const pct = Math.min((progress / task.target) * 100, 100);
   const ready = progress >= task.target && !claimed;
@@ -382,6 +386,7 @@ function DailyTaskCard({ userTask }: { userTask: any; userId: string }) {
 // ---- MINI SHOP CARD ----
 function MiniShopCard({ item, userTokens, onClick }: any) {
   const t = useTranslations("home");
+  const fmt = useLocaleFmt();
   const canAfford = userTokens >= item.price;
   return (
     <button
@@ -481,6 +486,7 @@ function AchievementBadgeSmall({ achievement }: { achievement: any }) {
 // ---- LIVE BANNER ----
 function LiveBanner() {
   const t = useTranslations("home");
+  const fmt = useLocaleFmt();
   return (
     <div
       className="relative overflow-hidden border border-red-900/60 clip-corner"

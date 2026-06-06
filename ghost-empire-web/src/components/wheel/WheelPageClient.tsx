@@ -5,6 +5,7 @@
 // and shows a recent-wins feed.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { Link } from "@/i18n/navigation";
 import { WheelGraphic, rotationForIndex, type WheelSeg } from "@/components/WheelGraphic";
 
@@ -31,6 +32,7 @@ type SpinResponse = {
 
 export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const t = useTranslations("wheel");
+  const fmt = useLocaleFmt();
   const [state, setState] = useState<WheelState | null>(null);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
@@ -105,7 +107,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
                   result.reward > 0 ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40" : "bg-zinc-800/60 text-zinc-300 border border-zinc-700"
                 }`}
               >
-                {result.reward > 0 ? t("won", { reward: result.reward.toLocaleString("pl-PL"), label: result.label }) : t("tryAgain", { label: result.label })}
+                {result.reward > 0 ? t("won", { reward: fmt(result.reward), label: result.label }) : t("tryAgain", { label: result.label })}
               </div>
             )}
             {error && <div className="text-rose-400 text-sm">{error}</div>}
@@ -117,10 +119,10 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
                   disabled={spinning || !canAfford}
                   className="px-8 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-900/40"
                 >
-                  {spinning ? t("spinning") : t("spinCost", { cost: state.costPerSpin.toLocaleString("pl-PL") })}
+                  {spinning ? t("spinning") : t("spinCost", { cost: fmt(state.costPerSpin) })}
                 </button>
                 <div className="text-sm text-zinc-400">
-                  {t("balance")} <span className="font-bold text-white">{(state.balance ?? 0).toLocaleString("pl-PL")} GT</span>
+                  {t("balance")} <span className="font-bold text-white">{fmt(state.balance ?? 0)} GT</span>
                   {!canAfford && <span className="text-rose-400 ml-2">{t("cantAfford")}</span>}
                 </div>
               </>
@@ -138,7 +140,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
                 {state.recentWins.map((w) => (
                   <li key={w.id} className="flex items-center justify-between text-sm rounded-md bg-zinc-950 border border-zinc-900 px-3 py-1.5">
                     <span className="text-zinc-300 font-medium truncate">{w.name}</span>
-                    <span className="text-emerald-400 font-bold">+{w.reward.toLocaleString("pl-PL")} GT</span>
+                    <span className="text-emerald-400 font-bold">+{fmt(w.reward)} GT</span>
                   </li>
                 ))}
               </ul>

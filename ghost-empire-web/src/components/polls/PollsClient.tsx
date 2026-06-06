@@ -5,7 +5,8 @@ import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { BarChart3, Check, Loader2, X } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { cn, fmt } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
 type Poll = {
   id: string;
@@ -26,6 +27,7 @@ export function PollsClient({
   isAuthenticated: boolean;
 }) {
   const t = useTranslations("polls");
+  const fmt = useLocaleFmt();
   const [polls, setPolls] = useState<Poll[]>(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);

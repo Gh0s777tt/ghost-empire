@@ -260,7 +260,7 @@ export default async function PublicProfilePage({
                       {atMax ? t("xpToPrestige", { n: user.prestige + 1 }) : t("xpToLevel", { n: user.level + 1 })}
                     </span>
                     <span className="text-white">
-                      {atMax ? `${fmt(prestigeProgress)} / ${fmt(PRESTIGE_XP)}` : `${fmt(xpCurrent)} / 500`}
+                      {atMax ? `${fmt(prestigeProgress, locale)} / ${fmt(PRESTIGE_XP, locale)}` : `${fmt(xpCurrent, locale)} / 500`}
                     </span>
                   </div>
                   <div className="h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">
@@ -276,8 +276,8 @@ export default async function PublicProfilePage({
                   </div>
                   <p className="text-[10px] text-zinc-600 font-mono">
                     {atMax
-                      ? t("xpTotalMax", { xp: fmt(user.xp) })
-                      : t("xpTotal", { xp: fmt(user.xp), max: fmt(xpForLevel(100)) })}
+                      ? t("xpTotalMax", { xp: fmt(user.xp, locale) })
+                      : t("xpTotal", { xp: fmt(user.xp, locale), max: fmt(xpForLevel(100), locale) })}
                   </p>
                 </div>
               </div>
@@ -295,10 +295,10 @@ export default async function PublicProfilePage({
 
           {/* Public stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatTile label={t("statLifetime")} value={fmt(user.totalEarned)} emoji="📈" />
+            <StatTile label={t("statLifetime")} value={fmt(user.totalEarned, locale)} emoji="📈" />
             <StatTile label={t("statStreak")} value={`${user.streak} ${t("streakUnit", { count: user.streak })}`} emoji="🔥" />
-            <StatTile label={t("statMessages")} value={fmt(user.messageCount)} emoji="💬" />
-            <StatTile label={t("statVoice")} value={`${fmt(user.voiceMinutes)} min`} emoji="🎤" />
+            <StatTile label={t("statMessages")} value={fmt(user.messageCount, locale)} emoji="💬" />
+            <StatTile label={t("statVoice")} value={`${fmt(user.voiceMinutes, locale)} min`} emoji="🎤" />
           </div>
 
           {/* Ranking positions */}
