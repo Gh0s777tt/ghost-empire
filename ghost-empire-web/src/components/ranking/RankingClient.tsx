@@ -2,7 +2,8 @@
 // src/components/ranking/RankingClient.tsx
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import {
   Trophy, TrendingUp, Sparkles, Flame, Crown, Medal, ShieldCheck,
   X, Loader2, Check, Coins, Heart, UserCog, Ban,
@@ -29,12 +30,12 @@ type User = {
 
 const SORT_META: Record<
   Sort,
-  { label: string; short: string; icon: typeof Trophy; suffix: string; color: string }
+  { icon: typeof Trophy; suffix: string; color: string }
 > = {
-  tokens:      { label: "BALANS GHOST TOKENS", short: "BALANS",     icon: Trophy,     suffix: "GT",    color: "#E50914" },
-  totalEarned: { label: "ŁĄCZNIE ZAROBIONE",   short: "ZAROBIONE",  icon: TrendingUp, suffix: "GT",    color: "#10b981" },
-  level:       { label: "POZIOM (LEVEL)",       short: "LEVEL",     icon: Sparkles,   suffix: "",      color: "#a855f7" },
-  streak:      { label: "STREAK (DNI Z RZĘDU)", short: "STREAK",    icon: Flame,      suffix: "dni",   color: "#FF4500" },
+  tokens:      { icon: Trophy,     suffix: "GT", color: "#E50914" },
+  totalEarned: { icon: TrendingUp, suffix: "GT", color: "#10b981" },
+  level:       { icon: Sparkles,   suffix: "",   color: "#a855f7" },
+  streak:      { icon: Flame,      suffix: "",   color: "#FF4500" },
 };
 
 const PODIUM_STYLE = [
@@ -68,9 +69,18 @@ export function RankingClient({
   isAdmin: boolean;
   permissions?: Permissions;
 }) {
+  const t = useTranslations("ranking");
   const [adminTarget, setAdminTarget] = useState<User | null>(null);
   const meta = SORT_META[sort];
   const Icon = meta.icon;
+  const sortShorts: Record<Sort, string> = {
+    tokens: t("sortTokensShort"), totalEarned: t("sortEarnedShort"),
+    level: t("sortLevelShort"), streak: t("sortStreakShort"),
+  };
+  const sortLabels: Record<Sort, string> = {
+    tokens: t("sortTokensLabel"), totalEarned: t("sortEarnedLabel"),
+    level: t("sortLevelLabel"), streak: t("sortStreakLabel"),
+  };
 
   const podium = topUsers.slice(0, 3);
   const rest = topUsers.slice(3);
@@ -78,7 +88,7 @@ export function RankingClient({
   function formatValue(u: User): string {
     const v = u[sort];
     if (sort === "level") return `LVL ${v}`;
-    if (sort === "streak") return `${v} ${v === 1 ? "dzień" : "dni"}`;
+    if (sort === "streak") return `${v} ${t("streakUnit", { count: v })}`;
     return `${fmt(v)} ${meta.suffix}`;
   }
 
@@ -97,12 +107,12 @@ export function RankingClient({
             </h1>
           </div>
           <p className="text-zinc-500 text-sm">
-            Najlepsi członkowie Ghost Empire. Przegrupowuj wg metryki.
+            {t("subtitle")}
           </p>
         </div>
         <div className="text-right">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-            W rankingu
+            {t("rankedLabel")}
           </div>
           <div className="font-mono text-2xl text-white tabular-nums">
             {fmt(totalRanked)}{" "}
@@ -131,7 +141,7 @@ export function RankingClient({
               )}
             >
               <TabIcon className="w-3.5 h-3.5" />
-              {m.short}
+              {sortShorts[k]}
             </Link>
           );
         })}
@@ -140,8 +150,8 @@ export function RankingClient({
       {topUsers.length === 0 ? (
         <EmptyState
           icon={<Icon className="w-6 h-6" />}
-          title="Pusty ranking"
-          message={`Nikt jeszcze nie ma punktów w kategorii ${meta.label.toLowerCase()}. Bądź pierwszy!`}
+          title={t("emptyTitle")}
+          message={t("emptyMsg", { category: sortLabels[sort].toLowerCase() })}
         />
       ) : (
         <>
@@ -238,7 +248,7 @@ export function RankingClient({
 
                     {isMe && (
                       <div className="text-[9px] font-bold tracking-widest uppercase text-red-400 mt-2">
-                        TO TY
+                        {t("itsYou")}
                       </div>
                     )}
                   </Link>
@@ -260,9 +270,9 @@ export function RankingClient({
                 <thead>
                   <tr className="border-b border-zinc-800 text-[10px] font-mono uppercase tracking-widest text-zinc-500">
                     <th className="text-left p-3 w-16">#</th>
-                    <th className="text-left p-3">User</th>
-                    <th className="text-right p-3 hidden sm:table-cell">Level</th>
-                    <th className="text-right p-3">{meta.short}</th>
+                    <th className="text-left p-3">{t("thUser")}</th>
+                    <th className="text-right p-3 hidden sm:table-cell">{t("thLevel")}</th>
+                    <th className="text-right p-3">{sortShorts[sort]}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -285,7 +295,7 @@ export function RankingClient({
           {myRank && (
             <div className="space-y-1.5">
               <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 px-1">
-                Twoja pozycja
+                {t("yourPosition")}
               </div>
               <div
                 className="border-2 border-red-900/50 bg-red-950/10 backdrop-blur-xs overflow-hidden"
@@ -335,6 +345,7 @@ function UserRow({
   sortLabel: string;
   onAdminClick?: () => void;
 }) {
+  const t = useTranslations("ranking");
   const router = useRouter();
   const rank = rankForLevel(user.level);
   // Clickable: admin → modal, else navigate to public profile (if username exists)
@@ -382,7 +393,7 @@ function UserRow({
               )}
               {isMe && (
                 <span className="text-[9px] font-bold tracking-widest uppercase text-red-400 shrink-0">
-                  TY
+                  {t("itsYouShort")}
                 </span>
               )}
             </div>
@@ -420,6 +431,7 @@ function AdminUserActions({
   permissions: Permissions;
   onClose: () => void;
 }) {
+  const t = useTranslations("ranking");
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
@@ -442,7 +454,7 @@ function AdminUserActions({
   async function grantTokens(value?: number) {
     const amt = value ?? parseInt(amount);
     if (!Number.isFinite(amt) || amt === 0) {
-      showToast("err", "Wpisz kwotę != 0");
+      showToast("err", t("admAmountZero"));
       return;
     }
     setBusy(true);
@@ -458,9 +470,10 @@ function AdminUserActions({
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast("err", data.error ?? "Błąd");
+        showToast("err", data.error ?? t("err"));
       } else {
-        showToast("ok", `${amt > 0 ? "+" : ""}${fmt(amt)} GT → ${user.username ?? "user"}. Balans: ${fmt(data.newBalance)}`);
+        const delta = `${amt > 0 ? "+" : ""}${fmt(amt)}`;
+        showToast("ok", t("admGranted", { delta, user: user.username ?? "user", balance: fmt(data.newBalance) }));
         setAmount("");
         startTransition(() => router.refresh());
       }
@@ -468,8 +481,8 @@ function AdminUserActions({
   }
 
   async function banUser(durationDays: number) {
-    const reason = prompt("Powód bana (opcjonalnie):") ?? undefined;
-    if (!confirm(durationDays > 0 ? `Zbanować na ${durationDays} dni?` : "Zbanować NA STAŁE?")) return;
+    const reason = prompt(t("admBanReasonPrompt")) ?? undefined;
+    if (!confirm(durationDays > 0 ? t("admBanConfirmTemp", { days: durationDays }) : t("admBanConfirmPerm"))) return;
     setBusy(true);
     try {
       const res = await fetch("/api/admin/ban-user", {
@@ -478,9 +491,11 @@ function AdminUserActions({
         body: JSON.stringify({ target: user.username ?? user.id, action: "ban", durationDays, reason }),
       });
       const data = await res.json();
-      if (!res.ok) showToast("err", data.error ?? "Błąd");
+      if (!res.ok) showToast("err", data.error ?? t("err"));
       else {
-        showToast("ok", `${user.username ?? "User"} zbanowany${durationDays > 0 ? ` na ${durationDays} dni` : " na stałe"}`);
+        showToast("ok", durationDays > 0
+          ? t("admBannedTemp", { user: user.username ?? "User", days: durationDays })
+          : t("admBannedPerm", { user: user.username ?? "User" }));
         startTransition(() => router.refresh());
       }
     } finally { setBusy(false); }
@@ -495,9 +510,9 @@ function AdminUserActions({
         body: JSON.stringify({ target: user.username ?? user.id, action: "unban" }),
       });
       const data = await res.json();
-      if (!res.ok) showToast("err", data.error ?? "Błąd");
+      if (!res.ok) showToast("err", data.error ?? t("err"));
       else {
-        showToast("ok", `${user.username ?? "User"} odbanowany`);
+        showToast("ok", t("admUnbanned", { user: user.username ?? "User" }));
         startTransition(() => router.refresh());
       }
     } finally { setBusy(false); }
@@ -513,9 +528,9 @@ function AdminUserActions({
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast("err", data.error ?? "Błąd");
+        showToast("err", data.error ?? t("err"));
       } else {
-        showToast("ok", `${enable ? "Nadano" : "Odebrano"} ${role}`);
+        showToast("ok", enable ? t("admRoleGranted", { role }) : t("admRoleRevoked", { role }));
         startTransition(() => router.refresh());
       }
     } finally { setBusy(false); }
@@ -561,7 +576,7 @@ function AdminUserActions({
         {permissions.canGrantTokens && (
         <div className="space-y-2 mb-4">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
-            <Coins className="w-3 h-3" /> Szybki grant tokenów
+            <Coins className="w-3 h-3" /> {t("admQuickGrant")}
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             {[100, 500, 1000, 5000, 10000, -500].map((v) => (
@@ -585,14 +600,14 @@ function AdminUserActions({
           <div className="flex gap-1.5 pt-1">
             <input
               type="number"
-              placeholder="Custom kwota"
+              placeholder={t("admCustomAmount")}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="flex-1 border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-red-600 placeholder:text-zinc-700"
             />
             <input
               type="text"
-              placeholder="Powód"
+              placeholder={t("admReason")}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="flex-1 border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-hidden focus:border-red-600 placeholder:text-zinc-700"
@@ -613,7 +628,7 @@ function AdminUserActions({
         {permissions.canSetRole && (
         <div className="space-y-2 mb-4">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
-            <UserCog className="w-3 h-3" /> Role
+            <UserCog className="w-3 h-3" /> {t("admRoles")}
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             <button
@@ -648,7 +663,7 @@ function AdminUserActions({
             </button>
           </div>
           <p className="text-[9px] font-mono text-zinc-600 leading-snug">
-            Klik = toggle. Stan rzeczywisty z bazy może się różnić od UI tu — odśwież po zmianach.
+            {t("admRolesNote")}
           </p>
         </div>
         )}
@@ -657,37 +672,37 @@ function AdminUserActions({
         {permissions.canBan && (
         <div className="space-y-2 mb-4">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1.5">
-            <Ban className="w-3 h-3" /> Ban
+            <Ban className="w-3 h-3" /> {t("admBan")}
           </div>
           <div className="grid grid-cols-4 gap-1.5">
             <button
               onClick={() => banUser(1)}
               disabled={busy || user.isAdmin}
               className="px-2 py-2 border border-orange-800 hover:border-orange-500 text-orange-300 hover:bg-orange-950/40 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed"
-              title={user.isAdmin ? "Nie da się zbanować admina" : "Ban na 1 dzień"}
+              title={user.isAdmin ? t("admBanAdminTitle") : t("admBan1dTitle")}
             >
-              1 dzień
+              {t("admBan1d")}
             </button>
             <button
               onClick={() => banUser(7)}
               disabled={busy || user.isAdmin}
               className="px-2 py-2 border border-orange-800 hover:border-orange-500 text-orange-300 hover:bg-orange-950/40 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              7 dni
+              {t("admBan7d")}
             </button>
             <button
               onClick={() => banUser(30)}
               disabled={busy || user.isAdmin}
               className="px-2 py-2 border border-red-800 hover:border-red-500 text-red-300 hover:bg-red-950/40 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              30 dni
+              {t("admBan30d")}
             </button>
             <button
               onClick={() => banUser(0)}
               disabled={busy || user.isAdmin}
               className="px-2 py-2 border-2 border-red-700 hover:bg-red-950 text-red-200 text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1"
             >
-              <Ban className="w-3 h-3" /> Permanent
+              <Ban className="w-3 h-3" /> {t("admBanPerm")}
             </button>
           </div>
           <button
@@ -695,7 +710,7 @@ function AdminUserActions({
             disabled={busy}
             className="w-full px-3 py-1.5 border border-green-800 hover:border-green-500 text-green-300 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
           >
-            Odbanuj (jeśli był banowany)
+            {t("admUnban")}
           </button>
         </div>
         )}
@@ -707,14 +722,14 @@ function AdminUserActions({
               href={`/u/${user.username}`}
               className="text-center px-3 py-2 border border-zinc-800 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase"
             >
-              → Publiczny profil
+              {t("admPublicProfile")}
             </Link>
           )}
           <Link
             href="/admin"
             className="text-center px-3 py-2 border border-zinc-800 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase"
           >
-            → Pełen admin
+            {t("admFullAdmin")}
           </Link>
         </div>
 
