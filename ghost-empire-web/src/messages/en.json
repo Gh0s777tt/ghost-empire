@@ -38,5 +38,37 @@
   },
   "locale": {
     "switchTo": "Switch language to Polish"
+  },
+  "home": {
+    "dailyQuests": "DAILY QUESTS",
+    "resetMidnight": "RESET: MIDNIGHT",
+    "loadingTasks": "Loading tasks…",
+    "hotInShop": "HOT IN SHOP",
+    "activeEvents": "ACTIVE EVENTS",
+    "recentAchievements": "RECENT ACHIEVEMENTS",
+    "seeAll": "ALL",
+    "seeAllPlural": "ALL",
+    "noEvents": "No active events",
+    "noEventsMsg": "More coming soon — giveaways, raffles and happy hours return regularly.",
+    "taskClaimed": "CLAIMED",
+    "taskClaim": "CLAIM",
+    "taskInProgress": "IN PROGRESS",
+    "stock": "Stock",
+    "evContest": "CONTEST",
+    "heroSubtitle": "Collect Ghost Tokens, redeem them for real rewards, climb the ranking. The official community portal of streamer Gh0s77tt.",
+    "join": "👻 JOIN THE EMPIRE",
+    "watchTwitch": "💜 WATCH ON TWITCH",
+    "statPlayers": "ACTIVE PLAYERS",
+    "statTokens": "GHOST TOKENS AWARDED",
+    "statRewards": "SHOP REWARDS",
+    "statEvents": "EVENTS TOTAL",
+    "topPlayers": "TOP PLAYERS",
+    "phEarned": "EARNED",
+    "phSpent": "SPENT",
+    "phMessages": "MESSAGES",
+    "progressTo": "PROGRESS TO LVL {level}",
+    "liveOnTwitch": "● LIVE ON TWITCH",
+    "watching": "{count} watching",
+    "watch": "Watch"
   }
 }

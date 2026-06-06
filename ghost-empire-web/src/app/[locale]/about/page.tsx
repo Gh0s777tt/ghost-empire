@@ -86,6 +86,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Flagi języków + strona główna po angielsku 🌍",
+    items: [
+      "Przełącznik języka w nagłówku ma teraz flagi (PL/EN), a cała strona główna jest dostępna po angielsku. Kolejne strony tłumaczymy stopniowo.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Profil — konta i linki razem 🔗",
     items: [
       "Na profilu wszystko o kontach jest teraz w jednej sekcji — łączenie platform (Twitch/Kick/Discord/YouTube) i ich status (sub/VIP/mod) w jednym miejscu, plus Twoje linki społecznościowe.",
