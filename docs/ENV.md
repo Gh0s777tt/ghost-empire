@@ -77,16 +77,20 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 
 ---
 
-## 3. `ghost-empire-bot` (bot Discord)
+## 3. Bot Discord — **E-Bot** (osobne repo `Gh0s777tt/E-Bot`)
 
-| Zmienna | Po co |
+> ⚠️ Dawny `ghost-empire-bot` jest **zastąpiony (deprecated)**. Discordem zajmuje się **E-Bot** — używa własnego pliku `.env` (w swoim repo) i **prefiksowanych `GHOST_*`** zmiennych, by nie kolidować z resztą E-Bota. Ekonomia jest **opt-in** (domyślnie OFF).
+
+| Zmienna (E-Bot) | Po co |
 |---|---|
 | `DISCORD_BOT_TOKEN` (R) | Token bota Discord |
-| `DISCORD_CLIENT_ID` (R) | Application ID |
-| `DISCORD_GUILD_ID` (R) | ID serwera |
-| `WEB_API_URL` (R) | URL portalu |
-| `BOT_SECRET` (R) | **Ten sam** co w portalu |
-| `MESSAGE_REWARD` / `MESSAGE_COOLDOWN_SECONDS` / `VOICE_REWARD_PER_MINUTE` / `VOICE_TICK_SECONDS` / `AFK_GIVES_REWARD` / `MUTED_GIVES_REWARD` (O) | Strojenie nagród (mają sensowne defaulty; nadpisywane też z `/admin#bot`) |
+| `GHOST_ECONOMY` (R) | `1`/`true` włącza ekonomię GT + privileged intents. Bez tego E-Bot działa jak dotąd (bez naliczania) |
+| `GHOST_BOT_SECRET` (R) | **Ten sam** co `BOT_SECRET` w portalu (bearer do `/api/internal/*`) |
+| `GHOST_API_URL` (O) | URL portalu (domyślnie `https://ghost-empire-web.vercel.app`) |
+| `DISCORD_GUILD_ID` (O) | Zawęża naliczanie do jednego serwera |
+| `GHOST_MESSAGE_REWARD` / `GHOST_MESSAGE_COOLDOWN_SECONDS` / `GHOST_VOICE_REWARD_PER_MINUTE` / `GHOST_VOICE_TICK_SECONDS` / `GHOST_AFK_GIVES_REWARD` / `GHOST_MUTED_GIVES_REWARD` (O) | Strojenie nagród (defaulty pollowane z `/api/bot/config`, czyli z `/admin#bot`; env nadpisuje) |
+
+> Dodatkowo w Discord Dev Portal apki E-Bota włącz **Message Content** + **Server Members** (privileged intents) — bez tego bot z `GHOST_ECONOMY=1` nie zaloguje się. Po zmianie: `cd bot && npm run deploy` (rejestruje `/portal`) + restart.
 
 ---
 

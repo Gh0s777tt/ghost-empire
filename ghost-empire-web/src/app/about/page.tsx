@@ -87,6 +87,15 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Discord przeniesiony do E-Bota 💬",
+    items: [
+      "Naszym Discordem zajmuje się teraz osobny bot — E-Bot — a Empire Bot skupia się na streamie (Twitch/Kick/YouTube/Rumble).",
+      "Ghost Tokeny za aktywność na Discordzie (pisanie na czacie + przebywanie na voice) oraz łączenie konta Discord z profilem działają dokładnie tak samo jak wcześniej — zmienił się tylko bot „pod maską”.",
+      "Komenda /portal na Discordzie podrzuca link do portalu i ściągę, jak zarabiać GT.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Czytelniejsze górne menu 🧭",
     items: [
       "Górny pasek został pogrupowany w rozwijane sekcje (GRY, SPOŁECZNOŚĆ) — koniec z tłokiem, gdy przybywa zakładek. Klikasz/najeżdżasz na grupę i wysuwa się lista.",

@@ -58,6 +58,8 @@ ghost-empire-phase1/
 
 `ghost-empire-chat` to nowy mono-bot dla 3 platform streamingowych. Discord bot zostaje osobno (różne odpowiedzialności, różny gateway, różny runtime).
 
+> **Aktualizacja (2026-06-06):** rolę Discorda przejął osobny projekt **E-Bot** (`Gh0s777tt/E-Bot`) — to on nalicza GT za wiadomości/voice i linkuje konta. Katalog `ghost-empire-bot/` w monorepo jest **zastąpiony (deprecated)**. Finalny podział: `ghost-empire-chat` = streaming (Twitch/Kick/YT/Rumble) · **E-Bot** = Discord + społeczność.
+
 ### Komunikacja chat-bot ↔ portal
 
 Identyczny pattern jak Discord bot:

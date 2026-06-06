@@ -111,9 +111,11 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/bot/heist` | Napad kooperacyjny (`!heist` — join/resolve) — escrow przy dołączeniu + atomowa wypłata, scheduler rozliczenia po stronie bota |
 
 ## Internal (botSecret) — boty wysyłają zdarzenia
+> Trasy `award` + `link-discord` (Discord) woła teraz **E-Bot** (osobne repo `Gh0s777tt/E-Bot`); `chat-award`/`chat-feed`/`song-request`/`mod-violation` — `ghost-empire-chat`. Kontrakt niezmieniony (dawny `ghost-empire-bot` zastąpiony).
+
 | Trasa | Po co |
 |---|---|
-| `…/api/internal/award` | Nagroda GT (Discord: wiadomości/voice) |
+| `…/api/internal/award` | Nagroda GT (Discord: wiadomości/voice) — wołane przez E-Bot |
 | `…/api/internal/chat-award` | Nagroda GT + heatmapa (czat Twitch/Kick/YT) |
 | `…/api/internal/chat-feed` | Push wiadomości do overlaya czatu |
 | `…/api/internal/song-request` | Dodanie utworu do kolejki `!sr` |

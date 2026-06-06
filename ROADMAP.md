@@ -21,6 +21,8 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 > **🆕 Świeżo dowiezione (2026-06-05, PR #146–#157):** 🎰 **Koło Fortuny** (moduł `/wheel` + overlay OBS + panel) · 🔐 **szyfrowanie sekretów at-rest** (klucze API #146, tokeny OAuth #147) + nagłówki overlay #148 · 💬 **prawdziwe odznaki Twitch + emotki 7TV/BTTV/FFZ** #149 · 🧹 cron czyszczący bazę #151 · 🎲 predictions auto-close + announce #152 · 🛡️ **eskalacja moderacji recydywistów + statystyki** #153 · 📊 **Vercel Analytics + Speed Insights** #155 · 🔎 `npm audit` w CI #156 · 🔗 **webhooki wychodzące** (Discord/n8n/custom) #157 · 📄 runbook rotacji sekretów.
 
+> **🆕 Świeżo dowiezione (2026-06-06, PR #173–#184):** ✦ **prestiż (Phantom Ascension)** #173 + perk GT · 🛒 zniżka w sklepie #174 · ⚔️ **pojedynki PvP `!duel`** #175–176 · 🔊 TTS na alertach #180 · 🏆 osiągnięcia (prestiż/pojedynki/kasyno) #179 · 🏦 **napad kooperacyjny `!heist`** #181 · 🎡 **ruletka `!roulette`** #182 · 🧭 grupowana nawigacja #183 · 💬 **Discord wydzielony do osobnego `E-Bot`** (`Gh0s777tt/E-Bot`), `ghost-empire-bot` zastąpiony #184. **Podział finalny:** `ghost-empire-chat` = streaming · **E-Bot** = Discord + społeczność.
+
 **Pozostałe duże kierunki:**
 - **F6 — security/backup** (zrobione: backup JSON, sanityzacja URL, ✅ **szyfrowanie sekretów at-rest AES-256-GCM**, ✅ **nagłówki overlay `noindex`/`no-store`**, ✅ **cron czyszczący bazę**). Zostaje: auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
 - **Hardware (3C):** OBS WebSocket (panel integracji już przyjmuje adres+hasło), Philips Hue / Govee (efekty świetlne na donejty) — konta dev.

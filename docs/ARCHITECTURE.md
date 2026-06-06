@@ -9,10 +9,11 @@ Przegląd architektury ekosystemu Ghost Empire: 3 pakiety, jeden wspólny model 
 | Pakiet | Co to | Stack | Hosting |
 |---|---|---|---|
 | **`ghost-empire-web`** | Portal + API + panel admina + overlaye OBS | Next.js 15 (App Router), React 18, Prisma 5, NextAuth v4, Tailwind | Vercel |
-| **`ghost-empire-chat`** | Bot czatu na żywo (Twitch + Kick + YouTube) | Node + `tsx` (tmi.js / Pusher WS / YouTube polling) | Docker / VPS 24/7 |
-| **`ghost-empire-bot`** | Bot Discord (nagrody za wiadomości/voice) | Node (discord.js) | VPS / kontener |
+| **`ghost-empire-chat`** | Bot czatu na żywo (Twitch + Kick + YouTube + Rumble) | Node + `tsx` (tmi.js / Pusher WS / YouTube polling) | Docker / VPS 24/7 |
+| **E-Bot** (osobne repo `Gh0s777tt/E-Bot`) | Bot Discord — ekonomia GT (wiadomości/voice) + linkowanie kont. **Zastępuje `ghost-empire-bot`** | Node (discord.js v14, natywne `.mts`) | lokalnie / VPS |
+| ~~`ghost-empire-bot`~~ *(deprecated)* | Dawny bot Discord w monorepo — **wyłączony**, przejęty przez E-Bot. Katalog zostaje jako referencja | Node (discord.js) | — |
 
-Baza danych: **PostgreSQL (Supabase)**, jeden schemat dla portalu. Boty **nie** łączą się z bazą bezpośrednio — rozmawiają z portalem przez HTTP API (`BOT_SECRET`).
+Baza danych: **PostgreSQL (Supabase)**, jeden schemat dla portalu. Boty **nie** łączą się z bazą bezpośrednio — rozmawiają z portalem przez HTTP API (`BOT_SECRET`). **Podział ról:** `ghost-empire-chat` = streaming (Twitch/Kick/YT/Rumble), **E-Bot** = Discord + społeczność.
 
 ---
 
@@ -33,6 +34,8 @@ Donacje (Streamlabs) ───────┤→ cron /api/cron/streamlabs-poll 
                             ↓
         wydatki: sklep, predykcje, raffle  ·  progresja: XP/level, Battle Pass, osiągnięcia, streak, daily questy
 ```
+
+> Gałąź „Discord (wiadomości/voice)" obsługuje teraz **E-Bot** (osobne repo) — woła `POST /api/internal/award` (`BOT_SECRET`), tak samo jak robił to dawny `ghost-empire-bot`. Endpointy portalu są niezmienione; zmienił się tylko bot wołający.
 
 Czysta matematyka ekonomii (payouty predykcji, tier battle passa, konwersja walut, **perki poziomu i prestiżu** — `levelGtMultiplier` / `prestigeFromXp` / `prestigeGtMultiplier` / `discountedPrice`) żyje w `lib/economy.ts` (testowana, bez DB).
 
