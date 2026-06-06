@@ -119,19 +119,6 @@ const SOCIAL_META: Record<string, { label: string; icon: ComponentType<{ classNa
   website:   { label: "Website",   icon: Globe,     color: "#10b981", placeholder: "domena.pl" },
 };
 
-// Auto-derived from OAuth Connection. Discord left out — no public profile URL.
-const AUTO_PLATFORM_META: Record<string, { label: string; color: string; urlFor: (handle: string) => string }> = {
-  twitch: { label: "Twitch", color: "#9146FF", urlFor: (h) => `https://twitch.tv/${h}` },
-  kick:   { label: "Kick",   color: "#53FC18", urlFor: (h) => `https://kick.com/${h}` },
-};
-
-const PLATFORM_META: Record<string, { label: string; color: string; emoji: string }> = {
-  twitch:  { label: "Twitch",  color: "#9146FF", emoji: "💜" },
-  discord: { label: "Discord", color: "#5865F2", emoji: "👾" },
-  kick:    { label: "Kick",    color: "#53FC18", emoji: "🟢" },
-  youtube: { label: "YouTube", color: "#FF0000", emoji: "📺" },
-};
-
 export function ProfileClient({
   user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelStats,
 }: Props) {
@@ -349,70 +336,10 @@ export function ProfileClient({
       {/* Discord linking — only when not yet linked */}
       {!user.discordId && <DiscordLinkCard />}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Connections */}
-        <SectionCard title="Połączone konta" icon={LinkIcon} className="lg:col-span-1">
-          {connections.length === 0 ? (
-            <p className="text-zinc-500 text-sm">Brak połączonych platform.</p>
-          ) : (
-            <div className="space-y-2">
-              {connections.map((c) => {
-                const meta = PLATFORM_META[c.platform] ?? { label: c.platform, color: "#888", emoji: "🔗" };
-                return (
-                  <div key={c.id} className="border border-zinc-800 bg-black/30 p-3">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <span className="text-lg">{meta.emoji}</span>
-                      <span className="font-bold text-white text-sm">{meta.label}</span>
-                      <div className="ml-auto flex items-center gap-1 flex-wrap justify-end">
-                        {c.isModerator && (
-                          <span
-                            className="text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 flex items-center gap-1"
-                            style={{ background: "rgba(59,130,246,0.2)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.5)" }}
-                            title="Moderator tej platformy"
-                          >
-                            <ShieldCheck className="w-2.5 h-2.5" /> MOD
-                          </span>
-                        )}
-                        {c.isVip && (
-                          <span
-                            className="text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 flex items-center gap-1"
-                            style={{ background: "rgba(236,72,153,0.2)", color: "#f472b6", border: "1px solid rgba(236,72,153,0.5)" }}
-                          >
-                            <Star className="w-2.5 h-2.5" /> VIP
-                          </span>
-                        )}
-                        {c.isSubscriber && (
-                          <span
-                            className="text-[9px] font-bold tracking-widest uppercase px-2 py-0.5"
-                            style={{ background: meta.color + "30", color: meta.color, border: `1px solid ${meta.color}` }}
-                          >
-                            SUB {c.subTier ?? "?"} · {c.subMonths}mc
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-xs text-zinc-500 font-mono truncate">
-                      {/* Show only real handles — never a leaked full name or an
-                          email local-part fallback (e.g. Google login w/o YT handle). */}
-                      {isPublicHandle(c.username) ? `@${c.username}` : "połączono"}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </SectionCard>
-
-        {/* Social links editor */}
-        <SectionCard title="Social linki" icon={Globe} className="lg:col-span-2">
-          <SocialLinksEditor initialLinks={socialLinks} connections={connections} />
-        </SectionCard>
-
-        {/* Connected OAuth accounts — link more platforms to unify identities */}
-        <SectionCard title="Połączone platformy" icon={LinkIcon} className="lg:col-span-2">
-          <ConnectedAccountsCard linkedAccounts={linkedAccounts} />
-        </SectionCard>
-      </div>
+      {/* Unified: OAuth accounts (link/unlink + sub/mod/vip status) + social links */}
+      <SectionCard title="Połączone konta i linki" icon={LinkIcon}>
+        <AccountsAndLinks connections={connections} linkedAccounts={linkedAccounts} socialLinks={socialLinks} />
+      </SectionCard>
 
       {/* Achievements */}
       <SectionCard
@@ -553,22 +480,6 @@ function SectionCard({
   );
 }
 
-// Brand-color SVG icons for OAuth-derived tiles (lucide doesn't have official Twitch/Kick marks)
-function BrandIcon({ platform, className }: { platform: "twitch" | "kick"; className?: string }) {
-  if (platform === "twitch") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-      <path d="M1.714 0v24h6.857v-5.486h2.286v3.2h2.286V24h6.857v-6.857h-2.286V14.857h-2.286v-2.285h2.286V9.43h2.286V0h-6.857v6.857h-2.286V9.43H8.57V6.857H8.57V0z"/>
-    </svg>
-  );
-}
-
 type Tile = {
   key: string;
   platform: string;
@@ -581,10 +492,9 @@ type Tile = {
 };
 
 function SocialLinksEditor({
-  initialLinks, connections,
+  initialLinks,
 }: {
   initialLinks: Array<{ id: string; platform: string; handle: string; url: string }>;
-  connections: Array<{ platform: string; username: string }>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -594,7 +504,6 @@ function SocialLinksEditor({
   const [busy, setBusy] = useState<string | null>(null);
 
   const manualPlatforms = Object.keys(SOCIAL_META);
-  const autoConnections = connections.filter((c) => AUTO_PLATFORM_META[c.platform]);
 
   async function save(platform: string) {
     if (!draft.trim()) return;
@@ -638,44 +547,8 @@ function SocialLinksEditor({
   return (
     <div className="space-y-2">
       <p className="text-zinc-500 text-xs mb-1">
-        Kliknij platformę, by rozwinąć i edytować link. Twitch / Kick pobierane są z połączeń OAuth (zarządzasz w „Połączone konta”).
+        Publiczne linki na Twoim profilu. Kliknij platformę, by rozwinąć i edytować.
       </p>
-
-      {/* OAuth-derived (read-only) */}
-      {autoConnections.map((c) => {
-        const meta = AUTO_PLATFORM_META[c.platform];
-        const handle = isPublicHandle(c.username) ? c.username : "";
-        const key = `auto-${c.platform}`;
-        const isOpen = open === key;
-        return (
-          <div key={key} className="border border-zinc-800 bg-black/30">
-            <button
-              type="button"
-              onClick={() => { setOpen((o) => (o === key ? null : key)); setDraft(""); }}
-              aria-expanded={isOpen}
-              className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/[0.03] transition-colors"
-            >
-              <span style={{ color: meta.color }} className="shrink-0">
-                <BrandIcon platform={c.platform as "twitch" | "kick"} className="w-5 h-5" />
-              </span>
-              <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-300 flex-1">{meta.label}</span>
-              <span className="text-xs text-zinc-300 font-mono truncate max-w-[40%]">{handle ? `@${handle}` : meta.label}</span>
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 border border-zinc-800 px-1.5 py-0.5 shrink-0">OAuth</span>
-              <ChevronDown className={cn("w-4 h-4 text-zinc-500 shrink-0 transition-transform", isOpen && "rotate-180")} />
-            </button>
-            {isOpen && (
-              <div className="p-3 pt-0 text-xs text-zinc-500 space-y-2">
-                <p>Pobierane automatycznie z połączenia OAuth — zarządzaj w sekcji „Połączone konta”.</p>
-                {handle && (
-                  <a href={meta.urlFor(handle)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white">
-                    <LinkIcon className="w-3 h-3" /> Otwórz profil
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
 
       {/* Manual platforms (editable) */}
       {manualPlatforms.map((platform) => {
@@ -884,20 +757,22 @@ function prettyReason(reason: string, achByCode?: Map<string, string>): string {
   }
 }
 
-// ============== CONNECTED ACCOUNTS (link more platforms) ==============
+// ============== ACCOUNTS & LINKS (OAuth link/unlink + status + social links) ==============
 
-type ConnectableProvider = {
-  id: string;          // NextAuth provider id (twitch | kick | discord | google)
+type AccountProvider = {
+  id: string;            // NextAuth provider id (twitch | kick | discord | google)
+  connPlatform: string;  // Connection.platform key (google → youtube)
   label: string;
   color: string;
+  emoji: string;
   description: string;
 };
 
-const CONNECTABLE_PROVIDERS: ConnectableProvider[] = [
-  { id: "twitch",  label: "Twitch",         color: "#9146FF", description: "Subskrypcje, bity, EventSub" },
-  { id: "kick",    label: "Kick",           color: "#53FC18", description: "Status sub, follow" },
-  { id: "discord", label: "Discord",        color: "#5865F2", description: "Discord bot, voice/messages" },
-  { id: "google",  label: "Google / YouTube", color: "#FF0000", description: "YouTube channel (przyszłe super chaty)" },
+const ACCOUNT_PROVIDERS: AccountProvider[] = [
+  { id: "twitch",  connPlatform: "twitch",  label: "Twitch",  color: "#9146FF", emoji: "💜", description: "Subskrypcje, bity, EventSub" },
+  { id: "kick",    connPlatform: "kick",    label: "Kick",    color: "#53FC18", emoji: "🟢", description: "Status sub, follow" },
+  { id: "discord", connPlatform: "discord", label: "Discord", color: "#5865F2", emoji: "👾", description: "Bot Discord — tokeny za voice/wiadomości" },
+  { id: "google",  connPlatform: "youtube", label: "YouTube", color: "#FF0000", emoji: "📺", description: "Kanał YouTube (super chaty)" },
 ];
 
 const LINK_ERROR_MSG: Record<string, string> = {
@@ -907,10 +782,17 @@ const LINK_ERROR_MSG: Record<string, string> = {
   internal:                "Wewnętrzny błąd. Spróbuj ponownie.",
 };
 
-function ConnectedAccountsCard({
-  linkedAccounts,
+type ProfileConnection = Props["connections"][number];
+
+// One unified section: link/unlink OAuth platforms (with their sub/mod/VIP status
+// shown inline on each tile) + the manual social links — replaces the previous
+// three separate cards (Połączone konta / Social linki / Połączone platformy).
+function AccountsAndLinks({
+  connections, linkedAccounts, socialLinks,
 }: {
+  connections: ProfileConnection[];
   linkedAccounts: Array<{ provider: string; providerAccountId: string }>;
+  socialLinks: Array<{ id: string; platform: string; handle: string; url: string }>;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -923,13 +805,12 @@ function ConnectedAccountsCard({
     const linked = params.get("linked");
     const err = params.get("link_error");
     if (linked) {
-      const meta = CONNECTABLE_PROVIDERS.find((p) => p.id === linked);
+      const meta = ACCOUNT_PROVIDERS.find((p) => p.id === linked);
       setFlash({ kind: "ok", msg: `Połączono z ${meta?.label ?? linked}` });
     } else if (err) {
       setFlash({ kind: "err", msg: LINK_ERROR_MSG[err] ?? "Nie udało się połączyć platformy." });
     }
     if (linked || err) {
-      // Clean URL so a refresh doesn't show the message again
       const url = new URL(window.location.href);
       url.searchParams.delete("linked");
       url.searchParams.delete("link_error");
@@ -941,13 +822,14 @@ function ConnectedAccountsCard({
 
   const linkedProviders = new Set(linkedAccounts.map((a) => a.provider));
   const onlyOneMethod = linkedAccounts.length <= 1;
+  const connByPlatform = new Map(connections.map((c) => [c.platform, c] as const));
 
   function startLink(providerId: string) {
     window.location.href = `/api/profile/connections/link/${providerId}`;
   }
 
   async function unlink(providerId: string) {
-    const meta = CONNECTABLE_PROVIDERS.find((p) => p.id === providerId);
+    const meta = ACCOUNT_PROVIDERS.find((p) => p.id === providerId);
     if (!confirm(`Odłączyć ${meta?.label ?? providerId} od konta?`)) return;
     setBusy(providerId);
     try {
@@ -969,15 +851,11 @@ function ConnectedAccountsCard({
   }
 
   return (
-    <div>
-      <p className="text-zinc-500 text-xs mb-3">
-        Dodaj kolejne platformy do tego konta, żeby wszystko (tokeny, suby, achievementy) liczyło się w jednym miejscu — zamiast zakładania osobnego konta na każdej platformie.
-      </p>
-
+    <div className="space-y-6">
       {flash && (
         <div
           className={cn(
-            "mb-3 px-3 py-2 border text-xs",
+            "px-3 py-2 border text-xs",
             flash.kind === "ok"
               ? "border-green-700 bg-green-950/40 text-green-200"
               : "border-red-700 bg-red-950/40 text-red-200",
@@ -987,67 +865,104 @@ function ConnectedAccountsCard({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {CONNECTABLE_PROVIDERS.map((p) => {
-          const isLinked = linkedProviders.has(p.id);
-          const isBusy = busy === p.id;
-          return (
-            <div
-              key={p.id}
-              className={cn(
-                "border p-3 flex items-center gap-3",
-                isLinked ? "border-zinc-700 bg-black/30" : "border-zinc-900 bg-black/20",
-              )}
-            >
+      {/* Block 1 — OAuth accounts: link/unlink + sub/mod/VIP status on each tile */}
+      <div>
+        <h3 className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 mb-1">Konta (logowanie + ekonomia)</h3>
+        <p className="text-zinc-500 text-xs mb-3">
+          Połącz platformy z tym kontem — tokeny, suby i osiągnięcia liczą się w jednym miejscu (zamiast osobnego konta na każdej platformie).
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {ACCOUNT_PROVIDERS.map((p) => {
+            const isLinked = linkedProviders.has(p.id);
+            const isBusy = busy === p.id;
+            const conn = connByPlatform.get(p.connPlatform);
+            const handle = conn && isPublicHandle(conn.username) ? conn.username : null;
+            return (
               <div
-                className="w-2 h-10 shrink-0"
-                style={{ background: isLinked ? p.color : "#333" }}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="font-bold text-sm text-white">{p.label}</span>
+                key={p.id}
+                className={cn(
+                  "border p-3 flex items-stretch gap-3",
+                  isLinked ? "border-zinc-700 bg-black/30" : "border-zinc-900 bg-black/20",
+                )}
+              >
+                <div className="w-2 shrink-0" style={{ background: isLinked ? p.color : "#333" }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <span className="text-base">{p.emoji}</span>
+                    <span className="font-bold text-sm text-white">{p.label}</span>
+                    {isLinked ? (
+                      <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/30 text-green-300">
+                        Połączone
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-800 text-zinc-500">
+                        Nie połączone
+                      </span>
+                    )}
+                  </div>
+                  {/* Inline status (from the OAuth Connection): handle + sub/mod/VIP */}
+                  {isLinked && (handle || conn?.isModerator || conn?.isVip || conn?.isSubscriber) && (
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      {handle && <span className="text-xs text-zinc-400 font-mono truncate max-w-[60%]">@{handle}</span>}
+                      {conn?.isModerator && (
+                        <span className="text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 flex items-center gap-1" style={{ background: "rgba(59,130,246,0.2)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.5)" }}>
+                          <ShieldCheck className="w-2.5 h-2.5" /> MOD
+                        </span>
+                      )}
+                      {conn?.isVip && (
+                        <span className="text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 flex items-center gap-1" style={{ background: "rgba(236,72,153,0.2)", color: "#f472b6", border: "1px solid rgba(236,72,153,0.5)" }}>
+                          <Star className="w-2.5 h-2.5" /> VIP
+                        </span>
+                      )}
+                      {conn?.isSubscriber && (
+                        <span className="text-[9px] font-bold tracking-widest uppercase px-2 py-0.5" style={{ background: p.color + "30", color: p.color, border: `1px solid ${p.color}` }}>
+                          SUB {conn.subTier ?? "?"} · {conn.subMonths}mc
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="text-[11px] text-zinc-500 truncate">{p.description}</div>
+                </div>
+                <div className="shrink-0 flex items-center">
                   {isLinked ? (
-                    <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/30 text-green-300">
-                      Połączone
-                    </span>
+                    <button
+                      onClick={() => unlink(p.id)}
+                      disabled={isBusy || onlyOneMethod}
+                      title={onlyOneMethod ? "To Twoja jedyna metoda logowania — najpierw połącz inną" : "Odłącz"}
+                      className="text-[10px] font-mono uppercase tracking-widest border border-red-900 hover:border-red-700 hover:bg-red-950/40 text-red-400 hover:text-red-300 px-2.5 py-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                    >
+                      {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
+                      Odłącz
+                    </button>
                   ) : (
-                    <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-800 text-zinc-500">
-                      Nie połączone
-                    </span>
+                    <button
+                      onClick={() => startLink(p.id)}
+                      disabled={isBusy}
+                      className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 hover:border-red-700 hover:bg-red-950/40 text-zinc-300 hover:text-white px-2.5 py-1.5 transition-colors flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Połącz
+                    </button>
                   )}
                 </div>
-                <div className="text-[11px] text-zinc-500 truncate">{p.description}</div>
               </div>
-              {isLinked ? (
-                <button
-                  onClick={() => unlink(p.id)}
-                  disabled={isBusy || onlyOneMethod}
-                  title={onlyOneMethod ? "To Twoja jedyna metoda logowania — najpierw połącz inną" : "Odłącz"}
-                  className="text-[10px] font-mono uppercase tracking-widest border border-red-900 hover:border-red-700 hover:bg-red-950/40 text-red-400 hover:text-red-300 px-2.5 py-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
-                >
-                  {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
-                  Odłącz
-                </button>
-              ) : (
-                <button
-                  onClick={() => startLink(p.id)}
-                  disabled={isBusy}
-                  className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 hover:border-red-700 hover:bg-red-950/40 text-zinc-300 hover:text-white px-2.5 py-1.5 transition-colors flex items-center gap-1.5"
-                >
-                  <Plus className="w-3 h-3" />
-                  Połącz
-                </button>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        {onlyOneMethod && (
+          <p className="text-[10px] text-zinc-600 mt-3 italic">
+            Masz jedną metodę logowania — odłączenie jej zablokowałoby Cię w koncie. Połącz drugą platformę, żeby odblokować odłączanie.
+          </p>
+        )}
       </div>
 
-      {onlyOneMethod && (
-        <p className="text-[10px] text-zinc-600 mt-3 italic">
-          Masz jedną metodę logowania — odłączenie jej zablokowałoby Cię w koncie. Połącz drugą platformę żeby odblokować przycisk odłączenia.
-        </p>
-      )}
+      {/* Block 2 — manual social links (public handles shown on your profile) */}
+      <div className="border-t border-zinc-900 pt-5">
+        <h3 className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 mb-2 flex items-center gap-1.5">
+          <Globe className="w-3.5 h-3.5" /> Linki społecznościowe
+        </h3>
+        <SocialLinksEditor initialLinks={socialLinks} />
+      </div>
     </div>
   );
 }
