@@ -27,7 +27,8 @@
     "back": "Back",
     "save": "Save",
     "cancel": "Cancel",
-    "empty": "No data"
+    "empty": "No data",
+    "skipToContent": "Skip to content"
   },
   "footer": {
     "about": "About",

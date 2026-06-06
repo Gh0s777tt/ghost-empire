@@ -2,6 +2,8 @@
 // Generated /sitemap.xml listing public, indexable routes for search engines.
 // Auth-gated (/admin, /profile), API and OBS overlay routes are intentionally
 // excluded — they carry no SEO value and some require a session.
+// Each route lists PL (default, at /) + EN (/en) via hreflang alternates so
+// Google serves the right language version (i18n, next-intl `as-needed` prefix).
 import type { MetadataRoute } from "next";
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
@@ -31,5 +33,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency,
     priority,
+    alternates: {
+      languages: {
+        pl: `${BASE}${path}`,
+        en: `${BASE}/en${path}`,
+        "x-default": `${BASE}${path}`,
+      },
+    },
   }));
 }

@@ -27,7 +27,8 @@
     "back": "Wstecz",
     "save": "Zapisz",
     "cancel": "Anuluj",
-    "empty": "Brak danych"
+    "empty": "Brak danych",
+    "skipToContent": "Przejdź do treści"
   },
   "footer": {
     "about": "O nas",
