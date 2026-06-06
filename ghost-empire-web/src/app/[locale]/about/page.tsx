@@ -1,5 +1,6 @@
 // src/app/about/page.tsx
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import {
@@ -9,81 +10,20 @@ import {
 import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
 import { ChangelogList } from "@/components/ChangelogList";
 
-export const metadata = {
-  title: "O Ghost Empire",
-  description: "Co to jest Ghost Empire, jak zarabiać Ghost Tokens i jak zacząć.",
-};
-
-const FEATURES = [
-  {
-    icon: ShoppingBag, color: "#E50914",
-    title: "SKLEP",
-    desc: "Klucze Steam, skiny CS2, gifted suby, voice z Ghostem. Każda nagroda za Ghost Tokens.",
-    href: "/shop",
-  },
-  {
-    icon: Trophy, color: "#FFD700",
-    title: "RANKING",
-    desc: "4 rankingi: balans, lifetime earnings, level, streak. Top 100 + Twoja pozycja.",
-    href: "/ranking",
-  },
-  {
-    icon: Calendar, color: "#10b981",
-    title: "EVENTY",
-    desc: "Giveawaye, raffles, happy hours z mnożnikami x2. Wygrywaj prawdziwe nagrody.",
-    href: "/events",
-  },
-  {
-    icon: Dice5, color: "#8b5cf6",
-    title: "PREDICTIONS",
-    desc: "Obstawiaj wynik streama Ghost Tokenami. Wygrywający dzielą całą pulę proporcjonalnie do stawek.",
-    href: "/predictions",
-  },
-  {
-    icon: Ticket, color: "#f59e0b",
-    title: "BATTLE PASS",
-    desc: "Miesięczne sezony, 30 tierów. Zbieraj XP za każdą aktywność i odbieraj nagrody z kolejnych poziomów.",
-    href: "/seasons",
-  },
-  {
-    icon: Award, color: "#a855f7",
-    title: "OSIĄGNIĘCIA",
-    desc: "60 achievementów: common, rare, epic, legendary. Za level, prestiż, streak, pojedynki, kasyno, suby, donejty.",
-    href: "/achievements",
-  },
-  {
-    icon: Zap, color: "#FF4500",
-    title: "DAILY QUESTY",
-    desc: "Codziennie 3 zadania: czat, voice, drop. Bonus reward za wszystkie naraz.",
-    href: "/quests",
-  },
-  {
-    icon: Sparkles, color: "#3b82f6",
-    title: "STREAK SYSTEM",
-    desc: "Każdy dzień aktywności = +1 do streaka. Im dłużej, tym większy bonus daily.",
-    href: "/profile",
-  },
-];
-
-const EARN_WAYS = [
-  { emoji: "💬", title: "Wiadomości na Discord", desc: "Aktywny czat = tokeny. Daily limit chroni przed spamem." },
-  { emoji: "🎤", title: "Voice chat", desc: "Spędź czas na voice channelach z innymi. Tokeny lecą za każdą minutę." },
-  { emoji: "🎁", title: "Drop codes podczas live", desc: "Ghost wpisuje sekretne kody na stream. Wpisz pierwszy = bonus reward." },
-  { emoji: "👑", title: "Suby, gifty i bity", desc: "Sub na Twitch/Kick, gifted suby i bity są wykrywane automatycznie i nagradzane GT." },
-  { emoji: "💸", title: "Donacje i Super Chaty", desc: "Donejt przez Streamlabs lub YouTube Super Chat = tokeny + odznaki patrona." },
-  { emoji: "🎲", title: "Predictions", desc: "Dobrze obstawiony zakład na /predictions = część puli przegranych dla Ciebie." },
-  { emoji: "⚡", title: "Happy Hours x2", desc: "W trakcie aktywnego Happy Hour wszystkie tokeny lecą podwójnie." },
-  { emoji: "🏆", title: "Daily questy", desc: "3 zadania dziennie. Skończ wszystkie = bonus pula." },
-];
-
-const STEPS = [
-  { n: 1, title: "Zaloguj się", desc: "Przez Twitch, Kick, Discord lub Google/YouTube — wybór masz na stronie logowania. Pierwsze logowanie = 500 GT welcome bonus." },
-  { n: 2, title: "Połącz pozostałe platformy", desc: "Wejdź na /profile i dolinkuj resztę kont do jednego profilu. Sub na Twitch i Kick naraz = Dual Supporter." },
-  { n: 3, title: "Bądź aktywny", desc: "Pisz na Discord, hańguj na voice, wpisuj drop codes podczas live. Tokeny lecą w tle." },
-  { n: 4, title: "Wymień na nagrody", desc: "Wejdź na /shop. Coś dla każdego — od 8,000 GT (kolor nicka) po 1,500,000 GT (legendarny skin)." },
-];
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "about" });
+  return { title: t("metaTitle"), description: t("metaDesc") };
+}
 
 const CHANGELOG = [
+  {
+    date: "2026-06-06",
+    title: "Cały portal po angielsku 🌍",
+    items: [
+      "Wszystkie strony — łącznie z tą — są już dostępne po angielsku. Przełącz język flagą w nagłówku. (Ten dziennik zmian zostaje po polsku.)",
+    ],
+  },
   {
     date: "2026-06-06",
     title: "Profile publiczne po angielsku 🌍",
@@ -581,6 +521,34 @@ const CHANGELOG = [
 export default async function AboutPage() {
   const session = await auth();
   const isAuthed = !!session?.user?.id;
+  const t = await getTranslations("about");
+
+  const features = [
+    { icon: ShoppingBag, color: "#E50914", href: "/shop", title: t("featShopTitle"), desc: t("featShopDesc") },
+    { icon: Trophy, color: "#FFD700", href: "/ranking", title: t("featRankTitle"), desc: t("featRankDesc") },
+    { icon: Calendar, color: "#10b981", href: "/events", title: t("featEventsTitle"), desc: t("featEventsDesc") },
+    { icon: Dice5, color: "#8b5cf6", href: "/predictions", title: t("featPredTitle"), desc: t("featPredDesc") },
+    { icon: Ticket, color: "#f59e0b", href: "/seasons", title: t("featPassTitle"), desc: t("featPassDesc") },
+    { icon: Award, color: "#a855f7", href: "/achievements", title: t("featAchTitle"), desc: t("featAchDesc") },
+    { icon: Zap, color: "#FF4500", href: "/quests", title: t("featQuestTitle"), desc: t("featQuestDesc") },
+    { icon: Sparkles, color: "#3b82f6", href: "/profile", title: t("featStreakTitle"), desc: t("featStreakDesc") },
+  ];
+  const steps = [
+    { n: 1, title: t("step1Title"), desc: t("step1Desc") },
+    { n: 2, title: t("step2Title"), desc: t("step2Desc") },
+    { n: 3, title: t("step3Title"), desc: t("step3Desc") },
+    { n: 4, title: t("step4Title"), desc: t("step4Desc") },
+  ];
+  const earnWays = [
+    { emoji: "💬", title: t("earn1Title"), desc: t("earn1Desc") },
+    { emoji: "🎤", title: t("earn2Title"), desc: t("earn2Desc") },
+    { emoji: "🎁", title: t("earn3Title"), desc: t("earn3Desc") },
+    { emoji: "👑", title: t("earn4Title"), desc: t("earn4Desc") },
+    { emoji: "💸", title: t("earn5Title"), desc: t("earn5Desc") },
+    { emoji: "🎲", title: t("earn6Title"), desc: t("earn6Desc") },
+    { emoji: "⚡", title: t("earn7Title"), desc: t("earn7Desc") },
+    { emoji: "🏆", title: t("earn8Title"), desc: t("earn8Desc") },
+  ];
 
   return (
     <div className="min-h-screen bg-black">
@@ -613,10 +581,10 @@ export default async function AboutPage() {
             GH0ST EMPIRE
           </h1>
           <p className="text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto mb-2">
-            Oficjalny portal społeczności streamera Gh0s77tt.
+            {t("heroSub1")}
           </p>
           <p className="text-zinc-500 text-sm max-w-2xl mx-auto mb-8">
-            Zbieraj Ghost Tokens za aktywność, wymieniaj na nagrody, rywalizuj w rankingu, wygrywaj eventy.
+            {t("heroSub2")}
           </p>
 
           {!isAuthed ? (
@@ -624,14 +592,14 @@ export default async function AboutPage() {
               href="/auth/signin"
               className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-sm tracking-widest uppercase transition-all"
             >
-              Zaloguj się <ArrowRight className="w-4 h-4" />
+              {t("signIn")} <ArrowRight className="w-4 h-4" />
             </Link>
           ) : (
             <Link
               href="/"
               className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-sm tracking-widest uppercase transition-all"
             >
-              Wróć do portalu <ArrowRight className="w-4 h-4" />
+              {t("backToPortal")} <ArrowRight className="w-4 h-4" />
             </Link>
           )}
 
@@ -642,21 +610,18 @@ export default async function AboutPage() {
         </section>
 
         {/* Co to jest */}
-        <Section title="Co to jest?" id="o-projekcie">
+        <Section title={t("secWhat")} id="o-projekcie">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm leading-relaxed">
             <div className="md:col-span-2 text-zinc-300 space-y-3">
               <p>
-                <strong className="text-white">Ghost Empire</strong> to portal społeczności łączący Twitch, Kick, YouTube i Discord
-                w jedną ekonomię opartą na <strong className="text-red-400">Ghost Tokens (GT)</strong>.
+                {t.rich("whatP1", {
+                  b: (c) => <strong className="text-white">{c}</strong>,
+                  r: (c) => <strong className="text-red-400">{c}</strong>,
+                })}
               </p>
+              <p>{t("whatP2")}</p>
               <p>
-                Tokeny lecą Ci za każdą aktywność: pisanie na czacie, voice, oglądanie live'ów, wpisywanie drop kodów,
-                wykonywanie daily questów. Subowie zarabiają więcej. Streakerzy zarabiają jeszcze więcej.
-              </p>
-              <p>
-                Co zrobisz z tokenami? Wymienisz na <strong className="text-white">prawdziwe nagrody</strong> —
-                klucze Steam, skiny CS2, gifted suby na Twitch, custom kolor nicka Discord, voice 1-on-1 z Ghostem,
-                bilety na offline meetup.
+                {t.rich("whatP3", { b: (c) => <strong className="text-white">{c}</strong> })}
               </p>
             </div>
             <div
@@ -674,19 +639,19 @@ export default async function AboutPage() {
                 500 GT
               </div>
               <div className="text-[10px] font-mono uppercase tracking-widest text-red-300 mt-1">
-                Welcome bonus
+                {t("welcomeBonus")}
               </div>
               <div className="text-xs text-zinc-500 mt-2">
-                Za pierwsze logowanie. Bez warunków.
+                {t("welcomeBonusNote")}
               </div>
             </div>
           </div>
         </Section>
 
         {/* Funkcje */}
-        <Section title="Funkcje" id="funkcje">
+        <Section title={t("secFeatures")} id="funkcje">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {FEATURES.map((f) => {
+            {features.map((f) => {
               const Icon = f.icon;
               return (
                 <Link
@@ -717,9 +682,9 @@ export default async function AboutPage() {
         </Section>
 
         {/* Jak zacząć */}
-        <Section title="Jak zacząć" id="jak-zaczac">
+        <Section title={t("secStart")} id="jak-zaczac">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {STEPS.map((s) => (
+            {steps.map((s) => (
               <div
                 key={s.n}
                 className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4 flex gap-4"
@@ -740,9 +705,9 @@ export default async function AboutPage() {
         </Section>
 
         {/* Jak zarabiać */}
-        <Section title="Jak zarabiać Ghost Tokens" id="zarabianie">
+        <Section title={t("secEarn")} id="zarabianie">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {EARN_WAYS.map((w) => (
+            {earnWays.map((w) => (
               <div
                 key={w.title}
                 className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-3 flex items-start gap-3"
@@ -756,44 +721,44 @@ export default async function AboutPage() {
             ))}
           </div>
           <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mt-4 text-center">
-            * Mnożniki kumulują się (sub × happy_hour × streak).
+            {t("earnNote")}
           </p>
         </Section>
 
         {/* Socials */}
-        <Section title="Znajdziesz nas tutaj" id="socials">
+        <Section title={t("secSocials")} id="socials">
           <p className="text-zinc-400 text-sm mb-4 max-w-2xl">
-            Wszystkie oficjalne kanały Ghost Empire. Discord to centrum społeczności — eventy, drop codes, wsparcie.
+            {t("socialsText")}
           </p>
           <SocialLinksGrid />
         </Section>
 
         {/* Changelog */}
-        <Section title="Changelog" id="changelog">
-          <p className="text-zinc-500 text-xs mb-4">Kliknij wpis, aby rozwinąć szczegóły.</p>
+        <Section title={t("secChangelog")} id="changelog">
+          <p className="text-zinc-500 text-xs mb-4">{t("changelogIntro")}</p>
           <ChangelogList entries={CHANGELOG} />
         </Section>
 
         {/* Legal links */}
         <div className="py-6 text-center text-xs text-zinc-600 font-mono">
           <Link href="/privacy" className="hover:text-red-400 underline-offset-2 hover:underline">
-            Polityka prywatności
+            {t("privacy")}
           </Link>
           {" · "}
           <Link href="/terms" className="hover:text-red-400 underline-offset-2 hover:underline">
-            Regulamin
+            {t("terms")}
           </Link>
         </div>
 
         {/* Final CTA */}
         {!isAuthed && (
           <section className="py-12 text-center">
-            <div className="text-zinc-500 text-sm mb-4">Gotowy?</div>
+            <div className="text-zinc-500 text-sm mb-4">{t("ready")}</div>
             <Link
               href="/auth/signin"
               className="inline-flex items-center gap-2 px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-base tracking-widest uppercase transition-all"
             >
-              Dołącz do imperium <ArrowRight className="w-5 h-5" />
+              {t("join")} <ArrowRight className="w-5 h-5" />
             </Link>
           </section>
         )}
