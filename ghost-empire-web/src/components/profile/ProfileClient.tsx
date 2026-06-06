@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect, type ComponentType, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
   Globe, Music2, Flame, MessageCircle, Mic2,
@@ -10,7 +11,8 @@ import {
   Gamepad2, Radio, MessageSquare, Code2, ChevronDown,
 } from "lucide-react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
-import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
+import { formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscountFraction } from "@/lib/economy";
 
 type Achievement = {
@@ -97,31 +99,35 @@ type Props = {
 };
 
 const RARITY_STYLE: Record<string, { border: string; bg: string; text: string; label: string }> = {
-  common:    { border: "border-zinc-700",    bg: "bg-zinc-900/40",   text: "text-zinc-300",   label: "Pospolite" },
-  rare:      { border: "border-blue-700",    bg: "bg-blue-950/30",   text: "text-blue-300",   label: "Rzadkie" },
-  epic:      { border: "border-purple-700",  bg: "bg-purple-950/30", text: "text-purple-300", label: "Epickie" },
-  legendary: { border: "border-orange-600",  bg: "bg-orange-950/30", text: "text-orange-300", label: "Legendarne" },
+  common:    { border: "border-zinc-700",    bg: "bg-zinc-900/40",   text: "text-zinc-300",   label: "rarityCommon" },
+  rare:      { border: "border-blue-700",    bg: "bg-blue-950/30",   text: "text-blue-300",   label: "rarityRare" },
+  epic:      { border: "border-purple-700",  bg: "bg-purple-950/30", text: "text-purple-300", label: "rarityEpic" },
+  legendary: { border: "border-orange-600",  bg: "bg-orange-950/30", text: "text-orange-300", label: "rarityLegendary" },
 };
 
-// Manual social-link platforms (editable by user)
+// Manual social-link platforms (editable by user). `placeholder` is a "profile"
+// namespace key (translated at render); labels are brand names (kept as-is).
 const SOCIAL_META: Record<string, { label: string; icon: ComponentType<{ className?: string; style?: CSSProperties; strokeWidth?: number | string }>; color: string; placeholder: string }> = {
-  instagram: { label: "Instagram", icon: InstagramIcon, color: "#E4405F", placeholder: "twoj_handle" },
-  twitter:   { label: "X (Twitter)", icon: TwitterIcon, color: "#000",    placeholder: "twoj_handle" },
-  tiktok:    { label: "TikTok",    icon: Music2,    color: "#fff",    placeholder: "twoj_handle" },
-  youtube:   { label: "YouTube",   icon: YoutubeIcon,   color: "#FF0000", placeholder: "@channel lub link" },
-  rumble:    { label: "Rumble",    icon: Radio,     color: "#85c742", placeholder: "kanał lub link" },
-  trovo:     { label: "Trovo",     icon: Radio,     color: "#19d66c", placeholder: "nick" },
-  github:    { label: "GitHub",    icon: Code2,     color: "#fafafa", placeholder: "user" },
-  steam:     { label: "Steam",     icon: Gamepad2,  color: "#66c0f4", placeholder: "vanity lub link" },
-  psn:       { label: "PlayStation", icon: Gamepad2, color: "#0070d1", placeholder: "PSN ID" },
-  xbox:      { label: "Xbox",      icon: Gamepad2,  color: "#107C10", placeholder: "Gamertag" },
-  discord:   { label: "Discord (zaproszenie)", icon: MessageSquare, color: "#5865F2", placeholder: "discord.gg/..." },
-  website:   { label: "Website",   icon: Globe,     color: "#10b981", placeholder: "domena.pl" },
+  instagram: { label: "Instagram", icon: InstagramIcon, color: "#E4405F", placeholder: "phHandle" },
+  twitter:   { label: "X (Twitter)", icon: TwitterIcon, color: "#000",    placeholder: "phHandle" },
+  tiktok:    { label: "TikTok",    icon: Music2,    color: "#fff",    placeholder: "phHandle" },
+  youtube:   { label: "YouTube",   icon: YoutubeIcon,   color: "#FF0000", placeholder: "phYoutube" },
+  rumble:    { label: "Rumble",    icon: Radio,     color: "#85c742", placeholder: "phChannel" },
+  trovo:     { label: "Trovo",     icon: Radio,     color: "#19d66c", placeholder: "phNick" },
+  github:    { label: "GitHub",    icon: Code2,     color: "#fafafa", placeholder: "phUser" },
+  steam:     { label: "Steam",     icon: Gamepad2,  color: "#66c0f4", placeholder: "phVanity" },
+  psn:       { label: "PlayStation", icon: Gamepad2, color: "#0070d1", placeholder: "phPsn" },
+  xbox:      { label: "Xbox",      icon: Gamepad2,  color: "#107C10", placeholder: "phGamertag" },
+  discord:   { label: "Discord", icon: MessageSquare, color: "#5865F2", placeholder: "phDiscord" },
+  website:   { label: "Website",   icon: Globe,     color: "#10b981", placeholder: "phDomain" },
 };
 
 export function ProfileClient({
   user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelStats,
 }: Props) {
+  const t = useTranslations("profile");
+  const locale = useLocale();
+  const fmt = useLocaleFmt();
   const rank = rankForLevel(user.level);
   const duelTotal = duelStats.wins + duelStats.losses;
   const duelWinrate = duelTotal > 0 ? Math.round((duelStats.wins / duelTotal) * 100) : 0;
@@ -156,9 +162,9 @@ export function ProfileClient({
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
           className="absolute top-3 right-4 z-10 flex items-center gap-1.5 px-2.5 py-1 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase transition-all"
-          title="Wyloguj się"
+          title={t("logoutTitle")}
         >
-          <LogOut className="w-3 h-3" /> Wyloguj
+          <LogOut className="w-3 h-3" /> {t("logout")}
         </button>
         <div className="flex flex-col md:flex-row gap-6 items-start">
           <div className="relative shrink-0">
@@ -206,23 +212,23 @@ export function ProfileClient({
               {user.isDonator && (
                 <span
                   className="text-[10px] font-bold tracking-widest uppercase border border-yellow-500 bg-yellow-600/15 text-yellow-300 px-2 py-0.5 flex items-center gap-1"
-                  title={user.totalDonated > 0 ? `Łącznie wsparł: ${fmt(user.totalDonated)}` : "Donator"}
+                  title={user.totalDonated > 0 ? t("donatorTitle", { amount: fmt(user.totalDonated) }) : t("donatorTitleFallback")}
                 >
-                  <Heart className="w-2.5 h-2.5" /> DONATOR
+                  <Heart className="w-2.5 h-2.5" /> {t("badgeDonator")}
                 </span>
               )}
               {user.isBanned && (
                 <span
                   className="text-[10px] font-bold tracking-widest uppercase border-2 border-red-600 bg-red-950/60 text-red-300 px-2 py-0.5 flex items-center gap-1"
-                  title={user.banReason ?? "Konto zablokowane"}
+                  title={user.banReason ?? t("bannedTitleFallback")}
                 >
                   <Ban className="w-2.5 h-2.5" /> BANNED
-                  {user.bannedUntil && ` (do ${new Date(user.bannedUntil).toLocaleDateString("pl-PL")})`}
+                  {user.bannedUntil && ` (${t("bannedUntil", { date: formatDate(user.bannedUntil, locale) })})`}
                 </span>
               )}
             </div>
             <div className="flex items-center gap-3 text-zinc-500 font-mono text-xs mb-3 flex-wrap">
-              <span>@{user.username ?? "unset"}</span>
+              <span>@{user.username ?? t("usernameUnset")}</span>
               <span>·</span>
               <span style={{ color: rank.color }}>
                 {rank.emoji} {rank.name}
@@ -230,13 +236,13 @@ export function ProfileClient({
               {user.prestige > 0 && (
                 <span
                   className="text-[10px] font-bold tracking-widest uppercase border border-amber-600/60 bg-amber-950/30 text-amber-300 px-1.5 py-0.5"
-                  title={`Prestiż ${user.prestige} — Phantom Ascension`}
+                  title={t("prestigeTitle", { n: user.prestige })}
                 >
                   ✦ {user.prestige}
                 </span>
               )}
               <span>·</span>
-              <span>Od {formatDate(user.createdAt)}</span>
+              <span>{t("joined", { date: formatDate(user.createdAt, locale) })}</span>
             </div>
 
             {user.bio && (
@@ -247,7 +253,7 @@ export function ProfileClient({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
                 <span className="text-zinc-500">
-                  {atMax ? `XP do prestiżu ✦${user.prestige + 1}` : `XP do LVL ${user.level + 1}`}
+                  {atMax ? t("xpToPrestige", { n: user.prestige + 1 }) : t("xpToLevel", { n: user.level + 1 })}
                 </span>
                 <span className="text-white">
                   {atMax ? `${fmt(prestigeProgress)} / ${fmt(PRESTIGE_XP)}` : `${fmt(xpCurrent)} / 500`}
@@ -266,16 +272,16 @@ export function ProfileClient({
               </div>
               <p className="text-[10px] text-zinc-600 font-mono">
                 {atMax
-                  ? `Łącznie ${fmt(user.xp)} XP · max LVL osiągnięty — XP buduje teraz prestiż ✦`
-                  : `Łącznie ${fmt(user.xp)} XP · do max LVL 100 brakuje ${fmt(Math.max(0, xpForLevel(100) - user.xp))} XP`}
+                  ? t("xpTotalMax", { xp: fmt(user.xp) })
+                  : t("xpTotal", { xp: fmt(user.xp), left: fmt(Math.max(0, xpForLevel(100) - user.xp)) })}
               </p>
               {(user.level > 1 || user.prestige > 0) && (
                 <p className="text-[10px] font-mono text-emerald-400/90">
-                  Perk: +{Math.round(Math.min(50, (user.level - 1) * 0.5))}% GT z czatu
+                  {t("perkChat", { pct: Math.round(Math.min(50, (user.level - 1) * 0.5)) })}
                   {user.prestige > 0 &&
-                    ` · ✦${user.prestige}: +${Math.round((prestigeGtMultiplier(user.prestige) - 1) * 100)}% GT`}
+                    t("perkPrestige", { n: user.prestige, pct: Math.round((prestigeGtMultiplier(user.prestige) - 1) * 100) })}
                   {shopDiscountFraction(user.level, user.prestige) > 0 &&
-                    ` · −${Math.round(shopDiscountFraction(user.level, user.prestige) * 100)}% w sklepie`}
+                    t("perkShop", { pct: Math.round(shopDiscountFraction(user.level, user.prestige) * 100) })}
                 </p>
               )}
             </div>
@@ -285,17 +291,17 @@ export function ProfileClient({
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        <StatTile label="Balans" value={fmt(user.tokens)} suffix="GT" emoji="👻" accent />
-        <StatTile label="Zarobione" value={fmt(user.totalEarned)} suffix="GT" emoji="📈" />
-        <StatTile label="Wydane" value={fmt(user.totalSpent)} suffix="GT" emoji="💸" />
-        <StatTile label="Streak" value={user.streak.toString()} suffix={user.streak === 1 ? "dzień" : "dni"} emoji="🔥" />
-        <StatTile label="Wiadomości" value={fmt(user.messageCount)} emoji="💬" />
-        <StatTile label="Voice" value={fmt(user.voiceMinutes)} suffix="min" emoji="🎤" />
+        <StatTile label={t("statBalance")} value={fmt(user.tokens)} suffix="GT" emoji="👻" accent />
+        <StatTile label={t("statEarned")} value={fmt(user.totalEarned)} suffix="GT" emoji="📈" />
+        <StatTile label={t("statSpent")} value={fmt(user.totalSpent)} suffix="GT" emoji="💸" />
+        <StatTile label={t("statStreak")} value={user.streak.toString()} suffix={t("streakUnit", { count: user.streak })} emoji="🔥" />
+        <StatTile label={t("statMessages")} value={fmt(user.messageCount)} emoji="💬" />
+        <StatTile label={t("statVoice")} value={fmt(user.voiceMinutes)} suffix="min" emoji="🎤" />
         {duelTotal > 0 && (
           <StatTile
-            label="Pojedynki"
+            label={t("statDuels")}
             value={`${duelStats.wins}W·${duelStats.losses}L`}
-            suffix={`${duelWinrate}% WR`}
+            suffix={t("duelWr", { n: duelWinrate })}
             emoji="⚔️"
           />
         )}
@@ -304,28 +310,28 @@ export function ProfileClient({
       {/* Pending deliveries */}
       {pendingDeliveries.length > 0 && (
         <SectionCard
-          title="Zamówienia w realizacji"
+          title={t("pendingTitle")}
           icon={Flame}
           accent="orange"
-          subtitle={`${pendingDeliveries.length} ${pendingDeliveries.length === 1 ? "zakup" : "zakupów"} czeka na dostawę`}
+          subtitle={t("pendingSubtitle", { count: pendingDeliveries.length })}
         >
           <div className="space-y-2">
-            {pendingDeliveries.map((t) => (
+            {pendingDeliveries.map((tx) => (
               <div
-                key={t.id}
+                key={tx.id}
                 className="flex items-center gap-3 border border-orange-900/50 bg-orange-950/20 px-3 py-2.5"
               >
-                <span className="text-2xl">{t.shopItem?.imageEmoji ?? "🎁"}</span>
+                <span className="text-2xl">{tx.shopItem?.imageEmoji ?? "🎁"}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-white font-medium truncate">
-                    {t.shopItem?.name ?? prettyReason(t.reason, achByCode)}
+                    {tx.shopItem?.name ?? prettyReason(tx.reason, t, achByCode)}
                   </div>
                   <div className="text-[10px] font-mono text-orange-400 uppercase tracking-widest">
-                    Pending · zakup {formatDate(t.createdAt)}
+                    {t("pendingStatus", { date: formatDate(tx.createdAt, locale) })}
                   </div>
                 </div>
                 <div className="text-xs font-mono text-zinc-500 hidden sm:block">
-                  Skontaktuj się na Discord
+                  {t("pendingContact")}
                 </div>
               </div>
             ))}
@@ -337,15 +343,15 @@ export function ProfileClient({
       {!user.discordId && <DiscordLinkCard />}
 
       {/* Unified: OAuth accounts (link/unlink + sub/mod/vip status) + social links */}
-      <SectionCard title="Połączone konta i linki" icon={LinkIcon}>
+      <SectionCard title={t("accountsTitle")} icon={LinkIcon}>
         <AccountsAndLinks connections={connections} linkedAccounts={linkedAccounts} socialLinks={socialLinks} />
       </SectionCard>
 
       {/* Achievements */}
       <SectionCard
-        title="Osiągnięcia"
+        title={t("achievementsTitle")}
         icon={Trophy}
-        subtitle={`${earnedAchievements.length} / ${allAchievements.length} zdobyte`}
+        subtitle={t("achievementsSubtitle", { earned: earnedAchievements.length, total: allAchievements.length })}
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {allAchievements.map((a) => {
@@ -365,7 +371,7 @@ export function ProfileClient({
                   {a.name}
                 </div>
                 <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mt-1">
-                  {style.label}
+                  {t(style.label)}
                 </div>
               </div>
             );
@@ -375,29 +381,29 @@ export function ProfileClient({
 
       {/* Transaction history */}
       <SectionCard
-        title="Historia transakcji"
+        title={t("historyTitle")}
         icon={History}
-        subtitle={`Ostatnie ${transactions.length}`}
+        subtitle={t("historySubtitle", { count: transactions.length })}
       >
         {transactions.length === 0 ? (
-          <p className="text-zinc-500 text-sm">Brak transakcji.</p>
+          <p className="text-zinc-500 text-sm">{t("historyEmpty")}</p>
         ) : (
           <div className="divide-y divide-zinc-900">
-            {transactions.map((t) => {
-              const isEarn = t.amount > 0;
+            {transactions.map((tx) => {
+              const isEarn = tx.amount > 0;
               return (
-                <div key={t.id} className="flex items-center gap-3 py-2.5">
+                <div key={tx.id} className="flex items-center gap-3 py-2.5">
                   <span className="text-xl shrink-0">
-                    {t.shopItem?.imageEmoji ?? (isEarn ? "📈" : "🛒")}
+                    {tx.shopItem?.imageEmoji ?? (isEarn ? "📈" : "🛒")}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-white truncate">
-                      {t.shopItem?.name ?? prettyReason(t.reason, achByCode)}
+                      {tx.shopItem?.name ?? prettyReason(tx.reason, t, achByCode)}
                     </div>
                     <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
-                      {formatDate(t.createdAt)}
-                      {t.multiplier && t.multiplier !== 1 ? ` · ×${t.multiplier}` : ""}
-                      {t.status !== "completed" ? ` · ${t.status}` : ""}
+                      {formatDate(tx.createdAt, locale)}
+                      {tx.multiplier && tx.multiplier !== 1 ? ` · ×${tx.multiplier}` : ""}
+                      {tx.status !== "completed" ? ` · ${tx.status}` : ""}
                     </div>
                   </div>
                   <div
@@ -407,7 +413,7 @@ export function ProfileClient({
                     )}
                   >
                     {isEarn ? "+" : ""}
-                    {fmt(t.amount)} GT
+                    {fmt(tx.amount)} GT
                   </div>
                 </div>
               );
@@ -496,6 +502,7 @@ function SocialLinksEditor({
 }: {
   initialLinks: Array<{ id: string; platform: string; handle: string; url: string }>;
 }) {
+  const t = useTranslations("profile");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [links, setLinks] = useState(initialLinks);
@@ -547,7 +554,7 @@ function SocialLinksEditor({
   return (
     <div className="space-y-2">
       <p className="text-zinc-500 text-xs mb-1">
-        Publiczne linki na Twoim profilu. Kliknij platformę, by rozwinąć i edytować.
+        {t("socialIntro")}
       </p>
 
       {/* Manual platforms (editable) */}
@@ -577,7 +584,7 @@ function SocialLinksEditor({
                   <Check className="w-3.5 h-3.5 shrink-0" /> @{existing.handle}
                 </span>
               ) : (
-                <span className="text-xs text-zinc-600 shrink-0">brak</span>
+                <span className="text-xs text-zinc-600 shrink-0">{t("socialNone")}</span>
               )}
               <ChevronDown className={cn("w-4 h-4 text-zinc-500 shrink-0 transition-transform", isOpen && "rotate-180")} />
             </button>
@@ -593,14 +600,14 @@ function SocialLinksEditor({
                       if (e.key === "Enter") save(platform);
                       if (e.key === "Escape") { setOpen(null); setDraft(""); }
                     }}
-                    placeholder={meta.placeholder}
+                    placeholder={t(meta.placeholder)}
                     className="flex-1 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden font-mono min-w-0 focus:border-red-600"
                   />
-                  <button onClick={() => save(platform)} disabled={isBusy || !draft.trim()} className="text-green-400 hover:text-green-300 disabled:opacity-30" title="Zapisz">
+                  <button onClick={() => save(platform)} disabled={isBusy || !draft.trim()} className="text-green-400 hover:text-green-300 disabled:opacity-30" title={t("save")}>
                     {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                   </button>
                   {existing && (
-                    <button onClick={() => remove(platform)} disabled={isBusy} className="text-red-500 hover:text-red-400 disabled:opacity-30" title="Usuń">
+                    <button onClick={() => remove(platform)} disabled={isBusy} className="text-red-500 hover:text-red-400 disabled:opacity-30" title={t("remove")}>
                       {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
                     </button>
                   )}
@@ -620,6 +627,7 @@ function SocialLinksEditor({
 }
 
 function DiscordLinkCard() {
+  const t = useTranslations("profile");
   const [code, setCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -633,13 +641,13 @@ function DiscordLinkCard() {
       const res = await fetch("/api/profile/discord-link-code", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setErr(data.error ?? "Błąd");
+        setErr(data.error ?? t("discordErrGeneric"));
       } else {
         setCode(data.code);
         setExpiresAt(data.expiresAt);
       }
     } catch {
-      setErr("Brak połączenia");
+      setErr(t("discordErrConn"));
     } finally {
       setBusy(false);
     }
@@ -664,15 +672,14 @@ function DiscordLinkCard() {
         <div className="text-4xl shrink-0">👾</div>
         <div className="flex-1">
           <h3 className="font-display text-lg text-white tracking-wider mb-1">
-            POŁĄCZ DISCORD
+            {t("discordTitle")}
           </h3>
           <p className="text-zinc-400 text-xs leading-relaxed mb-4">
-            Bez połączenia bot Ghost Empire NIE może Ci dawać tokenów za aktywność na Discord
-            (wiadomości + voice). Wygeneruj kod i wpisz go w komendzie{" "}
-            <code className="bg-black/40 px-1.5 py-0.5 text-indigo-300 font-mono">
-              /link kod:XXXXXX
-            </code>{" "}
-            na serwerze Discord Ghosta.
+            {t.rich("discordIntro", {
+              code: (chunks) => (
+                <code className="bg-black/40 px-1.5 py-0.5 text-indigo-300 font-mono">{chunks}</code>
+              ),
+            })}
           </p>
 
           {!code ? (
@@ -682,7 +689,7 @@ function DiscordLinkCard() {
               className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center gap-2"
             >
               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LinkIcon className="w-3.5 h-3.5" />}
-              Wygeneruj kod
+              {t("discordGenerate")}
             </button>
           ) : (
             <div className="space-y-2">
@@ -693,17 +700,17 @@ function DiscordLinkCard() {
                 <button
                   onClick={copyCode}
                   className="px-3 py-3 border-2 border-indigo-700 hover:border-indigo-500 text-indigo-300 flex items-center justify-center"
-                  title="Kopiuj kod"
+                  title={t("discordCopyTitle")}
                 >
                   {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
               <div className="text-[10px] font-mono uppercase tracking-widest text-indigo-400 flex items-center justify-between">
-                <span>1. Skopiuj kod</span>
-                <span>2. Na Discordzie napisz: /link kod:{code}</span>
+                <span>{t("discordStep1")}</span>
+                <span>{t("discordStep2", { code })}</span>
               </div>
               <p className="text-[10px] text-zinc-500">
-                Kod wygasa za 10 minut. Po użyciu odśwież tę stronę.
+                {t("discordExpiry")}
               </p>
             </div>
           )}
@@ -719,13 +726,15 @@ function DiscordLinkCard() {
   );
 }
 
-function prettyReason(reason: string, achByCode?: Map<string, string>): string {
+// `t` is the "profile" translator passed from the calling component (module-scope
+// fn can't call the hook itself); typed loosely to avoid next-intl key-narrowing.
+function prettyReason(reason: string, t: any, achByCode?: Map<string, string>): string {
   const exact: Record<string, string> = {
-    welcome_bonus: "Bonus powitalny",
-    message: "Wiadomość Discord",
-    voice: "Aktywność voice",
-    kick_follow: "Follow na Kick",
-    kick_sub: "Subskrypcja Kick",
+    welcome_bonus: t("reasonWelcome"),
+    message: t("reasonMessage"),
+    voice: t("reasonVoice"),
+    kick_follow: t("reasonKickFollow"),
+    kick_sub: t("reasonKickSub"),
   };
   if (exact[reason]) return exact[reason];
 
@@ -734,25 +743,25 @@ function prettyReason(reason: string, achByCode?: Map<string, string>): string {
   const rest = colon === -1 ? "" : reason.slice(colon + 1);
 
   switch (key) {
-    case "achievement":       return achByCode?.get(rest) ? `Osiągnięcie: ${achByCode.get(rest)}` : "Osiągnięcie";
-    case "daily_task":        return "Daily quest";
-    case "shop":              return rest || "Zakup w sklepie";
-    case "season":            return "Nagroda sezonowa";
-    case "donation":          return "Donacja";
-    case "drop":              return rest.endsWith("_bonus") ? "Drop (bonus)" : "Drop";
-    case "raffle_tickets":    return rest ? `Bilety: ${rest}` : "Bilety na losowanie";
-    case "twitch_sub":        return "Subskrypcja Twitch";
-    case "twitch_gift_sub":   return "Gift suby (Twitch)";
-    case "twitch_cheer":      return "Bity (Twitch)";
-    case "kick_gift_sub":     return "Gift suby (Kick)";
-    case "yt_superchat":      return "YouTube Super Chat";
-    case "yt_member":         return "YouTube Member";
-    case "paymedia":          return "Płatność";
-    case "prediction_wager":  return "Zakład — postawiono";
-    case "prediction_win":    return "Zakład — wygrana";
-    case "prediction_refund": return "Zakład — zwrot";
-    case "prediction_cancel": return "Zakład — zwrot (anulowano)";
-    case "refund":            return `Zwrot: ${prettyReason(rest, achByCode)}`;
+    case "achievement":       return achByCode?.get(rest) ? t("reasonAchievement", { name: achByCode.get(rest) }) : t("reasonAchievementBare");
+    case "daily_task":        return t("reasonDailyTask");
+    case "shop":              return rest || t("reasonShop");
+    case "season":            return t("reasonSeason");
+    case "donation":          return t("reasonDonation");
+    case "drop":              return rest.endsWith("_bonus") ? t("reasonDropBonus") : t("reasonDrop");
+    case "raffle_tickets":    return rest ? t("reasonRaffleTickets", { rest }) : t("reasonRaffleBare");
+    case "twitch_sub":        return t("reasonTwitchSub");
+    case "twitch_gift_sub":   return t("reasonTwitchGiftSub");
+    case "twitch_cheer":      return t("reasonTwitchCheer");
+    case "kick_gift_sub":     return t("reasonKickGiftSub");
+    case "yt_superchat":      return t("reasonYtSuperchat");
+    case "yt_member":         return t("reasonYtMember");
+    case "paymedia":          return t("reasonPaymedia");
+    case "prediction_wager":  return t("reasonPredWager");
+    case "prediction_win":    return t("reasonPredWin");
+    case "prediction_refund": return t("reasonPredRefund");
+    case "prediction_cancel": return t("reasonPredCancel");
+    case "refund":            return t("reasonRefund", { inner: prettyReason(rest, t, achByCode) });
     default:                  return key.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
   }
 }
@@ -765,21 +774,22 @@ type AccountProvider = {
   label: string;
   color: string;
   emoji: string;
-  description: string;
+  description: string;   // "profile" namespace key (translated at render)
 };
 
 const ACCOUNT_PROVIDERS: AccountProvider[] = [
-  { id: "twitch",  connPlatform: "twitch",  label: "Twitch",  color: "#9146FF", emoji: "💜", description: "Subskrypcje, bity, EventSub" },
-  { id: "kick",    connPlatform: "kick",    label: "Kick",    color: "#53FC18", emoji: "🟢", description: "Status sub, follow" },
-  { id: "discord", connPlatform: "discord", label: "Discord", color: "#5865F2", emoji: "👾", description: "Bot Discord — tokeny za voice/wiadomości" },
-  { id: "google",  connPlatform: "youtube", label: "YouTube", color: "#FF0000", emoji: "📺", description: "Kanał YouTube (super chaty)" },
+  { id: "twitch",  connPlatform: "twitch",  label: "Twitch",  color: "#9146FF", emoji: "💜", description: "provTwitch" },
+  { id: "kick",    connPlatform: "kick",    label: "Kick",    color: "#53FC18", emoji: "🟢", description: "provKick" },
+  { id: "discord", connPlatform: "discord", label: "Discord", color: "#5865F2", emoji: "👾", description: "provDiscord" },
+  { id: "google",  connPlatform: "youtube", label: "YouTube", color: "#FF0000", emoji: "📺", description: "provYoutube" },
 ];
 
-const LINK_ERROR_MSG: Record<string, string> = {
-  target_missing:          "Konto źródłowe nie istnieje — spróbuj ponownie.",
-  already_used_by_another: "To konto platformy jest już połączone z innym kontem Ghost Empire.",
-  already_have_provider:   "Masz już połączoną tę platformę.",
-  internal:                "Wewnętrzny błąd. Spróbuj ponownie.",
+// Maps the OAuth round-trip error code to a "profile" namespace key.
+const LINK_ERROR_KEY: Record<string, string> = {
+  target_missing:          "errTargetMissing",
+  already_used_by_another: "errAlreadyUsed",
+  already_have_provider:   "errAlreadyHave",
+  internal:                "errInternal",
 };
 
 type ProfileConnection = Props["connections"][number];
@@ -794,6 +804,7 @@ function AccountsAndLinks({
   linkedAccounts: Array<{ provider: string; providerAccountId: string }>;
   socialLinks: Array<{ id: string; platform: string; handle: string; url: string }>;
 }) {
+  const t = useTranslations("profile");
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [flash, setFlash] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -806,9 +817,9 @@ function AccountsAndLinks({
     const err = params.get("link_error");
     if (linked) {
       const meta = ACCOUNT_PROVIDERS.find((p) => p.id === linked);
-      setFlash({ kind: "ok", msg: `Połączono z ${meta?.label ?? linked}` });
+      setFlash({ kind: "ok", msg: t("linkedFlash", { label: meta?.label ?? linked }) });
     } else if (err) {
-      setFlash({ kind: "err", msg: LINK_ERROR_MSG[err] ?? "Nie udało się połączyć platformy." });
+      setFlash({ kind: "err", msg: t(LINK_ERROR_KEY[err] ?? "linkFailGeneric") });
     }
     if (linked || err) {
       const url = new URL(window.location.href);
@@ -818,7 +829,7 @@ function AccountsAndLinks({
       const t = setTimeout(() => setFlash(null), 6000);
       return () => clearTimeout(t);
     }
-  }, []);
+  }, [t]);
 
   const linkedProviders = new Set(linkedAccounts.map((a) => a.provider));
   const onlyOneMethod = linkedAccounts.length <= 1;
@@ -830,7 +841,7 @@ function AccountsAndLinks({
 
   async function unlink(providerId: string) {
     const meta = ACCOUNT_PROVIDERS.find((p) => p.id === providerId);
-    if (!confirm(`Odłączyć ${meta?.label ?? providerId} od konta?`)) return;
+    if (!confirm(t("unlinkConfirm", { label: meta?.label ?? providerId }))) return;
     setBusy(providerId);
     try {
       const res = await fetch("/api/profile/connections/unlink", {
@@ -840,9 +851,9 @@ function AccountsAndLinks({
       });
       const data = await res.json();
       if (!res.ok) {
-        setFlash({ kind: "err", msg: data.error ?? "Nie udało się odłączyć." });
+        setFlash({ kind: "err", msg: data.error ?? t("unlinkFailGeneric") });
       } else {
-        setFlash({ kind: "ok", msg: `Odłączono ${meta?.label ?? providerId}` });
+        setFlash({ kind: "ok", msg: t("unlinkedFlash", { label: meta?.label ?? providerId }) });
         router.refresh();
       }
     } finally {
@@ -867,9 +878,9 @@ function AccountsAndLinks({
 
       {/* Block 1 — OAuth accounts: link/unlink + sub/mod/VIP status on each tile */}
       <div>
-        <h3 className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 mb-1">Konta (logowanie + ekonomia)</h3>
+        <h3 className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 mb-1">{t("accountsBlockTitle")}</h3>
         <p className="text-zinc-500 text-xs mb-3">
-          Połącz platformy z tym kontem — tokeny, suby i osiągnięcia liczą się w jednym miejscu (zamiast osobnego konta na każdej platformie).
+          {t("accountsBlockIntro")}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {ACCOUNT_PROVIDERS.map((p) => {
@@ -892,11 +903,11 @@ function AccountsAndLinks({
                     <span className="font-bold text-sm text-white">{p.label}</span>
                     {isLinked ? (
                       <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/30 text-green-300">
-                        Połączone
+                        {t("connected")}
                       </span>
                     ) : (
                       <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-800 text-zinc-500">
-                        Nie połączone
+                        {t("notConnected")}
                       </span>
                     )}
                   </div>
@@ -916,23 +927,23 @@ function AccountsAndLinks({
                       )}
                       {conn?.isSubscriber && (
                         <span className="text-[9px] font-bold tracking-widest uppercase px-2 py-0.5" style={{ background: p.color + "30", color: p.color, border: `1px solid ${p.color}` }}>
-                          SUB {conn.subTier ?? "?"} · {conn.subMonths}mc
+                          {t("subBadge", { tier: conn.subTier ?? "?", months: conn.subMonths })}
                         </span>
                       )}
                     </div>
                   )}
-                  <div className="text-[11px] text-zinc-500 truncate">{p.description}</div>
+                  <div className="text-[11px] text-zinc-500 truncate">{t(p.description)}</div>
                 </div>
                 <div className="shrink-0 flex items-center">
                   {isLinked ? (
                     <button
                       onClick={() => unlink(p.id)}
                       disabled={isBusy || onlyOneMethod}
-                      title={onlyOneMethod ? "To Twoja jedyna metoda logowania — najpierw połącz inną" : "Odłącz"}
+                      title={onlyOneMethod ? t("unlinkOnlyMethodTitle") : t("unlink")}
                       className="text-[10px] font-mono uppercase tracking-widest border border-red-900 hover:border-red-700 hover:bg-red-950/40 text-red-400 hover:text-red-300 px-2.5 py-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
                     >
                       {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
-                      Odłącz
+                      {t("unlink")}
                     </button>
                   ) : (
                     <button
@@ -941,7 +952,7 @@ function AccountsAndLinks({
                       className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 hover:border-red-700 hover:bg-red-950/40 text-zinc-300 hover:text-white px-2.5 py-1.5 transition-colors flex items-center gap-1.5"
                     >
                       <Plus className="w-3 h-3" />
-                      Połącz
+                      {t("link")}
                     </button>
                   )}
                 </div>
@@ -951,7 +962,7 @@ function AccountsAndLinks({
         </div>
         {onlyOneMethod && (
           <p className="text-[10px] text-zinc-600 mt-3 italic">
-            Masz jedną metodę logowania — odłączenie jej zablokowałoby Cię w koncie. Połącz drugą platformę, żeby odblokować odłączanie.
+            {t("onlyMethodNote")}
           </p>
         )}
       </div>
@@ -959,7 +970,7 @@ function AccountsAndLinks({
       {/* Block 2 — manual social links (public handles shown on your profile) */}
       <div className="border-t border-zinc-900 pt-5">
         <h3 className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 mb-2 flex items-center gap-1.5">
-          <Globe className="w-3.5 h-3.5" /> Linki społecznościowe
+          <Globe className="w-3.5 h-3.5" /> {t("socialBlockTitle")}
         </h3>
         <SocialLinksEditor initialLinks={socialLinks} />
       </div>
