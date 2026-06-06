@@ -164,6 +164,10 @@ export async function acceptDuel(opts: {
       })
       .catch(() => {});
 
+    // Duel-win achievements (best-effort; helper swallows its own errors).
+    const { checkAndGrantAchievements } = await import("@/lib/achievements");
+    await checkAndGrantAchievements({ userId: result.winnerId, triggerType: "duels_won" });
+
     return {
       ok: true,
       message: `⚔️ @${result.challengerName} vs @${accepterName} o ${fmt(result.bet)} GT → 🏆 wygrywa @${winnerName} i bierze ${fmt(result.winnerTakes)} GT!`,

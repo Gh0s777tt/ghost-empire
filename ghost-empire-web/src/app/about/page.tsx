@@ -49,7 +49,7 @@ const FEATURES = [
   {
     icon: Award, color: "#a855f7",
     title: "OSIĄGNIĘCIA",
-    desc: "53 achievementy: common, rare, epic, legendary. Za level, streak, suby, donejty, dropy i eventy.",
+    desc: "60 achievementów: common, rare, epic, legendary. Za level, prestiż, streak, pojedynki, kasyno, suby, donejty.",
     href: "/achievements",
   },
   {
@@ -85,6 +85,14 @@ const STEPS = [
 ];
 
 const CHANGELOG = [
+  {
+    date: "2026-06-06",
+    title: "Nowe osiągnięcia 🏆 — prestiż, pojedynki, kasyno",
+    items: [
+      "Doszło 7 nowych achievementów (jest ich teraz 60): za zdobycie gwiazdek prestiżu ✦, wygrane pojedynki !duel oraz granie w kasynie GT.",
+      "Przyznają się automatycznie z nagrodą GT, gdy osiągniesz dany próg.",
+    ],
+  },
   {
     date: "2026-06-06",
     title: "Pojedynki PvP ⚔️ — graj o GT z innymi",

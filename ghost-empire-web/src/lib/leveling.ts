@@ -121,6 +121,12 @@ export async function awardAccountXp(userId: string, amount: number): Promise<vo
             amountLabel: "LVL",
           },
     );
+
+    // Prestige achievements (Phantom Ascension) — best-effort, after the prestige-up.
+    if (prestigedUp) {
+      const { checkAndGrantAchievements } = await import("@/lib/achievements");
+      await checkAndGrantAchievements({ userId, triggerType: "prestige", hintValue: newPrestige });
+    }
   } catch (e) {
     log.error("awardAccountXp failed", e, { userId });
   }
