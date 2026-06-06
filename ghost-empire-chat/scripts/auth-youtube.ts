@@ -5,7 +5,11 @@ import http from "node:http";
 
 const clientId = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const redirectUri = "http://localhost:3000";
+// Default localhost:3000; override with YT_AUTH_REDIRECT if that port is taken
+// (e.g. another local dev server). Whatever you set MUST be added as an Authorized
+// redirect URI on the Google OAuth client.
+const redirectUri = process.env.YT_AUTH_REDIRECT ?? "http://localhost:3000";
+const listenPort = Number(new URL(redirectUri).port || 3000);
 const scope = "https://www.googleapis.com/auth/youtube.force-ssl"; // read + post live chat
 
 if (!clientId || !clientSecret) {
@@ -68,4 +72,4 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(3000, () => console.log("Listening on " + redirectUri + " …\n"));
+server.listen(listenPort, () => console.log("Listening on " + redirectUri + " …\n"));
