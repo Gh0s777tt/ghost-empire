@@ -7,7 +7,7 @@ import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
   Globe, Music2, Flame, MessageCircle, Mic2,
   Copy, ShieldCheck, Heart, Star, Crown, Ban, LogOut,
-  Gamepad2, Radio, MessageSquare, Code2,
+  Gamepad2, Radio, MessageSquare, Code2, ChevronDown,
 } from "lucide-react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
@@ -589,31 +589,12 @@ function SocialLinksEditor({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [links, setLinks] = useState(initialLinks);
-  const [editing, setEditing] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null); // rozwinięta platforma (klucz karty)
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
-  const [editMode, setEditMode] = useState(false);
 
   const manualPlatforms = Object.keys(SOCIAL_META);
-
-  // Tiles for OAuth-derived platforms (read-only — comes from Connection row)
-  const autoTiles: Tile[] = connections
-    .filter((c) => AUTO_PLATFORM_META[c.platform])
-    .map((c) => {
-      const meta = AUTO_PLATFORM_META[c.platform];
-      // Show only real handles — never a leaked full name or email local-part.
-      const handle = isPublicHandle(c.username) ? c.username : "";
-      return {
-        key: `auto-${c.platform}`,
-        platform: c.platform,
-        label: meta.label,
-        color: meta.color,
-        handle: handle || meta.label,
-        url: handle ? meta.urlFor(handle) : "#",
-        source: "auto" as const,
-        Icon: <BrandIcon platform={c.platform as "twitch" | "kick"} className="w-5 h-5" />,
-      };
-    });
+  const autoConnections = connections.filter((c) => AUTO_PLATFORM_META[c.platform]);
 
   async function save(platform: string) {
     if (!draft.trim()) return;
@@ -630,7 +611,7 @@ function SocialLinksEditor({
           const others = prev.filter((l) => l.platform !== platform);
           return [...others, data.link].sort((a, b) => a.platform.localeCompare(b.platform));
         });
-        setEditing(null);
+        setOpen(null);
         setDraft("");
         startTransition(() => router.refresh());
       }
@@ -642,11 +623,10 @@ function SocialLinksEditor({
   async function remove(platform: string) {
     setBusy(platform);
     try {
-      const res = await fetch(`/api/profile/social-links?platform=${platform}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/profile/social-links?platform=${platform}`, { method: "DELETE" });
       if (res.ok) {
         setLinks((prev) => prev.filter((l) => l.platform !== platform));
+        setOpen(null);
         startTransition(() => router.refresh());
       }
     } finally {
@@ -654,231 +634,114 @@ function SocialLinksEditor({
     }
   }
 
-  // Manual links with data — rendered in main view alongside auto tiles
-  const manualTiles: Tile[] = manualPlatforms.flatMap((platform) => {
-    const link = links.find((l) => l.platform === platform);
-    if (!link) return [];
-    const meta = SOCIAL_META[platform];
-    const Icon = meta.icon;
-    const tile: Tile = {
-      key: `manual-${platform}`,
-      platform,
-      label: meta.label,
-      color: meta.color,
-      handle: link.handle,
-      url: link.url,
-      source: "manual",
-      Icon: <Icon className="w-5 h-5" style={{ color: meta.color }} strokeWidth={2} />,
-    };
-    return [tile];
-  });
-
-  const allTiles = [...autoTiles, ...manualTiles];
-
-  // === View mode: tile grid ===
-  if (!editMode) {
-    return (
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-zinc-500 text-xs">
-            Kliknij kafelek żeby przejść do profilu. {autoTiles.length > 0 && (
-              <span className="text-zinc-600">({autoTiles.length} auto z OAuth)</span>
-            )}
-          </p>
-          <button
-            onClick={() => setEditMode(true)}
-            className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-700 px-2.5 py-1 transition-colors"
-          >
-            Edytuj
-          </button>
-        </div>
-
-        {allTiles.length === 0 ? (
-          <div className="text-center py-8 border border-zinc-900 bg-black/20">
-            <p className="text-zinc-600 text-xs mb-2">Brak social linków</p>
-            <button
-              onClick={() => setEditMode(true)}
-              className="text-[11px] font-mono uppercase tracking-widest text-red-400 hover:text-red-300"
-            >
-              + Dodaj pierwszy
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {allTiles.map((tile) => (
-              <a
-                key={tile.key}
-                href={tile.url}
-                target="_blank"
-                rel="noreferrer"
-                title={`${tile.label} — @${tile.handle}`}
-                className="group relative border border-zinc-800 bg-black/30 p-3 flex items-center gap-2.5 hover:border-transparent transition-all"
-                style={{
-                  clipPath:
-                    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = `0 0 18px ${tile.color}55, inset 0 0 0 1px ${tile.color}`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "";
-                }}
-              >
-                <div
-                  className="w-9 h-9 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
-                  style={{ color: tile.color }}
-                >
-                  {tile.Icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 truncate">
-                    {tile.label}
-                  </div>
-                  <div className="text-xs text-white font-mono truncate">@{tile.handle}</div>
-                </div>
-                {tile.source === "auto" && (
-                  <span className="text-[8px] font-mono uppercase tracking-widest text-zinc-600 border border-zinc-800 px-1 py-0.5 shrink-0">
-                    OAuth
-                  </span>
-                )}
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // === Edit mode: per-platform rows with handle inputs ===
+  // Rozwijana karta per platforma (klik nagłówek → edycja). Spójne z kartami integracji.
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-zinc-500 text-xs">
-          Twitch / Kick są pobierane automatycznie z połączeń OAuth — nie da się ich edytować tutaj.
-        </p>
-        <button
-          onClick={() => { setEditMode(false); setEditing(null); setDraft(""); }}
-          className="text-[10px] font-mono uppercase tracking-widest text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 px-2.5 py-1 transition-colors"
-        >
-          Gotowe
-        </button>
-      </div>
+    <div className="space-y-2">
+      <p className="text-zinc-500 text-xs mb-1">
+        Kliknij platformę, by rozwinąć i edytować link. Twitch / Kick pobierane są z połączeń OAuth (zarządzasz w „Połączone konta”).
+      </p>
 
       {/* OAuth-derived (read-only) */}
-      {autoTiles.length > 0 && (
-        <div className="space-y-1.5 mb-3">
-          {autoTiles.map((tile) => (
-            <div
-              key={tile.key}
-              className="border border-zinc-900 bg-black/20 p-2.5 flex items-center gap-2"
+      {autoConnections.map((c) => {
+        const meta = AUTO_PLATFORM_META[c.platform];
+        const handle = isPublicHandle(c.username) ? c.username : "";
+        const key = `auto-${c.platform}`;
+        const isOpen = open === key;
+        return (
+          <div key={key} className="border border-zinc-800 bg-black/30">
+            <button
+              type="button"
+              onClick={() => { setOpen((o) => (o === key ? null : key)); setDraft(""); }}
+              aria-expanded={isOpen}
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/[0.03] transition-colors"
             >
-              <span style={{ color: tile.color }} className="shrink-0">{tile.Icon}</span>
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                  {tile.label}
-                </div>
-                <div className="text-xs text-zinc-300 font-mono truncate">@{tile.handle}</div>
-              </div>
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 border border-zinc-800 px-1.5 py-0.5">
-                OAuth · read-only
+              <span style={{ color: meta.color }} className="shrink-0">
+                <BrandIcon platform={c.platform as "twitch" | "kick"} className="w-5 h-5" />
               </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Manual social links (editable) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {manualPlatforms.map((platform) => {
-          const meta = SOCIAL_META[platform];
-          const Icon = meta.icon;
-          const existing = links.find((l) => l.platform === platform);
-          const isEditing = editing === platform;
-          const isBusy = busy === platform || pending;
-
-          if (isEditing) {
-            return (
-              <div key={platform} className="border border-red-900/50 bg-black/40 p-2.5 flex items-center gap-2">
-                <Icon className="w-4 h-4 shrink-0" style={{ color: meta.color }} />
-                <input
-                  autoFocus
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") save(platform);
-                    if (e.key === "Escape") { setEditing(null); setDraft(""); }
-                  }}
-                  placeholder={meta.placeholder}
-                  className="flex-1 bg-transparent text-xs text-white outline-hidden font-mono min-w-0"
-                />
-                <button
-                  onClick={() => save(platform)}
-                  disabled={isBusy || !draft.trim()}
-                  className="text-green-400 hover:text-green-300 disabled:opacity-30"
-                >
-                  {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                </button>
-                <button
-                  onClick={() => { setEditing(null); setDraft(""); }}
-                  className="text-zinc-500 hover:text-zinc-300"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            );
-          }
-
-          return (
-            <div
-              key={platform}
-              className={cn(
-                "border bg-black/30 p-2.5 flex items-center gap-2",
-                existing ? "border-zinc-800" : "border-zinc-900",
-              )}
-            >
-              <Icon className="w-4 h-4 shrink-0" style={{ color: meta.color }} />
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                  {meta.label}
-                </div>
-                {existing ? (
-                  <span className="text-xs text-white font-mono truncate block">@{existing.handle}</span>
-                ) : (
-                  <span className="text-xs text-zinc-600 italic">Brak</span>
+              <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-300 flex-1">{meta.label}</span>
+              <span className="text-xs text-zinc-300 font-mono truncate max-w-[40%]">{handle ? `@${handle}` : meta.label}</span>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 border border-zinc-800 px-1.5 py-0.5 shrink-0">OAuth</span>
+              <ChevronDown className={cn("w-4 h-4 text-zinc-500 shrink-0 transition-transform", isOpen && "rotate-180")} />
+            </button>
+            {isOpen && (
+              <div className="p-3 pt-0 text-xs text-zinc-500 space-y-2">
+                <p>Pobierane automatycznie z połączenia OAuth — zarządzaj w sekcji „Połączone konta”.</p>
+                {handle && (
+                  <a href={meta.urlFor(handle)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white">
+                    <LinkIcon className="w-3 h-3" /> Otwórz profil
+                  </a>
                 )}
               </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Manual platforms (editable) */}
+      {manualPlatforms.map((platform) => {
+        const meta = SOCIAL_META[platform];
+        const Icon = meta.icon;
+        const existing = links.find((l) => l.platform === platform);
+        const key = `manual-${platform}`;
+        const isOpen = open === key;
+        const isBusy = busy === platform || pending;
+        return (
+          <div key={key} className={cn("border bg-black/30", existing ? "border-zinc-800" : "border-zinc-900")}>
+            <button
+              type="button"
+              onClick={() => {
+                const next = isOpen ? null : key;
+                setOpen(next);
+                setDraft(next ? (existing?.handle ?? "") : "");
+              }}
+              aria-expanded={isOpen}
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/[0.03] transition-colors"
+            >
+              <Icon className="w-5 h-5 shrink-0" style={{ color: meta.color }} strokeWidth={2} />
+              <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-300 flex-1">{meta.label}</span>
               {existing ? (
-                <>
-                  <button
-                    onClick={() => { setEditing(platform); setDraft(existing.handle); }}
-                    disabled={isBusy}
-                    className="text-zinc-500 hover:text-zinc-300 text-[10px] font-mono uppercase tracking-widest"
-                  >
-                    Edytuj
-                  </button>
-                  <button
-                    onClick={() => remove(platform)}
-                    disabled={isBusy}
-                    className="text-red-500 hover:text-red-400 disabled:opacity-30"
-                    title="Usuń"
-                  >
-                    {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
-                  </button>
-                </>
+                <span className="flex items-center gap-1.5 text-xs text-green-500 font-mono shrink-0 truncate max-w-[45%]">
+                  <Check className="w-3.5 h-3.5 shrink-0" /> @{existing.handle}
+                </span>
               ) : (
-                <button
-                  onClick={() => { setEditing(platform); setDraft(""); }}
-                  disabled={isBusy}
-                  className="text-zinc-500 hover:text-red-400"
-                  title="Dodaj"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+                <span className="text-xs text-zinc-600 shrink-0">brak</span>
               )}
-            </div>
-          );
-        })}
-      </div>
+              <ChevronDown className={cn("w-4 h-4 text-zinc-500 shrink-0 transition-transform", isOpen && "rotate-180")} />
+            </button>
+            {isOpen && (
+              <div className="p-3 pt-0 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Icon className="w-4 h-4 shrink-0" style={{ color: meta.color }} />
+                  <input
+                    autoFocus
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") save(platform);
+                      if (e.key === "Escape") { setOpen(null); setDraft(""); }
+                    }}
+                    placeholder={meta.placeholder}
+                    className="flex-1 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden font-mono min-w-0 focus:border-red-600"
+                  />
+                  <button onClick={() => save(platform)} disabled={isBusy || !draft.trim()} className="text-green-400 hover:text-green-300 disabled:opacity-30" title="Zapisz">
+                    {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  {existing && (
+                    <button onClick={() => remove(platform)} disabled={isBusy} className="text-red-500 hover:text-red-400 disabled:opacity-30" title="Usuń">
+                      {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                    </button>
+                  )}
+                </div>
+                {existing && (
+                  <a href={existing.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-white break-all">
+                    <LinkIcon className="w-3 h-3 shrink-0" /> {existing.url}
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

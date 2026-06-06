@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Linki na profilu jak karty 🔗",
+    items: [
+      "Edytor linków na profilu działa teraz jak panel integracji: każda platforma to zwijana karta — widzisz status (@handle / brak / OAuth), a po kliknięciu rozwijasz edycję.",
+      "Łączenie kont przez OAuth (Twitch / Kick / Discord / YouTube) — klikasz „Połącz”, przekierowuje na platformę i łączy — jest w karcie „Połączone konta” na profilu.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Czytelniejszy panel integracji 🔌",
     items: [
       "W panelu admina integracje (AI, Sentry, OBS) są teraz zwijane: widzisz status (skonfigurowane / brak), a po kliknięciu rozwijają się pola do edycji — koniec ze ścianą pól naraz.",
