@@ -215,7 +215,7 @@ export function AdminClient({
       setTimeout(() => setToast(null), 7000);
       const url = new URL(window.location.href);
       ["kick_success","kick_error","twitch_success","twitch_error","yt_success","yt_error"]
-        .forEach((k) => url.searchParams.delete(k));
+        .forEach((k) => { url.searchParams.delete(k); });
       window.history.replaceState(null, "", url.toString());
     }
      

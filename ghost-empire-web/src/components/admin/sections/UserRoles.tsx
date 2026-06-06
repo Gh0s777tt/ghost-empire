@@ -29,7 +29,7 @@ function ModPermissionsPicker({
         <div className="flex gap-1">
           <button
             type="button"
-            onClick={() => MOD_PERMISSIONS.forEach((p) => !selected.has(p.id) && onToggle(p.id))}
+            onClick={() => MOD_PERMISSIONS.forEach((p) => { if (!selected.has(p.id)) onToggle(p.id); })}
             className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 hover:text-green-400"
           >
             Zaznacz wszystkie
@@ -37,7 +37,7 @@ function ModPermissionsPicker({
           <span className="text-[9px] text-zinc-700">·</span>
           <button
             type="button"
-            onClick={() => MOD_PERMISSIONS.forEach((p) => selected.has(p.id) && onToggle(p.id))}
+            onClick={() => MOD_PERMISSIONS.forEach((p) => { if (selected.has(p.id)) onToggle(p.id); })}
             className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 hover:text-red-400"
           >
             Wyczyść

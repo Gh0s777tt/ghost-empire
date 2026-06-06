@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { RotateCw, ArrowLeft } from "lucide-react";
 
-export default function Error({
+export default function GlobalError({
   error,
   reset,
 }: {
