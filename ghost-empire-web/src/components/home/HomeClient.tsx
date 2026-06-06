@@ -2,7 +2,7 @@
 // src/components/home/HomeClient.tsx
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, Check, Clock, Zap, Gift, Trophy } from "lucide-react";
 import { fmt, timeLeft, rankForLevel, displayNick } from "@/lib/utils";
 import { EmptyState } from "@/components/EmptyState";
@@ -417,6 +417,7 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
 // ---- EVENT MINI CARD ----
 function EventMiniCard({ event }: { event: any }) {
   const t = useTranslations("home");
+  const locale = useLocale();
   const typeStyles: Record<string, any> = {
     happy_hour: { icon: Zap,    color: "#E50914", label: "HAPPY HOUR" },
     giveaway:   { icon: Gift,   color: "#FFD700", label: "GIVEAWAY" },
@@ -448,7 +449,7 @@ function EventMiniCard({ event }: { event: any }) {
           {event.endsAt && (
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {timeLeft(event.endsAt)}
+              {timeLeft(event.endsAt, locale)}
             </span>
           )}
         </div>

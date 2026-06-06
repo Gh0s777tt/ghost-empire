@@ -1,7 +1,7 @@
 // src/app/u/[username]/page.tsx
 // Public profile — visible to anyone (no auth required). Shows only public stats.
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -75,6 +75,7 @@ export default async function PublicProfilePage({
 }) {
   const { username } = await params;
   const t = await getTranslations("userProfile");
+  const locale = await getLocale();
   const session = await auth();
   const isOwnProfile = session?.user?.username === username;
 
@@ -247,7 +248,7 @@ export default async function PublicProfilePage({
                     </span>
                   )}
                   <span>·</span>
-                  <span>{t("since", { date: formatDate(user.createdAt) })}</span>
+                  <span>{t("since", { date: formatDate(user.createdAt, locale) })}</span>
                 </div>
                 {user.bio && (
                   <p className="text-zinc-400 text-sm mb-4 italic">"{user.bio}"</p>

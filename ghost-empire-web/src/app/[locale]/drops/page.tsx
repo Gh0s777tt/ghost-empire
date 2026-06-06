@@ -7,7 +7,7 @@ import { Gift, Trophy, Clock, Sparkles } from "lucide-react";
 import { fmt, formatDate, timeAgo } from "@/lib/utils";
 
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function DropsPage() {
   const session = await auth();
   const isAuthenticated = !!session?.user?.id;
+  const locale = await getLocale();
 
   let myClaims: Array<{
     id: string;
@@ -170,7 +171,7 @@ export default async function DropsPage() {
                             )}
                           </div>
                           <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
-                            {timeAgo(c.claimedAt)} · {formatDate(c.claimedAt)}
+                            {timeAgo(c.claimedAt, locale)} · {formatDate(c.claimedAt, locale)}
                           </div>
                         </div>
                         <div className="font-mono text-sm font-bold text-green-400 tabular-nums">
