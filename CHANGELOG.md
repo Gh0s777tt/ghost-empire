@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **Górny pasek — grupowana, rozwijana nawigacja** **(#183)** — rosnąca liczba zakładek (Koło / Kasyno / Gry / Ankiety…) zaczynała się nie mieścić w poziomym pasku. Nawigacja desktopowa to teraz **3 bezpośrednie linki** (HOME · SKLEP · RANKING) + **2 rozwijane grupy** (jak w panelu admina): **GRY ▾** (Kasyno / Koło Fortuny / Biblioteka gier) i **SPOŁECZNOŚĆ ▾** (Eventy / Ankiety / Osiągnięcia / Plan streamów). Dropdowny otwierają się na hover **i** na focus klawiaturą (`group-focus-within`, a11y), czysto CSS (bez stanu) — nowe funkcje wpadają do grupy zamiast dokładać kolejną zakładkę. `PROFIL` usunięty z paska (jest w menu avatara). Mobile bez zmian (płaski scroll wszystkich pozycji). `Header.tsx`, zielone: `tsc` / `next build`.
+
 - **Helper `auth:youtube` — konfigurowalny port redirectu** — `scripts/auth-youtube.ts` czyta teraz `YT_AUTH_REDIRECT` (fallback `http://localhost:3000`), więc gdy domyślny port jest zajęty (np. inny lokalny dev-server), re-auth YouTube można odpalić na innym porcie bez edycji kodu. Bez wpływu na produkcję.
 
 ### Fixed

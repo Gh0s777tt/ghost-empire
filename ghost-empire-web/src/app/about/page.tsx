@@ -87,6 +87,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Czytelniejsze górne menu 🧭",
+    items: [
+      "Górny pasek został pogrupowany w rozwijane sekcje (GRY, SPOŁECZNOŚĆ) — koniec z tłokiem, gdy przybywa zakładek. Klikasz/najeżdżasz na grupę i wysuwa się lista.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Ruletka 🎡 w kasynie",
     items: [
       "Doszła ruletka: obstaw czerwone/czarne (wygrana 2×) albo konkretną liczbę 0–36 (wygrana 36×).",
