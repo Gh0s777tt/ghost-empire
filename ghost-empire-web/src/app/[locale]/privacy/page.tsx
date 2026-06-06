@@ -1,15 +1,38 @@
 // src/app/privacy/page.tsx
 // Polityka prywatności — wymóg RODO przy zbieraniu danych osobowych przez OAuth
-import Link from "next/link";
+import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { Header } from "@/components/Header";
 import { Shield } from "lucide-react";
 
-export const metadata = {
-  title: "Polityka prywatności",
-  description: "Jak Ghost Empire przetwarza Twoje dane osobowe (RODO).",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "privacy" });
+  return { title: t("metaTitle"), description: t("metaDesc") };
+}
 
-export default function PrivacyPage() {
+const S2B = ["s2b1", "s2b2", "s2b3", "s2b4", "s2b5", "s2b6"];
+const S2C = ["s2c1", "s2c2", "s2c3", "s2c4"];
+const S3 = ["s3b1", "s3b2", "s3b3", "s3b4", "s3b5"];
+const S4 = ["s4b1", "s4b2", "s4b3", "s4b4"];
+const S5 = ["s5b1", "s5b2", "s5b3", "s5b4", "s5b5"];
+const S6 = ["s6b1", "s6b2", "s6b3", "s6b4", "s6b5", "s6b6"];
+const S7 = ["s7b1", "s7b2", "s7b3", "s7b4", "s7b5", "s7b6", "s7b7"];
+
+export default async function PrivacyPage() {
+  const t = await getTranslations("privacy");
+  const richTags = {
+    b: (c: ReactNode) => <strong className="text-white">{c}</strong>,
+    em: (c: ReactNode) => <em>{c}</em>,
+    discord: (c: ReactNode) => (
+      <a href="https://discord.gg/deAPJ9Ym2F" target="_blank" rel="noreferrer" className="text-red-400 hover:underline">{c}</a>
+    ),
+  };
+  // Dynamic-key helper (messages aren't statically typed here).
+  const tr = (key: string): ReactNode =>
+    (t.rich as unknown as (k: string, v: typeof richTags) => ReactNode)(key, richTags);
+
   return (
     <div className="min-h-screen bg-black">
       <Header />
@@ -22,115 +45,69 @@ export default function PrivacyPage() {
                 className="font-display text-4xl text-white tracking-wider"
                 style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
               >
-                POLITYKA PRYWATNOŚCI
+                {t("title")}
               </h1>
             </div>
-            <p className="text-zinc-500 text-sm">
-              Ostatnia aktualizacja: 26 maja 2026
-            </p>
+            <p className="text-zinc-500 text-sm">{t("lastUpdated")}</p>
           </div>
 
-          <Section title="1. Administrator danych">
-            <p>
-              Administratorem Twoich danych osobowych w portalu Ghost Empire (dalej: <em>Portal</em>)
-              jest <strong>Gh0s77tt</strong> — streamer prowadzący działalność na platformach
-              Twitch, Kick i Discord. Kontakt w sprawach RODO:
-              przez serwer Discord{" "}
-              <a href="https://discord.gg/deAPJ9Ym2F" target="_blank" rel="noreferrer" className="text-red-400 hover:underline">
-                discord.gg/deAPJ9Ym2F
-              </a>
-              {" "}— wiadomość prywatna do admina.
-            </p>
+          <Section title={t("s1")}>
+            <p>{tr("s1p")}</p>
           </Section>
 
-          <Section title="2. Jakie dane zbieramy">
-            <p className="mb-3">Przy logowaniu przez OAuth (Twitch / Discord) Portal otrzymuje:</p>
+          <Section title={t("s2")}>
+            <p className="mb-3">{t("s2intro1")}</p>
             <ul className="space-y-1.5 ml-4">
-              <Bullet>Twój <strong>adres email</strong> (z konta Twitch lub Discord)</Bullet>
-              <Bullet>Twój <strong>nick</strong> (username) oraz wyświetlana nazwa (display name)</Bullet>
-              <Bullet>Twój <strong>avatar</strong> (URL obrazka)</Bullet>
-              <Bullet>Twój <strong>ID platformy</strong> (Twitch User ID, Discord User ID — unikalne identyfikatory)</Bullet>
-              <Bullet>OAuth <strong>access token i refresh token</strong> (do utrzymania sesji i odświeżania danych)</Bullet>
-              <Bullet>Status <strong>subskrypcji</strong> kanału (jeśli dostępny przez API)</Bullet>
+              {S2B.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
-            <p className="mt-3">Podczas korzystania z Portalu zbieramy też:</p>
+            <p className="mt-3">{t("s2intro2")}</p>
             <ul className="space-y-1.5 ml-4 mt-2">
-              <Bullet>Liczbę wiadomości na Discord, czas spędzony na voice — przesyłane przez bota Discord</Bullet>
-              <Bullet>Historię transakcji Ghost Tokens (zarobione, wydane, donacje)</Bullet>
-              <Bullet>Zdobyte osiągnięcia, ukończone questy, kupione przedmioty w sklepie</Bullet>
-              <Bullet>IP request'u przy akcjach administracyjnych (audit log, do celów bezpieczeństwa)</Bullet>
+              {S2C.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
-          <Section title="3. Po co przetwarzamy dane">
+          <Section title={t("s3")}>
             <ul className="space-y-1.5 ml-4">
-              <Bullet><strong>Autoryzacja:</strong> logowanie i utrzymanie sesji (art. 6 ust. 1 lit. b RODO — wykonanie umowy)</Bullet>
-              <Bullet><strong>Ekonomia Ghost Tokens:</strong> naliczanie nagród, realizacja zakupów, prowadzenie rankingu</Bullet>
-              <Bullet><strong>Identyfikacja subskrybentów:</strong> przyznawanie dodatkowych funkcji subom Twitch/Kick</Bullet>
-              <Bullet><strong>Bezpieczeństwo:</strong> audit log akcji admin, rate limiting, wykrywanie nadużyć (art. 6 ust. 1 lit. f — uzasadniony interes)</Bullet>
-              <Bullet><strong>Komunikacja:</strong> powiadomienia w portalu (np. "wygrałeś giveaway")</Bullet>
+              {S3.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
-          <Section title="4. Komu przekazujemy dane">
+          <Section title={t("s4")}>
             <ul className="space-y-1.5 ml-4">
-              <Bullet><strong>Vercel Inc.</strong> (USA) — hosting Portalu. Standardowe klauzule umowne (SCC)</Bullet>
-              <Bullet><strong>Supabase Inc.</strong> (Frankfurt, EU) — baza danych. Hosted w eu-central-1</Bullet>
-              <Bullet><strong>Twitch Interactive Inc.</strong> i <strong>Discord Inc.</strong> — providery OAuth, do uwierzytelnienia</Bullet>
-              <Bullet>Nie sprzedajemy ani nie udostępniamy danych marketerom</Bullet>
+              {S4.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
-          <Section title="5. Jak długo przechowujemy dane">
+          <Section title={t("s5")}>
             <ul className="space-y-1.5 ml-4">
-              <Bullet><strong>Konto użytkownika:</strong> do momentu usunięcia (na Twój wniosek)</Bullet>
-              <Bullet><strong>OAuth tokens:</strong> rotowane automatycznie, stare usuwane</Bullet>
-              <Bullet><strong>Sesje:</strong> 30 dni od ostatniego logowania</Bullet>
-              <Bullet><strong>Audit log akcji admin:</strong> bezterminowo (do celów bezpieczeństwa i forensics)</Bullet>
-              <Bullet><strong>Powiadomienia:</strong> usuwane po 90 dniach</Bullet>
+              {S5.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
-          <Section title="6. Twoje prawa (RODO)">
+          <Section title={t("s6")}>
             <ul className="space-y-1.5 ml-4">
-              <Bullet><strong>Prawo dostępu</strong> — możesz poprosić o kopię swoich danych</Bullet>
-              <Bullet><strong>Prawo do sprostowania</strong> — poprawiamy błędne dane</Bullet>
-              <Bullet><strong>Prawo do usunięcia</strong> (prawo do bycia zapomnianym) — kasujemy konto i wszystkie powiązane dane</Bullet>
-              <Bullet><strong>Prawo do ograniczenia przetwarzania</strong></Bullet>
-              <Bullet><strong>Prawo do przenoszenia danych</strong> — eksport w formacie JSON</Bullet>
-              <Bullet><strong>Prawo do wniesienia skargi</strong> do Prezesa UODO (https://uodo.gov.pl)</Bullet>
+              {S6.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
-            <p className="mt-3">
-              Aby skorzystać z dowolnego prawa — napisz na Discord do admina serwera{" "}
-              <a href="https://discord.gg/deAPJ9Ym2F" target="_blank" rel="noreferrer" className="text-red-400 hover:underline">
-                Ghost Empire
-              </a>. Odpowiemy w ciągu 30 dni.
-            </p>
+            <p className="mt-3">{tr("s6p")}</p>
           </Section>
 
-          <Section title="7. Bezpieczeństwo">
-            <p>Stosujemy:</p>
+          <Section title={t("s7")}>
+            <p>{t("s7intro")}</p>
             <ul className="space-y-1.5 ml-4 mt-2">
-              <Bullet>HTTPS (TLS 1.3) na całym ruchu</Bullet>
-              <Bullet>HSTS preload (force-https na 2 lata)</Bullet>
-              <Bullet>Content Security Policy, X-Frame-Options, Permissions-Policy headers</Bullet>
-              <Bullet>Rate limiting na publicznych endpointach</Bullet>
-              <Bullet>Atomic database transactions dla operacji ekonomii</Bullet>
-              <Bullet>Audit log z IP dla wszystkich akcji administracyjnych</Bullet>
-              <Bullet>Hasła OAuth NIE są przechowywane — używamy tylko tokenów</Bullet>
+              {S7.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
-          <Section title="8. Cookies">
-            <p>Portal używa cookies wyłącznie technicznych (sesja NextAuth) — niezbędnych do funkcjonowania. Nie używamy cookies trackingowych / marketingowych / analytics.</p>
+          <Section title={t("s8")}>
+            <p>{t("s8p")}</p>
           </Section>
 
-          <Section title="9. Zmiany polityki">
-            <p>Zmiany publikujemy na tej stronie. Większe zmiany ogłaszamy na Discord. Korzystanie z Portalu po wprowadzeniu zmian oznacza ich akceptację.</p>
+          <Section title={t("s9")}>
+            <p>{t("s9p")}</p>
           </Section>
 
           <div className="border-t border-zinc-800 pt-6 text-center text-xs text-zinc-600">
-            Zobacz też: <Link href="/terms" className="text-zinc-400 hover:text-red-400">Regulamin</Link>
+            {t("seeAlso")} <Link href="/terms" className="text-zinc-400 hover:text-red-400">{t("termsLink")}</Link>
           </div>
         </div>
       </main>
@@ -138,7 +115,7 @@ export default function PrivacyPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section
       className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-5"
@@ -152,7 +129,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Bullet({ children }: { children: React.ReactNode }) {
+function Bullet({ children }: { children: ReactNode }) {
   return (
     <li className="flex gap-2">
       <span className="text-red-500 shrink-0">▸</span>
