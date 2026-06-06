@@ -290,5 +290,48 @@
     "unitVoice": "min",
     "unitDrop": "drop",
     "unitPurchase": "buy"
+  },
+  "kasyno": {
+    "title": "🎰 GT Casino",
+    "subtitlePre": "Slots, coinflip and roulette for Ghost Tokens. In chat too:",
+    "loginToPlay": "Sign in to play",
+    "err": "Error",
+    "connError": "Connection error",
+    "stake": "Stake",
+    "slots": "🎰 Slots",
+    "coinflip": "🪙 Coinflip",
+    "rouletteLabel": "🎡 Roulette:",
+    "red": "🔴 Red 2×",
+    "black": "⚫ Black 2×",
+    "number": "🎯 Number 36×",
+    "balance": "Balance:",
+    "bigWins": "Biggest wins (30 days)",
+    "topNet": "Top net (30 days)",
+    "gameSlots": "Slots",
+    "gameCoinflip": "Coinflip",
+    "gameRoulette": "Roulette"
+  },
+  "wheel": {
+    "title": "🎡 Wheel of Fortune",
+    "subtitle": "Spin and win Ghost Tokens.",
+    "loading": "Loading…",
+    "disabled": "The Wheel of Fortune is currently disabled. Check back later!",
+    "won": "You won {reward} GT — {label}! 🎉",
+    "tryAgain": "{label} — try again!",
+    "spinFailed": "Couldn't spin",
+    "connError": "Connection error",
+    "spinning": "Spinning…",
+    "spinCost": "Spin for {cost} GT",
+    "balance": "Your balance:",
+    "cantAfford": "— not enough to spin",
+    "loginToPlay": "Sign in to play",
+    "recentWins": "Recent wins"
+  },
+  "games": {
+    "metaTitle": "Game library",
+    "metaDesc": "Games I play — an aggregated library (Steam and more).",
+    "title": "🎮 Game library",
+    "countLine": "<b>{count}</b> games · <b>{hours}h</b> total",
+    "empty": "The library is empty for now — check back later."
   }
 }
