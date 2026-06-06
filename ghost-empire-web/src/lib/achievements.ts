@@ -28,6 +28,9 @@ export type AchievementTriggerType =
   | "shop_purchases"         // # of shop items bought
   | "platforms_linked"       // # of OAuth platforms linked to account
   | "yt_member"              // YT membership received
+  | "prestige"               // prestige stars (Phantom Ascension)
+  | "duels_won"              // # of PvP duels won
+  | "casino_plays"           // # of GT casino games played (slots/coinflip)
   // Existing in seed file:
   | "level"
   | "streak"
@@ -212,6 +215,17 @@ async function computeCurrentValue(userId: string, triggerType: AchievementTrigg
 
     case "platforms_linked":
       return prisma.connection.count({ where: { userId } });
+
+    case "prestige": {
+      const u = await prisma.user.findUnique({ where: { id: userId }, select: { prestige: true } });
+      return u?.prestige ?? 0;
+    }
+
+    case "duels_won":
+      return prisma.duel.count({ where: { status: "resolved", winnerId: userId } });
+
+    case "casino_plays":
+      return prisma.gtGamePlay.count({ where: { userId } });
 
     case "tokens_earned": {
       const u = await prisma.user.findUnique({ where: { id: userId }, select: { totalEarned: true } });

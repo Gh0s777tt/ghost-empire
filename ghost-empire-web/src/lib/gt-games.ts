@@ -88,6 +88,10 @@ export async function playGtGame(userId: string, game: "slots" | "coinflip", bet
       return fresh?.tokens ?? 0;
     });
 
+    // Casino achievements (best-effort; helper swallows its own errors, never throws).
+    const { checkAndGrantAchievements } = await import("@/lib/achievements");
+    await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
+
     return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels };
   } catch (e) {
     if (e instanceof GtGameError) return { ok: false, status: e.status, error: e.message };

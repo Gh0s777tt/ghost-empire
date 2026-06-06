@@ -39,7 +39,7 @@ Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** 
 
 ## ✨ W skrócie — co potrafi
 
-`👻 Ekonomia GT` &nbsp; `🛒 Sklep` &nbsp; `🎁 Eventy & raffle` &nbsp; `🎲 Predictions` &nbsp; `🏆 Battle Pass / Sezony` &nbsp; `🗳️ Ankiety` &nbsp; `🏅 53 osiągnięcia` &nbsp; `📅 Daily questy` &nbsp; `🔑 Drop-code'y` &nbsp; `📊 Ranking` &nbsp; `💬 Chat bot ×3 platformy` &nbsp; `🛡️ Automod` &nbsp; `⏱️ Timery` &nbsp; `❓ FAQ` &nbsp; `👋 Powitania` &nbsp; `🎵 Song requesty` &nbsp; `🔔 Alerty OBS (per-typ)` &nbsp; `🎯 Stream Goals + Hype Train` &nbsp; `⏳ Subathon` &nbsp; `🧩 Biblioteka + generator widgetów` &nbsp; `🖼️ 11 overlayów z podglądem`
+`👻 Ekonomia GT` &nbsp; `🛒 Sklep` &nbsp; `🎁 Eventy & raffle` &nbsp; `🎲 Predictions` &nbsp; `🏆 Battle Pass / Sezony` &nbsp; `🗳️ Ankiety` &nbsp; `🏅 60 osiągnięć` &nbsp; `📅 Daily questy` &nbsp; `🔑 Drop-code'y` &nbsp; `📊 Ranking` &nbsp; `💬 Chat bot ×3 platformy` &nbsp; `🛡️ Automod` &nbsp; `⏱️ Timery` &nbsp; `❓ FAQ` &nbsp; `👋 Powitania` &nbsp; `🎵 Song requesty` &nbsp; `🔔 Alerty OBS (per-typ)` &nbsp; `🎯 Stream Goals + Hype Train` &nbsp; `⏳ Subathon` &nbsp; `🧩 Biblioteka + generator widgetów` &nbsp; `🖼️ 11 overlayów z podglądem`
 
 ---
 
@@ -134,7 +134,7 @@ flowchart LR
 - **Sklep** (`/shop`) — itemy z requirementami (level, sub tier, dual platform, **odblokowanie przez osiągnięcie**) + grafiki
 - **Eventy** (`/events`) — giveaway, raffle z biletami, contest, happy hour (mnożnik) + **szablony okolicznościowe**
 - **Ranking** (`/ranking`), **Profil** (`/profile`), **profil publiczny** (`/u/[username]`) z **dynamicznym OG per ranga**
-- **53 osiągnięcia** (4 rzadkości, auto-grant), **daily questy**, **streak**, **drop-code'y**, **ankiety** (`/polls`)
+- **60 osiągnięć** (4 rzadkości, auto-grant), **daily questy**, **streak**, **drop-code'y**, **ankiety** (`/polls`)
 - **Discord bot** — tracking msg/voice, slash commands (`/link`, `/portal`, `/help`), live config
 </details>
 

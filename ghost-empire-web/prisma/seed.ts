@@ -84,6 +84,19 @@ async function main() {
     // Platforms linked
     { code: "linked_2",          name: "Dwa Konta",              icon: "🔗", rarity: "common",    description: "Połącz drugą platformę OAuth",              triggerType: "platforms_linked",      triggerValue: 2,   tokenReward: 500 },
     { code: "linked_4",          name: "Wszystkie Platformy",    icon: "🌐", rarity: "epic",      description: "Połącz 4 platformy (TW/Kick/DC/Google)",    triggerType: "platforms_linked",      triggerValue: 4,   tokenReward: 5000 },
+
+    // Prestiż (Phantom Ascension) — gwiazdki ✦ za lifetime XP ponad max level
+    { code: "prestige_1",        name: "Wniebowstąpienie",       icon: "✦", rarity: "epic",      description: "Zdobądź pierwszą gwiazdkę prestiżu ✦",       triggerType: "prestige",              triggerValue: 1,   tokenReward: 10000 },
+    { code: "prestige_5",        name: "Pięć Gwiazd",            icon: "✦", rarity: "legendary", description: "Zdobądź 5 gwiazdek prestiżu ✦",              triggerType: "prestige",              triggerValue: 5,   tokenReward: 50000 },
+
+    // Pojedynki PvP (!duel) — wygrane walki
+    { code: "duel_win_1",        name: "Pierwsza Krew",          icon: "⚔️", rarity: "common",    description: "Wygraj pierwszy pojedynek",                  triggerType: "duels_won",             triggerValue: 1,   tokenReward: 500 },
+    { code: "duel_win_10",       name: "Pojedynkowicz",          icon: "⚔️", rarity: "rare",      description: "Wygraj 10 pojedynków",                       triggerType: "duels_won",             triggerValue: 10,  tokenReward: 5000 },
+    { code: "duel_win_50",       name: "Gladiator",              icon: "🗡️", rarity: "epic",      description: "Wygraj 50 pojedynków",                       triggerType: "duels_won",             triggerValue: 50,  tokenReward: 20000 },
+
+    // Kasyno GT (sloty / coinflip) — liczba gier
+    { code: "casino_first",      name: "Pierwszy Zakład",        icon: "🎰", rarity: "common",    description: "Zagraj pierwszy raz w kasynie GT",           triggerType: "casino_plays",          triggerValue: 1,   tokenReward: 200 },
+    { code: "casino_100",        name: "Hazardzista",            icon: "🎲", rarity: "rare",      description: "Zagraj 100 razy w kasynie GT",               triggerType: "casino_plays",          triggerValue: 100, tokenReward: 5000 },
   ];
 
   for (const a of achievements) {
