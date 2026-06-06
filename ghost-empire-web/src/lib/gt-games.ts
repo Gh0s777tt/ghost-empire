@@ -37,6 +37,41 @@ export function flipCoin(rng: () => number = Math.random): { win: boolean; multi
   return { win, multiplier: win ? 2 : 0 };
 }
 
+// Roulette: European single-zero wheel (0-36). Bets: red/black (2×) or a straight number
+// (36×). The single green 0 is the house edge → RTP ≈ 0.973 on every bet type (a GT sink).
+const ROULETTE_RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+
+export type RouletteColor = "green" | "red" | "black";
+
+export function rouletteColor(n: number): RouletteColor {
+  if (n === 0) return "green";
+  return ROULETTE_RED.has(n) ? "red" : "black";
+}
+
+/** Canonical roulette bet, or null if invalid. Accepts red/black (+ PL/short aliases) or 0-36. */
+export function normRouletteChoice(choice?: string): string | null {
+  const s = (choice ?? "").trim().toLowerCase();
+  if (["red", "r", "czerwone", "czerwony", "🔴"].includes(s)) return "red";
+  if (["black", "b", "czarne", "czarny", "⚫"].includes(s)) return "black";
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10);
+    if (n >= 0 && n <= 36) return String(n);
+  }
+  return null;
+}
+
+export type RouletteOutcome = { n: number; color: RouletteColor; multiplier: number };
+
+/** Spin the wheel + resolve a (pre-normalized) bet. `rng()` is a [0,1) source. */
+export function spinRoulette(choice: string, rng: () => number = Math.random): RouletteOutcome {
+  const n = Math.floor(rng() * 37); // 0-36 uniform
+  const color = rouletteColor(n);
+  let multiplier = 0;
+  if (choice === "red" || choice === "black") multiplier = color === choice ? 2 : 0;
+  else if (/^\d+$/.test(choice)) multiplier = n === parseInt(choice, 10) ? 36 : 0;
+  return { n, color, multiplier };
+}
+
 export type GtGameResult =
   | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[] }
   | { ok: false; status: number; error: string };
@@ -45,8 +80,14 @@ export class GtGameError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
-/** Charge `bet`, resolve the game, pay winnings and log it — atomically. */
-export async function playGtGame(userId: string, game: "slots" | "coinflip", bet: number): Promise<GtGameResult> {
+/** Charge `bet`, resolve the game, pay winnings and log it — atomically. `choice` is only
+ *  used by roulette (red/black or a number 0-36). */
+export async function playGtGame(
+  userId: string,
+  game: "slots" | "coinflip" | "roulette",
+  bet: number,
+  choice?: string,
+): Promise<GtGameResult> {
   if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) {
     return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} GT` };
   }
@@ -63,6 +104,13 @@ export async function playGtGame(userId: string, game: "slots" | "coinflip", bet
     const o = flipCoin();
     detail = o.win ? "✅ orzeł" : "❌ reszka";
     payout = o.win ? bet * o.multiplier : 0;
+  } else if (game === "roulette") {
+    const c = normRouletteChoice(choice);
+    if (!c) return { ok: false, status: 400, error: "Wybierz: red / black / liczba 0-36" };
+    const o = spinRoulette(c);
+    const emoji = o.color === "red" ? "🔴" : o.color === "black" ? "⚫" : "🟢";
+    detail = `${emoji} ${o.n}`;
+    payout = o.multiplier > 0 ? bet * o.multiplier : 0;
   } else {
     return { ok: false, status: 400, error: "Nieznana gra" };
   }

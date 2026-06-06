@@ -87,6 +87,14 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Ruletka 🎡 w kasynie",
+    items: [
+      "Doszła ruletka: obstaw czerwone/czarne (wygrana 2×) albo konkretną liczbę 0–36 (wygrana 36×).",
+      "Na czacie: „!roulette 100 red” lub „!roulette 100 17”; na stronie /kasyno klikasz kolory albo wpisujesz liczbę.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Napad kooperacyjny 🏦 (!heist)",
     items: [
       "Nowa mini-gra dla całej widowni: wpisz „!heist 100”, żeby zebrać ekipę na napad na skarbiec Ghost Tokenów.",

@@ -12,13 +12,16 @@ export async function POST(req: Request) {
   if (!verifyBotSecret(req.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  let body: { platform?: string; platformUserId?: string; username?: string; game?: string; bet?: number };
+  let body: { platform?: string; platformUserId?: string; username?: string; game?: string; bet?: number; choice?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const platform = String(body.platform ?? "");
-  const game = body.game === "coinflip" ? "coinflip" : body.game === "slots" ? "slots" : null;
+  const game =
+    body.game === "coinflip" ? "coinflip" :
+    body.game === "slots" ? "slots" :
+    body.game === "roulette" ? "roulette" : null;
   const bet = Math.floor(Number(body.bet ?? 0));
   if (!game) return NextResponse.json({ message: null });
 
@@ -41,17 +44,15 @@ export async function POST(req: Request) {
   const rl = await rateLimit(`gtgame:${connection.userId}`, 10, 60_000);
   if (!rl.allowed) return NextResponse.json({ message: `@${body.username ?? "widz"} za szybko — chwila przerwy.` });
 
-  const result = await playGtGame(connection.userId, game, bet);
+  const result = await playGtGame(connection.userId, game, bet, typeof body.choice === "string" ? body.choice : undefined);
   const u = body.username ?? "widz";
   if (!result.ok) return NextResponse.json({ message: `@${u} ${result.error}` });
 
-  const message = game === "slots"
-    ? (result.payout > 0
-        ? `@${u} ${result.detail} — WYGRANA ${result.payout.toLocaleString("pl-PL")} GT! 🎰 (saldo ${result.newBalance.toLocaleString("pl-PL")})`
-        : `@${u} ${result.detail} — pudło, -${result.bet.toLocaleString("pl-PL")} GT (saldo ${result.newBalance.toLocaleString("pl-PL")})`)
-    : (result.payout > 0
-        ? `@${u} ${result.detail} — wygrywasz ${result.payout.toLocaleString("pl-PL")} GT! 🪙 (saldo ${result.newBalance.toLocaleString("pl-PL")})`
-        : `@${u} ${result.detail} — przegrana ${result.bet.toLocaleString("pl-PL")} GT (saldo ${result.newBalance.toLocaleString("pl-PL")})`);
+  const emoji = game === "slots" ? "🎰" : game === "roulette" ? "🎡" : "🪙";
+  const bal = result.newBalance.toLocaleString("pl-PL");
+  const message = result.payout > 0
+    ? `@${u} ${result.detail} — WYGRANA ${result.payout.toLocaleString("pl-PL")} GT! ${emoji} (saldo ${bal})`
+    : `@${u} ${result.detail} — pudło, -${result.bet.toLocaleString("pl-PL")} GT (saldo ${bal})`;
 
   return NextResponse.json({ message, ok: true });
 }
