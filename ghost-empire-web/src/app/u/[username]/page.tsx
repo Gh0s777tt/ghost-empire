@@ -1,8 +1,7 @@
 // src/app/u/[username]/page.tsx
 // Public profile — visible to anyone (no auth required). Shows only public stats.
 import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import {
@@ -70,7 +69,7 @@ export default async function PublicProfilePage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const isOwnProfile = session?.user?.username === username;
 
   const user = await prisma.user.findUnique({

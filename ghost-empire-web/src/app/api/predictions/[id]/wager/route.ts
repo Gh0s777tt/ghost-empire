@@ -1,15 +1,14 @@
 // src/app/api/predictions/[id]/wager/route.ts
 // User wagers tokens on a prediction option.
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { placeWager } from "@/lib/predictions";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id: predictionId } = await ctx.params;
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
   }

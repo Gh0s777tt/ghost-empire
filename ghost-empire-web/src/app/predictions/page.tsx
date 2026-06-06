@@ -1,6 +1,5 @@
 // src/app/predictions/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { PredictionsClient } from "@/components/predictions/PredictionsClient";
@@ -14,7 +13,7 @@ export const metadata = {
 };
 
 export default async function PredictionsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const userId = session?.user?.id ?? null;
 
   await lockExpiredPredictions();

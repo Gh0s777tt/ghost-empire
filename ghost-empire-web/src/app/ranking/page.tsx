@@ -1,6 +1,5 @@
 // src/app/ranking/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { RankingClient } from "@/components/ranking/RankingClient";
@@ -26,7 +25,7 @@ export default async function RankingPage({
     ? (params.sort as Sort)
     : "tokens";
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   // Compute admin/mod permissions for quick-actions modal
   let canGrantTokens = false;

@@ -1,6 +1,5 @@
 // src/app/wheel/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { WheelPageClient } from "@/components/wheel/WheelPageClient";
 
@@ -12,7 +11,7 @@ export const metadata = {
 };
 
 export default async function WheelPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   return (
     <div className="min-h-screen bg-black">

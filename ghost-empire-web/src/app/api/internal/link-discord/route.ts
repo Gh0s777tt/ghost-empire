@@ -4,9 +4,8 @@
 //   POST — bot (authenticated by BOT_SECRET) consumes the code, links Discord ID
 // Codes persisted in DB (serverless-safe across function instances).
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { randomInt } from "node:crypto";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
@@ -21,7 +20,7 @@ function generateCode(): string {
 
 // === USER → ask for a code ===
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
   }

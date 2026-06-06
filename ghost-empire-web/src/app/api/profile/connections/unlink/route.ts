@@ -2,14 +2,13 @@
 // Disconnect an OAuth provider from the user's account.
 // Safety: refuses to remove the last remaining sign-in method (would lock the user out).
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const ALLOWED_PROVIDERS = new Set(["twitch", "kick", "discord", "google"]);
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
   }

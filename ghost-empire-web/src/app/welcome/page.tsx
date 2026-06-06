@@ -2,8 +2,7 @@
 // Landing / first-visit page — a focused hero shown on a visitor's first load
 // (see FirstVisitRedirect). Reachable any time at /welcome.
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio } from "lucide-react";
 import { YoutubeIcon } from "@/components/BrandIcons";
 import { SocialLinksRow } from "@/components/SocialLinks";
@@ -22,7 +21,7 @@ const HIGHLIGHTS = [
 ];
 
 export default async function WelcomePage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const isAuthed = !!session?.user?.id;
 
   return (

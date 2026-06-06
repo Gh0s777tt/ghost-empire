@@ -1,15 +1,14 @@
 // src/app/api/predictions/route.ts
 // Public — lists open + recently-resolved predictions for the /predictions page.
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { lockExpiredPredictions } from "@/lib/predictions";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const userId = session?.user?.id ?? null;
 
   await lockExpiredPredictions();

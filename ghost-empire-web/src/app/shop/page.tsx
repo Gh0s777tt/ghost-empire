@@ -1,6 +1,5 @@
 // src/app/shop/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { ShopClient } from "@/components/shop/ShopClient";
@@ -13,7 +12,7 @@ export const metadata = {
 };
 
 export default async function ShopPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   // Shop items and the user's context are independent → fetch in parallel.
   const [items, user, achievementList] = await Promise.all([

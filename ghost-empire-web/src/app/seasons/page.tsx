@@ -1,6 +1,5 @@
 // src/app/seasons/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { SeasonsClient } from "@/components/seasons/SeasonsClient";
@@ -14,7 +13,7 @@ export const metadata = {
 };
 
 export default async function SeasonsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const userId = session?.user?.id ?? null;
 
   const season = await getOrCreateCurrentSeason();

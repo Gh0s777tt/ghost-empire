@@ -1,5 +1,9 @@
 // src/lib/auth.ts
-import { NextAuthOptions } from "next-auth";
+// Auth.js v5 (next-auth@5). Exports { handlers, auth, signIn, signOut } — `auth()`
+// replaces v4's getServerSession(authOptions) everywhere. Secret is read from
+// AUTH_SECRET, falling back to NEXTAUTH_SECRET so the existing env (and the
+// crypto.ts encryption key derived from it) keep working unchanged.
+import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import TwitchProvider from "next-auth/providers/twitch";
 import DiscordProvider from "next-auth/providers/discord";
@@ -7,7 +11,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
 import type { Adapter } from "next-auth/adapters";
-import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
+import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers";
 import { cookies } from "next/headers";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { displayNick } from "@/lib/utils";
@@ -134,8 +138,14 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
   };
 }
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as Adapter,
+
+  // Read AUTH_SECRET (v5 default) or fall back to the legacy NEXTAUTH_SECRET so no
+  // env change is needed — crypto.ts derives its encryption key from the same value.
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  // Behind the Vercel proxy — trust the forwarded host for callback URL construction.
+  trustHost: true,
 
   providers: [
     // allowDangerousEmailAccountLinking: true on every OAuth provider —
@@ -232,7 +242,7 @@ export const authOptions: NextAuthOptions = {
 
           const result = await executeAccountLink({
             targetUserId: intent.uid,
-            orphanUserId: user.id,
+            orphanUserId: user.id as string,
             provider: account.provider,
             providerAccountId: account.providerAccountId,
           });
@@ -462,6 +472,8 @@ export const authOptions: NextAuthOptions = {
 
   events: {
     async createUser({ user }) {
+      // v5 types User.id as optional — bail if missing (can't grant without it).
+      if (!user.id) return;
       // New user created — grant 500 welcome tokens
       try {
         await prisma.user.update({
@@ -501,32 +513,30 @@ export const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === "development",
 
   logger: {
-    error(code, metadata) {
-      // Extract Error properties (non-enumerable so JSON.stringify misses them)
-      const err = (metadata as { error?: unknown })?.error;
-      let errDetail: Record<string, unknown> = {};
-      if (err instanceof Error) {
-        errDetail = {
-          name: err.name,
-          message: err.message,
-          stack: err.stack?.split("\n").slice(0, 5).join(" | "),
-          cause: err.cause,
-        };
-      } else if (typeof err === "object" && err !== null) {
-        errDetail = err as Record<string, unknown>;
-      }
+    // v5 logger: error receives an Error object directly (v4 passed code+metadata).
+    error(error) {
+      const e = error as Error & { cause?: unknown };
       console.error(
-        `[next-auth][error] ${code}`,
-        JSON.stringify({ ...metadata, errorDetail: errDetail }, null, 2),
+        "[next-auth][error]",
+        JSON.stringify(
+          {
+            name: e?.name,
+            message: e?.message,
+            stack: e?.stack?.split("\n").slice(0, 5).join(" | "),
+            cause: e?.cause,
+          },
+          null,
+          2,
+        ),
       );
     },
     warn(code) {
       console.warn(`[next-auth][warn] ${code}`);
     },
-    debug(code, metadata) {
+    debug(message, metadata) {
       if (process.env.NODE_ENV === "development") {
-        console.log(`[next-auth][debug] ${code}`, metadata);
+        console.log(`[next-auth][debug] ${message}`, metadata);
       }
     },
   },
-};
+});
