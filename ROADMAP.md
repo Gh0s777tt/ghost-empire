@@ -208,7 +208,7 @@ Część features jest dziś ograniczona planem Hobby:
 
 | Ograniczenie Hobby | Skutek dziś | Po upgrade (Pro) |
 |---|---|---|
-| Brak websocketów | Overlay + notyfikacje przez polling | SSE/WS → niższe opóźnienia, mniej zapytań |
+| Brak websocketów *(Pro aktywny)* | ✅ Overlay alertów na **SSE** (#189) + fallback polling; reszta overlayów/notyfikacje wciąż polling | Rozszerzyć SSE na pozostałe overlaye |
 | Cron tylko daily | Streamlabs polling 1×/dzień | Częstszy polling donacji / quest reset |
 | Funkcje max 10 s | Ciężkie operacje trzeba dzielić | Większe batch-e, mniej obejść |
 | Limit optymalizatora obrazów | Natywne `<img>` zamiast `next/image` | Pełny `next/image` (§3) |

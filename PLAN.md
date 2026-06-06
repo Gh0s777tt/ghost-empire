@@ -97,7 +97,7 @@ Moje propozycje (otwarte na Twoje):
 **Engagement**
 - Sklep (grafiki + warunki odblokowania, w tym przez osiągnięcie), Eventy (giveaway/raffle/contest/happy hour + szablony okolicznościowe), Predictions, Battle Pass/Sezony (nagrody tokenowe i rzeczowe item/kod), Osiągnięcia (własne, tworzone w panelu, + nagrody rzeczowe), Daily questy, Streak, Drop-code'y, **Drop losowych kodów**, **Ankiety**.
 
-**Overlaye OBS** (token-gated, polling): alerty, Stream Goals + Hype Train, czat, Subathon, rotacja kodów — wszystkie z **podglądem w panelu**.
+**Overlaye OBS** (token-gated): alerty na **SSE realtime** (#189, z fallbackiem do pollingu), reszta (Stream Goals + Hype Train, czat, Subathon, rotacja kodów) na pollingu — wszystkie z **podglądem w panelu**.
 
 **Panel admina** (`/admin`): ~24 sekcje, leniwe ładowanie per sekcja, audit log (czytelny: nick → akcja → obiekt), reset bazy z potwierdzeniem.
 

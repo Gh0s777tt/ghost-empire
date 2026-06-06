@@ -52,11 +52,11 @@ Czysta matematyka ekonomii (payouty predykcji, tier battle passa, konwersja walu
 
 ## 4. Overlaye OBS (Browser Source)
 
-Wzorzec: strona `/overlay/<x>` (transparentna, `pointer-events:none`) **odpytuje** token-gated `/api/alerts/<x>?token=` (polling, bo Vercel Hobby = brak websocketów).
+Wzorzec: strona `/overlay/<x>` (transparentna, `pointer-events:none`) czyta token-gated `/api/alerts/<x>?token=`. Większość overlayów = **polling**; overlay alertów (`/overlay`) działa **realtime przez SSE** (`/api/alerts/stream`, `EventSource`) z automatycznym **fallbackiem do pollingu** (`/api/alerts/queue`) — oba transporty dzielą `lib/alert-feed` (identyczny payload).
 
 | Overlay | Feed | Treść |
 |---|---|---|
-| `/overlay` | `/api/alerts/queue` | Alerty (zakupy, suby, donacje…) |
+| `/overlay` | `/api/alerts/stream` (SSE) → `/api/alerts/queue` (fallback) | Alerty (zakupy, suby, donacje…) |
 | `/overlay/goals` | `/api/alerts/goals` | Stream Goals + Hype Train |
 | `/overlay/chat` | `/api/alerts/chat` | Czat z 3 platform |
 | `/overlay/subathon` | `/api/alerts/subathon` | Odliczanie (drift-corrected) + kolor/napis |
