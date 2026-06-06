@@ -300,7 +300,5 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
 
 /** Look up a feed definition by key (null for an unknown key). */
 export function getOverlayFeed(key: string): OverlayFeedDef | null {
-  return Object.prototype.hasOwnProperty.call(OVERLAY_FEEDS, key)
-    ? OVERLAY_FEEDS[key as OverlayFeedKey]
-    : null;
+  return Object.hasOwn(OVERLAY_FEEDS, key) ? OVERLAY_FEEDS[key as OverlayFeedKey] : null;
 }

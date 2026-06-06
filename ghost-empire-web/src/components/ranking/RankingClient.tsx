@@ -75,7 +75,7 @@ export function RankingClient({
   const podium = topUsers.slice(0, 3);
   const rest = topUsers.slice(3);
 
-  function valueOf(u: User): string {
+  function formatValue(u: User): string {
     const v = u[sort];
     if (sort === "level") return `LVL ${v}`;
     if (sort === "streak") return `${v} ${v === 1 ? "dzień" : "dni"}`;
@@ -226,7 +226,7 @@ export function RankingClient({
                       className="font-mono text-xl font-bold tabular-nums"
                       style={{ color: style.color }}
                     >
-                      {valueOf(u)}
+                      {formatValue(u)}
                     </div>
 
                     <div
@@ -272,7 +272,7 @@ export function RankingClient({
                       position={i + 4}
                       user={u}
                       isMe={u.id === currentUserId}
-                      sortLabel={valueOf(u)}
+                      sortLabel={formatValue(u)}
                       onAdminClick={isAdmin ? () => setAdminTarget(u) : undefined}
                     />
                   ))}
@@ -300,7 +300,7 @@ export function RankingClient({
                       position={myRank.position}
                       user={myRank.user}
                       isMe={true}
-                      sortLabel={valueOf(myRank.user)}
+                      sortLabel={formatValue(myRank.user)}
                     />
                   </tbody>
                 </table>
