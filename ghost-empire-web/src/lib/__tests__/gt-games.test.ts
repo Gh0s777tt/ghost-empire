@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { spinSlots, flipCoin, SLOT_SYMBOLS } from "@/lib/gt-games";
+import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice } from "@/lib/gt-games";
 
 describe("slots", () => {
   it("always returns 3 reels and a non-negative multiplier", () => {
@@ -47,5 +47,44 @@ describe("coinflip", () => {
     let wins = 0;
     for (let i = 0; i < N; i++) if (flipCoin().win) wins++;
     expect(Math.abs(wins / N - 0.48)).toBeLessThan(0.02);
+  });
+});
+
+describe("roulette", () => {
+  it("colors the European wheel correctly (0 green, known reds black/red)", () => {
+    expect(rouletteColor(0)).toBe("green");
+    expect(rouletteColor(1)).toBe("red");   // 1 is red
+    expect(rouletteColor(2)).toBe("black"); // 2 is black
+    expect(rouletteColor(36)).toBe("red");  // 36 is red
+  });
+
+  it("normalizes bet choices (red/black aliases + 0-36) and rejects junk", () => {
+    expect(normRouletteChoice("RED")).toBe("red");
+    expect(normRouletteChoice("czarne")).toBe("black");
+    expect(normRouletteChoice("17")).toBe("17");
+    expect(normRouletteChoice("0")).toBe("0");
+    expect(normRouletteChoice("37")).toBeNull();   // out of range
+    expect(normRouletteChoice("blue")).toBeNull();
+    expect(normRouletteChoice("")).toBeNull();
+  });
+
+  it("spins 0-36 and pays 2× for the matching color, 36× for the exact number", () => {
+    // rng 0 → pocket 0 (green) → red/black lose, number 0 wins
+    expect(spinRoulette("red", () => 0).multiplier).toBe(0);
+    expect(spinRoulette("0", () => 0).multiplier).toBe(36);
+    // rng ~just under 1 → pocket 36 (red) → red wins 2×, black loses, number 36 wins 36×
+    const last = () => 0.9999999;
+    expect(spinRoulette("red", last).multiplier).toBe(2);
+    expect(spinRoulette("black", last).multiplier).toBe(0);
+    expect(spinRoulette("36", last).multiplier).toBe(36);
+  });
+
+  it("red/black has a sane RTP (~0.973 — single-zero house edge)", () => {
+    const N = 200_000;
+    let returned = 0;
+    for (let i = 0; i < N; i++) returned += spinRoulette("red").multiplier; // bet 1
+    const rtp = returned / N;
+    expect(rtp).toBeGreaterThan(0.93);
+    expect(rtp).toBeLessThan(1.0);
   });
 });

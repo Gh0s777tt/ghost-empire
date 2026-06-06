@@ -10,17 +10,21 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
 
-  let body: { game?: string; bet?: number };
+  let body: { game?: string; bet?: number; choice?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
-  const game = body.game === "coinflip" ? "coinflip" : body.game === "slots" ? "slots" : null;
+  const game =
+    body.game === "coinflip" ? "coinflip" :
+    body.game === "slots" ? "slots" :
+    body.game === "roulette" ? "roulette" : null;
   if (!game) return NextResponse.json({ error: "Nieznana gra" }, { status: 400 });
 
   const rl = await rateLimit(`gtgame:web:${session.user.id}`, 30, 60_000);
   if (!rl.allowed) return NextResponse.json({ error: "Za szybko. Spróbuj za chwilę." }, { status: 429, headers: rateLimitHeaders(rl) });
 
-  const result = await playGtGame(session.user.id, game, Math.floor(Number(body.bet ?? 0)));
+  const choice = typeof body.choice === "string" ? body.choice : undefined;
+  const result = await playGtGame(session.user.id, game, Math.floor(Number(body.bet ?? 0)), choice);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
 }

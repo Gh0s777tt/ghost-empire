@@ -10,7 +10,7 @@ type Leaderboard = {
   topNet: Array<{ name: string; net: number }>;
 };
 
-const GAME_LABEL: Record<string, string> = { slots: "Sloty", coinflip: "Coinflip" };
+const GAME_LABEL: Record<string, string> = { slots: "Sloty", coinflip: "Coinflip", roulette: "Ruletka" };
 
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const [balance, setBalance] = useState<number | null>(initialBalance);
@@ -19,17 +19,18 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const [result, setResult] = useState<PlayResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lb, setLb] = useState<Leaderboard | null>(null);
+  const [rouletteNum, setRouletteNum] = useState("");
 
   const loadLb = useCallback(async () => {
     try { const r = await fetch("/api/gt-games/leaderboard", { cache: "no-store" }); if (r.ok) setLb(await r.json()); } catch { /* ignore */ }
   }, []);
   useEffect(() => { void loadLb(); }, [loadLb]);
 
-  async function play(game: "slots" | "coinflip") {
+  async function play(game: "slots" | "coinflip" | "roulette", choice?: string) {
     if (busy) return;
     setBusy(true); setError(null); setResult(null);
     try {
-      const res = await fetch("/api/gt-games/play", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ game, bet }) });
+      const res = await fetch("/api/gt-games/play", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ game, bet, choice }) });
       const d = await res.json();
       if (!res.ok) { setError(d.error ?? "Błąd"); return; }
       setResult(d); setBalance(d.newBalance); void loadLb();
@@ -41,7 +42,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
     <div className="flex flex-col items-center gap-6">
       <div className="text-center">
         <h1 className="text-3xl font-black text-white tracking-tight">🎰 Kasyno GT</h1>
-        <p className="text-zinc-400 mt-1 text-sm">Sloty i coinflip za Ghost Tokens. Na czacie też: <code className="text-zinc-500">!slots 100</code> · <code className="text-zinc-500">!coinflip 50</code></p>
+        <p className="text-zinc-400 mt-1 text-sm">Sloty, coinflip i ruletka za Ghost Tokens. Na czacie też: <code className="text-zinc-500">!slots 100</code> · <code className="text-zinc-500">!coinflip 50</code> · <code className="text-zinc-500">!roulette 100 red</code></p>
       </div>
 
       {!isAuthenticated ? (
@@ -73,6 +74,20 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <button onClick={() => play("coinflip")} disabled={busy || (balance ?? 0) < bet}
               className="px-6 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 disabled:opacity-40 transition-all">🪙 Coinflip</button>
           </div>
+
+          {/* Roulette: red/black (2×) or a straight number (36×) */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-zinc-500 self-center mr-1">🎡 Ruletka:</span>
+            <button onClick={() => play("roulette", "red")} disabled={busy || (balance ?? 0) < bet}
+              className="px-4 py-2 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 transition-all">🔴 Czerwone 2×</button>
+            <button onClick={() => play("roulette", "black")} disabled={busy || (balance ?? 0) < bet}
+              className="px-4 py-2 rounded-full font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 disabled:opacity-40 transition-all">⚫ Czarne 2×</button>
+            <input type="number" min={0} max={36} value={rouletteNum} onChange={(e) => setRouletteNum(e.target.value)} placeholder="0-36"
+              className="w-20 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500" />
+            <button onClick={() => play("roulette", rouletteNum)} disabled={busy || (balance ?? 0) < bet || !/^\d+$/.test(rouletteNum)}
+              className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 disabled:opacity-40 transition-all">🎯 Liczba 36×</button>
+          </div>
+
           <div className="text-sm text-zinc-400">Saldo: <span className="font-bold text-white">{(balance ?? 0).toLocaleString("pl-PL")} GT</span></div>
         </>
       )}
