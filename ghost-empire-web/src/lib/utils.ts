@@ -10,9 +10,9 @@ export function fmt(n: number): string {
   return n.toLocaleString("pl-PL");
 }
 
-export function timeLeft(iso: string | Date): string {
+export function timeLeft(iso: string | Date, locale: string = "pl"): string {
   const ms = new Date(iso).getTime() - Date.now();
-  if (ms <= 0) return "Zakończony";
+  if (ms <= 0) return locale === "en" ? "Ended" : "Zakończony";
   const h = Math.floor(ms / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
   if (h > 48) return `${Math.floor(h / 24)}d`;
@@ -20,8 +20,8 @@ export function timeLeft(iso: string | Date): string {
   return `${m}m`;
 }
 
-export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString("pl-PL", {
+export function formatDate(date: string | Date, locale: string = "pl"): string {
+  return new Date(date).toLocaleDateString(locale === "en" ? "en-US" : "pl-PL", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -32,20 +32,21 @@ export function today(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-export function timeAgo(iso: string | Date): string {
+export function timeAgo(iso: string | Date, locale: string = "pl"): string {
+  const en = locale === "en";
   const diff = Date.now() - new Date(iso).getTime();
-  if (diff < 0) return "teraz";
+  if (diff < 0) return en ? "now" : "teraz";
   const sec = Math.floor(diff / 1000);
-  if (sec < 30) return "teraz";
-  if (sec < 60) return `${sec}s temu`;
+  if (sec < 30) return en ? "now" : "teraz";
+  if (sec < 60) return en ? `${sec}s ago` : `${sec}s temu`;
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min} min temu`;
+  if (min < 60) return en ? `${min} min ago` : `${min} min temu`;
   const h = Math.floor(min / 60);
-  if (h < 24) return `${h} godz. temu`;
+  if (h < 24) return en ? `${h}h ago` : `${h} godz. temu`;
   const d = Math.floor(h / 24);
-  if (d === 1) return "wczoraj";
-  if (d < 7) return `${d} dni temu`;
-  return new Date(iso).toLocaleDateString("pl-PL", { day: "2-digit", month: "short" });
+  if (d === 1) return en ? "yesterday" : "wczoraj";
+  if (d < 7) return en ? `${d} days ago` : `${d} dni temu`;
+  return new Date(iso).toLocaleDateString(en ? "en-US" : "pl-PL", { day: "2-digit", month: "short" });
 }
 
 export function xpForLevel(level: number): number {

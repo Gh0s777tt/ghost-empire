@@ -1,7 +1,7 @@
 "use client";
 // src/components/achievements/AchievementsClient.tsx
 import { useState, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Award, Lock, Check, Eye, EyeOff } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { fmt, formatDate, timeAgo, cn } from "@/lib/utils";
@@ -288,6 +288,7 @@ function AchievementCard({
   progress: { current: number; target: number; ratio: number } | null;
 }) {
   const t = useTranslations("achievements");
+  const locale = useLocale();
   const triggerLabels: Record<string, string> = {
     level: t("trgLevel"),
     tokens_earned: t("trgTokens"),
@@ -422,10 +423,10 @@ function AchievementCard({
           <div
             className="flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase"
             style={{ background: meta.color, color: "#000" }}
-            title={t("earnedOn", { date: formatDate(a.myEarnedAt) })}
+            title={t("earnedOn", { date: formatDate(a.myEarnedAt, locale) })}
           >
             <Check className="w-2.5 h-2.5" />
-            {timeAgo(a.myEarnedAt).toUpperCase()}
+            {timeAgo(a.myEarnedAt, locale).toUpperCase()}
           </div>
         </div>
       )}

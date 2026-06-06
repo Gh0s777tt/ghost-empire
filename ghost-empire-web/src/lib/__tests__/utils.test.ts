@@ -6,6 +6,8 @@ import {
   pluralPL,
   fmt,
   timeLeft,
+  timeAgo,
+  formatDate,
   verifyBotSecret,
 } from "@/lib/utils";
 
@@ -74,6 +76,35 @@ describe("timeLeft", () => {
 
   it("collapses to days beyond 48h", () => {
     expect(timeLeft(new Date(Date.now() + 73 * 3_600_000))).toBe("3d");
+  });
+
+  it("uses the English ended label when locale is en", () => {
+    expect(timeLeft(new Date(Date.now() - 1000), "en")).toBe("Ended");
+  });
+});
+
+describe("timeAgo (locale)", () => {
+  it("formats relative time in Polish by default", () => {
+    expect(timeAgo(new Date())).toBe("teraz");
+    expect(timeAgo(new Date(Date.now() - (5 * 60 + 30) * 1000))).toBe("5 min temu");
+    expect(timeAgo(new Date(Date.now() - 25 * 3_600_000))).toBe("wczoraj");
+  });
+
+  it("formats relative time in English for en", () => {
+    expect(timeAgo(new Date(), "en")).toBe("now");
+    expect(timeAgo(new Date(Date.now() - (5 * 60 + 30) * 1000), "en")).toBe("5 min ago");
+    expect(timeAgo(new Date(Date.now() - 25 * 3_600_000), "en")).toBe("yesterday");
+    expect(timeAgo(new Date(Date.now() - 73 * 3_600_000), "en")).toBe("3 days ago");
+  });
+});
+
+describe("formatDate (locale)", () => {
+  it("uses the Polish month name by default", () => {
+    expect(formatDate(new Date(2026, 5, 15))).toMatch(/cze/);
+  });
+
+  it("uses the English month name for en", () => {
+    expect(formatDate(new Date(2026, 5, 15), "en")).toMatch(/Jun/);
   });
 });
 

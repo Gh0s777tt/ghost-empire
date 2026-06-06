@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Daty po angielsku 🌍",
+    items: [
+      "Daty i czasy względne (wczoraj, 3 dni temu, Zakończony) pokazują się teraz po angielsku, gdy przeglądasz portal w wersji EN. (Ten dziennik zmian zostaje po polsku.)",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Lepsze SEO wielojęzyczne 🌍",
     items: [
       "Każda strona ma teraz poprawne znaczniki języka (hreflang) i własny tytuł po angielsku — wyszukiwarki serwują właściwą wersję językową strony. (Ten dziennik zmian zostaje po polsku.)",
