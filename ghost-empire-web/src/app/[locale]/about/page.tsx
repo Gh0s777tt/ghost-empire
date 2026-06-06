@@ -86,6 +86,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Gry po angielsku 🌍",
+    items: [
+      "Kasyno, Koło Fortuny i biblioteka gier są już dostępne po angielsku. Tłumaczymy portal strona po stronie.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Plan streamów i questy po angielsku 🌍",
     items: [
       "Plan streamów (z nazwami dni i miesięcy) oraz daily questy są już dostępne po angielsku. Tłumaczymy portal strona po stronie.",

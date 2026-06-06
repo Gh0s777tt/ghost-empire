@@ -1,17 +1,20 @@
 // src/app/games/page.tsx
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Biblioteka gier",
-  description: "Gry, w które gram — zagregowana biblioteka (Steam i więcej).",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "games" });
+  return { title: t("metaTitle"), description: t("metaDesc") };
+}
 
 const SOURCE_LABEL: Record<string, string> = { steam: "Steam", gog: "GOG", psn: "PlayStation", xbox: "Xbox" };
 
 export default async function GamesPage() {
+  const t = await getTranslations("games");
   const games = await prisma.game.findMany({
     where: { hidden: false },
     orderBy: [{ playtimeMin: "desc" }, { name: "asc" }],
@@ -31,11 +34,15 @@ export default async function GamesPage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-black text-white tracking-tight">🎮 Biblioteka gier</h1>
+          <h1 className="text-3xl font-black text-white tracking-tight">{t("title")}</h1>
           <p className="text-zinc-400 mt-1 text-sm">
             {games.length > 0
-              ? <><span className="text-white font-bold">{games.length}</span> gier · <span className="text-white font-bold">{totalHours.toLocaleString("pl-PL")}h</span> łącznie</>
-              : "Biblioteka jest jeszcze pusta — wróć później."}
+              ? t.rich("countLine", {
+                  count: games.length,
+                  hours: totalHours.toLocaleString("pl-PL"),
+                  b: (chunks) => <span className="text-white font-bold">{chunks}</span>,
+                })
+              : t("empty")}
           </p>
         </div>
 

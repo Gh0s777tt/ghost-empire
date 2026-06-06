@@ -290,5 +290,48 @@
     "unitVoice": "min",
     "unitDrop": "drop",
     "unitPurchase": "zakup"
+  },
+  "kasyno": {
+    "title": "🎰 Kasyno GT",
+    "subtitlePre": "Sloty, coinflip i ruletka za Ghost Tokens. Na czacie też:",
+    "loginToPlay": "Zaloguj się, aby grać",
+    "err": "Błąd",
+    "connError": "Błąd połączenia",
+    "stake": "Stawka",
+    "slots": "🎰 Sloty",
+    "coinflip": "🪙 Coinflip",
+    "rouletteLabel": "🎡 Ruletka:",
+    "red": "🔴 Czerwone 2×",
+    "black": "⚫ Czarne 2×",
+    "number": "🎯 Liczba 36×",
+    "balance": "Saldo:",
+    "bigWins": "Największe wygrane (30 dni)",
+    "topNet": "Top bilans (30 dni)",
+    "gameSlots": "Sloty",
+    "gameCoinflip": "Coinflip",
+    "gameRoulette": "Ruletka"
+  },
+  "wheel": {
+    "title": "🎡 Koło Fortuny",
+    "subtitle": "Zakręć i wygraj Ghost Tokens.",
+    "loading": "Ładowanie…",
+    "disabled": "Koło Fortuny jest aktualnie wyłączone. Zajrzyj później!",
+    "won": "Wygrałeś {reward} GT — {label}! 🎉",
+    "tryAgain": "{label} — spróbuj jeszcze raz!",
+    "spinFailed": "Nie udało się zakręcić",
+    "connError": "Błąd połączenia",
+    "spinning": "Kręci się…",
+    "spinCost": "Zakręć za {cost} GT",
+    "balance": "Twoje saldo:",
+    "cantAfford": "— za mało na zakręcenie",
+    "loginToPlay": "Zaloguj się, aby zagrać",
+    "recentWins": "Ostatnie wygrane"
+  },
+  "games": {
+    "metaTitle": "Biblioteka gier",
+    "metaDesc": "Gry, w które gram — zagregowana biblioteka (Steam i więcej).",
+    "title": "🎮 Biblioteka gier",
+    "countLine": "<b>{count}</b> gier · <b>{hours}h</b> łącznie",
+    "empty": "Biblioteka jest jeszcze pusta — wróć później."
   }
 }
