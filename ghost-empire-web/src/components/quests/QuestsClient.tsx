@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Zap, Check, Loader2, MessageCircle, Mic2, Gift, Flame, X, Clock,
 } from "lucide-react";
@@ -27,12 +28,12 @@ type UserTask = {
   };
 };
 
-const TRIGGER_META: Record<string, { icon: typeof MessageCircle; color: string; unit: string }> = {
-  messages:      { icon: MessageCircle, color: "#5865F2", unit: "wiad."  },
-  voice_minutes: { icon: Mic2,          color: "#9146FF", unit: "min"    },
-  drop_code:     { icon: Gift,          color: "#FF4500", unit: "drop"   },
-  shop_purchase: { icon: Gift,          color: "#10b981", unit: "zakup"  },
-  manual:        { icon: Zap,           color: "#a855f7", unit: ""       },
+const TRIGGER_META: Record<string, { icon: typeof MessageCircle; color: string }> = {
+  messages:      { icon: MessageCircle, color: "#5865F2" },
+  voice_minutes: { icon: Mic2,          color: "#9146FF" },
+  drop_code:     { icon: Gift,          color: "#FF4500" },
+  shop_purchase: { icon: Gift,          color: "#10b981" },
+  manual:        { icon: Zap,           color: "#a855f7" },
 };
 
 function secondsUntilMidnight(): number {
@@ -58,6 +59,7 @@ export function QuestsClient({
   streak: number;
   balance: number;
 }) {
+  const t = useTranslations("quests");
   const router = useRouter();
   const { update: refreshSession } = useSession();
   const [tasks, setTasks] = useState(initialTasks);
@@ -93,7 +95,7 @@ export function QuestsClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast("err", data.error ?? "Błąd");
+        showToast("err", data.error ?? t("err"));
         return;
       }
       // Optimistic update
@@ -104,7 +106,7 @@ export function QuestsClient({
             : t,
         ),
       );
-      showToast("ok", `+${fmt(data.reward)} GT — nowy balans ${fmt(data.newBalance)} GT`);
+      showToast("ok", t("claimedToast", { reward: fmt(data.reward), balance: fmt(data.newBalance) }));
       await refreshSession();
       startTransition(() => router.refresh());
     } finally {
@@ -123,11 +125,11 @@ export function QuestsClient({
               className="font-display text-4xl text-white tracking-wider"
               style={{ textShadow: "2px 0 0 rgba(255,69,0,0.7), -2px 0 0 rgba(139,0,0,0.4)" }}
             >
-              DAILY QUESTY
+              {t("title")}
             </h1>
           </div>
           <p className="text-zinc-500 text-sm">
-            Codziennie 3 zadania. Wykonaj, zclaimuj, zgarnij Ghost Tokens.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -135,7 +137,7 @@ export function QuestsClient({
           <Clock className="w-4 h-4 text-orange-500" />
           <div className="leading-tight">
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              Reset za
+              {t("resetIn")}
             </div>
             <div className="font-mono text-lg font-bold text-white tabular-nums">
               {formatHMS(resetIn)}
@@ -147,27 +149,27 @@ export function QuestsClient({
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatTile
-          label="Wykonane"
+          label={t("statDone")}
           value={`${completedCount} / ${tasks.length}`}
           emoji="✅"
           accent={completedCount === tasks.length && tasks.length > 0}
         />
         <StatTile
-          label="Zclaimowane"
+          label={t("statClaimed")}
           value={`${claimedCount} / ${tasks.length}`}
           emoji="🎁"
         />
         <StatTile
-          label="Do odbioru"
+          label={t("statClaimable")}
           value={`${fmt(totalClaimableTokens)}`}
           suffix="GT"
           emoji="💰"
           accent={totalClaimableTokens > 0}
         />
         <StatTile
-          label="Streak"
+          label={t("statStreak")}
           value={streak.toString()}
-          suffix={streak === 1 ? "dzień" : "dni"}
+          suffix={t("streakUnit", { count: streak })}
           emoji="🔥"
         />
       </div>
@@ -183,9 +185,9 @@ export function QuestsClient({
         >
           <div className="text-3xl">🎉</div>
           <div>
-            <div className="font-bold text-green-300 text-sm">Wszystkie questy na dziś zaliczone!</div>
+            <div className="font-bold text-green-300 text-sm">{t("allDoneTitle")}</div>
             <div className="text-zinc-400 text-xs">
-              Łącznie zarobiłeś {fmt(totalReward)} GT z daily questów. Reset o 00:00.
+              {t("allDoneMsg", { total: fmt(totalReward) })}
             </div>
           </div>
         </div>
@@ -195,8 +197,8 @@ export function QuestsClient({
       {tasks.length === 0 ? (
         <EmptyState
           icon={<Zap className="w-6 h-6" />}
-          title="Brak questów na dziś"
-          message="Questy odświeżają się codziennie — wróć jutro po nową porcję Ghost Tokens."
+          title={t("emptyTitle")}
+          message={t("emptyMsg")}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -213,23 +215,23 @@ export function QuestsClient({
 
       {/* How it works */}
       <div className="border border-zinc-800 bg-zinc-950/50 p-5 mt-8">
-        <h3 className="font-display text-base text-white tracking-wider mb-3">JAK TO DZIAŁA</h3>
+        <h3 className="font-display text-base text-white tracking-wider mb-3">{t("howTitle")}</h3>
         <ul className="text-xs text-zinc-400 space-y-1.5">
           <li className="flex gap-2">
             <span className="text-orange-500 shrink-0">▸</span>
-            Bot Discord śledzi Twoją aktywność (wiadomości, voice) i aktualizuje progress automatycznie.
+            {t("how1")}
           </li>
           <li className="flex gap-2">
             <span className="text-orange-500 shrink-0">▸</span>
-            Drop codes wpisujesz podczas live streama (Ghost wrzuca kod na czat → wpisz pierwszy).
+            {t("how2")}
           </li>
           <li className="flex gap-2">
             <span className="text-orange-500 shrink-0">▸</span>
-            Gdy progress dobije do targetu, kliknij <strong className="text-white">CLAIM</strong> — tokeny lecą na Twoje konto.
+            {t.rich("how3", { b: (c) => <strong className="text-white">{c}</strong> })}
           </li>
           <li className="flex gap-2">
             <span className="text-orange-500 shrink-0">▸</span>
-            Wszystko resetuje się o 00:00. Niezclaimowane wczorajsze questy znikają (claim w dniu wygenerowania!).
+            {t("how4")}
           </li>
         </ul>
       </div>
@@ -286,11 +288,23 @@ function QuestCard({
   busy: boolean;
   onClaim: () => void;
 }) {
+  const t = useTranslations("quests");
+  const locale = useLocale();
   const { task, progress, claimed } = userTask;
   const done = progress >= task.target;
   const ratio = Math.min(100, (progress / task.target) * 100);
   const meta = TRIGGER_META[task.triggerType] ?? TRIGGER_META.manual;
   const Icon = meta.icon;
+  const unitMap: Record<string, string> = {
+    messages: t("unitMessages"),
+    voice_minutes: t("unitVoice"),
+    drop_code: t("unitDrop"),
+    shop_purchase: t("unitPurchase"),
+  };
+  const unit = unitMap[task.triggerType] ?? "";
+  const isEn = locale === "en";
+  const title = isEn && task.textEn ? task.textEn : task.text;
+  const subtitle = isEn ? null : task.textEn;
 
   const status: "claimed" | "claimable" | "in_progress" = claimed
     ? "claimed"
@@ -323,9 +337,9 @@ function QuestCard({
           <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mb-0.5">
             {task.code.replace("daily_", "").toUpperCase()}
           </div>
-          <h3 className="text-white text-sm font-bold leading-tight">{task.text}</h3>
-          {task.textEn && (
-            <p className="text-zinc-600 text-[10px] mt-0.5 italic">{task.textEn}</p>
+          <h3 className="text-white text-sm font-bold leading-tight">{title}</h3>
+          {subtitle && (
+            <p className="text-zinc-600 text-[10px] mt-0.5 italic">{subtitle}</p>
           )}
         </div>
       </div>
@@ -333,10 +347,10 @@ function QuestCard({
       {/* Progress bar */}
       <div className="mb-3">
         <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest mb-1.5">
-          <span className="text-zinc-500">Postęp</span>
+          <span className="text-zinc-500">{t("progress")}</span>
           <span className={status === "claimable" ? "text-green-300" : "text-white"}>
             {fmt(Math.min(progress, task.target))} / {fmt(task.target)}{" "}
-            <span className="text-zinc-500">{meta.unit}</span>
+            <span className="text-zinc-500">{unit}</span>
           </span>
         </div>
         <div className="h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">
@@ -355,11 +369,11 @@ function QuestCard({
 
       {/* Reward */}
       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest mb-3">
-        <span className="text-zinc-500">Nagroda</span>
+        <span className="text-zinc-500">{t("reward")}</span>
         <span className="text-white text-sm normal-case font-bold tabular-nums">
           {fmt(task.reward)} GT
           {task.bonusReward > 0 && (
-            <span className="text-orange-400 text-xs ml-1.5">+{fmt(task.bonusReward)} bonus</span>
+            <span className="text-orange-400 text-xs ml-1.5">{t("bonus", { bonus: fmt(task.bonusReward) })}</span>
           )}
         </span>
       </div>
@@ -372,7 +386,7 @@ function QuestCard({
             className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-600 text-xs font-bold tracking-widest uppercase cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Check className="w-3.5 h-3.5" />
-            Odebrane
+            {t("claimed")}
           </button>
         ) : status === "claimable" ? (
           <button
@@ -385,7 +399,7 @@ function QuestCard({
           </button>
         ) : (
           <div className="w-full px-4 py-2.5 border border-zinc-800 bg-zinc-950 text-zinc-500 text-xs font-bold tracking-widest uppercase text-center">
-            W toku — {fmt(task.target - progress)} {meta.unit} pozostało
+            {t("inProgress", { remaining: fmt(task.target - progress), unit })}
           </div>
         )}
       </div>
