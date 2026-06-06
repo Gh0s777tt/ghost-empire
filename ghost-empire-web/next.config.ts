@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import createNextIntlPlugin from "next-intl/plugin";
+
+// next-intl: points the plugin at the per-request i18n config (locale + messages).
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 // Wraps the config so `ANALYZE=true next build` (npm run analyze) emits an
 // interactive treemap of each route's bundle to .next/analyze/*.html. No-op
@@ -101,4 +105,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withBundleAnalyzer(nextConfig);
+export default withNextIntl(withBundleAnalyzer(nextConfig));

@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "ranking": "Ranking",
+    "games": "Games",
+    "casino": "Casino",
+    "wheel": "Wheel of Fortune",
+    "library": "Game library",
+    "community": "Community",
+    "events": "Events",
+    "polls": "Polls",
+    "predictions": "Predictions",
+    "achievements": "Achievements",
+    "schedule": "Stream schedule",
+    "profile": "Profile",
+    "myProfile": "My profile",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "drop": "Drop",
+    "tagline": "Official Portal",
+    "account": "Account menu",
+    "mainNav": "Main navigation"
+  },
+  "common": {
+    "loading": "Loading…",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "No data"
+  },
+  "footer": {
+    "about": "About",
+    "privacy": "Privacy policy",
+    "terms": "Terms",
+    "community": "Gh0s77tt community portal",
+    "legalNav": "Legal links"
+  },
+  "locale": {
+    "switchTo": "Switch language to Polish"
+  }
+}

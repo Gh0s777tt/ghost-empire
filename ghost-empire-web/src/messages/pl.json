@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "home": "Home",
+    "shop": "Sklep",
+    "ranking": "Ranking",
+    "games": "Gry",
+    "casino": "Kasyno",
+    "wheel": "Koło Fortuny",
+    "library": "Biblioteka gier",
+    "community": "Społeczność",
+    "events": "Eventy",
+    "polls": "Ankiety",
+    "predictions": "Predykcje",
+    "achievements": "Osiągnięcia",
+    "schedule": "Plan streamów",
+    "profile": "Profil",
+    "myProfile": "Mój profil",
+    "login": "Zaloguj się",
+    "logout": "Wyloguj się",
+    "drop": "Drop",
+    "tagline": "Oficjalny Portal",
+    "account": "Menu konta",
+    "mainNav": "Główna nawigacja"
+  },
+  "common": {
+    "loading": "Ładowanie…",
+    "back": "Wstecz",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "empty": "Brak danych"
+  },
+  "footer": {
+    "about": "O nas",
+    "privacy": "Polityka prywatności",
+    "terms": "Regulamin",
+    "community": "Portal społeczności Gh0s77tt",
+    "legalNav": "Linki prawne"
+  },
+  "locale": {
+    "switchTo": "Zmień język na angielski"
+  }
+}

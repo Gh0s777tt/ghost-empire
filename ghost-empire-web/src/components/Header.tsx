@@ -2,40 +2,43 @@
 // src/components/Header.tsx
 import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+// Locale-aware Link + usePathname (next-intl): links auto-carry the active locale
+// (add /en when needed); usePathname returns the path WITHOUT the locale prefix.
+import { Link, usePathname } from "@/i18n/navigation";
 import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, type LucideIcon } from "lucide-react";
 import { fmt, displayNick } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
-// Grouped navigation. As the site grew (Koło / Kasyno / Gry / Ankiety …) a flat row ran out
-// of horizontal space, so related destinations live in dropdown groups (like the admin nav) —
-// new features go into a group instead of adding another top-level tab. PROFIL is reachable
-// from the avatar menu, so it's not duplicated here.
-type NavLeaf = { href: string; label: string; icon: LucideIcon };
-type NavGroup = { label: string; icon: LucideIcon; children: NavLeaf[] };
+// Grouped navigation. Labels are i18n keys (namespace "nav") resolved at render.
+type NavKey =
+  | "home" | "shop" | "ranking" | "games" | "casino" | "wheel"
+  | "library" | "community" | "events" | "polls" | "achievements" | "schedule";
+type NavLeaf = { href: string; tk: NavKey; icon: LucideIcon };
+type NavGroup = { tk: NavKey; icon: LucideIcon; children: NavLeaf[] };
 type NavEntry = NavLeaf | NavGroup;
 const isGroup = (e: NavEntry): e is NavGroup => "children" in e;
 
 const NAV: NavEntry[] = [
-  { href: "/",        label: "HOME",    icon: Ghost },
-  { href: "/shop",    label: "SKLEP",   icon: ShoppingBag },
-  { href: "/ranking", label: "RANKING", icon: Trophy },
+  { href: "/",        tk: "home",    icon: Ghost },
+  { href: "/shop",    tk: "shop",    icon: ShoppingBag },
+  { href: "/ranking", tk: "ranking", icon: Trophy },
   {
-    label: "GRY", icon: Gamepad2,
+    tk: "games", icon: Gamepad2,
     children: [
-      { href: "/kasyno", label: "KASYNO",          icon: Dice5 },
-      { href: "/wheel",  label: "KOŁO FORTUNY",    icon: Disc3 },
-      { href: "/games",  label: "BIBLIOTEKA GIER", icon: Gamepad2 },
+      { href: "/kasyno", tk: "casino",  icon: Dice5 },
+      { href: "/wheel",  tk: "wheel",   icon: Disc3 },
+      { href: "/games",  tk: "library", icon: Gamepad2 },
     ],
   },
   {
-    label: "SPOŁECZNOŚĆ", icon: Users,
+    tk: "community", icon: Users,
     children: [
-      { href: "/events",       label: "EVENTY",        icon: Calendar },
-      { href: "/polls",        label: "ANKIETY",       icon: BarChart3 },
-      { href: "/achievements", label: "OSIĄGNIĘCIA",   icon: Award },
-      { href: "/schedule",     label: "PLAN STREAMÓW", icon: Zap },
+      { href: "/events",       tk: "events",       icon: Calendar },
+      { href: "/polls",        tk: "polls",        icon: BarChart3 },
+      { href: "/achievements", tk: "achievements", icon: Award },
+      { href: "/schedule",     tk: "schedule",     icon: Zap },
     ],
   },
 ];
@@ -47,9 +50,12 @@ function isLeafActive(href: string, pathname: string): boolean {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
 
+type ResolvedLeaf = { href: string; label: string; icon: LucideIcon };
+
 export function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -70,32 +76,36 @@ export function Header() {
             <div className="hidden sm:block leading-none">
               <span
                 className="font-display text-xl text-white tracking-wider"
-                style={{
-                  textShadow:
-                    "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)",
-                }}
+                style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
               >
                 GH0ST EMPIRE
               </span>
               <p className="text-[9px] text-zinc-600 uppercase tracking-widest font-mono mt-0.5">
-                Oficjalny Portal
+                {t("tagline")}
               </p>
             </div>
           </Link>
 
           {/* Desktop nav — direct links + dropdown groups (hover / keyboard-focus) */}
-          <nav className="hidden lg:flex items-center gap-0.5" aria-label="Główna nawigacja">
+          <nav className="hidden lg:flex items-center gap-0.5" aria-label={t("mainNav")}>
             {NAV.map((entry) =>
               isGroup(entry) ? (
-                <NavDropdown key={entry.label} group={entry} pathname={pathname} />
+                <NavDropdown
+                  key={entry.tk}
+                  label={t(entry.tk)}
+                  icon={entry.icon}
+                  items={entry.children.map((c) => ({ href: c.href, label: t(c.tk), icon: c.icon }))}
+                  pathname={pathname}
+                />
               ) : (
-                <NavLink key={entry.href} item={entry} pathname={pathname} />
+                <NavLink key={entry.href} href={entry.href} label={t(entry.tk)} icon={entry.icon} pathname={pathname} />
               ),
             )}
           </nav>
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            <LocaleSwitcher />
             {session ? (
               <>
                 {/* Token balance */}
@@ -114,10 +124,10 @@ export function Header() {
                       ? "border-orange-500 bg-orange-600 text-white"
                       : "border-orange-900 text-orange-400 hover:border-orange-500"
                   }`}
-                  title="Wpisz drop code"
+                  title={t("drop")}
                 >
                   <Gift className="w-3 h-3" />
-                  DROP
+                  {t("drop")}
                 </Link>
 
                 {/* Notifications */}
@@ -127,14 +137,14 @@ export function Header() {
                 {session.user.isDonator && (
                   <span
                     className="hidden sm:flex items-center gap-1.5 px-2 py-1.5 border border-yellow-700 bg-yellow-600/15 text-yellow-300 text-[10px] font-bold tracking-widest uppercase"
-                    title="Donator — wsparłeś projekt"
+                    title="Donator"
                   >
                     <Heart className="w-3 h-3" />
                     DONATOR
                   </span>
                 )}
 
-                {/* Moderator badge — clickable to /admin (panel shows their permissions only) */}
+                {/* Moderator badge — clickable to /admin */}
                 {session.user.isModerator && !session.user.isAdmin && (
                   <Link
                     href="/admin"
@@ -164,41 +174,30 @@ export function Header() {
                   </Link>
                 )}
 
-                {/* User avatar + account menu (click-toggle — works on mobile/touch too) */}
+                {/* User avatar + account menu */}
                 <div className="relative">
                   <button
                     onClick={() => setMenuOpen((o) => !o)}
                     className="flex items-center gap-2"
-                    aria-label="Menu konta"
+                    aria-label={t("account")}
                     aria-haspopup="true"
                     aria-expanded={menuOpen}
                   >
                     {session.user.image ? (
-                      <img
-                        src={session.user.image}
-                        alt=""
-                        className="w-8 h-8 border border-red-500/50 object-cover"
-                      />
+                      <img src={session.user.image} alt="" className="w-8 h-8 border border-red-500/50 object-cover" />
                     ) : (
-                      <img
-                        src="/brand/skull.png"
-                        alt=""
-                        className="w-8 h-8 border border-red-500/50 object-cover bg-black"
-                      />
+                      <img src="/brand/skull.png" alt="" className="w-8 h-8 border border-red-500/50 object-cover bg-black" />
                     )}
                   </button>
                   {menuOpen && (
                     <>
-                      {/* Backdrop — click anywhere to close */}
                       <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
                       <div className="absolute right-0 top-full mt-1 w-52 border border-zinc-800 bg-zinc-950 shadow-xl z-50">
                         <div className="p-3 border-b border-zinc-800">
                           <p className="text-xs font-bold text-white truncate">
                             {displayNick(session.user.name, session.user.username)}
                           </p>
-                          <p className="text-[10px] text-zinc-500 font-mono">
-                            LVL {session.user.level}
-                          </p>
+                          <p className="text-[10px] text-zinc-500 font-mono">LVL {session.user.level}</p>
                         </div>
                         <Link
                           href="/profile"
@@ -206,14 +205,14 @@ export function Header() {
                           className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
                         >
                           <Users className="w-3.5 h-3.5" />
-                          Mój profil
+                          {t("myProfile")}
                         </Link>
                         <button
                           onClick={() => signOut({ callbackUrl: "/" })}
                           className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-zinc-400 hover:text-red-400 hover:bg-zinc-900 transition-colors border-t border-zinc-800"
                         >
                           <LogOut className="w-3.5 h-3.5" />
-                          Wyloguj się
+                          {t("logout")}
                         </button>
                       </div>
                     </>
@@ -225,15 +224,15 @@ export function Header() {
                 onClick={() => signIn()}
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs tracking-widest uppercase transition-all clip-tag"
               >
-                ZALOGUJ
+                {t("login")}
               </button>
             )}
           </div>
         </div>
 
         {/* Mobile nav — flat horizontal scroll of every destination (groups expanded) */}
-        <nav className="lg:hidden flex overflow-x-auto no-scrollbar items-center gap-1 pb-2 -mt-1" aria-label="Główna nawigacja">
-          {NAV_LEAVES.map(({ href, label, icon: Icon }) => {
+        <nav className="lg:hidden flex overflow-x-auto no-scrollbar items-center gap-1 pb-2 -mt-1" aria-label={t("mainNav")}>
+          {NAV_LEAVES.map(({ href, tk, icon: Icon }) => {
             const active = isLeafActive(href, pathname);
             return (
               <Link
@@ -241,13 +240,11 @@ export function Header() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={`shrink-0 px-3 py-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase transition-all border ${
-                  active
-                    ? "border-red-500 bg-red-600/20 text-red-300"
-                    : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                  active ? "border-red-500 bg-red-600/20 text-red-300" : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
                 }`}
               >
                 <Icon className="w-3 h-3" />
-                {label}
+                {t(tk)}
               </Link>
             );
           })}
@@ -258,12 +255,11 @@ export function Header() {
 }
 
 // A single top-level direct link (desktop nav).
-function NavLink({ item, pathname }: { item: NavLeaf; pathname: string }) {
-  const Icon = item.icon;
-  const active = isLeafActive(item.href, pathname);
+function NavLink({ href, label, icon: Icon, pathname }: { href: string; label: string; icon: LucideIcon; pathname: string }) {
+  const active = isLeafActive(href, pathname);
   return (
     <Link
-      href={item.href}
+      href={href}
       aria-current={active ? "page" : undefined}
       className={`relative px-3 py-2 flex items-center gap-2 text-[11px] font-semibold tracking-widest uppercase transition-all ${
         active ? "text-white" : "text-zinc-500 hover:text-zinc-300"
@@ -271,16 +267,14 @@ function NavLink({ item, pathname }: { item: NavLeaf; pathname: string }) {
     >
       {active && <span className="absolute inset-0 bg-red-600/10 border-l-2 border-red-600" />}
       <Icon className="w-3.5 h-3.5 relative z-10" />
-      <span className="relative z-10">{item.label}</span>
+      <span className="relative z-10">{label}</span>
     </Link>
   );
 }
 
-// A dropdown group (desktop nav). Opens on hover or keyboard focus (focus-within) — pure CSS,
-// no state — so it scales as more destinations are added without crowding the bar.
-function NavDropdown({ group, pathname }: { group: NavGroup; pathname: string }) {
-  const Icon = group.icon;
-  const anyActive = group.children.some((c) => isLeafActive(c.href, pathname));
+// A dropdown group (desktop nav). Opens on hover or keyboard focus (focus-within) — pure CSS.
+function NavDropdown({ label, icon: Icon, items, pathname }: { label: string; icon: LucideIcon; items: ResolvedLeaf[]; pathname: string }) {
+  const anyActive = items.some((c) => isLeafActive(c.href, pathname));
   return (
     <div className="relative group">
       <button
@@ -292,16 +286,15 @@ function NavDropdown({ group, pathname }: { group: NavGroup; pathname: string })
       >
         {anyActive && <span className="absolute inset-0 bg-red-600/10 border-l-2 border-red-600" />}
         <Icon className="w-3.5 h-3.5 relative z-10" />
-        <span className="relative z-10">{group.label}</span>
+        <span className="relative z-10">{label}</span>
         <ChevronDown className="w-3 h-3 relative z-10 text-zinc-600 transition-transform group-hover:rotate-180" />
       </button>
-      {/* pt-1 keeps a continuous hover area between the button and the panel */}
       <div className="absolute left-0 top-full pt-1 hidden group-hover:block group-focus-within:block z-50">
         <div
           className="min-w-[210px] border border-zinc-800 bg-zinc-950 shadow-xl"
           style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}
         >
-          {group.children.map((c) => {
+          {items.map((c) => {
             const Ic = c.icon;
             const active = isLeafActive(c.href, pathname);
             return (
@@ -310,9 +303,7 @@ function NavDropdown({ group, pathname }: { group: NavGroup; pathname: string })
                 href={c.href}
                 aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-2 px-3 py-2.5 text-[11px] font-semibold tracking-widest uppercase transition-colors border-l-2 ${
-                  active
-                    ? "bg-red-600/15 text-white border-red-600"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-900 border-transparent"
+                  active ? "bg-red-600/15 text-white border-red-600" : "text-zinc-400 hover:text-white hover:bg-zinc-900 border-transparent"
                 }`}
               >
                 <Ic className="w-3.5 h-3.5 shrink-0" />
