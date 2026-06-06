@@ -2,7 +2,8 @@
 // src/components/predictions/PredictionsClient.tsx
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Dice5, Coins, Trophy, Clock, Check, X, Loader2, History } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { fmt, cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ export function PredictionsClient({
   active: ActivePrediction[];
   recent: RecentPrediction[];
 }) {
+  const t = useTranslations("predictions");
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -68,7 +70,7 @@ export function PredictionsClient({
           </h1>
         </div>
         <p className="text-zinc-500 text-sm max-w-2xl">
-          Obstawiaj wydarzenia streamowe za Ghost Tokens. Wygrywająca opcja dzieli między siebie <strong className="text-white">całą pulę</strong> (włącznie ze stawkami przegranych) proporcjonalnie do wpłaconych GT.
+          {t.rich("subtitle", { b: (c) => <strong className="text-white">{c}</strong> })}
         </p>
       </div>
 
@@ -76,15 +78,15 @@ export function PredictionsClient({
       {isAuthenticated && (
         <div className="border border-zinc-800 bg-zinc-950/70 p-3 flex items-center gap-3">
           <Coins className="w-5 h-5 text-yellow-500" />
-          <div className="text-sm text-zinc-400">Twoje saldo:</div>
+          <div className="text-sm text-zinc-400">{t("balance")}</div>
           <div className="font-mono font-bold text-white text-lg tabular-nums">{fmt(myTokens)} <span className="text-xs text-zinc-500">GT</span></div>
         </div>
       )}
 
       {!isAuthenticated && (
         <div className="border border-blue-700 bg-blue-950/30 p-4 text-sm text-blue-200">
-          Zaloguj się żeby móc obstawiać zakłady.{" "}
-          <Link href="/auth/signin?callbackUrl=/predictions" className="text-white underline">Login</Link>
+          {t("loginPrompt")}{" "}
+          <Link href="/auth/signin?callbackUrl=/predictions" className="text-white underline">{t("login")}</Link>
         </div>
       )}
 
@@ -92,13 +94,13 @@ export function PredictionsClient({
       <section>
         <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
           <Trophy className="w-5 h-5 text-red-500" />
-          Aktywne zakłady ({active.length})
+          {t("activeTitle", { count: active.length })}
         </h2>
         {active.length === 0 ? (
           <EmptyState
             icon={<Dice5 className="w-6 h-6" />}
-            title="Brak aktywnych zakładów"
-            message="Streamer doda nowy zakład, gdy będzie hyped 🎲"
+            title={t("emptyTitle")}
+            message={t("emptyMsg")}
           />
         ) : (
           <div className="space-y-4">
@@ -121,7 +123,7 @@ export function PredictionsClient({
         <section>
           <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
             <History className="w-5 h-5 text-zinc-500" />
-            Ostatnie wyniki
+            {t("recentTitle")}
           </h2>
           <div className="space-y-2">
             {recent.map((p) => (
@@ -157,6 +159,7 @@ function ActivePredictionCard({
   onToast: (k: "ok" | "err", m: string) => void;
   onSuccess: () => void;
 }) {
+  const t = useTranslations("predictions");
   const [pickedOption, setPickedOption] = useState<number | null>(prediction.myEntry?.optionIndex ?? null);
   const [wagerInput, setWagerInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -165,10 +168,10 @@ function ActivePredictionCard({
   const alreadyWagered = prediction.myEntry !== null;
 
   async function submit() {
-    if (pickedOption === null) { onToast("err", "Wybierz opcję"); return; }
+    if (pickedOption === null) { onToast("err", t("pickOption")); return; }
     const wager = parseInt(wagerInput, 10);
-    if (!wager || wager < 10) { onToast("err", "Min stawka: 10 GT"); return; }
-    if (wager > myTokens) { onToast("err", "Za mało GT"); return; }
+    if (!wager || wager < 10) { onToast("err", t("minWager")); return; }
+    if (wager > myTokens) { onToast("err", t("notEnough")); return; }
 
     setBusy(true);
     try {
@@ -179,9 +182,9 @@ function ActivePredictionCard({
       });
       const data = await res.json();
       if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
+        onToast("err", data.error ?? t("err"));
       } else {
-        onToast("ok", `Obstawiono ${wager} GT. Saldo: ${data.newBalance} GT`);
+        onToast("ok", t("wagered", { wager, balance: data.newBalance }));
         setWagerInput("");
         onSuccess();
       }
@@ -200,7 +203,7 @@ function ActivePredictionCard({
       <div className="flex items-start justify-between gap-3 mb-4">
         <h3 className="text-white font-bold text-base sm:text-lg flex-1 border-l-2 pl-2" style={{ borderColor: accent }}>{prediction.question}</h3>
         <div className="text-right shrink-0">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Pula</div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("pot")}</div>
           <div className="font-mono font-bold text-yellow-500 text-lg tabular-nums">{fmt(prediction.totalPot)} GT</div>
         </div>
       </div>
@@ -208,7 +211,7 @@ function ActivePredictionCard({
       {isLocked && (
         <div className="border border-orange-900 bg-orange-950/20 px-3 py-2 mb-3 text-xs text-orange-200 flex items-center gap-2">
           <Clock className="w-3.5 h-3.5" />
-          Zakład zamknięty — czeka na rozstrzygnięcie
+          {t("locked")}
         </div>
       )}
 
@@ -245,13 +248,13 @@ function ActivePredictionCard({
                   <span className="text-white font-medium text-sm truncate">{o.label}</span>
                   {isMine && (
                     <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/40 text-green-300 shrink-0">
-                      Twoja
+                      {t("yours")}
                     </span>
                   )}
                 </div>
                 <div className="text-right shrink-0">
                   <div className="font-mono text-xs text-white tabular-nums">{fmt(o.totalWagered)} GT</div>
-                  <div className="text-[10px] text-zinc-500">{o.wagerCount} {o.wagerCount === 1 ? "wager" : "wagers"} · {pct.toFixed(0)}%</div>
+                  <div className="text-[10px] text-zinc-500">{o.wagerCount} {t("wagers", { count: o.wagerCount })} · {pct.toFixed(0)}%</div>
                 </div>
               </div>
             </button>
@@ -262,7 +265,7 @@ function ActivePredictionCard({
       {/* Wager form */}
       {isAuthenticated && !alreadyWagered && !isLocked && (
         <div className="border-t border-zinc-800 pt-3 flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Stawka:</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("stake")}</span>
           <input
             type="number"
             min={10}
@@ -297,14 +300,18 @@ function ActivePredictionCard({
             className="ml-auto px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-30 flex items-center gap-1.5"
           >
             {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Coins className="w-3 h-3" />}
-            Obstaw
+            {t("place")}
           </button>
         </div>
       )}
 
       {alreadyWagered && (
         <div className="border-t border-zinc-800 pt-3 text-xs text-zinc-400">
-          Obstawiłeś <strong className="text-green-400">{fmt(prediction.myEntry!.tokensWagered)} GT</strong> na opcję #{prediction.myEntry!.optionIndex + 1}. Czekaj na rozstrzygnięcie.
+          {t.rich("alreadyWagered", {
+            gt: fmt(prediction.myEntry!.tokensWagered),
+            n: prediction.myEntry!.optionIndex + 1,
+            b: (c) => <strong className="text-green-400">{c}</strong>,
+          })}
         </div>
       )}
     </div>
@@ -312,6 +319,7 @@ function ActivePredictionCard({
 }
 
 function RecentPredictionRow({ prediction }: { prediction: RecentPrediction }) {
+  const t = useTranslations("predictions");
   const isCancelled = prediction.status === "cancelled";
   const winningLabel =
     prediction.resolvedOptionIndex != null ? prediction.options[prediction.resolvedOptionIndex] : null;
@@ -328,15 +336,15 @@ function RecentPredictionRow({ prediction }: { prediction: RecentPrediction }) {
       </div>
       <div className="text-xs text-zinc-500 flex flex-wrap items-center gap-3">
         {winningLabel && !isCancelled && (
-          <span>Wygrana opcja: <strong className="text-green-300">{winningLabel}</strong></span>
+          <span>{t("winningOption")} <strong className="text-green-300">{winningLabel}</strong></span>
         )}
-        <span>Pula: <span className="text-zinc-300 font-mono">{fmt(prediction.totalPot)} GT</span></span>
+        <span>{t("pot")}: <span className="text-zinc-300 font-mono">{fmt(prediction.totalPot)} GT</span></span>
         {prediction.myResult && (
           <span className={cn(
             "font-mono",
             prediction.myResult.won ? "text-green-400" : "text-red-400",
           )}>
-            Ty: {prediction.myResult.won ? `+${fmt(prediction.myResult.payout - prediction.myResult.tokensWagered)}` : `-${fmt(prediction.myResult.tokensWagered)}`} GT
+            {t("you")} {prediction.myResult.won ? `+${fmt(prediction.myResult.payout - prediction.myResult.tokensWagered)}` : `-${fmt(prediction.myResult.tokensWagered)}`} GT
           </span>
         )}
       </div>

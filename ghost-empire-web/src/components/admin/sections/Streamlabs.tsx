@@ -101,7 +101,7 @@ export function StreamlabsManager({
             <p className="text-zinc-400 text-sm mb-3">
               Streamlabs jeszcze nie połączony. Po autoryzacji donejty będą automatycznie dopasowywane do userów.
             </p>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /api/auth/streamlabs is an API route doing a server-side OAuth redirect, not a Next page; <a> is correct here */}
+            {/* /api/auth/streamlabs is an API route doing a server-side OAuth redirect, not a Next page; <a> is correct here */}
             <a
               href="/api/auth/streamlabs"
               className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase"

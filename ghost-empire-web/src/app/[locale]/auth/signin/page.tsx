@@ -2,6 +2,8 @@
 // src/app/auth/signin/page.tsx
 import { signIn, getProviders } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 type Provider = {
   id: string;
@@ -13,54 +15,38 @@ type Provider = {
 
 const PROVIDER_CONFIG: Record<
   string,
-  { color: string; bg: string; border: string; emoji: string; desc: string }
+  { color: string; bg: string; border: string; emoji: string }
 > = {
-  twitch: {
-    color: "#9146FF",
-    bg: "rgba(145,70,255,0.1)",
-    border: "rgba(145,70,255,0.5)",
-    emoji: "💜",
-    desc: "Połącz konto Twitch — śledzenie subskrypcji",
-  },
-  discord: {
-    color: "#5865F2",
-    bg: "rgba(88,101,242,0.1)",
-    border: "rgba(88,101,242,0.5)",
-    emoji: "👾",
-    desc: "Połącz Discord — synchronizacja rang i Ghost Tokens",
-  },
-  kick: {
-    color: "#53FC18",
-    bg: "rgba(83,252,24,0.08)",
-    border: "rgba(83,252,24,0.5)",
-    emoji: "🟢",
-    desc: "Połącz Kick — drugi stream channel",
-  },
-  google: {
-    color: "#FF0000",
-    bg: "rgba(255,0,0,0.08)",
-    border: "rgba(255,0,0,0.5)",
-    emoji: "📺",
-    desc: "Zaloguj przez YouTube (Google account)",
-  },
-};
-
-const ERROR_MSG: Record<string, string> = {
-  OAuthSignin: "Nie udało się rozpocząć logowania u dostawcy — najczęściej brakujący / zły klucz w env (np. TWITCH_CLIENT_ID/SECRET w Vercel).",
-  OAuthCallback: "Błąd przy powrocie od dostawcy — sprawdź Redirect URI w konsoli dewelopera (musi być /api/auth/callback/<provider>).",
-  OAuthCreateAccount: "Nie udało się utworzyć konta z tego dostawcy.",
-  Callback: "Błąd logowania (callback). Spróbuj ponownie.",
-  OAuthAccountNotLinked: "To konto e-mail jest już powiązane z inną platformą — zaloguj się tą, której użyłeś pierwszy raz.",
-  AccessDenied: "Dostęp odrzucony (konto zbanowane lub brak zgody).",
-  Configuration: "Błąd konfiguracji logowania po stronie serwera.",
+  twitch: { color: "#9146FF", bg: "rgba(145,70,255,0.1)", border: "rgba(145,70,255,0.5)", emoji: "💜" },
+  discord: { color: "#5865F2", bg: "rgba(88,101,242,0.1)", border: "rgba(88,101,242,0.5)", emoji: "👾" },
+  kick: { color: "#53FC18", bg: "rgba(83,252,24,0.08)", border: "rgba(83,252,24,0.5)", emoji: "🟢" },
+  google: { color: "#FF0000", bg: "rgba(255,0,0,0.08)", border: "rgba(255,0,0,0.5)", emoji: "📺" },
 };
 
 export default function SignInPage() {
+  const t = useTranslations("signin");
   const [providers, setProviders] = useState<Record<string, Provider> | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
+
+  const errorMessages: Record<string, string> = {
+    OAuthSignin: t("errOAuthSignin"),
+    OAuthCallback: t("errOAuthCallback"),
+    OAuthCreateAccount: t("errOAuthCreateAccount"),
+    Callback: t("errCallback"),
+    OAuthAccountNotLinked: t("errOAuthAccountNotLinked"),
+    AccessDenied: t("errAccessDenied"),
+    Configuration: t("errConfiguration"),
+  };
+  const providerDesc: Record<string, string> = {
+    twitch: t("descTwitch"),
+    discord: t("descDiscord"),
+    kick: t("descKick"),
+    google: t("descGoogle"),
+  };
+  const perks = [t("perk1"), t("perk2"), t("perk3"), t("perk4"), t("perk5")];
 
   useEffect(() => {
     getProviders().then(setProviders);
@@ -106,7 +92,7 @@ export default function SignInPage() {
             GH0ST EMPIRE
           </h1>
           <p className="text-zinc-500 text-sm font-mono tracking-widest">
-            OFICJALNY PORTAL SPOŁECZNOŚCI
+            {t("tagline")}
           </p>
         </div>
 
@@ -119,19 +105,19 @@ export default function SignInPage() {
           }}
         >
           <h2 className="font-display text-2xl text-white mb-2 tracking-wider">
-            ZALOGUJ SIĘ
+            {t("title")}
           </h2>
           <p className="text-zinc-500 text-xs mb-8">
-            Wybierz platformę, żeby uzyskać dostęp do swojego profilu, sklepu i rankingu.
+            {t("subtitle")}
           </p>
 
           {error && (
             <div className="mb-6 border border-red-700 bg-red-950/40 text-red-200 text-xs p-3 leading-relaxed">
-              <p>{ERROR_MSG[error] ?? `Błąd logowania: ${error}`}</p>
+              <p>{errorMessages[error] ?? t("errFallback", { error })}</p>
               {["OAuthSignin", "OAuthCallback", "Callback", "Configuration"].includes(error) && origin && (
                 <div className="mt-3 border-t border-red-800/60 pt-3 space-y-2">
                   <p className="font-semibold text-red-300/90">
-                    Wklej DOKŁADNIE ten Redirect URI w konsoli dewelopera (Twitch / Kick / Discord / Google):
+                    {t("redirectHint")}
                   </p>
                   <div className="flex items-center gap-2">
                     <code className="break-all rounded-sm bg-black/50 px-1.5 py-0.5 font-mono text-[11px] text-zinc-200">
@@ -146,7 +132,7 @@ export default function SignInPage() {
                       }}
                       className="shrink-0 text-red-300 underline hover:text-white"
                     >
-                      {copied ? "skopiowano ✓" : "kopiuj"}
+                      {copied ? t("copied") : t("copy")}
                     </button>
                   </div>
                   <ul className="space-y-0.5 font-mono text-[11px] text-zinc-400">
@@ -155,10 +141,10 @@ export default function SignInPage() {
                     <li className="break-all">{origin}/api/auth/callback/google</li>
                   </ul>
                   <p className="text-zinc-400">
-                    Sprawdź też w Vercel:{" "}
+                    {t("vercelHint")}{" "}
                     <code className="rounded-sm bg-black/50 px-1 font-mono">NEXTAUTH_URL</code> ={" "}
                     <code className="break-all rounded-sm bg-black/50 px-1 font-mono">{origin}</code>{" "}
-                    (bez ukośnika na końcu).
+                    {t("vercelHintEnd")}
                   </p>
                 </div>
               )}
@@ -186,10 +172,10 @@ export default function SignInPage() {
                     <div className="flex-1">
                       <div className="font-bold text-white font-mono">
                         {loading === provider.id
-                          ? "Łączenie..."
-                          : `Zaloguj przez ${provider.name}`}
+                          ? t("connecting")
+                          : t("signInWith", { name: provider.name })}
                       </div>
-                      <div className="text-xs text-zinc-500 mt-0.5">{config.desc}</div>
+                      <div className="text-xs text-zinc-500 mt-0.5">{providerDesc[provider.id]}</div>
                     </div>
                     <div
                       className="w-2 h-8 opacity-60 group-hover:opacity-100 transition-opacity"
@@ -203,16 +189,10 @@ export default function SignInPage() {
           {/* Features list */}
           <div className="mt-8 pt-6 border-t border-zinc-800">
             <p className="text-[10px] font-mono tracking-widest text-zinc-600 mb-3">
-              CO DOSTANIESZ
+              {t("whatYouGet")}
             </p>
             <ul className="space-y-1.5">
-              {[
-                "👻 500 Ghost Tokens powitalnych",
-                "📊 Pełen profil z statystykami",
-                "🛍️ Dostęp do sklepu z nagrodami",
-                "🏆 Ranking i system osiągnięć",
-                "🎁 Daily questy z bonusami",
-              ].map((item) => (
+              {perks.map((item) => (
                 <li key={item} className="text-xs text-zinc-400 flex items-center gap-2">
                   <span>{item}</span>
                 </li>
@@ -223,18 +203,18 @@ export default function SignInPage() {
 
         {/* Footer */}
         <p className="text-center text-zinc-700 text-xs mt-6 font-mono">
-          Logując się akceptujesz{" "}
-          <a href="/terms" className="text-zinc-500 hover:text-red-400 underline-offset-2 hover:underline">
-            Regulamin
-          </a>
-          {" "}i{" "}
-          <a href="/privacy" className="text-zinc-500 hover:text-red-400 underline-offset-2 hover:underline">
-            Politykę prywatności
-          </a>.
+          {t.rich("footerAccept", {
+            terms: (c) => (
+              <Link href="/terms" className="text-zinc-500 hover:text-red-400 underline-offset-2 hover:underline">{c}</Link>
+            ),
+            privacy: (c) => (
+              <Link href="/privacy" className="text-zinc-500 hover:text-red-400 underline-offset-2 hover:underline">{c}</Link>
+            ),
+          })}
           <br />
-          <a href="/about" className="hover:text-red-400 transition-colors underline-offset-2 hover:underline">
-            Dowiedz się więcej o Ghost Empire
-          </a>
+          <Link href="/about" className="hover:text-red-400 transition-colors underline-offset-2 hover:underline">
+            {t("learnMore")}
+          </Link>
           <br />
           twitch.tv/gh0s77tt · kick.com/Gh0s77tt
         </p>
