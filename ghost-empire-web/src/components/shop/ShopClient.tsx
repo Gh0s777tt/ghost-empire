@@ -6,7 +6,8 @@ import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { ShoppingBag, Flame, Lock, Check, X, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { fmt, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { shopDiscountFraction, discountedPrice } from "@/lib/economy";
 import type { ShopItem } from "@prisma/client";
 
@@ -47,6 +48,7 @@ export function ShopClient({
 }) {
   const router = useRouter();
   const t = useTranslations("shop");
+  const fmt = useLocaleFmt();
   const { update: refreshSession } = useSession();
   const [category, setCategory] = useState<string>("all");
   const [pending, startTransition] = useTransition();

@@ -7,7 +7,8 @@ import { useTranslations } from "next-intl";
 // (add /en when needed); usePathname returns the path WITHOUT the locale prefix.
 import { Link, usePathname } from "@/i18n/navigation";
 import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, type LucideIcon } from "lucide-react";
-import { fmt, displayNick } from "@/lib/utils";
+import { displayNick } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { NotificationBell } from "@/components/NotificationBell";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
@@ -56,6 +57,7 @@ export function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const fmt = useLocaleFmt();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (

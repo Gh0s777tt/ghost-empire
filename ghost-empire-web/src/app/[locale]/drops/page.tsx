@@ -117,12 +117,12 @@ export default async function DropsPage() {
             <div className="grid grid-cols-2 gap-3">
               <StatTile
                 label="Złapane dropy"
-                value={fmt(myClaims.length)}
+                value={fmt(myClaims.length, locale)}
                 emoji="🎁"
               />
               <StatTile
                 label="Łącznie z dropów"
-                value={fmt(totalEarnedFromDrops)}
+                value={fmt(totalEarnedFromDrops, locale)}
                 suffix="GT"
                 emoji="💰"
               />
@@ -175,7 +175,7 @@ export default async function DropsPage() {
                           </div>
                         </div>
                         <div className="font-mono text-sm font-bold text-green-400 tabular-nums">
-                          +{fmt(c.reward)} GT
+                          +{fmt(c.reward, locale)} GT
                         </div>
                       </div>
                     );

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Ticket, Lock, Check, Loader2, Clock, Sparkles, X } from "lucide-react";
-import { fmt, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
 type Reward = {
   id: string;
@@ -37,6 +38,7 @@ export function SeasonsClient({
   rewards: Reward[];
 }) {
   const t = useTranslations("seasons");
+  const fmt = useLocaleFmt();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);

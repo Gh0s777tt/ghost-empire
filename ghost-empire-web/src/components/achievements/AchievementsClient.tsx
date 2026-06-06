@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Award, Lock, Check, Eye, EyeOff } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { fmt, formatDate, timeAgo, cn } from "@/lib/utils";
+import { formatDate, timeAgo, cn } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
 type Achievement = {
   id: string;
@@ -97,6 +98,7 @@ export function AchievementsClient({
   userStats: UserStats;
 }) {
   const t = useTranslations("achievements");
+  const fmt = useLocaleFmt();
   const [rarityFilter, setRarityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "earned" | "locked">(
     "all",
@@ -289,6 +291,7 @@ function AchievementCard({
 }) {
   const t = useTranslations("achievements");
   const locale = useLocale();
+  const fmt = useLocaleFmt();
   const triggerLabels: Record<string, string> = {
     level: t("trgLevel"),
     tokens_earned: t("trgTokens"),

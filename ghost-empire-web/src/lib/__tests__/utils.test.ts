@@ -51,13 +51,17 @@ describe("pluralPL", () => {
 });
 
 describe("fmt", () => {
-  it("groups thousands using the pl-PL locale", () => {
+  it("groups thousands using the pl-PL locale by default", () => {
     const out = fmt(1234567);
     // pl-PL uses some kind of space as the thousands separator (ICU-dependent;
     // \s also matches the no-break U+00A0 / U+202F variants). Strip it, then
     // assert the digits survive AND that grouping actually happened.
     expect(out.replace(/\s/g, "")).toBe("1234567");
     expect(out).not.toBe("1234567");
+  });
+
+  it("groups with commas for the en locale", () => {
+    expect(fmt(1234567, "en")).toBe("1,234,567");
   });
 });
 

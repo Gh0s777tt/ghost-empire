@@ -8,7 +8,8 @@ import {
   Calendar, Gift, Ticket, Trophy, Zap, Users, Clock, Check, X, Loader2, Minus, Plus, Crown,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { fmt, cn, displayNick } from "@/lib/utils";
+import { cn, displayNick } from "@/lib/utils";
+import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
 type Winner = {
   id: string;
@@ -408,6 +409,7 @@ function GiveawayCard({
   joined: boolean; busy: boolean; onJoin: () => void;
 }) {
   const t = useTranslations("events");
+  const fmt = useLocaleFmt();
   const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
   const drawn = !!event.drawnAt;
@@ -492,6 +494,7 @@ function ContestCard({
   joined: boolean; busy: boolean; onJoin: () => void;
 }) {
   const t = useTranslations("events");
+  const fmt = useLocaleFmt();
   const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
   const drawn = !!event.drawnAt;
@@ -560,6 +563,7 @@ function RaffleCard({
   myTickets: number; userTokens: number; busy: boolean; onBuy: (count: number) => void;
 }) {
   const t = useTranslations("events");
+  const fmt = useLocaleFmt();
   const [qty, setQty] = useState(1);
   const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
