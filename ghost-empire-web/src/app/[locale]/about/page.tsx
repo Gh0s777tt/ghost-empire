@@ -88,7 +88,7 @@ const CHANGELOG = [
     date: "2026-06-06",
     title: "Profil — konta i linki razem 🔗",
     items: [
-      "Na profilu „Połączone konta", „Social linki" i „Połączone platformy" to teraz jedna sekcja — łączenie platform i ich status (sub/VIP/mod) w jednym miejscu, plus Twoje linki społecznościowe.",
+      "Na profilu wszystko o kontach jest teraz w jednej sekcji — łączenie platform (Twitch/Kick/Discord/YouTube) i ich status (sub/VIP/mod) w jednym miejscu, plus Twoje linki społecznościowe.",
     ],
   },
   {
