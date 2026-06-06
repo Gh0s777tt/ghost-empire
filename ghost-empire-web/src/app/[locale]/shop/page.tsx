@@ -4,12 +4,17 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { ShopClient } from "@/components/shop/ShopClient";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Sklep",
-  description: "Wymień Ghost Tokens na klucze Steam, skiny CS2, gifted suby i więcej.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "shop" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/shop", locale) };
+}
 
 export default async function ShopPage() {
   const session = await auth();

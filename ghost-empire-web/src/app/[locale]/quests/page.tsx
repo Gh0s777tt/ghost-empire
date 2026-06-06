@@ -6,12 +6,17 @@ import { Header } from "@/components/Header";
 import { QuestsClient } from "@/components/quests/QuestsClient";
 import { today } from "@/lib/utils";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Daily Questy",
-  description: "Codzienne zadania w Ghost Empire — wykonuj, claimuj nagrody.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "quests" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/quests", locale) };
+}
 
 export default async function QuestsPage() {
   const session = await auth();

@@ -2,6 +2,7 @@
 // Regulamin portalu Ghost Empire
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { Header } from "@/components/Header";
 import { FileText } from "lucide-react";
@@ -9,7 +10,7 @@ import { FileText } from "lucide-react";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "terms" });
-  return { title: t("metaTitle"), description: t("metaDesc") };
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/terms", locale) };
 }
 
 const SECTIONS_A = [

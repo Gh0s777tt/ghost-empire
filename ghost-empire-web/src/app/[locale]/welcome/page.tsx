@@ -2,6 +2,7 @@
 // Landing / first-visit page — a focused hero shown on a visitor's first load
 // (see FirstVisitRedirect). Reachable any time at /welcome.
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio } from "lucide-react";
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "welcome" });
-  return { title: t("metaTitle"), description: t("metaDesc") };
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/welcome", locale) };
 }
 
 export default async function WelcomePage() {

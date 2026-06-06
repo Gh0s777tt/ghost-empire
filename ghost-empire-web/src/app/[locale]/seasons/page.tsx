@@ -5,12 +5,17 @@ import { Header } from "@/components/Header";
 import { SeasonsClient } from "@/components/seasons/SeasonsClient";
 import { getOrCreateCurrentSeason } from "@/lib/seasons";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Battle Pass",
-  description: "Zdobywaj XP sezonowe za aktywność i odbieraj nagrody na kolejnych tierach.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seasons" });
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/seasons", locale) };
+}
 
 export default async function SeasonsPage() {
   const session = await auth();

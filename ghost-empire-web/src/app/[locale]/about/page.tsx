@@ -1,5 +1,6 @@
 // src/app/about/page.tsx
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
@@ -13,10 +14,17 @@ import { ChangelogList } from "@/components/ChangelogList";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "about" });
-  return { title: t("metaTitle"), description: t("metaDesc") };
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/about", locale) };
 }
 
 const CHANGELOG = [
+  {
+    date: "2026-06-06",
+    title: "Lepsze SEO wielojęzyczne 🌍",
+    items: [
+      "Każda strona ma teraz poprawne znaczniki języka (hreflang) i własny tytuł po angielsku — wyszukiwarki serwują właściwą wersję językową strony. (Ten dziennik zmian zostaje po polsku.)",
+    ],
+  },
   {
     date: "2026-06-06",
     title: "Cały portal po angielsku 🌍",

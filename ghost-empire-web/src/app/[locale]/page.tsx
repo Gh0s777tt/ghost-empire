@@ -7,7 +7,17 @@ import { FirstVisitRedirect } from "@/components/FirstVisitRedirect";
 import { today } from "@/lib/utils";
 import { getCachedTopUsers } from "@/lib/cached";
 
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
+
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "home" });
+  return { description: t("metaDesc"), alternates: localeAlternates("", locale) };
+}
 
 export default async function HomePage() {
   const session = await auth();

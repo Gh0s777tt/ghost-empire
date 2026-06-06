@@ -1,5 +1,6 @@
 // src/app/games/page.tsx
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/i18n/metadata";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "games" });
-  return { title: t("metaTitle"), description: t("metaDesc") };
+  return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/games", locale) };
 }
 
 const SOURCE_LABEL: Record<string, string> = { steam: "Steam", gog: "GOG", psn: "PlayStation", xbox: "Xbox" };

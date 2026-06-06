@@ -41,6 +41,7 @@
     "switchTo": "Zmień język na angielski"
   },
   "home": {
+    "metaDesc": "Oficjalny portal społeczności GH0ST EMPIRE. Zbieraj Ghost Tokens, wymieniaj na nagrody, rywalizuj w rankingu.",
     "dailyQuests": "DAILY QUESTY",
     "resetMidnight": "RESET: PÓŁNOC",
     "loadingTasks": "Ładowanie zadań…",
@@ -73,6 +74,8 @@
     "watch": "Oglądaj"
   },
   "shop": {
+    "metaTitle": "Sklep",
+    "metaDesc": "Wymień Ghost Tokens na klucze Steam, skiny CS2, gifted suby i więcej.",
     "title": "SKLEP",
     "subtitle": "Wymień Ghost Tokens na klucze, skiny, suby i nagrody niedostępne nigdzie indziej.",
     "perk": "Perk sklepu",
@@ -187,6 +190,8 @@
     "learnMore": "Dowiedz się więcej o Ghost Empire"
   },
   "predictions": {
+    "metaTitle": "Predictions",
+    "metaDesc": "Obstawiaj wydarzenia streamowe za Ghost Tokens — wygrywający dzielą się pulą.",
     "subtitle": "Obstawiaj wydarzenia streamowe za Ghost Tokens. Wygrywająca opcja dzieli między siebie <b>całą pulę</b> (włącznie ze stawkami przegranych) proporcjonalnie do wpłaconych GT.",
     "balance": "Twoje saldo:",
     "loginPrompt": "Zaloguj się żeby móc obstawiać zakłady.",
@@ -211,6 +216,8 @@
     "you": "Ty:"
   },
   "drops": {
+    "metaTitle": "Drop codes",
+    "metaDesc": "Wpisuj sekretne kody z live'a — zgarniaj Ghost Tokens. Pierwszy łapie bonus.",
     "loginPrompt": "Zaloguj się żeby wpisywać drop codes podczas streama.",
     "login": "Zaloguj",
     "hint": "Wpisz kod który Ghost wrzucił na czat podczas streama. Pierwszy łapie bonus!",
@@ -223,6 +230,8 @@
     "bonusGone": "Bonusy zostały już rozdane innym 🐢"
   },
   "seasons": {
+    "metaTitle": "Battle Pass",
+    "metaDesc": "Zdobywaj XP sezonowe za aktywność i odbieraj nagrody na kolejnych tierach.",
     "daysLeft": "{days, plural, one {# dzień} few {# dni} many {# dni} other {# dni}} do końca",
     "loginPrompt": "Zaloguj się żeby zbierać XP sezonowe i odbierać nagrody.",
     "login": "Login",
@@ -238,6 +247,8 @@
     "claimedItem": "Odebrano: {label}"
   },
   "schedule": {
+    "metaTitle": "Plan streamów",
+    "metaDesc": "Tygodniowy plan streamów Gh0s77tt — Twitch + Kick.",
     "daysFull": ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"],
     "daysShort": ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"],
     "months": ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
@@ -263,6 +274,8 @@
     "footnote": "Harmonogram może się zmienić — sprawdź Discord po aktualne info"
   },
   "quests": {
+    "metaTitle": "Daily Questy",
+    "metaDesc": "Codzienne zadania w Ghost Empire — wykonuj, claimuj nagrody.",
     "title": "DAILY QUESTY",
     "subtitle": "Codziennie 3 zadania. Wykonaj, zclaimuj, zgarnij Ghost Tokens.",
     "resetIn": "Reset za",
@@ -462,6 +475,8 @@
     "s9p": "Zmiany publikujemy na tej stronie. Większe zmiany ogłaszamy na Discord. Korzystanie z Portalu po wprowadzeniu zmian oznacza ich akceptację."
   },
   "achievements": {
+    "metaTitle": "Osiągnięcia",
+    "metaDesc": "Wszystkie osiągnięcia Ghost Empire — common, rare, epic, legendary.",
     "title": "OSIĄGNIĘCIA",
     "progressNote": "Twój progres: {earned} z {total} zdobyte ({pct}%)",
     "galleryNote": "Pełna galeria {count} osiągnięć. Zaloguj się żeby śledzić progres.",
@@ -491,6 +506,8 @@
     "trgManual": "Ręcznie"
   },
   "ranking": {
+    "metaTitle": "Ranking",
+    "metaDesc": "Najlepsi członkowie Ghost Empire — top tokeny, level, streak.",
     "subtitle": "Najlepsi członkowie Ghost Empire. Przegrupowuj wg metryki.",
     "rankedLabel": "W rankingu",
     "emptyTitle": "Pusty ranking",
@@ -537,6 +554,8 @@
     "admFullAdmin": "→ Pełen admin"
   },
   "events": {
+    "metaTitle": "Eventy",
+    "metaDesc": "Giveawaye, raffle, happy hours i konkursy w Ghost Empire.",
     "title": "EVENTY",
     "subtitle": "Aktualne giveawaye, raffle, happy hours i konkursy. Bierz udział, wygrywaj nagrody.",
     "emptyTitle": "Brak aktywnych eventów",
