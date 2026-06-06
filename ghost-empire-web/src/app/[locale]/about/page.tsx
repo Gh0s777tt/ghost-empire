@@ -86,6 +86,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Ranking po angielsku 🌍",
+    items: [
+      "Ranking (podium, tabela, sortowanie) jest już dostępny po angielsku. Tłumaczymy portal strona po stronie.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Osiągnięcia po angielsku 🌍",
     items: [
       "Galeria osiągnięć (filtry, postępy, nagrody) jest już dostępna po angielsku. Tłumaczymy portal strona po stronie.",
