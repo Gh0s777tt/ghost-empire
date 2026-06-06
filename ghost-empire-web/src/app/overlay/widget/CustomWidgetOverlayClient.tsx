@@ -1,11 +1,11 @@
 "use client";
 // src/app/overlay/widget/CustomWidgetOverlayClient.tsx
-// Renders one custom widget (by ?id=) at its configured position. Polls /api/alerts/widget
-// every 8s so edits in the admin generator show up live without re-adding the OBS source.
+// Renders one custom widget (by ?id=) at its configured position. Realtime via SSE
+// (/api/overlay/stream/widget) + polling fallback so admin edits show up live.
 import { useEffect, useState, type CSSProperties } from "react";
 import { CustomWidgetCard } from "@/components/CustomWidgetCard";
+import { useOverlayStream } from "@/lib/use-overlay-stream";
 
-const POLL_INTERVAL_MS = 8000;
 const PAD = 24;
 
 type Feed =
@@ -40,44 +40,21 @@ function positionStyle(position: string): CSSProperties {
 }
 
 export function CustomWidgetOverlayClient() {
-  const [token, setToken] = useState<string | null>(null);
   const [id, setId] = useState<string | null>(null);
-  const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token" | "no-id">("idle");
-  const [feed, setFeed] = useState<Feed | null>(null);
+  const [missingId, setMissingId] = useState(false);
 
+  // The widget id is a SERVER param (sent on both transports via the hook query).
   useEffect(() => {
-    const params = new URL(window.location.href).searchParams;
-    const t = params.get("token");
-    const i = params.get("id");
-    if (!t) { setAuthStatus("no-token"); return; }
-    if (!i) { setAuthStatus("no-id"); return; }
-    setToken(t);
+    const i = new URL(window.location.href).searchParams.get("id");
+    if (!i) { setMissingId(true); return; }
     setId(i);
   }, []);
 
-  useEffect(() => {
-    if (!token || !id) return;
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/alerts/widget?token=${encodeURIComponent(token)}&id=${encodeURIComponent(id)}`, { cache: "no-store" });
-        if (cancelled) return;
-        if (res.status === 401) { setAuthStatus("unauthorized"); return; }
-        if (!res.ok) return;
-        setFeed(await res.json());
-        setAuthStatus("ok");
-      } catch {
-        /* retry next tick */
-      }
-    };
-    void poll();
-    const idt = setInterval(poll, POLL_INTERVAL_MS);
-    return () => { cancelled = true; clearInterval(idt); };
-  }, [token, id]);
+  const { data: feed, status } = useOverlayStream<Feed>({ feed: "widget", query: { id }, intervalMs: 8000 });
 
-  if (authStatus === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
-  if (authStatus === "no-id") return <StatusBox msg="Missing ?id=<WIDGET_ID>" />;
-  if (authStatus === "unauthorized") return <StatusBox msg="Invalid token" />;
+  if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
+  if (missingId) return <StatusBox msg="Missing ?id=<WIDGET_ID>" />;
+  if (status === "unauthorized") return <StatusBox msg="Invalid token" />;
   if (!feed || !feed.exists) return null;
 
   return (

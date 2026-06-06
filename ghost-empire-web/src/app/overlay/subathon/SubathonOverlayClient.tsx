@@ -1,64 +1,40 @@
 "use client";
 // src/app/overlay/subathon/SubathonOverlayClient.tsx
-// Polls /api/alerts/subathon every 3s (to catch extensions) and ticks locally every
-// second. Countdown is drift-corrected against server time. The card visual lives in
+// Realtime subathon via SSE (/api/overlay/stream/subathon) + polling fallback; ticks
+// locally every second with a drift-corrected countdown vs server time. Card visual in
 // @/components/SubathonCard (shared with the /admin#subathon preview).
 import { useEffect, useRef, useState } from "react";
 import { SubathonCard } from "@/components/SubathonCard";
-
-const POLL_INTERVAL_MS = 3000;
+import { useOverlayStream } from "@/lib/use-overlay-stream";
 
 type Feed = { active: boolean; endsAt: string | null; accentColor?: string; label?: string; serverNow: string };
 
 export function SubathonOverlayClient() {
-  const [token, setToken] = useState<string | null>(null);
-  const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
-  const [endsAtMs, setEndsAtMs] = useState<number | null>(null);
-  const [active, setActive] = useState(false);
-  const [accent, setAccent] = useState("#E50914");
-  const [label, setLabel] = useState("Subathon");
+  const { data, status } = useOverlayStream<Feed>({ feed: "subathon", intervalMs: 3000 });
   const offsetRef = useRef(0); // localNow - serverNow
   const [, setTick] = useState(0); // forces a 1s re-render
 
+  // Re-sync the drift offset whenever a fresh payload arrives.
   useEffect(() => {
-    const t = new URL(window.location.href).searchParams.get("token");
-    if (!t) { setAuthStatus("no-token"); return; }
-    setToken(t);
+    if (data?.serverNow) offsetRef.current = Date.now() - new Date(data.serverNow).getTime();
+  }, [data]);
+
+  // Local 1s tick so the countdown keeps ticking down between server updates.
+  useEffect(() => {
+    const tickId = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => clearInterval(tickId);
   }, []);
 
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/alerts/subathon?token=${encodeURIComponent(token)}`, { cache: "no-store" });
-        if (cancelled) return;
-        if (res.status === 401) { setAuthStatus("unauthorized"); return; }
-        if (!res.ok) return;
-        const d: Feed = await res.json();
-        offsetRef.current = Date.now() - new Date(d.serverNow).getTime();
-        setActive(d.active);
-        setEndsAtMs(d.endsAt ? new Date(d.endsAt).getTime() : null);
-        if (d.accentColor) setAccent(d.accentColor);
-        if (d.label) setLabel(d.label);
-        setAuthStatus("ok");
-      } catch {
-        /* retry next tick */
-      }
-    };
-    void poll();
-    const pollId = setInterval(poll, POLL_INTERVAL_MS);
-    const tickId = setInterval(() => setTick((n) => n + 1), 1000);
-    return () => { cancelled = true; clearInterval(pollId); clearInterval(tickId); };
-  }, [token]);
-
-  if (authStatus === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
-  if (authStatus === "unauthorized") return <StatusBox msg="Invalid token" />;
-  if (!active || endsAtMs == null) return null;
+  if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
+  if (status === "unauthorized") return <StatusBox msg="Invalid token" />;
+  const endsAtMs = data?.endsAt ? new Date(data.endsAt).getTime() : null;
+  if (!data?.active || endsAtMs == null) return null;
 
   const serverNow = Date.now() - offsetRef.current;
   const remainingMs = Math.max(0, endsAtMs - serverNow);
   const ended = remainingMs <= 0;
+  const accent = data.accentColor ?? "#E50914";
+  const label = data.label ?? "Subathon";
 
   return (
     <div

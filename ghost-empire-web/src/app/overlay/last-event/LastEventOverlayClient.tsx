@@ -1,11 +1,10 @@
 "use client";
 // src/app/overlay/last-event/LastEventOverlayClient.tsx
-// Polls /api/alerts/recent-events every 5s and shows the "last sub" or "last donator"
-// card (selected by ?kind=). Hidden until the first matching event exists.
+// Realtime "last sub/donator/follower" via SSE (/api/overlay/stream/recent-events)
+// + polling fallback; card selected by ?kind=. Hidden until the first matching event.
 import { useEffect, useState } from "react";
 import { LastEventCard } from "@/components/LastEventCard";
-
-const POLL_INTERVAL_MS = 5000;
+import { useOverlayStream } from "@/lib/use-overlay-stream";
 
 type EventData = { name: string; amount: number | null; amountLabel: string | null; at: string } | null;
 type Feed = { sub: EventData; donation: EventData; follow: EventData };
@@ -18,45 +17,21 @@ const KIND_META: Record<Kind, { label: string; icon: string; accent: string; sho
 };
 
 export function LastEventOverlayClient() {
-  const [token, setToken] = useState<string | null>(null);
+  const { data: feed, status } = useOverlayStream<Feed>({ feed: "recent-events", intervalMs: 5000 });
   const [kind, setKind] = useState<Kind>("sub");
   const [accentOverride, setAccentOverride] = useState<string | null>(null);
-  const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
-  const [feed, setFeed] = useState<Feed | null>(null);
 
+  // kind + accent are client-only display config from the URL (not sent to the server).
   useEffect(() => {
     const params = new URL(window.location.href).searchParams;
-    const t = params.get("token");
-    if (!t) { setAuthStatus("no-token"); return; }
-    setToken(t);
     const k = params.get("kind");
     if (k === "donation" || k === "sub" || k === "follow") setKind(k);
     const a = params.get("accent");
     if (a && /^[0-9a-fA-F]{6}$/.test(a)) setAccentOverride(`#${a}`);
   }, []);
 
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/alerts/recent-events?token=${encodeURIComponent(token)}`, { cache: "no-store" });
-        if (cancelled) return;
-        if (res.status === 401) { setAuthStatus("unauthorized"); return; }
-        if (!res.ok) return;
-        setFeed(await res.json());
-        setAuthStatus("ok");
-      } catch {
-        /* retry next tick */
-      }
-    };
-    void poll();
-    const id = setInterval(poll, POLL_INTERVAL_MS);
-    return () => { cancelled = true; clearInterval(id); };
-  }, [token]);
-
-  if (authStatus === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
-  if (authStatus === "unauthorized") return <StatusBox msg="Invalid token" />;
+  if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
+  if (status === "unauthorized") return <StatusBox msg="Invalid token" />;
   if (!feed) return null;
 
   const meta = KIND_META[kind];

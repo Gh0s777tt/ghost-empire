@@ -1,18 +1,13 @@
 // src/app/api/alerts/chat/route.ts
-// Token-gated public feed for the OBS chat overlay. Returns the most recent
-// messages (oldest → newest) from all platforms. Mirrors /api/alerts/goals.
+// Polled fallback for the chat OBS overlay (recent messages + look config) — the
+// realtime path is the generic SSE streamer /api/overlay/stream/chat. Both share
+// the lib/overlay-feeds producer so the payload is identical regardless of
+// transport. Token-gated.
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { isValidOverlayToken } from "@/lib/alerts";
+import { OVERLAY_FEEDS } from "@/lib/overlay-feeds";
 
 export const dynamic = "force-dynamic";
-
-const LIMIT = 40;
-
-function safeParse(s: string | null): unknown {
-  if (!s) return null;
-  try { return JSON.parse(s); } catch { return null; }
-}
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -20,30 +15,5 @@ export async function GET(req: Request) {
   if (!(await isValidOverlayToken(token))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const [rows, config] = await Promise.all([
-    prisma.chatFeedMessage.findMany({ orderBy: { createdAt: "desc" }, take: LIMIT }),
-    prisma.chatOverlayConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
-  ]);
-
-  return NextResponse.json({
-    config: {
-      fontSize: config.fontSize,
-      textColor: config.textColor,
-      fontFamily: config.fontFamily,
-      bgOpacity: config.bgOpacity,
-      showPlatformIcon: config.showPlatformIcon,
-    },
-    messages: rows
-      .reverse()
-      .map((m) => ({
-        id: m.id,
-        platform: m.platform,
-        username: m.username,
-        message: m.message,
-        emotes: safeParse(m.emotes),
-        badges: safeParse(m.badges),
-        createdAt: m.createdAt.toISOString(),
-      })),
-  });
+  return NextResponse.json(await OVERLAY_FEEDS.chat.producer(url.searchParams));
 }

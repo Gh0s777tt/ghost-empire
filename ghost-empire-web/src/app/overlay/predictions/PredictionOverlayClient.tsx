@@ -1,12 +1,10 @@
 "use client";
 // src/app/overlay/predictions/PredictionOverlayClient.tsx
-// Polls /api/alerts/predictions every 4s and renders the active prediction card
-// (top-center). Hidden when there's no open/locked prediction. The visual lives in
-// @/components/PredictionOverlayCard (shared with the /admin#predictions preview).
-import { useEffect, useState } from "react";
+// Realtime active prediction via SSE (/api/overlay/stream/predictions) + polling
+// fallback; renders the prediction card (top-center). Hidden when none open/locked.
+// Visual in @/components/PredictionOverlayCard (shared with /admin#predictions preview).
 import { PredictionOverlayCard, type PredictionOverlayOption } from "@/components/PredictionOverlayCard";
-
-const POLL_INTERVAL_MS = 4000;
+import { useOverlayStream } from "@/lib/use-overlay-stream";
 
 type Feed =
   | { active: false }
@@ -21,39 +19,10 @@ type Feed =
     };
 
 export function PredictionOverlayClient() {
-  const [token, setToken] = useState<string | null>(null);
-  const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
-  const [feed, setFeed] = useState<Feed | null>(null);
+  const { data: feed, status } = useOverlayStream<Feed>({ feed: "predictions", intervalMs: 4000 });
 
-  useEffect(() => {
-    const t = new URL(window.location.href).searchParams.get("token");
-    if (!t) { setAuthStatus("no-token"); return; }
-    setToken(t);
-  }, []);
-
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/alerts/predictions?token=${encodeURIComponent(token)}`, { cache: "no-store" });
-        if (cancelled) return;
-        if (res.status === 401) { setAuthStatus("unauthorized"); return; }
-        if (!res.ok) return;
-        const d: Feed = await res.json();
-        setFeed(d);
-        setAuthStatus("ok");
-      } catch {
-        /* retry next tick */
-      }
-    };
-    void poll();
-    const id = setInterval(poll, POLL_INTERVAL_MS);
-    return () => { cancelled = true; clearInterval(id); };
-  }, [token]);
-
-  if (authStatus === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
-  if (authStatus === "unauthorized") return <StatusBox msg="Invalid token" />;
+  if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
+  if (status === "unauthorized") return <StatusBox msg="Invalid token" />;
   if (!feed || !feed.active) return null;
 
   return (

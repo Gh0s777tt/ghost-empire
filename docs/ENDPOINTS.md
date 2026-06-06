@@ -123,17 +123,16 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/internal/mod-violation` | Log naruszenia automod (po egzekucji) — statystyki + eskalacja |
 
 ## Źródła OBS (overlayToken, odczyt)
-| Trasa | Overlay |
+> **Transport realtime (#189/#190):** każdy overlay łączy się najpierw przez **SSE** (push), a przy dowolnym problemie spada na **polling** (fallback) — payload identyczny, bo overlay i fallback dzielą te same producery (`lib/overlay-feeds`; alerty: `lib/alert-feed`). Klient: hook `lib/use-overlay-stream`.
+
+| Trasa | Overlay / rola |
 |---|---|
-| `…/api/alerts/stream` | `/overlay` (alerty) — **SSE realtime** (push, długie połączenie + heartbeat, self-close 50 s) |
-| `…/api/alerts/queue` | `/overlay` (alerty) — polling **fallback** (ten sam payload co SSE; współdzielony `lib/alert-feed`) |
-| `…/api/alerts/goals` | `/overlay/goals` (cele + hype train) |
-| `…/api/alerts/chat` | `/overlay/chat` (czat 3 platform) |
-| `…/api/alerts/subathon` | `/overlay/subathon` (odliczanie) |
-| `…/api/alerts/wheel` | `/overlay/wheel` (Koło Fortuny — animacja zakręcenia) |
-| `…/api/alerts/rumble` | `/overlay/rumble` (Rumble — LIVE / widzowie / followers) |
+| `…/api/overlay/stream/[feed]` | **Generyczny SSE** dla overlayów — `feed` ∈ `goals` · `subathon` · `polls` · `predictions` · `recent-events` · `emoji-combo` · `rumble` · `wheel` · `widget` · `chat` · `viewers` (push, heartbeat, self-close 50 s) |
+| `…/api/alerts/stream` | `/overlay` (alerty) — dedykowany **SSE** (push, heartbeat, self-close 50 s) |
+| `…/api/alerts/queue` | `/overlay` (alerty) — polling **fallback** |
+| `…/api/alerts/<feed>` | polling **fallback** pozostałych overlayów (`goals`/`chat`/`subathon`/`wheel`/`rumble`/`polls`/`predictions`/`recent-events`/`emoji-combo`/`widget`/`viewers`) — ten sam payload co SSE |
 | `…/api/chat/assets` | `/overlay/chat` (odznaki Twitch + emotki 7TV/BTTV/FFZ) |
-| `…/api/codes/current` | `/overlay/codes` (rotacja kodów) |
+| `…/api/codes/current` | `/overlay/codes` (rotacja kodów — bez SSE) |
 
 ## Webhooki / polling / cron (public + własny podpis)
 | Trasa | Po co |

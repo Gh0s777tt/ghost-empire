@@ -1,11 +1,11 @@
 "use client";
 // src/app/overlay/wheel/WheelOverlayClient.tsx
-// Polls /api/alerts/wheel; when a NEW spin appears it spins the wheel to land on
-// the winning segment, then flashes a winner banner. The wheel idles otherwise.
+// Realtime Wheel of Fortune via SSE (/api/overlay/stream/wheel) + polling fallback;
+// when a NEW spin appears it spins to the winning segment, then flashes a banner.
 import { useEffect, useRef, useState } from "react";
 import { WheelGraphic, rotationForIndex, type WheelSeg } from "@/components/WheelGraphic";
+import { useOverlayStream } from "@/lib/use-overlay-stream";
 
-const POLL_MS = 2000;
 const SPIN_MS = 5000;       // must match the CSS transition in WheelGraphic
 const BANNER_MS = 6000;     // how long the winner banner stays after the spin
 
@@ -18,10 +18,10 @@ type Latest = {
   at: string;
 };
 
+type WheelFeed = { enabled: boolean; segments: WheelSeg[]; latest: Latest | null };
+
 export function WheelOverlayClient() {
-  const [token, setToken] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
-  const [segments, setSegments] = useState<WheelSeg[]>([]);
+  const { data, status } = useOverlayStream<WheelFeed>({ feed: "wheel", intervalMs: 2000 });
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<Latest | null>(null);
@@ -29,57 +29,39 @@ export function WheelOverlayClient() {
   const lastSpinId = useRef<string | null>(null);
   const initialised = useRef(false);
   const rotationRef = useRef(0);
+  const bannerTimers = useRef<number[]>([]);
 
+  // Detect a NEW spin in each fresh payload → animate to its segment, then banner.
   useEffect(() => {
-    const t = new URL(window.location.href).searchParams.get("token");
-    if (!t) { setStatus("no-token"); return; }
-    setToken(t);
-  }, []);
+    const latest = data?.latest;
+    if (!latest) return;
 
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
+    // First payload: sync to the latest spin silently (don't replay an old result).
+    if (!initialised.current) {
+      initialised.current = true;
+      lastSpinId.current = latest.id;
+      return;
+    }
+    if (latest.id !== lastSpinId.current && latest.segmentIndex >= 0) {
+      lastSpinId.current = latest.id;
+      const next = rotationForIndex(rotationRef.current, latest.segmentIndex, (data?.segments ?? []).length);
+      rotationRef.current = next;
+      setSpinning(true);
+      setRotation(next);
+      setWinner(null);
+      // Replace any prior pending banner timers so an intervening tick can't cancel them.
+      bannerTimers.current.forEach(clearTimeout);
+      bannerTimers.current = [
+        window.setTimeout(() => setWinner(latest), SPIN_MS),
+        window.setTimeout(() => setWinner(null), SPIN_MS + BANNER_MS),
+      ];
+    }
+  }, [data]);
 
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/alerts/wheel?token=${encodeURIComponent(token)}`, { cache: "no-store" });
-        if (cancelled) return;
-        if (res.status === 401) { setStatus("unauthorized"); return; }
-        if (!res.ok) return;
-        const data: { segments: WheelSeg[]; latest: Latest | null } = await res.json();
-        setSegments(data.segments ?? []);
-        setStatus("ok");
+  // Clear pending banner timers on unmount.
+  useEffect(() => () => bannerTimers.current.forEach(clearTimeout), []);
 
-        const latest = data.latest;
-        if (!latest) return;
-
-        // First poll: sync to the latest spin silently (don't replay an old result).
-        if (!initialised.current) {
-          initialised.current = true;
-          lastSpinId.current = latest.id;
-          return;
-        }
-
-        // A genuinely new spin → animate to its segment, then banner.
-        if (latest.id !== lastSpinId.current && latest.segmentIndex >= 0) {
-          lastSpinId.current = latest.id;
-          const next = rotationForIndex(rotationRef.current, latest.segmentIndex, (data.segments ?? []).length);
-          rotationRef.current = next;
-          setSpinning(true);
-          setRotation(next);
-          setWinner(null);
-          window.setTimeout(() => { if (!cancelled) setWinner(latest); }, SPIN_MS);
-          window.setTimeout(() => { if (!cancelled) setWinner(null); }, SPIN_MS + BANNER_MS);
-        }
-      } catch {
-        /* retry next tick */
-      }
-    };
-
-    void poll();
-    const interval = setInterval(poll, POLL_MS);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [token]);
+  const segments = data?.segments ?? [];
 
   if (status === "no-token") return <Box msg="Missing ?token=<OVERLAY_TOKEN>" />;
   if (status === "unauthorized") return <Box msg="Invalid token" />;

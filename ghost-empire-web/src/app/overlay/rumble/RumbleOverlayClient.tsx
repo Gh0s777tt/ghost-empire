@@ -1,42 +1,15 @@
 "use client";
 // src/app/overlay/rumble/RumbleOverlayClient.tsx
-// Polls /api/alerts/rumble and shows a compact Rumble status pill: LIVE + viewers
-// when streaming, otherwise follower / subscriber counts.
-import { useEffect, useState } from "react";
+// Realtime Rumble status via SSE (/api/overlay/stream/rumble) + polling fallback;
+// shows a compact pill: LIVE + viewers when streaming, else follower / sub counts.
+import { useOverlayStream } from "@/lib/use-overlay-stream";
 
-const POLL_MS = 15_000;
 const RUMBLE_GREEN = "#85c742";
 
 type Status = { configured: boolean; live: boolean; followers: number; subscribers: number; title: string | null; watching: number };
 
 export function RumbleOverlayClient() {
-  const [token, setToken] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "no-token" | "unauthorized" | "ok">("idle");
-  const [data, setData] = useState<Status | null>(null);
-
-  useEffect(() => {
-    const t = new URL(window.location.href).searchParams.get("token");
-    if (!t) { setStatus("no-token"); return; }
-    setToken(t);
-  }, []);
-
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/alerts/rumble?token=${encodeURIComponent(token)}`, { cache: "no-store" });
-        if (cancelled) return;
-        if (res.status === 401) { setStatus("unauthorized"); return; }
-        if (!res.ok) return;
-        setData(await res.json());
-        setStatus("ok");
-      } catch { /* retry */ }
-    };
-    void poll();
-    const id = setInterval(poll, POLL_MS);
-    return () => { cancelled = true; clearInterval(id); };
-  }, [token]);
+  const { data, status } = useOverlayStream<Status>({ feed: "rumble", intervalMs: 15_000 });
 
   if (status === "no-token") return <Box msg="Missing ?token=" />;
   if (status === "unauthorized") return <Box msg="Invalid token" />;
