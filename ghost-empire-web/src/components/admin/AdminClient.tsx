@@ -9,6 +9,7 @@ import {
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
 import { fmt, formatDate, cn } from "@/lib/utils";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
@@ -20,7 +21,10 @@ import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, Strea
 
 // Heavy, rarely-first-viewed admin sections split into their own lazy chunks
 // (keeps the initial /admin client bundle smaller). See components/admin/sections/.
-const SectionLoading = () => <div className="text-zinc-600 text-sm">Ładowanie…</div>;
+function SectionLoading() {
+  const t = useTranslations("admin");
+  return <div className="text-zinc-600 text-sm">{t("loading")}</div>;
+}
 const AnalyticsSection = dynamic(() => import("./sections/Analytics").then((m) => m.AnalyticsSection), { ssr: false, loading: SectionLoading });
 const AuditLogSection = dynamic(() => import("./sections/AuditLog").then((m) => m.AuditLogSection), { ssr: false, loading: SectionLoading });
 const PollsManager = dynamic(() => import("./sections/Polls").then((m) => m.PollsManager), { ssr: false, loading: SectionLoading });
@@ -100,6 +104,7 @@ export function AdminClient({
     (perm: string) => isAdmin || myPermissions.includes(perm),
     [isAdmin, myPermissions],
   );
+  const t = useTranslations("admin");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -117,44 +122,44 @@ export function AdminClient({
     group: string;
     permission: () => boolean;
   }> = [
-    { id: "dashboard", label: "Dashboard",   icon: LayoutDashboard, group: "main",       permission: () => true },
-    { id: "analytics", label: "Analityka",    icon: TrendingUp,     group: "main",       permission: () => isAdmin },
-    { id: "integrations", label: "Integracje", icon: Plug,          group: "main",       permission: () => isAdmin },
-    { id: "webhooks",  label: "Webhooki",     icon: Webhook,         group: "main",       permission: () => isAdmin },
+    { id: "dashboard", label: t("secDashboard"),   icon: LayoutDashboard, group: "main",       permission: () => true },
+    { id: "analytics", label: t("secAnalytics"),    icon: TrendingUp,     group: "main",       permission: () => isAdmin },
+    { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       permission: () => isAdmin },
+    { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       permission: () => isAdmin },
 
-    { id: "users",     label: "Użytkownicy", icon: UserCog,         group: "moderation", permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
-    { id: "merge",     label: "Merge duplikatów", icon: GitMerge,   group: "moderation", permission: () => isAdmin },
-    { id: "moderation", label: "Moderacja",    icon: ShieldCheck,   group: "moderation", permission: () => isAdmin },
-    { id: "audit",     label: "Audit log",   icon: History,         group: "moderation", permission: () => can("view_audit") },
+    { id: "users",     label: t("secUsers"), icon: UserCog,         group: "moderation", permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
+    { id: "merge",     label: t("secMerge"), icon: GitMerge,   group: "moderation", permission: () => isAdmin },
+    { id: "moderation", label: t("secModeration"),    icon: ShieldCheck,   group: "moderation", permission: () => isAdmin },
+    { id: "audit",     label: t("secAudit"),   icon: History,         group: "moderation", permission: () => can("view_audit") },
 
-    { id: "twitch",    label: "Twitch",      icon: Tv,              group: "platforms",  permission: () => isAdmin },
-    { id: "kick",      label: "Kick",        icon: Radio,           group: "platforms",  permission: () => isAdmin },
-    { id: "youtube",   label: "YouTube",     icon: MonitorPlay,     group: "platforms",  permission: () => isAdmin },
+    { id: "twitch",    label: t("secTwitch"),      icon: Tv,              group: "platforms",  permission: () => isAdmin },
+    { id: "kick",      label: t("secKick"),        icon: Radio,           group: "platforms",  permission: () => isAdmin },
+    { id: "youtube",   label: t("secYoutube"),     icon: MonitorPlay,     group: "platforms",  permission: () => isAdmin },
 
-    { id: "bot",       label: "Bot Discord", icon: Bot,             group: "bot",        permission: () => can("manage_shop") },
-    { id: "chat",      label: "Komendy czatu", icon: MessageSquare, group: "bot",        permission: () => isAdmin },
-    { id: "timers",    label: "Timery",        icon: Clock,         group: "bot",        permission: () => isAdmin },
-    { id: "faq",       label: "FAQ / auto",    icon: HelpCircle,    group: "bot",        permission: () => isAdmin },
-    { id: "welcome",   label: "Powitania",     icon: UserPlus,      group: "bot",        permission: () => isAdmin },
-    { id: "songs",     label: "Song requests", icon: Music,         group: "bot",        permission: () => isAdmin },
+    { id: "bot",       label: t("secBot"), icon: Bot,             group: "bot",        permission: () => can("manage_shop") },
+    { id: "chat",      label: t("secChat"), icon: MessageSquare, group: "bot",        permission: () => isAdmin },
+    { id: "timers",    label: t("secTimers"),        icon: Clock,         group: "bot",        permission: () => isAdmin },
+    { id: "faq",       label: t("secFaq"),    icon: HelpCircle,    group: "bot",        permission: () => isAdmin },
+    { id: "welcome",   label: t("secWelcome"),     icon: UserPlus,      group: "bot",        permission: () => isAdmin },
+    { id: "songs",     label: t("secSongs"), icon: Music,         group: "bot",        permission: () => isAdmin },
 
-    { id: "widgets",   label: "Widgety (OBS)", icon: LayoutGrid,    group: "overlays",   permission: () => isAdmin },
-    { id: "alerts",    label: "Stream Alerts", icon: Bell,          group: "overlays",   permission: () => isAdmin },
-    { id: "goals",     label: "Stream Goals", icon: Target,         group: "overlays",   permission: () => isAdmin },
-    { id: "subathon",  label: "Subathon",      icon: Hourglass,     group: "overlays",   permission: () => isAdmin },
+    { id: "widgets",   label: t("secWidgets"), icon: LayoutGrid,    group: "overlays",   permission: () => isAdmin },
+    { id: "alerts",    label: t("secAlerts"), icon: Bell,          group: "overlays",   permission: () => isAdmin },
+    { id: "goals",     label: t("secGoals"), icon: Target,         group: "overlays",   permission: () => isAdmin },
+    { id: "subathon",  label: t("secSubathon"),      icon: Hourglass,     group: "overlays",   permission: () => isAdmin },
 
-    { id: "shop",      label: "Sklep",       icon: ShoppingBag,     group: "economy",    permission: () => can("manage_shop") || can("deliver_orders") },
-    { id: "drops",     label: "Drops",       icon: Gift,            group: "economy",    permission: () => can("create_drops") },
-    { id: "seasons",   label: "Battle Pass", icon: Ticket,          group: "economy",    permission: () => isAdmin },
-    { id: "wheel",     label: "Koło Fortuny", icon: Disc3,          group: "economy",    permission: () => isAdmin },
-    { id: "donations", label: "Donacje",     icon: Heart,           group: "economy",    permission: () => isAdmin },
+    { id: "shop",      label: t("secShop"),       icon: ShoppingBag,     group: "economy",    permission: () => can("manage_shop") || can("deliver_orders") },
+    { id: "drops",     label: t("secDrops"),       icon: Gift,            group: "economy",    permission: () => can("create_drops") },
+    { id: "seasons",   label: t("secSeasons"), icon: Ticket,          group: "economy",    permission: () => isAdmin },
+    { id: "wheel",     label: t("secWheel"), icon: Disc3,          group: "economy",    permission: () => isAdmin },
+    { id: "donations", label: t("secDonations"),     icon: Heart,           group: "economy",    permission: () => isAdmin },
 
-    { id: "events",    label: "Eventy",      icon: Calendar,        group: "community",  permission: () => can("create_events") || can("edit_events") || can("draw_events") },
-    { id: "predictions", label: "Predictions", icon: Dice5,         group: "community",  permission: () => can("create_events") },
-    { id: "polls",     label: "Ankiety",     icon: BarChart3,       group: "community",  permission: () => isAdmin },
-    { id: "achievements", label: "Osiągnięcia", icon: Award,        group: "community",  permission: () => isAdmin },
-    { id: "schedule",  label: "Harmonogram", icon: CalendarDays,    group: "community",  permission: () => can("manage_shop") },
-    { id: "games",     label: "Biblioteka gier", icon: Gamepad2,    group: "community",  permission: () => isAdmin },
+    { id: "events",    label: t("secEvents"),      icon: Calendar,        group: "community",  permission: () => can("create_events") || can("edit_events") || can("draw_events") },
+    { id: "predictions", label: t("secPredictions"), icon: Dice5,         group: "community",  permission: () => can("create_events") },
+    { id: "polls",     label: t("secPolls"),     icon: BarChart3,       group: "community",  permission: () => isAdmin },
+    { id: "achievements", label: t("secAchievements"), icon: Award,        group: "community",  permission: () => isAdmin },
+    { id: "schedule",  label: t("secSchedule"), icon: CalendarDays,    group: "community",  permission: () => can("manage_shop") },
+    { id: "games",     label: t("secGames"), icon: Gamepad2,    group: "community",  permission: () => isAdmin },
   ];
 
   const visibleSections = SECTIONS.filter((s) => s.permission());
@@ -204,10 +209,10 @@ export function AdminClient({
     let matched = false;
     for (const p of providers) {
       if (params.has(p.ok)) {
-        setToast({ kind: "ok", msg: `${p.label}: autoryzacja udana ✓` });
+        setToast({ kind: "ok", msg: t("oauthOk", { label: p.label }) });
         matched = true;
       } else if (params.has(p.err)) {
-        setToast({ kind: "err", msg: `${p.label}: błąd autoryzacji — ${params.get(p.err)}` });
+        setToast({ kind: "err", msg: t("oauthErr", { label: p.label, err: params.get(p.err) ?? "" }) });
         matched = true;
       }
     }
@@ -218,8 +223,7 @@ export function AdminClient({
         .forEach((k) => { url.searchParams.delete(k); });
       window.history.replaceState(null, "", url.toString());
     }
-     
-  }, []);
+  }, [t]);
 
   const sharedProps = { onToast: showToast, onSuccess: refresh, pending };
 
@@ -237,18 +241,18 @@ export function AdminClient({
 
       {/* Stats — always visible above the sidebar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatTile label="Userów" value={fmt(stats.totalUsers)} icon={Users} />
-        <StatTile label="Tokens w obiegu" value={fmt(stats.totalTokensInCirculation)} suffix="GT" icon={Coins} />
-        <StatTile label="Ever earned" value={fmt(stats.totalEverEarned)} suffix="GT" icon={TrendingUp} />
-        <StatTile label="Aktywne eventy" value={fmt(stats.eventsActive)} icon={Calendar} />
-        <StatTile label="Pending orders" value={fmt(stats.ordersPending)} icon={Package} accent={stats.ordersPending > 0} />
+        <StatTile label={t("statUsers")} value={fmt(stats.totalUsers)} icon={Users} />
+        <StatTile label={t("statTokensCirc")} value={fmt(stats.totalTokensInCirculation)} suffix="GT" icon={Coins} />
+        <StatTile label={t("statEverEarned")} value={fmt(stats.totalEverEarned)} suffix="GT" icon={TrendingUp} />
+        <StatTile label={t("statActiveEvents")} value={fmt(stats.eventsActive)} icon={Calendar} />
+        <StatTile label={t("statPendingOrders")} value={fmt(stats.ordersPending)} icon={Package} accent={stats.ordersPending > 0} />
       </div>
 
       {!isAdmin && (
         <div className="border border-blue-700 bg-blue-950/30 px-4 py-2.5 text-xs text-blue-200">
-          🛡️ Widzisz panel jako <strong>moderator</strong>. Twoje uprawnienia:{" "}
-          <span className="font-mono">{myPermissions.length === 0 ? "BRAK" : myPermissions.join(", ")}</span>.
-          Sekcje bez odpowiedniego uprawnienia są ukryte.
+          🛡️ {t.rich("modAs", { b: (c) => <strong>{c}</strong> })} {t("modPerms")}{" "}
+          <span className="font-mono">{myPermissions.length === 0 ? t("permsNone") : myPermissions.join(", ")}</span>.
+          {" "}{t("modHidden")}
         </div>
       )}
 
@@ -485,6 +489,7 @@ export function AdminClient({
  * deferred, so opening /admin no longer fetches every section's data up-front.
  */
 function LazySection<T>({ s, children }: { s: string; children: (data: T) => React.ReactNode }) {
+  const t = useTranslations("admin");
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -497,22 +502,22 @@ function LazySection<T>({ s, children }: { s: string; children: (data: T) => Rea
       .then(async (r) => {
         if (!r.ok) {
           const e = await r.json().catch(() => ({}));
-          throw new Error(e.error ?? `Błąd ${r.status}`);
+          throw new Error(e.error ?? t("errStatus", { status: r.status }));
         }
         return r.json();
       })
       .then((d) => { if (!cancelled) setData(d as T); })
-      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Błąd ładowania"); });
+      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : t("loadError")); });
     return () => { cancelled = true; };
-  }, [s, reloadKey]);
+  }, [s, reloadKey, t]);
 
   if (error) {
-    return <ErrorState message={`Sekcja: ${error}`} onRetry={() => setReloadKey((k) => k + 1)} />;
+    return <ErrorState message={t("sectionError", { error })} onRetry={() => setReloadKey((k) => k + 1)} />;
   }
   if (data === null) {
     return (
       <div className="border border-zinc-800 bg-black/30 p-8 flex items-center justify-center gap-2 text-zinc-500 text-sm">
-        <Loader2 className="w-4 h-4 animate-spin" /> Ładowanie sekcji…
+        <Loader2 className="w-4 h-4 animate-spin" /> {t("loadingSection")}
       </div>
     );
   }
@@ -522,14 +527,15 @@ function LazySection<T>({ s, children }: { s: string; children: (data: T) => Rea
 // ============== ADMIN NAV ==============
 
 // Sidebar groups (order + labels). Sections carry a `group` key matching these.
+// `label` is an "admin" namespace key (translated in AdminNav).
 const NAV_GROUPS: Array<{ key: string; label: string }> = [
-  { key: "main",       label: "Pulpit" },
-  { key: "moderation", label: "Moderacja" },
-  { key: "platforms",  label: "Platformy" },
-  { key: "bot",        label: "Bot & czat" },
-  { key: "overlays",   label: "Overlaye OBS" },
-  { key: "economy",    label: "Ekonomia" },
-  { key: "community",  label: "Eventy & społeczność" },
+  { key: "main",       label: "grpMain" },
+  { key: "moderation", label: "grpModeration" },
+  { key: "platforms",  label: "grpPlatforms" },
+  { key: "bot",        label: "grpBot" },
+  { key: "overlays",   label: "grpOverlays" },
+  { key: "economy",    label: "grpEconomy" },
+  { key: "community",  label: "grpCommunity" },
 ];
 
 function AdminNav<T extends string>({
@@ -539,6 +545,7 @@ function AdminNav<T extends string>({
   active: T;
   onSelect: (id: T) => void;
 }) {
+  const t = useTranslations("admin");
   const activeGroup = sections.find((s) => s.id === active)?.group ?? "main";
   // Collapsed by default except the group holding the active section → no endless scroll.
   const [open, setOpen] = useState<Record<string, boolean>>({ [activeGroup]: true });
@@ -563,10 +570,10 @@ function AdminNav<T extends string>({
           type="button"
           onClick={() => openCommandPalette()}
           className="flex items-center gap-2 px-2.5 py-2 mb-1 text-[11px] text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 transition-colors"
-          title="Szybkie wyszukiwanie (Ctrl+K)"
+          title={t("searchTitle")}
         >
           <Search className="w-3.5 h-3.5 shrink-0" />
-          <span className="flex-1 text-left">Szukaj…</span>
+          <span className="flex-1 text-left">{t("search")}</span>
           <kbd className="text-[9px] font-mono text-zinc-600 border border-zinc-800 px-1 py-0.5">Ctrl K</kbd>
         </button>
         {NAV_GROUPS.map((g) => {
@@ -586,7 +593,7 @@ function AdminNav<T extends string>({
                 aria-expanded={isOpen}
               >
                 <span className="flex items-center gap-1.5">
-                  {g.label}
+                  {t(g.label)}
                   {!isOpen && hasActive && <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />}
                 </span>
                 <span className="flex items-center gap-1.5 text-zinc-600">
@@ -636,10 +643,11 @@ function DashboardSection({
   pendingOrders: PendingOrder[];
   onJump: (id: string) => void;
 }) {
+  const t = useTranslations("admin");
   return (
     <div className="space-y-6">
       <SetupStatusCard onJump={onJump} />
-      <SectionCard title="Skrót — co wymaga uwagi" icon={LayoutDashboard}>
+      <SectionCard title={t("dashNeedsAttention")} icon={LayoutDashboard}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
             onClick={() => onJump("shop")}
@@ -651,12 +659,12 @@ function DashboardSection({
             <div className="flex items-center gap-2 mb-1">
               <Package className={cn("w-4 h-4", stats.ordersPending > 0 ? "text-orange-400" : "text-zinc-500")} />
               <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                Pending orders
+                {t("statPendingOrders")}
               </span>
             </div>
             <div className="text-2xl font-mono font-bold text-white">{fmt(stats.ordersPending)}</div>
             {stats.ordersPending > 0 && (
-              <div className="text-[10px] text-orange-300 mt-1">Kliknij żeby dostarczyć</div>
+              <div className="text-[10px] text-orange-300 mt-1">{t("dashClickDeliver")}</div>
             )}
           </button>
 
@@ -667,12 +675,12 @@ function DashboardSection({
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-4 h-4 text-zinc-500" />
               <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                Aktywne eventy
+                {t("statActiveEvents")}
               </span>
             </div>
             <div className="text-2xl font-mono font-bold text-white">{fmt(events.length)}</div>
             <div className="text-[10px] text-zinc-500 mt-1">
-              {events.filter((e) => e.type !== "happy_hour").length} z losowaniem
+              {t("dashWithDraw", { count: events.filter((e) => e.type !== "happy_hour").length })}
             </div>
           </button>
 
@@ -683,45 +691,45 @@ function DashboardSection({
             <div className="flex items-center gap-2 mb-1">
               <Gift className="w-4 h-4 text-zinc-500" />
               <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                Aktywne dropy
+                {t("dashActiveDrops")}
               </span>
             </div>
             <div className="text-2xl font-mono font-bold text-white">{fmt(drops.length)}</div>
             <div className="text-[10px] text-zinc-500 mt-1">
-              {drops.reduce((acc, d) => acc + d.claimsCount, 0)} złapanych łącznie
+              {t("dashClaimedTotal", { count: drops.reduce((acc, d) => acc + d.claimsCount, 0) })}
             </div>
           </button>
         </div>
       </SectionCard>
 
-      <SectionCard title="Skróty" icon={Zap}>
+      <SectionCard title={t("dashShortcuts")} icon={Zap}>
         <p className="text-zinc-500 text-xs mb-3">
-          Częste akcje — używaj zakładek po lewej stronie żeby przejść do pełnych narzędzi.
+          {t("dashShortcutsHint")}
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] font-mono uppercase tracking-widest">
           <a href="#users" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
-            ▸ Eventy
+            ▸ {t("secEvents")}
           </a>
           <a href="#drops" onClick={(e) => { e.preventDefault(); onJump("drops"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
-            ▸ Nowy drop
+            ▸ {t("scNewDrop")}
           </a>
           <a href="#alerts" onClick={(e) => { e.preventDefault(); onJump("alerts"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
-            ▸ OBS Alerts
+            ▸ {t("scObsAlerts")}
           </a>
           <a href="#shop" onClick={(e) => { e.preventDefault(); onJump("shop"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
-            ▸ Sklep
+            ▸ {t("secShop")}
           </a>
         </div>
       </SectionCard>
 
       {pendingOrders.length > 0 && (
-        <SectionCard title={`Ostatnie zakupy czekające na dostawę (${pendingOrders.length})`} icon={Package}>
+        <SectionCard title={t("dashPendingList", { count: pendingOrders.length })} icon={Package}>
           <div className="space-y-1 text-[10px] font-mono">
             {pendingOrders.slice(0, 5).map((o) => (
               <div key={o.id} className="flex items-center gap-2 border-l-2 border-orange-700 pl-2 py-1">
                 <span className="text-orange-300">{o.shopItem?.imageEmoji ?? "📦"} {o.shopItem?.name ?? "?"}</span>
                 <span className="text-zinc-500 truncate">
-                  {o.user.displayName || o.user.username || o.user.discordUsername || "anon"}
+                  {o.user.displayName || o.user.username || o.user.discordUsername || t("anon")}
                 </span>
                 <span className="text-zinc-700 ml-auto shrink-0">
                   {new Date(o.createdAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
