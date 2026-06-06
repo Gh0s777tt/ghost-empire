@@ -1,6 +1,7 @@
 "use client";
 // src/components/achievements/AchievementsClient.tsx
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Award, Lock, Check, Eye, EyeOff } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { fmt, formatDate, timeAgo, cn } from "@/lib/utils";
@@ -84,14 +85,6 @@ function getProgress(
   };
 }
 
-const TRIGGER_LABEL: Record<string, string> = {
-  level: "Level",
-  tokens_earned: "Zarobione GT",
-  streak: "Dni streak",
-  messages: "Wiadomości",
-  manual: "Ręcznie",
-};
-
 export function AchievementsClient({
   achievements,
   totalUsers,
@@ -103,6 +96,7 @@ export function AchievementsClient({
   isAuthenticated: boolean;
   userStats: UserStats;
 }) {
+  const t = useTranslations("achievements");
   const [rarityFilter, setRarityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "earned" | "locked">(
     "all",
@@ -160,13 +154,13 @@ export function AchievementsClient({
               className="font-display text-4xl text-white tracking-wider"
               style={{ textShadow: "2px 0 0 rgba(168,85,247,0.6), -2px 0 0 rgba(229,9,20,0.4)" }}
             >
-              OSIĄGNIĘCIA
+              {t("title")}
             </h1>
           </div>
           <p className="text-zinc-500 text-sm">
             {isAuthenticated
-              ? `Twój progres: ${earnedCount} z ${visibleCount} zdobyte (${completionPct}%)`
-              : `Pełna galeria 22 osiągnięć. Zaloguj się żeby śledzić progres.`}
+              ? t("progressNote", { earned: earnedCount, total: visibleCount, pct: completionPct })
+              : t("galleryNote", { count: achievements.length })}
           </p>
         </div>
 
@@ -174,7 +168,7 @@ export function AchievementsClient({
           <div className="grid grid-cols-2 gap-2">
             <div className="border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-right">
               <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">
-                +XP z osiągnięć
+                {t("xpFrom")}
               </div>
               <div className="font-mono text-sm font-bold text-purple-300 tabular-nums">
                 +{fmt(xpFromAchievements)} XP
@@ -182,7 +176,7 @@ export function AchievementsClient({
             </div>
             <div className="border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-right">
               <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">
-                +GT z osiągnięć
+                {t("gtFrom")}
               </div>
               <div className="font-mono text-sm font-bold text-red-300 tabular-nums">
                 +{fmt(tokensFromAchievements)} GT
@@ -204,7 +198,7 @@ export function AchievementsClient({
                 : "border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:text-zinc-300",
             )}
           >
-            Wszystko ({visibleCount})
+            {t("allFilter", { count: visibleCount })}
           </button>
           {RARITY_ORDER.map((r) => {
             const meta = RARITY_META[r];
@@ -243,16 +237,16 @@ export function AchievementsClient({
                     : "border-zinc-900 bg-zinc-950/50 text-zinc-600 hover:text-zinc-400",
                 )}
               >
-                {s === "all" ? "Wszystkie" : s === "earned" ? "Zdobyte" : "Brakujące"}
+                {s === "all" ? t("statusAll") : s === "earned" ? t("statusEarned") : t("statusLocked")}
               </button>
             ))}
             <button
               onClick={() => setShowHidden((v) => !v)}
               className="ml-auto px-2.5 py-1 border border-zinc-900 bg-zinc-950/50 text-zinc-600 hover:text-zinc-400 text-[9px] font-mono uppercase tracking-widest flex items-center gap-1.5"
-              title="Pokaż ukryte achievementy"
+              title={t("hiddenTitle")}
             >
               {showHidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-              {showHidden ? "Hidden ON" : "Hidden OFF"}
+              {showHidden ? t("hiddenOn") : t("hiddenOff")}
             </button>
           </div>
         )}
@@ -262,8 +256,8 @@ export function AchievementsClient({
       {visible.length === 0 ? (
         <EmptyState
           icon={<Award className="w-6 h-6" />}
-          title="Brak osiągnięć"
-          message="Żadne osiągnięcie nie pasuje do wybranych filtrów."
+          title={t("emptyTitle")}
+          message={t("emptyMsg")}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -293,6 +287,14 @@ function AchievementCard({
   isAuthenticated: boolean;
   progress: { current: number; target: number; ratio: number } | null;
 }) {
+  const t = useTranslations("achievements");
+  const triggerLabels: Record<string, string> = {
+    level: t("trgLevel"),
+    tokens_earned: t("trgTokens"),
+    streak: t("trgStreak"),
+    messages: t("trgMessages"),
+    manual: t("trgManual"),
+  };
   const meta = RARITY_META[a.rarity] ?? RARITY_META.common;
   const earned = !!a.myEarnedAt;
   const earnedPct = totalUsers > 0
@@ -345,7 +347,7 @@ function AchievementCard({
             {isHidden ? "???" : a.name}
           </h3>
           <p className="text-zinc-500 text-xs mt-0.5 leading-relaxed">
-            {isHidden ? "Ukryte osiągnięcie — odkryjesz po zdobyciu." : a.description}
+            {isHidden ? t("hiddenDesc") : a.description}
           </p>
         </div>
       </div>
@@ -353,9 +355,9 @@ function AchievementCard({
       {/* Trigger info */}
       {!isHidden && a.triggerType && a.triggerValue && (
         <div className="flex items-center gap-2 mb-2 text-[10px] font-mono uppercase tracking-widest">
-          <span className="text-zinc-600">Wymóg:</span>
+          <span className="text-zinc-600">{t("reqLabel")}</span>
           <span className="text-zinc-400">
-            {TRIGGER_LABEL[a.triggerType] ?? a.triggerType} ≥ {fmt(a.triggerValue)}
+            {triggerLabels[a.triggerType] ?? a.triggerType} ≥ {fmt(a.triggerValue)}
           </span>
         </div>
       )}
@@ -364,7 +366,7 @@ function AchievementCard({
       {!earned && !isHidden && progress && !isManual && (
         <div className="mb-2">
           <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest mb-1">
-            <span className="text-zinc-600">Postęp</span>
+            <span className="text-zinc-600">{t("progress")}</span>
             <span className="text-zinc-400">
               {fmt(Math.min(progress.current, progress.target))} / {fmt(progress.target)}
               <span className="text-zinc-600 ml-1">({Math.floor(progress.ratio)}%)</span>
@@ -385,7 +387,7 @@ function AchievementCard({
       {/* Manual trigger note */}
       {!earned && !isHidden && isManual && (
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mb-2">
-          Zdobywany ręcznie (admin)
+          {t("manualNote")}
         </div>
       )}
 
@@ -399,12 +401,12 @@ function AchievementCard({
             <span className="text-red-400">+{fmt(a.tokenReward)} GT</span>
           )}
           {a.xpReward === 0 && a.tokenReward === 0 && (
-            <span className="text-zinc-700">Bez nagrody</span>
+            <span className="text-zinc-700">{t("noReward")}</span>
           )}
         </div>
         <span
           className="text-zinc-600"
-          title={`${a.globalEarnedCount} z ${totalUsers} użytkowników`}
+          title={t("earnedByUsers", { count: a.globalEarnedCount, total: totalUsers })}
         >
           {earnedPct < 1 && a.globalEarnedCount > 0
             ? `<1%`
@@ -420,7 +422,7 @@ function AchievementCard({
           <div
             className="flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase"
             style={{ background: meta.color, color: "#000" }}
-            title={`Zdobyte ${formatDate(a.myEarnedAt)}`}
+            title={t("earnedOn", { date: formatDate(a.myEarnedAt) })}
           >
             <Check className="w-2.5 h-2.5" />
             {timeAgo(a.myEarnedAt).toUpperCase()}
@@ -431,7 +433,7 @@ function AchievementCard({
       {!earned && !isAuthenticated && (
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity backdrop-blur-[1px]">
           <div className="flex items-center gap-2 text-xs text-zinc-300">
-            <Lock className="w-3 h-3" /> Zaloguj się żeby śledzić
+            <Lock className="w-3 h-3" /> {t("loginToTrack")}
           </div>
         </div>
       )}
