@@ -85,7 +85,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 
 | Propozycja | Pri | Notatki |
 |---|---|---|
-| **CSP — `'unsafe-eval'` usunięte** ✅ / nonce dla `'unsafe-inline'` 🔥 | częściowo | ✅ **(#164)** `'unsafe-eval'` wycięte ze `script-src` (prod React/Next go nie potrzebuje; zweryfikowane E2E ze strażnikiem naruszeń CSP w konsoli). **Zostaje:** usunięcie `'unsafe-inline'` ze `script-src` przez nonce middleware (inline `style=` w overlayach wymusza pozostawienie `style-src 'unsafe-inline'`) — osobna sesja z testami w przeglądarce |
+| ~~**CSP — `'unsafe-inline'` ze `script-src`**~~ ✅ | — | ✅ **(#164)** `'unsafe-eval'` + ✅ **(#192)** `'unsafe-inline'` wycięte ze `script-src` przez **per-request nonce + `'strict-dynamic'`** w `src/proxy.ts` (wymusza dynamiczny render wszystkich tras). `style-src 'unsafe-inline'` zostaje (inline `style=` w overlayach). Strażnik E2E naruszeń CSP w CI. *(Do potwierdzenia na prodzie: skrypty Vercel Analytics — tylko na infra Vercela.)* |
 | **2FA / step-up dla akcji admina** | 🟡 | Wrażliwe akcje (grant dużych kwot, merge, ban) za dodatkowym potwierdzeniem |
 | ~~**Audyt zależności**~~ ✅ | — | **Zrobione (#156)** — `npm audit --omit=dev --audit-level=high` w CI (nieblokujący) + Dependabot (patrz §1) |
 | ~~**Rotacja sekretów + skan**~~ ✅ | — | **Zrobione** — skan: **GitGuardian** (na PR) + **runbook rotacji** w [docs/ENV.md §5](docs/ENV.md) (`BOT_SECRET`/`NEXTAUTH_SECRET`/`ENCRYPTION_KEY`/OAuth/EventSub/tokeny botów/webhooki) |
