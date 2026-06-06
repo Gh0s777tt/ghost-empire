@@ -86,6 +86,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Profil — konta i linki razem 🔗",
+    items: [
+      "Na profilu „Połączone konta", „Social linki" i „Połączone platformy" to teraz jedna sekcja — łączenie platform i ich status (sub/VIP/mod) w jednym miejscu, plus Twoje linki społecznościowe.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Wersja angielska (EN) 🌍",
     items: [
       "Portal ma teraz wersję angielską — przełącznik PL/EN w nagłówku, a angielskie strony żyją pod adresami /en. Polskie adresy zostają bez zmian.",
