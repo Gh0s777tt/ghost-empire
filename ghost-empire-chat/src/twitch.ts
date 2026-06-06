@@ -8,6 +8,7 @@ import { checkMessage, violationLabel, escalate, logViolation } from "./moderati
 import { isAiTrigger, handleAiTrigger } from "./aiCommands";
 import { isGtGameTrigger, handleGtGame } from "./gtGames";
 import { isDuelTrigger, handleDuel } from "./gtDuel";
+import { isHeistTrigger, handleHeist } from "./heist";
 import { trackEmojis } from "./emojiCombo";
 import { pushChatFeed } from "./chatFeed";
 import { awardChat } from "./portal";
@@ -74,6 +75,10 @@ function build(password: string): tmi.Client {
       });
     } else if (isDuelTrigger(message)) {
       void handleDuel("twitch", tags["user-id"], tags.username, message).then((r) => {
+        if (r) c.say(env.twitch.channel, r).catch(() => {});
+      });
+    } else if (isHeistTrigger(message)) {
+      void handleHeist("twitch", tags["user-id"], tags.username, message).then((r) => {
         if (r) c.say(env.twitch.channel, r).catch(() => {});
       });
     } else if (isSongRequest(message)) {

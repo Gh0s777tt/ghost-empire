@@ -108,6 +108,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/bot/ai-reply` · `…/api/bot/imagine` | AI: odpowiedź `@bot` + generowanie obrazka `!imagine` (klucz server-side) |
 | `…/api/bot/gt-game` | Mini-gra GT (`!slots` / `!coinflip`) — atomowa gra, zwraca gotową wiadomość |
 | `…/api/bot/duel` | Pojedynki PvP (`!duel` / `!accept` / `!decline`) — atomowy transfer puli, zwraca wiadomość |
+| `…/api/bot/heist` | Napad kooperacyjny (`!heist` — join/resolve) — escrow przy dołączeniu + atomowa wypłata, scheduler rozliczenia po stronie bota |
 
 ## Internal (botSecret) — boty wysyłają zdarzenia
 | Trasa | Po co |

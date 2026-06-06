@@ -126,6 +126,28 @@ export function pickDuelWinner(rng: () => number = Math.random): 0 | 1 {
   return rng() < 0.5 ? 0 : 1;
 }
 
+// ---------- HEIST (co-op PvE) ----------
+// A crew joins with !heist; a single collective roll (odds scale with crew size — bigger
+// crew = better) pays everyone WIN_MULT× their stake on success, else the crew loses their
+// stakes. Pure + unit-tested; the atomic GT escrow/payout lives in lib/heist.ts.
+
+/** Success → each member gets this multiple of their stake (2× = net +stake). */
+export const HEIST_WIN_MULT = 2;
+
+/** Cap on crew size — bounds the resolution transaction (and the odds curve). */
+export const HEIST_MAX_CREW = 50;
+
+/** Collective success chance, scaled by crew size: 30% base, +4%/member, capped at 60%.
+ *  Bigger crew = better odds (the social hook). Clamped to [0,1]. */
+export function heistSuccessChance(crew: number): number {
+  return Math.min(0.6, Math.max(0, 0.3 + Math.max(0, crew) * 0.04));
+}
+
+/** Roll the collective heist outcome (true = success). `rng` is a [0,1) source. */
+export function rollHeist(crew: number, rng: () => number = Math.random): boolean {
+  return rng() < heistSuccessChance(crew);
+}
+
 /**
  * Pick an index into `weights` with probability proportional to each weight
  * (weighted random — used by the Wheel of Fortune). `rng` is a [0,1) random
