@@ -107,5 +107,50 @@
     "errBuy": "Purchase error",
     "boughtPending": "Bought: {name} — pending delivery (Discord ticket)",
     "boughtDone": "Bought: {name} — done!"
+  },
+  "authError": {
+    "title": "SIGN-IN ERROR",
+    "retry": "TRY AGAIN",
+    "errConfiguration": "Server configuration error. Please contact an administrator.",
+    "errAccessDenied": "Access denied. Your account may be banned — contact an administrator on Discord.",
+    "errVerification": "The verification link has expired or is invalid.",
+    "errOAuthSignin": "Error during OAuth sign-in.",
+    "errOAuthCallback": "Error in the OAuth response.",
+    "errOAuthCreateAccount": "Could not create the account.",
+    "errEmailCreateAccount": "Could not create the email account.",
+    "errCallback": "Callback error.",
+    "errOAuthAccountNotLinked": "An account with this email is already linked to another provider.",
+    "errDefault": "An unknown error occurred."
+  },
+  "polls": {
+    "title": "POLLS",
+    "subtitle": "Vote in community decisions. You can change your vote while the poll is open.",
+    "emptyTitle": "No polls",
+    "emptyMsg": "There are no polls right now. Check back later!",
+    "closed": "Closed",
+    "votes": "{count} votes",
+    "loginToVote": "Sign in to vote",
+    "canChange": "You can change your vote",
+    "voteSaved": "Vote saved!",
+    "err": "Error",
+    "errNet": "Network error"
+  },
+  "welcome": {
+    "metaTitle": "Welcome to Ghost Empire",
+    "metaDesc": "One token economy for Twitch, Kick, YouTube and Discord. Collect Ghost Tokens, redeem them for rewards.",
+    "sub1pre": "One economy for",
+    "sub2": "Earn <b>Ghost Tokens</b> for activity, redeem them for real rewards, compete and win events.",
+    "signIn": "Sign in",
+    "browse": "Look around",
+    "enter": "Enter the portal",
+    "hlTokens": "Ghost Tokens",
+    "hlTokensDesc": "Earn GT for chat, voice, subs, donations and quests — on every platform.",
+    "hlRewards": "Real rewards",
+    "hlRewardsDesc": "Redeem tokens in the shop: Steam keys, skins, gifted subs, voice with Ghost.",
+    "hlCompete": "Compete",
+    "hlCompeteDesc": "Rankings, events, predictions, battle pass and seasonal rewards.",
+    "hlBot": "Bot on 3 platforms",
+    "hlBotDesc": "Twitch + Kick + YouTube: commands, timers, greetings, song requests, overlay.",
+    "learnMore": "Learn more →"
   }
 }

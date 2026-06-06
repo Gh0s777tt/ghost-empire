@@ -1,28 +1,32 @@
 // src/app/welcome/page.tsx
 // Landing / first-visit page — a focused hero shown on a visitor's first load
 // (see FirstVisitRedirect). Reachable any time at /welcome.
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio } from "lucide-react";
 import { YoutubeIcon } from "@/components/BrandIcons";
 import { SocialLinksRow } from "@/components/SocialLinks";
 
 export const dynamic = "force-dynamic";
-export const metadata = {
-  title: "Witaj w Ghost Empire",
-  description: "Jedna tokenowa ekonomia dla Twitch, Kick, YouTube i Discord. Zbieraj Ghost Tokens, wymieniaj na nagrody.",
-};
 
-const HIGHLIGHTS = [
-  { icon: Coins, color: "#E50914", title: "Ghost Tokens", desc: "Zarabiaj GT za czat, voice, suby, donejty i questy — na każdej platformie." },
-  { icon: Gift, color: "#10b981", title: "Prawdziwe nagrody", desc: "Wymieniaj tokeny w sklepie: klucze Steam, skiny, gifted suby, voice z Ghostem." },
-  { icon: Trophy, color: "#FFD700", title: "Rywalizacja", desc: "Rankingi, eventy, predictions, battle pass i sezonowe nagrody." },
-  { icon: MessageSquare, color: "#8b5cf6", title: "Bot na 3 platformach", desc: "Twitch + Kick + YouTube: komendy, timery, powitania, song requests, overlay." },
-];
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "welcome" });
+  return { title: t("metaTitle"), description: t("metaDesc") };
+}
 
 export default async function WelcomePage() {
   const session = await auth();
   const isAuthed = !!session?.user?.id;
+  const t = await getTranslations("welcome");
+
+  const highlights = [
+    { icon: Coins, color: "#E50914", title: t("hlTokens"), desc: t("hlTokensDesc") },
+    { icon: Gift, color: "#10b981", title: t("hlRewards"), desc: t("hlRewardsDesc") },
+    { icon: Trophy, color: "#FFD700", title: t("hlCompete"), desc: t("hlCompeteDesc") },
+    { icon: MessageSquare, color: "#8b5cf6", title: t("hlBot"), desc: t("hlBotDesc") },
+  ];
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden flex flex-col">
@@ -47,10 +51,10 @@ export default async function WelcomePage() {
           GH0ST EMPIRE
         </h1>
         <p className="text-zinc-300 text-base sm:text-xl max-w-2xl mb-2">
-          Jedna ekonomia dla <span className="text-red-400 font-semibold">Twitch · Kick · YouTube · Discord</span>.
+          {t("sub1pre")} <span className="text-red-400 font-semibold">Twitch · Kick · YouTube · Discord</span>.
         </p>
         <p className="text-zinc-500 text-sm sm:text-base max-w-xl mb-8">
-          Zbieraj <strong className="text-white">Ghost Tokens</strong> za aktywność, wymieniaj na realne nagrody, rywalizuj i wygrywaj eventy.
+          {t.rich("sub2", { b: (chunks) => <strong className="text-white">{chunks}</strong> })}
         </p>
 
         {/* Platform icons */}
@@ -68,10 +72,10 @@ export default async function WelcomePage() {
                 href="/auth/signin"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-sm tracking-widest uppercase transition-all"
               >
-                Zaloguj się <ArrowRight className="w-4 h-4" />
+                {t("signIn")} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/" className="inline-flex items-center gap-2 px-6 py-4 border border-zinc-700 hover:border-zinc-500 text-zinc-300 font-bold text-sm tracking-widest uppercase transition-all">
-                Rozejrzyj się
+                {t("browse")}
               </Link>
             </>
           ) : (
@@ -79,14 +83,14 @@ export default async function WelcomePage() {
               href="/"
               className="inline-flex items-center gap-2 px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-sm tracking-widest uppercase transition-all"
             >
-              Wejdź do portalu <ArrowRight className="w-4 h-4" />
+              {t("enter")} <ArrowRight className="w-4 h-4" />
             </Link>
           )}
         </div>
 
         {/* Highlights */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mb-10">
-          {HIGHLIGHTS.map((h) => {
+          {highlights.map((h) => {
             const Icon = h.icon;
             return (
               <div
@@ -109,7 +113,7 @@ export default async function WelcomePage() {
         <SocialLinksRow />
 
         <Link href="/about" className="mt-8 text-xs font-mono uppercase tracking-widest text-zinc-500 hover:text-red-400 transition-colors">
-          Dowiedz się więcej →
+          {t("learnMore")}
         </Link>
       </main>
     </div>

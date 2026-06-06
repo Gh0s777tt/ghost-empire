@@ -86,6 +86,13 @@ const STEPS = [
 const CHANGELOG = [
   {
     date: "2026-06-06",
+    title: "Kolejne strony po angielsku 🌍",
+    items: [
+      "Strona powitalna, ekran błędu logowania i ankiety są już dostępne po angielsku. Tłumaczymy portal strona po stronie.",
+    ],
+  },
+  {
+    date: "2026-06-06",
     title: "Flagi języków + strona główna po angielsku 🌍",
     items: [
       "Przełącznik języka w nagłówku ma teraz flagi (PL/EN), a cała strona główna jest dostępna po angielsku. Kolejne strony tłumaczymy stopniowo.",
