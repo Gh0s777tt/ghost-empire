@@ -1287,6 +1287,7 @@ model PredictionEntry {
 
 model StreamGoal {
   id          String    @id @default(cuid())
+  tenantId    String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
   type        String    // "subs" | "follows" | "donations_pln" | "cheers_bits" | "gift_subs" | "yt_members"
   label       String    // admin custom text shown on overlay e.g. "500 subów = nowy setup!"
   current     Int       @default(0)
@@ -1301,6 +1302,7 @@ model StreamGoal {
   updatedAt   DateTime  @updatedAt
 
   @@index([type, active])
+  @@index([tenantId])
   @@map("stream_goals")
 }
 

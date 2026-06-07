@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const VALID_TYPES = ["subs", "gift_subs", "follows", "donations_pln", "cheers_bits", "yt_members"] as const;
 const VALID_RESET_MODES = ["manual", "per_stream", "daily", "weekly", "monthly"] as const;
@@ -12,8 +13,9 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const tid = await currentTenantId();
   const [goals, hypeTrain] = await Promise.all([
-    prisma.streamGoal.findMany({ orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }] }),
+    prisma.streamGoal.findMany({ where: tid ? { tenantId: tid } : {}, orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }] }),
     prisma.hypeTrainState.findUnique({ where: { id: "default" } }),
   ]);
 
@@ -76,8 +78,10 @@ export async function POST(req: Request) {
       : "manual";
     const color = body.color && /^#[0-9a-fA-F]{6}$/.test(body.color) ? body.color : null;
 
+    const tid = await currentTenantId();
     const created = await prisma.streamGoal.create({
       data: {
+        ...(tid ? { tenantId: tid } : {}),
         type: body.type,
         label: body.label.trim(),
         target: Math.floor(body.target),
@@ -109,16 +113,22 @@ export async function POST(req: Request) {
     else if (body.color && /^#[0-9a-fA-F]{6}$/.test(body.color)) patch.color = body.color;
     if (typeof body.sortOrder === "number") patch.sortOrder = body.sortOrder;
 
-    const updated = await prisma.streamGoal.update({ where: { id: body.id }, data: patch });
+    const tid = await currentTenantId();
+    const r = await prisma.streamGoal.updateMany({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) }, data: patch });
+    if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    const updated = await prisma.streamGoal.findUnique({ where: { id: body.id } });
     return NextResponse.json({ ok: true, goal: updated });
   }
 
   if (body.action === "reset") {
     if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    const updated = await prisma.streamGoal.update({
-      where: { id: body.id },
+    const tid = await currentTenantId();
+    const r = await prisma.streamGoal.updateMany({
+      where: { id: body.id, ...(tid ? { tenantId: tid } : {}) },
       data: { current: 0, completedAt: null, lastResetAt: new Date() },
     });
+    if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    const updated = await prisma.streamGoal.findUnique({ where: { id: body.id } });
     await logAdminAction({
       adminId: auth.userId,
       action: "set_user_role",
@@ -131,7 +141,8 @@ export async function POST(req: Request) {
 
   if (body.action === "delete") {
     if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    await prisma.streamGoal.delete({ where: { id: body.id } });
+    const tid = await currentTenantId();
+    await prisma.streamGoal.deleteMany({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) } });
     return NextResponse.json({ ok: true });
   }
 
