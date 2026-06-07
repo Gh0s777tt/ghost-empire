@@ -5,6 +5,7 @@
 // URL with a copy button. Fetches the shared overlay token itself.
 import { useEffect, useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function OverlayPreview({
   path,
@@ -15,6 +16,7 @@ export function OverlayPreview({
   children: React.ReactNode; // sample render (shared overlay component)
   note?: string;
 }) {
+  const t = useTranslations("admin.overlayPreview");
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -33,7 +35,7 @@ export function OverlayPreview({
   return (
     <div className="space-y-2">
       <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block">
-        Podgląd (tak wygląda w OBS)
+        {t("previewLabel")}
       </label>
       <div
         className="border border-zinc-800 rounded-sm p-6 overflow-hidden flex flex-col gap-2"
@@ -51,13 +53,13 @@ export function OverlayPreview({
           <button
             onClick={() => { navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
             className="px-3 border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition-all"
-            title="Kopiuj URL do OBS"
+            title={t("copyTitle")}
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
         </div>
       ) : (
-        <p className="text-[11px] text-zinc-600">Ładowanie URL overlayu…</p>
+        <p className="text-[11px] text-zinc-600">{t("loadingUrl")}</p>
       )}
       {note && <p className="text-[11px] text-zinc-600 leading-relaxed">{note}</p>}
     </div>

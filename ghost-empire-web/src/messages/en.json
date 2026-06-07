@@ -1,5 +1,23 @@
 {
   "admin": {
+    "commandPalette": {
+      "ariaLabel": "Quick section search",
+      "placeholder": "Jump to a section…",
+      "noResults": "No results for “{q}”"
+    },
+    "overlayPreview": {
+      "previewLabel": "Preview (this is how it looks in OBS)",
+      "copyTitle": "Copy URL to OBS",
+      "loadingUrl": "Loading overlay URL…"
+    },
+    "setupStatus": {
+      "title": "Configuration status",
+      "done": "Done: <b>{done}/{total}</b>",
+      "allReqOk": "✓ All required ready",
+      "reqProgress": "{done}/{total} required",
+      "optional": "optional",
+      "configure": "Configure"
+    },
     "schedule": {
       "days": [
         "Sunday",
