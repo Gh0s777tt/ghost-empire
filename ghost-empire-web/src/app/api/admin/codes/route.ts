@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { getCodeConfig } from "@/lib/codes";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 export async function POST(req: Request) {
   const auth = await requireAdmin();
@@ -34,7 +35,8 @@ export async function POST(req: Request) {
         .filter((r) => r.code.length > 0)
         .map((r) => ({ label: r.label, code: r.code.slice(0, 200) }));
       if (data.length === 0) return NextResponse.json({ error: "Brak poprawnych kodów" }, { status: 400 });
-      const created = await prisma.streamCode.createMany({ data });
+      const tid = await currentTenantId();
+      const created = await prisma.streamCode.createMany({ data: tid ? data.map((d) => ({ ...d, tenantId: tid })) : data });
       await logAdminAction({ adminId: auth.userId, action: "manage_codes", targetType: "code", details: { added: created.count }, req });
       return NextResponse.json({ ok: true, added: created.count });
     }
@@ -42,20 +44,23 @@ export async function POST(req: Request) {
     case "delete": {
       const id = String(body.id ?? "");
       if (!id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
-      await prisma.streamCode.delete({ where: { id } }).catch(() => {});
+      const tid = await currentTenantId();
+      await prisma.streamCode.deleteMany({ where: { id, ...(tid ? { tenantId: tid } : {}) } });
       return NextResponse.json({ ok: true });
     }
 
     case "toggle": {
       const id = String(body.id ?? "");
-      const c = await prisma.streamCode.findUnique({ where: { id } });
+      const tid = await currentTenantId();
+      const c = await prisma.streamCode.findFirst({ where: { id, ...(tid ? { tenantId: tid } : {}) } });
       if (!c) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
       const updated = await prisma.streamCode.update({ where: { id }, data: { active: !c.active } });
       return NextResponse.json({ ok: true, active: updated.active });
     }
 
     case "clear": {
-      const res = await prisma.streamCode.deleteMany({});
+      const tid = await currentTenantId();
+      const res = await prisma.streamCode.deleteMany({ where: tid ? { tenantId: tid } : {} });
       const cfg = await getCodeConfig();
       await prisma.codeDropConfig.update({ where: { id: cfg.id }, data: { currentCodeId: null, currentShownAt: null } });
       await logAdminAction({ adminId: auth.userId, action: "manage_codes", targetType: "code", details: { deletedAll: res.count }, req });
@@ -63,7 +68,8 @@ export async function POST(req: Request) {
     }
 
     case "reset_shown": {
-      await prisma.streamCode.updateMany({ data: { shownCount: 0, lastShownAt: null } });
+      const tid = await currentTenantId();
+      await prisma.streamCode.updateMany({ where: tid ? { tenantId: tid } : {}, data: { shownCount: 0, lastShownAt: null } });
       const cfg = await getCodeConfig();
       await prisma.codeDropConfig.update({ where: { id: cfg.id }, data: { currentCodeId: null, currentShownAt: null } });
       return NextResponse.json({ ok: true });

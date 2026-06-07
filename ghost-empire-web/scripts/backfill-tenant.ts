@@ -65,6 +65,8 @@ async function main() {
   console.log(`   streamGoal: attached ${sg.count} row(s)`);
   const sd = await prisma.streamDrop.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   streamDrop: attached ${sd.count} row(s)`);
+  const scd = await prisma.streamCode.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   streamCode: attached ${scd.count} row(s)`);
 
   await prisma.$disconnect();
 }
