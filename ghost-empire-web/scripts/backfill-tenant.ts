@@ -47,6 +47,8 @@ async function main() {
   console.log(`   gameLibraryConfig: attached ${glc.count} row(s)`);
   const coc = await prisma.chatOverlayConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   chatOverlayConfig: attached ${coc.count} row(s)`);
+  const cdc = await prisma.codeDropConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   codeDropConfig: attached ${cdc.count} row(s)`);
 
   await prisma.$disconnect();
 }

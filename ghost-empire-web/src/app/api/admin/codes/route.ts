@@ -56,18 +56,16 @@ export async function POST(req: Request) {
 
     case "clear": {
       const res = await prisma.streamCode.deleteMany({});
-      await prisma.codeDropConfig
-        .update({ where: { id: "default" }, data: { currentCodeId: null, currentShownAt: null } })
-        .catch(() => {});
+      const cfg = await getCodeConfig();
+      await prisma.codeDropConfig.update({ where: { id: cfg.id }, data: { currentCodeId: null, currentShownAt: null } });
       await logAdminAction({ adminId: auth.userId, action: "manage_codes", targetType: "code", details: { deletedAll: res.count }, req });
       return NextResponse.json({ ok: true, deleted: res.count });
     }
 
     case "reset_shown": {
       await prisma.streamCode.updateMany({ data: { shownCount: 0, lastShownAt: null } });
-      await prisma.codeDropConfig
-        .update({ where: { id: "default" }, data: { currentCodeId: null, currentShownAt: null } })
-        .catch(() => {});
+      const cfg = await getCodeConfig();
+      await prisma.codeDropConfig.update({ where: { id: cfg.id }, data: { currentCodeId: null, currentShownAt: null } });
       return NextResponse.json({ ok: true });
     }
 
@@ -80,8 +78,8 @@ export async function POST(req: Request) {
       if (typeof body.title === "string") data.title = body.title.slice(0, 80);
       if (typeof body.accentColor === "string") data.accentColor = body.accentColor.slice(0, 16);
       if (Object.keys(data).length === 0) return NextResponse.json({ error: "Brak zmian" }, { status: 400 });
-      await getCodeConfig(); // ensure the singleton exists
-      const updated = await prisma.codeDropConfig.update({ where: { id: "default" }, data });
+      const cfg = await getCodeConfig(); // ensure the per-tenant row exists
+      const updated = await prisma.codeDropConfig.update({ where: { id: cfg.id }, data });
       return NextResponse.json({ ok: true, config: updated });
     }
 
