@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { RankingClient } from "@/components/ranking/RankingClient";
 import { getCachedRanking } from "@/lib/cached";
+import { currentTenantId } from "@/lib/tenant";
 
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -31,6 +32,7 @@ export default async function RankingPage({
     : "tokens";
 
   const session = await auth();
+  const tid = await currentTenantId();
 
   // Compute admin/mod permissions for quick-actions modal
   let canGrantTokens = false;
@@ -56,7 +58,7 @@ export default async function RankingPage({
   // Cached 45s per sort metric — ranking is the heaviest public query and the
   // result is identical for everyone, so we serve it from cache instead of
   // hammering the (free-tier) DB on every visit.
-  const { topUsers, totalRanked, totalUsers } = await getCachedRanking(sort);
+  const { topUsers, totalRanked, totalUsers } = await getCachedRanking(sort, tid);
 
   // Compute current user's rank if not in top 100
   let myRank: {
@@ -92,6 +94,7 @@ export default async function RankingPage({
             sort === "level"
               ? await prisma.user.count({
                   where: {
+                    ...(tid ? { tenantId: tid } : {}),
                     OR: [
                       { level: { gt: me.level } },
                       { level: me.level, xp: { gt: me.xp } },
@@ -99,7 +102,7 @@ export default async function RankingPage({
                   },
                 })
               : await prisma.user.count({
-                  where: { [sort]: { gt: myValue } },
+                  where: { [sort]: { gt: myValue }, ...(tid ? { tenantId: tid } : {}) },
                 });
           myRank = { position: ahead + 1, user: me };
         }

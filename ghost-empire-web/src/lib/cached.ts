@@ -34,23 +34,23 @@ const RANK_SELECT = {
  * Top-100 ranking for a given sort metric + total counts. Cached 45s per sort.
  * Tagged "ranking" so admin token grants could revalidateTag("ranking") later.
  */
-export const getCachedRanking = (sort: "tokens" | "totalEarned" | "level" | "streak") =>
+export const getCachedRanking = (sort: "tokens" | "totalEarned" | "level" | "streak", tenantId: string | null = null) =>
   unstable_cache(
     async () => {
       const orderBy =
         sort === "level"
           ? [{ level: "desc" as const }, { xp: "desc" as const }]
           : [{ [sort]: "desc" as const }];
-      const where = { [sort]: { gt: 0 } };
+      const where = { [sort]: { gt: 0 }, ...(tenantId ? { tenantId } : {}) };
 
       const [topUsers, totalRanked, totalUsers] = await Promise.all([
         prisma.user.findMany({ where, orderBy, take: 100, select: RANK_SELECT }),
         prisma.user.count({ where }),
-        prisma.user.count(),
+        prisma.user.count({ where: tenantId ? { tenantId } : {} }),
       ]);
       return { topUsers: topUsers as RankedUser[], totalRanked, totalUsers };
     },
-    ["ranking", sort],
+    ["ranking", sort, tenantId ?? "all"],
     { revalidate: 45, tags: ["ranking"] },
   )();
 
@@ -90,16 +90,16 @@ export const getCachedAchievementsMeta = (tenantId: string | null = null) =>
   )();
 
 /** Homepage top-N preview. Cached 60s. */
-export const getCachedTopUsers = (limit = 3) =>
+export const getCachedTopUsers = (limit = 3, tenantId: string | null = null) =>
   unstable_cache(
     async () => {
       return prisma.user.findMany({
-        where: { tokens: { gt: 0 } },
+        where: { tokens: { gt: 0 }, ...(tenantId ? { tenantId } : {}) },
         orderBy: { tokens: "desc" },
         take: limit,
         select: { id: true, username: true, displayName: true, image: true, tokens: true, level: true },
       });
     },
-    ["home-top-users", String(limit)],
+    ["home-top-users", String(limit), tenantId ?? "all"],
     { revalidate: 60, tags: ["ranking"] },
   )();
