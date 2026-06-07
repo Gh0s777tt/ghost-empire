@@ -217,6 +217,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.tokens = user.tokens ?? 0;
         session.user.level = user.level ?? 1;
         session.user.username = user.username ?? null;
+        // Multi-tenant (SaaS): expose which tenant the signed-in user belongs to.
+        session.user.tenantId = user.tenantId ?? null;
       }
       return session;
     },
