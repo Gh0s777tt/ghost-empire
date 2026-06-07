@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
@@ -29,7 +30,8 @@ export async function POST(req: Request) {
     return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
   }
 
-  const poll = await prisma.poll.findUnique({ where: { id: pollId } });
+  const tid = await currentTenantId();
+  const poll = await prisma.poll.findFirst({ where: { id: pollId, ...(tid ? { tenantId: tid } : {}) } });
   if (!poll) return jsonError("Ankieta nie istnieje", 404);
   if (poll.status !== "open") return jsonError("Ankieta jest zamknięta", 409);
   if (optionIndex < 0 || optionIndex >= poll.options.length) {

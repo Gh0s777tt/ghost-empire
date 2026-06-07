@@ -1436,6 +1436,7 @@ model CodeDropConfig {
 
 model Poll {
   id          String   @id @default(cuid())
+  tenantId    String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
   question    String   @db.Text
   options     String[]                       // option labels (order = optionIndex)
   status      String   @default("open")      // "open" | "closed"
@@ -1447,6 +1448,7 @@ model Poll {
   votes PollVote[]
 
   @@index([status, createdAt])
+  @@index([tenantId])
   @@map("polls")
 }
 
