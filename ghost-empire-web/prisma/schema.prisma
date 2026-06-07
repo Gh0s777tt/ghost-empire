@@ -608,7 +608,8 @@ model FaqResponse {
 // =====================================================
 
 model WelcomeConfig {
-  id        String   @id @default("default")
+  id        String   @id @default(cuid()) // was singleton "default"; now one row per tenant
+  tenantId  String?  @unique // multi-tenant (Phase 3)
   enabled   Boolean  @default(false)
   template    String   @default("Witaj {user}! Miło Cię widzieć 👋") @db.Text  // {user} = chatter name
   bonusTokens Int      @default(0)   // GT przyznawane raz/widz/sesję przy pierwszej wiadomości (0 = off)
@@ -681,7 +682,8 @@ model Subathon {
 // =====================================================
 
 model ModerationConfig {
-  id      String  @id @default("default")
+  id      String  @id @default(cuid()) // was singleton "default"; now one row per tenant
+  tenantId String? @unique // multi-tenant (Phase 3)
   enabled Boolean @default(false) // master switch
 
   profanityEnabled     Boolean  @default(false)

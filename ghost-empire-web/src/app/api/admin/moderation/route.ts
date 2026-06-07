@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const ACTIONS = ["delete", "timeout", "warn"] as const;
 const MAX_TIMEOUT = 1_209_600; // 14 days (Twitch max)
@@ -16,7 +17,13 @@ const pickAction = (v: unknown, fb: string) =>
   typeof v === "string" && (ACTIONS as readonly string[]).includes(v) ? v : fb;
 const pickBool = (v: unknown, fb: boolean) => (typeof v === "boolean" ? v : fb);
 
-function getConfig() {
+// Per-tenant moderation config (get-or-create); legacy id:"default" when no tenant.
+async function getConfig() {
+  const tid = await currentTenantId();
+  if (tid) {
+    const existing = await prisma.moderationConfig.findFirst({ where: { tenantId: tid } });
+    return existing ?? (await prisma.moderationConfig.create({ data: { tenantId: tid } }));
+  }
   return prisma.moderationConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
 }
 
@@ -47,7 +54,7 @@ export async function POST(req: Request) {
     : cur.linkWhitelist;
 
   const updated = await prisma.moderationConfig.update({
-    where: { id: "default" },
+    where: { id: cur.id },
     data: {
       enabled: pickBool(body.enabled, cur.enabled),
 
