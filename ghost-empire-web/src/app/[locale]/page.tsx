@@ -6,6 +6,7 @@ import { HomeClient } from "@/components/home/HomeClient";
 import { FirstVisitRedirect } from "@/components/FirstVisitRedirect";
 import { today } from "@/lib/utils";
 import { getCachedTopUsers } from "@/lib/cached";
+import { currentTenantId } from "@/lib/tenant";
 
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -21,13 +22,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function HomePage() {
   const session = await auth();
+  const tid = await currentTenantId();
 
   // Parallel data fetching. topUsers is cached (public, no Date fields → safe);
   // hot items + events stay live (tiny take: 3/4 queries).
   const [hotItems, activeEvents, topUsers] = await Promise.all([
     // Hot items from shop
     prisma.shopItem.findMany({
-      where: { active: true, hot: true },
+      where: { active: true, hot: true, ...(tid ? { tenantId: tid } : {}) },
       orderBy: { sortOrder: "asc" },
       take: 3,
     }),
@@ -36,6 +38,7 @@ export default async function HomePage() {
     prisma.event.findMany({
       where: {
         active: true,
+        ...(tid ? { tenantId: tid } : {}),
         OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
       },
       take: 4,
@@ -43,7 +46,7 @@ export default async function HomePage() {
     }),
 
     // Top 3 for quick ranking preview (cached 60s)
-    getCachedTopUsers(3),
+    getCachedTopUsers(3, tid),
   ]);
 
   // User-specific data (only if logged in)
