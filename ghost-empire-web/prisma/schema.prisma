@@ -1242,6 +1242,7 @@ model KickEvent {
 
 model Prediction {
   id                  String    @id @default(cuid())
+  tenantId            String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
   question            String    @db.Text
   options             String[]                              // labels for each option, order matches optionIndex
   status              String    @default("open")            // "open" | "locked" | "resolved" | "cancelled"
@@ -1259,6 +1260,7 @@ model Prediction {
   entries PredictionEntry[]
 
   @@index([status, opensAt])
+  @@index([tenantId])
   @@map("predictions")
 }
 

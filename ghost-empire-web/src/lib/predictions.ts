@@ -4,6 +4,7 @@
 import { prisma } from "@/lib/prisma";
 import { awardSeasonXp } from "@/lib/seasons";
 import { computePayouts } from "@/lib/economy";
+import { currentTenantId } from "@/lib/tenant";
 
 export const MAX_OPTIONS = 4;
 export const MIN_WAGER = 10;
@@ -16,8 +17,9 @@ export const MAX_WAGER = 1_000_000;
  * call it at the start of prediction read paths. Returns how many were locked.
  */
 export async function lockExpiredPredictions(now: Date = new Date()): Promise<number> {
+  const tid = await currentTenantId();
   const res = await prisma.prediction.updateMany({
-    where: { status: "open", closesAt: { not: null, lt: now } },
+    where: { status: "open", closesAt: { not: null, lt: now }, ...(tid ? { tenantId: tid } : {}) },
     data: { status: "locked" },
   });
   return res.count;
@@ -48,9 +50,10 @@ export async function placeWager(opts: {
     return { ok: false, status: 400, error: "Niepoprawna opcja" };
   }
 
+  const tid = await currentTenantId();
   try {
     return await prisma.$transaction(async (tx) => {
-      const prediction = await tx.prediction.findUnique({ where: { id: predictionId } });
+      const prediction = await tx.prediction.findFirst({ where: { id: predictionId, ...(tid ? { tenantId: tid } : {}) } });
       if (!prediction) {
         return { ok: false, status: 404, error: "Zakład nie istnieje" } as const;
       }
@@ -136,10 +139,11 @@ export async function resolvePrediction(opts: {
   const { predictionId, winningOptionIndex } = opts;
   const winnerUserIds: string[] = [];  // collected for post-commit season XP
 
+  const tid = await currentTenantId();
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const prediction = await tx.prediction.findUnique({
-        where: { id: predictionId },
+      const prediction = await tx.prediction.findFirst({
+        where: { id: predictionId, ...(tid ? { tenantId: tid } : {}) },
         include: { entries: true },
       });
       if (!prediction) return { ok: false, status: 404, error: "Nie znaleziono" } as const;
@@ -291,10 +295,11 @@ export async function resolvePrediction(opts: {
 
 /** Cancel an open prediction and refund all wagers. */
 export async function cancelPrediction(predictionId: string): Promise<{ ok: true; refunded: number } | { ok: false; status: number; error: string }> {
+  const tid = await currentTenantId();
   try {
     return await prisma.$transaction(async (tx) => {
-      const prediction = await tx.prediction.findUnique({
-        where: { id: predictionId },
+      const prediction = await tx.prediction.findFirst({
+        where: { id: predictionId, ...(tid ? { tenantId: tid } : {}) },
         include: { entries: true },
       });
       if (!prediction) return { ok: false, status: 404, error: "Nie znaleziono" } as const;
