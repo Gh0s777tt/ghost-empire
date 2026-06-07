@@ -9,7 +9,7 @@ import {
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
 import { fmt, formatDate, cn } from "@/lib/utils";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
@@ -105,6 +105,7 @@ export function AdminClient({
     [isAdmin, myPermissions],
   );
   const t = useTranslations("admin");
+  const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -241,11 +242,11 @@ export function AdminClient({
 
       {/* Stats — always visible above the sidebar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatTile label={t("statUsers")} value={fmt(stats.totalUsers)} icon={Users} />
-        <StatTile label={t("statTokensCirc")} value={fmt(stats.totalTokensInCirculation)} suffix="GT" icon={Coins} />
-        <StatTile label={t("statEverEarned")} value={fmt(stats.totalEverEarned)} suffix="GT" icon={TrendingUp} />
-        <StatTile label={t("statActiveEvents")} value={fmt(stats.eventsActive)} icon={Calendar} />
-        <StatTile label={t("statPendingOrders")} value={fmt(stats.ordersPending)} icon={Package} accent={stats.ordersPending > 0} />
+        <StatTile label={t("statUsers")} value={fmt(stats.totalUsers, locale)} icon={Users} />
+        <StatTile label={t("statTokensCirc")} value={fmt(stats.totalTokensInCirculation, locale)} suffix="GT" icon={Coins} />
+        <StatTile label={t("statEverEarned")} value={fmt(stats.totalEverEarned, locale)} suffix="GT" icon={TrendingUp} />
+        <StatTile label={t("statActiveEvents")} value={fmt(stats.eventsActive, locale)} icon={Calendar} />
+        <StatTile label={t("statPendingOrders")} value={fmt(stats.ordersPending, locale)} icon={Package} accent={stats.ordersPending > 0} />
       </div>
 
       {!isAdmin && (
@@ -644,6 +645,8 @@ function DashboardSection({
   onJump: (id: string) => void;
 }) {
   const t = useTranslations("admin");
+  const locale = useLocale();
+  const nf = locale === "en" ? "en-US" : "pl-PL";
   return (
     <div className="space-y-6">
       <SetupStatusCard onJump={onJump} />
@@ -662,7 +665,7 @@ function DashboardSection({
                 {t("statPendingOrders")}
               </span>
             </div>
-            <div className="text-2xl font-mono font-bold text-white">{fmt(stats.ordersPending)}</div>
+            <div className="text-2xl font-mono font-bold text-white">{fmt(stats.ordersPending, locale)}</div>
             {stats.ordersPending > 0 && (
               <div className="text-[10px] text-orange-300 mt-1">{t("dashClickDeliver")}</div>
             )}
@@ -678,7 +681,7 @@ function DashboardSection({
                 {t("statActiveEvents")}
               </span>
             </div>
-            <div className="text-2xl font-mono font-bold text-white">{fmt(events.length)}</div>
+            <div className="text-2xl font-mono font-bold text-white">{fmt(events.length, locale)}</div>
             <div className="text-[10px] text-zinc-500 mt-1">
               {t("dashWithDraw", { count: events.filter((e) => e.type !== "happy_hour").length })}
             </div>
@@ -694,7 +697,7 @@ function DashboardSection({
                 {t("dashActiveDrops")}
               </span>
             </div>
-            <div className="text-2xl font-mono font-bold text-white">{fmt(drops.length)}</div>
+            <div className="text-2xl font-mono font-bold text-white">{fmt(drops.length, locale)}</div>
             <div className="text-[10px] text-zinc-500 mt-1">
               {t("dashClaimedTotal", { count: drops.reduce((acc, d) => acc + d.claimsCount, 0) })}
             </div>
@@ -732,7 +735,7 @@ function DashboardSection({
                   {o.user.displayName || o.user.username || o.user.discordUsername || t("anon")}
                 </span>
                 <span className="text-zinc-700 ml-auto shrink-0">
-                  {new Date(o.createdAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
+                  {new Date(o.createdAt).toLocaleString(nf, { dateStyle: "short", timeStyle: "short" })}
                 </span>
               </div>
             ))}

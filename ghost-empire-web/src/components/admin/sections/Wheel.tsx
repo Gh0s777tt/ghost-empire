@@ -4,7 +4,7 @@
 // weighted segments. Shows house stats + recent spins and the OBS overlay URL.
 import { useCallback, useEffect, useState } from "react";
 import { Disc3, Loader2, Check, Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { WheelGraphic } from "@/components/WheelGraphic";
@@ -28,6 +28,7 @@ export function WheelManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.wheel");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const [data, setData] = useState<Data | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [cost, setCost] = useState(100);
@@ -92,9 +93,9 @@ export function WheelManager({
 
       {/* stats */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <Stat label={t("statSpins")} value={data.stats.spins.toLocaleString("pl-PL")} />
-        <Stat label={t("statSpent")} value={data.stats.spent.toLocaleString("pl-PL")} />
-        <Stat label={t("statHouse")} value={`${houseProfit >= 0 ? "+" : ""}${houseProfit.toLocaleString("pl-PL")}`} accent={houseProfit >= 0 ? "text-emerald-400" : "text-rose-400"} />
+        <Stat label={t("statSpins")} value={data.stats.spins.toLocaleString(nf)} />
+        <Stat label={t("statSpent")} value={data.stats.spent.toLocaleString(nf)} />
+        <Stat label={t("statHouse")} value={`${houseProfit >= 0 ? "+" : ""}${houseProfit.toLocaleString(nf)}`} accent={houseProfit >= 0 ? "text-emerald-400" : "text-rose-400"} />
       </div>
 
       {/* toggle + cost */}
@@ -164,7 +165,7 @@ export function WheelManager({
                 <span className="text-zinc-300 truncate">{r.name}</span>
                 <span className="text-zinc-500 truncate mx-2">{r.label}</span>
                 <span className={r.reward > 0 ? "text-emerald-400 font-bold" : "text-zinc-600"}>
-                  {r.reward > 0 ? `+${r.reward.toLocaleString("pl-PL")}` : `−${r.cost.toLocaleString("pl-PL")}`}
+                  {r.reward > 0 ? `+${r.reward.toLocaleString(nf)}` : `−${r.cost.toLocaleString(nf)}`}
                 </span>
               </li>
             ))}

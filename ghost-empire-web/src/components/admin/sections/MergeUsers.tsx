@@ -2,7 +2,7 @@
 // src/components/admin/sections/MergeUsers.tsx — lazily-loaded duplicate-account merge tool.
 import { useState, useEffect, useCallback } from "react";
 import { GitMerge, AlertTriangle, Loader2, History, Eye } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -140,6 +140,7 @@ function DuplicateGroupCard({
   onSuccess: () => void;
 }) {
   const t = useTranslations("admin.mergeUsers");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const MERGE_REASON_LABEL = t.raw("reason") as Record<string, string>;
   // Pick primary by default = the user with most tokens (likely the "real" account)
   const defaultPrimaryId = group.users.reduce((acc, u) => (u.tokens > acc.tokens ? u : acc), group.users[0]).id;
@@ -267,9 +268,9 @@ function DuplicateGroupCard({
 
               <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] font-mono">
                 <div className="text-zinc-500">Tokens</div>
-                <div className="text-white text-right">{u.tokens.toLocaleString("pl-PL")}</div>
+                <div className="text-white text-right">{u.tokens.toLocaleString(nf)}</div>
                 <div className="text-zinc-500">Earned</div>
-                <div className="text-white text-right">{u.totalEarned.toLocaleString("pl-PL")}</div>
+                <div className="text-white text-right">{u.totalEarned.toLocaleString(nf)}</div>
                 <div className="text-zinc-500">Donated</div>
                 <div className="text-white text-right">{(u.totalDonated / 100).toFixed(2)} PLN</div>
                 <div className="text-zinc-500">Level</div>
@@ -283,7 +284,7 @@ function DuplicateGroupCard({
                 <div className="text-zinc-500">Connections</div>
                 <div className="text-white text-right">{u.connectionsCount}</div>
                 <div className="text-zinc-500">{t("created")}</div>
-                <div className="text-white text-right">{new Date(u.createdAt).toLocaleDateString("pl-PL")}</div>
+                <div className="text-white text-right">{new Date(u.createdAt).toLocaleDateString(nf)}</div>
               </div>
 
               {(u.isAdmin || u.isModerator || u.isBanned) && (
@@ -330,7 +331,7 @@ function DuplicateGroupCard({
                 ))}
               </div>
               <div className="text-[11px] text-zinc-400">
-                {t.rich("finalTokens", { b: (c) => <strong className="text-white">{c}</strong>, n: preview.finalPrimaryTokens.toLocaleString("pl-PL") })}
+                {t.rich("finalTokens", { b: (c) => <strong className="text-white">{c}</strong>, n: preview.finalPrimaryTokens.toLocaleString(nf) })}
               </div>
 
               {(preview.conflicts.accountProviders.length > 0 ||

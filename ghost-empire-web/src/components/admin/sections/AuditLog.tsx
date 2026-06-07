@@ -2,7 +2,7 @@
 // src/components/admin/sections/AuditLog.tsx
 // Lazily-loaded admin audit log (extracted from the AdminClient monolith).
 import { History } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 import type { AuditEntry } from "../types";
 
@@ -34,6 +34,7 @@ const ACTION_META: Record<string, { emoji: string; color: string }> = {
 
 export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
   const t = useTranslations("admin.auditLog");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   if (auditLog.length === 0) {
     return (
       <SectionCard title="Audit log" icon={History}>
@@ -80,7 +81,7 @@ export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
                     </>
                   )}
                   <span className="text-[10px] font-mono text-zinc-700 ml-auto whitespace-nowrap">
-                    {date.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
+                    {date.toLocaleString(nf, { dateStyle: "short", timeStyle: "short" })}
                   </span>
                 </div>
                 {detailsText && (

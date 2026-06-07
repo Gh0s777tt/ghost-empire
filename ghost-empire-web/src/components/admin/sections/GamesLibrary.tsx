@@ -3,7 +3,7 @@
 // Configure the SteamID, sync the owned-games library, and hide/show individual games.
 import { useCallback, useEffect, useState } from "react";
 import { Gamepad2, Loader2, RefreshCw, Check, Eye, EyeOff } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 
 type Data = {
@@ -24,6 +24,7 @@ export function GamesLibraryManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.gamesLibrary");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const [data, setData] = useState<Data | null>(null);
   const [steamInput, setSteamInput] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -88,9 +89,9 @@ export function GamesLibraryManager({
       </p>
 
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <Stat label={t("statGames")} value={data.count.toLocaleString("pl-PL")} />
-        <Stat label={t("statHours")} value={data.totalHours.toLocaleString("pl-PL")} />
-        <Stat label={t("statLastSync")} value={data.steamSyncedAt ? new Date(data.steamSyncedAt).toLocaleDateString("pl-PL") : "—"} />
+        <Stat label={t("statGames")} value={data.count.toLocaleString(nf)} />
+        <Stat label={t("statHours")} value={data.totalHours.toLocaleString(nf)} />
+        <Stat label={t("statLastSync")} value={data.steamSyncedAt ? new Date(data.steamSyncedAt).toLocaleDateString(nf) : "—"} />
       </div>
 
       <div className="border border-zinc-800 bg-black/30 p-3 mb-4 space-y-2">

@@ -2,7 +2,7 @@
 // src/components/admin/sections/Shop.tsx — lazily-loaded shop manager + item editor.
 import { useState } from "react";
 import { ShoppingBag, Plus, Loader2, Eye, EyeOff, Pencil, X, Check } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { fmt, cn } from "@/lib/utils";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
 import type { ShopItemRow } from "../types";
@@ -20,6 +20,7 @@ export function ShopManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.shop");
+  const locale = useLocale();
   const [editing, setEditing] = useState<ShopItemRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -77,7 +78,7 @@ export function ShopManager({
                 )}
               </div>
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                {fmt(item.price)} GT
+                {fmt(item.price, locale)} GT
                 {item.stock !== -1 && ` · stock ${item.stock}/${item.totalStock}`}
                 {item.stock === -1 && " · unlimited"}
               </div>

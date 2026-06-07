@@ -2,7 +2,7 @@
 // src/components/admin/sections/Subathon.tsx — lazily-loaded subathon manager.
 import { useState, useEffect, useCallback } from "react";
 import { Hourglass, Loader2, Play } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { SubathonCard } from "@/components/SubathonCard";
@@ -36,6 +36,7 @@ export function SubathonManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.subathon");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SubathonData | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -151,9 +152,9 @@ export function SubathonManager({
             <div className="text-[10px] font-mono uppercase tracking-widest text-red-400">{t("remaining")}</div>
             <div className="text-5xl font-black text-white tabular-nums my-1">{subathonHMS(remainingMs)}</div>
             <div className="text-[11px] text-zinc-500">
-              {t("endsLabel")} {data.endsAt ? new Date(data.endsAt).toLocaleString("pl-PL") : "—"}
+              {t("endsLabel")} {data.endsAt ? new Date(data.endsAt).toLocaleString(nf) : "—"}
               {" · "}{t("addedTotal", { min: Math.round(data.totalAddedSecs / 60) })}
-              {data.maxEndsAt && <> · cap: {new Date(data.maxEndsAt).toLocaleTimeString("pl-PL")}</>}
+              {data.maxEndsAt && <> · cap: {new Date(data.maxEndsAt).toLocaleTimeString(nf)}</>}
             </div>
           </div>
 

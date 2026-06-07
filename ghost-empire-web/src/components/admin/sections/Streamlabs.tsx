@@ -2,7 +2,7 @@
 // src/components/admin/sections/Streamlabs.tsx — lazily-loaded Streamlabs donations manager.
 import { useState } from "react";
 import { Link as LinkIcon, Loader2, Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 import type { StreamlabsConnectionData, UnmatchedDonation } from "../types";
 
@@ -16,6 +16,7 @@ export function StreamlabsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.streamlabs");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const [busy, setBusy] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Record<string, string>>({});
 
@@ -78,7 +79,7 @@ export function StreamlabsManager({
               </div>
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
                 {connection.lastPolledAt
-                  ? t("lastSync", { date: new Date(connection.lastPolledAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" }) })
+                  ? t("lastSync", { date: new Date(connection.lastPolledAt).toLocaleString(nf, { dateStyle: "short", timeStyle: "short" }) })
                   : t("neverSynced")}
               </div>
             </div>
@@ -146,7 +147,7 @@ export function StreamlabsManager({
                     </span>
                     <span className="text-sm text-white font-medium">{d.donorName}</span>
                     <span className="text-[10px] font-mono text-zinc-500 ml-auto">
-                      {new Date(d.donatedAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}
+                      {new Date(d.donatedAt).toLocaleString(nf, { dateStyle: "short", timeStyle: "short" })}
                     </span>
                   </div>
                   {d.message && (

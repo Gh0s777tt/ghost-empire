@@ -2,7 +2,7 @@
 // src/components/admin/sections/StreamGoals.tsx — lazily-loaded stream goals + hype train.
 import { useState, useEffect, useCallback } from "react";
 import { Target, Loader2, Eye, EyeOff, RefreshCw, Trash2, Plus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
@@ -41,6 +41,7 @@ export function StreamGoalsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.streamGoals");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const GOAL_TYPE_LABEL: Record<string, string> = {
     subs: t("goalType.subs"), gift_subs: t("goalType.gift_subs"), follows: t("goalType.follows"),
     donations_pln: t("goalType.donations_pln"), cheers_bits: t("goalType.cheers_bits"), yt_members: t("goalType.yt_members"),
@@ -165,17 +166,17 @@ export function StreamGoalsManager({
         {hypeTrain && hypeTrain.active ? (
           <div className="text-sm">
             <span className="text-yellow-300 font-bold">{t("hypeActive")}</span> — Level {hypeTrain.level} ·
-            {" "}{hypeTrain.total.toLocaleString("pl-PL")} / {hypeTrain.goal.toLocaleString("pl-PL")} {t("points")}
+            {" "}{hypeTrain.total.toLocaleString(nf)} / {hypeTrain.goal.toLocaleString(nf)} {t("points")}
             {hypeTrain.topContributor && <> · Top: <strong>{hypeTrain.topContributor}</strong></>}
             {hypeTrain.expiresAt && (
               <span className="text-[10px] text-zinc-500 ml-2">
-                expiry {new Date(hypeTrain.expiresAt).toLocaleTimeString("pl-PL")}
+                expiry {new Date(hypeTrain.expiresAt).toLocaleTimeString(nf)}
               </span>
             )}
           </div>
         ) : (
           <div className="text-xs text-zinc-500">
-            {t("hypeInactive")} {hypeTrain?.endedAt && <>{t("hypeLast")} Level {hypeTrain.level} ({new Date(hypeTrain.endedAt).toLocaleString("pl-PL")})</>}
+            {t("hypeInactive")} {hypeTrain?.endedAt && <>{t("hypeLast")} Level {hypeTrain.level} ({new Date(hypeTrain.endedAt).toLocaleString(nf)})</>}
             {!hypeTrain && <> {t.rich("hypeSetupNote", { code: (c) => <code>{c}</code> })}</>}
           </div>
         )}
@@ -258,7 +259,7 @@ export function StreamGoalsManager({
                       <div className="h-full transition-all" style={{ width: `${pct}%`, background: color }} />
                     </div>
                     <span className="text-[11px] font-mono text-white tabular-nums shrink-0">
-                      {g.current.toLocaleString("pl-PL")} / {g.target.toLocaleString("pl-PL")}
+                      {g.current.toLocaleString(nf)} / {g.target.toLocaleString(nf)}
                       <span className="text-zinc-500 ml-1">({pct.toFixed(0)}%)</span>
                     </span>
                   </div>

@@ -2,7 +2,7 @@
 // src/components/admin/sections/YouTubeLive.tsx — lazily-loaded YouTube live chat manager.
 import { useState, useEffect, useCallback } from "react";
 import { MonitorPlay, Loader2, Radio } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 
 type YTStatus = {
@@ -34,6 +34,7 @@ export function YouTubeLiveManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.youtubeLive");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const [status, setStatus] = useState<YTStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
@@ -105,7 +106,7 @@ export function YouTubeLiveManager({
                   t("noCacheVideo")
                 )}
                 {status.lastPolledAt && (
-                  <> · {t("lastPoll")} {new Date(status.lastPolledAt).toLocaleTimeString("pl-PL")}</>
+                  <> · {t("lastPoll")} {new Date(status.lastPolledAt).toLocaleTimeString(nf)}</>
                 )}
               </div>
             </div>
