@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { AlertTriangle, Trash2, Loader2, Download } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 
 export function DatabaseResetCard({
@@ -12,6 +13,8 @@ export function DatabaseResetCard({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.databaseReset");
+  // Backend-matched confirm token (api/admin/reset-database checks it literally) — stays literal.
   const PHRASE = "USUŃ WSZYSTKO";
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
@@ -19,10 +22,7 @@ export function DatabaseResetCard({
 
   async function submit() {
     if (!armed) return;
-    if (!window.confirm(
-      "OSTATNIE OSTRZEŻENIE\n\nTo NIEODWRACALNIE usunie WSZYSTKICH użytkowników i ich dane " +
-      "(także Twoje konto — zalogujesz się ponownie). Konfiguracja i katalog zostają.\n\nKontynuować?",
-    )) return;
+    if (!window.confirm(t("lastWarning"))) return;
     setBusy(true);
     try {
       const res = await fetch("/api/admin/reset-database", {
@@ -32,57 +32,50 @@ export function DatabaseResetCard({
       });
       const data = await res.json();
       if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
+        onToast("err", data.error ?? t("err"));
         setBusy(false);
         return;
       }
-      onToast("ok", `Baza zresetowana — usunięto ${data.deletedUsers} użytkowników. Wylogowuję…`);
+      onToast("ok", t("resetDone", { count: data.deletedUsers }));
       // The acting admin's account is gone too — sign out and back to landing.
       setTimeout(() => signOut({ callbackUrl: "/welcome" }), 1800);
     } catch {
-      onToast("err", "Błąd sieci");
+      onToast("err", t("netErr"));
       setBusy(false);
     }
   }
 
   return (
-    <SectionCard title="Reset bazy danych" icon={AlertTriangle}>
+    <SectionCard title={t("title")} icon={AlertTriangle}>
       {/* Backup — grab a copy before doing anything destructive */}
       <div className="mb-3 border border-zinc-800 bg-black/30 p-4">
         <p className="text-xs text-zinc-200 font-bold mb-1 flex items-center gap-2">
-          <Download className="w-4 h-4 text-green-400" /> Backup (JSON)
+          <Download className="w-4 h-4 text-green-400" /> {t("backupTitle")}
         </p>
         <p className="text-[11px] text-zinc-500 leading-relaxed mb-2.5">
-          Pobiera kopię <strong className="text-zinc-300">konfiguracji, katalogu i sald użytkowników</strong> jako plik JSON —
-          <strong className="text-zinc-300"> bez sekretów</strong> (maile, tokeny OAuth, sesje, logi pominięte). Zrób backup zanim cokolwiek skasujesz.
+          {t.rich("backupDesc", { b: (c) => <strong className="text-zinc-300">{c}</strong> })}
         </p>
         <a
           href="/api/admin/backup"
           className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-700 hover:border-green-600 text-green-300 text-xs font-bold tracking-widest uppercase transition-all"
         >
-          <Download className="w-3.5 h-3.5" /> Pobierz backup
+          <Download className="w-3.5 h-3.5" /> {t("downloadBackup")}
         </a>
       </div>
 
       <div className="space-y-3 border border-red-800 bg-red-950/20 p-4">
         <p className="text-sm text-red-300 font-bold flex items-center gap-2">
-          <Trash2 className="w-4 h-4" /> Strefa niebezpieczna — operacja NIEODWRACALNA
+          <Trash2 className="w-4 h-4" /> {t("dangerZone")}
         </p>
         <p className="text-xs text-zinc-400 leading-relaxed">
-          Usuwa <strong className="text-white">wszystkich użytkowników</strong> i ich dane: konta i logowania,
-          połączone platformy, tokeny i transakcje, osiągnięcia, questy, progres battle passa, zakłady,
-          udziały w eventach, powiadomienia i social linki. Czyści też kolejkę alertów, feed czatu oraz logi
-          zdarzeń (Twitch / Kick / YouTube). Użytkownicy zalogują się od nowa (z bonusem powitalnym).
+          {t.rich("dangerDesc1", { b: (c) => <strong className="text-white">{c}</strong> })}
         </p>
         <p className="text-xs text-zinc-400 leading-relaxed">
-          <strong className="text-green-300">Zostaje:</strong> konfiguracja i katalog — sklep, definicje eventów,
-          osiągnięć, questów i dropów, sezony battle passa, komendy / timery / FAQ czatu, harmonogram, ustawienia
-          alertów, integracje (Twitch / Kick / YouTube / Streamlabs) oraz audit log. Konto właściciela wraca jako
-          admin po ponownym zalogowaniu.
+          {t.rich("dangerDesc2", { b: (c) => <strong className="text-green-300">{c}</strong> })}
         </p>
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Wpisz dokładnie <span className="text-red-400 font-bold">{PHRASE}</span>, aby odblokować
+            {t.rich("unlockLabel", { red: (c) => <span className="text-red-400 font-bold">{c}</span>, p: PHRASE })}
           </label>
           <input
             value={confirm}
@@ -97,7 +90,7 @@ export function DatabaseResetCard({
           className="w-full px-4 py-2.5 bg-red-700 hover:bg-red-600 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-          Zresetuj bazę danych
+          {t("resetBtn")}
         </button>
       </div>
     </SectionCard>
