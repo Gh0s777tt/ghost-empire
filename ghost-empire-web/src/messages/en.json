@@ -1,5 +1,71 @@
 {
   "admin": {
+    "databaseReset": {
+      "err": "Error",
+      "netErr": "Network error",
+      "lastWarning": "FINAL WARNING\n\nThis will IRREVERSIBLY delete ALL users and their data (your account too — you'll log in again). Configuration and catalog stay.\n\nContinue?",
+      "resetDone": "Database reset — deleted {count} users. Signing out…",
+      "title": "Database reset",
+      "backupTitle": "Backup (JSON)",
+      "backupDesc": "Downloads a copy of the <b>configuration, catalog and user balances</b> as a JSON file — <b>no secrets</b> (emails, OAuth tokens, sessions, logs omitted). Make a backup before deleting anything.",
+      "downloadBackup": "Download backup",
+      "dangerZone": "Danger zone — IRREVERSIBLE operation",
+      "dangerDesc1": "Deletes <b>all users</b> and their data: accounts and logins, connected platforms, tokens and transactions, achievements, quests, battle pass progress, bets, event entries, notifications and social links. Also clears the alert queue, chat feed and event logs (Twitch / Kick / YouTube). Users log in fresh (with the welcome bonus).",
+      "dangerDesc2": "<b>Kept:</b> configuration and catalog — shop, event/achievement/quest/drop definitions, battle pass seasons, chat commands / timers / FAQ, schedule, alert settings, integrations (Twitch / Kick / YouTube / Streamlabs) and the audit log. The owner account returns as admin after logging back in.",
+      "unlockLabel": "Type exactly <red>{p}</red> to unlock",
+      "resetBtn": "Reset the database"
+    },
+    "auditLog": {
+      "title": "Audit log (last {count})",
+      "empty": "No admin actions in the database. Every grant/draw/refund will show up here — who and when.",
+      "accountDeleted": "account deleted",
+      "action": {
+        "grant_tokens": "Token grant",
+        "create_drop": "New drop",
+        "deactivate_drop": "Deactiv. drop",
+        "create_event": "New event",
+        "deactivate_event": "Deactiv. event",
+        "draw_event": "Draw",
+        "deliver_order": "Delivered",
+        "refund_order": "Refund",
+        "set_user_role": "User role",
+        "set_connection_role": "Platform status",
+        "reset_database": "DB reset",
+        "manage_codes": "Codes (drop)",
+        "manage_achievements": "Achievements",
+        "manage_polls": "Poll",
+        "create_prediction": "New prediction",
+        "resolve_prediction": "Resolution",
+        "cancel_prediction": "Cancel prediction",
+        "test_alert": "Test alert",
+        "update_alert_settings": "Alert settings",
+        "merge_users": "Merge accounts",
+        "update_moderation": "Moderation (auto)",
+        "update_integrations": "Integrations / keys"
+      }
+    },
+    "modViolations": {
+      "violation": {
+        "profanity": "profanity",
+        "caps": "CAPS",
+        "length": "length",
+        "repeat": "spam",
+        "zalgo": "zalgo"
+      },
+      "action": {
+        "delete": "delete",
+        "timeout": "timeout",
+        "warn": "warn"
+      },
+      "loading": "Loading stats…",
+      "statsTitle": "Violation stats",
+      "refresh": "Refresh",
+      "last24h": "Last 24h",
+      "last7d": "Last 7 days",
+      "noViolations": "No violations in the last 7 days.",
+      "topOffenders": "Most frequent (7 days)",
+      "recentSummary": "Last {count} events"
+    },
     "twitchEventSub": {
       "eventType": {
         "channel.subscribe": "Subscriptions",

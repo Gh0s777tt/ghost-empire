@@ -1,5 +1,71 @@
 {
   "admin": {
+    "databaseReset": {
+      "err": "Błąd",
+      "netErr": "Błąd sieci",
+      "lastWarning": "OSTATNIE OSTRZEŻENIE\n\nTo NIEODWRACALNIE usunie WSZYSTKICH użytkowników i ich dane (także Twoje konto — zalogujesz się ponownie). Konfiguracja i katalog zostają.\n\nKontynuować?",
+      "resetDone": "Baza zresetowana — usunięto {count} użytkowników. Wylogowuję…",
+      "title": "Reset bazy danych",
+      "backupTitle": "Backup (JSON)",
+      "backupDesc": "Pobiera kopię <b>konfiguracji, katalogu i sald użytkowników</b> jako plik JSON — <b>bez sekretów</b> (maile, tokeny OAuth, sesje, logi pominięte). Zrób backup zanim cokolwiek skasujesz.",
+      "downloadBackup": "Pobierz backup",
+      "dangerZone": "Strefa niebezpieczna — operacja NIEODWRACALNA",
+      "dangerDesc1": "Usuwa <b>wszystkich użytkowników</b> i ich dane: konta i logowania, połączone platformy, tokeny i transakcje, osiągnięcia, questy, progres battle passa, zakłady, udziały w eventach, powiadomienia i social linki. Czyści też kolejkę alertów, feed czatu oraz logi zdarzeń (Twitch / Kick / YouTube). Użytkownicy zalogują się od nowa (z bonusem powitalnym).",
+      "dangerDesc2": "<b>Zostaje:</b> konfiguracja i katalog — sklep, definicje eventów, osiągnięć, questów i dropów, sezony battle passa, komendy / timery / FAQ czatu, harmonogram, ustawienia alertów, integracje (Twitch / Kick / YouTube / Streamlabs) oraz audit log. Konto właściciela wraca jako admin po ponownym zalogowaniu.",
+      "unlockLabel": "Wpisz dokładnie <red>{p}</red>, aby odblokować",
+      "resetBtn": "Zresetuj bazę danych"
+    },
+    "auditLog": {
+      "title": "Audit log (ostatnie {count})",
+      "empty": "Brak akcji admin w bazie. Tu pojawi się każdy grant/draw/refund kto i kiedy.",
+      "accountDeleted": "konto usunięte",
+      "action": {
+        "grant_tokens": "Grant tokenów",
+        "create_drop": "Nowy drop",
+        "deactivate_drop": "Dezakt. drop",
+        "create_event": "Nowy event",
+        "deactivate_event": "Dezakt. event",
+        "draw_event": "Losowanie",
+        "deliver_order": "Dostarczone",
+        "refund_order": "Zwrot",
+        "set_user_role": "Rola usera",
+        "set_connection_role": "Status platform",
+        "reset_database": "Reset bazy",
+        "manage_codes": "Kody (drop)",
+        "manage_achievements": "Osiągnięcia",
+        "manage_polls": "Ankieta",
+        "create_prediction": "Nowa predykcja",
+        "resolve_prediction": "Rozstrzygnięcie",
+        "cancel_prediction": "Anulow. predykcji",
+        "test_alert": "Test alert",
+        "update_alert_settings": "Ustaw. alertów",
+        "merge_users": "Scalenie kont",
+        "update_moderation": "Moderacja (auto)",
+        "update_integrations": "Integracje / klucze"
+      }
+    },
+    "modViolations": {
+      "violation": {
+        "profanity": "wulgaryzmy",
+        "caps": "CAPS",
+        "length": "długość",
+        "repeat": "spam",
+        "zalgo": "zalgo"
+      },
+      "action": {
+        "delete": "usuń",
+        "timeout": "timeout",
+        "warn": "ostrzeż"
+      },
+      "loading": "Ładowanie statystyk…",
+      "statsTitle": "Statystyki naruszeń",
+      "refresh": "Odśwież",
+      "last24h": "Ostatnie 24h",
+      "last7d": "Ostatnie 7 dni",
+      "noViolations": "Brak naruszeń w ostatnich 7 dniach.",
+      "topOffenders": "Najczęstsi (7 dni)",
+      "recentSummary": "Ostatnie {count} zdarzeń"
+    },
     "twitchEventSub": {
       "eventType": {
         "channel.subscribe": "Subskrypcje",
