@@ -491,7 +491,8 @@ model Notification {
 
 model StreamDrop {
   id        String   @id @default(cuid())
-  code      String   @unique
+  tenantId  String? // multi-tenant (Phase 3) — collection
+  code      String   // unique PER TENANT (see @@unique below) — was globally @unique
   reward    Int
   bonusReward Int    @default(0)
   bonusSlots  Int    @default(10)  // first N users get bonus
@@ -503,6 +504,8 @@ model StreamDrop {
 
   claims    DropClaim[]
 
+  @@unique([tenantId, code])
+  @@index([tenantId])
   @@map("stream_drops")
 }
 

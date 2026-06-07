@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -36,7 +37,8 @@ export async function POST(req: Request) {
     return jsonError("Za dużo prób. Poczekaj chwilę.", 429, rateLimitHeaders(rl));
   }
 
-  const drop = await prisma.streamDrop.findUnique({ where: { code } });
+  const tid = await currentTenantId();
+  const drop = await prisma.streamDrop.findFirst({ where: { code, ...(tid ? { tenantId: tid } : {}) } });
   if (!drop) return jsonError("Kod nie istnieje", 404);
   if (!drop.active) return jsonError("Kod nieaktywny", 410);
   if (drop.expiresAt && drop.expiresAt < new Date()) {

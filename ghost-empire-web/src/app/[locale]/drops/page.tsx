@@ -1,6 +1,7 @@
 // src/app/drops/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { DropRedeemBox } from "@/components/drops/DropRedeemBox";
 import { Gift, Trophy, Clock, Sparkles } from "lucide-react";
@@ -22,6 +23,7 @@ export default async function DropsPage() {
   const session = await auth();
   const isAuthenticated = !!session?.user?.id;
   const locale = await getLocale();
+  const tid = await currentTenantId();
 
   let myClaims: Array<{
     id: string;
@@ -36,6 +38,7 @@ export default async function DropsPage() {
   activeDropsCount = await prisma.streamDrop.count({
     where: {
       active: true,
+      ...(tid ? { tenantId: tid } : {}),
       OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     },
   });
