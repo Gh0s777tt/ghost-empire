@@ -4,10 +4,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
+import { currentTenantId } from "@/lib/tenant";
 
 const FONTS = ["Inter", "JetBrains Mono", "Anton", "system"];
 
+// Per-tenant chat-overlay config (get-or-create); legacy id:"default" when no tenant.
 async function getConfig() {
+  const tid = await currentTenantId();
+  if (tid) {
+    const existing = await prisma.chatOverlayConfig.findFirst({ where: { tenantId: tid } });
+    return existing ?? (await prisma.chatOverlayConfig.create({ data: { tenantId: tid } }));
+  }
   return prisma.chatOverlayConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
 }
 
@@ -46,7 +53,7 @@ export async function POST(req: Request) {
 
   if (Object.keys(data).length === 0) return NextResponse.json({ error: "Brak zmian" }, { status: 400 });
 
-  await getConfig(); // ensure exists
-  const updated = await prisma.chatOverlayConfig.update({ where: { id: "default" }, data });
+  const row = await getConfig(); // ensure the per-tenant row exists
+  const updated = await prisma.chatOverlayConfig.update({ where: { id: row.id }, data });
   return NextResponse.json({ ok: true, config: shape(updated) });
 }

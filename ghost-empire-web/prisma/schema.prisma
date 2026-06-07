@@ -1463,7 +1463,8 @@ model PollVote {
 // =====================================================
 
 model ChatOverlayConfig {
-  id               String   @id @default("default")
+  id               String   @id @default(cuid()) // was singleton "default"; now one row per tenant
+  tenantId         String?  @unique // multi-tenant (Phase 3)
   fontSize         Int      @default(15)          // message text size (px)
   textColor        String   @default("#e4e4e7")   // message body color
   fontFamily       String   @default("Inter")     // "Inter" | "JetBrains Mono" | "Anton" | "system"
