@@ -3,6 +3,7 @@
 // manager: live preview, overlay token/URL, per-type config (AlertTypeList) and settings.
 import { useState, useEffect } from "react";
 import { Zap, Eye, EyeOff, Copy, Loader2, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { AlertCard } from "@/components/AlertCard";
@@ -10,25 +11,10 @@ import {
   ALERT_TYPE_LIST,
   ALERT_ANIMATIONS,
   ALERT_POSITIONS,
-  ANIMATION_LABELS,
-  POSITION_LABELS,
   type AlertAnimation,
   type AlertPosition,
 } from "@/lib/alert-types";
 import type { StreamAlertsData } from "../types";
-
-const ALERT_TYPE_LABEL: Record<string, string> = {
-  shop_purchase:    "Zakup w sklepie",
-  event_win:        "Wygrana w evencie",
-  drop_claim_bonus: "Drop bonus claim",
-  twitch_sub:       "Twitch — sub",
-  twitch_gift_sub:  "Twitch — gifted sub",
-  twitch_cheer:     "Twitch — cheer (bits)",
-  donation:         "Donacja",
-  welcome:          "Welcome / nowy user",
-  level_up:         "Level up",
-  test:             "Test (Admin)",
-};
 
 type AlertTypeRow = {
   type: string;
@@ -49,6 +35,15 @@ function AlertTypeList({
   onToggle: (t: string) => void;
   onToast: (k: "ok" | "err", m: string) => void;
 }) {
+  const t = useTranslations("admin.streamAlerts");
+  const ANIMATION_LABELS: Record<AlertAnimation, string> = {
+    slide: t("animation.slide"), fade: t("animation.fade"), scale: t("animation.scale"), none: t("animation.none"),
+  };
+  const POSITION_LABELS: Record<AlertPosition, string> = {
+    "top-left": t("position.top-left"), "top-center": t("position.top-center"), "top-right": t("position.top-right"),
+    center: t("position.center"), "bottom-left": t("position.bottom-left"), "bottom-center": t("position.bottom-center"), "bottom-right": t("position.bottom-right"),
+  };
+  const typeLabel = (ty: string, fb: string) => (t.has(`alertType.${ty}`) ? t(`alertType.${ty}`) : fb);
   const [rows, setRows] = useState<AlertTypeRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [savingType, setSavingType] = useState<string | null>(null);
@@ -82,10 +77,10 @@ function AlertTypeList({
         }),
       });
       const d = await res.json();
-      if (!res.ok) onToast("err", d.error ?? "Błąd");
-      else { onToast("ok", `Zapisano: ${row.label}`); patch(row.type, "configured", true); }
+      if (!res.ok) onToast("err", d.error ?? t("err"));
+      else { onToast("ok", t("savedType", { label: typeLabel(row.type, row.label) })); patch(row.type, "configured", true); }
     } catch {
-      onToast("err", "Błąd sieci");
+      onToast("err", t("netErr"));
     } finally {
       setSavingType(null);
     }
@@ -94,7 +89,7 @@ function AlertTypeList({
   return (
     <div className="mb-4">
       <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-        Typy alertów — ● włącz/wyłącz · kliknij nazwę, by dostosować ({enabledTypes.length} aktywnych)
+        {t("typesHeader", { count: enabledTypes.length })}
       </div>
       <div className="space-y-1.5">
         {ALERT_TYPE_LIST.map(({ type, label }) => {
@@ -107,7 +102,7 @@ function AlertTypeList({
                 <button
                   type="button"
                   onClick={() => onToggle(type)}
-                  title={active ? "Wyłącz ten typ alertu" : "Włącz ten typ alertu"}
+                  title={active ? t("disableType") : t("enableType")}
                   className={cn("text-base leading-none shrink-0", active ? "text-red-400" : "text-zinc-600 hover:text-zinc-400")}
                 >
                   {active ? "●" : "○"}
@@ -117,9 +112,9 @@ function AlertTypeList({
                   onClick={() => setOpenType(open ? null : type)}
                   className="flex-1 flex items-center justify-between gap-2 text-left"
                 >
-                  <span className={cn("text-xs", active ? "text-zinc-200" : "text-zinc-500")}>{label}</span>
+                  <span className={cn("text-xs", active ? "text-zinc-200" : "text-zinc-500")}>{typeLabel(type, label)}</span>
                   <span className="flex items-center gap-2 shrink-0">
-                    {row?.configured && <span className="text-[9px] font-mono uppercase tracking-widest text-green-500">własne</span>}
+                    {row?.configured && <span className="text-[9px] font-mono uppercase tracking-widest text-green-500">{t("customBadge")}</span>}
                     <span className="text-zinc-500 text-[10px]">{open ? "▴" : "▾"}</span>
                   </span>
                 </button>
@@ -127,29 +122,29 @@ function AlertTypeList({
               {open && (
                 <div className="border-t border-zinc-800/70 p-2.5">
                   {!row ? (
-                    <p className="text-zinc-600 text-[10px]">Ładowanie ustawień…</p>
+                    <p className="text-zinc-600 text-[10px]">{t("loadingSettings")}</p>
                   ) : (
                     <>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Animacja</label>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("animationLabel")}</label>
                           <select value={row.animation} onChange={(e) => patch(type, "animation", e.target.value)} className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500">
                             {ALERT_ANIMATIONS.map((a) => <option key={a} value={a}>{ANIMATION_LABELS[a]}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Pozycja</label>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("positionLabel")}</label>
                           <select value={row.position} onChange={(e) => patch(type, "position", e.target.value)} className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500">
                             {ALERT_POSITIONS.map((p) => <option key={p} value={p}>{POSITION_LABELS[p]}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Dźwięk (URL, opcjonalnie)</label>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("soundLabel")}</label>
                           <input type="text" value={row.soundUrl ?? ""} onChange={(e) => patch(type, "soundUrl", e.target.value || null)} placeholder="https://…/sound.mp3" className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Próg kwoty (≥, opcjonalnie)</label>
-                          <input type="number" min={0} value={row.minAmount ?? ""} onChange={(e) => patch(type, "minAmount", e.target.value === "" ? null : Math.max(0, parseInt(e.target.value) || 0))} placeholder="np. 50" className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500" />
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("thresholdLabel")}</label>
+                          <input type="number" min={0} value={row.minAmount ?? ""} onChange={(e) => patch(type, "minAmount", e.target.value === "" ? null : Math.max(0, parseInt(e.target.value) || 0))} placeholder={t("thresholdPh")} className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500" />
                         </div>
                       </div>
                       <button
@@ -158,7 +153,7 @@ function AlertTypeList({
                         className="mt-2 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
                       >
                         {savingType === type ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                        Zapisz ustawienia
+                        {t("saveSettingsBtn")}
                       </button>
                     </>
                   )}
@@ -180,6 +175,12 @@ export function StreamAlertsManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.streamAlerts");
+  const ALERT_TYPE_LABEL: Record<string, string> = {
+    shop_purchase: t("alertType.shop_purchase"), event_win: t("alertType.event_win"), drop_claim_bonus: t("alertType.drop_claim_bonus"),
+    twitch_sub: t("alertType.twitch_sub"), twitch_gift_sub: t("alertType.twitch_gift_sub"), twitch_cheer: t("alertType.twitch_cheer"),
+    donation: t("alertType.donation"), welcome: t("alertType.welcome"), level_up: t("alertType.level_up"), test: t("alertType.test"),
+  };
   const [enabledTypes, setEnabledTypes] = useState<string[]>(data.settings.enabledTypes);
   const [durationMs, setDurationMs] = useState(data.settings.durationMs);
   const [accentColor, setAccentColor] = useState(data.settings.accentColor);
@@ -193,8 +194,8 @@ export function StreamAlertsManager({
   const [urlCopied, setUrlCopied] = useState(false);
 
   const previewAlerts = [
-    { title: "Nowy sub!", message: "zasubował kanał — dzięki za wsparcie!", icon: "💜", actorName: "Widz_123", amount: 5000, amountLabel: "GT" },
-    { title: "Donacja!", message: "postawił kawę 💸", icon: "💰", actorName: "Anonim", amount: 20, amountLabel: "PLN" },
+    { title: t("prevAlert1Title"), message: t("prevAlert1Msg"), icon: "💜", actorName: t("prevAlert1Actor"), amount: 5000, amountLabel: "GT" },
+    { title: t("prevAlert2Title"), message: t("prevAlert2Msg"), icon: "💰", actorName: t("prevAlert2Actor"), amount: 20, amountLabel: "PLN" },
   ];
 
   const dirty =
@@ -231,9 +232,9 @@ export function StreamAlertsManager({
       });
       const result = await res.json();
       if (!res.ok) {
-        onToast("err", result.error ?? "Błąd");
+        onToast("err", result.error ?? t("err"));
       } else {
-        onToast("ok", "Zapisano");
+        onToast("ok", t("saved"));
         onSuccess();
       }
     } finally {
@@ -250,8 +251,8 @@ export function StreamAlertsManager({
         body: JSON.stringify({ action: "test" }),
       });
       const result = await res.json();
-      if (!res.ok) onToast("err", result.error ?? "Błąd");
-      else onToast("ok", "Wysłano test alert — sprawdź overlay");
+      if (!res.ok) onToast("err", result.error ?? t("err"));
+      else onToast("ok", t("testSent"));
     } finally {
       setBusy(false);
     }
@@ -260,14 +261,13 @@ export function StreamAlertsManager({
   return (
     <SectionCard title="Stream Alerts (OBS Overlay)" icon={Zap}>
       <p className="text-zinc-500 text-xs mb-3">
-        Alerty wyświetlane przez OBS Browser Source — pokazują live zakupy, wygrane, suby/bity, donacje.
-        Overlay polluje serwer co ~1.2s — alert pojawi się max 1.5s po zdarzeniu.
+        {t("intro")}
       </p>
 
-      {/* Live preview — odzwierciedla kolor akcentu wybrany niżej */}
+      {/* Live preview — reflects the accent color picked below */}
       <div className="border border-zinc-800 bg-black/40 p-4 mb-3">
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-3">
-          Podgląd na żywo — tak alert wygląda na overlayu OBS
+          {t("previewHeader")}
         </div>
         <div className="mx-auto flex flex-col items-center gap-3 overflow-hidden" style={{ maxWidth: 520 }}>
           {previewAlerts.map((a, i) => (
@@ -275,7 +275,7 @@ export function StreamAlertsManager({
           ))}
         </div>
         <p className="text-[10px] text-zinc-600 mt-3 text-center">
-          Zmień kolor akcentu poniżej — podgląd zaktualizuje się od razu.
+          {t("previewHint")}
         </p>
       </div>
 
@@ -285,16 +285,16 @@ export function StreamAlertsManager({
           <>
             <div className="flex items-center justify-between gap-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                Overlay token (sekret)
+                {t("tokenLabel")}
               </span>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setTokenVisible((v) => !v)}
                   className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 px-2 py-0.5 transition-colors flex items-center gap-1"
-                  title={tokenVisible ? "Ukryj" : "Pokaż"}
+                  title={tokenVisible ? t("hide") : t("show")}
                 >
                   {tokenVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  {tokenVisible ? "Ukryj" : "Pokaż"}
+                  {tokenVisible ? t("hide") : t("show")}
                 </button>
                 <button
                   onClick={async () => {
@@ -302,16 +302,16 @@ export function StreamAlertsManager({
                       await navigator.clipboard.writeText(data.overlayToken ?? "");
                       setTokenCopied(true);
                       setTimeout(() => setTokenCopied(false), 1500);
-                    } catch { onToast("err", "Schowek niedostępny"); }
+                    } catch { onToast("err", t("clipboardError")); }
                   }}
                   className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 px-2 py-0.5 transition-colors flex items-center gap-1"
                 >
                   <Copy className="w-3 h-3" />
-                  {tokenCopied ? "Skopiowano" : "Token"}
+                  {tokenCopied ? t("copied") : t("tokenBtn")}
                 </button>
                 <button
                   onClick={async () => {
-                    if (!confirm("Wygenerować nowy token? Stare URL-e do OBS przestaną działać — będziesz musiał wkleić nowy URL do OBS Browser Source.")) return;
+                    if (!confirm(t("regenConfirm"))) return;
                     setBusy(true);
                     try {
                       const res = await fetch("/api/admin/alerts", {
@@ -320,16 +320,16 @@ export function StreamAlertsManager({
                         body: JSON.stringify({ action: "regenerate_token" }),
                       });
                       const result = await res.json();
-                      if (!res.ok) onToast("err", result.error ?? "Błąd");
-                      else { onToast("ok", "Nowy token wygenerowany — wklej nowy URL do OBS"); onSuccess(); }
+                      if (!res.ok) onToast("err", result.error ?? t("err"));
+                      else { onToast("ok", t("tokenRegenerated")); onSuccess(); }
                     } finally { setBusy(false); }
                   }}
                   disabled={busy || pending}
                   className="text-[10px] font-mono uppercase tracking-widest text-orange-300 hover:text-orange-200 border border-orange-900 hover:border-orange-700 px-2 py-0.5 disabled:opacity-50 transition-colors flex items-center gap-1"
-                  title="Rotacja tokena — unieważnia stare URL-e"
+                  title={t("regenTitle")}
                 >
                   <Zap className="w-3 h-3" />
-                  Wygeneruj nowy
+                  {t("regenBtn")}
                 </button>
               </div>
             </div>
@@ -340,7 +340,7 @@ export function StreamAlertsManager({
             <div className="pt-1">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                  URL dla OBS Browser Source
+                  {t("urlLabel")}
                 </span>
                 <button
                   onClick={async () => {
@@ -349,12 +349,12 @@ export function StreamAlertsManager({
                       await navigator.clipboard.writeText(url);
                       setUrlCopied(true);
                       setTimeout(() => setUrlCopied(false), 1500);
-                    } catch { onToast("err", "Schowek niedostępny"); }
+                    } catch { onToast("err", t("clipboardError")); }
                   }}
                   className="text-[10px] font-mono uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-900 hover:border-red-700 bg-red-950/30 px-2 py-0.5 transition-colors flex items-center gap-1"
                 >
                   <Copy className="w-3 h-3" />
-                  {urlCopied ? "Skopiowano!" : "Kopiuj URL"}
+                  {urlCopied ? t("copiedUrl") : t("copyUrl")}
                 </button>
               </div>
               <div className="font-mono text-[10px] text-zinc-400 break-all bg-black/40 border border-zinc-900 p-2">
@@ -362,13 +362,13 @@ export function StreamAlertsManager({
                 /overlay?token={tokenVisible ? data.overlayToken : "•".repeat(8) + "..."}
               </div>
               <p className="text-[10px] text-zinc-500 mt-1.5">
-                Wklej ten URL jako <strong>Browser Source</strong> w OBS (rozmiar 1920×1080, transparent background = ON, refresh on activate = ON).
+                {t.rich("urlNote", { b: (c) => <strong>{c}</strong> })}
               </p>
             </div>
           </>
         ) : (
           <div className="text-[11px] text-orange-300">
-            ⚠ Brak tokena overlay w bazie. Odśwież stronę — powinien się auto-wygenerować przy pierwszym wejściu na sekcję.
+            {t("noToken")}
           </div>
         )}
       </div>
@@ -381,10 +381,10 @@ export function StreamAlertsManager({
           className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
         >
           {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-          Wyślij test alert
+          {t("testBtn")}
         </button>
         <span className="text-[10px] text-zinc-500">
-          Zobaczysz alert na overlay w ciągu ~1.5s.
+          {t("testHint")}
         </span>
       </div>
 
@@ -392,7 +392,7 @@ export function StreamAlertsManager({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Rozmiar alertu
+            {t("sizeLabel")}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -406,7 +406,7 @@ export function StreamAlertsManager({
         </div>
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Rozmiar tekstu
+            {t("textSizeLabel")}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -420,7 +420,7 @@ export function StreamAlertsManager({
         </div>
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Kolor tekstu
+            {t("textColorLabel")}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -442,7 +442,7 @@ export function StreamAlertsManager({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div className="md:col-span-1">
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Czas wyświetlania
+            {t("durationLabel")}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -462,7 +462,7 @@ export function StreamAlertsManager({
 
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Kolor akcentu
+            {t("accentLabel")}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -482,7 +482,7 @@ export function StreamAlertsManager({
 
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Dźwięk
+            {t("soundHeading")}
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -492,7 +492,7 @@ export function StreamAlertsManager({
               className="w-4 h-4 accent-red-600"
             />
             <span className="text-xs text-zinc-300">
-              {soundEnabled ? "Włączony (chime)" : "Wyłączony"}
+              {soundEnabled ? t("soundOn") : t("soundOff")}
             </span>
           </label>
         </div>
@@ -509,7 +509,7 @@ export function StreamAlertsManager({
           className="px-3 py-1.5 bg-purple-700 hover:bg-purple-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-40 flex items-center gap-1.5"
         >
           {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-          {dirty ? "Zapisz zmiany" : "Brak zmian"}
+          {dirty ? t("saveChanges") : t("noChanges")}
         </button>
       </div>
 
@@ -517,7 +517,7 @@ export function StreamAlertsManager({
       {data.recent.length > 0 && (
         <>
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-            Ostatnie alerty ({data.recent.length})
+            {t("recentTitle", { count: data.recent.length })}
           </div>
           <div className="space-y-1 text-[10px] font-mono">
             {data.recent.slice(0, 10).map((a) => (
@@ -538,7 +538,7 @@ export function StreamAlertsManager({
                     "shrink-0 text-[9px] uppercase tracking-widest",
                     a.shownAt ? "text-zinc-600" : "text-orange-400",
                   )}
-                  title={a.shownAt ? `Pokazany ${new Date(a.shownAt).toLocaleTimeString("pl-PL")}` : "Jeszcze nie pokazany"}
+                  title={a.shownAt ? t("shownAt", { time: new Date(a.shownAt).toLocaleTimeString("pl-PL") }) : t("notShown")}
                 >
                   {a.shownAt ? "shown" : "pending"}
                 </span>

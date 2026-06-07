@@ -1,5 +1,218 @@
 {
   "admin": {
+    "streamAlerts": {
+      "err": "Error",
+      "netErr": "Network error",
+      "saved": "Saved",
+      "savedType": "Saved: {label}",
+      "testSent": "Test alert sent — check the overlay",
+      "typesHeader": "Alert types — ● toggle · click the name to customize ({count} active)",
+      "disableType": "Disable this alert type",
+      "enableType": "Enable this alert type",
+      "customBadge": "custom",
+      "loadingSettings": "Loading settings…",
+      "animationLabel": "Animation",
+      "positionLabel": "Position",
+      "soundLabel": "Sound (URL, optional)",
+      "thresholdLabel": "Amount threshold (≥, optional)",
+      "thresholdPh": "e.g. 50",
+      "saveSettingsBtn": "Save settings",
+      "animation": {
+        "slide": "Slide in (slide)",
+        "fade": "Fade in (fade)",
+        "scale": "Scale up (scale)",
+        "none": "No animation"
+      },
+      "position": {
+        "top-left": "Top-left",
+        "top-center": "Top-center",
+        "top-right": "Top-right",
+        "center": "Center",
+        "bottom-left": "Bottom-left",
+        "bottom-center": "Bottom-center",
+        "bottom-right": "Bottom-right (default)"
+      },
+      "alertType": {
+        "shop_purchase": "Shop purchase",
+        "event_win": "Event win",
+        "drop_claim_bonus": "Drop bonus claim",
+        "twitch_sub": "Twitch — sub",
+        "twitch_gift_sub": "Twitch — gifted sub",
+        "twitch_cheer": "Twitch — cheer (bits)",
+        "donation": "Donation",
+        "welcome": "Welcome / new user",
+        "level_up": "Level up",
+        "test": "Test (Admin)"
+      },
+      "intro": "Alerts shown via an OBS Browser Source — they display live purchases, wins, subs/bits, donations. The overlay polls the server every ~1.2s — an alert appears at most 1.5s after the event.",
+      "prevAlert1Title": "New sub!",
+      "prevAlert1Msg": "subscribed to the channel — thanks for the support!",
+      "prevAlert1Actor": "Viewer_123",
+      "prevAlert2Title": "Donation!",
+      "prevAlert2Msg": "bought a coffee 💸",
+      "prevAlert2Actor": "Anonymous",
+      "previewHeader": "Live preview — this is how the alert looks on the OBS overlay",
+      "previewHint": "Change the accent color below — the preview updates instantly.",
+      "tokenLabel": "Overlay token (secret)",
+      "hide": "Hide",
+      "show": "Show",
+      "copied": "Copied",
+      "tokenBtn": "Token",
+      "clipboardError": "Clipboard unavailable",
+      "regenConfirm": "Generate a new token? Old OBS URLs will stop working — you’ll have to paste the new URL into the OBS Browser Source.",
+      "tokenRegenerated": "New token generated — paste the new URL into OBS",
+      "regenBtn": "Generate new",
+      "regenTitle": "Token rotation — invalidates old URLs",
+      "urlLabel": "URL for OBS Browser Source",
+      "copiedUrl": "Copied!",
+      "copyUrl": "Copy URL",
+      "urlNote": "Paste this URL as a <b>Browser Source</b> in OBS (size 1920×1080, transparent background = ON, refresh on activate = ON).",
+      "noToken": "⚠ No overlay token in the database. Refresh the page — it should auto-generate on the first visit to this section.",
+      "testBtn": "Send test alert",
+      "testHint": "You’ll see the alert on the overlay within ~1.5s.",
+      "sizeLabel": "Alert size",
+      "textSizeLabel": "Text size",
+      "textColorLabel": "Text color",
+      "durationLabel": "Display time",
+      "accentLabel": "Accent color",
+      "soundHeading": "Sound",
+      "soundOn": "On (chime)",
+      "soundOff": "Off",
+      "saveChanges": "Save changes",
+      "noChanges": "No changes",
+      "recentTitle": "Recent alerts ({count})",
+      "shownAt": "Shown {time}",
+      "notShown": "Not shown yet"
+    },
+    "widgets": {
+      "copyToast": "URL copied",
+      "title": "Widget library",
+      "intro": "All OBS overlays in one place. Paste the URL as a <b>Browser Source</b> in OBS (transparent background = ON, refresh on activate = ON). <b>The token is shared</b> across all — “Generate new” in <em>Stream Alerts</em> invalidates old URLs.",
+      "loadingToken": "Loading overlay token…",
+      "clickHint": "Click a widget to see a <b>preview</b>, copy the URL, and jump to its appearance settings.",
+      "previewHeader": "Preview (this is how it looks on stream)",
+      "copyUrlTitle": "Copy URL to OBS",
+      "openTitle": "Open in a new tab",
+      "editLook": "Edit appearance (colors / font / size) →",
+      "autoNote": "Works automatically — no appearance settings.",
+      "position": {
+        "top-left": "Top-left",
+        "top-center": "Top-center",
+        "top-right": "Top-right",
+        "center": "Center",
+        "bottom-left": "Bottom-left",
+        "bottom-center": "Bottom-center",
+        "bottom-right": "Bottom-right"
+      },
+      "widget": {
+        "alerts": {
+          "name": "Stream Alerts",
+          "desc": "Live alerts: subs, gifts, bits, donations, purchases, events, welcomes."
+        },
+        "chat": {
+          "name": "Chat on screen",
+          "desc": "Chat messages (Twitch / Kick / YouTube), color per platform."
+        },
+        "goals": {
+          "name": "Stream Goals",
+          "desc": "Goal bars (subs / donations / follows) + Hype Train."
+        },
+        "subathon": {
+          "name": "Subathon",
+          "desc": "Countdown extended by subs/gifts/donations (color + caption)."
+        },
+        "codes": {
+          "name": "Code drops",
+          "desc": "Code rotation (e.g. game keys) — one on screen at a time."
+        },
+        "predictions": {
+          "name": "Predictions / bets",
+          "desc": "Current open/closed bet: options, % of pot, pot."
+        },
+        "polls": {
+          "name": "Polls",
+          "desc": "Current open poll: options + live results."
+        },
+        "last-sub": {
+          "name": "Last sub",
+          "desc": "Latest subscriber (Twitch sub / gift). Small badge."
+        },
+        "last-donator": {
+          "name": "Last donator",
+          "desc": "Latest donation — name + amount. Small badge."
+        },
+        "last-follower": {
+          "name": "Last follower",
+          "desc": "Latest follower. Requires Twitch re-auth (followers scope) + subscription."
+        },
+        "viewers": {
+          "name": "Viewer count",
+          "desc": "Current viewer count on Twitch (when live). Requires a connected Twitch."
+        },
+        "emoji-combo": {
+          "name": "Emoji combo",
+          "desc": "When viewers spam the same emoji — it pops ×N COMBO. Requires a bot restart."
+        },
+        "wheel": {
+          "name": "Wheel of Fortune",
+          "desc": "Wheel spin animation + winner on every viewer spin."
+        },
+        "rumble": {
+          "name": "Rumble status",
+          "desc": "LIVE + viewers on Rumble, or follower/sub count. Requires RUMBLE_API_URL."
+        }
+      },
+      "prevAlertTitle": "New sub!",
+      "prevAlertMsg": "subscribed — thanks!",
+      "prevActor1": "Viewer_123",
+      "prevChatUser1": "Viewer_77",
+      "prevChat1": "hey! greetings 🔥",
+      "prevChat2": "yo team 👋",
+      "prevGoalLabel": "Goal: subs",
+      "prevCodeTitle": "Free code!",
+      "prevPredQ": "How many deaths this stream?",
+      "prevPredOpt1": "Fewer than 5",
+      "prevPredOpt3": "More than 10",
+      "prevPollQ": "What do we play on Friday?",
+      "prevPollOpt1": "Option A",
+      "prevPollOpt2": "Option B",
+      "prevPollOpt3": "Option C",
+      "prevLastSubLabel": "Last sub",
+      "prevLastDonLabel": "Last donator",
+      "prevAnon": "Anonymous",
+      "prevLastFollowLabel": "Last follower",
+      "prevNewViewer": "NewViewer",
+      "genTitle": "Custom widget generator",
+      "genIntro": "Create your own text overlays (e.g. social handle, “now playing…”, an announcement). Supports emoji and Unicode. Each widget has its own OBS URL — edits update on the overlay live (~8 s).",
+      "namePh": "Name (for you)",
+      "textLabel": "On-screen text (emoji / Unicode ✅)",
+      "textPh": "e.g. 🎮 Now playing… · @YourNick · 🔴 LIVE",
+      "accentLabel": "Accent color",
+      "textColorLabel": "Text color",
+      "fontSizeLabel": "Text size: {size}px",
+      "fontLabel": "Font",
+      "positionLabel": "Position",
+      "cardLabel": "Background (card)",
+      "gradientLabel": "Gradient background 🌈",
+      "color1Label": "Color 1",
+      "color2Label": "Color 2",
+      "angleLabel": "Angle: {angle}°",
+      "saveChanges": "Save changes",
+      "createWidget": "Create widget",
+      "cancel": "Cancel",
+      "previewLabel": "Preview",
+      "previewTextPh": "Your text…",
+      "loading": "Loading…",
+      "emptyList": "No custom widgets — create the first one above.",
+      "editTitle": "Edit",
+      "deleteTitle": "Delete",
+      "textRequired": "Widget text is required",
+      "err": "Error",
+      "saved": "Widget saved",
+      "created": "Widget created",
+      "deleteConfirm": "Delete this widget?",
+      "deleted": "Deleted"
+    },
     "customAlerts": {
       "err": "Error",
       "netErr": "Network error",

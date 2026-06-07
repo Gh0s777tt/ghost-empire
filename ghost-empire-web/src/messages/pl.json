@@ -1,5 +1,218 @@
 {
   "admin": {
+    "streamAlerts": {
+      "err": "Błąd",
+      "netErr": "Błąd sieci",
+      "saved": "Zapisano",
+      "savedType": "Zapisano: {label}",
+      "testSent": "Wysłano test alert — sprawdź overlay",
+      "typesHeader": "Typy alertów — ● włącz/wyłącz · kliknij nazwę, by dostosować ({count} aktywnych)",
+      "disableType": "Wyłącz ten typ alertu",
+      "enableType": "Włącz ten typ alertu",
+      "customBadge": "własne",
+      "loadingSettings": "Ładowanie ustawień…",
+      "animationLabel": "Animacja",
+      "positionLabel": "Pozycja",
+      "soundLabel": "Dźwięk (URL, opcjonalnie)",
+      "thresholdLabel": "Próg kwoty (≥, opcjonalnie)",
+      "thresholdPh": "np. 50",
+      "saveSettingsBtn": "Zapisz ustawienia",
+      "animation": {
+        "slide": "Wjazd z boku (slide)",
+        "fade": "Płynne pojawienie (fade)",
+        "scale": "Powiększenie (scale)",
+        "none": "Bez animacji"
+      },
+      "position": {
+        "top-left": "Góra-lewo",
+        "top-center": "Góra-środek",
+        "top-right": "Góra-prawo",
+        "center": "Środek ekranu",
+        "bottom-left": "Dół-lewo",
+        "bottom-center": "Dół-środek",
+        "bottom-right": "Dół-prawo (domyślnie)"
+      },
+      "alertType": {
+        "shop_purchase": "Zakup w sklepie",
+        "event_win": "Wygrana w evencie",
+        "drop_claim_bonus": "Drop bonus claim",
+        "twitch_sub": "Twitch — sub",
+        "twitch_gift_sub": "Twitch — gifted sub",
+        "twitch_cheer": "Twitch — cheer (bits)",
+        "donation": "Donacja",
+        "welcome": "Welcome / nowy user",
+        "level_up": "Level up",
+        "test": "Test (Admin)"
+      },
+      "intro": "Alerty wyświetlane przez OBS Browser Source — pokazują live zakupy, wygrane, suby/bity, donacje. Overlay polluje serwer co ~1.2s — alert pojawi się max 1.5s po zdarzeniu.",
+      "prevAlert1Title": "Nowy sub!",
+      "prevAlert1Msg": "zasubował kanał — dzięki za wsparcie!",
+      "prevAlert1Actor": "Widz_123",
+      "prevAlert2Title": "Donacja!",
+      "prevAlert2Msg": "postawił kawę 💸",
+      "prevAlert2Actor": "Anonim",
+      "previewHeader": "Podgląd na żywo — tak alert wygląda na overlayu OBS",
+      "previewHint": "Zmień kolor akcentu poniżej — podgląd zaktualizuje się od razu.",
+      "tokenLabel": "Overlay token (sekret)",
+      "hide": "Ukryj",
+      "show": "Pokaż",
+      "copied": "Skopiowano",
+      "tokenBtn": "Token",
+      "clipboardError": "Schowek niedostępny",
+      "regenConfirm": "Wygenerować nowy token? Stare URL-e do OBS przestaną działać — będziesz musiał wkleić nowy URL do OBS Browser Source.",
+      "tokenRegenerated": "Nowy token wygenerowany — wklej nowy URL do OBS",
+      "regenBtn": "Wygeneruj nowy",
+      "regenTitle": "Rotacja tokena — unieważnia stare URL-e",
+      "urlLabel": "URL dla OBS Browser Source",
+      "copiedUrl": "Skopiowano!",
+      "copyUrl": "Kopiuj URL",
+      "urlNote": "Wklej ten URL jako <b>Browser Source</b> w OBS (rozmiar 1920×1080, transparent background = ON, refresh on activate = ON).",
+      "noToken": "⚠ Brak tokena overlay w bazie. Odśwież stronę — powinien się auto-wygenerować przy pierwszym wejściu na sekcję.",
+      "testBtn": "Wyślij test alert",
+      "testHint": "Zobaczysz alert na overlay w ciągu ~1.5s.",
+      "sizeLabel": "Rozmiar alertu",
+      "textSizeLabel": "Rozmiar tekstu",
+      "textColorLabel": "Kolor tekstu",
+      "durationLabel": "Czas wyświetlania",
+      "accentLabel": "Kolor akcentu",
+      "soundHeading": "Dźwięk",
+      "soundOn": "Włączony (chime)",
+      "soundOff": "Wyłączony",
+      "saveChanges": "Zapisz zmiany",
+      "noChanges": "Brak zmian",
+      "recentTitle": "Ostatnie alerty ({count})",
+      "shownAt": "Pokazany {time}",
+      "notShown": "Jeszcze nie pokazany"
+    },
+    "widgets": {
+      "copyToast": "URL skopiowany",
+      "title": "Biblioteka widgetów",
+      "intro": "Wszystkie overlaye OBS w jednym miejscu. Wklej URL jako <b>Browser Source</b> w OBS (transparent background = ON, refresh on activate = ON). <b>Token jest wspólny</b> dla wszystkich — „Wygeneruj nowy” w <em>Stream Alerts</em> unieważnia stare URL-e.",
+      "loadingToken": "Ładowanie tokenu overlayu…",
+      "clickHint": "Kliknij widget, by zobaczyć <b>podgląd</b>, skopiować URL i przejść do edycji wyglądu.",
+      "previewHeader": "Podgląd (tak wygląda na streamie)",
+      "copyUrlTitle": "Kopiuj URL do OBS",
+      "openTitle": "Otwórz w nowej karcie",
+      "editLook": "Edytuj wygląd (kolory / czcionka / rozmiar) →",
+      "autoNote": "Działa automatycznie — brak ustawień wyglądu.",
+      "position": {
+        "top-left": "Góra-lewo",
+        "top-center": "Góra-środek",
+        "top-right": "Góra-prawo",
+        "center": "Środek",
+        "bottom-left": "Dół-lewo",
+        "bottom-center": "Dół-środek",
+        "bottom-right": "Dół-prawo"
+      },
+      "widget": {
+        "alerts": {
+          "name": "Stream Alerts",
+          "desc": "Alerty na żywo: suby, gifty, bity, donejty, zakupy, eventy, powitania."
+        },
+        "chat": {
+          "name": "Chat na ekranie",
+          "desc": "Wiadomości z czatu (Twitch / Kick / YouTube), kolor per platforma."
+        },
+        "goals": {
+          "name": "Stream Goals",
+          "desc": "Paski celów (suby / donejty / followy) + Hype Train."
+        },
+        "subathon": {
+          "name": "Subathon",
+          "desc": "Odliczanie przedłużane subami/giftami/donejtami (kolor + napis)."
+        },
+        "codes": {
+          "name": "Drop kodów",
+          "desc": "Rotacja kodów (np. klucze do gier) — jeden na ekranie naraz."
+        },
+        "predictions": {
+          "name": "Predykcje / zakłady",
+          "desc": "Aktualny otwarty/zamknięty zakład: opcje, % puli, pula."
+        },
+        "polls": {
+          "name": "Ankiety",
+          "desc": "Aktualna otwarta ankieta: opcje + wyniki na żywo."
+        },
+        "last-sub": {
+          "name": "Ostatni sub",
+          "desc": "Najnowszy subskrybent (Twitch sub / gift). Mały badge."
+        },
+        "last-donator": {
+          "name": "Ostatni donator",
+          "desc": "Najnowszy donejt — nick + kwota. Mały badge."
+        },
+        "last-follower": {
+          "name": "Ostatni follower",
+          "desc": "Najnowszy obserwujący. Wymaga re-auth Twitcha (scope followers) + subskrypcji."
+        },
+        "viewers": {
+          "name": "Liczba widzów",
+          "desc": "Aktualna liczba widzów na Twitchu (gdy live). Wymaga połączonego Twitcha."
+        },
+        "emoji-combo": {
+          "name": "Emoji combo",
+          "desc": "Gdy widzowie spamują to samo emoji — wybucha ×N COMBO. Wymaga restartu bota."
+        },
+        "wheel": {
+          "name": "Koło Fortuny",
+          "desc": "Animacja zakręcenia koła + zwycięzca przy każdym spinie widza."
+        },
+        "rumble": {
+          "name": "Rumble status",
+          "desc": "LIVE + widzowie na Rumble, lub liczba obserwujących/subów. Wymaga RUMBLE_API_URL."
+        }
+      },
+      "prevAlertTitle": "Nowy sub!",
+      "prevAlertMsg": "zasubował kanał — dzięki!",
+      "prevActor1": "Widz_123",
+      "prevChatUser1": "Widz_77",
+      "prevChat1": "hej! pozdrawiam 🔥",
+      "prevChat2": "siema ekipa 👋",
+      "prevGoalLabel": "Cel: suby",
+      "prevCodeTitle": "Darmowy kod!",
+      "prevPredQ": "Ile zgonów w tym streamie?",
+      "prevPredOpt1": "Mniej niż 5",
+      "prevPredOpt3": "Więcej niż 10",
+      "prevPollQ": "W co gramy w piątek?",
+      "prevPollOpt1": "Opcja A",
+      "prevPollOpt2": "Opcja B",
+      "prevPollOpt3": "Opcja C",
+      "prevLastSubLabel": "Ostatni sub",
+      "prevLastDonLabel": "Ostatni donator",
+      "prevAnon": "Anonim",
+      "prevLastFollowLabel": "Ostatni follower",
+      "prevNewViewer": "NowyWidz",
+      "genTitle": "Generator własnych widgetów",
+      "genIntro": "Twórz własne nakładki tekstowe (np. social handle, „teraz gram w…”, ogłoszenie). Wspiera emoji i Unicode. Każdy widget ma własny URL do OBS — edycja aktualizuje się na overlayu na żywo (~8 s).",
+      "namePh": "Nazwa (dla Ciebie)",
+      "textLabel": "Tekst na ekranie (emoji / Unicode ✅)",
+      "textPh": "np. 🎮 Teraz gram w… · @TwójNick · 🔴 LIVE",
+      "accentLabel": "Kolor akcentu",
+      "textColorLabel": "Kolor tekstu",
+      "fontSizeLabel": "Rozmiar tekstu: {size}px",
+      "fontLabel": "Czcionka",
+      "positionLabel": "Pozycja",
+      "cardLabel": "Tło (karta)",
+      "gradientLabel": "Tło gradientowe 🌈",
+      "color1Label": "Kolor 1",
+      "color2Label": "Kolor 2",
+      "angleLabel": "Kąt: {angle}°",
+      "saveChanges": "Zapisz zmiany",
+      "createWidget": "Utwórz widget",
+      "cancel": "Anuluj",
+      "previewLabel": "Podgląd",
+      "previewTextPh": "Twój tekst…",
+      "loading": "Ładowanie…",
+      "emptyList": "Brak własnych widgetów — stwórz pierwszy powyżej.",
+      "editTitle": "Edytuj",
+      "deleteTitle": "Usuń",
+      "textRequired": "Tekst widgetu jest wymagany",
+      "err": "Błąd",
+      "saved": "Widget zapisany",
+      "created": "Widget utworzony",
+      "deleteConfirm": "Usunąć ten widget?",
+      "deleted": "Usunięto"
+    },
     "customAlerts": {
       "err": "Błąd",
       "netErr": "Błąd sieci",
