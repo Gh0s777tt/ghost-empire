@@ -2,6 +2,7 @@
 // src/components/admin/sections/Faq.tsx — lazily-loaded FAQ / auto-responses manager.
 import { useState, useEffect, useCallback } from "react";
 import { HelpCircle, Loader2, Eye, EyeOff, Pencil, Trash2, Check, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -21,6 +22,7 @@ export function FaqManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.faq");
   const [loading, setLoading] = useState(true);
   const [faqs, setFaqs] = useState<FaqRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function FaqManager({
     });
     const data = await res.json();
     if (!res.ok) {
-      onToast("err", data.error ?? "Błąd");
+      onToast("err", data.error ?? t("err"));
       return false;
     }
     return true;
@@ -79,7 +81,7 @@ export function FaqManager({
     const response = fResponse.trim();
     const cooldownSeconds = Math.max(0, parseInt(fCooldown, 10) || 0);
     if (!keyword || !response) {
-      onToast("err", "Wpisz słowo kluczowe i odpowiedź");
+      onToast("err", t("fieldsRequired"));
       return;
     }
     setBusy("form");
@@ -88,7 +90,7 @@ export function FaqManager({
       ? await call("update", { id: editingId, ...payload })
       : await call("create", payload);
     if (ok) {
-      onToast("ok", editingId ? "Zapisano" : "FAQ dodane");
+      onToast("ok", editingId ? t("saved") : t("created"));
       resetForm();
       await load();
       onSuccess();
@@ -103,10 +105,10 @@ export function FaqManager({
   }
 
   async function deleteFaq(f: FaqRow) {
-    if (!confirm(`Usunąć FAQ "${f.keyword}"?`)) return;
+    if (!confirm(t("deleteConfirm", { keyword: f.keyword }))) return;
     setBusy(f.id);
     if (await call("delete", { id: f.id })) {
-      onToast("ok", "Usunięto");
+      onToast("ok", t("deleted"));
       if (editingId === f.id) resetForm();
       await load();
     }
@@ -114,19 +116,18 @@ export function FaqManager({
   }
 
   return (
-    <SectionCard title="FAQ / auto-odpowiedzi" icon={HelpCircle}>
+    <SectionCard title={t("title")} icon={HelpCircle}>
       <p className="text-zinc-500 text-xs mb-3">
-        Bot odpowiada, gdy wiadomość <strong>zawiera</strong> słowo kluczowe (nie tylko <code className="text-zinc-300">!komendy</code>).
-        Działa na Twitch + Kick + YouTube. „Całe słowo" = dopasowanie tylko jako osobny wyraz.
+        {t.rich("intro", { b: (c) => <strong>{c}</strong>, code: (c) => <code className="text-zinc-300">{c}</code> })}
       </p>
 
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : (
         <div className="space-y-2 mb-4">
           {faqs.length === 0 ? (
             <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-              Brak wpisów FAQ. Dodaj pierwszy poniżej.
+              {t("empty")}
             </div>
           ) : (
             faqs.map((f) => (
@@ -143,17 +144,17 @@ export function FaqManager({
                       {f.keyword}
                     </span>
                     <span className="text-[9px] font-mono uppercase text-zinc-600 shrink-0">
-                      {f.matchType === "word" ? "słowo" : "zawiera"}
+                      {f.matchType === "word" ? t("matchWord") : t("matchContains")}
                     </span>
                     <span className="text-sm text-zinc-300 truncate">{f.response}</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-[10px] font-mono text-zinc-600 mr-1" title="Cooldown">{f.cooldownSeconds}s</span>
+                    <span className="text-[10px] font-mono text-zinc-600 mr-1" title={t("cooldownTitle")}>{f.cooldownSeconds}s</span>
                     <button
                       onClick={() => toggleEnabled(f)}
                       disabled={busy === f.id || pending}
                       className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center"
-                      title={f.enabled ? "Wyłącz" : "Włącz"}
+                      title={f.enabled ? t("disable") : t("enable")}
                     >
                       {f.enabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                     </button>
@@ -161,7 +162,7 @@ export function FaqManager({
                       onClick={() => startEdit(f)}
                       disabled={busy === f.id || pending}
                       className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center"
-                      title="Edytuj"
+                      title={t("editTitle")}
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
@@ -169,7 +170,7 @@ export function FaqManager({
                       onClick={() => deleteFaq(f)}
                       disabled={busy === f.id || pending}
                       className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"
-                      title="Usuń"
+                      title={t("deleteTitle")}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -184,13 +185,13 @@ export function FaqManager({
       {/* Create / edit form */}
       <div className="border border-zinc-800 bg-black/30 p-3">
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-          {editingId ? "Edytuj FAQ" : "Dodaj FAQ"}
+          {editingId ? t("editForm") : t("addForm")}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[160px_120px_1fr_90px] gap-2 mb-2">
           <input
             value={fKeyword}
             onChange={(e) => setFKeyword(e.target.value)}
-            placeholder="słowo kluczowe"
+            placeholder={t("keywordPh")}
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
           <select
@@ -198,13 +199,13 @@ export function FaqManager({
             onChange={(e) => setFMatchType(e.target.value)}
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           >
-            <option value="contains">zawiera</option>
-            <option value="word">całe słowo</option>
+            <option value="contains">{t("optContains")}</option>
+            <option value="word">{t("optWord")}</option>
           </select>
           <input
             value={fResponse}
             onChange={(e) => setFResponse(e.target.value)}
-            placeholder="Odpowiedź bota…"
+            placeholder={t("responsePh")}
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
           <input
@@ -212,7 +213,7 @@ export function FaqManager({
             value={fCooldown}
             onChange={(e) => setFCooldown(e.target.value)}
             min={0}
-            title="Cooldown (sekundy)"
+            title={t("cooldownInputTitle")}
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
         </div>
@@ -223,7 +224,7 @@ export function FaqManager({
             className="bg-red-900/40 border border-red-800 hover:border-red-600 text-red-200 px-3 py-1.5 text-xs font-mono uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
           >
             {busy === "form" ? <Loader2 className="w-3 h-3 animate-spin" /> : editingId ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-            {editingId ? "Zapisz" : "Dodaj"}
+            {editingId ? t("saveBtn") : t("addBtn")}
           </button>
           {editingId && (
             <button
@@ -231,7 +232,7 @@ export function FaqManager({
               disabled={busy === "form"}
               className="border border-zinc-800 hover:border-zinc-600 text-zinc-400 px-3 py-1.5 text-xs font-mono uppercase tracking-widest"
             >
-              Anuluj
+              {t("cancel")}
             </button>
           )}
         </div>

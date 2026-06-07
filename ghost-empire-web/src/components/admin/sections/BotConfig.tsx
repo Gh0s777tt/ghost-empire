@@ -2,6 +2,7 @@
 // src/components/admin/sections/BotConfig.tsx — lazily-loaded Discord bot reward config.
 import { useState } from "react";
 import { Bot, Loader2, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
 import type { BotConfigData } from "../types";
 
@@ -13,6 +14,7 @@ export function BotConfigCard({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.botConfig");
   const [messageReward, setMessageReward] = useState(config.messageReward.toString());
   const [messageCooldownSeconds, setMessageCooldownSeconds] = useState(config.messageCooldownSeconds.toString());
   const [voiceRewardPerMinute, setVoiceRewardPerMinute] = useState(config.voiceRewardPerMinute.toString());
@@ -39,18 +41,18 @@ export function BotConfigCard({
         }),
       });
       const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? "Błąd");
+      if (!res.ok) onToast("err", data.error ?? t("err"));
       else {
-        onToast("ok", "Bot config zaktualizowany. Bot zaaplikuje przy następnym fetch'u (~60s).");
+        onToast("ok", t("saved"));
         onSuccess();
       }
     } finally { setBusy(false); }
   }
 
   return (
-    <SectionCard title="Bot Discord — konfiguracja nagród" icon={Bot}>
+    <SectionCard title={t("title")} icon={Bot}>
       <p className="text-zinc-500 text-xs mb-3">
-        Bot pobiera te wartości z API co ~60s. Zmiany zaaplikują się automatycznie bez restartu bota.
+        {t("intro")}
       </p>
 
       <div className="space-y-3">
@@ -62,15 +64,15 @@ export function BotConfigCard({
             className="accent-green-500"
           />
           <span className="text-xs font-bold tracking-widest uppercase text-zinc-300">
-            Bot ENABLED — gdy wyłączone, bot nie nalicza tokenów
+            {t("enabledLabel")}
           </span>
         </label>
 
         <div className="grid grid-cols-2 gap-2">
-          <FieldInput label="Tokenów za wiadomość" value={messageReward} onChange={setMessageReward} type="number" />
-          <FieldInput label="Cooldown wiadomości (s)" value={messageCooldownSeconds} onChange={setMessageCooldownSeconds} type="number" />
-          <FieldInput label="Tokeny / min voice" value={voiceRewardPerMinute} onChange={setVoiceRewardPerMinute} type="number" />
-          <FieldInput label="Voice tick (s)" value={voiceTickSeconds} onChange={setVoiceTickSeconds} type="number" />
+          <FieldInput label={t("messageReward")} value={messageReward} onChange={setMessageReward} type="number" />
+          <FieldInput label={t("messageCooldown")} value={messageCooldownSeconds} onChange={setMessageCooldownSeconds} type="number" />
+          <FieldInput label={t("voiceReward")} value={voiceRewardPerMinute} onChange={setVoiceRewardPerMinute} type="number" />
+          <FieldInput label={t("voiceTick")} value={voiceTickSeconds} onChange={setVoiceTickSeconds} type="number" />
         </div>
 
         <div className="flex gap-4 pt-2">
@@ -82,7 +84,7 @@ export function BotConfigCard({
               className="accent-purple-500"
             />
             <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-300">
-              AFK channel daje tokeny
+              {t("afkLabel")}
             </span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -93,7 +95,7 @@ export function BotConfigCard({
               className="accent-blue-500"
             />
             <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-300">
-              Muteowani dostają tokeny (słuchanie = aktywność)
+              {t("mutedLabel")}
             </span>
           </label>
         </div>
@@ -104,7 +106,7 @@ export function BotConfigCard({
           className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-          Zapisz config bota
+          {t("saveBtn")}
         </button>
       </div>
     </SectionCard>
