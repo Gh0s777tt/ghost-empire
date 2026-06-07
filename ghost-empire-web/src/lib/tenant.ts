@@ -6,8 +6,10 @@
 // subdomain-based resolution into the proxy/middleware, callers get that single
 // tenant's brand (falling back to SITE before the row/table exists). Keeping the
 // seam here means Phase 2 only changes HOW the tenant is chosen, not the callers.
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/site";
+import { TENANT_HEADER } from "@/lib/tenant-host";
 
 /** Slug (and future subdomain) of the original single-streamer tenant. */
 export const DEFAULT_TENANT_SLUG = "ghost-empire";
@@ -31,13 +33,22 @@ export const FALLBACK_TENANT: TenantBrand = {
 };
 
 /**
- * Resolve the active tenant's brand. Phase 1: returns the single default tenant
- * (looked up by slug) if it has been created, else the SITE-derived fallback.
- * Phase 2 will switch the lookup to the request subdomain.
+ * Resolve the active tenant's brand for the current request. Phase 2: reads the
+ * tenant slug the proxy derived from the subdomain (the `x-tenant-slug` header),
+ * falling back to the default tenant when there's no subdomain. Looks the slug up
+ * in the DB; before the table exists, or outside a request scope, returns the
+ * SITE-derived fallback.
  */
 export async function getCurrentTenant(): Promise<TenantBrand> {
+  let slug = DEFAULT_TENANT_SLUG;
   try {
-    const t = await prisma.tenant.findUnique({ where: { slug: DEFAULT_TENANT_SLUG } });
+    const h = await headers();
+    slug = h.get(TENANT_HEADER) || DEFAULT_TENANT_SLUG;
+  } catch {
+    // headers() unavailable outside a request scope — keep the default slug.
+  }
+  try {
+    const t = await prisma.tenant.findUnique({ where: { slug } });
     if (t) {
       return { id: t.id, slug: t.slug, name: t.name, shortName: t.shortName ?? t.name, brandColor: t.brandColor };
     }

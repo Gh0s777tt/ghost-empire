@@ -18,6 +18,7 @@ declare module "next-auth" {
       tokens: number;
       level: number;
       username: string | null;
+      tenantId: string | null;
     };
   }
 
@@ -29,6 +30,7 @@ declare module "next-auth" {
     level?: number;
     username?: string | null;
     discordId?: string | null;
+    tenantId?: string | null;
   }
 }
 
@@ -41,5 +43,6 @@ declare module "next-auth/adapters" {
     level?: number;
     username?: string | null;
     discordId?: string | null;
+    tenantId?: string | null;
   }
 }

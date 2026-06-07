@@ -11,6 +11,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
+import { tenantSlugFromHost, TENANT_HEADER } from "@/lib/tenant-host";
 
 const handleI18n = createMiddleware(routing);
 
@@ -38,6 +39,12 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("content-security-policy", csp);
+
+  // Multi-tenant (SaaS): derive the tenant slug from the request subdomain and
+  // forward it so server code can resolve it to a tenant. No DB call here — the
+  // proxy runs on the edge. No-op until NEXT_PUBLIC_ROOT_DOMAIN is set (→ null).
+  const tenantSlug = tenantSlugFromHost(request.headers.get("host"));
+  if (tenantSlug) requestHeaders.set(TENANT_HEADER, tenantSlug);
 
   let response: NextResponse;
   if (request.nextUrl.pathname.startsWith("/overlay")) {
