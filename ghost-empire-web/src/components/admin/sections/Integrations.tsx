@@ -6,6 +6,7 @@
 // klik rozwija pola edycji (collapsed domyślnie).
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Plug, Loader2, Check, KeyRound, ChevronDown, CheckCircle2, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 
 const AI_PROVIDERS: Array<[string, string]> = [
@@ -29,24 +30,25 @@ function SecretField({ label, has, preview, value, onChange, onClear, placeholde
   label: string; has: boolean; preview: string | null;
   value: string; onChange: (v: string) => void; onClear: () => void; placeholder?: string;
 }) {
+  const t = useTranslations("admin.integrations");
   return (
     <div>
       <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1 flex items-center gap-2">
         <KeyRound className="w-3 h-3" /> {label}
-        {has && <span className="text-green-500 normal-case tracking-normal">● ustawiony ({preview})</span>}
+        {has && <span className="text-green-500 normal-case tracking-normal">{t("secretSet", { preview: preview ?? "" })}</span>}
       </label>
       <div className="flex gap-2">
         <input
           type="password"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={has ? "wklej nowy klucz, by nadpisać" : (placeholder ?? "wklej klucz…")}
+          placeholder={has ? t("overwritePh") : (placeholder ?? t("defaultKeyPh"))}
           autoComplete="off"
           className="flex-1 bg-black border border-zinc-800 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-green-600"
         />
         {has && (
           <button type="button" onClick={onClear} className="px-2.5 border border-zinc-700 text-zinc-400 hover:border-red-500 hover:text-red-400 text-[10px] font-mono uppercase">
-            Wyczyść
+            {t("clear")}
           </button>
         )}
       </div>
@@ -58,6 +60,7 @@ function SecretField({ label, has, preview, value, onChange, onClear, placeholde
 function IntegrationCard({ title, configured, statusLabel, children, defaultOpen = false }: {
   title: string; configured: boolean; statusLabel?: string; children: ReactNode; defaultOpen?: boolean;
 }) {
+  const t = useTranslations("admin.integrations");
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="border border-zinc-800 bg-black/30 mb-3">
@@ -74,7 +77,7 @@ function IntegrationCard({ title, configured, statusLabel, children, defaultOpen
           </span>
         ) : (
           <span className="flex items-center gap-1.5 text-xs text-zinc-500 shrink-0">
-            <XCircle className="w-3.5 h-3.5" /> brak
+            <XCircle className="w-3.5 h-3.5" /> {t("none")}
           </span>
         )}
         <ChevronDown className={`w-4 h-4 text-zinc-500 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -91,6 +94,7 @@ export function IntegrationsManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.integrations");
   const [meta, setMeta] = useState<Meta | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -125,8 +129,8 @@ export function IntegrationsManager({
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
       const d = await res.json();
-      if (!res.ok) { onToast("err", d.error ?? "Błąd"); return; }
-      onToast("ok", "Integracje zapisane");
+      if (!res.ok) { onToast("err", d.error ?? t("err")); return; }
+      onToast("ok", t("saved"));
       setAiKey(""); setSentry(""); setObsPass(""); // clear inputs; reload shows masked state
       await load();
       onSuccess();
@@ -135,8 +139,8 @@ export function IntegrationsManager({
 
   if (!meta) {
     return (
-      <SectionCard title="Integracje / klucze API" icon={Plug}>
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+      <SectionCard title={t("title")} icon={Plug}>
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       </SectionCard>
     );
   }
@@ -145,41 +149,42 @@ export function IntegrationsManager({
   const obsConfigured = meta.hasObsPassword || meta.obsWebsocketUrl.trim().length > 0;
 
   return (
-    <SectionCard title="Integracje / klucze API" icon={Plug}>
+    <SectionCard title={t("title")} icon={Plug}>
       <p className="text-zinc-500 text-xs mb-4 leading-relaxed">
-        Wklej tutaj klucze <strong className="text-zinc-300">funkcji opcjonalnych</strong> — zapisują się w bazie, więc przeżywają
-        zmianę komputera i nie musisz ich szukać w plikach. <strong className="text-zinc-300">Wartość z bazy nadpisuje env.</strong> Klucze
-        wracają zamaskowane. <span className="text-zinc-600">Sekrety infrastruktury (baza, logowanie OAuth, NEXTAUTH/BOT_SECRET) celowo zostają w env.</span>
+        {t.rich("intro", {
+          b: (c) => <strong className="text-zinc-300">{c}</strong>,
+          muted: (c) => <span className="text-zinc-600">{c}</span>,
+        })}
       </p>
-      <p className="text-zinc-600 text-[10px] mb-3">Kliknij integrację, by rozwinąć pola edycji.</p>
+      <p className="text-zinc-600 text-[10px] mb-3">{t("clickHint")}</p>
 
       {/* AI — unlocks the bot persona + !imagine (F4) */}
-      <IntegrationCard title="🤖 AI (postać bota + !imagine)" configured={meta.hasAiKey} statusLabel={meta.hasAiKey ? aiProviderLabel : undefined}>
+      <IntegrationCard title={t("aiTitle")} configured={meta.hasAiKey} statusLabel={meta.hasAiKey ? aiProviderLabel : undefined}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <label className="text-[11px] text-zinc-400">Dostawca
+          <label className="text-[11px] text-zinc-400">{t("provider")}
             <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value)} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white outline-hidden focus:border-green-600">
               {AI_PROVIDERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           </label>
-          <label className="text-[11px] text-zinc-400">Model (opcjonalnie)
-            <input value={aiModel} onChange={(e) => setAiModel(e.target.value)} placeholder="np. claude-… / gpt-…" className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
+          <label className="text-[11px] text-zinc-400">{t("modelLabel")}
+            <input value={aiModel} onChange={(e) => setAiModel(e.target.value)} placeholder={t("modelPh")} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
           </label>
         </div>
-        <SecretField label="Klucz API" has={meta.hasAiKey} preview={meta.aiKeyPreview} value={aiKey ?? ""} onChange={setAiKey} onClear={() => setAiKey(null)} placeholder="wklej klucz dostawcy AI" />
-        <p className="text-[10px] text-zinc-600">Po wklejeniu klucza poproś o uruchomienie F4 — postać <code className="text-zinc-400">@bot</code> i <code className="text-zinc-400">!imagine</code>.</p>
+        <SecretField label={t("aiKeyLabel")} has={meta.hasAiKey} preview={meta.aiKeyPreview} value={aiKey ?? ""} onChange={setAiKey} onClear={() => setAiKey(null)} placeholder={t("aiKeyPh")} />
+        <p className="text-[10px] text-zinc-600">{t.rich("aiHint", { code: (c) => <code className="text-zinc-400">{c}</code> })}</p>
       </IntegrationCard>
 
       {/* Sentry */}
-      <IntegrationCard title="🐛 Sentry (monitoring błędów)" configured={meta.hasSentry}>
-        <SecretField label="DSN" has={meta.hasSentry} preview={meta.sentryPreview} value={sentry ?? ""} onChange={setSentry} onClear={() => setSentry(null)} placeholder="DSN z ustawień projektu w Sentry" />
+      <IntegrationCard title={t("sentryTitle")} configured={meta.hasSentry}>
+        <SecretField label="DSN" has={meta.hasSentry} preview={meta.sentryPreview} value={sentry ?? ""} onChange={setSentry} onClear={() => setSentry(null)} placeholder={t("sentryPh")} />
       </IntegrationCard>
 
       {/* OBS WebSocket */}
-      <IntegrationCard title="🎛️ OBS WebSocket (sterowanie sceną)" configured={obsConfigured} statusLabel={obsConfigured ? "skonfigurowane" : undefined}>
-        <label className="text-[11px] text-zinc-400 block">Adres
+      <IntegrationCard title={t("obsTitle")} configured={obsConfigured} statusLabel={obsConfigured ? t("configured") : undefined}>
+        <label className="text-[11px] text-zinc-400 block">{t("addressLabel")}
           <input value={obsUrl} onChange={(e) => setObsUrl(e.target.value)} placeholder="ws://localhost:4455" className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
         </label>
-        <SecretField label="Hasło" has={meta.hasObsPassword} preview={meta.obsPasswordPreview} value={obsPass ?? ""} onChange={setObsPass} onClear={() => setObsPass(null)} placeholder="hasło z OBS" />
+        <SecretField label={t("passwordLabel")} has={meta.hasObsPassword} preview={meta.obsPasswordPreview} value={obsPass ?? ""} onChange={setObsPass} onClear={() => setObsPass(null)} placeholder={t("obsPassPh")} />
       </IntegrationCard>
 
       <button
@@ -188,7 +193,7 @@ export function IntegrationsManager({
         className="w-full mt-1 px-4 py-2.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-        Zapisz integracje
+        {t("saveBtn")}
       </button>
     </SectionCard>
   );

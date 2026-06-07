@@ -2,6 +2,7 @@
 // src/components/admin/sections/YouTubeLive.tsx — lazily-loaded YouTube live chat manager.
 import { useState, useEffect, useCallback } from "react";
 import { MonitorPlay, Loader2, Radio } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 
 type YTStatus = {
@@ -32,6 +33,7 @@ export function YouTubeLiveManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.youtubeLive");
   const [status, setStatus] = useState<YTStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
@@ -63,11 +65,11 @@ export function YouTubeLiveManager({
         onToast("err", data.error ?? "Polling failed");
       } else {
         if (data.status === "no_active_broadcast") {
-          onToast("ok", "Nie ma aktywnej transmisji live");
+          onToast("ok", t("noBroadcast"));
         } else if (data.status === "chat_ended") {
-          onToast("ok", "Stream skończył się — cache wyczyszczony");
+          onToast("ok", t("chatEnded"));
         } else {
-          onToast("ok", `Pobrane: ${data.messagesFetched ?? 0} wiadomości, ${data.superChatsProcessed ?? 0} super chat`);
+          onToast("ok", t("polled", { messages: data.messagesFetched ?? 0, superchats: data.superChatsProcessed ?? 0 }));
         }
         await loadStatus();
         onSuccess();
@@ -80,31 +82,30 @@ export function YouTubeLiveManager({
   return (
     <SectionCard title="YouTube Live Chat (Super Chats + Members)" icon={MonitorPlay}>
       <p className="text-zinc-500 text-xs mb-3">
-        Wykrywa Super Chats i nowych członków na YouTube live → grant Ghost Tokens
-        donatorowi, zapisuje donejt, triggeruje stream alert na OBS overlay.
+        {t("intro")}
       </p>
 
       {/* Connection status */}
       <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
         {loading ? (
           <div className="text-xs text-zinc-500 flex items-center gap-2">
-            <Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…
+            <Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}
           </div>
         ) : status?.streamerConnected ? (
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-green-300 mb-0.5 flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5" />
-                Streamer autoryzowany: {status.channelTitle}
+                {t("streamerAuthorized")}: {status.channelTitle}
               </div>
               <div className="text-[10px] font-mono text-zinc-500">
                 {status.currentLiveVideoId ? (
                   <>Live video: <code className="text-zinc-300">{status.currentLiveVideoId}</code></>
                 ) : (
-                  "Brak cache live video — następny poll wyszuka"
+                  t("noCacheVideo")
                 )}
                 {status.lastPolledAt && (
-                  <> · Ostatni poll: {new Date(status.lastPolledAt).toLocaleTimeString("pl-PL")}</>
+                  <> · {t("lastPoll")} {new Date(status.lastPolledAt).toLocaleTimeString("pl-PL")}</>
                 )}
               </div>
             </div>
@@ -112,20 +113,20 @@ export function YouTubeLiveManager({
               href="/api/admin/youtube-streamer-auth"
               className="px-3 py-1.5 border border-zinc-700 hover:border-zinc-500 text-zinc-300 text-[10px] font-bold tracking-widest uppercase"
             >
-              Re-autoryzuj
+              {t("reauth")}
             </a>
           </div>
         ) : (
           <div className="text-center py-2">
             <p className="text-zinc-400 text-sm mb-3">
-              YouTube nie autoryzowany. Zaloguj się jako <strong>właściciel kanału Gh0s77tt</strong> żeby nadać Ghost Empire dostęp read-only do live chatu.
+              {t.rich("notConnected", { b: (c) => <strong>{c}</strong> })}
             </p>
             <a
               href="/api/admin/youtube-streamer-auth"
               className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase"
             >
               <MonitorPlay className="w-3.5 h-3.5" />
-              Autoryzuj YouTube
+              {t("authYoutube")}
             </a>
           </div>
         )}
@@ -148,16 +149,16 @@ export function YouTubeLiveManager({
               disabled={loading || pending}
               className="px-3 py-1.5 border border-zinc-700 hover:border-zinc-500 text-zinc-300 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
             >
-              Odśwież status
+              {t("refreshStatus")}
             </button>
             <span className="text-[10px] text-zinc-500">
-              Manual poll dla testu. Dla auto-pollingu setuj external cron (poniżej).
+              {t("manualHint")}
             </span>
           </div>
 
           {lastResult && (
             <div className="border border-zinc-800 bg-black/30 p-3 mb-3 text-[10px] font-mono">
-              <div className="text-zinc-500 uppercase tracking-widest mb-1">Ostatni poll result</div>
+              <div className="text-zinc-500 uppercase tracking-widest mb-1">{t("lastResultLabel")}</div>
               <pre className="text-zinc-300 whitespace-pre-wrap break-all">
                 {JSON.stringify(lastResult, null, 2)}
               </pre>
@@ -167,30 +168,30 @@ export function YouTubeLiveManager({
           {/* External cron setup instructions */}
           <div className="border border-zinc-800 bg-black/30 p-3 text-xs space-y-2">
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              Setup auto-polling (zalecane)
+              {t("cronTitle")}
             </div>
             <p className="text-zinc-400">
-              Vercel Hobby plan obsługuje tylko daily cron — dla pollingu co minutę użyj zewnętrznego serwisu:
+              {t("cronIntro")}
             </p>
             <ol className="text-zinc-400 list-decimal pl-5 space-y-1">
               <li>
-                Wejdź na <a href="https://cron-job.org" target="_blank" rel="noreferrer" className="text-red-400 underline">cron-job.org</a> (free)
+                {t.rich("cronStep1", { link: (c) => <a href="https://cron-job.org" target="_blank" rel="noreferrer" className="text-red-400 underline">{c}</a> })}
               </li>
               <li>
-                Stwórz nowy job z URL: <code className="text-zinc-200 text-[10px]">{typeof window !== "undefined" ? window.location.origin : ""}/api/yt/poll-live-chat</code>
+                {t.rich("cronStep2", { code: (c) => <code className="text-zinc-200 text-[10px]">{c}</code>, url: `${typeof window !== "undefined" ? window.location.origin : ""}/api/yt/poll-live-chat` })}
               </li>
               <li>
-                Method: <strong>POST</strong>, schedule: <strong>co 30s</strong> (lub 1 min jeśli oszczędzasz quota)
+                {t.rich("cronStep3", { b: (c) => <strong>{c}</strong> })}
               </li>
               <li>
-                Add header: <code className="text-zinc-200">Authorization: Bearer &lt;BOT_SECRET&gt;</code> (ten sam co Discord bot używa)
+                {t.rich("cronStep4", { code: (c) => <code className="text-zinc-200">{c}</code>, header: "Authorization: Bearer <BOT_SECRET>", note: t("cronStep4Note") })}
               </li>
               <li>
-                Save → status zaczyna się polować automatycznie
+                {t("cronStep5")}
               </li>
             </ol>
             <p className="text-zinc-500 text-[10px] italic">
-              YouTube Data API quota: 10,000 jednostek/dzień. Polling co 30s przez 3h streama ≈ 1800 jednostek (sporo headroomu). Polluj tylko podczas live żeby oszczędzać quota.
+              {t("quotaNote")}
             </p>
           </div>
         </>
