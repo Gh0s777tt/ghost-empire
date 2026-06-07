@@ -63,8 +63,13 @@ async function runCheck(opts: {
   triggerType: AchievementTriggerType;
   hintValue?: number;
 }): Promise<CheckResult> {
+  // Scope to the granted user's tenant (works in signin/OAuth-callback context too,
+  // where the request has no tenant subdomain — so we use the user's tenantId, not
+  // currentTenantId()).
+  const u0 = await prisma.user.findUnique({ where: { id: opts.userId }, select: { tenantId: true } });
+  const tid = u0?.tenantId ?? null;
   const candidates = await prisma.achievement.findMany({
-    where: { triggerType: opts.triggerType },
+    where: { triggerType: opts.triggerType, ...(tid ? { tenantId: tid } : {}) },
   });
   if (candidates.length === 0) return { granted: [] };
 
@@ -255,7 +260,8 @@ async function computeCurrentValue(userId: string, triggerType: AchievementTrigg
 /** Manually grant an achievement by code — for admin actions / "manual" trigger achievements. */
 export async function grantManualAchievement(userId: string, code: string): Promise<boolean> {
   try {
-    const achievement = await prisma.achievement.findUnique({ where: { code } });
+    const u = await prisma.user.findUnique({ where: { id: userId }, select: { tenantId: true } });
+    const achievement = await prisma.achievement.findFirst({ where: { code, ...(u?.tenantId ? { tenantId: u.tenantId } : {}) } });
     if (!achievement) return false;
     const existing = await prisma.userAchievement.findFirst({
       where: { userId, achievementId: achievement.id },

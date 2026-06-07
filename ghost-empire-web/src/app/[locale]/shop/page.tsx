@@ -42,7 +42,7 @@ export default async function ShopPage() {
           },
         })
       : Promise.resolve(null),
-    prisma.achievement.findMany({ select: { code: true, name: true } }),
+    prisma.achievement.findMany({ where: tid ? { tenantId: tid } : {}, select: { code: true, name: true } }),
   ]);
 
   let userContext:

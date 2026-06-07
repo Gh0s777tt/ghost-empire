@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { AchievementsClient } from "@/components/achievements/AchievementsClient";
 import { getCachedAchievementsMeta } from "@/lib/cached";
+import { currentTenantId } from "@/lib/tenant";
 
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -20,11 +21,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function AchievementsPage() {
   const session = await auth();
   const userId = session?.user?.id;
+  const tid = await currentTenantId();
 
   // Global list + earned-counts come from cache (public, 120s). User-specific
   // bits (myEarned, me) stay live.
   const [meta, myEarned, me] = await Promise.all([
-    getCachedAchievementsMeta(),
+    getCachedAchievementsMeta(tid),
     userId
       ? prisma.userAchievement.findMany({
           where: { userId },

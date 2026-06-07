@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { grantManualAchievement } from "@/lib/achievements";
+import { currentTenantId } from "@/lib/tenant";
 
 const RARITIES = ["common", "rare", "epic", "legendary"];
 const TRIGGER_TYPES = [
@@ -20,7 +21,9 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const tid = await currentTenantId();
   const achievements = await prisma.achievement.findMany({
+    where: tid ? { tenantId: tid } : {},
     orderBy: [{ createdAt: "desc" }],
     include: { _count: { select: { userAchievements: true } } },
   });
@@ -41,6 +44,7 @@ export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const tid = await currentTenantId();
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -58,6 +62,7 @@ export async function POST(req: Request) {
       try {
         const created = await prisma.achievement.create({
           data: {
+            ...(tid ? { tenantId: tid } : {}),
             code, name,
             description: String(body.description ?? "").slice(0, 500),
             icon: String(body.icon ?? "🏆").slice(0, 16) || "🏆",
@@ -95,7 +100,8 @@ export async function POST(req: Request) {
       if (body.tokenReward !== undefined) data.tokenReward = num(body.tokenReward);
       if (body.rewardNote !== undefined) data.rewardNote = body.rewardNote ? String(body.rewardNote).slice(0, 300) : null;
       if (Object.keys(data).length === 0) return NextResponse.json({ error: "Brak zmian" }, { status: 400 });
-      await prisma.achievement.update({ where: { id }, data });
+      const upd = await prisma.achievement.updateMany({ where: { id, ...(tid ? { tenantId: tid } : {}) }, data });
+      if (upd.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
       await logAdminAction({ adminId: auth.userId, action: "manage_achievements", targetType: "achievement", targetId: id, details: { update: Object.keys(data) }, req });
       return NextResponse.json({ ok: true });
     }
@@ -103,6 +109,9 @@ export async function POST(req: Request) {
     case "delete": {
       const id = String(body.id ?? "");
       if (!id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
+      // Tenant-guard: only this tenant's achievement (+ its grants) may be removed.
+      const ach = await prisma.achievement.findFirst({ where: { id, ...(tid ? { tenantId: tid } : {}) }, select: { id: true } });
+      if (!ach) return NextResponse.json({ ok: true });
       // UserAchievement has no cascade to Achievement — remove grants first.
       await prisma.userAchievement.deleteMany({ where: { achievementId: id } });
       await prisma.achievement.delete({ where: { id } }).catch(() => {});
