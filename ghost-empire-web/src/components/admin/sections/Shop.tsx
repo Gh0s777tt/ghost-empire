@@ -2,6 +2,7 @@
 // src/components/admin/sections/Shop.tsx — lazily-loaded shop manager + item editor.
 import { useState } from "react";
 import { ShoppingBag, Plus, Loader2, Eye, EyeOff, Pencil, X, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { fmt, cn } from "@/lib/utils";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
 import type { ShopItemRow } from "../types";
@@ -18,6 +19,7 @@ export function ShopManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.shop");
   const [editing, setEditing] = useState<ShopItemRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -31,24 +33,24 @@ export function ShopManager({
         body: JSON.stringify({ id: item.id, active: !item.active }),
       });
       if (res.ok) {
-        onToast("ok", item.active ? `"${item.name}" dezaktywowane` : `"${item.name}" aktywowane`);
+        onToast("ok", item.active ? t("deactivated", { name: item.name }) : t("activated", { name: item.name }));
         onSuccess();
       } else {
         const data = await res.json();
-        onToast("err", data.error ?? "Błąd");
+        onToast("err", data.error ?? t("err"));
       }
     } finally { setBusyId(null); }
   }
 
   return (
-    <SectionCard title={`Sklep (${items.length} item${items.length === 1 ? "" : "ów"})`} icon={ShoppingBag}>
+    <SectionCard title={t("title", { count: items.length })} icon={ShoppingBag}>
       <div className="space-y-1.5">
         <button
           onClick={() => setCreating(true)}
           disabled={pending}
           className="w-full px-3 py-2 border-2 border-dashed border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-1.5"
         >
-          <Plus className="w-3 h-3" /> Dodaj nowy item
+          <Plus className="w-3 h-3" /> {t("addItem")}
         </button>
         {items.map((item) => (
           <div
@@ -87,7 +89,7 @@ export function ShopManager({
                 "px-2 py-1.5 border text-[10px] font-bold tracking-widest uppercase flex items-center gap-1",
                 item.active ? "border-green-700 text-green-300 bg-green-950/30 hover:bg-green-950/50" : "border-zinc-700 text-zinc-500 hover:text-zinc-300",
               )}
-              title={item.active ? "Dezaktywuj" : "Aktywuj"}
+              title={item.active ? t("deactivate") : t("activate")}
             >
               {busyId === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : (item.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />)}
               {item.active ? "ON" : "OFF"}
@@ -142,6 +144,7 @@ function ShopItemEditor({
   const [requiresAchievement, setRequiresAchievement] = useState(item?.requiresAchievement ?? "");
   const [imageUrl, setImageUrl] = useState(item?.imageUrl ?? "");
   const [busy, setBusy] = useState(false);
+  const t = useTranslations("admin.shop");
 
   async function save() {
     setBusy(true);
@@ -167,9 +170,9 @@ function ShopItemEditor({
       });
       const data = await res.json();
       if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
+        onToast("err", data.error ?? t("err"));
       } else {
-        onToast("ok", isNew ? "Item utworzony" : "Item zaktualizowany");
+        onToast("ok", isNew ? t("created") : t("updated"));
         onSaved();
       }
     } finally { setBusy(false); }
@@ -183,13 +186,13 @@ function ShopItemEditor({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Edytor itema sklepu"
+        aria-label={t("editorAria")}
         className="bg-zinc-950 border-2 border-zinc-800 max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display text-xl text-white tracking-wider">
-            {isNew ? "NOWY ITEM" : "EDYCJA ITEMA"}
+            {isNew ? t("editorNew") : t("editorEdit")}
           </h3>
           <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400">
             <X className="w-5 h-5" />
@@ -197,22 +200,22 @@ function ShopItemEditor({
         </div>
 
         <div className="space-y-3">
-          <FieldInput label="Nazwa" value={name} onChange={setName} />
-          <FieldTextarea label="Opis" value={description} onChange={setDescription} />
+          <FieldInput label={t("nameLabel")} value={name} onChange={setName} />
+          <FieldTextarea label={t("descLabel")} value={description} onChange={setDescription} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <FieldInput label="Emoji" value={imageEmoji} onChange={setImageEmoji} placeholder="🎁" />
-            <FieldInput label="Cena (GT)" value={price} onChange={setPrice} type="number" />
-            <FieldInput label="Stock (-1=∞)" value={stock} onChange={setStock} type="number" />
-            <FieldInput label="Total stock" value={totalStock} onChange={setTotalStock} type="number" />
+            <FieldInput label={t("emojiLabel")} value={imageEmoji} onChange={setImageEmoji} placeholder="🎁" />
+            <FieldInput label={t("priceLabel")} value={price} onChange={setPrice} type="number" />
+            <FieldInput label={t("stockLabel")} value={stock} onChange={setStock} type="number" />
+            <FieldInput label={t("totalStockLabel")} value={totalStock} onChange={setTotalStock} type="number" />
           </div>
 
-          <FieldInput label="URL grafiki / screena (opcjonalny, http(s)://)" value={imageUrl} onChange={setImageUrl} placeholder="https://..." />
+          <FieldInput label={t("imageUrlLabel")} value={imageUrl} onChange={setImageUrl} placeholder="https://..." />
           {imageUrl.trim() && (
             <img src={imageUrl} alt="" className="w-full max-h-40 object-contain border border-zinc-800 bg-black" />
           )}
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Kategoria</label>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("categoryLabel")}</label>
             <div className="grid grid-cols-5 gap-1">
               {CATEGORIES_SHOP.map((c) => (
                 <button
@@ -228,34 +231,34 @@ function ShopItemEditor({
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Wymagany sub tier (opcjonalny)</label>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("subTierLabel")}</label>
             <div className="grid grid-cols-7 gap-1">
-              {TIERS.map((t) => (
+              {TIERS.map((tier) => (
                 <button
-                  key={t || "none"}
-                  onClick={() => setRequiresSubTier(t)}
+                  key={tier || "none"}
+                  onClick={() => setRequiresSubTier(tier)}
                   className={cn(
                     "px-1 py-1.5 border text-[10px] font-bold tracking-widest uppercase",
-                    requiresSubTier === t ? "border-purple-500 bg-purple-600/15 text-purple-300" : "border-zinc-800 bg-zinc-950 text-zinc-500",
+                    requiresSubTier === tier ? "border-purple-500 bg-purple-600/15 text-purple-300" : "border-zinc-800 bg-zinc-950 text-zinc-500",
                   )}
-                >{t || "—"}</button>
+                >{tier || "—"}</button>
               ))}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <FieldInput label="Wymagany min level (opcjonalny)" value={requiresMinLevel} onChange={setRequiresMinLevel} type="number" />
-            <FieldInput label="Wymagane mc subskrypcji (opcjonalny)" value={requiresMinMonths} onChange={setRequiresMinMonths} type="number" />
+            <FieldInput label={t("minLevelLabel")} value={requiresMinLevel} onChange={setRequiresMinLevel} type="number" />
+            <FieldInput label={t("minMonthsLabel")} value={requiresMinMonths} onChange={setRequiresMinMonths} type="number" />
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Odblokowane przez osiągnięcie (opcjonalne)</label>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("achievementGateLabel")}</label>
             <select
               value={requiresAchievement}
               onChange={(e) => setRequiresAchievement(e.target.value)}
               className="w-full bg-black border border-zinc-800 px-3 py-2 text-sm text-white focus:border-red-500 outline-hidden"
             >
-              <option value="">— brak (dostępne dla wszystkich) —</option>
+              <option value="">{t("noneOption")}</option>
               {achievements.map((a) => (
                 <option key={a.code} value={a.code}>{a.name}</option>
               ))}
@@ -275,11 +278,11 @@ function ShopItemEditor({
 
           <div className="flex gap-2 pt-3 border-t border-zinc-800">
             <button onClick={onClose} disabled={busy} className="flex-1 px-4 py-2.5 border border-zinc-700 text-zinc-400 text-xs font-bold tracking-widest uppercase">
-              Anuluj
+              {t("cancel")}
             </button>
             <button onClick={save} disabled={busy || !name || !description} className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase disabled:opacity-50 flex items-center justify-center gap-2">
               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              {isNew ? "Utwórz" : "Zapisz"}
+              {isNew ? t("createBtn") : t("saveBtn")}
             </button>
           </div>
         </div>
