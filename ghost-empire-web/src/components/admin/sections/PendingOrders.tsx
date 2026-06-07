@@ -2,7 +2,7 @@
 // src/components/admin/sections/PendingOrders.tsx — lazily-loaded shop order fulfilment list.
 import { useState } from "react";
 import { Package, Loader2, Check } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { formatDate } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import type { PendingOrder } from "../types";
@@ -16,6 +16,7 @@ export function PendingOrdersList({
   pending: boolean;
 }) {
   const t = useTranslations("admin.pendingOrders");
+  const locale = useLocale();
   const [busyId, setBusyId] = useState<string | null>(null);
 
   async function act(id: string, action: "deliver" | "refund") {
@@ -57,7 +58,7 @@ export function PendingOrdersList({
                   {o.shopItem?.name ?? o.reason}
                 </div>
                 <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                  @{o.user.username ?? "?"} · {Math.abs(o.amount)} GT · {formatDate(o.createdAt)}
+                  @{o.user.username ?? "?"} · {Math.abs(o.amount)} GT · {formatDate(o.createdAt, locale)}
                   {o.user.discordUsername && ` · 💬 ${o.user.discordUsername}`}
                 </div>
                 {o.user.discordId && (

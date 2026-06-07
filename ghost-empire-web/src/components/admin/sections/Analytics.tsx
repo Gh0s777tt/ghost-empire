@@ -4,7 +4,7 @@
 // Extracted from the AdminClient monolith; rendered via next/dynamic.
 import { useState, useEffect } from "react";
 import { Radio, Loader2, TrendingUp } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -23,6 +23,7 @@ function fmtBroadcastDuration(sec: number): string {
 // Measures the STREAMER's broadcast time (not per-viewer — EventSub can't do that).
 function StreamSessionsCard() {
   const t = useTranslations("admin.analytics");
+  const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [streams, setStreams] = useState<{
     live: { startedAt: string } | null;
@@ -99,7 +100,7 @@ function StreamSessionsCard() {
             {streams.recent.map((s) => (
               <div key={s.id} className="flex items-center gap-3 border border-zinc-800 bg-black/30 px-3 py-2">
                 <Radio className={cn("w-3.5 h-3.5 shrink-0", s.endedAt === null ? "text-green-500" : "text-zinc-600")} />
-                <div className="flex-1 min-w-0 text-sm text-white truncate">{formatDate(s.startedAt)}</div>
+                <div className="flex-1 min-w-0 text-sm text-white truncate">{formatDate(s.startedAt, locale)}</div>
                 <div className="text-[11px] font-mono text-zinc-400 shrink-0">
                   {s.endedAt === null
                     ? <span className="text-green-400">{t("ongoing")}</span>
@@ -116,6 +117,7 @@ function StreamSessionsCard() {
 
 function ChatHeatmap() {
   const t = useTranslations("admin.analytics");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const [loading, setLoading] = useState(true);
   const [grid, setGrid] = useState<number[][]>([]);
   const [peak, setPeak] = useState(0);
@@ -172,7 +174,7 @@ function ChatHeatmap() {
             ))}
           </div>
           <div className="text-[10px] text-zinc-600 mt-2">
-            {t("heatmapFooter", { total: total.toLocaleString("pl-PL"), peak })}
+            {t("heatmapFooter", { total: total.toLocaleString(nf), peak })}
           </div>
         </div>
       )}

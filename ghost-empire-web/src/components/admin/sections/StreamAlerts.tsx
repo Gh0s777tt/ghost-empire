@@ -3,7 +3,7 @@
 // manager: live preview, overlay token/URL, per-type config (AlertTypeList) and settings.
 import { useState, useEffect } from "react";
 import { Zap, Eye, EyeOff, Copy, Loader2, Check } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { AlertCard } from "@/components/AlertCard";
@@ -176,6 +176,7 @@ export function StreamAlertsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.streamAlerts");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const ALERT_TYPE_LABEL: Record<string, string> = {
     shop_purchase: t("alertType.shop_purchase"), event_win: t("alertType.event_win"), drop_claim_bonus: t("alertType.drop_claim_bonus"),
     twitch_sub: t("alertType.twitch_sub"), twitch_gift_sub: t("alertType.twitch_gift_sub"), twitch_cheer: t("alertType.twitch_cheer"),
@@ -530,7 +531,7 @@ export function StreamAlertsManager({
                 </span>
                 {a.amount != null && (
                   <span className="text-red-400 shrink-0">
-                    {a.amount.toLocaleString("pl-PL")}{a.amountLabel ? ` ${a.amountLabel}` : ""}
+                    {a.amount.toLocaleString(nf)}{a.amountLabel ? ` ${a.amountLabel}` : ""}
                   </span>
                 )}
                 <span
@@ -538,12 +539,12 @@ export function StreamAlertsManager({
                     "shrink-0 text-[9px] uppercase tracking-widest",
                     a.shownAt ? "text-zinc-600" : "text-orange-400",
                   )}
-                  title={a.shownAt ? t("shownAt", { time: new Date(a.shownAt).toLocaleTimeString("pl-PL") }) : t("notShown")}
+                  title={a.shownAt ? t("shownAt", { time: new Date(a.shownAt).toLocaleTimeString(nf) }) : t("notShown")}
                 >
                   {a.shownAt ? "shown" : "pending"}
                 </span>
                 <span className="text-zinc-700 shrink-0">
-                  {new Date(a.createdAt).toLocaleTimeString("pl-PL")}
+                  {new Date(a.createdAt).toLocaleTimeString(nf)}
                 </span>
               </div>
             ))}

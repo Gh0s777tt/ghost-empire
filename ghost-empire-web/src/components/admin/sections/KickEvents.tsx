@@ -2,7 +2,7 @@
 // src/components/admin/sections/KickEvents.tsx — lazily-loaded Kick webhook events manager.
 import { useState, useEffect, useCallback } from "react";
 import { Radio, Loader2, Zap, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 
 type KickData = {
@@ -34,6 +34,7 @@ export function KickEventsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.kickEvents");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const KICK_EVENT_LABEL = t.raw("eventLabel") as Record<string, string>;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<KickData | null>(null);
@@ -114,7 +115,7 @@ export function KickEventsManager({
                 ● {t("streamerAuthorized")}: @{data.broadcasterLogin}
               </div>
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate">
-                Broadcaster ID: {data.broadcasterId} · {t("since")} {data.connectedAt && new Date(data.connectedAt).toLocaleString("pl-PL", { dateStyle: "short" })}
+                Broadcaster ID: {data.broadcasterId} · {t("since")} {data.connectedAt && new Date(data.connectedAt).toLocaleString(nf, { dateStyle: "short" })}
               </div>
             </div>
             <button
@@ -166,7 +167,7 @@ export function KickEventsManager({
                     {KICK_EVENT_LABEL[s.type] ?? s.type}
                   </span>
                   <div className="flex-1 min-w-0 text-[10px] font-mono text-zinc-500 truncate">
-                    {s.lastSeenAt ? `Last: ${new Date(s.lastSeenAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}` : t("noEvents")}
+                    {s.lastSeenAt ? `Last: ${new Date(s.lastSeenAt).toLocaleString(nf, { dateStyle: "short", timeStyle: "short" })}` : t("noEvents")}
                   </div>
                   <button
                     onClick={() => deleteSub(s.id, s.type)}
@@ -193,12 +194,12 @@ export function KickEventsManager({
                       {KICK_EVENT_LABEL[e.type] ?? e.type}
                     </span>
                     {e.tokensGranted ? (
-                      <span className="text-green-400">+{e.tokensGranted.toLocaleString("pl-PL")} GT</span>
+                      <span className="text-green-400">+{e.tokensGranted.toLocaleString(nf)} GT</span>
                     ) : (
                       <span className="text-zinc-600">(unmatched / no reward)</span>
                     )}
                     <span className="text-zinc-700 ml-auto">
-                      {new Date(e.receivedAt).toLocaleTimeString("pl-PL")}
+                      {new Date(e.receivedAt).toLocaleTimeString(nf)}
                     </span>
                   </div>
                 ))}

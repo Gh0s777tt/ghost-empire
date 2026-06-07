@@ -3,7 +3,7 @@
 // Manage outgoing webhooks: POST stream events to Discord / n8n / Zapier / custom URLs.
 import { useCallback, useEffect, useState } from "react";
 import { Webhook, Loader2, Plus, Trash2, Send, Power } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 
 type Hook = {
@@ -30,6 +30,7 @@ export function WebhooksOutManager({
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [allEvents, setAllEvents] = useState(false);
   const t = useTranslations("admin.webhooksOut");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const EVENT_LABEL = t.raw("eventLabel") as Record<string, string>;
 
   const load = useCallback(async () => {
@@ -127,7 +128,7 @@ export function WebhooksOutManager({
             </div>
             {(h.lastFiredAt || h.failCount > 0) && (
               <div className="text-[10px] text-zinc-600 mt-1.5">
-                {h.lastFiredAt && <>{t("lastFired", { date: new Date(h.lastFiredAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" }), status: String(h.lastStatus ?? "—") })}</>}
+                {h.lastFiredAt && <>{t("lastFired", { date: new Date(h.lastFiredAt).toLocaleString(nf, { dateStyle: "short", timeStyle: "short" }), status: String(h.lastStatus ?? "—") })}</>}
                 {h.failCount > 0 && <span className="text-orange-400"> {t("errorsCount", { count: h.failCount })}</span>}
               </div>
             )}

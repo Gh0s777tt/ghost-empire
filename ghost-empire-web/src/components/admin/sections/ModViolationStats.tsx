@@ -4,7 +4,7 @@
 // Violations are logged by the bot after it enforces an automod action.
 import { useEffect, useState } from "react";
 import { BarChart3, RefreshCw } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 type Stats = {
   byType: Array<{ violation: string; count: number }>;
@@ -18,6 +18,7 @@ const PLATFORM_DOT: Record<string, string> = { twitch: "#9146FF", kick: "#53FC18
 
 export function ModViolationStats() {
   const t = useTranslations("admin.modViolations");
+  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
   const VIOLATION_PL = t.raw("violation") as Record<string, string>;
   const ACTION_PL = t.raw("action") as Record<string, string>;
   const [stats, setStats] = useState<Stats | null>(null);
@@ -54,11 +55,11 @@ export function ModViolationStats() {
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="bg-black/40 border border-zinc-900 px-3 py-2">
           <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">{t("last24h")}</div>
-          <div className="text-xl font-bold text-white">{stats.total24h.toLocaleString("pl-PL")}</div>
+          <div className="text-xl font-bold text-white">{stats.total24h.toLocaleString(nf)}</div>
         </div>
         <div className="bg-black/40 border border-zinc-900 px-3 py-2">
           <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">{t("last7d")}</div>
-          <div className="text-xl font-bold text-white">{stats.total7d.toLocaleString("pl-PL")}</div>
+          <div className="text-xl font-bold text-white">{stats.total7d.toLocaleString(nf)}</div>
         </div>
       </div>
 

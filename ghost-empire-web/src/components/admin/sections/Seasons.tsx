@@ -2,7 +2,7 @@
 // src/components/admin/sections/Seasons.tsx — lazily-loaded battle pass / seasons manager.
 import { useState, useEffect, useCallback } from "react";
 import { Ticket, Loader2, RefreshCw, Trash2, Plus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { fmt } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -28,6 +28,8 @@ export function SeasonsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.seasons");
+  const locale = useLocale();
+  const nf = locale === "en" ? "en-US" : "pl-PL";
   const [loading, setLoading] = useState(true);
   const [seasons, setSeasons] = useState<AdminSeason[]>([]);
   const [rewardTypes, setRewardTypes] = useState<string[]>([]);
@@ -138,7 +140,7 @@ export function SeasonsManager({
                   <span className="text-white font-bold">{activeSeason.name}</span>
                 </div>
                 <div className="text-[10px] font-mono text-zinc-500">
-                  {t("seasonMeta", { players: String(activeSeason.participants), tiers: String(activeSeason.totalTiers), xp: fmt(activeSeason.xpPerTier), date: new Date(activeSeason.endsAt).toLocaleDateString("pl-PL") })}
+                  {t("seasonMeta", { players: String(activeSeason.participants), tiers: String(activeSeason.totalTiers), xp: fmt(activeSeason.xpPerTier, locale), date: new Date(activeSeason.endsAt).toLocaleDateString(nf) })}
                 </div>
               </div>
 
