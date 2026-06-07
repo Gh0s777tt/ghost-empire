@@ -4,12 +4,14 @@
 // section that needs setting up. Data from /api/admin/setup-status.
 import { useState, useEffect } from "react";
 import { CheckCircle2, AlertCircle, ArrowRight, ListChecks } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "./shared";
 
 type Item = { key: string; label: string; ok: boolean; section: string; hint: string; optional?: boolean };
 
 export function SetupStatusCard({ onJump }: { onJump: (id: string) => void }) {
+  const t = useTranslations("admin.setupStatus");
   const [items, setItems] = useState<Item[] | null>(null);
 
   useEffect(() => {
@@ -29,11 +31,11 @@ export function SetupStatusCard({ onJump }: { onJump: (id: string) => void }) {
   const allReqOk = reqDone === required.length;
 
   return (
-    <SectionCard title="Status konfiguracji" icon={ListChecks}>
+    <SectionCard title={t("title")} icon={ListChecks}>
       <div className="flex items-center justify-between mb-3 text-xs">
-        <span className="text-zinc-400">Gotowe: <strong className="text-white">{done}/{items.length}</strong></span>
+        <span className="text-zinc-400">{t.rich("done", { b: (c) => <strong className="text-white">{c}</strong>, done, total: items.length })}</span>
         <span className={cn(allReqOk ? "text-green-400" : "text-orange-400")}>
-          {allReqOk ? "✓ Wszystko wymagane gotowe" : `${reqDone}/${required.length} wymaganych`}
+          {allReqOk ? t("allReqOk") : t("reqProgress", { done: reqDone, total: required.length })}
         </span>
       </div>
       <div className="space-y-1.5">
@@ -45,7 +47,7 @@ export function SetupStatusCard({ onJump }: { onJump: (id: string) => void }) {
             <div className="flex-1 min-w-0">
               <div className={cn("text-sm", i.ok ? "text-zinc-400" : "text-white")}>
                 {i.label}
-                {i.optional && !i.ok && <span className="text-[9px] uppercase tracking-widest text-zinc-600 ml-1.5">opcjonalne</span>}
+                {i.optional && !i.ok && <span className="text-[9px] uppercase tracking-widest text-zinc-600 ml-1.5">{t("optional")}</span>}
               </div>
               {!i.ok && <div className="text-[10px] text-zinc-500">{i.hint}</div>}
             </div>
@@ -54,7 +56,7 @@ export function SetupStatusCard({ onJump }: { onJump: (id: string) => void }) {
                 onClick={() => onJump(i.section)}
                 className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-500 px-2 py-1 shrink-0 flex items-center gap-1 transition-colors"
               >
-                Konfiguruj <ArrowRight className="w-3 h-3" />
+                {t("configure")} <ArrowRight className="w-3 h-3" />
               </button>
             )}
           </div>

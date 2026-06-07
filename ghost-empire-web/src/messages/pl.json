@@ -1,5 +1,23 @@
 {
   "admin": {
+    "commandPalette": {
+      "ariaLabel": "Szybkie wyszukiwanie sekcji",
+      "placeholder": "Skocz do sekcji…",
+      "noResults": "Brak wyników dla „{q}”"
+    },
+    "overlayPreview": {
+      "previewLabel": "Podgląd (tak wygląda w OBS)",
+      "copyTitle": "Kopiuj URL do OBS",
+      "loadingUrl": "Ładowanie URL overlayu…"
+    },
+    "setupStatus": {
+      "title": "Status konfiguracji",
+      "done": "Gotowe: <b>{done}/{total}</b>",
+      "allReqOk": "✓ Wszystko wymagane gotowe",
+      "reqProgress": "{done}/{total} wymaganych",
+      "optional": "opcjonalne",
+      "configure": "Konfiguruj"
+    },
     "schedule": {
       "days": [
         "Niedziela",

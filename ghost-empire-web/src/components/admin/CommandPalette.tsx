@@ -5,6 +5,7 @@
 // button can open it (e.g. the nav search button) without prop-drilling.
 import { useState, useEffect, useRef } from "react";
 import { Search, CornerDownLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -20,6 +21,7 @@ export function CommandPalette<T extends string>({
   sections: Array<{ id: T; label: string; icon: LucideIcon; group: string }>;
   onSelect: (id: T) => void;
 }) {
+  const t = useTranslations("admin.commandPalette");
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
@@ -62,7 +64,7 @@ export function CommandPalette<T extends string>({
       onClick={() => setOpen(false)}
       role="dialog"
       aria-modal="true"
-      aria-label="Szybkie wyszukiwanie sekcji"
+      aria-label={t("ariaLabel")}
     >
       <div className="w-full max-w-lg border border-zinc-700 bg-zinc-950 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 border-b border-zinc-800 px-3 py-2.5">
@@ -76,14 +78,14 @@ export function CommandPalette<T extends string>({
               else if (e.key === "ArrowUp") { e.preventDefault(); setIdx((i) => Math.max(i - 1, 0)); }
               else if (e.key === "Enter") { e.preventDefault(); const s = filtered[idx]; if (s) choose(s.id); }
             }}
-            placeholder="Skocz do sekcji…"
+            placeholder={t("placeholder")}
             className="flex-1 bg-transparent text-sm text-white outline-hidden placeholder:text-zinc-600"
           />
           <kbd className="text-[9px] font-mono text-zinc-600 border border-zinc-800 px-1.5 py-0.5">ESC</kbd>
         </div>
         <div className="max-h-72 overflow-y-auto py-1">
           {filtered.length === 0 ? (
-            <div className="px-3 py-5 text-xs text-zinc-600 text-center">Brak wyników dla „{q}"</div>
+            <div className="px-3 py-5 text-xs text-zinc-600 text-center">{t("noResults", { q })}</div>
           ) : (
             filtered.map((s, i) => {
               const Icon = s.icon;
