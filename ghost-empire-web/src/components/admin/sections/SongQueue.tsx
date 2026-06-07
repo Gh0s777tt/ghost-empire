@@ -2,6 +2,7 @@
 // src/components/admin/sections/SongQueue.tsx — lazily-loaded song-request queue.
 import { useState, useEffect, useCallback } from "react";
 import { Music, Loader2, Play, Check, SkipForward, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -22,6 +23,7 @@ export function SongQueueManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.songQueue");
   const [loading, setLoading] = useState(true);
   const [queue, setQueue] = useState<SongRow[]>([]);
   const [recent, setRecent] = useState<SongRow[]>([]);
@@ -43,8 +45,8 @@ export function SongQueueManager({
   // Live-ish queue: refresh every 10s while the section is open.
   useEffect(() => {
     void load();
-    const t = setInterval(() => void load(), 10_000);
-    return () => clearInterval(t);
+    const iv = setInterval(() => void load(), 10_000);
+    return () => clearInterval(iv);
   }, [load]);
 
   async function call(action: string, id?: string) {
@@ -55,7 +57,7 @@ export function SongQueueManager({
     });
     const data = await res.json();
     if (!res.ok) {
-      onToast("err", data.error ?? "Błąd");
+      onToast("err", data.error ?? t("err"));
       return false;
     }
     return true;
@@ -68,10 +70,10 @@ export function SongQueueManager({
   }
 
   async function clearQueue() {
-    if (!confirm("Wyczyścić całą kolejkę?")) return;
+    if (!confirm(t("clearConfirm"))) return;
     setBusy("clear");
     if (await call("clear")) {
-      onToast("ok", "Kolejka wyczyszczona");
+      onToast("ok", t("queueCleared"));
       await load();
       onSuccess();
     }
@@ -97,19 +99,18 @@ export function SongQueueManager({
   }
 
   return (
-    <SectionCard title="Song requests (kolejka)" icon={Music}>
+    <SectionCard title={t("title")} icon={Music}>
       <p className="text-zinc-500 text-xs mb-3">
-        Widzowie dodają utwory komendą <code className="text-zinc-300">!sr &lt;link lub tytuł&gt;</code> na dowolnej platformie.
-        Tutaj odtwarzasz / pomijasz / czyścisz kolejkę (odświeża się co 10 s).
+        {t.rich("intro", { code: (c) => <code className="text-zinc-300">{c}</code>, cmd: t("cmd") })}
       </p>
 
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : (
         <>
           {queue.length === 0 ? (
             <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20 mb-3">
-              Kolejka pusta.
+              {t("queueEmpty")}
             </div>
           ) : (
             <div className="space-y-2 mb-3">
@@ -131,7 +132,7 @@ export function SongQueueManager({
                         <div className="flex flex-col min-w-0">
                           {renderQuery(s.query, s.title)}
                           <span className="text-[10px] text-zinc-500">
-                            od <strong className="text-zinc-400">{s.requestedBy}</strong>
+                            {t("requestedBy")} <strong className="text-zinc-400">{s.requestedBy}</strong>
                             <span className="ml-1 font-mono uppercase" style={{ color: platformColor[s.platform] ?? "#888" }}>
                               {s.platform}
                             </span>
@@ -144,7 +145,7 @@ export function SongQueueManager({
                             onClick={() => act("play", s.id)}
                             disabled={busy === s.id || pending}
                             className="text-green-400 hover:text-green-300 border border-zinc-800 hover:border-green-700 w-6 h-6 flex items-center justify-center"
-                            title="Odtwarzaj"
+                            title={t("playTitle")}
                           >
                             <Play className="w-3 h-3" />
                           </button>
@@ -154,7 +155,7 @@ export function SongQueueManager({
                             onClick={() => act("played", s.id)}
                             disabled={busy === s.id || pending}
                             className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-2 h-6 text-[9px] font-mono uppercase"
-                            title="Oznacz jako odtworzone"
+                            title={t("markPlayedTitle")}
                           >
                             <Check className="w-3 h-3" />
                           </button>
@@ -163,7 +164,7 @@ export function SongQueueManager({
                           onClick={() => act("skip", s.id)}
                           disabled={busy === s.id || pending}
                           className="text-zinc-500 hover:text-orange-400 border border-zinc-800 hover:border-orange-700 w-6 h-6 flex items-center justify-center"
-                          title="Pomiń"
+                          title={t("skipTitle")}
                         >
                           <SkipForward className="w-3 h-3" />
                         </button>
@@ -171,7 +172,7 @@ export function SongQueueManager({
                           onClick={() => act("delete", s.id)}
                           disabled={busy === s.id || pending}
                           className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"
-                          title="Usuń"
+                          title={t("deleteTitle")}
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -189,17 +190,17 @@ export function SongQueueManager({
               disabled={busy === "clear" || pending}
               className="border border-zinc-800 hover:border-red-700 text-zinc-400 hover:text-red-300 px-3 py-1.5 text-xs font-mono uppercase tracking-widest mb-4 disabled:opacity-50"
             >
-              Wyczyść kolejkę
+              {t("clearBtn")}
             </button>
           )}
 
           {recent.length > 0 && (
             <div className="border-t border-zinc-900 pt-3">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mb-2">Ostatnie</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mb-2">{t("recentTitle")}</div>
               <div className="space-y-1">
                 {recent.map((s) => (
                   <div key={s.id} className="flex items-center gap-2 text-xs text-zinc-600">
-                    <span className="font-mono uppercase text-[9px] w-12 shrink-0">{s.status === "played" ? "✓ grane" : "pominięte"}</span>
+                    <span className="font-mono uppercase text-[9px] w-12 shrink-0">{s.status === "played" ? t("statusPlayed") : t("statusSkipped")}</span>
                     <span className="truncate">{s.query}</span>
                     <span className="text-zinc-700 shrink-0">— {s.requestedBy}</span>
                   </div>

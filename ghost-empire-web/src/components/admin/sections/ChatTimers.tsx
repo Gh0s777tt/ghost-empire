@@ -2,6 +2,7 @@
 // src/components/admin/sections/ChatTimers.tsx — lazily-loaded cyclic chat timers.
 import { useState, useEffect, useCallback } from "react";
 import { Clock, Loader2, Eye, EyeOff, Pencil, Trash2, Check, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -19,6 +20,7 @@ export function ChatTimersManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.chatTimers");
   const [loading, setLoading] = useState(true);
   const [timers, setTimers] = useState<ChatTimerRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function ChatTimersManager({
     });
     const data = await res.json();
     if (!res.ok) {
-      onToast("err", data.error ?? "Błąd");
+      onToast("err", data.error ?? t("err"));
       return false;
     }
     return true;
@@ -60,17 +62,17 @@ export function ChatTimersManager({
     setFMinutes("15");
   }
 
-  function startEdit(t: ChatTimerRow) {
-    setEditingId(t.id);
-    setFMessage(t.message);
-    setFMinutes(String(Math.max(1, Math.round(t.intervalSeconds / 60))));
+  function startEdit(tm: ChatTimerRow) {
+    setEditingId(tm.id);
+    setFMessage(tm.message);
+    setFMinutes(String(Math.max(1, Math.round(tm.intervalSeconds / 60))));
   }
 
   async function submit() {
     const message = fMessage.trim();
     const minutes = Math.max(1, parseInt(fMinutes, 10) || 0);
     if (!message) {
-      onToast("err", "Wpisz wiadomość");
+      onToast("err", t("messageRequired"));
       return;
     }
     setBusy("form");
@@ -79,7 +81,7 @@ export function ChatTimersManager({
       ? await call("update", { id: editingId, message, intervalSeconds })
       : await call("create", { message, intervalSeconds });
     if (ok) {
-      onToast("ok", editingId ? "Zapisano" : "Timer dodany");
+      onToast("ok", editingId ? t("saved") : t("created"));
       resetForm();
       await load();
       onSuccess();
@@ -87,76 +89,75 @@ export function ChatTimersManager({
     setBusy(null);
   }
 
-  async function toggleEnabled(t: ChatTimerRow) {
-    setBusy(t.id);
-    if (await call("update", { id: t.id, enabled: !t.enabled })) await load();
+  async function toggleEnabled(tm: ChatTimerRow) {
+    setBusy(tm.id);
+    if (await call("update", { id: tm.id, enabled: !tm.enabled })) await load();
     setBusy(null);
   }
 
-  async function deleteTimer(t: ChatTimerRow) {
-    if (!confirm("Usunąć ten timer?")) return;
-    setBusy(t.id);
-    if (await call("delete", { id: t.id })) {
-      onToast("ok", "Usunięto");
-      if (editingId === t.id) resetForm();
+  async function deleteTimer(tm: ChatTimerRow) {
+    if (!confirm(t("deleteConfirm"))) return;
+    setBusy(tm.id);
+    if (await call("delete", { id: tm.id })) {
+      onToast("ok", t("deleted"));
+      if (editingId === tm.id) resetForm();
       await load();
     }
     setBusy(null);
   }
 
   return (
-    <SectionCard title="Timery (cykliczne wiadomości)" icon={Clock}>
+    <SectionCard title={t("title")} icon={Clock}>
       <p className="text-zinc-500 text-xs mb-3">
-        Bot wrzuca te wiadomości co X minut na <strong>Twitch + Kick + YouTube</strong> —
-        tylko gdy czat jest aktywny (czyli podczas streamu).
+        {t.rich("intro", { b: (c) => <strong>{c}</strong> })}
       </p>
 
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : (
         <div className="space-y-2 mb-4">
           {timers.length === 0 ? (
             <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-              Brak timerów. Dodaj pierwszy poniżej.
+              {t("empty")}
             </div>
           ) : (
-            timers.map((t) => (
+            timers.map((tm) => (
               <div
-                key={t.id}
+                key={tm.id}
                 className={cn(
                   "border bg-black/30 p-3",
-                  t.enabled ? "border-zinc-800" : "border-zinc-900 opacity-60",
+                  tm.enabled ? "border-zinc-800" : "border-zinc-900 opacity-60",
                 )}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <span className="text-[10px] font-mono px-1.5 py-0.5 border border-zinc-700 text-zinc-400 shrink-0">
-                      co {Math.max(1, Math.round(t.intervalSeconds / 60))} min
+                      {t("everyMin", { min: Math.max(1, Math.round(tm.intervalSeconds / 60)) })}
                     </span>
-                    <span className="text-sm text-zinc-300 truncate">{t.message}</span>
+                    <span className="text-sm text-zinc-300 truncate">{tm.message}</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={() => toggleEnabled(t)}
-                      disabled={busy === t.id || pending}
+                      onClick={() => toggleEnabled(tm)}
+                      disabled={busy === tm.id || pending}
                       className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center"
-                      title={t.enabled ? "Wyłącz" : "Włącz"}
+                      title={tm.enabled ? t("disable") : t("enable")}
                     >
-                      {t.enabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                      {tm.enabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                     </button>
                     <button
-                      onClick={() => startEdit(t)}
-                      disabled={busy === t.id || pending}
+                      onClick={() => startEdit(tm)}
+                      disabled={busy === tm.id || pending}
                       className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center"
-                      title="Edytuj"
+                      title={t("editTitle")}
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
                     <button
-                      onClick={() => deleteTimer(t)}
-                      disabled={busy === t.id || pending}
+                      onClick={() => deleteTimer(tm)}
+                      disabled={busy === tm.id || pending}
                       className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"
-                      title="Usuń"
+                      title={t("deleteTitle")}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -171,13 +172,13 @@ export function ChatTimersManager({
       {/* Create / edit form */}
       <div className="border border-zinc-800 bg-black/30 p-3">
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-          {editingId ? "Edytuj timer" : "Dodaj timer"}
+          {editingId ? t("editForm") : t("addForm")}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[1fr_140px] gap-2 mb-2">
           <input
             value={fMessage}
             onChange={(e) => setFMessage(e.target.value)}
-            placeholder="Wiadomość (np. Wbijaj na portal po GT!)"
+            placeholder={t("messagePh")}
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
           <div className="flex items-center gap-1">
@@ -198,7 +199,7 @@ export function ChatTimersManager({
             className="bg-red-900/40 border border-red-800 hover:border-red-600 text-red-200 px-3 py-1.5 text-xs font-mono uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
           >
             {busy === "form" ? <Loader2 className="w-3 h-3 animate-spin" /> : editingId ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-            {editingId ? "Zapisz" : "Dodaj"}
+            {editingId ? t("saveBtn") : t("addBtn")}
           </button>
           {editingId && (
             <button
@@ -206,7 +207,7 @@ export function ChatTimersManager({
               disabled={busy === "form"}
               className="border border-zinc-800 hover:border-zinc-600 text-zinc-400 px-3 py-1.5 text-xs font-mono uppercase tracking-widest"
             >
-              Anuluj
+              {t("cancel")}
             </button>
           )}
         </div>

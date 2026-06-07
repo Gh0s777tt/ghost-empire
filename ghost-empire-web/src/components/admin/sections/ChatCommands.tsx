@@ -3,6 +3,7 @@
 // (incl. conditional gating: requiresLive / activeFromMinute).
 import { useState, useEffect, useCallback } from "react";
 import { MessageSquare, Loader2, Eye, EyeOff, Pencil, Trash2, Check, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -23,6 +24,7 @@ export function ChatCommandsManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.chatCommands");
   const [loading, setLoading] = useState(true);
   const [commands, setCommands] = useState<ChatCommandRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export function ChatCommandsManager({
     });
     const data = await res.json();
     if (!res.ok) {
-      onToast("err", data.error ?? "Błąd");
+      onToast("err", data.error ?? t("err"));
       return false;
     }
     return true;
@@ -86,7 +88,7 @@ export function ChatCommandsManager({
     const cooldownSeconds = Math.max(0, parseInt(fCooldown, 10) || 0);
     const activeFromMinute = Math.max(0, parseInt(fActiveFrom, 10) || 0);
     if (!trigger || !response) {
-      onToast("err", "Wpisz trigger i odpowiedź");
+      onToast("err", t("fieldsRequired"));
       return;
     }
     setBusy("form");
@@ -95,7 +97,7 @@ export function ChatCommandsManager({
       ? await call("update", { id: editingId, ...fields })
       : await call("create", fields);
     if (ok) {
-      onToast("ok", editingId ? "Zapisano" : "Komenda dodana");
+      onToast("ok", editingId ? t("saved") : t("created"));
       resetForm();
       await load();
       onSuccess();
@@ -110,10 +112,10 @@ export function ChatCommandsManager({
   }
 
   async function deleteCmd(c: ChatCommandRow) {
-    if (!confirm(`Usunąć komendę ${c.trigger}?`)) return;
+    if (!confirm(t("deleteConfirm", { trigger: c.trigger }))) return;
     setBusy(c.id);
     if (await call("delete", { id: c.id })) {
-      onToast("ok", "Usunięto");
+      onToast("ok", t("deleted"));
       if (editingId === c.id) resetForm();
       await load();
     }
@@ -121,19 +123,18 @@ export function ChatCommandsManager({
   }
 
   return (
-    <SectionCard title="Komendy czatu" icon={MessageSquare}>
+    <SectionCard title={t("title")} icon={MessageSquare}>
       <p className="text-zinc-500 text-xs mb-3">
-        Działają na <strong>Twitch + Kick + YouTube</strong>. Bot pobiera włączone komendy co ~2 min.
-        Trigger to pierwsze słowo wiadomości, np. <code className="text-zinc-300">!portal</code>.
+        {t.rich("intro", { b: (c) => <strong>{c}</strong>, code: (c) => <code className="text-zinc-300">{c}</code> })}
       </p>
 
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : (
         <div className="space-y-2 mb-4">
           {commands.length === 0 ? (
             <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-              Brak komend. Dodaj pierwszą poniżej.
+              {t("empty")}
             </div>
           ) : (
             commands.map((c) => (
@@ -150,24 +151,24 @@ export function ChatCommandsManager({
                       {c.trigger}
                     </span>
                     {c.requiresLive && (
-                      <span className="text-[9px] font-mono px-1 py-0.5 border border-green-800 bg-green-950/30 text-green-400 shrink-0" title="Działa tylko, gdy stream jest na żywo">
+                      <span className="text-[9px] font-mono px-1 py-0.5 border border-green-800 bg-green-950/30 text-green-400 shrink-0" title={t("liveTitle")}>
                         LIVE
                       </span>
                     )}
                     {c.activeFromMinute > 0 && (
-                      <span className="text-[9px] font-mono px-1 py-0.5 border border-zinc-700 text-zinc-400 shrink-0" title={`Aktywna dopiero po ${c.activeFromMinute} min od startu streamu`}>
+                      <span className="text-[9px] font-mono px-1 py-0.5 border border-zinc-700 text-zinc-400 shrink-0" title={t("activeFromTitle", { min: c.activeFromMinute })}>
                         ≥{c.activeFromMinute}min
                       </span>
                     )}
                     <span className="text-sm text-zinc-300 truncate">{c.response}</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-[10px] font-mono text-zinc-600 mr-1" title="Cooldown">{c.cooldownSeconds}s</span>
+                    <span className="text-[10px] font-mono text-zinc-600 mr-1" title={t("cooldownTitle")}>{c.cooldownSeconds}s</span>
                     <button
                       onClick={() => toggleEnabled(c)}
                       disabled={busy === c.id || pending}
                       className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center"
-                      title={c.enabled ? "Wyłącz" : "Włącz"}
+                      title={c.enabled ? t("disable") : t("enable")}
                     >
                       {c.enabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                     </button>
@@ -175,7 +176,7 @@ export function ChatCommandsManager({
                       onClick={() => startEdit(c)}
                       disabled={busy === c.id || pending}
                       className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center"
-                      title="Edytuj"
+                      title={t("editTitle")}
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
@@ -183,7 +184,7 @@ export function ChatCommandsManager({
                       onClick={() => deleteCmd(c)}
                       disabled={busy === c.id || pending}
                       className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"
-                      title="Usuń"
+                      title={t("deleteTitle")}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -198,19 +199,19 @@ export function ChatCommandsManager({
       {/* Create / edit form */}
       <div className="border border-zinc-800 bg-black/30 p-3">
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-          {editingId ? "Edytuj komendę" : "Dodaj komendę"}
+          {editingId ? t("editForm") : t("addForm")}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[160px_1fr_90px] gap-2 mb-2">
           <input
             value={fTrigger}
             onChange={(e) => setFTrigger(e.target.value)}
-            placeholder="!komenda"
+            placeholder={t("triggerPh")}
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono focus:border-red-700 outline-hidden"
           />
           <input
             value={fResponse}
             onChange={(e) => setFResponse(e.target.value)}
-            placeholder="Odpowiedź bota…"
+            placeholder={t("responsePh")}
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
           <input
@@ -218,7 +219,7 @@ export function ChatCommandsManager({
             value={fCooldown}
             onChange={(e) => setFCooldown(e.target.value)}
             min={0}
-            title="Cooldown (sekundy)"
+            title={t("cooldownInputTitle")}
             className="bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
           />
         </div>
@@ -230,20 +231,20 @@ export function ChatCommandsManager({
               onChange={(e) => setFRequiresLive(e.target.checked)}
               className="accent-red-600"
             />
-            Tylko na żywo
+            {t("onlyLive")}
           </label>
           <label className="flex items-center gap-1.5 text-xs text-zinc-400">
-            Aktywna od minuty
+            {t("activeFromLabel")}
             <input
               type="number"
               value={fActiveFrom}
               onChange={(e) => setFActiveFrom(e.target.value)}
               min={0}
-              title="Komenda zacznie działać dopiero po N minutach od startu streamu (0 = od razu). Implikuje „na żywo”."
+              title={t("activeFromInputTitle")}
               className="w-16 bg-black border border-zinc-800 px-2 py-1 text-sm text-white focus:border-red-700 outline-hidden"
             />
           </label>
-          <span className="text-[10px] text-zinc-600">Wymaga subskrypcji <span className="font-mono">stream.online</span> (/admin#twitch).</span>
+          <span className="text-[10px] text-zinc-600">{t.rich("subRequiredNote", { code: (c) => <span className="font-mono">{c}</span>, event: "stream.online" })}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -252,7 +253,7 @@ export function ChatCommandsManager({
             className="bg-red-900/40 border border-red-800 hover:border-red-600 text-red-200 px-3 py-1.5 text-xs font-mono uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
           >
             {busy === "form" ? <Loader2 className="w-3 h-3 animate-spin" /> : editingId ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-            {editingId ? "Zapisz" : "Dodaj"}
+            {editingId ? t("saveBtn") : t("addBtn")}
           </button>
           {editingId && (
             <button
@@ -260,7 +261,7 @@ export function ChatCommandsManager({
               disabled={busy === "form"}
               className="border border-zinc-800 hover:border-zinc-600 text-zinc-400 px-3 py-1.5 text-xs font-mono uppercase tracking-widest"
             >
-              Anuluj
+              {t("cancel")}
             </button>
           )}
         </div>
