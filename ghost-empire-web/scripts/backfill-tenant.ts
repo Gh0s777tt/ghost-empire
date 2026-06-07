@@ -39,6 +39,8 @@ async function main() {
   console.log(`   welcomeConfig: attached ${wc.count} row(s)`);
   const mc = await prisma.moderationConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   moderationConfig: attached ${mc.count} row(s)`);
+  const bc = await prisma.botConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   botConfig: attached ${bc.count} row(s)`);
 
   await prisma.$disconnect();
 }

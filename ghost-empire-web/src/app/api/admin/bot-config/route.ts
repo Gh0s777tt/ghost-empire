@@ -4,15 +4,22 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
+
+// Per-tenant bot config (get-or-create); legacy id:"default" when no tenant.
+async function getBotCfg() {
+  const tid = await currentTenantId();
+  if (tid) {
+    const existing = await prisma.botConfig.findFirst({ where: { tenantId: tid } });
+    return existing ?? (await prisma.botConfig.create({ data: { tenantId: tid } }));
+  }
+  return prisma.botConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
+}
 
 export async function GET() {
   const auth = await requirePermission("manage_shop"); // closest existing perm; could add bot_config later
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const config = await prisma.botConfig.upsert({
-    where: { id: "default" },
-    create: { id: "default" },
-    update: {},
-  });
+  const config = await getBotCfg();
   return NextResponse.json(config);
 }
 
@@ -66,11 +73,8 @@ export async function PATCH(req: Request) {
   if (body.mutedGivesReward !== undefined) data.mutedGivesReward = !!body.mutedGivesReward;
   if (body.enabled !== undefined) data.enabled = !!body.enabled;
 
-  const updated = await prisma.botConfig.upsert({
-    where: { id: "default" },
-    create: { id: "default", ...data },
-    update: data,
-  });
+  const row = await getBotCfg();
+  const updated = await prisma.botConfig.update({ where: { id: row.id }, data });
 
   await logAdminAction({
     adminId: auth.userId,
