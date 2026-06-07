@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tenantSlugFromHost } from "@/lib/tenant-host";
+import { tenantSlugFromHost, resolveTenantSlug } from "@/lib/tenant-host";
 
 describe("tenantSlugFromHost", () => {
   const ROOT = "myapp.com";
@@ -38,5 +38,27 @@ describe("tenantSlugFromHost", () => {
   it("strips the port and is case-insensitive", () => {
     expect(tenantSlugFromHost("gh0st.myapp.com:3000", ROOT)).toBe("gh0st");
     expect(tenantSlugFromHost("GH0ST.MyApp.Com", ROOT)).toBe("gh0st");
+  });
+});
+
+describe("resolveTenantSlug", () => {
+  const ROOT = "myapp.com";
+
+  it("prefers the proxy header (trimmed) when present", () => {
+    expect(resolveTenantSlug("gh0st", "other.myapp.com", ROOT)).toBe("gh0st");
+    expect(resolveTenantSlug("  gh0st  ", null, ROOT)).toBe("gh0st");
+    expect(resolveTenantSlug("hdr", "myapp.com", ROOT)).toBe("hdr"); // header wins even over apex host
+  });
+
+  it("falls back to the Host when the header is absent/blank (the /api/* case)", () => {
+    expect(resolveTenantSlug(null, "gh0st.myapp.com", ROOT)).toBe("gh0st");
+    expect(resolveTenantSlug("", "gh0st.myapp.com", ROOT)).toBe("gh0st");
+    expect(resolveTenantSlug("   ", "gh0st.myapp.com", ROOT)).toBe("gh0st");
+  });
+
+  it("returns null when neither yields a tenant", () => {
+    expect(resolveTenantSlug(null, "myapp.com", ROOT)).toBeNull();
+    expect(resolveTenantSlug(null, "ghost-empire-web.vercel.app", ROOT)).toBeNull();
+    expect(resolveTenantSlug(undefined, undefined, ROOT)).toBeNull();
   });
 });
