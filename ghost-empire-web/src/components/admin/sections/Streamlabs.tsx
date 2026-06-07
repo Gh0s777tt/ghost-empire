@@ -16,7 +16,7 @@ export function StreamlabsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.streamlabs");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const [busy, setBusy] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Record<string, string>>({});
 

@@ -176,7 +176,7 @@ export function StreamAlertsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.streamAlerts");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const ALERT_TYPE_LABEL: Record<string, string> = {
     shop_purchase: t("alertType.shop_purchase"), event_win: t("alertType.event_win"), drop_claim_bonus: t("alertType.drop_claim_bonus"),
     twitch_sub: t("alertType.twitch_sub"), twitch_gift_sub: t("alertType.twitch_gift_sub"), twitch_cheer: t("alertType.twitch_cheer"),

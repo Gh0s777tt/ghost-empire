@@ -34,7 +34,7 @@ export function KickEventsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.kickEvents");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const KICK_EVENT_LABEL = t.raw("eventLabel") as Record<string, string>;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<KickData | null>(null);

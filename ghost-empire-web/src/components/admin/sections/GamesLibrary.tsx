@@ -24,7 +24,7 @@ export function GamesLibraryManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.gamesLibrary");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const [data, setData] = useState<Data | null>(null);
   const [steamInput, setSteamInput] = useState("");
   const [busy, setBusy] = useState<string | null>(null);

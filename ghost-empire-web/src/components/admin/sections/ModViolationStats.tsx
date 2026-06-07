@@ -18,7 +18,7 @@ const PLATFORM_DOT: Record<string, string> = { twitch: "#9146FF", kick: "#53FC18
 
 export function ModViolationStats() {
   const t = useTranslations("admin.modViolations");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const VIOLATION_PL = t.raw("violation") as Record<string, string>;
   const ACTION_PL = t.raw("action") as Record<string, string>;
   const [stats, setStats] = useState<Stats | null>(null);

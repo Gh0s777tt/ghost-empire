@@ -30,7 +30,7 @@ export function WebhooksOutManager({
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [allEvents, setAllEvents] = useState(false);
   const t = useTranslations("admin.webhooksOut");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const EVENT_LABEL = t.raw("eventLabel") as Record<string, string>;
 
   const load = useCallback(async () => {

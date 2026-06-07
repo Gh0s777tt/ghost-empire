@@ -33,7 +33,7 @@ export function PredictionsManager({
 }) {
   const t = useTranslations("admin.predictions");
   const locale = useLocale();
-  const nf = locale === "en" ? "en-US" : "pl-PL";
+  const nf = locale;
   const [loading, setLoading] = useState(true);
   const [predictions, setPredictions] = useState<PredictionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);

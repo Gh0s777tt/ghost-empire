@@ -87,18 +87,23 @@ describe("timeLeft", () => {
   });
 });
 
-describe("timeAgo (locale)", () => {
+describe("timeAgo (locale, Intl.RelativeTimeFormat)", () => {
   it("formats relative time in Polish by default", () => {
     expect(timeAgo(new Date())).toBe("teraz");
-    expect(timeAgo(new Date(Date.now() - (5 * 60 + 30) * 1000))).toBe("5 min temu");
+    expect(timeAgo(new Date(Date.now() - (5 * 60 + 30) * 1000))).toMatch(/^5 /); // "5 minut temu"
     expect(timeAgo(new Date(Date.now() - 25 * 3_600_000))).toBe("wczoraj");
   });
 
   it("formats relative time in English for en", () => {
     expect(timeAgo(new Date(), "en")).toBe("now");
-    expect(timeAgo(new Date(Date.now() - (5 * 60 + 30) * 1000), "en")).toBe("5 min ago");
+    expect(timeAgo(new Date(Date.now() - (5 * 60 + 30) * 1000), "en")).toMatch(/5 minute/); // "5 minutes ago"
     expect(timeAgo(new Date(Date.now() - 25 * 3_600_000), "en")).toBe("yesterday");
-    expect(timeAgo(new Date(Date.now() - 73 * 3_600_000), "en")).toBe("3 days ago");
+    expect(timeAgo(new Date(Date.now() - 73 * 3_600_000), "en")).toMatch(/3 days/);
+  });
+
+  it("localizes relative time for other locales via Intl (German / Russian)", () => {
+    expect(timeAgo(new Date(Date.now() - 25 * 3_600_000), "de")).toBe("gestern");
+    expect(timeAgo(new Date(Date.now() - (5 * 60 + 30) * 1000), "ru")).toMatch(/5 минут/);
   });
 });
 

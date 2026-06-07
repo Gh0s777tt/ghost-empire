@@ -34,7 +34,7 @@ export function YouTubeLiveManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.youtubeLive");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const [status, setStatus] = useState<YTStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);

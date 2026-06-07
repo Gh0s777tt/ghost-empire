@@ -29,7 +29,7 @@ export function SeasonsManager({
 }) {
   const t = useTranslations("admin.seasons");
   const locale = useLocale();
-  const nf = locale === "en" ? "en-US" : "pl-PL";
+  const nf = locale;
   const [loading, setLoading] = useState(true);
   const [seasons, setSeasons] = useState<AdminSeason[]>([]);
   const [rewardTypes, setRewardTypes] = useState<string[]>([]);

@@ -16,7 +16,7 @@ export function TwitchEventSubManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.twitchEventSub");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const EVENT_TYPE_LABEL = t.raw("eventType") as Record<string, string>;
   const [busy, setBusy] = useState(false);
 

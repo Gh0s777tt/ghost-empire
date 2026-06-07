@@ -34,7 +34,7 @@ const ACTION_META: Record<string, { emoji: string; color: string }> = {
 
 export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
   const t = useTranslations("admin.auditLog");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   if (auditLog.length === 0) {
     return (
       <SectionCard title="Audit log" icon={History}>

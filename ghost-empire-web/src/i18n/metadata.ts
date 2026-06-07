@@ -5,15 +5,19 @@
 // app/sitemap.ts — keep the two in sync. Pass the locale-agnostic PL path:
 // "" for home, "/shop", `/u/${username}`, etc.
 import type { Metadata } from "next";
+import { routing } from "./routing";
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
 export function localeAlternates(path: string, locale: string): Metadata["alternates"] {
-  const pl = `${BASE}${path}`;
-  const en = `${BASE}/en${path}`;
+  // PL (default) is unprefixed; every other locale lives under "/<locale><path>".
+  const urlFor = (loc: string) => (loc === routing.defaultLocale ? `${BASE}${path}` : `${BASE}/${loc}${path}`);
   return {
     // Self-referencing canonical (each language version points to itself).
-    canonical: locale === "en" ? en : pl,
-    languages: { pl, en, "x-default": pl },
+    canonical: urlFor(locale),
+    languages: {
+      ...Object.fromEntries(routing.locales.map((loc) => [loc, urlFor(loc)])),
+      "x-default": `${BASE}${path}`,
+    },
   };
 }
