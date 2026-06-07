@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
@@ -33,9 +34,10 @@ export async function POST(req: Request) {
 
   const userId = session.user.id;
 
+  const tid = await currentTenantId();
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const event = await tx.event.findUnique({ where: { id: eventId } });
+      const event = await tx.event.findFirst({ where: { id: eventId, ...(tid ? { tenantId: tid } : {}) } });
       if (!event) throw new HttpError("Event nie istnieje", 404);
       if (!event.active) throw new HttpError("Event nieaktywny", 410);
       if (event.endsAt && event.endsAt < new Date()) {
