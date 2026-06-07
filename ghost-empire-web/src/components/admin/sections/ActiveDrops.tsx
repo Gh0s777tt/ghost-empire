@@ -1,6 +1,7 @@
 "use client";
 // src/components/admin/sections/ActiveDrops.tsx — lazily-loaded list of active drops.
 import { Gift, Copy, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { fmt, formatDate } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import type { Drop } from "../types";
@@ -13,24 +14,25 @@ export function ActiveDropsList({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.activeDrops");
   async function deactivate(id: string) {
-    if (!confirm("Dezaktywować drop?")) return;
+    if (!confirm(t("confirmDeactivate"))) return;
     const res = await fetch(`/api/admin/drops?id=${id}`, { method: "DELETE" });
-    if (res.ok) { onToast("ok", "Drop dezaktywowany"); onSuccess(); }
-    else onToast("err", "Błąd");
+    if (res.ok) { onToast("ok", t("deactivated")); onSuccess(); }
+    else onToast("err", t("err"));
   }
 
   if (drops.length === 0) return null;
   return (
-    <SectionCard title="Aktywne dropy" icon={Gift}>
+    <SectionCard title={t("title")} icon={Gift}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {drops.map((d) => (
           <div key={d.id} className="border border-zinc-800 bg-black/30 p-3">
             <div className="flex items-center justify-between gap-2 mb-2">
               <button
-                onClick={() => { navigator.clipboard.writeText(d.code); onToast("ok", `Skopiowane: ${d.code}`); }}
+                onClick={() => { navigator.clipboard.writeText(d.code); onToast("ok", t("copied", { code: d.code })); }}
                 className="font-mono text-base text-white tracking-wider hover:text-red-400 flex items-center gap-1"
-                title="Kopiuj kod"
+                title={t("copyTitle")}
               >
                 {d.code}
                 <Copy className="w-3 h-3 opacity-50" />
@@ -50,7 +52,7 @@ export function ActiveDropsList({
               )}
               <div>Claims: <span className="text-white">{d.claimsCount}</span></div>
               {d.expiresAt && (
-                <div>Wygasa: <span className="text-white">{formatDate(d.expiresAt)}</span></div>
+                <div>{t("expiresLabel")} <span className="text-white">{formatDate(d.expiresAt)}</span></div>
               )}
             </div>
           </div>

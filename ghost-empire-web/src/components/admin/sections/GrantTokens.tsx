@@ -2,6 +2,7 @@
 // src/components/admin/sections/GrantTokens.tsx — lazily-loaded grant-tokens card.
 import { useState } from "react";
 import { Coins, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
 
 export function GrantTokensCard({
@@ -11,6 +12,7 @@ export function GrantTokensCard({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.grantTokens");
   const [target, setTarget] = useState("");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
@@ -26,9 +28,9 @@ export function GrantTokensCard({
       });
       const data = await res.json();
       if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
+        onToast("err", data.error ?? t("err"));
       } else {
-        onToast("ok", `${data.amount > 0 ? "+" : ""}${data.amount} GT dla ${data.user.username ?? data.user.id}. Balans: ${data.newBalance}`);
+        onToast("ok", t("granted", { delta: `${data.amount > 0 ? "+" : ""}${data.amount}`, user: data.user.username ?? data.user.id, balance: data.newBalance }));
         setAmount(""); setReason("");
         onSuccess();
       }
@@ -38,26 +40,26 @@ export function GrantTokensCard({
   }
 
   return (
-    <SectionCard title="Grant tokenów" icon={Coins}>
+    <SectionCard title={t("title")} icon={Coins}>
       <div className="space-y-3">
         <FieldInput
-          label="User (username, Discord ID lub ID konta)"
+          label={t("lblUser")}
           value={target}
           onChange={setTarget}
           placeholder="gh0s77tt / 1500923809522258000 / cmpq74…"
         />
         <FieldInput
-          label="Amount (ujemny = odjąć)"
+          label={t("lblAmount")}
           value={amount}
           onChange={setAmount}
-          placeholder="np. 1000 lub -500"
+          placeholder={t("phAmount")}
           type="number"
         />
         <FieldInput
-          label="Powód (opcjonalnie)"
+          label={t("lblReason")}
           value={reason}
           onChange={setReason}
-          placeholder="np. konkurs klipów"
+          placeholder={t("phReason")}
         />
         <button
           onClick={submit}
@@ -65,7 +67,7 @@ export function GrantTokensCard({
           className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Coins className="w-3.5 h-3.5" />}
-          Przyznaj
+          {t("submit")}
         </button>
       </div>
     </SectionCard>
