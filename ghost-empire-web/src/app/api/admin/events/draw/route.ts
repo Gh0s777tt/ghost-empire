@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -30,7 +31,8 @@ export async function POST(req: Request) {
   const eventId = body.eventId;
   if (!eventId) return NextResponse.json({ error: "Brak eventId" }, { status: 400 });
 
-  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  const tid = await currentTenantId();
+  const event = await prisma.event.findFirst({ where: { id: eventId, ...(tid ? { tenantId: tid } : {}) } });
   if (!event) return NextResponse.json({ error: "Event nie istnieje" }, { status: 404 });
   if (event.type === "happy_hour") {
     return NextResponse.json(

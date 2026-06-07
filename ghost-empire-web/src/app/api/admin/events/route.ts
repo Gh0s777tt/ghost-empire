@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const VALID_TYPES = ["giveaway", "raffle", "contest", "happy_hour"] as const;
 
@@ -89,6 +90,8 @@ export async function POST(req: Request) {
     }
   }
 
+  const tid = await currentTenantId();
+  if (tid) data.tenantId = tid;
   const event = await prisma.event.create({ data: data as never });
 
   await logAdminAction({
@@ -126,7 +129,8 @@ export async function PATCH(req: Request) {
   }
   if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
 
-  const existing = await prisma.event.findUnique({ where: { id: body.id } });
+  const tid = await currentTenantId();
+  const existing = await prisma.event.findFirst({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) } });
   if (!existing) return NextResponse.json({ error: "Event nie istnieje" }, { status: 404 });
   if (existing.drawnAt) {
     return NextResponse.json({ error: "Event już wylosowany — nie da się edytować" }, { status: 409 });
@@ -217,8 +221,9 @@ export async function DELETE(req: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
 
-  await prisma.event.update({
-    where: { id },
+  const tid = await currentTenantId();
+  await prisma.event.updateMany({
+    where: { id, ...(tid ? { tenantId: tid } : {}) },
     data: { active: false },
   });
 

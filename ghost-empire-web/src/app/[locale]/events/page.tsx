@@ -1,6 +1,7 @@
 // src/app/events/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { EventsClient } from "@/components/events/EventsClient";
 
@@ -20,9 +21,11 @@ export default async function EventsPage() {
   const session = await auth();
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const tid = await currentTenantId();
   const events = await prisma.event.findMany({
     where: {
       active: true,
+      ...(tid ? { tenantId: tid } : {}),
       OR: [
         // Still open for participation
         {

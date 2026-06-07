@@ -55,6 +55,8 @@ async function main() {
   console.log(`   streamScheduleSlot: attached ${sch.count} row(s)`);
   const si = await prisma.shopItem.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   shopItem: attached ${si.count} row(s)`);
+  const ev = await prisma.event.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   event: attached ${ev.count} row(s)`);
 
   await prisma.$disconnect();
 }

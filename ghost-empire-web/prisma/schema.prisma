@@ -297,6 +297,7 @@ model ShopItem {
 
 model Event {
   id          String  @id @default(cuid())
+  tenantId    String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
   type        String  // "giveaway" | "raffle" | "contest" | "happy_hour"
   name        String
   description String? @db.Text
@@ -329,6 +330,7 @@ model Event {
   entries     EventEntry[]
   raffleTickets RaffleTicket[]
 
+  @@index([tenantId])
   @@map("events")
 }
 

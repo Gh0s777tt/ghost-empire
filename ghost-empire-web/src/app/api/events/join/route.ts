@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
@@ -28,7 +29,8 @@ export async function POST(req: Request) {
     return jsonError("Brak eventId", 400);
   }
 
-  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  const tid = await currentTenantId();
+  const event = await prisma.event.findFirst({ where: { id: eventId, ...(tid ? { tenantId: tid } : {}) } });
   if (!event) return jsonError("Event nie istnieje", 404);
   if (!event.active) return jsonError("Event nieaktywny", 410);
   if (event.endsAt && event.endsAt < new Date()) {
