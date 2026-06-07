@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 function generateCode(): string {
   // 6 chars, uppercase alphanumeric (skipping ambiguous 0/O/I/1)
@@ -50,18 +51,19 @@ export async function POST(req: Request) {
     );
   }
 
+  const tid = await currentTenantId();
   // Auto-generate if empty, retry on collision (rare for 6 chars from 32-char alphabet)
   if (!code) {
     for (let i = 0; i < 5; i++) {
       const candidate = generateCode();
-      const exists = await prisma.streamDrop.findUnique({ where: { code: candidate } });
+      const exists = await prisma.streamDrop.findFirst({ where: { code: candidate, ...(tid ? { tenantId: tid } : {}) } });
       if (!exists) { code = candidate; break; }
     }
     if (!code) {
       return NextResponse.json({ error: "Nie udało się wygenerować kodu" }, { status: 500 });
     }
   } else {
-    const exists = await prisma.streamDrop.findUnique({ where: { code } });
+    const exists = await prisma.streamDrop.findFirst({ where: { code, ...(tid ? { tenantId: tid } : {}) } });
     if (exists) {
       return NextResponse.json({ error: `Code "${code}" już istnieje` }, { status: 409 });
     }
@@ -73,6 +75,7 @@ export async function POST(req: Request) {
 
   const drop = await prisma.streamDrop.create({
     data: {
+      ...(tid ? { tenantId: tid } : {}),
       code,
       reward,
       bonusReward,
@@ -102,8 +105,9 @@ export async function DELETE(req: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
 
-  await prisma.streamDrop.update({
-    where: { id },
+  const tid = await currentTenantId();
+  await prisma.streamDrop.updateMany({
+    where: { id, ...(tid ? { tenantId: tid } : {}) },
     data: { active: false },
   });
 
