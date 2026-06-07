@@ -46,11 +46,8 @@ export async function POST(req: Request) {
     if (body.steamId && !resolved) {
       return NextResponse.json({ error: "Nie rozpoznano SteamID / vanity / URL" }, { status: 400 });
     }
-    await prisma.gameLibraryConfig.upsert({
-      where: { id: "default" },
-      create: { id: "default", steamId: resolved },
-      update: { steamId: resolved },
-    });
+    const cfg = await getGameLibraryConfig();
+    await prisma.gameLibraryConfig.update({ where: { id: cfg.id }, data: { steamId: resolved } });
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "game_library", targetId: "steam", req });
     return NextResponse.json({ ok: true, steamId: resolved });
   }

@@ -5,15 +5,17 @@ import { prisma } from "@/lib/prisma";
 import { fetchSteamOwnedGames, steamHeaderImage } from "@/lib/steam";
 import { fetchPsnTitles } from "@/lib/psn";
 import { createLogger } from "@/lib/logger";
+import { currentTenantId } from "@/lib/tenant";
 
 const log = createLogger("games");
 
 export async function getGameLibraryConfig() {
-  return prisma.gameLibraryConfig.upsert({
-    where: { id: "default" },
-    create: { id: "default" },
-    update: {},
-  });
+  const tid = await currentTenantId();
+  if (tid) {
+    const existing = await prisma.gameLibraryConfig.findFirst({ where: { tenantId: tid } });
+    return existing ?? (await prisma.gameLibraryConfig.create({ data: { tenantId: tid } }));
+  }
+  return prisma.gameLibraryConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
 }
 
 export type SyncResult = { ok: boolean; synced?: number; removed?: number; error?: string };
@@ -54,7 +56,7 @@ export async function syncSteamLibrary(): Promise<SyncResult> {
     where: { source: "steam", externalId: { notIn: appIds.length ? appIds : ["__none__"] } },
   });
 
-  await prisma.gameLibraryConfig.update({ where: { id: "default" }, data: { steamSyncedAt: new Date() } });
+  await prisma.gameLibraryConfig.update({ where: { id: cfg.id }, data: { steamSyncedAt: new Date() } });
   log.info("steam library synced", { synced: games.length, removed: removed.count });
   return { ok: true, synced: games.length, removed: removed.count };
 }

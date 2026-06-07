@@ -7,6 +7,7 @@
 import { prisma } from "@/lib/prisma";
 import { pickWeightedIndex } from "@/lib/economy";
 import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
+import { currentTenantId } from "@/lib/tenant";
 
 export type WheelSegment = {
   label: string;
@@ -50,12 +51,18 @@ export function parseSegments(raw: unknown): WheelSegment[] {
 
 export type WheelConfigView = { enabled: boolean; costPerSpin: number; segments: WheelSegment[] };
 
+/** Per-tenant wheel config row (get-or-create); legacy id:"default" when no tenant. */
+export async function getWheelConfigRow() {
+  const tid = await currentTenantId();
+  if (tid) {
+    const existing = await prisma.wheelConfig.findFirst({ where: { tenantId: tid } });
+    return existing ?? (await prisma.wheelConfig.create({ data: { tenantId: tid } }));
+  }
+  return prisma.wheelConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
+}
+
 export async function getWheelConfig(): Promise<WheelConfigView> {
-  const c = await prisma.wheelConfig.upsert({
-    where: { id: "default" },
-    create: { id: "default" },
-    update: {},
-  });
+  const c = await getWheelConfigRow();
   return {
     enabled: c.enabled,
     costPerSpin: c.costPerSpin,
