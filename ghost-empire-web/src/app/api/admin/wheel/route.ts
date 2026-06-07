@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
-import { getWheelConfig, parseSegments } from "@/lib/wheel";
+import { getWheelConfig, getWheelConfigRow, parseSegments } from "@/lib/wheel";
 import { displayNick } from "@/lib/utils";
 
 export async function GET() {
@@ -62,11 +62,8 @@ export async function POST(req: Request) {
     data.segments = parseSegments(body.segments);
   }
 
-  await prisma.wheelConfig.upsert({
-    where: { id: "default" },
-    create: { id: "default", ...data },
-    update: data,
-  });
+  const row = await getWheelConfigRow();
+  await prisma.wheelConfig.update({ where: { id: row.id }, data });
 
   await logAdminAction({ adminId: auth.userId, action: "update_wheel", targetType: "wheel", targetId: "default", req });
 

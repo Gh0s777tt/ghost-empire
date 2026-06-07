@@ -41,6 +41,10 @@ async function main() {
   console.log(`   moderationConfig: attached ${mc.count} row(s)`);
   const bc = await prisma.botConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   botConfig: attached ${bc.count} row(s)`);
+  const whc = await prisma.wheelConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   wheelConfig: attached ${whc.count} row(s)`);
+  const glc = await prisma.gameLibraryConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   gameLibraryConfig: attached ${glc.count} row(s)`);
 
   await prisma.$disconnect();
 }
