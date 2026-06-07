@@ -49,6 +49,8 @@ async function main() {
   console.log(`   chatOverlayConfig: attached ${coc.count} row(s)`);
   const cdc = await prisma.codeDropConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   codeDropConfig: attached ${cdc.count} row(s)`);
+  const sub = await prisma.subathon.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   subathon: attached ${sub.count} row(s)`);
 
   await prisma.$disconnect();
 }

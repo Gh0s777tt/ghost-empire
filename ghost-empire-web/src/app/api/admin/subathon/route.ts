@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const clampInt = (v: unknown, min: number, max: number, fallback: number) =>
   typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.floor(v))) : fallback;
@@ -28,10 +29,20 @@ function serialize(s: Row) {
   };
 }
 
+// Per-tenant subathon row (get-or-create); legacy id:"default" when no tenant.
+async function getSubathonRow() {
+  const tid = await currentTenantId();
+  if (tid) {
+    const existing = await prisma.subathon.findFirst({ where: { tenantId: tid } });
+    return existing ?? (await prisma.subathon.create({ data: { tenantId: tid } }));
+  }
+  return prisma.subathon.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
+}
+
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const s = await prisma.subathon.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
+  const s = await getSubathonRow();
   return NextResponse.json({ subathon: serialize(s) });
 }
 
@@ -65,13 +76,10 @@ export async function POST(req: Request) {
       typeof body.maxMinutes === "number" && body.maxMinutes > 0
         ? new Date(now + clampInt(body.maxMinutes, 1, 1_000_000, minutes) * 60_000)
         : null;
-    const updated = await prisma.subathon.upsert({
-      where: { id: "default" },
-      create: {
-        id: "default", active: true, startedAt: new Date(now), endsAt: new Date(now + minutes * 60_000),
-        secondsPerSub, secondsPerPln, maxEndsAt, totalAddedSecs: 0,
-      },
-      update: {
+    const row = await getSubathonRow();
+    const updated = await prisma.subathon.update({
+      where: { id: row.id },
+      data: {
         active: true, startedAt: new Date(now), endsAt: new Date(now + minutes * 60_000),
         secondsPerSub, secondsPerPln, maxEndsAt, totalAddedSecs: 0,
       },
@@ -81,7 +89,8 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "stop") {
-    const updated = await prisma.subathon.upsert({ where: { id: "default" }, create: { id: "default", active: false }, update: { active: false } });
+    const row = await getSubathonRow();
+    const updated = await prisma.subathon.update({ where: { id: row.id }, data: { active: false } });
     await logAdminAction({ adminId: auth.userId, action: "set_user_role", targetType: "subathon_stop", targetId: "default", req });
     return NextResponse.json({ ok: true, subathon: serialize(updated) });
   }
@@ -90,11 +99,14 @@ export async function POST(req: Request) {
     if (typeof body.addMinutes !== "number" || !Number.isFinite(body.addMinutes)) {
       return NextResponse.json({ error: "addMinutes wymagane" }, { status: 400 });
     }
-    const s = await prisma.subathon.findUnique({ where: { id: "default" } });
+    const tid = await currentTenantId();
+    const s = tid
+      ? await prisma.subathon.findFirst({ where: { tenantId: tid } })
+      : await prisma.subathon.findUnique({ where: { id: "default" } });
     if (!s) return NextResponse.json({ error: "Brak subathonu" }, { status: 400 });
     const base = Math.max(now, s.endsAt?.getTime() ?? now);
     const next = new Date(Math.max(now, base + Math.floor(body.addMinutes) * 60_000));
-    const updated = await prisma.subathon.update({ where: { id: "default" }, data: { endsAt: next } });
+    const updated = await prisma.subathon.update({ where: { id: s.id }, data: { endsAt: next } });
     return NextResponse.json({ ok: true, subathon: serialize(updated) });
   }
 
@@ -102,7 +114,8 @@ export async function POST(req: Request) {
     const patch: Record<string, number> = {};
     if (body.secondsPerSub !== undefined) patch.secondsPerSub = clampInt(body.secondsPerSub, 0, 86_400, 300);
     if (body.secondsPerPln !== undefined) patch.secondsPerPln = clampInt(body.secondsPerPln, 0, 86_400, 60);
-    const updated = await prisma.subathon.upsert({ where: { id: "default" }, create: { id: "default", ...patch }, update: patch });
+    const row = await getSubathonRow();
+    const updated = await prisma.subathon.update({ where: { id: row.id }, data: patch });
     return NextResponse.json({ ok: true, subathon: serialize(updated) });
   }
 
@@ -110,7 +123,8 @@ export async function POST(req: Request) {
     const patch: Record<string, string> = {};
     if (typeof body.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(body.accentColor)) patch.accentColor = body.accentColor;
     if (typeof body.label === "string") patch.label = body.label.trim().slice(0, 40) || "Subathon";
-    const updated = await prisma.subathon.upsert({ where: { id: "default" }, create: { id: "default", ...patch }, update: patch });
+    const row = await getSubathonRow();
+    const updated = await prisma.subathon.update({ where: { id: row.id }, data: patch });
     return NextResponse.json({ ok: true, subathon: serialize(updated) });
   }
 
