@@ -431,8 +431,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
 
           if (!alreadyGranted) {
-            const achievement = await prisma.achievement.findUnique({
-              where: { code: "first_login" },
+            const achievement = await prisma.achievement.findFirst({
+              where: { code: "first_login", ...(dbUser.tenantId ? { tenantId: dbUser.tenantId } : {}) },
             });
             if (achievement) {
               await prisma.userAchievement.create({

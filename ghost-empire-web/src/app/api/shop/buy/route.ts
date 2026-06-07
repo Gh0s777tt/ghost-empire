@@ -91,8 +91,8 @@ export async function POST(req: Request) {
           select: { id: true },
         });
         if (!earned) {
-          const ach = await tx.achievement.findUnique({
-            where: { code: item.requiresAchievement },
+          const ach = await tx.achievement.findFirst({
+            where: { code: item.requiresAchievement, ...(tid ? { tenantId: tid } : {}) },
             select: { name: true },
           });
           throw new ShopError(`Wymagane osiągnięcie: ${ach?.name ?? item.requiresAchievement}`, 403);

@@ -371,7 +371,8 @@ model RaffleTicket {
 
 model Achievement {
   id          String @id @default(cuid())
-  code        String @unique
+  tenantId    String? // multi-tenant (Phase 3) — collection
+  code        String // unique PER TENANT (see @@unique below) — was globally @unique
   name        String
   description String
   icon        String
@@ -390,6 +391,8 @@ model Achievement {
 
   userAchievements UserAchievement[]
 
+  @@unique([tenantId, code])
+  @@index([tenantId])
   @@map("achievements")
 }
 

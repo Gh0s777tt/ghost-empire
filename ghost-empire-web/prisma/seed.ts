@@ -6,6 +6,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding database...");
 
+  // Multi-tenant: seeded achievements belong to the default "ghost-empire" tenant.
+  // (Other models with a nullable tenantId are attached by scripts/backfill-tenant.ts.)
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: "ghost-empire" },
+    update: {},
+    create: { slug: "ghost-empire", name: "GH0ST EMPIRE", shortName: "Ghost Empire", brandColor: "#E50914" },
+  });
+
   // ---- ACHIEVEMENTS ----
   const achievements = [
     { code: "first_login",    name: "Pierwsze Kroki",      icon: "👋", rarity: "common",    description: "Zaloguj się po raz pierwszy",              triggerType: "manual",         triggerValue: 1 },
@@ -101,9 +109,9 @@ async function main() {
 
   for (const a of achievements) {
     await prisma.achievement.upsert({
-      where: { code: a.code },
+      where: { tenantId_code: { tenantId: tenant.id, code: a.code } },
       update: a,
-      create: a,
+      create: { ...a, tenantId: tenant.id },
     });
   }
   console.log(`✅ ${achievements.length} achievements seeded`);

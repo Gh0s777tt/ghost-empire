@@ -29,8 +29,18 @@ async function main() {
   // Imported here (not at top) so the loadEnvFile() above runs first — the pg adapter
   // reads DATABASE_URL at module-eval time.
   const { prisma } = await import("../src/lib/prisma");
+  // Multi-tenant: seed into the default "ghost-empire" tenant (code is unique PER tenant).
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: "ghost-empire" },
+    update: {},
+    create: { slug: "ghost-empire", name: "GH0ST EMPIRE", shortName: "Ghost Empire", brandColor: "#E50914" },
+  });
   for (const a of NEW_ACHIEVEMENTS) {
-    await prisma.achievement.upsert({ where: { code: a.code }, update: a, create: a });
+    await prisma.achievement.upsert({
+      where: { tenantId_code: { tenantId: tenant.id, code: a.code } },
+      update: a,
+      create: { ...a, tenantId: tenant.id },
+    });
   }
   console.log(`✅ upserted ${NEW_ACHIEVEMENTS.length} achievements (prestiż / pojedynki / kasyno)`);
   await prisma.$disconnect();

@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { ProfileClient } from "@/components/profile/ProfileClient";
 
@@ -16,6 +17,7 @@ export default async function ProfilePage() {
   }
 
   const userId = session.user.id;
+  const tid = await currentTenantId();
 
   const [user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelWins, duelLosses] =
     await Promise.all([
@@ -58,7 +60,7 @@ export default async function ProfilePage() {
         orderBy: { earnedAt: "desc" },
       }),
       prisma.achievement.findMany({
-        where: { hidden: false },
+        where: { hidden: false, ...(tid ? { tenantId: tid } : {}) },
         orderBy: [{ rarity: "asc" }, { triggerValue: "asc" }],
       }),
       prisma.socialLink.findMany({

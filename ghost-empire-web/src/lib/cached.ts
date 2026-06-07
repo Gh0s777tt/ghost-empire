@@ -66,11 +66,12 @@ export type CachedAchievement = {
  * but 2-min staleness on a "% of users earned this" stat is fine. Cached 120s.
  * Selects only Date-free columns so it's safe to JSON-cache.
  */
-export const getCachedAchievementsMeta = () =>
+export const getCachedAchievementsMeta = (tenantId: string | null = null) =>
   unstable_cache(
     async () => {
       const [achievements, totalUsers, grouped] = await Promise.all([
         prisma.achievement.findMany({
+          where: tenantId ? { tenantId } : {},
           orderBy: [{ rarity: "asc" }, { triggerValue: "asc" }, { name: "asc" }],
           select: {
             id: true, code: true, name: true, description: true, icon: true,
@@ -84,7 +85,7 @@ export const getCachedAchievementsMeta = () =>
       const earnedCounts = grouped.map((g) => ({ achievementId: g.achievementId, count: g._count.id }));
       return { achievements: achievements as CachedAchievement[], totalUsers, earnedCounts };
     },
-    ["achievements-meta"],
+    ["achievements-meta", tenantId ?? "all"],
     { revalidate: 120, tags: ["achievements"] },
   )();
 
