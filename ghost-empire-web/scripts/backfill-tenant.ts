@@ -51,6 +51,8 @@ async function main() {
   console.log(`   codeDropConfig: attached ${cdc.count} row(s)`);
   const sub = await prisma.subathon.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   subathon: attached ${sub.count} row(s)`);
+  const sch = await prisma.streamScheduleSlot.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   streamScheduleSlot: attached ${sch.count} row(s)`);
 
   await prisma.$disconnect();
 }

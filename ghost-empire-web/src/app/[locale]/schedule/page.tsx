@@ -1,6 +1,7 @@
 // src/app/schedule/page.tsx
 // Public stream schedule — weekly view + countdown to next stream
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { Calendar, Clock } from "lucide-react";
 import { ScheduleClient } from "@/components/schedule/ScheduleClient";
@@ -20,8 +21,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const DAYS_PL = ["niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"];
 
 export default async function SchedulePage() {
+  const tid = await currentTenantId();
   const slots = await prisma.streamScheduleSlot.findMany({
-    where: { active: true },
+    where: { active: true, ...(tid ? { tenantId: tid } : {}) },
     orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }, { startMinute: "asc" }],
   });
 
