@@ -30,6 +30,12 @@ async function main() {
     data: { tenantId: tenant.id },
   });
   console.log(`✅ default tenant "${tenant.slug}" (${tenant.id}); attached ${count} user(s)`);
+
+  // Attach the existing config singletons to the default tenant (one row per tenant).
+  // Each Phase 3 model that gains a tenantId adds a line here; re-run after its db push.
+  const ic = await prisma.integrationConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   integrationConfig: attached ${ic.count} row(s)`);
+
   await prisma.$disconnect();
 }
 

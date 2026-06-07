@@ -58,3 +58,13 @@ export async function getCurrentTenant(): Promise<TenantBrand> {
   }
   return FALLBACK_TENANT;
 }
+
+/**
+ * Convenience: the active tenant's row id, or null before the tenant row exists
+ * (pre-backfill) / outside a request scope. This is the value to scope data by —
+ * callers pass it to `tenantScoped(id)` (collection models) or use it directly in a
+ * `where`/`data` (singletons). A null id means "fall back to legacy/unscoped".
+ */
+export async function currentTenantId(): Promise<string | null> {
+  return (await getCurrentTenant()).id;
+}
