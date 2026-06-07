@@ -2,6 +2,7 @@
 // src/components/admin/sections/Streamlabs.tsx — lazily-loaded Streamlabs donations manager.
 import { useState } from "react";
 import { Link as LinkIcon, Loader2, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import type { StreamlabsConnectionData, UnmatchedDonation } from "../types";
 
@@ -14,11 +15,12 @@ export function StreamlabsManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.streamlabs");
   const [busy, setBusy] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Record<string, string>>({});
 
   async function action(act: "sync" | "disconnect") {
-    if (act === "disconnect" && !confirm("Rozłączyć Streamlabs?")) return;
+    if (act === "disconnect" && !confirm(t("disconnectConfirm"))) return;
     setBusy(true);
     try {
       const res = await fetch("/api/admin/streamlabs", {
@@ -27,14 +29,14 @@ export function StreamlabsManager({
         body: JSON.stringify({ action: act }),
       });
       const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? "Błąd");
+      if (!res.ok) onToast("err", data.error ?? t("err"));
       else {
         if (act === "sync") {
           onToast(
             "ok",
             `Sync: fetched ${data.fetched ?? 0}, matched ${data.matched ?? 0}, unmatched ${data.unmatched ?? 0}`,
           );
-        } else onToast("ok", "Rozłączono Streamlabs");
+        } else onToast("ok", t("disconnected"));
         onSuccess();
       }
     } finally { setBusy(false); }
@@ -43,7 +45,7 @@ export function StreamlabsManager({
   async function matchDonation(donationId: string, action: "assign" | "skip") {
     const target = assignTarget[donationId];
     if (action === "assign" && !target) {
-      onToast("err", "Wpisz username lub Discord ID");
+      onToast("err", t("enterTarget"));
       return;
     }
     setBusy(true);
@@ -54,10 +56,10 @@ export function StreamlabsManager({
         body: JSON.stringify({ donationId, action, userTarget: target }),
       });
       const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? "Błąd");
+      if (!res.ok) onToast("err", data.error ?? t("err"));
       else {
-        if (action === "assign") onToast("ok", `Dopasowano: ${data.tokensGranted} GT dla ${data.user}`);
-        else onToast("ok", "Pominięto");
+        if (action === "assign") onToast("ok", t("matched", { gt: String(data.tokensGranted), user: data.user }));
+        else onToast("ok", t("skipped"));
         setAssignTarget((s) => { const copy = { ...s }; delete copy[donationId]; return copy; });
         onSuccess();
       }
@@ -65,19 +67,19 @@ export function StreamlabsManager({
   }
 
   return (
-    <SectionCard title="Streamlabs — donejty" icon={LinkIcon}>
+    <SectionCard title={t("title")} icon={LinkIcon}>
       {/* Connection status */}
       <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
         {connection.connected ? (
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-green-300 mb-0.5">
-                ● Połączono {connection.streamlabsUsername && `(${connection.streamlabsUsername})`}
+                ● {t("connected")} {connection.streamlabsUsername && `(${connection.streamlabsUsername})`}
               </div>
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
                 {connection.lastPolledAt
-                  ? `Ostatni sync: ${new Date(connection.lastPolledAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}`
-                  : "Jeszcze nie syncował się"}
+                  ? t("lastSync", { date: new Date(connection.lastPolledAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" }) })
+                  : t("neverSynced")}
               </div>
             </div>
             <button
@@ -93,13 +95,13 @@ export function StreamlabsManager({
               disabled={busy || pending}
               className="px-3 py-1.5 border border-red-700 hover:border-red-500 text-red-400 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
             >
-              Rozłącz
+              {t("disconnectBtn")}
             </button>
           </div>
         ) : (
           <div className="text-center py-2">
             <p className="text-zinc-400 text-sm mb-3">
-              Streamlabs jeszcze nie połączony. Po autoryzacji donejty będą automatycznie dopasowywane do userów.
+              {t("notConnectedDesc")}
             </p>
             {/* /api/auth/streamlabs is an API route doing a server-side OAuth redirect, not a Next page; <a> is correct here */}
             <a
@@ -107,10 +109,10 @@ export function StreamlabsManager({
               className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase"
             >
               <LinkIcon className="w-3.5 h-3.5" />
-              Połącz Streamlabs
+              {t("connectBtn")}
             </a>
             <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest mt-2">
-              Otworzy stronę Streamlabs do autoryzacji
+              {t("connectHint")}
             </p>
           </div>
         )}
@@ -121,18 +123,18 @@ export function StreamlabsManager({
         <>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              Nieprzypisane donejty ({unmatchedDonations.length})
+              {t("unmatchedTitle", { count: unmatchedDonations.length })}
             </span>
             {unmatchedDonations.length > 0 && (
               <span className="text-[9px] text-zinc-600 font-mono">
-                Wpisz username lub Discord ID i kliknij Przypisz
+                {t("unmatchedHint")}
               </span>
             )}
           </div>
 
           {unmatchedDonations.length === 0 ? (
             <p className="text-zinc-500 text-sm py-2 text-center">
-              Brak nieprzypisanych donejtów 🎉 (auto-match działa albo nie ma jeszcze donejtów)
+              {t("noUnmatched")}
             </p>
           ) : (
             <div className="space-y-1.5">
@@ -153,7 +155,7 @@ export function StreamlabsManager({
                   <div className="flex gap-1.5">
                     <input
                       type="text"
-                      placeholder="username lub Discord ID"
+                      placeholder={t("targetPh")}
                       value={assignTarget[d.id] ?? ""}
                       onChange={(e) => setAssignTarget((s) => ({ ...s, [d.id]: e.target.value }))}
                       className="flex-1 border border-zinc-800 bg-black/30 px-2 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600 placeholder:text-zinc-700"
@@ -163,14 +165,14 @@ export function StreamlabsManager({
                       disabled={busy}
                       className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
                     >
-                      Przypisz
+                      {t("assignBtn")}
                     </button>
                     <button
                       onClick={() => matchDonation(d.id, "skip")}
                       disabled={busy}
                       className="px-3 py-1 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase"
                     >
-                      Pomiń
+                      {t("skipBtn")}
                     </button>
                   </div>
                 </div>

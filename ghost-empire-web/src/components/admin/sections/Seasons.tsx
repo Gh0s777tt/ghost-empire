@@ -2,6 +2,7 @@
 // src/components/admin/sections/Seasons.tsx — lazily-loaded battle pass / seasons manager.
 import { useState, useEffect, useCallback } from "react";
 import { Ticket, Loader2, RefreshCw, Trash2, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { fmt } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -26,6 +27,7 @@ export function SeasonsManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.seasons");
   const [loading, setLoading] = useState(true);
   const [seasons, setSeasons] = useState<AdminSeason[]>([]);
   const [rewardTypes, setRewardTypes] = useState<string[]>([]);
@@ -61,19 +63,19 @@ export function SeasonsManager({
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (!res.ok) { onToast("err", data.error ?? "Błąd"); return false; }
+    if (!res.ok) { onToast("err", data.error ?? t("err")); return false; }
     return true;
   }
 
   async function ensureCurrent() {
     setBusy("ensure");
-    if (await call({ action: "ensure_current" })) { onToast("ok", "Bieżący sezon gotowy"); await load(); onSuccess(); }
+    if (await call({ action: "ensure_current" })) { onToast("ok", t("seasonReady")); await load(); onSuccess(); }
     setBusy(null);
   }
 
   async function addReward(seasonId: string) {
     const tier = parseInt(rTier, 10);
-    if (!tier || !rLabel.trim() || !rValue.trim()) { onToast("err", "Tier + label + value wymagane"); return; }
+    if (!tier || !rLabel.trim() || !rValue.trim()) { onToast("err", t("rewardFieldsRequired")); return; }
     setBusy(`add-${seasonId}`);
     const ok = await call({
       action: "add_reward",
@@ -87,14 +89,14 @@ export function SeasonsManager({
     });
     if (ok) {
       setRLabel(""); setRValue(""); setRIcon("");
-      onToast("ok", "Nagroda dodana");
+      onToast("ok", t("rewardAdded"));
       await load();
     }
     setBusy(null);
   }
 
   async function deleteReward(rewardId: string) {
-    if (!confirm("Usunąć nagrodę?")) return;
+    if (!confirm(t("deleteRewardConfirm"))) return;
     setBusy(rewardId);
     if (await call({ action: "delete_reward", rewardId })) { await load(); }
     setBusy(null);
@@ -103,9 +105,9 @@ export function SeasonsManager({
   const activeSeason = seasons.find((s) => s.active);
 
   return (
-    <SectionCard title="Battle Pass / Sezony" icon={Ticket}>
+    <SectionCard title={t("title")} icon={Ticket}>
       <p className="text-zinc-500 text-xs mb-3">
-        Sezony rolują się miesięcznie (auto przy pierwszym XP eventcie miesiąca). Widzowie zbierają XP za aktywność, odbierają nagrody na tierach. Strona widzów: <code className="text-zinc-300">/seasons</code>.
+        {t.rich("intro", { code: (c) => <code className="text-zinc-300">{c}</code> })}
       </p>
 
       <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -115,16 +117,16 @@ export function SeasonsManager({
           className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
         >
           {busy === "ensure" ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-          Utwórz / odśwież bieżący sezon
+          {t("ensureBtn")}
         </button>
-        <span className="text-[10px] text-zinc-500">Tworzy sezon dla bieżącego miesiąca z domyślnymi nagrodami.</span>
+        <span className="text-[10px] text-zinc-500">{t("ensureHint")}</span>
       </div>
 
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : seasons.length === 0 ? (
         <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-          Brak sezonów. Kliknij &quot;Utwórz bieżący sezon&quot;.
+          {t("empty")}
         </div>
       ) : (
         <div className="space-y-4">
@@ -132,17 +134,17 @@ export function SeasonsManager({
             <div className="border border-green-900 bg-green-950/10 p-3">
               <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                 <div>
-                  <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/40 text-green-300 mr-2">AKTYWNY</span>
+                  <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/40 text-green-300 mr-2">{t("activeBadge")}</span>
                   <span className="text-white font-bold">{activeSeason.name}</span>
                 </div>
                 <div className="text-[10px] font-mono text-zinc-500">
-                  {activeSeason.participants} graczy · {activeSeason.totalTiers} tierów · {fmt(activeSeason.xpPerTier)} XP/tier · do {new Date(activeSeason.endsAt).toLocaleDateString("pl-PL")}
+                  {t("seasonMeta", { players: String(activeSeason.participants), tiers: String(activeSeason.totalTiers), xp: fmt(activeSeason.xpPerTier), date: new Date(activeSeason.endsAt).toLocaleDateString("pl-PL") })}
                 </div>
               </div>
 
               <div className="space-y-1 mb-3">
                 {activeSeason.rewards.length === 0 ? (
-                  <div className="text-[11px] text-zinc-600 italic">Brak nagród.</div>
+                  <div className="text-[11px] text-zinc-600 italic">{t("noRewards")}</div>
                 ) : (
                   activeSeason.rewards.map((r) => (
                     <div key={r.id} className="flex items-center gap-2 text-[11px] border border-zinc-800 bg-black/30 px-2 py-1">
@@ -164,7 +166,7 @@ export function SeasonsManager({
               </div>
 
               <div className="border-t border-zinc-800 pt-2">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">Dodaj nagrodę</div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{t("addRewardTitle")}</div>
                 <div className="grid grid-cols-2 sm:grid-cols-6 gap-1.5 items-end">
                   <div>
                     <label className="text-[9px] text-zinc-500 block">Tier</label>
@@ -172,31 +174,31 @@ export function SeasonsManager({
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600" />
                   </div>
                   <div>
-                    <label className="text-[9px] text-zinc-500 block">Typ</label>
+                    <label className="text-[9px] text-zinc-500 block">{t("typeLabel")}</label>
                     <select value={rType} onChange={(e) => setRType(e.target.value)}
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-hidden focus:border-red-600">
-                      {rewardTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+                      {rewardTypes.map((rt) => <option key={rt} value={rt}>{rt}</option>)}
                     </select>
                   </div>
                   <div className="col-span-2">
                     <label className="text-[9px] text-zinc-500 block">Label</label>
-                    <input value={rLabel} onChange={(e) => setRLabel(e.target.value)} placeholder="np. 5000 Ghost Tokens"
+                    <input value={rLabel} onChange={(e) => setRLabel(e.target.value)} placeholder={t("labelPh")}
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-hidden focus:border-red-600" />
                   </div>
                   <div>
                     <label className="text-[9px] text-zinc-500 block">Value</label>
                     <input value={rValue} onChange={(e) => setRValue(e.target.value)}
-                      placeholder={rType === "tokens" ? "5000" : rType === "code" ? "KOD-XYZ-123" : rType === "item" ? "opis odbioru" : "wartość"}
+                      placeholder={rType === "tokens" ? t("valuePhTokens") : rType === "code" ? t("valuePhCode") : rType === "item" ? t("valuePhItem") : t("valuePhOther")}
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600" />
                   </div>
                   <div>
-                    <label className="text-[9px] text-zinc-500 block">Ikona</label>
+                    <label className="text-[9px] text-zinc-500 block">{t("iconLabel")}</label>
                     <input value={rIcon} onChange={(e) => setRIcon(e.target.value)} placeholder="👻"
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-hidden focus:border-red-600" />
                   </div>
                 </div>
                 <p className="text-[9px] text-zinc-600 mt-1 leading-relaxed">
-                  <strong className="text-zinc-400">tokens</strong>: ilość GT w „value" · <strong className="text-zinc-400">code</strong>: kod pokazywany graczowi po odebraniu · <strong className="text-zinc-400">item</strong>: nagroda rzeczowa, odbiór przez ticket (w „value" wpisz szczegóły) · reszta = kosmetyka.
+                  {t.rich("rewardHelp", { b: (c) => <strong className="text-zinc-400">{c}</strong> })}
                 </p>
                 <div className="flex items-center gap-3 mt-2">
                   <label className="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer">
@@ -209,7 +211,7 @@ export function SeasonsManager({
                     className="ml-auto px-3 py-1 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
                   >
                     {busy === `add-${activeSeason.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-                    Dodaj
+                    {t("addBtn")}
                   </button>
                 </div>
               </div>
@@ -218,12 +220,12 @@ export function SeasonsManager({
 
           {seasons.filter((s) => !s.active).length > 0 && (
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">Poprzednie sezony</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{t("pastSeasons")}</div>
               <div className="space-y-1">
                 {seasons.filter((s) => !s.active).map((s) => (
                   <div key={s.id} className="flex items-center gap-2 text-[11px] border border-zinc-900 bg-black/20 px-2 py-1.5">
                     <span className="text-white">{s.name}</span>
-                    <span className="text-zinc-600 font-mono ml-auto">{s.participants} graczy · {s.rewards.length} nagród</span>
+                    <span className="text-zinc-600 font-mono ml-auto">{t("pastSeasonMeta", { players: String(s.participants), rewards: String(s.rewards.length) })}</span>
                   </div>
                 ))}
               </div>
