@@ -28,7 +28,7 @@ export function WheelManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.wheel");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const [data, setData] = useState<Data | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [cost, setCost] = useState(100);

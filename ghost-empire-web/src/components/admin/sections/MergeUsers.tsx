@@ -140,7 +140,7 @@ function DuplicateGroupCard({
   onSuccess: () => void;
 }) {
   const t = useTranslations("admin.mergeUsers");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const MERGE_REASON_LABEL = t.raw("reason") as Record<string, string>;
   // Pick primary by default = the user with most tokens (likely the "real" account)
   const defaultPrimaryId = group.users.reduce((acc, u) => (u.tokens > acc.tokens ? u : acc), group.users[0]).id;

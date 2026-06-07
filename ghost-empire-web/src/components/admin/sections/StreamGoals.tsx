@@ -41,7 +41,7 @@ export function StreamGoalsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.streamGoals");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const GOAL_TYPE_LABEL: Record<string, string> = {
     subs: t("goalType.subs"), gift_subs: t("goalType.gift_subs"), follows: t("goalType.follows"),
     donations_pln: t("goalType.donations_pln"), cheers_bits: t("goalType.cheers_bits"), yt_members: t("goalType.yt_members"),

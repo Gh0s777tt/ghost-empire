@@ -1,65 +1,90 @@
 "use client";
 // src/components/LocaleSwitcher.tsx
-// PL/EN toggle with flags. Segmented control — click the inactive language to
-// switch on the SAME path (PL → "/", EN → "/en/…"). Flags are inline SVG, not
-// emoji (emoji flags don't render on Windows — they show "PL"/"US" letters).
+// Language picker (11 locales). A compact dropdown listing each language by its
+// own native name (autonym) — clearer than flags for a language menu, and scales
+// past the old 2-button segmented control. PL is unprefixed ("/"), every other
+// locale lives under "/<locale>/…"; selecting one switches on the SAME path.
 import { useLocale } from "next-intl";
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
-function FlagPL({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 20 14" className={className} aria-hidden>
-      <rect width="20" height="14" fill="#dc143c" />
-      <rect width="20" height="7" fill="#ffffff" />
-    </svg>
-  );
-}
-
-function FlagUS({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 20 14" className={className} aria-hidden>
-      <rect width="20" height="14" fill="#b22234" />
-      {[1, 3, 5, 7, 9, 11].map((i) => (
-        <rect key={i} y={i * (14 / 13)} width="20" height={14 / 13} fill="#ffffff" />
-      ))}
-      <rect width="8" height={7 * (14 / 13)} fill="#3c3b6e" />
-    </svg>
-  );
-}
-
-const LOCALES = [
-  { code: "pl", label: "PL", aria: "Polski", Flag: FlagPL },
-  { code: "en", label: "EN", aria: "English", Flag: FlagUS },
-] as const;
+// Native language names (autonyms) — what speakers call their own language.
+const NATIVE_NAME: Record<string, string> = {
+  pl: "Polski", en: "English", de: "Deutsch", es: "Español", it: "Italiano",
+  fr: "Français", zh: "中文", ja: "日本語", ko: "한국어", ru: "Русский", uk: "Українська",
+};
 
 export function LocaleSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click / Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   return (
-    <div className="flex items-center border border-zinc-800 divide-x divide-zinc-800" role="group" aria-label="Język / Language">
-      {LOCALES.map(({ code, label, aria, Flag }) => {
-        const active = locale === code;
-        return (
-          <button
-            key={code}
-            type="button"
-            onClick={() => { if (!active) router.replace(pathname, { locale: code }); }}
-            aria-label={aria}
-            aria-pressed={active}
-            title={aria}
-            className={cn(
-              "flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-bold tracking-widest transition-colors",
-              active ? "bg-zinc-800 text-white" : "text-zinc-500 hover:text-white hover:bg-white/5",
-            )}
-          >
-            <Flag className="w-4 h-auto shrink-0 rounded-[1px] ring-1 ring-black/40" />
-            {label}
-          </button>
-        );
-      })}
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Język / Language"
+        title={NATIVE_NAME[locale] ?? locale}
+        className="flex items-center gap-1.5 border border-zinc-800 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
+      >
+        {locale}
+        <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          aria-label="Język / Language"
+          className="absolute right-0 z-50 mt-1 max-h-80 w-44 overflow-auto border border-zinc-800 bg-zinc-950 py-1 shadow-xl"
+        >
+          {routing.locales.map((code) => {
+            const active = code === locale;
+            return (
+              <li key={code} role="option" aria-selected={active}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    if (!active) router.replace(pathname, { locale: code });
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-xs transition-colors",
+                    active ? "bg-zinc-800 text-white" : "text-zinc-400 hover:bg-white/5 hover:text-white",
+                  )}
+                >
+                  <span className="w-6 shrink-0 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                    {code}
+                  </span>
+                  <span className="truncate">{NATIVE_NAME[code] ?? code}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

@@ -36,7 +36,7 @@ export function SubathonManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.subathon");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SubathonData | null>(null);
   const [busy, setBusy] = useState<string | null>(null);

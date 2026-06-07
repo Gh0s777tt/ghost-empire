@@ -646,7 +646,7 @@ function DashboardSection({
 }) {
   const t = useTranslations("admin");
   const locale = useLocale();
-  const nf = locale === "en" ? "en-US" : "pl-PL";
+  const nf = locale;
   return (
     <div className="space-y-6">
       <SetupStatusCard onJump={onJump} />

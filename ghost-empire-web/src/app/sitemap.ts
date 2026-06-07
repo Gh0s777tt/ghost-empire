@@ -5,6 +5,7 @@
 // Each route lists PL (default, at /) + EN (/en) via hreflang alternates so
 // Google serves the right language version (i18n, next-intl `as-needed` prefix).
 import type { MetadataRoute } from "next";
+import { routing } from "@/i18n/routing";
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
@@ -28,6 +29,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/privacy", "yearly", 0.3],
   ];
 
+  const urlFor = (loc: string, path: string) =>
+    loc === routing.defaultLocale ? `${BASE}${path}` : `${BASE}/${loc}${path}`;
+
   return routes.map(([path, changeFrequency, priority]) => ({
     url: `${BASE}${path}`,
     lastModified: now,
@@ -35,8 +39,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority,
     alternates: {
       languages: {
-        pl: `${BASE}${path}`,
-        en: `${BASE}/en${path}`,
+        ...Object.fromEntries(routing.locales.map((loc) => [loc, urlFor(loc, path)])),
         "x-default": `${BASE}${path}`,
       },
     },

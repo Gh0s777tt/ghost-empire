@@ -7,12 +7,19 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function fmt(n: number, locale: string = "pl"): string {
-  return n.toLocaleString(locale === "en" ? "en-US" : "pl-PL");
+  // next-intl locale codes are valid BCP-47 tags → pass straight to Intl.
+  return n.toLocaleString(locale);
 }
+
+// "Event ended" label per locale (the only word in timeLeft; the rest is numeric).
+const ENDED_LABEL: Record<string, string> = {
+  pl: "Zakończony", en: "Ended", de: "Beendet", es: "Finalizado", it: "Terminato",
+  fr: "Terminé", zh: "已结束", ja: "終了", ko: "종료됨", ru: "Завершено", uk: "Завершено",
+};
 
 export function timeLeft(iso: string | Date, locale: string = "pl"): string {
   const ms = new Date(iso).getTime() - Date.now();
-  if (ms <= 0) return locale === "en" ? "Ended" : "Zakończony";
+  if (ms <= 0) return ENDED_LABEL[locale] ?? ENDED_LABEL.en;
   const h = Math.floor(ms / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
   if (h > 48) return `${Math.floor(h / 24)}d`;
@@ -21,7 +28,7 @@ export function timeLeft(iso: string | Date, locale: string = "pl"): string {
 }
 
 export function formatDate(date: string | Date, locale: string = "pl"): string {
-  return new Date(date).toLocaleDateString(locale === "en" ? "en-US" : "pl-PL", {
+  return new Date(date).toLocaleDateString(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -33,20 +40,20 @@ export function today(): string {
 }
 
 export function timeAgo(iso: string | Date, locale: string = "pl"): string {
-  const en = locale === "en";
+  // Localized relative time for every locale via Intl (no hardcoded language strings).
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const diff = Date.now() - new Date(iso).getTime();
-  if (diff < 0) return en ? "now" : "teraz";
+  if (diff < 0) return rtf.format(0, "second"); // future / clock skew → "now"
   const sec = Math.floor(diff / 1000);
-  if (sec < 30) return en ? "now" : "teraz";
-  if (sec < 60) return en ? `${sec}s ago` : `${sec}s temu`;
+  if (sec < 30) return rtf.format(0, "second"); // "now" / "teraz"
+  if (sec < 60) return rtf.format(-sec, "second");
   const min = Math.floor(sec / 60);
-  if (min < 60) return en ? `${min} min ago` : `${min} min temu`;
+  if (min < 60) return rtf.format(-min, "minute");
   const h = Math.floor(min / 60);
-  if (h < 24) return en ? `${h}h ago` : `${h} godz. temu`;
+  if (h < 24) return rtf.format(-h, "hour");
   const d = Math.floor(h / 24);
-  if (d === 1) return en ? "yesterday" : "wczoraj";
-  if (d < 7) return en ? `${d} days ago` : `${d} dni temu`;
-  return new Date(iso).toLocaleDateString(en ? "en-US" : "pl-PL", { day: "2-digit", month: "short" });
+  if (d < 7) return rtf.format(-d, "day"); // numeric:"auto" → "yesterday" / "2 days ago"
+  return new Date(iso).toLocaleDateString(locale, { day: "2-digit", month: "short" });
 }
 
 export function xpForLevel(level: number): number {

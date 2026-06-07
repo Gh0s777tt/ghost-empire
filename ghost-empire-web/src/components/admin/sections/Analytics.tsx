@@ -117,7 +117,7 @@ function StreamSessionsCard() {
 
 function ChatHeatmap() {
   const t = useTranslations("admin.analytics");
-  const nf = useLocale() === "en" ? "en-US" : "pl-PL";
+  const nf = useLocale();
   const [loading, setLoading] = useState(true);
   const [grid, setGrid] = useState<number[][]>([]);
   const [peak, setPeak] = useState(0);
