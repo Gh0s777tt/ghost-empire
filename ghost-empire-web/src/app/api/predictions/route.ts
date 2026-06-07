@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { lockExpiredPredictions } from "@/lib/predictions";
 
 export const dynamic = "force-dynamic";
@@ -10,12 +11,13 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
+  const tid = await currentTenantId();
 
   await lockExpiredPredictions();
 
   const [active, recent] = await Promise.all([
     prisma.prediction.findMany({
-      where: { status: { in: ["open", "locked"] } },
+      where: { status: { in: ["open", "locked"] }, ...(tid ? { tenantId: tid } : {}) },
       include: {
         entries: {
           select: { optionIndex: true, tokensWagered: true, userId: true },
@@ -24,7 +26,7 @@ export async function GET() {
       orderBy: { opensAt: "desc" },
     }),
     prisma.prediction.findMany({
-      where: { status: { in: ["resolved", "cancelled"] } },
+      where: { status: { in: ["resolved", "cancelled"] }, ...(tid ? { tenantId: tid } : {}) },
       include: {
         entries: userId
           ? { where: { userId }, select: { optionIndex: true, tokensWagered: true, payout: true } }

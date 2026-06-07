@@ -5,6 +5,7 @@ import { requirePermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { resolvePrediction, cancelPrediction, lockExpiredPredictions, MAX_OPTIONS } from "@/lib/predictions";
+import { currentTenantId } from "@/lib/tenant";
 
 export async function GET() {
   const auth = await requirePermission("create_events"); // reuse — same trust level as event creators
@@ -12,7 +13,9 @@ export async function GET() {
 
   await lockExpiredPredictions();
 
+  const tid = await currentTenantId();
   const all = await prisma.prediction.findMany({
+    where: tid ? { tenantId: tid } : {},
     include: { _count: { select: { entries: true } } },
     orderBy: [{ status: "asc" }, { opensAt: "desc" }],
     take: 50,
@@ -102,8 +105,10 @@ export async function POST(req: Request) {
         ? body.accentColor
         : undefined;
 
+    const tid = await currentTenantId();
     const created = await prisma.prediction.create({
       data: {
+        ...(tid ? { tenantId: tid } : {}),
         question,
         options,
         closesAt,
@@ -125,10 +130,10 @@ export async function POST(req: Request) {
 
   if (body.action === "lock") {
     if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
-    const updated = await prisma.prediction.update({
-      where: { id: body.id },
-      data: { status: "locked" },
-    });
+    const tid = await currentTenantId();
+    const r = await prisma.prediction.updateMany({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) }, data: { status: "locked" } });
+    if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    const updated = await prisma.prediction.findUnique({ where: { id: body.id } });
     return NextResponse.json({ ok: true, prediction: updated });
   }
 
@@ -136,10 +141,10 @@ export async function POST(req: Request) {
     if (!body.id || typeof body.announceToChat !== "boolean") {
       return NextResponse.json({ error: "id + announceToChat wymagane" }, { status: 400 });
     }
-    const updated = await prisma.prediction.update({
-      where: { id: body.id },
-      data: { announceToChat: body.announceToChat },
-    });
+    const tid = await currentTenantId();
+    const r = await prisma.prediction.updateMany({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) }, data: { announceToChat: body.announceToChat } });
+    if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    const updated = await prisma.prediction.findUnique({ where: { id: body.id } });
     return NextResponse.json({ ok: true, prediction: updated });
   }
 
@@ -190,7 +195,8 @@ export async function POST(req: Request) {
 
   if (body.action === "delete") {
     if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
-    const prediction = await prisma.prediction.findUnique({ where: { id: body.id } });
+    const tid = await currentTenantId();
+    const prediction = await prisma.prediction.findFirst({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) } });
     if (!prediction) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
     if (prediction.status !== "cancelled" && prediction.status !== "resolved") {
       return NextResponse.json({ error: "Najpierw anuluj/rozstrzygnij" }, { status: 409 });

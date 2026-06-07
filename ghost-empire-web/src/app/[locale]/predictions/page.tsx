@@ -1,6 +1,7 @@
 // src/app/predictions/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { PredictionsClient } from "@/components/predictions/PredictionsClient";
 import { lockExpiredPredictions } from "@/lib/predictions";
@@ -20,19 +21,20 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function PredictionsPage() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
+  const tid = await currentTenantId();
 
   await lockExpiredPredictions();
 
   const [active, recent, me] = await Promise.all([
     prisma.prediction.findMany({
-      where: { status: { in: ["open", "locked"] } },
+      where: { status: { in: ["open", "locked"] }, ...(tid ? { tenantId: tid } : {}) },
       include: {
         entries: { select: { optionIndex: true, tokensWagered: true, userId: true } },
       },
       orderBy: { opensAt: "desc" },
     }),
     prisma.prediction.findMany({
-      where: { status: { in: ["resolved", "cancelled"] } },
+      where: { status: { in: ["resolved", "cancelled"] }, ...(tid ? { tenantId: tid } : {}) },
       include: userId
         ? { entries: { where: { userId }, select: { optionIndex: true, tokensWagered: true, payout: true } } }
         : undefined,
