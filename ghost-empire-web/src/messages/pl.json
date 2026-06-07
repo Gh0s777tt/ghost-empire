@@ -11,6 +11,36 @@
       "loadingUrl": "Ładowanie URL overlayu…"
     },
     "setupStatus": {
+      "item": {
+        "ai": {
+          "label": "Klucz AI (postać @bot + !imagine)",
+          "hint": "Wklej klucz AI w sekcji Integracje"
+        },
+        "twitch": {
+          "label": "Twitch połączony (EventSub)",
+          "hint": "Połącz konto streamera w sekcji Twitch"
+        },
+        "twitchSubs": {
+          "label": "Subskrypcje EventSub utworzone",
+          "hint": "Kliknij Utwórz subskrypcje w sekcji Twitch"
+        },
+        "kick": {
+          "label": "Kick połączony",
+          "hint": "Połącz Kicka"
+        },
+        "youtube": {
+          "label": "YouTube połączony",
+          "hint": "Połącz YouTube"
+        },
+        "moderation": {
+          "label": "Moderacja czatu włączona",
+          "hint": "Włącz reguły w sekcji Moderacja"
+        },
+        "overlay": {
+          "label": "Token overlayu OBS",
+          "hint": "Wejdź w Stream Alerts, by wygenerować"
+        }
+      },
       "title": "Status konfiguracji",
       "done": "Gotowe: <b>{done}/{total}</b>",
       "allReqOk": "✓ Wszystko wymagane gotowe",
@@ -176,6 +206,57 @@
       "saveBtn": "Zapisz ustawienia moderacji"
     },
     "userRoles": {
+      "permGroup": {
+        "economy": "EKONOMIA",
+        "events": "EVENTY",
+        "moderation": "MODERACJA"
+      },
+      "perm": {
+        "grant_tokens": {
+          "label": "Przyznawanie tokenów",
+          "desc": "Dodawanie / odejmowanie Ghost Tokens userom (sekcja Użytkownicy)."
+        },
+        "manage_shop": {
+          "label": "Edycja sklepu",
+          "desc": "Edycja sklepu, harmonogramu streamów i bota Discord."
+        },
+        "deliver_orders": {
+          "label": "Realizacja zamówień",
+          "desc": "Oznaczanie oczekujących zamówień ze sklepu jako zrealizowane."
+        },
+        "create_events": {
+          "label": "Tworzenie eventów",
+          "desc": "Tworzenie eventów i predykcji (zakładów GT)."
+        },
+        "edit_events": {
+          "label": "Edycja eventów",
+          "desc": "Edycja istniejących eventów."
+        },
+        "draw_events": {
+          "label": "Losowanie zwycięzców",
+          "desc": "Losowanie zwycięzców w eventach / giveawayach."
+        },
+        "create_drops": {
+          "label": "Tworzenie drop codes",
+          "desc": "Tworzenie i zarządzanie drop-code'ami (kody na streamie)."
+        },
+        "ban_users": {
+          "label": "Banowanie userów",
+          "desc": "Banowanie userów — blokada konta (czasowa lub stała)."
+        },
+        "mute_users": {
+          "label": "Mutowanie userów",
+          "desc": "Wyciszanie userów."
+        },
+        "mark_subs": {
+          "label": "Flagowanie subskrybentów",
+          "desc": "Nadawanie statusu sub / mod / VIP per platforma."
+        },
+        "view_audit": {
+          "label": "Podgląd audit log",
+          "desc": "Wgląd w log akcji admina i moderacji."
+        }
+      },
       "err": "Błąd",
       "roleGranted": "Nadana rola {role} dla {user}",
       "roleRevoked": "Odebrana rola {role} dla {user}",

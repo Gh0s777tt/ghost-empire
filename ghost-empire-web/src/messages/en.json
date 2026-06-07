@@ -11,6 +11,36 @@
       "loadingUrl": "Loading overlay URL…"
     },
     "setupStatus": {
+      "item": {
+        "ai": {
+          "label": "AI key (@bot persona + !imagine)",
+          "hint": "Paste the AI key in the Integrations section"
+        },
+        "twitch": {
+          "label": "Twitch connected (EventSub)",
+          "hint": "Connect the streamer account in the Twitch section"
+        },
+        "twitchSubs": {
+          "label": "EventSub subscriptions created",
+          "hint": "Click Create subscriptions in the Twitch section"
+        },
+        "kick": {
+          "label": "Kick connected",
+          "hint": "Connect Kick"
+        },
+        "youtube": {
+          "label": "YouTube connected",
+          "hint": "Connect YouTube"
+        },
+        "moderation": {
+          "label": "Chat moderation enabled",
+          "hint": "Enable rules in the Moderation section"
+        },
+        "overlay": {
+          "label": "OBS overlay token",
+          "hint": "Go to Stream Alerts to generate it"
+        }
+      },
       "title": "Configuration status",
       "done": "Done: <b>{done}/{total}</b>",
       "allReqOk": "✓ All required ready",
@@ -176,6 +206,57 @@
       "saveBtn": "Save moderation settings"
     },
     "userRoles": {
+      "permGroup": {
+        "economy": "ECONOMY",
+        "events": "EVENTS",
+        "moderation": "MODERATION"
+      },
+      "perm": {
+        "grant_tokens": {
+          "label": "Granting tokens",
+          "desc": "Adding / removing Ghost Tokens for users (Users section)."
+        },
+        "manage_shop": {
+          "label": "Shop editing",
+          "desc": "Edit the shop, stream schedule and Discord bot."
+        },
+        "deliver_orders": {
+          "label": "Order fulfillment",
+          "desc": "Mark pending shop orders as fulfilled."
+        },
+        "create_events": {
+          "label": "Creating events",
+          "desc": "Create events and predictions (GT bets)."
+        },
+        "edit_events": {
+          "label": "Editing events",
+          "desc": "Edit existing events."
+        },
+        "draw_events": {
+          "label": "Drawing winners",
+          "desc": "Draw winners in events / giveaways."
+        },
+        "create_drops": {
+          "label": "Creating drop codes",
+          "desc": "Create and manage drop codes (on-stream codes)."
+        },
+        "ban_users": {
+          "label": "Banning users",
+          "desc": "Ban users — account lock (temporary or permanent)."
+        },
+        "mute_users": {
+          "label": "Muting users",
+          "desc": "Mute users."
+        },
+        "mark_subs": {
+          "label": "Flagging subscribers",
+          "desc": "Assign sub / mod / VIP status per platform."
+        },
+        "view_audit": {
+          "label": "View audit log",
+          "desc": "Insight into the admin and moderation action log."
+        }
+      },
       "err": "Error",
       "roleGranted": "Granted the {role} role for {user}",
       "roleRevoked": "Revoked the {role} role for {user}",
