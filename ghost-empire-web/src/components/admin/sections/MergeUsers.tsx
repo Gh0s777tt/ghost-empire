@@ -2,14 +2,9 @@
 // src/components/admin/sections/MergeUsers.tsx — lazily-loaded duplicate-account merge tool.
 import { useState, useEffect, useCallback } from "react";
 import { GitMerge, AlertTriangle, Loader2, History, Eye } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
-
-const MERGE_REASON_LABEL: Record<string, string> = {
-  shared_platform_id: "Wspólne konto OAuth (najsilniejszy sygnał)",
-  shared_email: "Wspólny email",
-  shared_discord_id: "Wspólny Discord ID",
-};
 
 type MergeUser = {
   id: string;
@@ -35,7 +30,7 @@ type MergeUser = {
 };
 
 type MergeGroup = {
-  reason: keyof typeof MERGE_REASON_LABEL;
+  reason: string;
   matchOn: string;
   users: MergeUser[];
 };
@@ -62,6 +57,7 @@ export function MergeUsersSection({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.mergeUsers");
   const [loading, setLoading] = useState(true);
   const [groups, setGroups] = useState<MergeGroup[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -73,26 +69,26 @@ export function MergeUsersSection({
       const res = await fetch("/api/admin/merge-users");
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Nie udało się załadować grup duplikatów");
+        setError(data.error ?? t("loadError"));
         setGroups([]);
       } else {
         setGroups(data.groups ?? []);
       }
     } catch {
-      setError("Błąd sieci");
+      setError(t("netErr"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { void load(); }, [load]);
 
   return (
-    <SectionCard title="Merge duplikatów" icon={GitMerge}>
+    <SectionCard title={t("title")} icon={GitMerge}>
       <div className="border border-orange-900 bg-orange-950/20 px-3 py-2.5 text-xs text-orange-200 mb-4 flex items-start gap-2">
         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-orange-400" />
         <div>
-          <strong>Operacja destrukcyjna</strong> — drugie konto zostaje całkowicie usunięte po przeniesieniu danych do primary. Działanie jest atomowe (jeden DB transaction) ale nieodwracalne.
+          {t.rich("warning", { b: (c) => <strong>{c}</strong> })}
         </div>
       </div>
 
@@ -103,10 +99,10 @@ export function MergeUsersSection({
           className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 hover:border-red-700 text-zinc-300 hover:text-white px-2.5 py-1.5 transition-colors flex items-center gap-1.5 disabled:opacity-50"
         >
           {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <History className="w-3 h-3" />}
-          Skanuj ponownie
+          {t("rescan")}
         </button>
         <span className="text-[10px] text-zinc-500">
-          Wykrywanie: ten sam OAuth provider account ID, email, lub Discord ID.
+          {t("detectHint")}
         </span>
       </div>
 
@@ -118,7 +114,7 @@ export function MergeUsersSection({
 
       {!loading && !error && groups.length === 0 && (
         <div className="border border-zinc-800 bg-black/30 p-6 text-center text-zinc-500 text-sm">
-          ✓ Brak wykrytych duplikatów — czyściutko.
+          {t("empty")}
         </div>
       )}
 
@@ -143,6 +139,8 @@ function DuplicateGroupCard({
   onToast: (k: "ok" | "err", m: string) => void;
   onSuccess: () => void;
 }) {
+  const t = useTranslations("admin.mergeUsers");
+  const MERGE_REASON_LABEL = t.raw("reason") as Record<string, string>;
   // Pick primary by default = the user with most tokens (likely the "real" account)
   const defaultPrimaryId = group.users.reduce((acc, u) => (u.tokens > acc.tokens ? u : acc), group.users[0]).id;
   const [primaryId, setPrimaryId] = useState<string>(defaultPrimaryId);
@@ -177,7 +175,7 @@ function DuplicateGroupCard({
 
   async function execute() {
     if (confirmText.trim() !== expectedConfirm) {
-      onToast("err", "Wpisz dokładny username drugiego konta żeby potwierdzić");
+      onToast("err", t("confirmRequired"));
       return;
     }
     setExecuting(true);
@@ -196,7 +194,7 @@ function DuplicateGroupCard({
       if (!res.ok) {
         onToast("err", data.error ?? "Merge failed");
       } else {
-        onToast("ok", `Scalono. Przeniesione: ${data.summary.tokens} GT, ${data.summary.transactions} txn`);
+        onToast("ok", t("merged", { tokens: String(data.summary.tokens), txn: String(data.summary.transactions) }));
         setPreview(null);
         setConfirmText("");
         onSuccess();
@@ -284,7 +282,7 @@ function DuplicateGroupCard({
                 <div className="text-white text-right">{u.accountsCount}</div>
                 <div className="text-zinc-500">Connections</div>
                 <div className="text-white text-right">{u.connectionsCount}</div>
-                <div className="text-zinc-500">Utworzone</div>
+                <div className="text-zinc-500">{t("created")}</div>
                 <div className="text-white text-right">{new Date(u.createdAt).toLocaleDateString("pl-PL")}</div>
               </div>
 
@@ -298,7 +296,7 @@ function DuplicateGroupCard({
 
               {u.connections.length > 0 && (
                 <div className="mt-2 text-[10px] text-zinc-500">
-                  Platformy: {u.connections.map((c) => `${c.platform}=${c.username}`).join(", ")}
+                  {t("platforms")} {u.connections.map((c) => `${c.platform}=${c.username}`).join(", ")}
                 </div>
               )}
             </div>
@@ -316,12 +314,12 @@ function DuplicateGroupCard({
               className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 hover:border-red-700 text-zinc-200 hover:text-white px-3 py-1.5 transition-colors flex items-center gap-1.5 disabled:opacity-50"
             >
               {previewing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye className="w-3 h-3" />}
-              Pokaż preview merge
+              {t("showPreview")}
             </button>
           ) : (
             <>
               <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                Co się przeniesie z @{preview.secondary.username} → @{preview.primary.username}
+                {t("willMoveHeader", { sec: preview.secondary.username ?? "?", prim: preview.primary.username ?? "?" })}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] font-mono">
                 {Object.entries(preview.willMove).map(([k, v]) => (
@@ -332,7 +330,7 @@ function DuplicateGroupCard({
                 ))}
               </div>
               <div className="text-[11px] text-zinc-400">
-                Tokeny po scaleniu: <strong className="text-white">{preview.finalPrimaryTokens.toLocaleString("pl-PL")} GT</strong>
+                {t.rich("finalTokens", { b: (c) => <strong className="text-white">{c}</strong>, n: preview.finalPrimaryTokens.toLocaleString("pl-PL") })}
               </div>
 
               {(preview.conflicts.accountProviders.length > 0 ||
@@ -342,7 +340,7 @@ function DuplicateGroupCard({
                 preview.conflicts.eventEntries > 0 ||
                 preview.conflicts.dropClaims > 0) && (
                 <div className="border border-orange-900 bg-orange-950/20 p-2 text-[11px] text-orange-200">
-                  <div className="font-bold mb-1">⚠ Konflikty (zostają wersje primary):</div>
+                  <div className="font-bold mb-1">{t("conflicts")}</div>
                   {preview.conflicts.accountProviders.length > 0 && (
                     <div>Account providers: {preview.conflicts.accountProviders.join(", ")}</div>
                   )}
@@ -358,8 +356,7 @@ function DuplicateGroupCard({
 
               <div className="border-t border-zinc-800 pt-3">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-                  Potwierdzenie — wpisz username drugiego konta:{" "}
-                  <code className="text-orange-300">{expectedConfirm}</code>
+                  {t.rich("confirmLabel", { code: (c) => <code className="text-orange-300">{c}</code>, name: expectedConfirm })}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -374,7 +371,7 @@ function DuplicateGroupCard({
                     className="text-[10px] font-mono uppercase tracking-widest bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 transition-colors flex items-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     {executing ? <Loader2 className="w-3 h-3 animate-spin" /> : <GitMerge className="w-3 h-3" />}
-                    Scal teraz
+                    {t("mergeNow")}
                   </button>
                 </div>
               </div>

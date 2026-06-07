@@ -3,6 +3,7 @@
 // management (admin/mod/donator + per-platform sub/mod/VIP).
 import { useState } from "react";
 import { ShieldCheck, Crown, Heart, UserCog, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { SectionCard, FieldInput } from "../shared";
@@ -14,6 +15,7 @@ function ModPermissionsPicker({
   selected: Set<string>;
   onToggle: (id: string) => void;
 }) {
+  const t = useTranslations("admin.userRoles");
   const grouped: Record<string, typeof MOD_PERMISSIONS[number][]> = {};
   for (const p of MOD_PERMISSIONS) {
     if (!grouped[p.group]) grouped[p.group] = [];
@@ -24,7 +26,7 @@ function ModPermissionsPicker({
     <div>
       <div className="flex items-center justify-between mb-2">
         <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
-          <ShieldCheck className="w-3 h-3" /> Uprawnienia moderatora
+          <ShieldCheck className="w-3 h-3" /> {t("permsTitle")}
         </label>
         <div className="flex gap-1">
           <button
@@ -32,7 +34,7 @@ function ModPermissionsPicker({
             onClick={() => MOD_PERMISSIONS.forEach((p) => { if (!selected.has(p.id)) onToggle(p.id); })}
             className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 hover:text-green-400"
           >
-            Zaznacz wszystkie
+            {t("selectAll")}
           </button>
           <span className="text-[9px] text-zinc-700">·</span>
           <button
@@ -40,7 +42,7 @@ function ModPermissionsPicker({
             onClick={() => MOD_PERMISSIONS.forEach((p) => { if (selected.has(p.id)) onToggle(p.id); })}
             className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 hover:text-red-400"
           >
-            Wyczyść
+            {t("clearAll")}
           </button>
         </div>
       </div>
@@ -89,7 +91,7 @@ function ModPermissionsPicker({
         })}
       </div>
       <p className="text-[9px] font-mono text-zinc-600 mt-2 leading-snug">
-        Admini mają wszystkie uprawnienia automatycznie. Moderatorzy — tylko zaznaczone.
+        {t("permsNote")}
       </p>
     </div>
   );
@@ -102,6 +104,7 @@ export function UserRolesCard({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.userRoles");
   const [target, setTarget] = useState("");
   const [role, setRole] = useState<"admin" | "moderator" | "donator">("moderator");
   const [enable, setEnable] = useState(true);
@@ -135,12 +138,10 @@ export function UserRolesCard({
       });
       const data = await res.json();
       if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
+        onToast("err", data.error ?? t("err"));
       } else {
-        onToast(
-          "ok",
-          `${enable ? "Nadana" : "Odebrana"} rola ${role} dla ${data.user.username ?? data.user.id}`,
-        );
+        const user = data.user.username ?? data.user.id;
+        onToast("ok", enable ? t("roleGranted", { role, user }) : t("roleRevoked", { role, user }));
         setTarget("");
         setAddDonation("");
         onSuccess();
@@ -151,10 +152,10 @@ export function UserRolesCard({
   }
 
   return (
-    <SectionCard title="Role usera (admin/mod/donator)" icon={UserCog}>
+    <SectionCard title={t("title")} icon={UserCog}>
       <div className="space-y-3">
         <FieldInput
-          label="User (username, Discord ID lub ID konta)"
+          label={t("userLabel")}
           value={target}
           onChange={setTarget}
           placeholder="gh0s77tt / 1500923809522258000 / cmpq74…"
@@ -162,7 +163,7 @@ export function UserRolesCard({
 
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Rola
+            {t("roleLabel")}
           </label>
           <div className="grid grid-cols-3 gap-1">
             {(["admin", "moderator", "donator"] as const).map((r) => {
@@ -202,7 +203,7 @@ export function UserRolesCard({
 
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Akcja
+            {t("actionLabel")}
           </label>
           <div className="grid grid-cols-2 gap-1">
             <button
@@ -212,7 +213,7 @@ export function UserRolesCard({
                 enable ? "border-green-500 bg-green-600/20 text-green-300" : "border-zinc-800 bg-zinc-950 text-zinc-500",
               )}
             >
-              ✓ Nadaj
+              {t("grant")}
             </button>
             <button
               onClick={() => setEnable(false)}
@@ -221,17 +222,17 @@ export function UserRolesCard({
                 !enable ? "border-red-500 bg-red-600/20 text-red-300" : "border-zinc-800 bg-zinc-950 text-zinc-500",
               )}
             >
-              ✗ Odbierz
+              {t("revoke")}
             </button>
           </div>
         </div>
 
         {role === "donator" && enable && (
           <FieldInput
-            label="Kwota donacji (opcjonalna, sumuje się)"
+            label={t("donationAmount")}
             value={addDonation}
             onChange={setAddDonation}
-            placeholder="np. 50 (PLN)"
+            placeholder={t("donationPh")}
             type="number"
           />
         )}
@@ -246,7 +247,7 @@ export function UserRolesCard({
           className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCog className="w-3.5 h-3.5" />}
-          Zastosuj
+          {t("apply")}
         </button>
       </div>
     </SectionCard>
@@ -260,6 +261,7 @@ export function ConnectionRolesCard({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.userRoles");
   const [target, setTarget] = useState("");
   const [platform, setPlatform] = useState<"twitch" | "kick" | "discord" | "youtube">("twitch");
   const [isSubscriber, setIsSubscriber] = useState(false);
@@ -290,9 +292,9 @@ export function ConnectionRolesCard({
       });
       const data = await res.json();
       if (!res.ok) {
-        onToast("err", data.error ?? "Błąd");
+        onToast("err", data.error ?? t("err"));
       } else {
-        onToast("ok", `Status ${platform} zaktualizowany dla ${target}`);
+        onToast("ok", t("statusUpdated", { platform, target }));
         setTarget("");
         setSubMonths("");
         onSuccess();
@@ -303,13 +305,13 @@ export function ConnectionRolesCard({
   }
 
   return (
-    <SectionCard title="Status na platformie (sub/mod/VIP)" icon={ShieldCheck}>
+    <SectionCard title={t("connTitle")} icon={ShieldCheck}>
       <div className="space-y-3">
-        <FieldInput label="User" value={target} onChange={setTarget} placeholder="username / Discord ID / ID konta" />
+        <FieldInput label={t("userShort")} value={target} onChange={setTarget} placeholder={t("userPh")} />
 
         <div>
           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
-            Platforma
+            {t("platformLabel")}
           </label>
           <div className="grid grid-cols-4 gap-1">
             {(["twitch", "kick", "discord", "youtube"] as const).map((p) => (
@@ -366,23 +368,23 @@ export function ConnectionRolesCard({
                 Tier
               </label>
               <div className="grid grid-cols-4 gap-1">
-                {(["T1", "T2", "T3", "Prime"] as const).map((t) => (
+                {(["T1", "T2", "T3", "Prime"] as const).map((tier) => (
                   <button
-                    key={t}
-                    onClick={() => setSubTier(t)}
+                    key={tier}
+                    onClick={() => setSubTier(tier)}
                     className={cn(
                       "px-1 py-1.5 border text-[10px] font-bold tracking-widest uppercase",
-                      subTier === t
+                      subTier === tier
                         ? "border-purple-500 bg-purple-600/20 text-purple-300"
                         : "border-zinc-800 bg-zinc-950 text-zinc-500",
                     )}
                   >
-                    {t}
+                    {tier}
                   </button>
                 ))}
               </div>
             </div>
-            <FieldInput label="Miesięcy sub" value={subMonths} onChange={setSubMonths} type="number" placeholder="0" />
+            <FieldInput label={t("subMonths")} value={subMonths} onChange={setSubMonths} type="number" placeholder="0" />
           </div>
         )}
 
@@ -392,7 +394,7 @@ export function ConnectionRolesCard({
           className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-          Zaktualizuj
+          {t("update")}
         </button>
       </div>
     </SectionCard>

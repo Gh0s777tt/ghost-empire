@@ -3,6 +3,7 @@
 // Pure detectors live in lib/moderation.ts; the bot fetches /api/bot/moderation.
 import { useState, useEffect, useCallback } from "react";
 import { ShieldCheck, Loader2, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { ModViolationStats } from "./ModViolationStats";
 
@@ -17,8 +18,6 @@ type ModConfig = {
   zalgoEnabled: boolean; zalgoMaxRatioPct: number; zalgoAction: string; zalgoTimeoutSecs: number;
   exemptSubs: boolean; exemptVips: boolean; exemptMods: boolean;
 };
-
-const ACTIONS: Array<[string, string]> = [["delete", "Usuń"], ["timeout", "Timeout"], ["warn", "Ostrzeż"]];
 
 function NumField({ label, value, onChange, min, max, suffix }: {
   label: string; value: number; onChange: (n: number) => void; min: number; max: number; suffix?: string;
@@ -45,6 +44,8 @@ function RuleBlock({ title, desc, enabled, onToggle, action, onAction, timeoutSe
   timeoutSecs: number; onTimeout: (n: number) => void;
   children?: React.ReactNode;
 }) {
+  const t = useTranslations("admin.moderation");
+  const ACTIONS: Array<[string, string]> = [["delete", t("actionDelete")], ["timeout", t("actionTimeout")], ["warn", t("actionWarn")]];
   return (
     <div className={"border p-3 " + (enabled ? "border-blue-900/60 bg-blue-950/10" : "border-zinc-800 bg-black/20")}>
       <div className="flex items-start justify-between gap-2 mb-1">
@@ -60,7 +61,7 @@ function RuleBlock({ title, desc, enabled, onToggle, action, onAction, timeoutSe
             <input
               type="number" min={1} max={1209600} value={timeoutSecs}
               onChange={(e) => onTimeout(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              title="Długość timeoutu (sekundy)"
+              title={t("timeoutTitle")}
               className="w-20 bg-black border border-zinc-800 px-2 py-1 text-[11px] text-white font-mono outline-hidden focus:border-blue-600"
             />
           )}
@@ -79,6 +80,7 @@ export function ModerationManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.moderation");
   const [cfg, setCfg] = useState<ModConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -115,30 +117,28 @@ export function ModerationManager({
         body: JSON.stringify({ ...cfg, profanityWords: words, profanityRegex, linkWhitelist }),
       });
       const d = await res.json();
-      if (!res.ok) { onToast("err", d.error ?? "Błąd"); return; }
+      if (!res.ok) { onToast("err", d.error ?? t("err")); return; }
       setCfg(d.config);
       setWordsText((d.config.profanityWords ?? []).join("\n"));
       setRegexText((d.config.profanityRegex ?? []).join("\n"));
       setLinkWlText((d.config.linkWhitelist ?? []).join("\n"));
-      onToast("ok", "Moderacja zapisana");
+      onToast("ok", t("saved"));
       onSuccess();
     } finally { setSaving(false); }
   }
 
   if (loading || !cfg) {
     return (
-      <SectionCard title="Moderacja czatu (automod)" icon={ShieldCheck}>
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+      <SectionCard title={t("title")} icon={ShieldCheck}>
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       </SectionCard>
     );
   }
 
   return (
-    <SectionCard title="Moderacja czatu (automod)" icon={ShieldCheck}>
+    <SectionCard title={t("title")} icon={ShieldCheck}>
       <p className="text-zinc-500 text-xs mb-3">
-        Automatyczna moderacja na Twitch / Kick / YouTube. Bot sprawdza każdą wiadomość i wykonuje akcję (usuń / timeout / ostrzeż).
-        Wymaga uprawnień moderatora dla konta bota na danej platformie. <strong className="text-zinc-300">Po zmianach zrestartuj bota.</strong>
-        Recydywiści dostają ostrzejsze kary automatycznie (eskalacja: ostrzeżenie → usuń → timeout ×2 za każde kolejne naruszenie w oknie 30 min).
+        {t.rich("intro", { b: (c) => <strong className="text-zinc-300">{c}</strong> })}
       </p>
 
       <ModViolationStats />
@@ -146,98 +146,98 @@ export function ModerationManager({
       {/* Master switch */}
       <label className="flex items-center gap-2 border border-zinc-800 bg-black/30 p-2.5 mb-3 cursor-pointer">
         <input type="checkbox" checked={cfg.enabled} onChange={(e) => patch({ enabled: e.target.checked })} className="accent-green-500 w-4 h-4" />
-        <span className="text-xs font-bold tracking-widest uppercase text-zinc-200">Automod włączony (główny przełącznik)</span>
+        <span className="text-xs font-bold tracking-widest uppercase text-zinc-200">{t("masterSwitch")}</span>
       </label>
 
       <div className="space-y-2">
         <RuleBlock
-          title="Przekleństwa" desc="Słownik zakazanych słów. Wykrywa też obejścia: leetspeak (b4d→bad) i separatory (b.a.d / b a d)."
+          title={t("profanityTitle")} desc={t("profanityDesc")}
           enabled={cfg.profanityEnabled} onToggle={(b) => patch({ profanityEnabled: b })}
           action={cfg.profanityAction} onAction={(a) => patch({ profanityAction: a })}
           timeoutSecs={cfg.profanityTimeoutSecs} onTimeout={(n) => patch({ profanityTimeoutSecs: n })}
         >
           <label className="text-[11px] text-zinc-400 block w-full">
-            Słowa (jedno na linię)
+            {t("wordsLabel")}
             <textarea
               value={wordsText} onChange={(e) => setWordsText(e.target.value)} rows={4}
-              placeholder={"slowo1\nslowo2"}
+              placeholder={t("wordsPh")}
               className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-blue-600"
             />
           </label>
           <label className="text-[11px] text-zinc-400 block w-full mt-2">
-            Wzorce regex (jeden na linię, opcjonalnie — np. <code className="text-zinc-500">v-?bucks</code>)
+            {t.rich("regexLabel", { code: (c) => <code className="text-zinc-500">{c}</code> })}
             <textarea
               value={regexText} onChange={(e) => setRegexText(e.target.value)} rows={2}
-              placeholder={"darmow\\w* gt\nv-?bucks"}
+              placeholder={t("regexPh")}
               className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-blue-600"
             />
           </label>
         </RuleBlock>
 
         <RuleBlock
-          title="Linki / URL" desc="Blokuje linki, chyba że domena jest na białej liście. Wykrywa też gołe domeny (scam.com) i skracacze (bit.ly)."
+          title={t("linkTitle")} desc={t("linkDesc")}
           enabled={cfg.linkEnabled} onToggle={(b) => patch({ linkEnabled: b })}
           action={cfg.linkAction} onAction={(a) => patch({ linkAction: a })}
           timeoutSecs={cfg.linkTimeoutSecs} onTimeout={(n) => patch({ linkTimeoutSecs: n })}
         >
           <label className="text-[11px] text-zinc-400 block w-full">
-            Biała lista domen (jedna na linię — np. <code className="text-zinc-500">twitch.tv</code>, <code className="text-zinc-500">youtube.com</code>)
+            {t.rich("whitelistLabel", { code: (c) => <code className="text-zinc-500">{c}</code> })}
             <textarea
               value={linkWlText} onChange={(e) => setLinkWlText(e.target.value)} rows={3}
-              placeholder={"twitch.tv\nyoutube.com\nclips.twitch.tv"}
+              placeholder={t("whitelistPh")}
               className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-blue-600"
             />
           </label>
           <label className="flex items-center gap-2 text-[11px] text-zinc-300 mt-1.5 cursor-pointer">
             <input type="checkbox" checked={cfg.linkAllowSubs} onChange={(e) => patch({ linkAllowSubs: e.target.checked })} className="accent-blue-500" />
-            Subskrybenci / VIP / mod mogą wrzucać linki
+            {t("linkAllowSubs")}
           </label>
         </RuleBlock>
 
         <RuleBlock
-          title="Nadmiar wielkich liter (CAPS)" desc="Flaguje wiadomości, gdzie zbyt duży % liter to wielkie litery (ignoruje krótkie)."
+          title={t("capsTitle")} desc={t("capsDesc")}
           enabled={cfg.capsEnabled} onToggle={(b) => patch({ capsEnabled: b })}
           action={cfg.capsAction} onAction={(a) => patch({ capsAction: a })}
           timeoutSecs={cfg.capsTimeoutSecs} onTimeout={(n) => patch({ capsTimeoutSecs: n })}
         >
-          <NumField label="Min. liter" value={cfg.capsMinLetters} onChange={(n) => patch({ capsMinLetters: n })} min={1} max={200} />
-          <NumField label="Max % CAPS" value={cfg.capsMaxRatioPct} onChange={(n) => patch({ capsMaxRatioPct: n })} min={1} max={100} suffix="%" />
+          <NumField label={t("capsMinLetters")} value={cfg.capsMinLetters} onChange={(n) => patch({ capsMinLetters: n })} min={1} max={200} />
+          <NumField label={t("capsMaxRatio")} value={cfg.capsMaxRatioPct} onChange={(n) => patch({ capsMaxRatioPct: n })} min={1} max={100} suffix="%" />
         </RuleBlock>
 
         <RuleBlock
-          title="Limit długości" desc="Maksymalna liczba znaków w wiadomości."
+          title={t("lengthTitle")} desc={t("lengthDesc")}
           enabled={cfg.lengthEnabled} onToggle={(b) => patch({ lengthEnabled: b })}
           action={cfg.lengthAction} onAction={(a) => patch({ lengthAction: a })}
           timeoutSecs={cfg.lengthTimeoutSecs} onTimeout={(n) => patch({ lengthTimeoutSecs: n })}
         >
-          <NumField label="Max znaków" value={cfg.lengthMax} onChange={(n) => patch({ lengthMax: n })} min={1} max={5000} />
+          <NumField label={t("lengthMax")} value={cfg.lengthMax} onChange={(n) => patch({ lengthMax: n })} min={1} max={5000} />
         </RuleBlock>
 
         <RuleBlock
-          title="Powtórzenia / flood" desc="Ten sam znak lub słowo powtórzone zbyt wiele razy (spam emotek, copypasta)."
+          title={t("repeatTitle")} desc={t("repeatDesc")}
           enabled={cfg.repeatEnabled} onToggle={(b) => patch({ repeatEnabled: b })}
           action={cfg.repeatAction} onAction={(a) => patch({ repeatAction: a })}
           timeoutSecs={cfg.repeatTimeoutSecs} onTimeout={(n) => patch({ repeatTimeoutSecs: n })}
         >
-          <NumField label="Max ten sam znak" value={cfg.repeatCharRun} onChange={(n) => patch({ repeatCharRun: n })} min={2} max={200} />
-          <NumField label="Max to samo słowo" value={cfg.repeatWordRun} onChange={(n) => patch({ repeatWordRun: n })} min={2} max={100} />
+          <NumField label={t("repeatCharRun")} value={cfg.repeatCharRun} onChange={(n) => patch({ repeatCharRun: n })} min={2} max={200} />
+          <NumField label={t("repeatWordRun")} value={cfg.repeatWordRun} onChange={(n) => patch({ repeatWordRun: n })} min={2} max={100} />
         </RuleBlock>
 
         <RuleBlock
-          title="Tekst zalgo" desc="Glitch-text — nadmiar znaków łączących Unicode (ḩ̸̢̛e̵l̶l̷o). Nie flaguje polskich liter."
+          title={t("zalgoTitle")} desc={t("zalgoDesc")}
           enabled={cfg.zalgoEnabled} onToggle={(b) => patch({ zalgoEnabled: b })}
           action={cfg.zalgoAction} onAction={(a) => patch({ zalgoAction: a })}
           timeoutSecs={cfg.zalgoTimeoutSecs} onTimeout={(n) => patch({ zalgoTimeoutSecs: n })}
         >
-          <NumField label="Max % znaków łączących" value={cfg.zalgoMaxRatioPct} onChange={(n) => patch({ zalgoMaxRatioPct: n })} min={1} max={100} suffix="%" />
+          <NumField label={t("zalgoMaxRatio")} value={cfg.zalgoMaxRatioPct} onChange={(n) => patch({ zalgoMaxRatioPct: n })} min={1} max={100} suffix="%" />
         </RuleBlock>
       </div>
 
       {/* Exemptions */}
       <div className="border border-zinc-800 bg-black/20 p-3 mt-3">
-        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">Pomijaj (whitelist)</div>
+        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{t("exemptHeader")}</div>
         <div className="flex flex-wrap gap-4">
-          {([["exemptSubs", "Subskrybentów"], ["exemptVips", "VIP-ów"], ["exemptMods", "Moderatorów"]] as const).map(([k, label]) => (
+          {([["exemptSubs", t("exemptSubs")], ["exemptVips", t("exemptVips")], ["exemptMods", t("exemptMods")]] as const).map(([k, label]) => (
             <label key={k} className="flex items-center gap-2 cursor-pointer text-xs text-zinc-300">
               <input type="checkbox" checked={cfg[k]} onChange={(e) => patch({ [k]: e.target.checked })} className="accent-blue-500" />
               {label}
@@ -252,7 +252,7 @@ export function ModerationManager({
         className="mt-3 w-full px-4 py-2.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-        Zapisz ustawienia moderacji
+        {t("saveBtn")}
       </button>
     </SectionCard>
   );
