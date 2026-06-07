@@ -10,6 +10,32 @@ datasource db {
 }
 
 // =====================================================
+// TENANCY (multi-tenant SaaS — Phase 1 scaffold)
+// =====================================================
+// One row per streamer/customer. Phase 1 introduces the model + User.tenantId
+// (nullable, backfilled to the default tenant). Later phases scope the remaining
+// models, resolve the tenant from the request subdomain, and make tenantId
+// required once every row is attributed.
+
+model Tenant {
+  id          String   @id @default(cuid())
+  slug        String   @unique           // subdomain + URL key, e.g. "ghost-empire"
+  name        String                     // brand display name, e.g. "GH0ST EMPIRE"
+  shortName   String?                    // manifest short_name / compact UI
+  brandColor  String   @default("#E50914")
+  logoUrl     String?
+  domain      String?                    // optional custom domain
+  ownerUserId String?                    // streamer-admin who owns this tenant (plain ref — no relation, to avoid a second User<->Tenant edge)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Phase 3 will scope the remaining models; User is the anchor relation.
+  users       User[]
+
+  @@map("tenants")
+}
+
+// =====================================================
 // USER & AUTH
 // =====================================================
 
@@ -59,6 +85,11 @@ model User {
   bannedUntil    DateTime?                 // null = permanent
   banReason      String?
 
+  // Tenancy (multi-tenant SaaS). Phase 1: nullable + backfilled to the default
+  // tenant; a later phase makes it required once every row is scoped.
+  tenantId      String?
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
+
   // Timestamps
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -91,6 +122,7 @@ model User {
   @@index([totalEarned])
   @@index([level, xp])
   @@index([streak])
+  @@index([tenantId])
   @@map("users")
 }
 

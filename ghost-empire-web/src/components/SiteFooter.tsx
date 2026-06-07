@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { SocialLinksRow } from "@/components/SocialLinks";
+import { SITE } from "@/lib/site";
 
 export async function SiteFooter() {
   const t = await getTranslations("footer");
@@ -19,7 +20,7 @@ export async function SiteFooter() {
               <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              GH0ST EMPIRE © 2026 · {t("community")}
+              {SITE.name} © {SITE.year} · {t("community")}
             </div>
           </div>
 

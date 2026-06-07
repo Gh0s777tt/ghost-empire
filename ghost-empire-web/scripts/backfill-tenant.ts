@@ -1,0 +1,39 @@
+// scripts/backfill-tenant.ts
+// Phase 1 of the multi-tenant SaaS migration: create the default "Ghost Empire"
+// tenant and attach every existing user to it. Idempotent — safe to re-run.
+//   npx tsx scripts/backfill-tenant.ts      (reads DATABASE_URL from .env.local / .env)
+// Run AFTER `npx prisma db push` (the tenants table + users.tenantId must exist).
+export {}; // mark as a module so top-level `main`/`DEFAULT` don't collide with sibling scripts
+
+// Load env BEFORE importing the prisma client — the pg driver adapter reads
+// DATABASE_URL at import time (src/lib/prisma.ts), so a dynamic import is required.
+for (const f of [".env.local", ".env"]) {
+  try {
+    process.loadEnvFile(f);
+  } catch {
+    /* file absent (CI / Vercel) — env already injected */
+  }
+}
+
+// Mirrors src/lib/site.ts — kept inline so the script has no app-alias dependency.
+const DEFAULT = { slug: "ghost-empire", name: "GH0ST EMPIRE", shortName: "Ghost Empire", brandColor: "#E50914" };
+
+async function main() {
+  const { prisma } = await import("../src/lib/prisma");
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: DEFAULT.slug },
+    update: {},
+    create: { slug: DEFAULT.slug, name: DEFAULT.name, shortName: DEFAULT.shortName, brandColor: DEFAULT.brandColor },
+  });
+  const { count } = await prisma.user.updateMany({
+    where: { tenantId: null },
+    data: { tenantId: tenant.id },
+  });
+  console.log(`✅ default tenant "${tenant.slug}" (${tenant.id}); attached ${count} user(s)`);
+  await prisma.$disconnect();
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
