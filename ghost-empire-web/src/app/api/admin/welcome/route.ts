@@ -4,18 +4,25 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const MAX_TEMPLATE = 300;
+
+// Per-tenant welcome config (get-or-create); legacy id:"default" when no tenant.
+async function getWelcomeCfg() {
+  const tid = await currentTenantId();
+  if (tid) {
+    const existing = await prisma.welcomeConfig.findFirst({ where: { tenantId: tid } });
+    return existing ?? (await prisma.welcomeConfig.create({ data: { tenantId: tid } }));
+  }
+  return prisma.welcomeConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
+}
 
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const config = await prisma.welcomeConfig.upsert({
-    where: { id: "default" },
-    create: { id: "default" },
-    update: {},
-  });
+  const config = await getWelcomeCfg();
   return NextResponse.json({
     config: {
       enabled: config.enabled,
@@ -50,11 +57,8 @@ export async function POST(req: Request) {
     patch.bonusTokens = Math.min(5000, Math.max(0, Math.floor(body.bonusTokens)));
   }
 
-  const config = await prisma.welcomeConfig.upsert({
-    where: { id: "default" },
-    create: { id: "default", ...patch },
-    update: patch,
-  });
+  const row = await getWelcomeCfg();
+  const config = await prisma.welcomeConfig.update({ where: { id: row.id }, data: patch });
   await logAdminAction({
     adminId: auth.userId,
     action: "set_user_role",

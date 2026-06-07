@@ -35,6 +35,10 @@ async function main() {
   // Each Phase 3 model that gains a tenantId adds a line here; re-run after its db push.
   const ic = await prisma.integrationConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   integrationConfig: attached ${ic.count} row(s)`);
+  const wc = await prisma.welcomeConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   welcomeConfig: attached ${wc.count} row(s)`);
+  const mc = await prisma.moderationConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   moderationConfig: attached ${mc.count} row(s)`);
 
   await prisma.$disconnect();
 }

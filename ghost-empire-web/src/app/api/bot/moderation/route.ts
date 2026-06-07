@@ -4,11 +4,17 @@
 // chosen action. Mirrors /api/bot/config (public, read-only, enabled-aware).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const c = await prisma.moderationConfig.findUnique({ where: { id: "default" } });
+  // Tenant from the request Host (the bot calls the tenant's subdomain); legacy
+  // id:"default" when there's no tenant (single-tenant / pre-backfill).
+  const tid = await currentTenantId();
+  const c = tid
+    ? await prisma.moderationConfig.findFirst({ where: { tenantId: tid } })
+    : await prisma.moderationConfig.findUnique({ where: { id: "default" } });
 
   // Not configured yet, or master switch off → bot does nothing.
   if (!c || !c.enabled) {
