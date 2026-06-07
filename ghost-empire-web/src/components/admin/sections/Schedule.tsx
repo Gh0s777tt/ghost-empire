@@ -2,11 +2,10 @@
 // src/components/admin/sections/Schedule.tsx — lazily-loaded weekly stream schedule.
 import { useState } from "react";
 import { CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard, FieldInput } from "../shared";
 import type { ScheduleSlot } from "../types";
-
-const DAYS_PL_LONG = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
 
 export function ScheduleManager({
   slots, onToast, onSuccess, pending,
@@ -16,6 +15,8 @@ export function ScheduleManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.schedule");
+  const DAYS = t.raw("days") as string[];
   const [dayOfWeek, setDayOfWeek] = useState("1"); // Monday
   const [startHour, setStartHour] = useState("18");
   const [startMinute, setStartMinute] = useState("0");
@@ -41,9 +42,9 @@ export function ScheduleManager({
         }),
       });
       const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? "Błąd");
+      if (!res.ok) onToast("err", data.error ?? t("err"));
       else {
-        onToast("ok", "Slot dodany");
+        onToast("ok", t("slotAdded"));
         setTitle("");
         onSuccess();
       }
@@ -51,12 +52,12 @@ export function ScheduleManager({
   }
 
   async function deleteSlot(id: string) {
-    if (!confirm("Usunąć ten slot?")) return;
+    if (!confirm(t("deleteConfirm"))) return;
     setBusyId(id);
     try {
       const res = await fetch(`/api/admin/schedule?id=${id}`, { method: "DELETE" });
-      if (res.ok) { onToast("ok", "Slot usunięty"); onSuccess(); }
-      else onToast("err", "Błąd");
+      if (res.ok) { onToast("ok", t("slotDeleted")); onSuccess(); }
+      else onToast("err", t("err"));
     } finally { setBusyId(null); }
   }
 
@@ -73,17 +74,17 @@ export function ScheduleManager({
   }
 
   return (
-    <SectionCard title={`Plan streamów (${slots.length} slot${slots.length === 1 ? "" : "ów"})`} icon={CalendarDays}>
+    <SectionCard title={t("title", { count: slots.length })} icon={CalendarDays}>
       <p className="text-zinc-500 text-xs mb-3">
-        Tygodniowy plan widoczny na <code className="text-red-400">/schedule</code>. Powtarza się co tydzień.
+        {t.rich("intro", { code: (c) => <code className="text-red-400">{c}</code> })}
       </p>
 
       {/* New slot form */}
       <div className="border border-zinc-800 bg-black/30 p-3 mb-4 space-y-2">
-        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Dodaj nowy slot</div>
+        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("addTitle")}</div>
 
         <div>
-          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">Dzień</label>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("dayLabel")}</label>
           <div className="grid grid-cols-7 gap-1">
             {[1, 2, 3, 4, 5, 6, 0].map((d) => (
               <button
@@ -96,21 +97,21 @@ export function ScheduleManager({
                     : "border-zinc-800 bg-zinc-950 text-zinc-500 hover:text-zinc-300",
                 )}
               >
-                {DAYS_PL_LONG[d].slice(0, 2)}
+                {DAYS[d].slice(0, 2)}
               </button>
             ))}
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <FieldInput label="Godzina" value={startHour} onChange={setStartHour} type="number" placeholder="18" />
-          <FieldInput label="Minuta" value={startMinute} onChange={setStartMinute} type="number" placeholder="0" />
-          <FieldInput label="Czas trwania (min)" value={durationMinutes} onChange={setDurationMinutes} type="number" />
+          <FieldInput label={t("hourLabel")} value={startHour} onChange={setStartHour} type="number" placeholder="18" />
+          <FieldInput label={t("minuteLabel")} value={startMinute} onChange={setStartMinute} type="number" placeholder="0" />
+          <FieldInput label={t("durationLabel")} value={durationMinutes} onChange={setDurationMinutes} type="number" />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <FieldInput label="Nazwa (opc.)" value={title} onChange={setTitle} placeholder="np. Just chatting" />
-          <FieldInput label="Platforma (opc.)" value={platform} onChange={setPlatform} placeholder="twitch / kick" />
+          <FieldInput label={t("nameLabel")} value={title} onChange={setTitle} placeholder={t("namePh")} />
+          <FieldInput label={t("platformLabel")} value={platform} onChange={setPlatform} placeholder="twitch / kick" />
         </div>
 
         <button
@@ -119,7 +120,7 @@ export function ScheduleManager({
           className="w-full px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-          Dodaj slot
+          {t("addBtn")}
         </button>
       </div>
 
@@ -135,7 +136,7 @@ export function ScheduleManager({
               )}
             >
               <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 w-24">
-                {DAYS_PL_LONG[s.dayOfWeek]}
+                {DAYS[s.dayOfWeek]}
               </span>
               <span className="font-mono text-sm text-white">
                 {s.startHour.toString().padStart(2, "0")}:{s.startMinute.toString().padStart(2, "0")}
@@ -166,7 +167,7 @@ export function ScheduleManager({
           ))}
         </div>
       ) : (
-        <p className="text-zinc-500 text-sm">Brak slotów. Dodaj pierwszy powyżej.</p>
+        <p className="text-zinc-500 text-sm">{t("empty")}</p>
       )}
     </SectionCard>
   );

@@ -4,6 +4,7 @@
 // Extracted from the AdminClient monolith; rendered via next/dynamic.
 import { useState, useEffect } from "react";
 import { Radio, Loader2, TrendingUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
 import { SectionCard } from "../shared";
 
@@ -21,6 +22,7 @@ function fmtBroadcastDuration(sec: number): string {
 // "Czas na streamie" — broadcast sessions from Twitch EventSub stream.online/offline.
 // Measures the STREAMER's broadcast time (not per-viewer — EventSub can't do that).
 function StreamSessionsCard() {
+  const t = useTranslations("admin.analytics");
   const [loading, setLoading] = useState(true);
   const [streams, setStreams] = useState<{
     live: { startedAt: string } | null;
@@ -56,15 +58,15 @@ function StreamSessionsCard() {
     : 0;
 
   return (
-    <SectionCard title="Czas na streamie" icon={Radio}>
+    <SectionCard title={t("streamTimeTitle")} icon={Radio}>
       <p className="text-zinc-500 text-xs mb-3">
-        Sesje nadawania z Twitch EventSub (<code>stream.online</code>/<code>stream.offline</code>). Mierzy czas <strong>nadawania streamera</strong>, nie czas oglądania per-widz.
+        {t.rich("streamIntro", { code: (c) => <code>{c}</code>, b: (c) => <strong>{c}</strong> })}
       </p>
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : !streams || (streams.count === 0 && !streams.live) ? (
         <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-          Brak sesji — pojawią się po pierwszym streamie. Wymaga utworzenia subskrypcji <strong>stream.online/offline</strong> w sekcji <span className="font-mono">Twitch</span> (przycisk „Utwórz subskrypcje").
+          {t.rich("streamEmpty", { b: (c) => <strong>{c}</strong>, mono: (c) => <span className="font-mono">{c}</span> })}
         </div>
       ) : (
         <>
@@ -73,22 +75,22 @@ function StreamSessionsCard() {
               "border p-3",
               streams.live ? "border-green-700/60 bg-green-950/20" : "border-zinc-800 bg-black/30",
             )}>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">Status</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{t("statusLabel")}</div>
               {streams.live ? (
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                   <span className="text-sm font-bold text-green-300 tabular-nums">LIVE · {fmtBroadcastDuration(liveUptime)}</span>
                 </div>
               ) : (
-                <div className="text-sm font-bold text-zinc-400">Offline</div>
+                <div className="text-sm font-bold text-zinc-400">{t("offline")}</div>
               )}
             </div>
             <div className="border border-zinc-800 bg-black/30 p-3">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">Łączny czas nadawania</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{t("totalBroadcast")}</div>
               <div className="text-sm font-bold text-white">{fmtBroadcastDuration(streams.totalSeconds)}</div>
             </div>
             <div className="border border-zinc-800 bg-black/30 p-3">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">Liczba streamów</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{t("streamCount")}</div>
               <div className="text-sm font-bold text-white">{streams.count}</div>
             </div>
           </div>
@@ -100,7 +102,7 @@ function StreamSessionsCard() {
                 <div className="flex-1 min-w-0 text-sm text-white truncate">{formatDate(s.startedAt)}</div>
                 <div className="text-[11px] font-mono text-zinc-400 shrink-0">
                   {s.endedAt === null
-                    ? <span className="text-green-400">trwa…</span>
+                    ? <span className="text-green-400">{t("ongoing")}</span>
                     : (s.durationSeconds != null ? fmtBroadcastDuration(s.durationSeconds) : "—")}
                 </div>
               </div>
@@ -113,6 +115,7 @@ function StreamSessionsCard() {
 }
 
 function ChatHeatmap() {
+  const t = useTranslations("admin.analytics");
   const [loading, setLoading] = useState(true);
   const [grid, setGrid] = useState<number[][]>([]);
   const [peak, setPeak] = useState(0);
@@ -136,20 +139,20 @@ function ChatHeatmap() {
     return () => { cancelled = true; };
   }, []);
 
-  const days = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"];
+  const days = t.raw("daysShort") as string[];
   const cellColor = (v: number) =>
     v <= 0 || peak <= 0 ? "rgba(255,255,255,0.04)" : `rgba(229,9,20,${(0.15 + (v / peak) * 0.85).toFixed(3)})`;
 
   return (
-    <SectionCard title="Analityka — heatmapa czatu" icon={TrendingUp}>
+    <SectionCard title={t("heatmapTitle")} icon={TrendingUp}>
       <p className="text-zinc-500 text-xs mb-3">
-        Kiedy czat jest najbardziej aktywny (dzień tygodnia × godzina, czas Europe/Warsaw). Zliczane z aktywności na Twitch + Kick + YouTube (1/min/widz).
+        {t("heatmapIntro")}
       </p>
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : total === 0 ? (
         <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-          Brak danych — pojawią się, gdy ktoś napisze na czacie podczas streamu.
+          {t("heatmapEmpty")}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -169,7 +172,7 @@ function ChatHeatmap() {
             ))}
           </div>
           <div className="text-[10px] text-zinc-600 mt-2">
-            Łącznie {total.toLocaleString("pl-PL")} aktywnych chatter-minut · szczyt {peak}/slot
+            {t("heatmapFooter", { total: total.toLocaleString("pl-PL"), peak })}
           </div>
         </div>
       )}

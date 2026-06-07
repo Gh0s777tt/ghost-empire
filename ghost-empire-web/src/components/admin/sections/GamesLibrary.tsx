@@ -3,6 +3,7 @@
 // Configure the SteamID, sync the owned-games library, and hide/show individual games.
 import { useCallback, useEffect, useState } from "react";
 import { Gamepad2, Loader2, RefreshCw, Check, Eye, EyeOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 
 type Data = {
@@ -22,6 +23,7 @@ export function GamesLibraryManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.gamesLibrary");
   const [data, setData] = useState<Data | null>(null);
   const [steamInput, setSteamInput] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -39,28 +41,28 @@ export function GamesLibraryManager({
   async function call(payload: Record<string, unknown>): Promise<unknown | null> {
     const r = await fetch("/api/admin/games", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const d = await r.json();
-    if (!r.ok) { onToast("err", d.error ?? "Błąd"); return null; }
+    if (!r.ok) { onToast("err", d.error ?? t("err")); return null; }
     return d;
   }
 
   async function saveSteamId() {
     setBusy("save");
     const r = (await call({ action: "set_steam_id", steamId: steamInput.trim() })) as { steamId?: string } | null;
-    if (r) { onToast("ok", r.steamId ? `SteamID: ${r.steamId}` : "SteamID wyczyszczony"); await load(); }
+    if (r) { onToast("ok", r.steamId ? t("steamIdSet", { id: r.steamId }) : t("steamIdCleared")); await load(); }
     setBusy(null);
   }
 
   async function sync() {
     setBusy("sync");
     const r = (await call({ action: "sync" })) as { synced?: number; removed?: number } | null;
-    if (r) { onToast("ok", `Steam: zsynchronizowano ${r.synced ?? 0} gier`); await load(); onSuccess(); }
+    if (r) { onToast("ok", t("steamSynced", { count: r.synced ?? 0 })); await load(); onSuccess(); }
     setBusy(null);
   }
 
   async function syncPsn() {
     setBusy("psn");
     const r = (await call({ action: "sync_psn" })) as { synced?: number } | null;
-    if (r) { onToast("ok", `PSN: zsynchronizowano ${r.synced ?? 0} tytułów`); await load(); onSuccess(); }
+    if (r) { onToast("ok", t("psnSynced", { count: r.synced ?? 0 })); await load(); onSuccess(); }
     setBusy(null);
   }
 
@@ -72,45 +74,45 @@ export function GamesLibraryManager({
 
   if (!data) {
     return (
-      <SectionCard title="Biblioteka gier" icon={Gamepad2}>
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+      <SectionCard title={t("title")} icon={Gamepad2}>
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       </SectionCard>
     );
   }
 
   return (
-    <SectionCard title="Biblioteka gier" icon={Gamepad2}>
+    <SectionCard title={t("title")} icon={Gamepad2}>
       <p className="text-zinc-500 text-xs mb-4 leading-relaxed">
-        Zagregowana biblioteka gier na publicznej stronie <code className="text-zinc-400">/games</code>. Steam działa od ręki (oficjalne API).
-        {!data.hasKey && <strong className="text-red-400"> ⚠️ Brak STEAM_API_KEY w env.</strong>}
+        {t.rich("intro", { code: (c) => <code className="text-zinc-400">{c}</code> })}
+        {!data.hasKey && <strong className="text-red-400">{t("noSteamKey")}</strong>}
       </p>
 
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <Stat label="Gier" value={data.count.toLocaleString("pl-PL")} />
-        <Stat label="Godzin łącznie" value={data.totalHours.toLocaleString("pl-PL")} />
-        <Stat label="Ostatni sync" value={data.steamSyncedAt ? new Date(data.steamSyncedAt).toLocaleDateString("pl-PL") : "—"} />
+        <Stat label={t("statGames")} value={data.count.toLocaleString("pl-PL")} />
+        <Stat label={t("statHours")} value={data.totalHours.toLocaleString("pl-PL")} />
+        <Stat label={t("statLastSync")} value={data.steamSyncedAt ? new Date(data.steamSyncedAt).toLocaleDateString("pl-PL") : "—"} />
       </div>
 
       <div className="border border-zinc-800 bg-black/30 p-3 mb-4 space-y-2">
-        <label className="text-[11px] text-zinc-400 block">SteamID64, link do profilu lub vanity
+        <label className="text-[11px] text-zinc-400 block">{t("steamIdLabel")}
           <input value={steamInput} onChange={(e) => setSteamInput(e.target.value)} placeholder="76561198… / steamcommunity.com/profiles/… / nick"
             className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-blue-600" />
         </label>
         <div className="flex gap-2">
           <button onClick={saveSteamId} disabled={busy === "save" || pending}
             className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
-            {busy === "save" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Zapisz
+            {busy === "save" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} {t("save")}
           </button>
           <button onClick={sync} disabled={busy === "sync" || pending || !data.steamId}
             className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
-            {busy === "sync" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Synchronizuj Steam
+            {busy === "sync" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} {t("syncSteam")}
           </button>
-          <button onClick={syncPsn} disabled={busy === "psn" || pending || !data.hasNpsso} title={data.hasNpsso ? "Synchronizuj bibliotekę PSN (npsso)" : "Brak PSN_NPSSO w env"}
+          <button onClick={syncPsn} disabled={busy === "psn" || pending || !data.hasNpsso} title={data.hasNpsso ? t("psnTitleOn") : t("psnTitleOff")}
             className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
-            {busy === "psn" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Synchronizuj PSN
+            {busy === "psn" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} {t("syncPsn")}
           </button>
         </div>
-        <p className="text-[10px] text-zinc-600">PSN: gra wymaga ważnego <code className="text-zinc-500">PSN_NPSSO</code> (wygasa ~60 dni — odśwież z ssocookie). {data.hasNpsso ? "✅ ustawiony" : "⚠️ brak w env"}</p>
+        <p className="text-[10px] text-zinc-600">{t.rich("psnNote", { code: (c) => <code className="text-zinc-500">{c}</code> })} {data.hasNpsso ? t("psnSet") : t("psnMissing")}</p>
       </div>
 
       {data.games.length > 0 && (
@@ -123,7 +125,7 @@ export function GamesLibraryManager({
               <span className="text-xs text-white flex-1 truncate">{g.name}</span>
               <span className="text-[10px] font-mono text-zinc-500 shrink-0">{g.hours}h</span>
               <button onClick={() => toggleHidden(g.id, !g.hidden)} disabled={busy === g.id}
-                className="text-zinc-500 hover:text-white shrink-0" title={g.hidden ? "Pokaż" : "Ukryj"}>
+                className="text-zinc-500 hover:text-white shrink-0" title={g.hidden ? t("show") : t("hide")}>
                 {g.hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
             </div>
