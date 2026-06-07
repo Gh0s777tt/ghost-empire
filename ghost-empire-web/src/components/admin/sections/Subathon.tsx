@@ -2,6 +2,7 @@
 // src/components/admin/sections/Subathon.tsx — lazily-loaded subathon manager.
 import { useState, useEffect, useCallback } from "react";
 import { Hourglass, Loader2, Play } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { SubathonCard } from "@/components/SubathonCard";
@@ -34,6 +35,7 @@ export function SubathonManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.subathon");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SubathonData | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export function SubathonManager({
       });
       const d = await res.json();
       if (!res.ok) {
-        onToast("err", d.error ?? "Błąd");
+        onToast("err", d.error ?? t("err"));
         return;
       }
       if (d.subathon) setData(d.subathon);
@@ -95,11 +97,11 @@ export function SubathonManager({
   return (
     <SectionCard title="Subathon" icon={Hourglass}>
       <p className="text-zinc-500 text-xs mb-3">
-        Odliczanie przedłużane automatycznie przez <strong>suby/gifty</strong> (Twitch + Kick) i <strong>donacje</strong> (Streamlabs + YouTube).
+        {t.rich("intro", { b: (c) => <strong>{c}</strong> })}
       </p>
 
       <div className="mb-4">
-        <OverlayPreview path="/overlay/subathon" note="Odliczanie pojawia się u góry ekranu, gdy subathon jest aktywny. Token współdzielony z alertami/goals.">
+        <OverlayPreview path="/overlay/subathon" note={t("obsNote")}>
           <div className="flex justify-center">
             <SubathonCard remainingMs={2 * 3600 * 1000 + 34 * 60 * 1000 + 12 * 1000} ended={false} accent={accent} label={label} />
           </div>
@@ -108,9 +110,9 @@ export function SubathonManager({
 
       {/* Appearance: heading text + accent color (live in the preview above) */}
       <div className="mb-4 border border-zinc-800 bg-black/30 p-3">
-        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">Wygląd overlaya</div>
+        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{t("appearanceTitle")}</div>
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-end">
-          <label className="text-xs text-zinc-400">Napis na timerze
+          <label className="text-xs text-zinc-400">{t("timerLabel")}
             <input
               type="text"
               value={label}
@@ -120,7 +122,7 @@ export function SubathonManager({
               className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden"
             />
           </label>
-          <label className="text-xs text-zinc-400">Kolor akcentu
+          <label className="text-xs text-zinc-400">{t("accentLabel")}
             <div className="flex items-center gap-2 mt-1">
               <input type="color" value={accent} onChange={(e) => setAccent(e.target.value)} className="w-10 h-9 bg-black border border-zinc-800 cursor-pointer" />
               <input
@@ -132,25 +134,25 @@ export function SubathonManager({
             </div>
           </label>
           <button
-            onClick={() => call("appearance", { accentColor: accent, label }, "Wygląd zapisany")}
+            onClick={() => call("appearance", { accentColor: accent, label }, t("appearanceSaved"))}
             disabled={!!busy || pending}
             className="border border-zinc-700 hover:border-green-600 text-green-300 px-3 py-2 text-xs font-mono uppercase tracking-widest disabled:opacity-50"
           >
-            {busy === "appearance" ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "Zapisz wygląd"}
+            {busy === "appearance" ? <Loader2 className="w-3 h-3 animate-spin inline" /> : t("saveAppearance")}
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : data?.active ? (
         <div className="space-y-3">
           <div className="border border-red-800 bg-red-950/20 p-4 text-center">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-red-400">Pozostało</div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-red-400">{t("remaining")}</div>
             <div className="text-5xl font-black text-white tabular-nums my-1">{subathonHMS(remainingMs)}</div>
             <div className="text-[11px] text-zinc-500">
-              koniec: {data.endsAt ? new Date(data.endsAt).toLocaleString("pl-PL") : "—"}
-              {" · "}dodano łącznie: {Math.round(data.totalAddedSecs / 60)} min
+              {t("endsLabel")} {data.endsAt ? new Date(data.endsAt).toLocaleString("pl-PL") : "—"}
+              {" · "}{t("addedTotal", { min: Math.round(data.totalAddedSecs / 60) })}
               {data.maxEndsAt && <> · cap: {new Date(data.maxEndsAt).toLocaleTimeString("pl-PL")}</>}
             </div>
           </div>
@@ -174,7 +176,7 @@ export function SubathonManager({
               −10 min
             </button>
             <button
-              onClick={() => { if (confirm("Zakończyć subathon?")) void call("stop", {}, "Zatrzymano"); }}
+              onClick={() => { if (confirm(t("stopConfirm"))) void call("stop", {}, t("stopped")); }}
               disabled={!!busy || pending}
               className="border border-red-800 hover:border-red-600 text-red-300 px-3 py-1.5 text-xs font-mono uppercase tracking-widest disabled:opacity-50 ml-auto"
             >
@@ -183,26 +185,26 @@ export function SubathonManager({
           </div>
 
           <SubathonRates perSub={perSub} perPln={perPln} setPerSub={setPerSub} setPerPln={setPerPln} busy={!!busy || pending}
-            onSave={() => call("settings", { secondsPerSub: parseInt(perSub, 10) || 0, secondsPerPln: parseInt(perPln, 10) || 0 }, "Tempo zapisane")} />
+            onSave={() => call("settings", { secondsPerSub: parseInt(perSub, 10) || 0, secondsPerPln: parseInt(perPln, 10) || 0 }, t("ratesSaved"))} />
         </div>
       ) : (
         <div className="border border-zinc-800 bg-black/30 p-3 space-y-2">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Start subathonu</div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("startTitle")}</div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <label className="text-xs text-zinc-400">Czas startowy (min)
+            <label className="text-xs text-zinc-400">{t("startMinutes")}
               <input type="number" value={minutes} onChange={(e) => setMinutes(e.target.value)} min={1}
                 className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden" />
             </label>
-            <label className="text-xs text-zinc-400">Sek / sub
+            <label className="text-xs text-zinc-400">{t("secPerSub")}
               <input type="number" value={perSub} onChange={(e) => setPerSub(e.target.value)} min={0}
                 className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden" />
             </label>
-            <label className="text-xs text-zinc-400">Sek / PLN
+            <label className="text-xs text-zinc-400">{t("secPerPln")}
               <input type="number" value={perPln} onChange={(e) => setPerPln(e.target.value)} min={0}
                 className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden" />
             </label>
-            <label className="text-xs text-zinc-400">Max (min, opcj.)
-              <input type="number" value={maxMinutes} onChange={(e) => setMaxMinutes(e.target.value)} min={0} placeholder="bez limitu"
+            <label className="text-xs text-zinc-400">{t("maxMinutes")}
+              <input type="number" value={maxMinutes} onChange={(e) => setMaxMinutes(e.target.value)} min={0} placeholder={t("noLimit")}
                 className="w-full mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden" />
             </label>
           </div>
@@ -212,7 +214,7 @@ export function SubathonManager({
               secondsPerSub: parseInt(perSub, 10) || 0,
               secondsPerPln: parseInt(perPln, 10) || 0,
               ...(parseInt(maxMinutes, 10) > 0 ? { maxMinutes: parseInt(maxMinutes, 10) } : {}),
-            }, "Subathon wystartował")}
+            }, t("started"))}
             disabled={!!busy || pending}
             className="bg-red-900/40 border border-red-800 hover:border-red-600 text-red-200 px-3 py-1.5 text-xs font-mono uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
           >
@@ -232,19 +234,20 @@ function SubathonRates({
   setPerSub: (v: string) => void; setPerPln: (v: string) => void;
   busy: boolean; onSave: () => void;
 }) {
+  const t = useTranslations("admin.subathon");
   return (
     <div className="flex flex-wrap items-end gap-2 border border-zinc-900 bg-black/20 p-3">
-      <label className="text-xs text-zinc-400">Sek / sub
+      <label className="text-xs text-zinc-400">{t("secPerSub")}
         <input type="number" value={perSub} onChange={(e) => setPerSub(e.target.value)} min={0}
           className="w-24 mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden block" />
       </label>
-      <label className="text-xs text-zinc-400">Sek / PLN
+      <label className="text-xs text-zinc-400">{t("secPerPln")}
         <input type="number" value={perPln} onChange={(e) => setPerPln(e.target.value)} min={0}
           className="w-24 mt-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-red-700 outline-hidden block" />
       </label>
       <button onClick={onSave} disabled={busy}
         className="border border-zinc-800 hover:border-zinc-600 text-zinc-300 px-3 py-1.5 text-xs font-mono uppercase tracking-widest disabled:opacity-50">
-        Zapisz tempo
+        {t("saveRates")}
       </button>
     </div>
   );

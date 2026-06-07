@@ -2,27 +2,11 @@
 // src/components/admin/sections/StreamGoals.tsx — lazily-loaded stream goals + hype train.
 import { useState, useEffect, useCallback } from "react";
 import { Target, Loader2, Eye, EyeOff, RefreshCw, Trash2, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { GoalBar } from "@/components/GoalBar";
-
-const GOAL_TYPE_LABEL: Record<string, string> = {
-  subs:          "Subskrypcje",
-  gift_subs:     "Gifted Subs",
-  follows:       "Followsy",
-  donations_pln: "Donacje (PLN)",
-  cheers_bits:   "Cheery (bits)",
-  yt_members:    "YouTube Members",
-};
-
-const RESET_MODE_LABEL: Record<string, string> = {
-  manual:     "Ręczny",
-  per_stream: "Co stream",
-  daily:      "Codziennie",
-  weekly:     "Co tydzień",
-  monthly:    "Co miesiąc",
-};
 
 type StreamGoalData = {
   id: string;
@@ -56,6 +40,15 @@ export function StreamGoalsManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.streamGoals");
+  const GOAL_TYPE_LABEL: Record<string, string> = {
+    subs: t("goalType.subs"), gift_subs: t("goalType.gift_subs"), follows: t("goalType.follows"),
+    donations_pln: t("goalType.donations_pln"), cheers_bits: t("goalType.cheers_bits"), yt_members: t("goalType.yt_members"),
+  };
+  const RESET_MODE_LABEL: Record<string, string> = {
+    manual: t("resetMode.manual"), per_stream: t("resetMode.per_stream"), daily: t("resetMode.daily"),
+    weekly: t("resetMode.weekly"), monthly: t("resetMode.monthly"),
+  };
   const [loading, setLoading] = useState(true);
   const [goals, setGoals] = useState<StreamGoalData[]>([]);
   const [hypeTrain, setHypeTrain] = useState<HypeTrainData | null>(null);
@@ -96,7 +89,7 @@ export function StreamGoalsManager({
     });
     const data = await res.json();
     if (!res.ok) {
-      onToast("err", data.error ?? "Błąd");
+      onToast("err", data.error ?? t("err"));
       return false;
     }
     return true;
@@ -105,7 +98,7 @@ export function StreamGoalsManager({
   async function createGoal() {
     const target = parseInt(newTarget, 10);
     if (!newLabel.trim() || !target || target < 1) {
-      onToast("err", "Wpisz label i target > 0");
+      onToast("err", t("createValidation"));
       return;
     }
     setBusy("create");
@@ -118,7 +111,7 @@ export function StreamGoalsManager({
     });
     if (ok) {
       setNewLabel(""); setNewTarget("100"); setNewColor("");
-      onToast("ok", "Cel utworzony");
+      onToast("ok", t("created"));
       await load();
       onSuccess();
     }
@@ -132,16 +125,16 @@ export function StreamGoalsManager({
   }
 
   async function resetGoal(g: StreamGoalData) {
-    if (!confirm(`Reset celu "${g.label}" do 0?`)) return;
+    if (!confirm(t("resetConfirm", { label: g.label }))) return;
     setBusy(g.id);
-    if (await call("reset", { id: g.id })) { onToast("ok", "Wyzerowano"); await load(); }
+    if (await call("reset", { id: g.id })) { onToast("ok", t("reset")); await load(); }
     setBusy(null);
   }
 
   async function deleteGoal(g: StreamGoalData) {
-    if (!confirm(`Usunąć cel "${g.label}"?`)) return;
+    if (!confirm(t("deleteConfirm", { label: g.label }))) return;
     setBusy(g.id);
-    if (await call("delete", { id: g.id })) { onToast("ok", "Usunięto"); await load(); }
+    if (await call("delete", { id: g.id })) { onToast("ok", t("deleted")); await load(); }
     setBusy(null);
   }
 
@@ -152,15 +145,15 @@ export function StreamGoalsManager({
   }
 
   return (
-    <SectionCard title="Stream Goals + Hype Train" icon={Target}>
+    <SectionCard title={t("title")} icon={Target}>
       <p className="text-zinc-500 text-xs mb-3">
-        Cele wyświetlane na OBS overlay. Auto-inkrementowane przez Twitch EventSub (subs/gifts/cheers), Streamlabs (donacje PLN), YouTube super chats + members.
+        {t("intro")}
       </p>
 
       <div className="mb-4">
-        <OverlayPreview path="/overlay/goals" note="Paski celów pojawiają się w lewym-dolnym rogu; hype train (gdy aktywny) u góry.">
-          <GoalBar goal={{ id: "preview1", type: "subs", label: "500 subów = nowy setup!", current: 327, target: 500, color: null, completedAt: null }} accent="#E50914" />
-          <GoalBar goal={{ id: "preview2", type: "donations_pln", label: "Cel miesiąca", current: 1500, target: 1500, color: "#10b981", completedAt: new Date().toISOString() }} accent="#E50914" />
+        <OverlayPreview path="/overlay/goals" note={t("obsNote")}>
+          <GoalBar goal={{ id: "preview1", type: "subs", label: t("previewGoal1"), current: 327, target: 500, color: null, completedAt: null }} accent="#E50914" />
+          <GoalBar goal={{ id: "preview2", type: "donations_pln", label: t("previewGoal2"), current: 1500, target: 1500, color: "#10b981", completedAt: new Date().toISOString() }} accent="#E50914" />
         </OverlayPreview>
       </div>
 
@@ -171,8 +164,8 @@ export function StreamGoalsManager({
         </div>
         {hypeTrain && hypeTrain.active ? (
           <div className="text-sm">
-            <span className="text-yellow-300 font-bold">AKTYWNY</span> — Level {hypeTrain.level} ·
-            {" "}{hypeTrain.total.toLocaleString("pl-PL")} / {hypeTrain.goal.toLocaleString("pl-PL")} pkt
+            <span className="text-yellow-300 font-bold">{t("hypeActive")}</span> — Level {hypeTrain.level} ·
+            {" "}{hypeTrain.total.toLocaleString("pl-PL")} / {hypeTrain.goal.toLocaleString("pl-PL")} {t("points")}
             {hypeTrain.topContributor && <> · Top: <strong>{hypeTrain.topContributor}</strong></>}
             {hypeTrain.expiresAt && (
               <span className="text-[10px] text-zinc-500 ml-2">
@@ -182,20 +175,20 @@ export function StreamGoalsManager({
           </div>
         ) : (
           <div className="text-xs text-zinc-500">
-            Nieaktywny. {hypeTrain?.endedAt && <>Ostatni: Level {hypeTrain.level} ({new Date(hypeTrain.endedAt).toLocaleString("pl-PL")})</>}
-            {!hypeTrain && <> — Twitch EventSub musi mieć subskrypcję <code>channel.hype_train.*</code> (zostaną dodane przy następnym &quot;Setup&quot; w sekcji Twitch).</>}
+            {t("hypeInactive")} {hypeTrain?.endedAt && <>{t("hypeLast")} Level {hypeTrain.level} ({new Date(hypeTrain.endedAt).toLocaleString("pl-PL")})</>}
+            {!hypeTrain && <> {t.rich("hypeSetupNote", { code: (c) => <code>{c}</code> })}</>}
           </div>
         )}
       </div>
 
       {/* Goals list */}
       {loading ? (
-        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : (
         <div className="space-y-2 mb-4">
           {goals.length === 0 ? (
             <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
-              Brak celów. Dodaj pierwszy poniżej.
+              {t("empty")}
             </div>
           ) : (
             goals.map((g) => {
@@ -238,7 +231,7 @@ export function StreamGoalsManager({
                         onClick={() => toggleActive(g)}
                         disabled={busy === g.id || pending}
                         className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 px-2 h-6 text-[9px] font-mono uppercase"
-                        title={g.active ? "Wyłącz" : "Włącz"}
+                        title={g.active ? t("disable") : t("enable")}
                       >
                         {g.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                       </button>
@@ -246,7 +239,7 @@ export function StreamGoalsManager({
                         onClick={() => resetGoal(g)}
                         disabled={busy === g.id || pending}
                         className="text-zinc-500 hover:text-orange-400 border border-zinc-800 hover:border-orange-700 w-6 h-6 flex items-center justify-center"
-                        title="Reset"
+                        title={t("resetTitle")}
                       >
                         <RefreshCw className="w-3 h-3" />
                       </button>
@@ -254,7 +247,7 @@ export function StreamGoalsManager({
                         onClick={() => deleteGoal(g)}
                         disabled={busy === g.id || pending}
                         className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"
-                        title="Usuń"
+                        title={t("deleteTitle")}
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -282,18 +275,18 @@ export function StreamGoalsManager({
       {/* Create new goal */}
       <div className="border border-zinc-800 bg-black/30 p-3">
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-          Dodaj nowy cel
+          {t("addGoalTitle")}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">Typ</label>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("typeLabel")}</label>
             <select
               value={newType}
               onChange={(e) => setNewType(e.target.value)}
               className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
             >
-              {validTypes.map((t) => (
-                <option key={t} value={t}>{GOAL_TYPE_LABEL[t] ?? t}</option>
+              {validTypes.map((ty) => (
+                <option key={ty} value={ty}>{GOAL_TYPE_LABEL[ty] ?? ty}</option>
               ))}
             </select>
           </div>
@@ -310,11 +303,11 @@ export function StreamGoalsManager({
             </select>
           </div>
           <div className="md:col-span-2">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">Label (widoczny na overlay)</label>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("labelFieldLabel")}</label>
             <input
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
-              placeholder="np. 500 subów = nowy setup!"
+              placeholder={t("labelPh")}
               className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
             />
           </div>
@@ -329,7 +322,7 @@ export function StreamGoalsManager({
             />
           </div>
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">Kolor (opcjonalny)</label>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("colorLabel")}</label>
             <div className="flex items-center gap-1.5">
               <input
                 type="color"
@@ -340,7 +333,7 @@ export function StreamGoalsManager({
               <input
                 value={newColor}
                 onChange={(e) => setNewColor(e.target.value)}
-                placeholder="#hex (puste = domyślny)"
+                placeholder={t("colorPh")}
                 className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600"
               />
             </div>
@@ -352,7 +345,7 @@ export function StreamGoalsManager({
           className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
         >
           {busy === "create" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-          Dodaj cel
+          {t("addGoalBtn")}
         </button>
       </div>
     </SectionCard>
