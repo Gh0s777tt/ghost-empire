@@ -3,18 +3,19 @@
 // the standalone display + brand colors used by the OS UI. Next serves this at
 // /manifest.webmanifest and auto-injects <link rel="manifest">.
 import type { MetadataRoute } from "next";
+import { SITE } from "@/lib/site";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "GH0ST EMPIRE",
-    short_name: "Ghost Empire",
+    name: SITE.name,
+    short_name: SITE.shortName,
     description:
-      "Oficjalny portal społeczności GH0ST EMPIRE — Ghost Tokens, eventy, sklep, ranking.",
+      `Oficjalny portal społeczności ${SITE.name} — Ghost Tokens, eventy, sklep, ranking.`,
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0A0A0A",
-    theme_color: "#E50914",
+    background_color: SITE.backgroundColor,
+    theme_color: SITE.brandColor,
     lang: "pl",
     categories: ["entertainment", "social", "games"],
     icons: [

@@ -5,6 +5,7 @@
 // carries app-wide CSS, base metadata/viewport, and the force-dynamic flag.
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { SITE } from "@/lib/site";
 
 // CSP nonce (src/proxy.ts) is per-request → every route must render dynamically to
 // receive it (a statically-prerendered page ships build-time scripts WITHOUT the
@@ -12,29 +13,29 @@ import "./globals.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ghost-empire-web.vercel.app"),
+  metadataBase: new URL(SITE.url),
   title: {
-    default: "GH0ST EMPIRE",
-    template: "%s | GH0ST EMPIRE",
+    default: SITE.name,
+    template: `%s | ${SITE.name}`,
   },
   description:
-    "Oficjalny portal społeczności GH0ST EMPIRE. Zbieraj Ghost Tokens, wymieniaj na nagrody, rywalizuj w rankingu.",
-  keywords: ["ghost empire", "gh0st", "gh0s77tt", "twitch", "kick", "streaming", "discord", "ghost tokens"],
-  authors: [{ name: "Gh0s77tt" }],
-  creator: "Gh0s77tt",
+    `Oficjalny portal społeczności ${SITE.name}. Zbieraj Ghost Tokens, wymieniaj na nagrody, rywalizuj w rankingu.`,
+  keywords: [...SITE.keywords],
+  authors: [{ name: SITE.owner }],
+  creator: SITE.owner,
   openGraph: {
-    title: "GH0ST EMPIRE",
-    description: "Oficjalny portal społeczności streamera Gh0s77tt. Ekonomia Ghost Tokens, eventy, sklep, ranking.",
+    title: SITE.name,
+    description: `Oficjalny portal społeczności streamera ${SITE.owner}. Ekonomia Ghost Tokens, eventy, sklep, ranking.`,
     type: "website",
     locale: "pl_PL",
-    siteName: "Ghost Empire",
-    url: "https://ghost-empire-web.vercel.app",
+    siteName: SITE.shortName,
+    url: SITE.url,
   },
   twitter: {
     card: "summary_large_image",
-    title: "GH0ST EMPIRE",
-    description: "Oficjalny portal społeczności streamera Gh0s77tt",
-    creator: "@Gh0s77tt",
+    title: SITE.name,
+    description: `Oficjalny portal społeczności streamera ${SITE.owner}`,
+    creator: SITE.ownerHandle,
   },
   robots: {
     index: true,
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
 
 // Next 15+: themeColor/colorScheme live in viewport, not metadata.
 export const viewport: Viewport = {
-  themeColor: "#E50914",
+  themeColor: SITE.brandColor,
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
