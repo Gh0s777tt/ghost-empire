@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
@@ -37,9 +38,11 @@ export async function POST(req: Request) {
     return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
   }
 
+  const tid = await currentTenantId();
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const item = await tx.shopItem.findUnique({ where: { id: itemId } });
+      // Tenant-guard: only this tenant's catalog item is buyable.
+      const item = await tx.shopItem.findFirst({ where: { id: itemId, ...(tid ? { tenantId: tid } : {}) } });
       if (!item) throw new ShopError("Item nie istnieje", 404);
       if (!item.active) throw new ShopError("Item niedostępny", 410);
       if (item.stock === 0) throw new ShopError("Brak na stanie", 409);
@@ -112,7 +115,7 @@ export async function POST(req: Request) {
 
       if (item.stock !== -1) {
         const stockUpdate = await tx.shopItem.updateMany({
-          where: { id: itemId, stock: { gt: 0 } },
+          where: { id: itemId, stock: { gt: 0 }, ...(tid ? { tenantId: tid } : {}) },
           data: { stock: { decrement: 1 } },
         });
         if (stockUpdate.count === 0) {

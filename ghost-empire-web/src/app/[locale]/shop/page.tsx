@@ -1,6 +1,7 @@
 // src/app/shop/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { ShopClient } from "@/components/shop/ShopClient";
 
@@ -18,11 +19,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function ShopPage() {
   const session = await auth();
+  const tid = await currentTenantId();
 
   // Shop items and the user's context are independent → fetch in parallel.
   const [items, user, achievementList] = await Promise.all([
     prisma.shopItem.findMany({
-      where: { active: true },
+      where: { active: true, ...(tid ? { tenantId: tid } : {}) },
       orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
     }),
     session?.user?.id

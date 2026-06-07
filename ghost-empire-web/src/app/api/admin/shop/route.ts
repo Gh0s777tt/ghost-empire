@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const VALID_CATEGORIES = ["games", "skins", "subs", "cosmetic", "experience"];
 const VALID_TIERS = ["T1", "T2", "T3", "Prime", "OG", "DUAL"];
@@ -103,10 +104,14 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Brak pól do aktualizacji" }, { status: 400 });
   }
 
-  const updated = await prisma.shopItem.update({
-    where: { id: body.id },
+  // Tenant-guarded update (can't edit another tenant's item).
+  const tid = await currentTenantId();
+  const r = await prisma.shopItem.updateMany({
+    where: { id: body.id, ...(tid ? { tenantId: tid } : {}) },
     data,
   });
+  if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+  const updated = await prisma.shopItem.findUnique({ where: { id: body.id } });
 
   await logAdminAction({
     adminId: auth.userId,
@@ -161,8 +166,10 @@ export async function POST(req: Request) {
   const stock = body.stock === undefined ? -1 : Math.floor(Number(body.stock));
   const totalStock = body.totalStock === undefined ? stock : Math.floor(Number(body.totalStock));
 
+  const tid = await currentTenantId();
   const created = await prisma.shopItem.create({
     data: {
+      ...(tid ? { tenantId: tid } : {}),
       name, description, category, price,
       imageEmoji: body.imageEmoji?.slice(0, 16) || "🎁",
       stock, totalStock,
@@ -197,8 +204,9 @@ export async function DELETE(req: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
 
-  await prisma.shopItem.update({
-    where: { id },
+  const tid = await currentTenantId();
+  await prisma.shopItem.updateMany({
+    where: { id, ...(tid ? { tenantId: tid } : {}) },
     data: { active: false },
   });
 
