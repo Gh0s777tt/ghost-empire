@@ -2,15 +2,8 @@
 // src/components/admin/sections/KickEvents.tsx — lazily-loaded Kick webhook events manager.
 import { useState, useEffect, useCallback } from "react";
 import { Radio, Loader2, Zap, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
-
-const KICK_EVENT_LABEL: Record<string, string> = {
-  "channel.subscription.new":      "Nowy sub",
-  "channel.subscription.renewal":  "Odnowienie subu",
-  "channel.subscription.gifts":    "Gifted suby",
-  "channel.followed":              "Follow",
-  "livestream.status.updated":     "Live status",
-};
 
 type KickData = {
   streamerConnected: boolean;
@@ -40,6 +33,8 @@ export function KickEventsManager({
   onSuccess: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("admin.kickEvents");
+  const KICK_EVENT_LABEL = t.raw("eventLabel") as Record<string, string>;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<KickData | null>(null);
   const [busy, setBusy] = useState(false);
@@ -58,7 +53,7 @@ export function KickEventsManager({
   useEffect(() => { void load(); }, [load]);
 
   async function setup() {
-    if (!confirm("Utworzyć webhook subscriptions dla wszystkich Kick eventów (subs/gifts/follows/live status)?")) return;
+    if (!confirm(t("setupConfirm"))) return;
     setBusy(true);
     try {
       const res = await fetch("/api/admin/kick-events", {
@@ -71,13 +66,13 @@ export function KickEventsManager({
       console.log("[kick setup] response:", result);
       if (!res.ok || result.error) {
         // Error case (incl. HTTP 200 but Kick rejected / created nothing)
-        onToast("err", result.error ?? "Błąd setupu");
+        onToast("err", result.error ?? t("setupErr"));
       } else if (Array.isArray(result.results) && result.results.length > 0) {
         const ok = result.results.filter((r: { ok: boolean }) => r.ok).length;
         const fail = result.results.length - ok;
         onToast(fail > 0 ? "err" : "ok", `Setup: ok=${ok}, fail=${fail}`);
       } else {
-        onToast("ok", result.message ?? "Setup zakończony");
+        onToast("ok", result.message ?? t("setupDone"));
       }
       await load();
       onSuccess();
@@ -87,7 +82,7 @@ export function KickEventsManager({
   }
 
   async function deleteSub(id: string, type: string) {
-    if (!confirm(`Usunąć subskrypcję ${type}?`)) return;
+    if (!confirm(t("deleteConfirm", { type }))) return;
     setBusy(true);
     try {
       const res = await fetch("/api/admin/kick-events", {
@@ -95,8 +90,8 @@ export function KickEventsManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "delete", id }),
       });
-      if (res.ok) { onToast("ok", "Usunięto"); await load(); }
-      else { const r = await res.json(); onToast("err", r.error ?? "Błąd"); }
+      if (res.ok) { onToast("ok", t("deleted")); await load(); }
+      else { const r = await res.json(); onToast("err", r.error ?? t("err")); }
     } finally {
       setBusy(false);
     }
@@ -105,21 +100,21 @@ export function KickEventsManager({
   return (
     <SectionCard title="Kick — webhook events (subs/gifts/follows)" icon={Radio}>
       <p className="text-zinc-500 text-xs mb-3">
-        Auto-tracking subskrypcji, gifted subów, followsów i live status na Kicku. Wymaga jednorazowej autoryzacji streamera ze scope&apos;ami: <code className="text-green-400">channel:read</code>, <code className="text-green-400">events:subscribe</code>.
+        {t.rich("intro", { code: (c) => <code className="text-green-400">{c}</code> })}
       </p>
 
       {/* Streamer auth status */}
       <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
         {loading ? (
-          <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Ładowanie…</div>
+          <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
         ) : data?.streamerConnected ? (
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-green-300 mb-0.5">
-                ● Streamer autoryzowany: @{data.broadcasterLogin}
+                ● {t("streamerAuthorized")}: @{data.broadcasterLogin}
               </div>
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate">
-                Broadcaster ID: {data.broadcasterId} · od {data.connectedAt && new Date(data.connectedAt).toLocaleString("pl-PL", { dateStyle: "short" })}
+                Broadcaster ID: {data.broadcasterId} · {t("since")} {data.connectedAt && new Date(data.connectedAt).toLocaleString("pl-PL", { dateStyle: "short" })}
               </div>
             </div>
             <button
@@ -128,26 +123,26 @@ export function KickEventsManager({
               className="px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
             >
               {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-              {data.subscriptions.length === 0 ? "Utwórz subskrypcje" : "Dodaj brakujące"}
+              {data.subscriptions.length === 0 ? t("createSubs") : t("addMissing")}
             </button>
             <a
               href="/api/admin/kick-streamer-auth"
               className="px-3 py-1.5 border border-zinc-700 hover:border-zinc-500 text-zinc-300 text-[10px] font-bold tracking-widest uppercase"
             >
-              Re-autoryzuj
+              {t("reauth")}
             </a>
           </div>
         ) : (
           <div className="text-center py-2">
             <p className="text-zinc-400 text-sm mb-3">
-              Streamer Kick jeszcze nie autoryzował. Kliknij i zaloguj jako <strong>Gh0s77tt</strong> na Kicku żeby nadać Ghost Empire prawo subskrypcji eventów.
+              {t.rich("notConnected", { b: (c) => <strong>{c}</strong> })}
             </p>
             <a
               href="/api/admin/kick-streamer-auth"
               className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold tracking-widest uppercase"
             >
               <Radio className="w-3.5 h-3.5" />
-              Autoryzuj Kick
+              {t("authKick")}
             </a>
           </div>
         )}
@@ -157,11 +152,11 @@ export function KickEventsManager({
       {data?.streamerConnected && (
         <>
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-            Subskrypcje Kick ({data.subscriptions.length})
+            {t("subsTitle", { count: data.subscriptions.length })}
           </div>
           {data.subscriptions.length === 0 ? (
             <p className="text-zinc-500 text-sm py-2 text-center">
-              Brak subskrypcji. Kliknij &quot;Utwórz subskrypcje&quot; powyżej.
+              {t("empty")}
             </p>
           ) : (
             <div className="space-y-1.5 mb-4">
@@ -171,7 +166,7 @@ export function KickEventsManager({
                     {KICK_EVENT_LABEL[s.type] ?? s.type}
                   </span>
                   <div className="flex-1 min-w-0 text-[10px] font-mono text-zinc-500 truncate">
-                    {s.lastSeenAt ? `Last: ${new Date(s.lastSeenAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}` : "Brak eventów"}
+                    {s.lastSeenAt ? `Last: ${new Date(s.lastSeenAt).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}` : t("noEvents")}
                   </div>
                   <button
                     onClick={() => deleteSub(s.id, s.type)}
@@ -189,7 +184,7 @@ export function KickEventsManager({
           {data.recentEvents.length > 0 && (
             <>
               <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-                Ostatnie eventy ({data.recentEvents.length})
+                {t("recentTitle", { count: data.recentEvents.length })}
               </div>
               <div className="space-y-1 text-[10px] font-mono">
                 {data.recentEvents.map((e) => (
