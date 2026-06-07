@@ -28,3 +28,20 @@ export function tenantSlugFromHost(
   if (!sub || sub.includes(".")) return null; // only a single-label subdomain is a slug
   return sub;
 }
+
+/**
+ * Resolve the tenant slug for a request from two sources, in priority order:
+ *   1. the proxy-set header (TENANT_HEADER) — present on page routes;
+ *   2. the request Host — needed on `/api/*` routes, which bypass the proxy (see its
+ *      matcher) and so never receive the header.
+ * Returns null when neither yields a tenant (caller then uses the default tenant).
+ */
+export function resolveTenantSlug(
+  headerSlug: string | null | undefined,
+  host: string | null | undefined,
+  rootDomain: string | undefined = process.env.NEXT_PUBLIC_ROOT_DOMAIN,
+): string | null {
+  const fromHeader = headerSlug?.trim();
+  if (fromHeader) return fromHeader;
+  return tenantSlugFromHost(host, rootDomain);
+}
