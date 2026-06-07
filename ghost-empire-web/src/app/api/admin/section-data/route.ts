@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, requirePermission, requireAnyPermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { getSettings as getAlertSettings } from "@/lib/alerts";
 import { getCodeConfig } from "@/lib/codes";
 import { displayNick } from "@/lib/utils";
@@ -47,11 +48,16 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Nieznana sekcja" }, { status: 400 });
   }
 
+  // Admin/bot hit this on the tenant subdomain → Host resolves the tenant (#234).
+  // Collection cases scope by it; singleton/webhook/OAuth cases (bot/streamlabs/
+  // twitch/alerts) stay legacy until the dedicated singleton + webhook passes.
+  const tid = await currentTenantId();
+
   switch (section) {
     case "shop": {
       const [items, achievements] = await Promise.all([
-        prisma.shopItem.findMany({ orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }] }),
-        prisma.achievement.findMany({ select: { code: true, name: true }, orderBy: { name: "asc" } }),
+        prisma.shopItem.findMany({ where: tid ? { tenantId: tid } : {}, orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { name: "asc" }] }),
+        prisma.achievement.findMany({ where: tid ? { tenantId: tid } : {}, select: { code: true, name: true }, orderBy: { name: "asc" } }),
       ]);
       return NextResponse.json({
         allShopItems: items.map((s) => ({
@@ -69,6 +75,7 @@ export async function GET(req: Request) {
       // All events (active first), with participant counts so the merged manager
       // can show draw eligibility + reactivate deactivated ones in one list.
       const events = await prisma.event.findMany({
+        where: tid ? { tenantId: tid } : {},
         orderBy: [{ active: "desc" }, { createdAt: "desc" }],
         take: 50,
         include: { _count: { select: { entries: true, raffleTickets: true } } },
@@ -87,6 +94,7 @@ export async function GET(req: Request) {
 
     case "schedule": {
       const slots = await prisma.streamScheduleSlot.findMany({
+        where: tid ? { tenantId: tid } : {},
         orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }, { startMinute: "asc" }],
       });
       return NextResponse.json({
@@ -106,7 +114,7 @@ export async function GET(req: Request) {
 
     case "codes": {
       const [codes, codeConfig, alertSettings] = await Promise.all([
-        prisma.streamCode.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
+        prisma.streamCode.findMany({ where: tid ? { tenantId: tid } : {}, orderBy: { createdAt: "desc" }, take: 500 }),
         getCodeConfig(),
         getAlertSettings(),
       ]);

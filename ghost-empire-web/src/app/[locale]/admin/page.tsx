@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { AdminClient } from "@/components/admin/AdminClient";
 
@@ -30,31 +31,34 @@ export default async function AdminPage() {
     ? ["__all__"]   // sentinel — AdminClient treats this as "all"
     : me.modPermissions;
 
+  const tid = await currentTenantId();
+
   // Only the DEFAULT (Dashboard) view's data is fetched server-side. Every other
   // section lazy-loads its own data on open via /api/admin/section-data, so the
-  // initial /admin render went from ~18 queries to these 7.
+  // initial /admin render went from ~18 queries to these 7. All scoped to the
+  // admin's tenant (counts via User.tenantId; collections + transactions via theirs).
   const [
     totalUsers, sums, eventsActive, ordersPending,
     activeDrops, activeEvents, pendingOrders,
   ] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.aggregate({ _sum: { tokens: true, totalEarned: true } }),
-    prisma.event.count({ where: { active: true } }),
-    prisma.transaction.count({ where: { type: "spend", status: "pending" } }),
+    prisma.user.count({ where: tid ? { tenantId: tid } : {} }),
+    prisma.user.aggregate({ _sum: { tokens: true, totalEarned: true }, where: tid ? { tenantId: tid } : {} }),
+    prisma.event.count({ where: { active: true, ...(tid ? { tenantId: tid } : {}) } }),
+    prisma.transaction.count({ where: { type: "spend", status: "pending", ...(tid ? { user: { tenantId: tid } } : {}) } }),
     prisma.streamDrop.findMany({
-      where: { active: true },
+      where: { active: true, ...(tid ? { tenantId: tid } : {}) },
       orderBy: { createdAt: "desc" },
       take: 20,
       include: { _count: { select: { claims: true } } },
     }),
     prisma.event.findMany({
-      where: { active: true },
+      where: { active: true, ...(tid ? { tenantId: tid } : {}) },
       orderBy: { createdAt: "desc" },
       take: 20,
       include: { _count: { select: { entries: true, raffleTickets: true } } },
     }),
     prisma.transaction.findMany({
-      where: { type: "spend", status: "pending" },
+      where: { type: "spend", status: "pending", ...(tid ? { user: { tenantId: tid } } : {}) },
       orderBy: { createdAt: "desc" },
       take: 50,
       include: {
