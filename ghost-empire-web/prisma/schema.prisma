@@ -1533,7 +1533,7 @@ model EmojiComboState {
 // in env — they bootstrap the app and must not live in the DB.
 // =====================================================
 model IntegrationConfig {
-  id         String  @id @default("default")
+  id         String  @id @default(cuid()) // was @default("default") singleton; now one row per tenant
   aiProvider String  @default("anthropic") // anthropic | openai | grok | gemini | deepseek | bielik
   aiApiKey   String?                        // key for the AI character + !imagine (F4)
   aiModel    String?                        // optional model override
@@ -1541,6 +1541,8 @@ model IntegrationConfig {
   sentryDsn            String? // error monitoring DSN
   obsWebsocketUrl      String? // ws://host:port for OBS control
   obsWebsocketPassword String?
+
+  tenantId String? @unique // multi-tenant (Phase 3): one config row per tenant
 
   updatedAt DateTime @updatedAt
 

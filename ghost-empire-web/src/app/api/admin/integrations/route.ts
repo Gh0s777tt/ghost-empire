@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { encryptSecret, decryptSecret } from "@/lib/crypto";
+import { currentTenantId } from "@/lib/tenant";
 
 const AI_PROVIDERS = ["anthropic", "openai", "grok", "gemini", "deepseek", "bielik"];
 
@@ -17,7 +18,14 @@ function mask(stored: string | null): string | null {
   return `${s.slice(0, 4)}…${s.slice(-4)}`;
 }
 
-function getCfg() {
+// Per-tenant config row (get-or-create). Before the tenant exists / outside a request,
+// tid is null → fall back to the legacy singleton row.
+async function getCfg() {
+  const tid = await currentTenantId();
+  if (tid) {
+    const existing = await prisma.integrationConfig.findFirst({ where: { tenantId: tid } });
+    return existing ?? (await prisma.integrationConfig.create({ data: { tenantId: tid } }));
+  }
   return prisma.integrationConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
 }
 
@@ -51,7 +59,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  await getCfg();
+  const row = await getCfg();
   const data: Record<string, unknown> = {};
   if (typeof body.aiProvider === "string" && AI_PROVIDERS.includes(body.aiProvider)) data.aiProvider = body.aiProvider;
   if (typeof body.aiModel === "string") data.aiModel = body.aiModel.trim().slice(0, 100) || null;
@@ -60,7 +68,7 @@ export async function POST(req: Request) {
   setSecret(data, "sentryDsn", body.sentryDsn);
   setSecret(data, "obsWebsocketPassword", body.obsWebsocketPassword);
 
-  await prisma.integrationConfig.update({ where: { id: "default" }, data });
+  await prisma.integrationConfig.update({ where: { id: row.id }, data });
   await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "integrations", targetId: "default", req });
   return NextResponse.json({ ok: true });
 }

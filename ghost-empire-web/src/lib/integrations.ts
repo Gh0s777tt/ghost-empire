@@ -4,6 +4,7 @@
 // on-site keys take precedence. NEVER import this into client components.
 import { prisma } from "@/lib/prisma";
 import { decryptSecret } from "@/lib/crypto";
+import { currentTenantId } from "@/lib/tenant";
 
 export type IntegrationConfig = {
   aiProvider: string;
@@ -15,7 +16,12 @@ export type IntegrationConfig = {
 };
 
 export async function getIntegrationConfig(): Promise<IntegrationConfig> {
-  const c = await prisma.integrationConfig.findUnique({ where: { id: "default" } });
+  // Per-tenant config (Phase 3). Before the tenant exists (pre-backfill) or outside a
+  // request, tid is null → fall back to the legacy singleton row so prod keeps working.
+  const tid = await currentTenantId();
+  const c = tid
+    ? await prisma.integrationConfig.findFirst({ where: { tenantId: tid } })
+    : await prisma.integrationConfig.findUnique({ where: { id: "default" } });
   return {
     aiProvider: c?.aiProvider ?? process.env.AI_PROVIDER ?? "anthropic",
     aiApiKey: decryptSecret(c?.aiApiKey) || process.env.AI_API_KEY || null,
