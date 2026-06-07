@@ -6,6 +6,7 @@
 // every code airs before any repeats.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { isValidOverlayToken } from "@/lib/alerts";
 import { getCodeConfig } from "@/lib/codes";
 
@@ -22,13 +23,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ enabled: false, serverNow: new Date().toISOString() });
   }
 
+  const tid = await currentTenantId();
   const now = Date.now();
   const shownAtMs = config.currentShownAt?.getTime() ?? 0;
 
   // Resolve the pinned code — only if it still exists AND is active.
   let code = config.currentCodeId
     ? await prisma.streamCode.findFirst({
-        where: { id: config.currentCodeId, active: true },
+        where: { id: config.currentCodeId, active: true, ...(tid ? { tenantId: tid } : {}) },
         select: { id: true, code: true, label: true },
       })
     : null;
@@ -38,13 +40,13 @@ export async function GET(req: Request) {
   // Advance if it's time, or if the pinned code vanished (deleted/deactivated).
   if (!code || intervalElapsed) {
     const agg = await prisma.streamCode.aggregate({
-      where: { active: true },
+      where: { active: true, ...(tid ? { tenantId: tid } : {}) },
       _min: { shownCount: true },
     });
     const minShown = agg._min.shownCount;
     if (minShown !== null && minShown !== undefined) {
       let pool = await prisma.streamCode.findMany({
-        where: { active: true, shownCount: minShown },
+        where: { active: true, shownCount: minShown, ...(tid ? { tenantId: tid } : {}) },
         select: { id: true, code: true, label: true },
       });
       // Avoid an immediate repeat when there are other candidates.
@@ -72,7 +74,7 @@ export async function GET(req: Request) {
     }
   }
 
-  const activeCount = await prisma.streamCode.count({ where: { active: true } });
+  const activeCount = await prisma.streamCode.count({ where: { active: true, ...(tid ? { tenantId: tid } : {}) } });
 
   return NextResponse.json({
     enabled: true,

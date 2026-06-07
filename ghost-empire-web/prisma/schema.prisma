@@ -1411,6 +1411,7 @@ model AlertTypeConfig {
 
 model StreamCode {
   id          String    @id @default(cuid())
+  tenantId    String? // multi-tenant (Phase 3) — collection (code is NOT unique — a pool)
   code        String                          // the actual key/code shown on stream
   label       String?                         // e.g. "Cyberpunk 2077 (Steam)"
   active      Boolean   @default(true)         // inactive codes are skipped in rotation
@@ -1419,6 +1420,7 @@ model StreamCode {
   createdAt   DateTime  @default(now())
 
   @@index([active, shownCount])
+  @@index([tenantId])
   @@map("stream_codes")
 }
 
