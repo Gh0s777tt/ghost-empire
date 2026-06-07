@@ -55,7 +55,7 @@ export async function GET(req: Request) {
         const pick = pool[Math.floor(Math.random() * pool.length)];
         await prisma.$transaction([
           prisma.codeDropConfig.update({
-            where: { id: "default" },
+            where: { id: config.id },
             data: { currentCodeId: pick.id, currentShownAt: new Date() },
           }),
           prisma.streamCode.update({
