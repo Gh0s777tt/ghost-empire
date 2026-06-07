@@ -57,6 +57,8 @@ async function main() {
   console.log(`   shopItem: attached ${si.count} row(s)`);
   const ev = await prisma.event.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   event: attached ${ev.count} row(s)`);
+  const pl = await prisma.poll.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   poll: attached ${pl.count} row(s)`);
 
   await prisma.$disconnect();
 }

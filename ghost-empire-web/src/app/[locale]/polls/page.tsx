@@ -1,6 +1,7 @@
 // src/app/polls/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { PollsClient } from "@/components/polls/PollsClient";
 
@@ -15,7 +16,9 @@ export default async function PollsPage() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
+  const tid = await currentTenantId();
   const polls = await prisma.poll.findMany({
+    where: tid ? { tenantId: tid } : {},
     orderBy: [{ createdAt: "desc" }],
     take: 30,
     include: { votes: { select: { optionIndex: true, userId: true } } },
