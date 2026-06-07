@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 export async function POST(req: Request) {
   const auth = await requirePermission("manage_shop"); // reusing — could add own perm later
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "durationMinutes 15-1440" }, { status: 400 });
   }
 
+  const tid = await currentTenantId();
   const slot = await prisma.streamScheduleSlot.create({
     data: {
       dayOfWeek: day,
@@ -41,6 +43,7 @@ export async function POST(req: Request) {
       durationMinutes: duration,
       title: body.title?.trim().slice(0, 200) || null,
       platform: body.platform || null,
+      ...(tid ? { tenantId: tid } : {}),
     },
   });
 
@@ -84,10 +87,14 @@ export async function PATCH(req: Request) {
   if (body.platform !== undefined) data.platform = body.platform || null;
   if (body.active !== undefined) data.active = !!body.active;
 
-  const slot = await prisma.streamScheduleSlot.update({
-    where: { id: body.id },
+  // Tenant-guarded: updateMany on {id, tenantId} so one tenant can't edit another's slot.
+  const tid = await currentTenantId();
+  const r = await prisma.streamScheduleSlot.updateMany({
+    where: { id: body.id, ...(tid ? { tenantId: tid } : {}) },
     data,
   });
+  if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+  const slot = await prisma.streamScheduleSlot.findUnique({ where: { id: body.id } });
   return NextResponse.json({ ok: true, slot });
 }
 
@@ -99,7 +106,9 @@ export async function DELETE(req: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
 
-  await prisma.streamScheduleSlot.delete({ where: { id } });
+  // Tenant-guarded delete (deleteMany on {id, tenantId} — no-op if it's not this tenant's).
+  const tid = await currentTenantId();
+  await prisma.streamScheduleSlot.deleteMany({ where: { id, ...(tid ? { tenantId: tid } : {}) } });
 
   await logAdminAction({
     adminId: auth.userId,

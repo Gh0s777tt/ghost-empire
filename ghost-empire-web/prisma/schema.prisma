@@ -945,6 +945,7 @@ model Game {
 
 model StreamScheduleSlot {
   id          String   @id @default(cuid())
+  tenantId    String?  // multi-tenant (Phase 3) — collection: many rows per tenant (NOT unique)
   dayOfWeek   Int      // 0=niedziela, 1=poniedziałek, ..., 6=sobota
   startHour   Int      // 0-23
   startMinute Int      @default(0)
@@ -956,6 +957,7 @@ model StreamScheduleSlot {
   updatedAt   DateTime @updatedAt
 
   @@index([dayOfWeek, active])
+  @@index([tenantId])
   @@map("stream_schedule")
 }
 
