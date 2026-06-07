@@ -16,6 +16,8 @@ function ModPermissionsPicker({
   onToggle: (id: string) => void;
 }) {
   const t = useTranslations("admin.userRoles");
+  // Localized label/desc from the namespace, falling back to the lib constant (PL).
+  const tf = (key: string, fallback: string) => (t.has(key) ? t(key) : fallback);
   const grouped: Record<string, typeof MOD_PERMISSIONS[number][]> = {};
   for (const p of MOD_PERMISSIONS) {
     if (!grouped[p.group]) grouped[p.group] = [];
@@ -56,7 +58,7 @@ function ModPermissionsPicker({
                 className="text-[9px] font-mono uppercase tracking-widest mb-2"
                 style={{ color: group.color }}
               >
-                {group.label}
+                {tf(`permGroup.${groupKey}`, group.label)}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {perms.map((p) => {
@@ -64,7 +66,7 @@ function ModPermissionsPicker({
                   return (
                     <label
                       key={p.id}
-                      title={p.desc}
+                      title={tf(`perm.${p.id}.desc`, p.desc)}
                       className={cn(
                         "flex items-start gap-2 px-2 py-1.5 border cursor-pointer transition-all",
                         isSet
@@ -79,8 +81,8 @@ function ModPermissionsPicker({
                         className="accent-blue-500 mt-0.5 shrink-0"
                       />
                       <span className="min-w-0">
-                        <span className="text-xs block font-medium">{p.label}</span>
-                        <span className="text-[10px] text-zinc-500 leading-snug block">{p.desc}</span>
+                        <span className="text-xs block font-medium">{tf(`perm.${p.id}.label`, p.label)}</span>
+                        <span className="text-[10px] text-zinc-500 leading-snug block">{tf(`perm.${p.id}.desc`, p.desc)}</span>
                       </span>
                     </label>
                   );

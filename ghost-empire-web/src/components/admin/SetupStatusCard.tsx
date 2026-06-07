@@ -46,10 +46,10 @@ export function SetupStatusCard({ onJump }: { onJump: (id: string) => void }) {
               : <AlertCircle className={cn("w-4 h-4 shrink-0", i.optional ? "text-zinc-500" : "text-orange-400")} />}
             <div className="flex-1 min-w-0">
               <div className={cn("text-sm", i.ok ? "text-zinc-400" : "text-white")}>
-                {i.label}
+                {t.has(`item.${i.key}.label`) ? t(`item.${i.key}.label`) : i.label}
                 {i.optional && !i.ok && <span className="text-[9px] uppercase tracking-widest text-zinc-600 ml-1.5">{t("optional")}</span>}
               </div>
-              {!i.ok && <div className="text-[10px] text-zinc-500">{i.hint}</div>}
+              {!i.ok && <div className="text-[10px] text-zinc-500">{t.has(`item.${i.key}.hint`) ? t(`item.${i.key}.hint`) : i.hint}</div>}
             </div>
             {!i.ok && (
               <button
