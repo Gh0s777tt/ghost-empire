@@ -53,6 +53,8 @@ async function main() {
   console.log(`   subathon: attached ${sub.count} row(s)`);
   const sch = await prisma.streamScheduleSlot.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   streamScheduleSlot: attached ${sch.count} row(s)`);
+  const si = await prisma.shopItem.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   shopItem: attached ${si.count} row(s)`);
 
   await prisma.$disconnect();
 }
