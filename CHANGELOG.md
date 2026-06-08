@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: rosyjski (RU) cz.3 — about + legal → RU user-facing KOMPLETNE** **(#272)** — `messages/ru.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **RU = 767 = 100% stron użytkownika** (5. pełny język). Tagi `t.rich` zachowane; rosyjskie `«…»`. **⚠️ LEGAL = baza maszynowa — przegląd prawnika przed sprzedażą w RU.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE: UK/ZH/JA/KO.**
+
 - **i18n: rosyjski (RU) cz.2 — profil + strony gier** **(#271)** — `messages/ru.json` +profile/userProfile (139) +schedule/quests/kasyno/welcome/seasons/wheel (118) = **257 kluczy** (łącznie RU = **581**). Tablice dni/miesięcy, rosyjskie plurale `one/few/many/other`, tagi `<code>`/`<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało RU: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: rosyjski (RU) cz.1 — rdzeń + strony funkcji** **(#270)** — start 5. języka (cyrylica — font subset z #253). `messages/ru.json` z 16 namespace'ami (rdzeń + funkcje = **324 klucze**). **Pełne rosyjskie plurale ICU `one/few/many/other`** (np. билет/билета/билетов) — nie tylko one/other; tagi `<b>` zachowane; walidacja `IntlMessageFormat` (locale `ru`): 0 błędów. Reszta RU = fallback EN. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
