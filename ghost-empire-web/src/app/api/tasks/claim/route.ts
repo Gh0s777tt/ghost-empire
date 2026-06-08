@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
+/** Thrown inside the claim transaction when a concurrent request already claimed the
+ *  task, so the transaction rolls back instead of crediting tokens twice. */
+class AlreadyClaimedError extends Error {}
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -48,38 +52,54 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Task not completed" }, { status: 400 });
   }
 
-  // Atomic: mark claimed + add tokens
-  const [updatedTask, transaction, updatedUser] = await prisma.$transaction([
-    prisma.userTask.update({
-      where: {
-        userId_taskId_date: {
+  // Atomic claim. The pre-check above is a fast path for UX; the real guard against a
+  // concurrent double-claim is the conditional updateMany below. Under READ COMMITTED
+  // two parallel requests can both pass the pre-check, and because this is an UPDATE of
+  // an existing row (no INSERT) the @@unique(userId,taskId,date) can't catch the race.
+  // Gating the UPDATE on `claimed: false` makes exactly one request win (count === 1).
+  let newBalance: number;
+  try {
+    newBalance = await prisma.$transaction(async (tx) => {
+      const claim = await tx.userTask.updateMany({
+        where: {
           userId: session.user.id,
           taskId,
           date: today(),
+          claimed: false,
         },
-      },
-      data: { claimed: true, claimedAt: new Date() },
-    }),
-    prisma.transaction.create({
-      data: {
-        userId: session.user.id,
-        type: "earn",
-        amount: userTask.task.reward,
-        reason: `daily_task:${userTask.task.code}`,
-      },
-    }),
-    prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        tokens: { increment: userTask.task.reward },
-        totalEarned: { increment: userTask.task.reward },
-      },
-    }),
-  ]);
+        data: { claimed: true, claimedAt: new Date() },
+      });
+      if (claim.count === 0) {
+        // Lost the race (another in-flight request claimed it first) — abort + roll back.
+        throw new AlreadyClaimedError();
+      }
+      await tx.transaction.create({
+        data: {
+          userId: session.user.id,
+          type: "earn",
+          amount: userTask.task.reward,
+          reason: `daily_task:${userTask.task.code}`,
+        },
+      });
+      const updatedUser = await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          tokens: { increment: userTask.task.reward },
+          totalEarned: { increment: userTask.task.reward },
+        },
+      });
+      return updatedUser.tokens;
+    });
+  } catch (e) {
+    if (e instanceof AlreadyClaimedError) {
+      return NextResponse.json({ error: "Already claimed" }, { status: 409 });
+    }
+    throw e;
+  }
 
   return NextResponse.json({
     ok: true,
     reward: userTask.task.reward,
-    newBalance: updatedUser.tokens,
+    newBalance,
   });
 }

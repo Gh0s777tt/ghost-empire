@@ -98,16 +98,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ignored: messageType });
   }
 
-  // Idempotency — skip if we already saw this message
-  const existing = await prisma.twitchEvent.findUnique({ where: { eventId: messageId } });
-  if (existing) {
-    return NextResponse.json({ ok: true, duplicate: true });
-  }
-
   const eventType = parsed.subscription?.type;
   const event = parsed.event;
   if (!eventType || !event) {
     return NextResponse.json({ error: "Missing event data" }, { status: 400 });
+  }
+
+  // Idempotency LOCK — insert the dedup row BEFORE running any grant handler. The unique
+  // on `eventId` makes a concurrent or retried delivery of the same message lose with
+  // P2002, so two parallel deliveries can never both reach the token grants below. (The
+  // audit fields userId/tokensGranted are backfilled with an UPDATE once we know them.)
+  try {
+    await prisma.twitchEvent.create({
+      data: {
+        eventId: messageId,
+        type: eventType,
+        payload: JSON.stringify(event).slice(0, 5000),
+      },
+    });
+  } catch (e) {
+    if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") {
+      return NextResponse.json({ ok: true, duplicate: true });
+    }
+    throw e;
   }
 
   // Update lastSeenAt on subscription
@@ -118,7 +131,7 @@ export async function POST(req: Request) {
     }).catch(() => {});
   }
 
-  // Save raw event for audit
+  // Run grant handlers; matchedUserId/tokensGranted are backfilled into the dedup row after.
   let matchedUserId: string | null = null;
   let tokensGranted: number | null = null;
 
@@ -154,15 +167,12 @@ export async function POST(req: Request) {
     log.error("handler error", e, { eventType });
   }
 
-  await prisma.twitchEvent.create({
-    data: {
-      eventId: messageId,
-      type: eventType,
-      payload: JSON.stringify(event).slice(0, 5000),
-      userId: matchedUserId,
-      tokensGranted,
-    },
-  });
+  // Backfill audit fields now that the handlers have resolved the matched user + grant.
+  if (matchedUserId !== null || tokensGranted !== null) {
+    await prisma.twitchEvent
+      .update({ where: { eventId: messageId }, data: { userId: matchedUserId, tokensGranted } })
+      .catch(() => {});
+  }
 
   // Fire achievement checks + season XP AFTER persisting the event so count queries see it
   if (matchedUserId) {

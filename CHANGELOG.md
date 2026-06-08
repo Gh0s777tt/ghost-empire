@@ -9,6 +9,14 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Fixed
 
+- **fix: szczelność/atomowość ekonomii — eliminacja podwójnego naliczenia Ghost Tokens** **(#367)** — audyt kodu wykrył kilka okien na duplikację GT przy równoczesnych/ponawianych żądaniach; uszczelnione w 4 ścieżkach:
+  - **`tasks/claim` (P0 — realna duplikacja):** sprawdzenie `claimed` było POZA transakcją, a `userTask.update` bezwarunkowy (po kluczu głównym). Dwa równoległe POST-y oba przechodziły pre-check i oba inkrementowały saldo (PostgreSQL READ COMMITTED + brak `INSERT` → `@@unique(userId,taskId,date)` nie chronił). Naprawione warunkowym `updateMany({ where:{ …, claimed:false } })` wewnątrz `$transaction`; `count===0` → rollback + HTTP 409. Dokładnie jeden request wygrywa.
+  - **webhook `twitch-eventsub` (idempotencja):** wiersz dedup `twitchEvent.create` powstawał PO grantach i poza transakcją → okno na podwójny grant sub/giftsub/cheer przy równoległym dostarczeniu tego samego `messageId`. Teraz dedup tworzony PRZED handlerami (unique `eventId`; P2002 → `{duplicate:true}`); pola audytu (`userId`/`tokensGranted`) backfillowane `update`-em po grancie.
+  - **`events/join`:** surowy `throw e` po obsłudze P2002 → 500 bez logu. Teraz `console.error` + `jsonError(…, 500)` (spójnie z resztą route'ów).
+  - **`seasons.ts` (battle pass):** przeliczanie tieru używało `!==` → współbieżny, wolniejszy award mógł zapisać przestarzały, niższy tier. XP w sezonie tylko rośnie (tier monotoniczny) → warunek `> progress.tier`. Dotyczy wyłącznie tieru/XP, nie salda GT.
+
+  Bez zmian schematu/`db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **fix: mignięcie błędu 404 „This page could not be found" przy przełączaniu stron** **(#360)** — `proxy.ts` (middleware Next 16) miał w `matcher` klauzulę `missing: [next-router-prefetch / purpose=prefetch]`, która **pomijała proxy dla żądań prefetch**. Przy `localePrefix:"as-needed"` to next-intl przepisuje nieprefiksowaną ścieżkę domyślnego języka (`/shop` → wewn. `/[locale]/shop`); pominięcie na prefetchu → ścieżka trafia w `[locale]="shop"` → `hasLocale()` w `[locale]/layout.tsx` zwraca `notFound()` → **prefetchowany payload RSC to strona 404**. Po kliknięciu Next pokazywał ten zcache'owany 404 (mignięcie), a dopiero realna nawigacja dociągała właściwą stronę. Fix: prefetch przechodzi teraz przez `handleI18n` (poprawny rewrite locale), pomijając jedynie nonce CSP — payload prefetch i tak nie dostaje nonce, więc cel #192 (świeżość nonce) zachowany. **Zweryfikowane empirycznie na `next start`:** prefetch `/shop` = 8 963 B (renderowany 404) → **106 902 B (realna strona sklepu)**; non-prefetch nadal z nagłówkiem CSP; overlaye OBS nietknięte. Bez zmian logiki/renderu. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 ### Added
