@@ -19,6 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 const CHANGELOG = [
   {
+    date: "2026-06-09",
+    title: "Ranking znów pokazuje wszystkich graczy 🏆",
+    items: [
+      "Naprawiony błąd, przez który część kont (zwłaszcza nowo założonych) nie pojawiała się w rankingu mimo posiadania Ghost Tokenów. Wszyscy gracze są teraz poprawnie widoczni na liście.",
+    ],
+  },
+  {
     date: "2026-06-08",
     title: "Wzmocnienia bezpieczeństwa 🔒",
     items: [
