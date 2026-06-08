@@ -23,9 +23,14 @@ export default function Loading() {
             <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
           </div>
         </div>
-        <p className="font-display text-sm text-zinc-500 tracking-[0.3em] uppercase animate-pulse">
-          Ładowanie
-        </p>
+        {/* Language-neutral pulsing dots — this is a Suspense fallback (no locale
+            context available), so an animated indicator avoids a single-language
+            word flashing for all 14 locales. */}
+        <div className="flex items-center gap-2" role="status" aria-label="Loading">
+          <span className="w-2 h-2 rounded-full bg-red-600/70 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-red-600/70 animate-pulse [animation-delay:0.15s]" />
+          <span className="w-2 h-2 rounded-full bg-red-600/70 animate-pulse [animation-delay:0.3s]" />
+        </div>
       </div>
     </div>
   );
