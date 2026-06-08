@@ -10,6 +10,7 @@ import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
+import { currentTenantId } from "@/lib/tenant";
 import type { Adapter } from "next-auth/adapters";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers";
 import { cookies } from "next/headers";
@@ -363,6 +364,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             });
           }
 
+          // Self-heal: attach legacy accounts (created before tenant assignment) to the
+          // current tenant on login, so they reappear in tenant-scoped queries like the
+          // ranking/leaderboard (which filters by tenantId). New users are handled in the
+          // createUser event; this catches accounts that predate it. [audit fix]
+          if (!dbUser.tenantId) {
+            const tid = await currentTenantId();
+            if (tid) {
+              await prisma.user.update({ where: { id: dbUser.id }, data: { tenantId: tid } });
+              dbUser.tenantId = tid;
+            }
+          }
+
           // Save/update connection record
           const platformId =
             p.id?.toString() ||
@@ -478,9 +491,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!user.id) return;
       // New user created — grant 500 welcome tokens
       try {
+        // Attach the new account to the current tenant (multi-tenant SaaS) alongside the
+        // welcome bonus. Without a tenantId the user is invisible in tenant-scoped queries
+        // like the ranking/leaderboard. Single-tenant → default tenant; multi-tenant →
+        // the signup host's tenant. [audit fix]
+        const tenantId = await currentTenantId();
         await prisma.user.update({
           where: { id: user.id },
-          data: { tokens: 500, totalEarned: 500 },
+          data: { tokens: 500, totalEarned: 500, ...(tenantId ? { tenantId } : {}) },
         });
 
         await prisma.transaction.create({
