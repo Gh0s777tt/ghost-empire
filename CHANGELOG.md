@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Fixed
+
+- **fix: mignięcie błędu 404 „This page could not be found" przy przełączaniu stron** **(#360)** — `proxy.ts` (middleware Next 16) miał w `matcher` klauzulę `missing: [next-router-prefetch / purpose=prefetch]`, która **pomijała proxy dla żądań prefetch**. Przy `localePrefix:"as-needed"` to next-intl przepisuje nieprefiksowaną ścieżkę domyślnego języka (`/shop` → wewn. `/[locale]/shop`); pominięcie na prefetchu → ścieżka trafia w `[locale]="shop"` → `hasLocale()` w `[locale]/layout.tsx` zwraca `notFound()` → **prefetchowany payload RSC to strona 404**. Po kliknięciu Next pokazywał ten zcache'owany 404 (mignięcie), a dopiero realna nawigacja dociągała właściwą stronę. Fix: prefetch przechodzi teraz przez `handleI18n` (poprawny rewrite locale), pomijając jedynie nonce CSP — payload prefetch i tak nie dostaje nonce, więc cel #192 (świeżość nonce) zachowany. **Zweryfikowane empirycznie na `next start`:** prefetch `/shop` = 8 963 B (renderowany 404) → **106 902 B (realna strona sklepu)**; non-prefetch nadal z nagłówkiem CSP; overlaye OBS nietknięte. Bez zmian logiki/renderu. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 ### Added
 
 - **i18n/UX: neutralny językowo ekran ładowania (fix przecieku PL w 14 językach)** **(#359)** — `[locale]/loading.tsx` (fallback Suspense pokazywany przy każdej nawigacji) miał zahardkodowane PL „Ładowanie" widoczne we wszystkich 14 lokalizacjach — a jako fallback nie ma dostępu do kontekstu locale, więc nie da się go zlokalizować przez `t()`. Zamienione na **neutralny językowo animowany wskaźnik** (3 pulsujące kropki, brandowa czerwień) + `role="status"`/`aria-label`. Brandowy logotyp-czaszka i poświata zostają. Respektuje `prefers-reduced-motion`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
