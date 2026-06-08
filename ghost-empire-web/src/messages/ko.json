@@ -1702,6 +1702,315 @@
       "submit": "지급",
       "err": "오류",
       "granted": "{user}에게 {delta} GT. 잔액: {balance}"
+    },
+    "userRoles": {
+      "permGroup": {
+        "economy": "경제",
+        "events": "이벤트",
+        "moderation": "모더레이션"
+      },
+      "perm": {
+        "grant_tokens": {
+          "label": "토큰 지급",
+          "desc": "사용자에게 Ghost Tokens 추가 / 제거(사용자 섹션)."
+        },
+        "manage_shop": {
+          "label": "상점 편집",
+          "desc": "상점, 방송 일정, Discord 봇 편집."
+        },
+        "deliver_orders": {
+          "label": "주문 이행",
+          "desc": "대기 중인 상점 주문을 이행됨으로 표시."
+        },
+        "create_events": {
+          "label": "이벤트 생성",
+          "desc": "이벤트와 예측(GT 베팅) 생성."
+        },
+        "edit_events": {
+          "label": "이벤트 편집",
+          "desc": "기존 이벤트 편집."
+        },
+        "draw_events": {
+          "label": "당첨자 추첨",
+          "desc": "이벤트 / giveaway에서 당첨자 추첨."
+        },
+        "create_drops": {
+          "label": "드롭 코드 생성",
+          "desc": "드롭 코드 생성 및 관리(방송 중 코드)."
+        },
+        "ban_users": {
+          "label": "사용자 차단",
+          "desc": "사용자 차단: 계정 잠금(임시 또는 영구)."
+        },
+        "mute_users": {
+          "label": "사용자 음소거",
+          "desc": "사용자 음소거."
+        },
+        "mark_subs": {
+          "label": "구독자 표시",
+          "desc": "플랫폼별 구독 / 모드 / VIP 상태 할당."
+        },
+        "view_audit": {
+          "label": "감사 로그 보기",
+          "desc": "관리자 및 모더레이션 작업 로그에 대한 접근."
+        }
+      },
+      "err": "오류",
+      "roleGranted": "{user}에게 {role} 역할을 부여했습니다",
+      "roleRevoked": "{user}의 {role} 역할을 회수했습니다",
+      "title": "사용자 역할(관리자/모드/후원자)",
+      "userLabel": "사용자(사용자명, Discord ID 또는 계정 ID)",
+      "roleLabel": "역할",
+      "actionLabel": "작업",
+      "grant": "✓ 부여",
+      "revoke": "✗ 회수",
+      "donationAmount": "후원 금액(선택, 합산됨)",
+      "donationPh": "예: 50 (PLN)",
+      "apply": "적용",
+      "permsTitle": "모더레이터 권한",
+      "selectAll": "모두 선택",
+      "clearAll": "지우기",
+      "permsNote": "관리자는 자동으로 모든 권한을 가집니다. 모더레이터는 체크한 것만.",
+      "connTitle": "플랫폼 상태(구독/모드/VIP)",
+      "userShort": "사용자",
+      "userPh": "사용자명 / Discord ID / 계정 ID",
+      "platformLabel": "플랫폼",
+      "subMonths": "구독 개월 수",
+      "update": "업데이트",
+      "statusUpdated": "{target}의 {platform} 상태가 업데이트되었습니다"
+    },
+    "moderation": {
+      "err": "오류",
+      "saved": "모더레이션이 저장되었습니다",
+      "title": "채팅 모더레이션(automod)",
+      "loading": "로딩 중…",
+      "intro": "Twitch / Kick / YouTube에서의 자동 모더레이션. 봇이 모든 메시지를 확인하고 작업(삭제 / 타임아웃 / 경고)을 실행합니다. 플랫폼에서 봇 계정의 모더레이터 권한이 필요합니다. <b>변경 후 봇을 재시작하세요.</b> 반복 위반자는 자동으로 더 엄격한 처벌을 받습니다(에스컬레이션: 경고 → 삭제 → 타임아웃 ×2, 30분 창 내 추가 위반마다).",
+      "masterSwitch": "Automod 활성화됨(메인 스위치)",
+      "actionDelete": "삭제",
+      "actionTimeout": "타임아웃",
+      "actionWarn": "경고",
+      "timeoutTitle": "타임아웃 길이(초)",
+      "profanityTitle": "욕설",
+      "profanityDesc": "금지어 사전. 회피도 감지: leetspeak (b4d→bad)와 구분자 (b.a.d / b a d).",
+      "wordsLabel": "단어(한 줄에 하나)",
+      "wordsPh": "단어1\n단어2",
+      "regexLabel": "정규식 패턴(한 줄에 하나, 선택——예 <code>v-?bucks</code>)",
+      "regexPh": "free\\w* gt\nv-?bucks",
+      "linkTitle": "링크 / URL",
+      "linkDesc": "도메인이 화이트리스트에 없으면 링크를 차단합니다. 노출된 도메인 (scam.com)과 단축 URL (bit.ly)도 감지합니다.",
+      "whitelistLabel": "도메인 화이트리스트(한 줄에 하나——예 <code>twitch.tv</code>, <code>youtube.com</code>)",
+      "whitelistPh": "twitch.tv\nyoutube.com\nclips.twitch.tv",
+      "linkAllowSubs": "구독자 / VIP / 모드는 링크를 게시할 수 있습니다",
+      "capsTitle": "과도한 대문자 (CAPS)",
+      "capsDesc": "대문자 비율이 너무 높은 메시지를 표시합니다(짧은 것은 무시).",
+      "capsMinLetters": "최소 글자 수",
+      "capsMaxRatio": "최대 % CAPS",
+      "lengthTitle": "길이 제한",
+      "lengthDesc": "메시지의 최대 문자 수.",
+      "lengthMax": "최대 문자 수",
+      "repeatTitle": "반복 / 도배",
+      "repeatDesc": "같은 문자나 단어를 너무 많이 반복(이모트 도배, 복사 붙여넣기).",
+      "repeatCharRun": "최대 동일 문자",
+      "repeatWordRun": "최대 동일 단어",
+      "zalgoTitle": "Zalgo 텍스트",
+      "zalgoDesc": "글리치 텍스트——과도한 Unicode 결합 문자 (ḩ̸̢̛e̵l̶l̷o). 폴란드어 문자는 표시하지 않습니다.",
+      "zalgoMaxRatio": "최대 % 결합 문자",
+      "exemptHeader": "건너뛰기(화이트리스트)",
+      "exemptSubs": "구독자",
+      "exemptVips": "VIP",
+      "exemptMods": "모더레이터",
+      "saveBtn": "모더레이션 설정 저장"
+    },
+    "webhooksOut": {
+      "eventLabel": {
+        "shop_purchase": "상점 구매",
+        "event_win": "이벤트 우승",
+        "drop_claim_bonus": "드롭 코드 수령",
+        "twitch_sub": "구독 (Twitch)",
+        "twitch_gift_sub": "선물 구독",
+        "twitch_cheer": "비트 (cheer)",
+        "donation": "후원",
+        "welcome": "환영",
+        "level_up": "레벨 업",
+        "wheel_win": "룰렛 우승"
+      },
+      "err": "오류",
+      "urlRequired": "URL을 입력하세요",
+      "eventRequired": "최소 1개 이벤트를 선택하세요",
+      "created": "Webhook이 추가되었습니다",
+      "deleteConfirm": "webhook {label}을(를) 삭제하시겠습니까?",
+      "deleted": "삭제되었습니다",
+      "testOk": "테스트 성공 (HTTP {status})",
+      "testFail": "테스트 실패 ({err})",
+      "title": "발신 webhook",
+      "loading": "로딩 중…",
+      "intro": "스트림 이벤트(구독, 후원, 구매, 우승…)를 <b>POST JSON</b>으로 모든 URL에 전송: <b>Discord webhook</b>, n8n, Zapier, 자신의 서버. 선택적 비밀이 본문에 서명합니다(<code>X-GhostEmpire-Signature: sha256=…</code>). 죽은 endpoint는 일련의 오류 후 자동으로 비활성화됩니다.",
+      "empty": "webhook이 없습니다. 아래에서 첫 번째를 추가하세요.",
+      "signedTitle": "비밀로 서명됨",
+      "testTitle": "테스트 보내기",
+      "disable": "비활성화",
+      "enable": "활성화",
+      "deleteTitle": "삭제",
+      "allBadge": "전체",
+      "lastFired": "마지막: {date} · 상태 {status}",
+      "errorsCount": "· 오류: {count}",
+      "newWebhook": "새 webhook",
+      "labelPh": "이름(예: Discord #alerts)",
+      "secretPh": "HMAC 비밀(선택: 본문에 서명)",
+      "allEvents": "모든 이벤트",
+      "addBtn": "webhook 추가"
+    },
+    "auditLog": {
+      "title": "감사 로그(최근 {count})",
+      "empty": "데이터베이스에 관리자 작업이 없습니다. 모든 지급/추첨/환불이 여기에 표시됩니다: 누가 언제.",
+      "accountDeleted": "계정 삭제됨",
+      "action": {
+        "grant_tokens": "토큰 지급",
+        "create_drop": "새 드롭",
+        "deactivate_drop": "드롭 비활성화",
+        "create_event": "새 이벤트",
+        "deactivate_event": "이벤트 비활성화",
+        "draw_event": "추첨",
+        "deliver_order": "전달됨",
+        "refund_order": "환불",
+        "set_user_role": "사용자 역할",
+        "set_connection_role": "플랫폼 상태",
+        "reset_database": "DB 초기화",
+        "manage_codes": "코드(드롭)",
+        "manage_achievements": "업적",
+        "manage_polls": "투표",
+        "create_prediction": "새 예측",
+        "resolve_prediction": "결산",
+        "cancel_prediction": "예측 취소",
+        "test_alert": "테스트 알림",
+        "update_alert_settings": "알림 설정",
+        "merge_users": "계정 병합",
+        "update_moderation": "모더레이션(자동)",
+        "update_integrations": "연동 / 키"
+      }
+    },
+    "mergeUsers": {
+      "reason": {
+        "shared_platform_id": "공유 OAuth 계정(가장 강한 신호)",
+        "shared_email": "공유 이메일",
+        "shared_discord_id": "공유 Discord ID"
+      },
+      "loadError": "중복 그룹을 로드하지 못했습니다",
+      "netErr": "네트워크 오류",
+      "title": "중복 병합",
+      "warning": "<b>파괴적 작업</b>——두 번째 계정은 데이터가 기본 계정으로 이동된 후 완전히 삭제됩니다. 작업은 원자적(하나의 DB 트랜잭션)이지만 되돌릴 수 없습니다.",
+      "rescan": "다시 스캔",
+      "detectHint": "감지: 동일한 OAuth 제공자 계정 ID, 이메일 또는 Discord ID.",
+      "empty": "✓ 중복이 감지되지 않았습니다——모두 깨끗합니다.",
+      "confirmRequired": "확인을 위해 두 번째 계정의 정확한 사용자명을 입력하세요",
+      "merged": "병합됨. 이동됨: {tokens} GT, {txn}건의 거래",
+      "created": "생성됨",
+      "platforms": "플랫폼:",
+      "showPreview": "병합 미리보기 표시",
+      "willMoveHeader": "@{sec} → @{prim}으로 이동하는 항목",
+      "finalTokens": "병합 후 토큰: <b>{n} GT</b>",
+      "conflicts": "⚠ 충돌(기본 계정 버전 유지):",
+      "confirmLabel": "확인: 두 번째 계정의 사용자명을 입력하세요: <code>{name}</code>",
+      "mergeNow": "지금 병합"
+    },
+    "modViolations": {
+      "violation": {
+        "profanity": "욕설",
+        "caps": "CAPS",
+        "length": "길이",
+        "repeat": "도배",
+        "zalgo": "zalgo"
+      },
+      "action": {
+        "delete": "삭제",
+        "timeout": "타임아웃",
+        "warn": "경고"
+      },
+      "loading": "통계 로딩 중…",
+      "statsTitle": "위반 통계",
+      "refresh": "새로고침",
+      "last24h": "최근 24시간",
+      "last7d": "최근 7일",
+      "noViolations": "최근 7일간 위반이 없습니다.",
+      "topOffenders": "가장 빈번(7일)",
+      "recentSummary": "최근 {count}개 이벤트"
+    },
+    "databaseReset": {
+      "err": "오류",
+      "netErr": "네트워크 오류",
+      "lastWarning": "최종 경고\n\n이것은 모든 사용자와 그 데이터를 되돌릴 수 없게 삭제합니다(당신의 계정도: 다시 로그인하게 됩니다). 구성과 카탈로그는 유지됩니다.\n\n계속하시겠습니까?",
+      "resetDone": "데이터베이스가 초기화되었습니다——{count}명의 사용자를 삭제했습니다. 로그아웃 중…",
+      "title": "데이터베이스 초기화",
+      "backupTitle": "백업 (JSON)",
+      "backupDesc": "<b>구성, 카탈로그, 사용자 잔액</b>의 사본을 JSON 파일로 다운로드——<b>비밀 없음</b>(이메일, OAuth 토큰, 세션, 로그 생략). 무언가를 삭제하기 전에 백업하세요.",
+      "downloadBackup": "백업 다운로드",
+      "dangerZone": "위험 구역——되돌릴 수 없는 작업",
+      "dangerDesc1": "<b>모든 사용자</b>와 그 데이터를 삭제: 계정과 로그인, 연결된 플랫폼, 토큰과 거래, 업적, 퀘스트, battle pass 진행, 베팅, 이벤트 참여, 알림, 소셜 링크. 또한 알림 큐, 채팅 피드, 이벤트 로그(Twitch / Kick / YouTube)도 지웁니다. 사용자는 처음부터 로그인합니다(환영 보너스 포함).",
+      "dangerDesc2": "<b>유지됨:</b> 구성과 카탈로그——상점, 이벤트/업적/퀘스트/드롭 정의, battle pass 시즌, 채팅 명령 / 타이머 / FAQ, 일정, 알림 설정, 연동(Twitch / Kick / YouTube / Streamlabs), 감사 로그. 소유자 계정은 다시 로그인 후 관리자로 돌아옵니다.",
+      "unlockLabel": "잠금 해제하려면 <red>{p}</red>을(를) 정확히 입력하세요",
+      "resetBtn": "데이터베이스 초기화"
+    },
+    "analytics": {
+      "loading": "로딩 중…",
+      "streamTimeTitle": "방송 시간",
+      "streamIntro": "Twitch EventSub(<code>stream.online</code>/<code>stream.offline</code>)의 방송 세션. <b>스트리머의 방송 시간</b>을 측정합니다(시청자별 시청 시간이 아님).",
+      "streamEmpty": "세션이 없습니다——첫 방송 후 표시됩니다. <mono>Twitch</mono> 섹션에서 <b>stream.online/offline</b> 구독을 생성해야 합니다(구독 생성 버튼).",
+      "statusLabel": "상태",
+      "offline": "오프라인",
+      "totalBroadcast": "총 방송 시간",
+      "streamCount": "방송 횟수",
+      "ongoing": "진행 중…",
+      "heatmapTitle": "분석——채팅 히트맵",
+      "heatmapIntro": "채팅이 가장 활발한 시간(요일 × 시간, Europe/Warsaw 시간대). Twitch + Kick + YouTube의 활동으로 계산(1/분/시청자).",
+      "heatmapEmpty": "데이터가 없습니다——방송 중 누군가 채팅하면 표시됩니다.",
+      "heatmapFooter": "총 {total} 활성 채터 분 · 최고 {peak}/슬롯",
+      "daysShort": [
+        "일",
+        "월",
+        "화",
+        "수",
+        "목",
+        "금",
+        "토"
+      ]
+    },
+    "setupStatus": {
+      "item": {
+        "ai": {
+          "label": "AI 키(@bot 페르소나 + !imagine)",
+          "hint": "연동 섹션에서 AI 키를 붙여넣으세요"
+        },
+        "twitch": {
+          "label": "Twitch 연결됨 (EventSub)",
+          "hint": "Twitch 섹션에서 스트리머 계정을 연결하세요"
+        },
+        "twitchSubs": {
+          "label": "EventSub 구독 생성됨",
+          "hint": "Twitch 섹션에서 구독 생성을 클릭하세요"
+        },
+        "kick": {
+          "label": "Kick 연결됨",
+          "hint": "Kick 연결"
+        },
+        "youtube": {
+          "label": "YouTube 연결됨",
+          "hint": "YouTube 연결"
+        },
+        "moderation": {
+          "label": "채팅 모더레이션 활성화됨",
+          "hint": "모더레이션 섹션에서 규칙을 활성화하세요"
+        },
+        "overlay": {
+          "label": "OBS 오버레이 토큰",
+          "hint": "스트림 알림으로 이동하여 생성하세요"
+        }
+      },
+      "title": "구성 상태",
+      "done": "완료: <b>{done}/{total}</b>",
+      "allReqOk": "✓ 필요한 모든 항목 준비 완료",
+      "reqProgress": "{done}/{total} 필수",
+      "optional": "선택",
+      "configure": "구성"
     }
   }
 }
