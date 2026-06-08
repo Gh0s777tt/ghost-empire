@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **🎉 i18n: panel `admin` — francuski (FR) cz.5/5 — bot/czat + chrome → FR KOMPLETNY 100%** **(#304)** — `messages/fr.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **FR = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 4. język w pełni przetłumaczony. Walidacja `IntlMessageFormat` (locale `fr`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — francuski (FR) cz.4/5 — użytkownicy + moderacja** **(#303)** — `messages/fr.json` +`admin` (userRoles/moderation/webhooksOut/auditLog/mergeUsers/modViolations/databaseReset/analytics/setupStatus = **231 kluczy**) → FR = 1754/1963 (admin 987/1196, 82%). Zagnieżdżone mapy + `\n`/`\n\n` + regex `\\w` + `<red>{p}</red>`; `analytics.daysShort` tablica. Walidacja `IntlMessageFormat` (locale `fr`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — francuski (FR) cz.3/5 — ekonomia + platformy** **(#302)** — `messages/fr.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → FR = 1523/1963 (admin 756/1196). Plurale ICU + `schedule.days` + tagi `<b>`/`<code>`/`<muted>`/`<link>`; klucze env zachowane. Walidacja `IntlMessageFormat` (locale `fr`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
