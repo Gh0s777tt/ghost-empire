@@ -1702,6 +1702,315 @@
       "submit": "Conceder",
       "err": "Error",
       "granted": "{delta} GT para {user}. Saldo: {balance}"
+    },
+    "userRoles": {
+      "permGroup": {
+        "economy": "ECONOMÍA",
+        "events": "EVENTOS",
+        "moderation": "MODERACIÓN"
+      },
+      "perm": {
+        "grant_tokens": {
+          "label": "Conceder tokens",
+          "desc": "Añadir / quitar Ghost Tokens a los usuarios (sección Usuarios)."
+        },
+        "manage_shop": {
+          "label": "Editar tienda",
+          "desc": "Editar la tienda, el horario de streams y el bot de Discord."
+        },
+        "deliver_orders": {
+          "label": "Cumplir pedidos",
+          "desc": "Marcar como cumplidos los pedidos pendientes de la tienda."
+        },
+        "create_events": {
+          "label": "Crear eventos",
+          "desc": "Crear eventos y predicciones (apuestas de GT)."
+        },
+        "edit_events": {
+          "label": "Editar eventos",
+          "desc": "Editar eventos existentes."
+        },
+        "draw_events": {
+          "label": "Sortear ganadores",
+          "desc": "Sortear ganadores en eventos / giveaways."
+        },
+        "create_drops": {
+          "label": "Crear códigos de drop",
+          "desc": "Crear y gestionar códigos de drop (códigos en directo)."
+        },
+        "ban_users": {
+          "label": "Banear usuarios",
+          "desc": "Banear usuarios: bloqueo de cuenta (temporal o permanente)."
+        },
+        "mute_users": {
+          "label": "Silenciar usuarios",
+          "desc": "Silenciar usuarios."
+        },
+        "mark_subs": {
+          "label": "Marcar suscriptores",
+          "desc": "Asignar estado de sub / mod / VIP por plataforma."
+        },
+        "view_audit": {
+          "label": "Ver registro de auditoría",
+          "desc": "Acceso al registro de acciones de admins y moderación."
+        }
+      },
+      "err": "Error",
+      "roleGranted": "Rol {role} concedido a {user}",
+      "roleRevoked": "Rol {role} revocado a {user}",
+      "title": "Roles de usuario (admin/mod/donante)",
+      "userLabel": "Usuario (nombre de usuario, ID de Discord o ID de cuenta)",
+      "roleLabel": "Rol",
+      "actionLabel": "Acción",
+      "grant": "✓ Conceder",
+      "revoke": "✗ Revocar",
+      "donationAmount": "Importe de donación (opcional, se acumula)",
+      "donationPh": "p. ej. 50 (PLN)",
+      "apply": "Aplicar",
+      "permsTitle": "Permisos de moderador",
+      "selectAll": "Seleccionar todo",
+      "clearAll": "Limpiar",
+      "permsNote": "Los admins tienen todos los permisos automáticamente. Los moderadores: solo los marcados.",
+      "connTitle": "Estado de plataforma (sub/mod/VIP)",
+      "userShort": "Usuario",
+      "userPh": "nombre de usuario / ID de Discord / ID de cuenta",
+      "platformLabel": "Plataforma",
+      "subMonths": "Meses de sub",
+      "update": "Actualizar",
+      "statusUpdated": "Estado de {platform} actualizado para {target}"
+    },
+    "moderation": {
+      "err": "Error",
+      "saved": "Moderación guardada",
+      "title": "Moderación del chat (automod)",
+      "loading": "Cargando…",
+      "intro": "Moderación automática en Twitch / Kick / YouTube. El bot revisa cada mensaje y aplica una acción (eliminar / timeout / advertir). Requiere permisos de moderador para la cuenta del bot en la plataforma. <b>Reinicia el bot tras los cambios.</b> Los reincidentes reciben sanciones más duras automáticamente (escalada: advertir → eliminar → timeout ×2 por cada infracción adicional en una ventana de 30 min).",
+      "masterSwitch": "Automod activado (interruptor principal)",
+      "actionDelete": "Eliminar",
+      "actionTimeout": "Timeout",
+      "actionWarn": "Advertir",
+      "timeoutTitle": "Duración del timeout (segundos)",
+      "profanityTitle": "Palabrotas",
+      "profanityDesc": "Diccionario de palabras prohibidas. También detecta evasiones: leetspeak (b4d→bad) y separadores (b.a.d / b a d).",
+      "wordsLabel": "Palabras (una por línea)",
+      "wordsPh": "palabra1\npalabra2",
+      "regexLabel": "Patrones regex (uno por línea, opcional — p. ej. <code>v-?bucks</code>)",
+      "regexPh": "free\\w* gt\nv-?bucks",
+      "linkTitle": "Enlaces / URL",
+      "linkDesc": "Bloquea enlaces salvo que el dominio esté en la lista blanca. También detecta dominios desnudos (scam.com) y acortadores (bit.ly).",
+      "whitelistLabel": "Lista blanca de dominios (uno por línea — p. ej. <code>twitch.tv</code>, <code>youtube.com</code>)",
+      "whitelistPh": "twitch.tv\nyoutube.com\nclips.twitch.tv",
+      "linkAllowSubs": "Suscriptores / VIP / mod pueden publicar enlaces",
+      "capsTitle": "Mayúsculas excesivas (CAPS)",
+      "capsDesc": "Marca mensajes con un % demasiado alto de letras en mayúscula (ignora los cortos).",
+      "capsMinLetters": "Mín. letras",
+      "capsMaxRatio": "Máx % CAPS",
+      "lengthTitle": "Límite de longitud",
+      "lengthDesc": "Número máximo de caracteres en un mensaje.",
+      "lengthMax": "Máx. caracteres",
+      "repeatTitle": "Repetición / flood",
+      "repeatDesc": "El mismo carácter o palabra repetido demasiadas veces (spam de emotes, copypasta).",
+      "repeatCharRun": "Máx. mismo carácter",
+      "repeatWordRun": "Máx. misma palabra",
+      "zalgoTitle": "Texto zalgo",
+      "zalgoDesc": "Texto glitch: exceso de marcas combinantes Unicode (ḩ̸̢̛e̵l̶l̷o). No marca las letras polacas.",
+      "zalgoMaxRatio": "Máx % marcas combinantes",
+      "exemptHeader": "Omitir (lista blanca)",
+      "exemptSubs": "Suscriptores",
+      "exemptVips": "VIPs",
+      "exemptMods": "Moderadores",
+      "saveBtn": "Guardar ajustes de moderación"
+    },
+    "webhooksOut": {
+      "eventLabel": {
+        "shop_purchase": "Compra en la tienda",
+        "event_win": "Victoria en evento",
+        "drop_claim_bonus": "Código de drop reclamado",
+        "twitch_sub": "Sub (Twitch)",
+        "twitch_gift_sub": "Sub regalado",
+        "twitch_cheer": "Bits (cheer)",
+        "donation": "Donación",
+        "welcome": "Bienvenida",
+        "level_up": "Subida de nivel",
+        "wheel_win": "Victoria en la ruleta"
+      },
+      "err": "Error",
+      "urlRequired": "Introduce una URL",
+      "eventRequired": "Elige al menos 1 evento",
+      "created": "Webhook añadido",
+      "deleteConfirm": "¿Eliminar el webhook {label}?",
+      "deleted": "Eliminado",
+      "testOk": "Prueba OK (HTTP {status})",
+      "testFail": "Prueba fallida ({err})",
+      "title": "Webhooks salientes",
+      "loading": "Cargando…",
+      "intro": "Envía eventos del stream (subs, donaciones, compras, victorias…) como un <b>POST JSON</b> a cualquier URL: <b>webhook de Discord</b>, n8n, Zapier, tu propio servidor. Un secreto opcional firma el cuerpo (<code>X-GhostEmpire-Signature: sha256=…</code>). Un endpoint muerto se desactiva solo tras una racha de errores.",
+      "empty": "No hay webhooks. Añade el primero abajo.",
+      "signedTitle": "firmado con un secreto",
+      "testTitle": "Enviar una prueba",
+      "disable": "Desactivar",
+      "enable": "Activar",
+      "deleteTitle": "Eliminar",
+      "allBadge": "todos",
+      "lastFired": "último: {date} · estado {status}",
+      "errorsCount": "· errores: {count}",
+      "newWebhook": "Nuevo webhook",
+      "labelPh": "Nombre (p. ej. Discord #alerts)",
+      "secretPh": "Secreto HMAC (opcional: firma el cuerpo)",
+      "allEvents": "Todos los eventos",
+      "addBtn": "Añadir webhook"
+    },
+    "auditLog": {
+      "title": "Registro de auditoría (últimas {count})",
+      "empty": "No hay acciones de admin en la base de datos. Cada concesión/sorteo/reembolso aparecerá aquí: quién y cuándo.",
+      "accountDeleted": "cuenta eliminada",
+      "action": {
+        "grant_tokens": "Concesión de tokens",
+        "create_drop": "Nuevo drop",
+        "deactivate_drop": "Desact. drop",
+        "create_event": "Nuevo evento",
+        "deactivate_event": "Desact. evento",
+        "draw_event": "Sorteo",
+        "deliver_order": "Entregado",
+        "refund_order": "Reembolso",
+        "set_user_role": "Rol de usuario",
+        "set_connection_role": "Estado de plataforma",
+        "reset_database": "Reset de BD",
+        "manage_codes": "Códigos (drop)",
+        "manage_achievements": "Logros",
+        "manage_polls": "Encuesta",
+        "create_prediction": "Nueva predicción",
+        "resolve_prediction": "Resolución",
+        "cancel_prediction": "Cancelar predicción",
+        "test_alert": "Alerta de prueba",
+        "update_alert_settings": "Ajustes de alertas",
+        "merge_users": "Fusionar cuentas",
+        "update_moderation": "Moderación (auto)",
+        "update_integrations": "Integraciones / claves"
+      }
+    },
+    "mergeUsers": {
+      "reason": {
+        "shared_platform_id": "Cuenta OAuth compartida (señal más fuerte)",
+        "shared_email": "Email compartido",
+        "shared_discord_id": "ID de Discord compartido"
+      },
+      "loadError": "No se pudieron cargar los grupos de duplicados",
+      "netErr": "Error de red",
+      "title": "Fusionar duplicados",
+      "warning": "<b>Operación destructiva</b>: la segunda cuenta se elimina por completo después de mover sus datos a la principal. La acción es atómica (una transacción de BD) pero irreversible.",
+      "rescan": "Reescanear",
+      "detectHint": "Detección: mismo ID de cuenta de proveedor OAuth, email o ID de Discord.",
+      "empty": "✓ No se detectaron duplicados: todo limpio.",
+      "confirmRequired": "Escribe el nombre de usuario exacto de la segunda cuenta para confirmar",
+      "merged": "Fusionadas. Movidos: {tokens} GT, {txn} transacciones",
+      "created": "Creada",
+      "platforms": "Plataformas:",
+      "showPreview": "Mostrar vista previa de la fusión",
+      "willMoveHeader": "Qué se mueve de @{sec} → @{prim}",
+      "finalTokens": "Tokens tras la fusión: <b>{n} GT</b>",
+      "conflicts": "⚠ Conflictos (se conservan las versiones de la principal):",
+      "confirmLabel": "Confirmación: escribe el nombre de usuario de la segunda cuenta: <code>{name}</code>",
+      "mergeNow": "Fusionar ahora"
+    },
+    "modViolations": {
+      "violation": {
+        "profanity": "palabrotas",
+        "caps": "CAPS",
+        "length": "longitud",
+        "repeat": "spam",
+        "zalgo": "zalgo"
+      },
+      "action": {
+        "delete": "eliminar",
+        "timeout": "timeout",
+        "warn": "advertir"
+      },
+      "loading": "Cargando estadísticas…",
+      "statsTitle": "Estadísticas de infracciones",
+      "refresh": "Actualizar",
+      "last24h": "Últimas 24 h",
+      "last7d": "Últimos 7 días",
+      "noViolations": "Sin infracciones en los últimos 7 días.",
+      "topOffenders": "Más frecuentes (7 días)",
+      "recentSummary": "Últimos {count} eventos"
+    },
+    "databaseReset": {
+      "err": "Error",
+      "netErr": "Error de red",
+      "lastWarning": "ADVERTENCIA FINAL\n\nEsto eliminará IRREVERSIBLEMENTE a TODOS los usuarios y sus datos (también tu cuenta: volverás a iniciar sesión). La configuración y el catálogo se mantienen.\n\n¿Continuar?",
+      "resetDone": "Base de datos reiniciada: {count} usuarios eliminados. Cerrando sesión…",
+      "title": "Reiniciar base de datos",
+      "backupTitle": "Copia de seguridad (JSON)",
+      "backupDesc": "Descarga una copia de la <b>configuración, el catálogo y los saldos de los usuarios</b> como archivo JSON: <b>sin secretos</b> (emails, tokens OAuth, sesiones, registros omitidos). Haz una copia de seguridad antes de eliminar nada.",
+      "downloadBackup": "Descargar copia de seguridad",
+      "dangerZone": "Zona de peligro: operación IRREVERSIBLE",
+      "dangerDesc1": "Elimina a <b>todos los usuarios</b> y sus datos: cuentas e inicios de sesión, plataformas conectadas, tokens y transacciones, logros, quests, progreso del battle pass, apuestas, participaciones en eventos, notificaciones y enlaces sociales. También vacía la cola de alertas, el feed del chat y los registros de eventos (Twitch / Kick / YouTube). Los usuarios inician sesión de cero (con el bonus de bienvenida).",
+      "dangerDesc2": "<b>Se conserva:</b> configuración y catálogo: tienda, definiciones de eventos/logros/quests/drops, temporadas del battle pass, comandos / temporizadores / FAQ del chat, horario, ajustes de alertas, integraciones (Twitch / Kick / YouTube / Streamlabs) y el registro de auditoría. La cuenta del propietario vuelve como admin tras volver a iniciar sesión.",
+      "unlockLabel": "Escribe exactamente <red>{p}</red> para desbloquear",
+      "resetBtn": "Reiniciar la base de datos"
+    },
+    "analytics": {
+      "loading": "Cargando…",
+      "streamTimeTitle": "Tiempo de stream",
+      "streamIntro": "Sesiones de transmisión de Twitch EventSub (<code>stream.online</code>/<code>stream.offline</code>). Mide el <b>tiempo de emisión del streamer</b>, no el tiempo de visionado por espectador.",
+      "streamEmpty": "No hay sesiones: aparecerán tras el primer stream. Requiere crear la suscripción <b>stream.online/offline</b> en la sección <mono>Twitch</mono> (el botón Crear suscripciones).",
+      "statusLabel": "Estado",
+      "offline": "Sin conexión",
+      "totalBroadcast": "Tiempo total de emisión",
+      "streamCount": "Número de streams",
+      "ongoing": "en curso…",
+      "heatmapTitle": "Analítica: mapa de calor del chat",
+      "heatmapIntro": "Cuándo el chat está más activo (día de la semana × hora, hora de Europe/Warsaw). Contado a partir de la actividad en Twitch + Kick + YouTube (1/min/espectador).",
+      "heatmapEmpty": "No hay datos: aparecerán cuando alguien chatee durante un stream.",
+      "heatmapFooter": "Total {total} minutos-chatter activos · pico {peak}/franja",
+      "daysShort": [
+        "Do",
+        "Lu",
+        "Ma",
+        "Mi",
+        "Ju",
+        "Vi",
+        "Sá"
+      ]
+    },
+    "setupStatus": {
+      "item": {
+        "ai": {
+          "label": "Clave de IA (persona @bot + !imagine)",
+          "hint": "Pega la clave de IA en la sección Integraciones"
+        },
+        "twitch": {
+          "label": "Twitch conectado (EventSub)",
+          "hint": "Conecta la cuenta del streamer en la sección Twitch"
+        },
+        "twitchSubs": {
+          "label": "Suscripciones de EventSub creadas",
+          "hint": "Haz clic en Crear suscripciones en la sección Twitch"
+        },
+        "kick": {
+          "label": "Kick conectado",
+          "hint": "Conecta Kick"
+        },
+        "youtube": {
+          "label": "YouTube conectado",
+          "hint": "Conecta YouTube"
+        },
+        "moderation": {
+          "label": "Moderación del chat activada",
+          "hint": "Activa reglas en la sección Moderación"
+        },
+        "overlay": {
+          "label": "Token del overlay de OBS",
+          "hint": "Ve a Alertas de stream para generarlo"
+        }
+      },
+      "title": "Estado de configuración",
+      "done": "Hecho: <b>{done}/{total}</b>",
+      "allReqOk": "✓ Todo lo requerido listo",
+      "reqProgress": "{done}/{total} requeridos",
+      "optional": "opcional",
+      "configure": "Configurar"
     }
   }
 }
