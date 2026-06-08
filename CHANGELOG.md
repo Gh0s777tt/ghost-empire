@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — chiński (ZH) cz.4/5 — użytkownicy + moderacja** **(#318)** — `messages/zh.json` +`admin` (userRoles/moderation/webhooksOut/auditLog/mergeUsers/modViolations/databaseReset/analytics/setupStatus = **231 kluczy**) → ZH = 1754/1963 (admin 987/1196, 82%). Zagnieżdżone mapy + `\n`/`\n\n` + regex `\\w` + `<red>{p}</red>`; `analytics.daysShort` (日一二…). Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — chiński (ZH) cz.3/5 — ekonomia + platformy** **(#317)** — `messages/zh.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → ZH = 1523/1963 (admin 756/1196). **Plurale CJK tylko `other`** (`shop.title`/`schedule.title`) + `schedule.days` (周日…) + tagi; klucze env zachowane. Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — chiński (ZH) cz.2/5 — społeczność + gry** **(#316)** — `messages/zh.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → ZH = 1288/1963 (admin 521/1196). Tablice `previewOpts` (CJK) + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`; interpunkcja pełnej szerokości. Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.

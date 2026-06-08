@@ -1702,6 +1702,315 @@
       "submit": "发放",
       "err": "错误",
       "granted": "{delta} GT 给 {user}。余额：{balance}"
+    },
+    "userRoles": {
+      "permGroup": {
+        "economy": "经济",
+        "events": "活动",
+        "moderation": "管理"
+      },
+      "perm": {
+        "grant_tokens": {
+          "label": "发放代币",
+          "desc": "为用户添加 / 移除 Ghost Tokens（用户部分）。"
+        },
+        "manage_shop": {
+          "label": "编辑商店",
+          "desc": "编辑商店、直播日程和 Discord 机器人。"
+        },
+        "deliver_orders": {
+          "label": "履行订单",
+          "desc": "将待处理的商店订单标记为已履行。"
+        },
+        "create_events": {
+          "label": "创建活动",
+          "desc": "创建活动和预测（GT 投注）。"
+        },
+        "edit_events": {
+          "label": "编辑活动",
+          "desc": "编辑现有活动。"
+        },
+        "draw_events": {
+          "label": "抽取获奖者",
+          "desc": "在活动 / 抽奖中抽取获奖者。"
+        },
+        "create_drops": {
+          "label": "创建掉落代码",
+          "desc": "创建和管理掉落代码（直播中的代码）。"
+        },
+        "ban_users": {
+          "label": "封禁用户",
+          "desc": "封禁用户：账户锁定（临时或永久）。"
+        },
+        "mute_users": {
+          "label": "禁言用户",
+          "desc": "禁言用户。"
+        },
+        "mark_subs": {
+          "label": "标记订阅者",
+          "desc": "按平台分配订阅 / 管理 / VIP 状态。"
+        },
+        "view_audit": {
+          "label": "查看审计日志",
+          "desc": "查看管理员和管理操作日志。"
+        }
+      },
+      "err": "错误",
+      "roleGranted": "已向 {user} 授予 {role} 角色",
+      "roleRevoked": "已撤销 {user} 的 {role} 角色",
+      "title": "用户角色（管理员/版主/捐赠者）",
+      "userLabel": "用户（用户名、Discord ID 或账户 ID）",
+      "roleLabel": "角色",
+      "actionLabel": "操作",
+      "grant": "✓ 授予",
+      "revoke": "✗ 撤销",
+      "donationAmount": "捐赠金额（可选，累加）",
+      "donationPh": "如 50 (PLN)",
+      "apply": "应用",
+      "permsTitle": "版主权限",
+      "selectAll": "全选",
+      "clearAll": "清除",
+      "permsNote": "管理员自动拥有所有权限。版主——仅勾选的权限。",
+      "connTitle": "平台状态（订阅/版主/VIP）",
+      "userShort": "用户",
+      "userPh": "用户名 / Discord ID / 账户 ID",
+      "platformLabel": "平台",
+      "subMonths": "订阅月数",
+      "update": "更新",
+      "statusUpdated": "{target} 的 {platform} 状态已更新"
+    },
+    "moderation": {
+      "err": "错误",
+      "saved": "管理已保存",
+      "title": "聊天管理（automod）",
+      "loading": "加载中…",
+      "intro": "Twitch / Kick / YouTube 上的自动管理。机器人检查每条消息并执行操作（删除 / 禁言 / 警告）。需要机器人账户在平台上的版主权限。<b>更改后重启机器人。</b>重复违规者自动获得更严厉的处罚（升级：警告 → 删除 → 禁言 ×2，30 分钟窗口内每次进一步违规）。",
+      "masterSwitch": "Automod 已启用（主开关）",
+      "actionDelete": "删除",
+      "actionTimeout": "禁言",
+      "actionWarn": "警告",
+      "timeoutTitle": "禁言时长（秒）",
+      "profanityTitle": "脏话",
+      "profanityDesc": "禁用词词典。还能检测规避：leetspeak (b4d→bad) 和分隔符 (b.a.d / b a d)。",
+      "wordsLabel": "词语（每行一个）",
+      "wordsPh": "词1\n词2",
+      "regexLabel": "正则表达式模式（每行一个，可选——如 <code>v-?bucks</code>）",
+      "regexPh": "free\\w* gt\nv-?bucks",
+      "linkTitle": "链接 / URL",
+      "linkDesc": "除非域名在白名单中，否则阻止链接。还能检测裸域名 (scam.com) 和短链接 (bit.ly)。",
+      "whitelistLabel": "域名白名单（每行一个——如 <code>twitch.tv</code>、<code>youtube.com</code>）",
+      "whitelistPh": "twitch.tv\nyoutube.com\nclips.twitch.tv",
+      "linkAllowSubs": "订阅者 / VIP / 版主可发布链接",
+      "capsTitle": "过多大写 (CAPS)",
+      "capsDesc": "标记大写字母占比过高的消息（忽略短消息）。",
+      "capsMinLetters": "最少字母数",
+      "capsMaxRatio": "最大 % CAPS",
+      "lengthTitle": "长度限制",
+      "lengthDesc": "消息中的最大字符数。",
+      "lengthMax": "最大字符数",
+      "repeatTitle": "重复 / 刷屏",
+      "repeatDesc": "同一字符或词语重复太多次（表情刷屏、复制粘贴）。",
+      "repeatCharRun": "最多相同字符",
+      "repeatWordRun": "最多相同词语",
+      "zalgoTitle": "Zalgo 文字",
+      "zalgoDesc": "故障文字——过多的 Unicode 组合标记 (ḩ̸̢̛e̵l̶l̷o)。不标记波兰语字母。",
+      "zalgoMaxRatio": "最大 % 组合标记",
+      "exemptHeader": "跳过（白名单）",
+      "exemptSubs": "订阅者",
+      "exemptVips": "VIP",
+      "exemptMods": "版主",
+      "saveBtn": "保存管理设置"
+    },
+    "webhooksOut": {
+      "eventLabel": {
+        "shop_purchase": "商店购买",
+        "event_win": "活动获胜",
+        "drop_claim_bonus": "掉落代码领取",
+        "twitch_sub": "订阅 (Twitch)",
+        "twitch_gift_sub": "礼物订阅",
+        "twitch_cheer": "Bits (cheer)",
+        "donation": "捐赠",
+        "welcome": "欢迎",
+        "level_up": "升级",
+        "wheel_win": "转盘获胜"
+      },
+      "err": "错误",
+      "urlRequired": "输入 URL",
+      "eventRequired": "选择至少 1 个事件",
+      "created": "Webhook 已添加",
+      "deleteConfirm": "删除 webhook {label}？",
+      "deleted": "已删除",
+      "testOk": "测试成功 (HTTP {status})",
+      "testFail": "测试失败 ({err})",
+      "title": "出站 webhook",
+      "loading": "加载中…",
+      "intro": "将直播事件（订阅、捐赠、购买、获胜…）作为 <b>POST JSON</b> 发送到任何 URL：<b>Discord webhook</b>、n8n、Zapier、你自己的服务器。可选密钥会签名正文（<code>X-GhostEmpire-Signature: sha256=…</code>）。失效的 endpoint 在一连串错误后会自行禁用。",
+      "empty": "没有 webhook。在下方添加第一个。",
+      "signedTitle": "用密钥签名",
+      "testTitle": "发送测试",
+      "disable": "禁用",
+      "enable": "启用",
+      "deleteTitle": "删除",
+      "allBadge": "全部",
+      "lastFired": "上次：{date} · 状态 {status}",
+      "errorsCount": "· 错误：{count}",
+      "newWebhook": "新 webhook",
+      "labelPh": "名称（如 Discord #alerts）",
+      "secretPh": "HMAC 密钥（可选：签名正文）",
+      "allEvents": "所有事件",
+      "addBtn": "添加 webhook"
+    },
+    "auditLog": {
+      "title": "审计日志（最近 {count}）",
+      "empty": "数据库中没有管理员操作。每次发放/抽取/退款都会显示在这里：谁和何时。",
+      "accountDeleted": "账户已删除",
+      "action": {
+        "grant_tokens": "发放代币",
+        "create_drop": "新掉落",
+        "deactivate_drop": "停用掉落",
+        "create_event": "新活动",
+        "deactivate_event": "停用活动",
+        "draw_event": "抽取",
+        "deliver_order": "已交付",
+        "refund_order": "退款",
+        "set_user_role": "用户角色",
+        "set_connection_role": "平台状态",
+        "reset_database": "数据库重置",
+        "manage_codes": "代码（掉落）",
+        "manage_achievements": "成就",
+        "manage_polls": "投票",
+        "create_prediction": "新预测",
+        "resolve_prediction": "结算",
+        "cancel_prediction": "取消预测",
+        "test_alert": "测试提醒",
+        "update_alert_settings": "提醒设置",
+        "merge_users": "合并账户",
+        "update_moderation": "管理（自动）",
+        "update_integrations": "集成 / 密钥"
+      }
+    },
+    "mergeUsers": {
+      "reason": {
+        "shared_platform_id": "共享 OAuth 账户（最强信号）",
+        "shared_email": "共享邮箱",
+        "shared_discord_id": "共享 Discord ID"
+      },
+      "loadError": "无法加载重复组",
+      "netErr": "网络错误",
+      "title": "合并重复项",
+      "warning": "<b>破坏性操作</b>——第二个账户的数据迁移到主账户后将被完全删除。该操作是原子性的（一个数据库事务），但不可逆。",
+      "rescan": "重新扫描",
+      "detectHint": "检测：相同的 OAuth 提供商账户 ID、邮箱或 Discord ID。",
+      "empty": "✓ 未检测到重复项——一切干净。",
+      "confirmRequired": "输入第二个账户的确切用户名以确认",
+      "merged": "已合并。已迁移：{tokens} GT，{txn} 笔交易",
+      "created": "已创建",
+      "platforms": "平台：",
+      "showPreview": "显示合并预览",
+      "willMoveHeader": "从 @{sec} → @{prim} 迁移的内容",
+      "finalTokens": "合并后的代币：<b>{n} GT</b>",
+      "conflicts": "⚠ 冲突（保留主账户版本）：",
+      "confirmLabel": "确认：输入第二个账户的用户名：<code>{name}</code>",
+      "mergeNow": "立即合并"
+    },
+    "modViolations": {
+      "violation": {
+        "profanity": "脏话",
+        "caps": "CAPS",
+        "length": "长度",
+        "repeat": "刷屏",
+        "zalgo": "zalgo"
+      },
+      "action": {
+        "delete": "删除",
+        "timeout": "禁言",
+        "warn": "警告"
+      },
+      "loading": "正在加载统计…",
+      "statsTitle": "违规统计",
+      "refresh": "刷新",
+      "last24h": "最近 24 小时",
+      "last7d": "最近 7 天",
+      "noViolations": "最近 7 天没有违规。",
+      "topOffenders": "最频繁（7 天）",
+      "recentSummary": "最近 {count} 个事件"
+    },
+    "databaseReset": {
+      "err": "错误",
+      "netErr": "网络错误",
+      "lastWarning": "最终警告\n\n这将不可逆地删除所有用户及其数据（你的账户也是：你将重新登录）。配置和目录保留。\n\n继续？",
+      "resetDone": "数据库已重置——删除了 {count} 名用户。正在登出…",
+      "title": "数据库重置",
+      "backupTitle": "备份 (JSON)",
+      "backupDesc": "将<b>配置、目录和用户余额</b>的副本下载为 JSON 文件——<b>不含密钥</b>（省略邮箱、OAuth 令牌、会话、日志）。删除任何内容前请先备份。",
+      "downloadBackup": "下载备份",
+      "dangerZone": "危险区域——不可逆操作",
+      "dangerDesc1": "删除<b>所有用户</b>及其数据：账户和登录、已连接平台、代币和交易、成就、任务、battle pass 进度、投注、活动参与、通知和社交链接。还会清除提醒队列、聊天信息流和事件日志（Twitch / Kick / YouTube）。用户重新从零登录（带欢迎奖励）。",
+      "dangerDesc2": "<b>保留：</b>配置和目录——商店、活动/成就/任务/掉落定义、battle pass 赛季、聊天命令 / 计时器 / FAQ、日程、提醒设置、集成（Twitch / Kick / YouTube / Streamlabs）和审计日志。所有者账户在重新登录后恢复为管理员。",
+      "unlockLabel": "准确输入 <red>{p}</red> 以解锁",
+      "resetBtn": "重置数据库"
+    },
+    "analytics": {
+      "loading": "加载中…",
+      "streamTimeTitle": "直播时间",
+      "streamIntro": "来自 Twitch EventSub 的广播会话（<code>stream.online</code>/<code>stream.offline</code>）。测量<b>主播的广播时间</b>，而非每位观众的观看时间。",
+      "streamEmpty": "没有会话——首次直播后会出现。需要在 <mono>Twitch</mono> 部分创建 <b>stream.online/offline</b> 订阅（创建订阅按钮）。",
+      "statusLabel": "状态",
+      "offline": "离线",
+      "totalBroadcast": "总广播时间",
+      "streamCount": "直播次数",
+      "ongoing": "进行中…",
+      "heatmapTitle": "分析——聊天热力图",
+      "heatmapIntro": "聊天最活跃的时间（星期 × 小时，Europe/Warsaw 时区）。根据 Twitch + Kick + YouTube 上的活动计算（1/分钟/观众）。",
+      "heatmapEmpty": "没有数据——当有人在直播期间聊天时会出现。",
+      "heatmapFooter": "共 {total} 个活跃聊天分钟 · 峰值 {peak}/时段",
+      "daysShort": [
+        "日",
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六"
+      ]
+    },
+    "setupStatus": {
+      "item": {
+        "ai": {
+          "label": "AI 密钥（@bot 角色 + !imagine）",
+          "hint": "在集成部分粘贴 AI 密钥"
+        },
+        "twitch": {
+          "label": "Twitch 已连接 (EventSub)",
+          "hint": "在 Twitch 部分连接主播账户"
+        },
+        "twitchSubs": {
+          "label": "EventSub 订阅已创建",
+          "hint": "在 Twitch 部分点击创建订阅"
+        },
+        "kick": {
+          "label": "Kick 已连接",
+          "hint": "连接 Kick"
+        },
+        "youtube": {
+          "label": "YouTube 已连接",
+          "hint": "连接 YouTube"
+        },
+        "moderation": {
+          "label": "聊天管理已启用",
+          "hint": "在管理部分启用规则"
+        },
+        "overlay": {
+          "label": "OBS 叠加层令牌",
+          "hint": "前往直播提醒以生成"
+        }
+      },
+      "title": "配置状态",
+      "done": "完成：<b>{done}/{total}</b>",
+      "allReqOk": "✓ 所有必需项已就绪",
+      "reqProgress": "{done}/{total} 必需",
+      "optional": "可选",
+      "configure": "配置"
     }
   }
 }
