@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: ukraiński (UK) cz.3 — about + legal → UK user-facing KOMPLETNE** **(#275)** — `messages/uk.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **UK = 767 = 100% stron użytkownika** (6. pełny język). Tagi `t.rich` zachowane; ukraińskie `«…»` + apострофи. **⚠️ LEGAL = baza maszynowa — przegląd prawnika przed sprzedażą w UA.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE (CJK): ZH/JA/KO — fallback fontu systemowego, review natywny przed sprzedażą.**
+
 - **i18n: ukraiński (UK) cz.2 — profil + strony gier** **(#274)** — `messages/uk.json` +profile/userProfile (139) +schedule/quests/kasyno/welcome/seasons/wheel (118) = **257 kluczy** (łącznie UK = **581**). Tablice dni/miesięcy, ukraińskie plurale `one/few/many/other`, tagi `<code>`/`<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało UK: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: ukraiński (UK) cz.1 — rdzeń + funkcje + fix przełącznika** **(#273)** — start 6. języka. `messages/uk.json` z 16 namespace'ami (**324 klucze**, cyrylica, pełne ukraińskie plurale `one/few/many/other`). **`LocaleSwitcher`: dla `uk` wyświetla badge „UA"** (kod języka ISO-639 to `uk`, ale wygląda jak „United Kingdom" → mapowanie display `uk`→`UA`; routing/URL/Intl/CLDR pozostają `uk`, bo `ua` nie jest poprawnym kodem języka i zepsułoby formatowanie). Native name «Українська». Walidacja `IntlMessageFormat`: 0 błędów. Reszta UK = fallback EN. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
