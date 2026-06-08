@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — koreański (KO) cz.2/5 — społeczność + gry** **(#326)** — `messages/ko.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → KO = 1288/1963 (admin 521/1196). Tablice `previewOpts` (CJK) + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`; partykuły koreańskie (을/를). Walidacja `IntlMessageFormat` (locale `ko`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — koreański (KO) cz.1/5 — overlaye** **(#325)** — 9. (ostatni) język admina (CJK). `messages/ko.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → KO = 1035/1963 (admin 268/1196). Koreańskie partykuły (을/를, (으)로) + 「…」 zamiast surowych `"`; tagi `<b>`/`<em>`/`<code>` + placeholdery; font systemowy + review natywny przed sprzedażą. Walidacja `IntlMessageFormat` (locale `ko`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **🎉 i18n: panel `admin` — japoński (JA) cz.5/5 — bot/czat + chrome → JA KOMPLETNY 100%** **(#324)** — `messages/ja.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **JA = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 8. język w pełni przetłumaczony. **Zostaje tylko KO.** Walidacja `IntlMessageFormat` (locale `ja`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
