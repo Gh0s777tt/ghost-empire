@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — francuski (FR) cz.1/5 — overlaye** **(#300)** — 4. język admina. `messages/fr.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → FR = 1035/1963 (admin 268/1196). Tagi `<b>`/`<em>`/`<code>` + placeholdery; apostrofy ASCII `'` bezpieczne. Walidacja `IntlMessageFormat` (locale `fr`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **🎉 i18n: panel `admin` — włoski (IT) cz.5/5 — bot/czat + chrome → IT KOMPLETNY 100%** **(#299)** — `messages/it.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **IT = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 3. język w pełni przetłumaczony. Walidacja `IntlMessageFormat` (locale `it`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — włoski (IT) cz.4/5 — użytkownicy + moderacja** **(#298)** — `messages/it.json` +`admin` (userRoles/moderation/webhooksOut/auditLog/mergeUsers/modViolations/databaseReset/analytics/setupStatus = **231 kluczy**) → IT = 1754/1963 (admin 987/1196, 82%). Zagnieżdżone mapy + `\n`/`\n\n` + regex `\\w` + `<red>{p}</red>`; `analytics.daysShort` tablica. Walidacja `IntlMessageFormat` (locale `it`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
