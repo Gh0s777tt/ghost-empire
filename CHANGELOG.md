@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: japoński (JA) cz.3 — about + legal → JA user-facing KOMPLETNE** **(#281)** — `messages/ja.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **JA = 767 = 100% stron użytkownika** (8. pełny język). Tagi `t.rich` zachowane; japońskie 「…」 + interpunkcja pełnej szerokości. **⚠️ LEGAL = baza maszynowa + CJK → review natywny przed sprzedażą.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE: KO (ostatni język).**
+
 - **i18n: japoński (JA) cz.2 — profil + strony gier** **(#280)** — `messages/ja.json` +profile/userProfile (139) +schedule/quests/kasyno/welcome/seasons/wheel (118) = **257 kluczy** (łącznie JA = **581**). Tablice dni/miesięcy (日曜日…/1月…), plurale `other`, tagi `<code>`/`<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało JA: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: japoński (JA) cz.1 — rdzeń + funkcje** **(#279)** — start 8. języka (CJK). `messages/ja.json` z 16 namespace'ami (**324 klucze**). Plurale ICU tylko `other`, liczniki (枚/名/本), interpunkcja pełnej szerokości （）：！, tagi `<b>` zachowane; walidacja `IntlMessageFormat` (locale `ja`): 0 błędów. **⚠️ Font fallback systemowy + review natywny przed sprzedażą.** Reszta JA = fallback EN. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
