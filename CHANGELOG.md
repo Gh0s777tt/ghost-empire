@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — koreański (KO) cz.3/5 — ekonomia + platformy** **(#327)** — `messages/ko.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → KO = 1523/1963 (admin 756/1196). **Plurale CJK tylko `other`** (`shop.title`/`schedule.title`) + `schedule.days`(일요일…)+ tagi; klucze env zachowane. Walidacja `IntlMessageFormat` (locale `ko`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — koreański (KO) cz.2/5 — społeczność + gry** **(#326)** — `messages/ko.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → KO = 1288/1963 (admin 521/1196). Tablice `previewOpts` (CJK) + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`; partykuły koreańskie (을/를). Walidacja `IntlMessageFormat` (locale `ko`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — koreański (KO) cz.1/5 — overlaye** **(#325)** — 9. (ostatni) język admina (CJK). `messages/ko.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → KO = 1035/1963 (admin 268/1196). Koreańskie partykuły (을/를, (으)로) + 「…」 zamiast surowych `"`; tagi `<b>`/`<em>`/`<code>` + placeholdery; font systemowy + review natywny przed sprzedażą. Walidacja `IntlMessageFormat` (locale `ko`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
