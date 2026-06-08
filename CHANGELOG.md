@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: francuski (FR) cz.3 — about + legal → FR user-facing KOMPLETNE** **(#269)** — `messages/fr.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **FR = 767 = 100% stron użytkownika** (4. pełny język po DE/ES/IT). Tagi `t.rich` zachowane; GDPR→RGPD; francuskie `«…»` + apostrofy. **⚠️ LEGAL = baza maszynowa — przegląd prawnika przed sprzedażą we Francji.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE: RU/UK/ZH/JA/KO.**
+
 - **i18n: francuski (FR) cz.2 — profil + strony gier** **(#268)** — `messages/fr.json` +profile/userProfile (139) +schedule/quests/kasyno/welcome/seasons/wheel (118) = **257 kluczy** (łącznie FR = **581**). Tablice dni/miesięcy, plurale ICU, tagi `<code>`/`<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało FR: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: francuski (FR) cz.1 — rdzeń + strony funkcji** **(#267)** — start 4. języka. `messages/fr.json` z 16 namespace'ami (rdzeń + funkcje = **324 klucze**). Plurale ICU + tagi `<b>` zachowane, apostrofy/`«…»` francuskie (bezpieczne w JSON); walidacja `IntlMessageFormat`: 0 błędów. Reszta FR = fallback EN. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
