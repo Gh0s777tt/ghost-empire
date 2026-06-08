@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — francuski (FR) cz.3/5 — ekonomia + platformy** **(#302)** — `messages/fr.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → FR = 1523/1963 (admin 756/1196). Plurale ICU + `schedule.days` + tagi `<b>`/`<code>`/`<muted>`/`<link>`; klucze env zachowane. Walidacja `IntlMessageFormat` (locale `fr`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — francuski (FR) cz.2/5 — społeczność + gry** **(#301)** — `messages/fr.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → FR = 1288/1963 (admin 521/1196). Tablice `previewOpts` + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`. Walidacja `IntlMessageFormat` (locale `fr`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — francuski (FR) cz.1/5 — overlaye** **(#300)** — 4. język admina. `messages/fr.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → FR = 1035/1963 (admin 268/1196). Tagi `<b>`/`<em>`/`<code>` + placeholdery; apostrofy ASCII `'` bezpieczne. Walidacja `IntlMessageFormat` (locale `fr`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
