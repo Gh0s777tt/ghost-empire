@@ -1702,6 +1702,315 @@
       "submit": "付与",
       "err": "エラー",
       "granted": "{user} に {delta} GT。残高：{balance}"
+    },
+    "userRoles": {
+      "permGroup": {
+        "economy": "エコノミー",
+        "events": "イベント",
+        "moderation": "モデレーション"
+      },
+      "perm": {
+        "grant_tokens": {
+          "label": "トークンの付与",
+          "desc": "ユーザーへの Ghost Tokens の追加 / 削除（ユーザーセクション）。"
+        },
+        "manage_shop": {
+          "label": "ショップの編集",
+          "desc": "ショップ、配信スケジュール、Discord ボットの編集。"
+        },
+        "deliver_orders": {
+          "label": "注文の履行",
+          "desc": "保留中のショップ注文を履行済みとしてマーク。"
+        },
+        "create_events": {
+          "label": "イベントの作成",
+          "desc": "イベントと予想（GT ベット）の作成。"
+        },
+        "edit_events": {
+          "label": "イベントの編集",
+          "desc": "既存のイベントの編集。"
+        },
+        "draw_events": {
+          "label": "当選者の抽選",
+          "desc": "イベント / giveaway での当選者の抽選。"
+        },
+        "create_drops": {
+          "label": "ドロップコードの作成",
+          "desc": "ドロップコードの作成と管理（配信中のコード）。"
+        },
+        "ban_users": {
+          "label": "ユーザーの BAN",
+          "desc": "ユーザーの BAN：アカウントロック（一時的または永久）。"
+        },
+        "mute_users": {
+          "label": "ユーザーのミュート",
+          "desc": "ユーザーのミュート。"
+        },
+        "mark_subs": {
+          "label": "購読者のマーク",
+          "desc": "プラットフォームごとにサブ / モッド / VIP ステータスを割り当て。"
+        },
+        "view_audit": {
+          "label": "監査ログの表示",
+          "desc": "管理者とモデレーションの操作ログへのアクセス。"
+        }
+      },
+      "err": "エラー",
+      "roleGranted": "{user} に {role} ロールを付与しました",
+      "roleRevoked": "{user} の {role} ロールを取り消しました",
+      "title": "ユーザーロール（管理者/モッド/寄付者）",
+      "userLabel": "ユーザー（ユーザー名、Discord ID、またはアカウント ID）",
+      "roleLabel": "ロール",
+      "actionLabel": "操作",
+      "grant": "✓ 付与",
+      "revoke": "✗ 取り消し",
+      "donationAmount": "寄付額（任意、合算）",
+      "donationPh": "例：50 (PLN)",
+      "apply": "適用",
+      "permsTitle": "モデレーター権限",
+      "selectAll": "すべて選択",
+      "clearAll": "クリア",
+      "permsNote": "管理者は自動的にすべての権限を持ちます。モデレーターはチェックしたものだけ。",
+      "connTitle": "プラットフォームステータス（サブ/モッド/VIP）",
+      "userShort": "ユーザー",
+      "userPh": "ユーザー名 / Discord ID / アカウント ID",
+      "platformLabel": "プラットフォーム",
+      "subMonths": "サブ月数",
+      "update": "更新",
+      "statusUpdated": "{target} の {platform} ステータスを更新しました"
+    },
+    "moderation": {
+      "err": "エラー",
+      "saved": "モデレーションを保存しました",
+      "title": "チャットモデレーション（automod）",
+      "loading": "読み込み中…",
+      "intro": "Twitch / Kick / YouTube での自動モデレーション。ボットがすべてのメッセージをチェックし、操作（削除 / タイムアウト / 警告）を実行します。プラットフォーム上のボットアカウントのモデレーター権限が必要です。<b>変更後はボットを再起動してください。</b>繰り返し違反者は自動的により厳しい処罰を受けます（エスカレーション：警告 → 削除 → タイムアウト ×2、30分のウィンドウ内のさらなる違反ごと）。",
+      "masterSwitch": "Automod 有効（メインスイッチ）",
+      "actionDelete": "削除",
+      "actionTimeout": "タイムアウト",
+      "actionWarn": "警告",
+      "timeoutTitle": "タイムアウトの長さ（秒）",
+      "profanityTitle": "暴言",
+      "profanityDesc": "禁止語の辞書。回避も検出：leetspeak (b4d→bad) と区切り文字 (b.a.d / b a d)。",
+      "wordsLabel": "単語（1行に1つ）",
+      "wordsPh": "単語1\n単語2",
+      "regexLabel": "正規表現パターン（1行に1つ、任意——例 <code>v-?bucks</code>）",
+      "regexPh": "free\\w* gt\nv-?bucks",
+      "linkTitle": "リンク / URL",
+      "linkDesc": "ドメインがホワイトリストにない限りリンクをブロックします。裸のドメイン (scam.com) や短縮 URL (bit.ly) も検出します。",
+      "whitelistLabel": "ドメインのホワイトリスト（1行に1つ——例 <code>twitch.tv</code>、<code>youtube.com</code>）",
+      "whitelistPh": "twitch.tv\nyoutube.com\nclips.twitch.tv",
+      "linkAllowSubs": "購読者 / VIP / モッドはリンクを投稿可能",
+      "capsTitle": "過剰な大文字 (CAPS)",
+      "capsDesc": "大文字の割合が高すぎるメッセージをマーク（短いものは無視）。",
+      "capsMinLetters": "最小文字数",
+      "capsMaxRatio": "最大 % CAPS",
+      "lengthTitle": "長さ制限",
+      "lengthDesc": "メッセージの最大文字数。",
+      "lengthMax": "最大文字数",
+      "repeatTitle": "繰り返し / フラッド",
+      "repeatDesc": "同じ文字や単語が多すぎる繰り返し（絵文字スパム、コピペ）。",
+      "repeatCharRun": "最大同一文字",
+      "repeatWordRun": "最大同一単語",
+      "zalgoTitle": "Zalgo テキスト",
+      "zalgoDesc": "グリッチテキスト——過剰な Unicode 結合文字 (ḩ̸̢̛e̵l̶l̷o)。ポーランド語の文字はマークしません。",
+      "zalgoMaxRatio": "最大 % 結合文字",
+      "exemptHeader": "スキップ（ホワイトリスト）",
+      "exemptSubs": "購読者",
+      "exemptVips": "VIP",
+      "exemptMods": "モデレーター",
+      "saveBtn": "モデレーション設定を保存"
+    },
+    "webhooksOut": {
+      "eventLabel": {
+        "shop_purchase": "ショップ購入",
+        "event_win": "イベント勝利",
+        "drop_claim_bonus": "ドロップコード受け取り",
+        "twitch_sub": "サブ (Twitch)",
+        "twitch_gift_sub": "ギフトサブ",
+        "twitch_cheer": "Bits (cheer)",
+        "donation": "寄付",
+        "welcome": "ようこそ",
+        "level_up": "レベルアップ",
+        "wheel_win": "ルーレット勝利"
+      },
+      "err": "エラー",
+      "urlRequired": "URL を入力",
+      "eventRequired": "少なくとも1つのイベントを選択",
+      "created": "Webhook を追加しました",
+      "deleteConfirm": "webhook {label} を削除しますか？",
+      "deleted": "削除しました",
+      "testOk": "テスト成功 (HTTP {status})",
+      "testFail": "テスト失敗 ({err})",
+      "title": "送信 webhook",
+      "loading": "読み込み中…",
+      "intro": "配信イベント（サブ、寄付、購入、勝利…）を <b>POST JSON</b> として任意の URL に送信：<b>Discord webhook</b>、n8n、Zapier、自分のサーバー。オプションの秘密鍵がボディに署名します（<code>X-GhostEmpire-Signature: sha256=…</code>）。死んだ endpoint は一連のエラー後に自動的に無効になります。",
+      "empty": "webhook がありません。下で最初のものを追加してください。",
+      "signedTitle": "秘密鍵で署名",
+      "testTitle": "テストを送信",
+      "disable": "無効にする",
+      "enable": "有効にする",
+      "deleteTitle": "削除",
+      "allBadge": "すべて",
+      "lastFired": "最終：{date} · ステータス {status}",
+      "errorsCount": "· エラー：{count}",
+      "newWebhook": "新しい webhook",
+      "labelPh": "名前（例：Discord #alerts）",
+      "secretPh": "HMAC 秘密鍵（任意：ボディに署名）",
+      "allEvents": "すべてのイベント",
+      "addBtn": "webhook を追加"
+    },
+    "auditLog": {
+      "title": "監査ログ（最新 {count}）",
+      "empty": "データベースに管理者操作がありません。すべての付与/抽選/返金がここに表示されます：誰がいつ。",
+      "accountDeleted": "アカウント削除済み",
+      "action": {
+        "grant_tokens": "トークン付与",
+        "create_drop": "新しいドロップ",
+        "deactivate_drop": "ドロップ無効化",
+        "create_event": "新しいイベント",
+        "deactivate_event": "イベント無効化",
+        "draw_event": "抽選",
+        "deliver_order": "配達済み",
+        "refund_order": "返金",
+        "set_user_role": "ユーザーロール",
+        "set_connection_role": "プラットフォームステータス",
+        "reset_database": "DB リセット",
+        "manage_codes": "コード（ドロップ）",
+        "manage_achievements": "実績",
+        "manage_polls": "投票",
+        "create_prediction": "新しい予想",
+        "resolve_prediction": "決済",
+        "cancel_prediction": "予想キャンセル",
+        "test_alert": "テストアラート",
+        "update_alert_settings": "アラート設定",
+        "merge_users": "アカウント統合",
+        "update_moderation": "モデレーション（自動）",
+        "update_integrations": "連携 / キー"
+      }
+    },
+    "mergeUsers": {
+      "reason": {
+        "shared_platform_id": "共有 OAuth アカウント（最強のシグナル）",
+        "shared_email": "共有メール",
+        "shared_discord_id": "共有 Discord ID"
+      },
+      "loadError": "重複グループの読み込みに失敗しました",
+      "netErr": "ネットワークエラー",
+      "title": "重複を統合",
+      "warning": "<b>破壊的な操作</b>——2番目のアカウントは、データがメインに移動された後に完全に削除されます。操作はアトミック（1つの DB トランザクション）ですが、元に戻せません。",
+      "rescan": "再スキャン",
+      "detectHint": "検出：同じ OAuth プロバイダーアカウント ID、メール、または Discord ID。",
+      "empty": "✓ 重複は検出されませんでした——すべてクリーンです。",
+      "confirmRequired": "確認のため2番目のアカウントの正確なユーザー名を入力",
+      "merged": "統合しました。移動：{tokens} GT、{txn} 件の取引",
+      "created": "作成済み",
+      "platforms": "プラットフォーム：",
+      "showPreview": "統合プレビューを表示",
+      "willMoveHeader": "@{sec} → @{prim} に移動するもの",
+      "finalTokens": "統合後のトークン：<b>{n} GT</b>",
+      "conflicts": "⚠ 競合（メインのバージョンを保持）：",
+      "confirmLabel": "確認：2番目のアカウントのユーザー名を入力：<code>{name}</code>",
+      "mergeNow": "今すぐ統合"
+    },
+    "modViolations": {
+      "violation": {
+        "profanity": "暴言",
+        "caps": "CAPS",
+        "length": "長さ",
+        "repeat": "スパム",
+        "zalgo": "zalgo"
+      },
+      "action": {
+        "delete": "削除",
+        "timeout": "タイムアウト",
+        "warn": "警告"
+      },
+      "loading": "統計を読み込み中…",
+      "statsTitle": "違反の統計",
+      "refresh": "更新",
+      "last24h": "過去24時間",
+      "last7d": "過去7日間",
+      "noViolations": "過去7日間に違反はありません。",
+      "topOffenders": "最も頻繁（7日間）",
+      "recentSummary": "最新 {count} 件のイベント"
+    },
+    "databaseReset": {
+      "err": "エラー",
+      "netErr": "ネットワークエラー",
+      "lastWarning": "最終警告\n\nこれにより、すべてのユーザーとそのデータが取り消し不能に削除されます（あなたのアカウントも：再度ログインします）。設定とカタログは残ります。\n\n続行しますか？",
+      "resetDone": "データベースをリセットしました——{count} 名のユーザーを削除しました。ログアウト中…",
+      "title": "データベースのリセット",
+      "backupTitle": "バックアップ (JSON)",
+      "backupDesc": "<b>設定、カタログ、ユーザー残高</b>のコピーを JSON ファイルとしてダウンロード——<b>秘密鍵なし</b>（メール、OAuth トークン、セッション、ログは省略）。何かを削除する前にバックアップを取ってください。",
+      "downloadBackup": "バックアップをダウンロード",
+      "dangerZone": "危険ゾーン——取り消し不能な操作",
+      "dangerDesc1": "<b>すべてのユーザー</b>とそのデータを削除：アカウントとログイン、接続プラットフォーム、トークンと取引、実績、クエスト、battle pass の進行、ベット、イベント参加、通知、ソーシャルリンク。アラートキュー、チャットフィード、イベントログ（Twitch / Kick / YouTube）もクリアします。ユーザーは最初からログインします（ウェルカムボーナス付き）。",
+      "dangerDesc2": "<b>保持されるもの：</b>設定とカタログ——ショップ、イベント/実績/クエスト/ドロップの定義、battle pass シーズン、チャットコマンド / タイマー / FAQ、スケジュール、アラート設定、連携（Twitch / Kick / YouTube / Streamlabs）、監査ログ。所有者アカウントは再ログイン後に管理者として戻ります。",
+      "unlockLabel": "ロック解除するには <red>{p}</red> を正確に入力",
+      "resetBtn": "データベースをリセット"
+    },
+    "analytics": {
+      "loading": "読み込み中…",
+      "streamTimeTitle": "配信時間",
+      "streamIntro": "Twitch EventSub（<code>stream.online</code>/<code>stream.offline</code>）からの配信セッション。<b>配信者の配信時間</b>を測定します（視聴者ごとの視聴時間ではありません）。",
+      "streamEmpty": "セッションがありません——最初の配信後に表示されます。<mono>Twitch</mono> セクションで <b>stream.online/offline</b> 購読を作成する必要があります（購読を作成ボタン）。",
+      "statusLabel": "ステータス",
+      "offline": "オフライン",
+      "totalBroadcast": "総配信時間",
+      "streamCount": "配信回数",
+      "ongoing": "進行中…",
+      "heatmapTitle": "分析——チャットヒートマップ",
+      "heatmapIntro": "チャットが最も活発な時間（曜日 × 時間、Europe/Warsaw タイムゾーン）。Twitch + Kick + YouTube のアクティビティから計算（1/分/視聴者）。",
+      "heatmapEmpty": "データがありません——配信中に誰かがチャットすると表示されます。",
+      "heatmapFooter": "合計 {total} アクティブチャッター分 · ピーク {peak}/枠",
+      "daysShort": [
+        "日",
+        "月",
+        "火",
+        "水",
+        "木",
+        "金",
+        "土"
+      ]
+    },
+    "setupStatus": {
+      "item": {
+        "ai": {
+          "label": "AI キー（@bot ペルソナ + !imagine）",
+          "hint": "連携セクションで AI キーを貼り付け"
+        },
+        "twitch": {
+          "label": "Twitch 接続済み (EventSub)",
+          "hint": "Twitch セクションで配信者アカウントを接続"
+        },
+        "twitchSubs": {
+          "label": "EventSub 購読作成済み",
+          "hint": "Twitch セクションで購読を作成をクリック"
+        },
+        "kick": {
+          "label": "Kick 接続済み",
+          "hint": "Kick を接続"
+        },
+        "youtube": {
+          "label": "YouTube 接続済み",
+          "hint": "YouTube を接続"
+        },
+        "moderation": {
+          "label": "チャットモデレーション有効",
+          "hint": "モデレーションセクションでルールを有効化"
+        },
+        "overlay": {
+          "label": "OBS オーバーレイトークン",
+          "hint": "配信アラートに移動して生成"
+        }
+      },
+      "title": "設定ステータス",
+      "done": "完了：<b>{done}/{total}</b>",
+      "allReqOk": "✓ 必要なものすべて準備完了",
+      "reqProgress": "{done}/{total} 必須",
+      "optional": "任意",
+      "configure": "設定"
     }
   }
 }
