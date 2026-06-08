@@ -1731,6 +1731,315 @@
       "submit": "Berikan",
       "err": "Kesalahan",
       "granted": "{delta} GT untuk {user}. Saldo: {balance}"
+    },
+    "userRoles": {
+      "permGroup": {
+        "economy": "EKONOMI",
+        "events": "ACARA",
+        "moderation": "MODERASI"
+      },
+      "perm": {
+        "grant_tokens": {
+          "label": "Berikan token",
+          "desc": "Menambah / menghapus Ghost Tokens untuk pengguna (bagian Pengguna)."
+        },
+        "manage_shop": {
+          "label": "Edit toko",
+          "desc": "Edit toko, jadwal siaran, dan bot Discord."
+        },
+        "deliver_orders": {
+          "label": "Pemenuhan pesanan",
+          "desc": "Tandai pesanan toko yang tertunda sebagai terpenuhi."
+        },
+        "create_events": {
+          "label": "Membuat acara",
+          "desc": "Membuat acara dan prediksi (taruhan GT)."
+        },
+        "edit_events": {
+          "label": "Mengedit acara",
+          "desc": "Mengedit acara yang ada."
+        },
+        "draw_events": {
+          "label": "Mengundi pemenang",
+          "desc": "Mengundi pemenang di acara / giveaway."
+        },
+        "create_drops": {
+          "label": "Membuat kode drop",
+          "desc": "Membuat dan mengelola kode drop (kode di siaran)."
+        },
+        "ban_users": {
+          "label": "Memblokir pengguna",
+          "desc": "Memblokir pengguna — penguncian akun (sementara atau permanen)."
+        },
+        "mute_users": {
+          "label": "Membisukan pengguna",
+          "desc": "Membisukan pengguna."
+        },
+        "mark_subs": {
+          "label": "Menandai pelanggan",
+          "desc": "Menetapkan status sub / mod / VIP per platform."
+        },
+        "view_audit": {
+          "label": "Lihat log audit",
+          "desc": "Akses ke log tindakan admin dan moderasi."
+        }
+      },
+      "err": "Kesalahan",
+      "roleGranted": "Peran {role} diberikan kepada {user}",
+      "roleRevoked": "Peran {role} dicabut dari {user}",
+      "title": "Peran pengguna (admin/mod/donatur)",
+      "userLabel": "Pengguna (username, Discord ID, atau ID akun)",
+      "roleLabel": "Peran",
+      "actionLabel": "Tindakan",
+      "grant": "✓ Berikan",
+      "revoke": "✗ Cabut",
+      "donationAmount": "Jumlah donasi (opsional, terakumulasi)",
+      "donationPh": "mis. 50 (PLN)",
+      "apply": "Terapkan",
+      "permsTitle": "Izin moderator",
+      "selectAll": "Pilih semua",
+      "clearAll": "Hapus",
+      "permsNote": "Admin memiliki semua izin secara otomatis. Moderator — hanya yang dicentang.",
+      "connTitle": "Status platform (sub/mod/VIP)",
+      "userShort": "Pengguna",
+      "userPh": "username / Discord ID / ID akun",
+      "platformLabel": "Platform",
+      "subMonths": "Bulan sub",
+      "update": "Perbarui",
+      "statusUpdated": "Status {platform} diperbarui untuk {target}"
+    },
+    "moderation": {
+      "err": "Kesalahan",
+      "saved": "Moderasi disimpan",
+      "title": "Moderasi chat (automod)",
+      "loading": "Memuat…",
+      "intro": "Moderasi otomatis di Twitch / Kick / YouTube. Bot memeriksa setiap pesan dan mengambil tindakan (hapus / timeout / peringatkan). Memerlukan izin moderator untuk akun bot di platform. <b>Mulai ulang bot setelah perubahan.</b> Pelanggar berulang mendapat hukuman lebih berat secara otomatis (eskalasi: peringatan → hapus → timeout ×2 untuk setiap pelanggaran berikutnya dalam jendela 30 mnt).",
+      "masterSwitch": "Automod aktif (sakelar utama)",
+      "actionDelete": "Hapus",
+      "actionTimeout": "Timeout",
+      "actionWarn": "Peringatkan",
+      "timeoutTitle": "Durasi timeout (detik)",
+      "profanityTitle": "Kata kasar",
+      "profanityDesc": "Kamus kata terlarang. Juga mendeteksi penghindaran: leetspeak (b4d→bad) dan pemisah (b.a.d / b a d).",
+      "wordsLabel": "Kata (satu per baris)",
+      "wordsPh": "kata1\nkata2",
+      "regexLabel": "Pola Regex (satu per baris, opsional — mis. <code>v-?bucks</code>)",
+      "regexPh": "free\\w* gt\nv-?bucks",
+      "linkTitle": "Tautan / URL",
+      "linkDesc": "Memblokir tautan kecuali domain ada di daftar putih. Juga mendeteksi domain tanpa protokol (scam.com) dan pemendek (bit.ly).",
+      "whitelistLabel": "Daftar putih domain (satu per baris — mis. <code>twitch.tv</code>, <code>youtube.com</code>)",
+      "whitelistPh": "twitch.tv\nyoutube.com\nclips.twitch.tv",
+      "linkAllowSubs": "Pelanggan / VIP / mod boleh mengirim tautan",
+      "capsTitle": "Huruf kapital berlebihan (CAPS)",
+      "capsDesc": "Menandai pesan yang % hurufnya terlalu banyak kapital (mengabaikan yang pendek).",
+      "capsMinLetters": "Min. huruf",
+      "capsMaxRatio": "Maks % CAPS",
+      "lengthTitle": "Batas panjang",
+      "lengthDesc": "Jumlah karakter maksimum dalam sebuah pesan.",
+      "lengthMax": "Maks karakter",
+      "repeatTitle": "Pengulangan / banjir",
+      "repeatDesc": "Karakter atau kata yang sama diulang terlalu banyak (spam emote, copypasta).",
+      "repeatCharRun": "Maks karakter sama",
+      "repeatWordRun": "Maks kata sama",
+      "zalgoTitle": "Teks Zalgo",
+      "zalgoDesc": "Teks rusak — kelebihan tanda penggabung Unicode (ḩ̸̢̛e̵l̶l̷o). Tidak menandai huruf Polandia.",
+      "zalgoMaxRatio": "Maks % tanda penggabung",
+      "exemptHeader": "Lewati (daftar putih)",
+      "exemptSubs": "Pelanggan",
+      "exemptVips": "VIP",
+      "exemptMods": "Moderator",
+      "saveBtn": "Simpan pengaturan moderasi"
+    },
+    "webhooksOut": {
+      "eventLabel": {
+        "shop_purchase": "Pembelian toko",
+        "event_win": "Menang acara",
+        "drop_claim_bonus": "Klaim kode drop",
+        "twitch_sub": "Sub (Twitch)",
+        "twitch_gift_sub": "Sub hadiah",
+        "twitch_cheer": "Bits (cheer)",
+        "donation": "Donasi",
+        "welcome": "Sambutan",
+        "level_up": "Naik level",
+        "wheel_win": "Menang roda"
+      },
+      "err": "Kesalahan",
+      "urlRequired": "Masukkan URL",
+      "eventRequired": "Pilih minimal 1 peristiwa",
+      "created": "Webhook ditambahkan",
+      "deleteConfirm": "Hapus webhook «{label}»?",
+      "deleted": "Dihapus",
+      "testOk": "Uji OK (HTTP {status})",
+      "testFail": "Uji gagal ({err})",
+      "title": "Webhook keluar",
+      "loading": "Memuat…",
+      "intro": "Kirim peristiwa siaran (sub, donasi, pembelian, kemenangan…) sebagai <b>POST JSON</b> ke URL mana pun — <b>webhook Discord</b>, n8n, Zapier, server kamu sendiri. Rahasia opsional menandatangani body (<code>X-GhostEmpire-Signature: sha256=…</code>). Endpoint mati menonaktifkan diri setelah serangkaian kesalahan.",
+      "empty": "Tidak ada webhook. Tambahkan yang pertama di bawah.",
+      "signedTitle": "ditandatangani dengan rahasia",
+      "testTitle": "Kirim uji",
+      "disable": "Nonaktifkan",
+      "enable": "Aktifkan",
+      "deleteTitle": "Hapus",
+      "allBadge": "semua",
+      "lastFired": "terakhir: {date} · status {status}",
+      "errorsCount": "· kesalahan: {count}",
+      "newWebhook": "Webhook baru",
+      "labelPh": "Nama (mis. Discord #alerts)",
+      "secretPh": "Rahasia HMAC (opsional — menandatangani body)",
+      "allEvents": "Semua peristiwa",
+      "addBtn": "Tambah webhook"
+    },
+    "auditLog": {
+      "title": "Log audit ({count} terakhir)",
+      "empty": "Tidak ada tindakan admin di basis data. Setiap pemberian/undian/pengembalian akan muncul di sini — siapa dan kapan.",
+      "accountDeleted": "akun dihapus",
+      "action": {
+        "grant_tokens": "Pemberian token",
+        "create_drop": "Drop baru",
+        "deactivate_drop": "Nonaktifkan drop",
+        "create_event": "Acara baru",
+        "deactivate_event": "Nonaktifkan acara",
+        "draw_event": "Undian",
+        "deliver_order": "Terkirim",
+        "refund_order": "Pengembalian",
+        "set_user_role": "Peran pengguna",
+        "set_connection_role": "Status platform",
+        "reset_database": "Reset BD",
+        "manage_codes": "Kode (drop)",
+        "manage_achievements": "Pencapaian",
+        "manage_polls": "Polling",
+        "create_prediction": "Prediksi baru",
+        "resolve_prediction": "Penyelesaian",
+        "cancel_prediction": "Batalkan prediksi",
+        "test_alert": "Alert uji",
+        "update_alert_settings": "Pengaturan alert",
+        "merge_users": "Gabung akun",
+        "update_moderation": "Moderasi (otomatis)",
+        "update_integrations": "Integrasi / kunci"
+      }
+    },
+    "mergeUsers": {
+      "reason": {
+        "shared_platform_id": "Akun OAuth bersama (sinyal terkuat)",
+        "shared_email": "Email bersama",
+        "shared_discord_id": "Discord ID bersama"
+      },
+      "loadError": "Gagal memuat grup duplikat",
+      "netErr": "Kesalahan jaringan",
+      "title": "Gabungkan duplikat",
+      "warning": "<b>Operasi destruktif</b> — akun kedua dihapus sepenuhnya setelah datanya dipindahkan ke akun utama. Tindakan ini atomik (satu transaksi BD) tetapi tidak dapat dibatalkan.",
+      "rescan": "Pindai ulang",
+      "detectHint": "Deteksi: ID akun penyedia OAuth, email, atau Discord ID yang sama.",
+      "empty": "✓ Tidak ada duplikat terdeteksi — semuanya bersih.",
+      "confirmRequired": "Ketik username persis akun kedua untuk mengonfirmasi",
+      "merged": "Digabungkan. Dipindahkan: {tokens} GT, {txn} transaksi",
+      "created": "Dibuat",
+      "platforms": "Platform:",
+      "showPreview": "Tampilkan pratinjau penggabungan",
+      "willMoveHeader": "Yang dipindahkan dari @{sec} → @{prim}",
+      "finalTokens": "Token setelah penggabungan: <b>{n} GT</b>",
+      "conflicts": "⚠ Konflik (versi akun utama dipertahankan):",
+      "confirmLabel": "Konfirmasi — ketik username akun kedua: <code>{name}</code>",
+      "mergeNow": "Gabungkan sekarang"
+    },
+    "modViolations": {
+      "violation": {
+        "profanity": "kata kasar",
+        "caps": "CAPS",
+        "length": "panjang",
+        "repeat": "spam",
+        "zalgo": "zalgo"
+      },
+      "action": {
+        "delete": "hapus",
+        "timeout": "timeout",
+        "warn": "peringatkan"
+      },
+      "loading": "Memuat statistik…",
+      "statsTitle": "Statistik pelanggaran",
+      "refresh": "Segarkan",
+      "last24h": "24 jam terakhir",
+      "last7d": "7 hari terakhir",
+      "noViolations": "Tidak ada pelanggaran dalam 7 hari terakhir.",
+      "topOffenders": "Paling sering (7 hari)",
+      "recentSummary": "{count} peristiwa terakhir"
+    },
+    "databaseReset": {
+      "err": "Kesalahan",
+      "netErr": "Kesalahan jaringan",
+      "lastWarning": "PERINGATAN TERAKHIR\n\nIni akan menghapus SECARA PERMANEN SEMUA pengguna dan data mereka (akunmu juga — kamu akan masuk lagi). Konfigurasi dan katalog tetap.\n\nLanjutkan?",
+      "resetDone": "Basis data direset — {count} pengguna dihapus. Keluar…",
+      "title": "Reset basis data",
+      "backupTitle": "Cadangan (JSON)",
+      "backupDesc": "Mengunduh salinan <b>konfigurasi, katalog, dan saldo pengguna</b> sebagai berkas JSON — <b>tanpa rahasia</b> (email, token OAuth, sesi, log dihilangkan). Buat cadangan sebelum menghapus apa pun.",
+      "downloadBackup": "Unduh cadangan",
+      "dangerZone": "Zona bahaya — operasi PERMANEN",
+      "dangerDesc1": "Menghapus <b>semua pengguna</b> dan data mereka: akun dan login, platform terhubung, token dan transaksi, pencapaian, misi, progres battle pass, taruhan, partisipasi acara, notifikasi, dan tautan sosial. Juga membersihkan antrean alert, feed chat, dan log peristiwa (Twitch / Kick / YouTube). Pengguna masuk dari awal (dengan bonus sambutan).",
+      "dangerDesc2": "<b>Dipertahankan:</b> konfigurasi dan katalog — toko, definisi acara/pencapaian/misi/drop, musim battle pass, perintah chat / timer / FAQ, jadwal, pengaturan alert, integrasi (Twitch / Kick / YouTube / Streamlabs), dan log audit. Akun pemilik kembali sebagai admin setelah masuk lagi.",
+      "unlockLabel": "Ketik persis <red>{p}</red> untuk membuka",
+      "resetBtn": "Reset basis data"
+    },
+    "analytics": {
+      "loading": "Memuat…",
+      "streamTimeTitle": "Waktu siaran",
+      "streamIntro": "Sesi siaran dari Twitch EventSub (<code>stream.online</code>/<code>stream.offline</code>). Mengukur <b>waktu siaran streamer</b>, bukan waktu tonton per penonton.",
+      "streamEmpty": "Tidak ada sesi — akan muncul setelah siaran pertama. Memerlukan pembuatan langganan <b>stream.online/offline</b> di bagian <mono>Twitch</mono> (tombol «Buat langganan»).",
+      "statusLabel": "Status",
+      "offline": "Offline",
+      "totalBroadcast": "Total waktu siaran",
+      "streamCount": "Jumlah siaran",
+      "ongoing": "berlangsung…",
+      "heatmapTitle": "Analitik — heatmap chat",
+      "heatmapIntro": "Kapan chat paling aktif (hari × jam, waktu Europe/Warsaw). Dihitung dari aktivitas di Twitch + Kick + YouTube (1/mnt/penonton).",
+      "heatmapEmpty": "Tidak ada data — akan muncul setelah seseorang chat saat siaran.",
+      "heatmapFooter": "Total {total} menit-pengobrol aktif · puncak {peak}/slot",
+      "daysShort": [
+        "Min",
+        "Sen",
+        "Sel",
+        "Rab",
+        "Kam",
+        "Jum",
+        "Sab"
+      ]
+    },
+    "setupStatus": {
+      "item": {
+        "ai": {
+          "label": "Kunci AI (persona @bot + !imagine)",
+          "hint": "Tempel kunci AI di bagian Integrasi"
+        },
+        "twitch": {
+          "label": "Twitch terhubung (EventSub)",
+          "hint": "Hubungkan akun streamer di bagian Twitch"
+        },
+        "twitchSubs": {
+          "label": "Langganan EventSub dibuat",
+          "hint": "Klik Buat langganan di bagian Twitch"
+        },
+        "kick": {
+          "label": "Kick terhubung",
+          "hint": "Hubungkan Kick"
+        },
+        "youtube": {
+          "label": "YouTube terhubung",
+          "hint": "Hubungkan YouTube"
+        },
+        "moderation": {
+          "label": "Moderasi chat aktif",
+          "hint": "Aktifkan aturan di bagian Moderasi"
+        },
+        "overlay": {
+          "label": "Token overlay OBS",
+          "hint": "Buka Stream Alerts untuk membuatnya"
+        }
+      },
+      "title": "Status konfigurasi",
+      "done": "Selesai: <b>{done}/{total}</b>",
+      "allReqOk": "✓ Semua yang wajib siap",
+      "reqProgress": "{done}/{total} wajib",
+      "optional": "opsional",
+      "configure": "Konfigurasi"
     }
   }
 }
