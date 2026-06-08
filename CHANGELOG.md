@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **🎉 i18n: panel `admin` — chiński (ZH) cz.5/5 — bot/czat + chrome → ZH KOMPLETNY 100%** **(#319)** — `messages/zh.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **ZH = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 7. język w pełni przetłumaczony (1. CJK). Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. **⚠️ CJK font systemowy + review natywny przed sprzedażą.** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — chiński (ZH) cz.4/5 — użytkownicy + moderacja** **(#318)** — `messages/zh.json` +`admin` (userRoles/moderation/webhooksOut/auditLog/mergeUsers/modViolations/databaseReset/analytics/setupStatus = **231 kluczy**) → ZH = 1754/1963 (admin 987/1196, 82%). Zagnieżdżone mapy + `\n`/`\n\n` + regex `\\w` + `<red>{p}</red>`; `analytics.daysShort` (日一二…). Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — chiński (ZH) cz.3/5 — ekonomia + platformy** **(#317)** — `messages/zh.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → ZH = 1523/1963 (admin 756/1196). **Plurale CJK tylko `other`** (`shop.title`/`schedule.title`) + `schedule.days` (周日…) + tagi; klucze env zachowane. Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
