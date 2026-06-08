@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — chiński (ZH) cz.3/5 — ekonomia + platformy** **(#317)** — `messages/zh.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → ZH = 1523/1963 (admin 756/1196). **Plurale CJK tylko `other`** (`shop.title`/`schedule.title`) + `schedule.days` (周日…) + tagi; klucze env zachowane. Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — chiński (ZH) cz.2/5 — społeczność + gry** **(#316)** — `messages/zh.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → ZH = 1288/1963 (admin 521/1196). Tablice `previewOpts` (CJK) + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`; interpunkcja pełnej szerokości. Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — chiński (ZH) cz.1/5 — overlaye** **(#315)** — 7. język admina (pierwszy CJK). `messages/zh.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → ZH = 1035/1963 (admin 268/1196). CJK: interpunkcja pełnej szerokości（）、「…」 zamiast surowych `"`; tagi `<b>`/`<em>`/`<code>` + placeholdery; font systemowy + review natywny przed sprzedażą. Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
