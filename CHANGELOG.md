@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — ukraiński (UK) cz.2/5 — społeczność + gry** **(#311)** — `messages/uk.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → UK = 1288/1963 (admin 521/1196). Tablice `previewOpts` (cyrylica) + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`. Walidacja `IntlMessageFormat` (locale `uk`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — ukraiński (UK) cz.1/5 — overlaye** **(#310)** — 6. język admina (cyrylica). `messages/uk.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → UK = 1035/1963 (admin 268/1196). Cyrylica + apostrof ASCII `'` (ім'я, з'являється); tagi `<b>`/`<em>`/`<code>`. Walidacja `IntlMessageFormat` (locale `uk`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **🎉 i18n: panel `admin` — rosyjski (RU) cz.5/5 — bot/czat + chrome → RU KOMPLETNY 100%** **(#309)** — `messages/ru.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **RU = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 5. język w pełni przetłumaczony. Walidacja `IntlMessageFormat` (locale `ru`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
