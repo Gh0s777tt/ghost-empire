@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: włoski (IT) cz.3 — about + legal → IT user-facing KOMPLETNE** **(#266)** — `messages/it.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **IT = 767 = 100% stron użytkownika** (3. pełny język po DE/ES). Tagi `t.rich` zachowane; włoskie `«…»` + apostrofy (bezpieczne w JSON). **⚠️ LEGAL = baza maszynowa — przegląd prawnika przed sprzedażą w IT.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE: FR/RU/UK/ZH/JA/KO.**
+
 - **i18n: włoski (IT) cz.2 — profil + strony gier** **(#265)** — `messages/it.json` +profile/userProfile (139) +schedule/quests/kasyno/welcome/seasons/wheel (118) = **257 kluczy** (łącznie IT = **581**). Tablice dni/miesięcy, plurale ICU, tagi `<code>`/`<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało IT: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: włoski (IT) cz.1 — rdzeń + strony funkcji** **(#264)** — start 3. języka. `messages/it.json` z 16 namespace'ami (nav/common/footer/locale/notifications/home/shop/signin/authError/games + events/ranking/predictions/achievements/drops/polls = **324 klucze**): cały przepływ odwiedzającego + strony funkcji w jednym PR (większe partie, bo pipeline sprawdzony). Plurale ICU + tagi `<b>` zachowane, apostrofy włoskie (`'` = U+0027, bezpieczne w JSON); walidacja `IntlMessageFormat`: 0 błędów. Reszta IT = fallback EN. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
