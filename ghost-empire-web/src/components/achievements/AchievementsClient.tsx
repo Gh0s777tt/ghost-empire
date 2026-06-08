@@ -168,7 +168,7 @@ export function AchievementsClient({
 
         {isAuthenticated && (
           <div className="grid grid-cols-2 gap-2">
-            <div className="border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-right">
+            <div className="border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-end">
               <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">
                 {t("xpFrom")}
               </div>
@@ -176,7 +176,7 @@ export function AchievementsClient({
                 +{fmt(xpFromAchievements)} XP
               </div>
             </div>
-            <div className="border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-right">
+            <div className="border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-end">
               <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">
                 {t("gtFrom")}
               </div>
@@ -324,7 +324,7 @@ function AchievementCard({
       {/* Rarity badge top right */}
       <div
         className={cn(
-          "absolute top-2 right-2 text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 border",
+          "absolute top-2 end-2 text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 border",
           earned ? `${meta.border} ${meta.bg} ${meta.text}` : "border-zinc-800 text-zinc-700",
         )}
       >
@@ -341,7 +341,7 @@ function AchievementCard({
         >
           {isHidden ? "❓" : a.icon}
         </div>
-        <div className="flex-1 min-w-0 pr-12">
+        <div className="flex-1 min-w-0 pe-12">
           <h3
             className={cn(
               "text-base font-bold leading-tight",
@@ -373,7 +373,7 @@ function AchievementCard({
             <span className="text-zinc-600">{t("progress")}</span>
             <span className="text-zinc-400">
               {fmt(Math.min(progress.current, progress.target))} / {fmt(progress.target)}
-              <span className="text-zinc-600 ml-1">({Math.floor(progress.ratio)}%)</span>
+              <span className="text-zinc-600 ms-1">({Math.floor(progress.ratio)}%)</span>
             </span>
           </div>
           <div className="h-1.5 bg-zinc-900 border border-zinc-800 overflow-hidden">
@@ -422,7 +422,7 @@ function AchievementCard({
 
       {/* Earned overlay info */}
       {earned && a.myEarnedAt && (
-        <div className="absolute top-1.5 left-1.5">
+        <div className="absolute top-1.5 start-1.5">
           <div
             className="flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase"
             style={{ background: meta.color, color: "#000" }}

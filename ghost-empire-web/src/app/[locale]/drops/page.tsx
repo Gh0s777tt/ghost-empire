@@ -168,7 +168,7 @@ export default async function DropsPage() {
                           <div className="font-mono text-sm text-white">
                             {c.drop.code}
                             {wasBonus && (
-                              <span className="ml-2 text-[9px] font-bold tracking-widest uppercase text-yellow-400 px-1.5 py-0.5 border border-yellow-700">
+                              <span className="ms-2 text-[9px] font-bold tracking-widest uppercase text-yellow-400 px-1.5 py-0.5 border border-yellow-700">
                                 BONUS
                               </span>
                             )}
@@ -237,7 +237,7 @@ function StatTile({
       </div>
       <div className="font-mono text-xl font-bold text-white tabular-nums">
         {value}
-        {suffix && <span className="text-zinc-500 text-xs ml-1">{suffix}</span>}
+        {suffix && <span className="text-zinc-500 text-xs ms-1">{suffix}</span>}
       </div>
     </div>
   );

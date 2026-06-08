@@ -29,7 +29,7 @@ export function ChangelogList({ entries }: { entries: ChangelogEntry[] }) {
               type="button"
               onClick={() => setOpenDates((o) => ({ ...o, [entry.date]: !o[entry.date] }))}
               aria-expanded={isOpen}
-              className="w-full flex items-center gap-3 p-4 text-left hover:bg-white/2 transition-colors"
+              className="w-full flex items-center gap-3 p-4 text-start hover:bg-white/2 transition-colors"
             >
               <span className="font-mono text-[10px] uppercase tracking-widest text-red-400 px-2 py-0.5 border border-red-900/50 shrink-0">
                 {entry.date}

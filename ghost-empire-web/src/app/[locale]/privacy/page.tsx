@@ -58,35 +58,35 @@ export default async function PrivacyPage() {
 
           <Section title={t("s2")}>
             <p className="mb-3">{t("s2intro1")}</p>
-            <ul className="space-y-1.5 ml-4">
+            <ul className="space-y-1.5 ms-4">
               {S2B.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
             <p className="mt-3">{t("s2intro2")}</p>
-            <ul className="space-y-1.5 ml-4 mt-2">
+            <ul className="space-y-1.5 ms-4 mt-2">
               {S2C.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
           <Section title={t("s3")}>
-            <ul className="space-y-1.5 ml-4">
+            <ul className="space-y-1.5 ms-4">
               {S3.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
           <Section title={t("s4")}>
-            <ul className="space-y-1.5 ml-4">
+            <ul className="space-y-1.5 ms-4">
               {S4.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
           <Section title={t("s5")}>
-            <ul className="space-y-1.5 ml-4">
+            <ul className="space-y-1.5 ms-4">
               {S5.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
 
           <Section title={t("s6")}>
-            <ul className="space-y-1.5 ml-4">
+            <ul className="space-y-1.5 ms-4">
               {S6.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
             <p className="mt-3">{tr("s6p")}</p>
@@ -94,7 +94,7 @@ export default async function PrivacyPage() {
 
           <Section title={t("s7")}>
             <p>{t("s7intro")}</p>
-            <ul className="space-y-1.5 ml-4 mt-2">
+            <ul className="space-y-1.5 ms-4 mt-2">
               {S7.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>

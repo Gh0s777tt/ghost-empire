@@ -68,7 +68,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           <div className="flex items-center gap-2">
             <label className="text-xs text-zinc-400">{t("stake")}
               <input type="number" min={10} max={100000} value={bet} onChange={(e) => setBet(Math.max(10, parseInt(e.target.value || "10", 10)))}
-                className="ml-2 w-28 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500" />
+                className="ms-2 w-28 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500" />
             </label>
           </div>
           <div className="flex gap-3">
@@ -80,7 +80,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
           {/* Roulette: red/black (2×) or a straight number (36×) */}
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs text-zinc-500 self-center mr-1">{t("rouletteLabel")}</span>
+            <span className="text-xs text-zinc-500 self-center me-1">{t("rouletteLabel")}</span>
             <button onClick={() => play("roulette", "red")} disabled={busy || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 transition-all">{t("red")}</button>
             <button onClick={() => play("roulette", "black")} disabled={busy || (balance ?? 0) < bet}

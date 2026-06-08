@@ -123,7 +123,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
                 </button>
                 <div className="text-sm text-zinc-400">
                   {t("balance")} <span className="font-bold text-white">{fmt(state.balance ?? 0)} GT</span>
-                  {!canAfford && <span className="text-rose-400 ml-2">{t("cantAfford")}</span>}
+                  {!canAfford && <span className="text-rose-400 ms-2">{t("cantAfford")}</span>}
                 </div>
               </>
             ) : (

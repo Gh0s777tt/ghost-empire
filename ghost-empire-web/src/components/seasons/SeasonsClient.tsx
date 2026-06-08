@@ -125,7 +125,7 @@ export function SeasonsClient({
                 <div className="text-white font-bold">{userTier} / {maxTier}</div>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Total XP</div>
               <div className="text-white font-mono font-bold tabular-nums">{fmt(userXp)}</div>
             </div>
@@ -220,7 +220,7 @@ export function SeasonsClient({
       {toast && (
         <div
           className={cn(
-            "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
+            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
             toast.kind === "ok"
               ? "border-green-700 bg-green-950/90 text-green-200"
               : "border-red-700 bg-red-950/90 text-red-200",

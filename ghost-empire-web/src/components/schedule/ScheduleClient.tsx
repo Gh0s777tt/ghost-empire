@@ -165,12 +165,12 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
               "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
           }}
         >
-          <div className="absolute top-0 right-0 px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-white bg-red-600 animate-pulse">
+          <div className="absolute top-0 end-0 px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-white bg-red-600 animate-pulse">
             {t("liveNow")}
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="text-5xl">🔴</div>
-            <div className="flex-1 text-center sm:text-left">
+            <div className="flex-1 text-center sm:text-start">
               <div className="font-display text-2xl sm:text-3xl text-white tracking-wider">
                 {nextSlot.title ?? t("streamOn")}
               </div>
@@ -178,7 +178,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
                 {t("endsAt", { time: formatTime(currentEnd.getHours(), currentEnd.getMinutes()) })}
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
                 {t("remaining")}
               </div>
@@ -201,7 +201,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
             {t("nextStream")}
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex-1 text-center sm:text-left">
+            <div className="flex-1 text-center sm:text-start">
               <div className="font-display text-2xl sm:text-3xl text-white tracking-wider mb-1">
                 {nextSlot.title ?? t("streamDay", { day: daysFull[nextSlot.dayOfWeek] })}
               </div>
@@ -218,7 +218,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
                 )}
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
                 {t("inLabel")}
               </div>
@@ -244,7 +244,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
             {view === "week" ? t("weekUpper") : `${months[monthGrid.month]} ${monthGrid.year}`}
           </h2>
           {view === "month" && (
-            <div className="flex items-center gap-1 ml-2">
+            <div className="flex items-center gap-1 ms-2">
               <button onClick={() => shiftMonth(-1)} aria-label={t("prevMonth")} className="w-7 h-7 flex items-center justify-center border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors">
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -298,7 +298,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
                   )}
                 >
                   {daysShort[dayIdx]}
-                  {isToday && <span className="ml-1 text-[8px]">{t("todayBadge")}</span>}
+                  {isToday && <span className="ms-1 text-[8px]">{t("todayBadge")}</span>}
                 </div>
 
                 {daySlots.length === 0 ? (
@@ -310,7 +310,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
                     {daySlots.map((s) => (
                       <div
                         key={s.id}
-                        className="border-l-2 border-red-700 pl-1.5 py-0.5"
+                        className="border-s-2 border-red-700 ps-1.5 py-0.5"
                       >
                         <div className="font-mono text-xs text-white">
                           {formatTime(s.startHour, s.startMinute)}
@@ -369,7 +369,7 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
                           {daySlots.slice(0, 3).map((s) => (
                             <div
                               key={s.id}
-                              className="text-[9px] font-mono text-white bg-red-900/30 border-l border-red-700 px-1 truncate leading-tight"
+                              className="text-[9px] font-mono text-white bg-red-900/30 border-s border-red-700 px-1 truncate leading-tight"
                               title={s.title ?? undefined}
                             >
                               {formatTime(s.startHour, s.startMinute)}{s.title ? ` ${s.title}` : ""}

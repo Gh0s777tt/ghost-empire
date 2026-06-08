@@ -197,7 +197,7 @@ export default async function PublicProfilePage({
                   />
                 )}
                 <div
-                  className="absolute -bottom-2 -right-2 px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
+                  className="absolute -bottom-2 -end-2 px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
                   style={{ background: rankInfo.color, color: "#000" }}
                 >
                   LVL {user.level}

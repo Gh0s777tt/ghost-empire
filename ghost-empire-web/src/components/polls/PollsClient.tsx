@@ -100,14 +100,14 @@ export function PollsClient({
                         onClick={() => clickable && vote(p.id, i)}
                         disabled={!clickable}
                         className={cn(
-                          "relative w-full text-left border overflow-hidden transition-all",
+                          "relative w-full text-start border overflow-hidden transition-all",
                           clickable ? "cursor-pointer hover:brightness-110" : "cursor-default",
                         )}
                         style={{ borderColor: mine ? accent : "#27272a" }}
                       >
                         {showResults && (
                           <div
-                            className="absolute inset-y-0 left-0 transition-all"
+                            className="absolute inset-y-0 start-0 transition-all"
                             style={{ width: `${pct}%`, background: mine ? `${accent}55` : `${accent}22` }}
                           />
                         )}
@@ -145,7 +145,7 @@ export function PollsClient({
 
       {toast && (
         <div className={cn(
-          "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
+          "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
           toast.kind === "ok" ? "border-green-700 bg-green-950/90 text-green-200" : "border-red-700 bg-red-950/90 text-red-200",
         )}>
           {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
