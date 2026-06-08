@@ -261,7 +261,7 @@ function ProfileHero({ user }: { user: any }) {
                 <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
               )}
             </div>
-            <div className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 bg-red-600 text-white font-mono text-[9px] font-bold clip-tag">
+            <div className="absolute -bottom-1.5 -end-1.5 px-1.5 py-0.5 bg-red-600 text-white font-mono text-[9px] font-bold clip-tag">
               LVL {user.level}
             </div>
           </div>
@@ -297,7 +297,7 @@ function ProfileHero({ user }: { user: any }) {
           </div>
           <div className="relative h-2.5 bg-zinc-900 border border-zinc-800 overflow-hidden">
             <div
-              className="absolute inset-y-0 left-0 transition-all duration-700"
+              className="absolute inset-y-0 start-0 transition-all duration-700"
               style={{
                 width: `${xpPct}%`,
                 background: "linear-gradient(90deg, #8B0000 0%, #E50914 50%, #FF4500 100%)",
@@ -356,7 +356,7 @@ function DailyTaskCard({ userTask }: { userTask: any; userId: string }) {
       </div>
       <div className="relative h-1.5 bg-zinc-900 mb-2 overflow-hidden">
         <div
-          className={`absolute inset-y-0 left-0 transition-all ${claimed ? "bg-green-500" : "bg-red-600"}`}
+          className={`absolute inset-y-0 start-0 transition-all ${claimed ? "bg-green-500" : "bg-red-600"}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -391,7 +391,7 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
   return (
     <button
       onClick={onClick}
-      className="relative p-3 border border-zinc-800 hover:border-red-500 bg-zinc-900/40 text-left transition-all group clip-corner w-full"
+      className="relative p-3 border border-zinc-800 hover:border-red-500 bg-zinc-900/40 text-start transition-all group clip-corner w-full"
     >
       <div className="flex items-start gap-3">
         <div className="text-3xl shrink-0">{item.imageEmoji}</div>
@@ -412,7 +412,7 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
           )}
         </div>
       </div>
-      <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-red-600/20 border border-red-500/50">
+      <div className="absolute top-1 end-1 px-1.5 py-0.5 bg-red-600/20 border border-red-500/50">
         <span className="font-mono text-[8px] font-bold text-red-300 tracking-widest">HOT</span>
       </div>
     </button>
@@ -504,7 +504,7 @@ function LiveBanner() {
           >
             <Radio className="w-7 h-7 text-red-500" />
           </div>
-          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+          <span className="absolute -top-1 -end-1 flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
           </span>

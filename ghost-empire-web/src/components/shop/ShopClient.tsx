@@ -228,7 +228,7 @@ export function ShopClient({
                 }}
               >
                 {/* Top badges */}
-                <div className="absolute top-3 right-3 flex gap-1.5 z-10">
+                <div className="absolute top-3 end-3 flex gap-1.5 z-10">
                   {item.hot && (
                     <span className="bg-red-600 text-white text-[9px] font-bold tracking-widest uppercase px-2 py-1 flex items-center gap-1">
                       <Flame className="w-2.5 h-2.5" /> HOT
@@ -390,7 +390,7 @@ export function ShopClient({
                 <span className="text-zinc-500">{t("mPrice")}</span>
                 <span className="text-white">
                   {priceFor(confirmItem) < confirmItem.price && (
-                    <span className="text-zinc-600 line-through mr-2">{fmt(confirmItem.price)}</span>
+                    <span className="text-zinc-600 line-through me-2">{fmt(confirmItem.price)}</span>
                   )}
                   <span className={priceFor(confirmItem) < confirmItem.price ? "text-emerald-300" : undefined}>
                     {fmt(priceFor(confirmItem))} GT
@@ -445,7 +445,7 @@ export function ShopClient({
       {toast && (
         <div
           className={cn(
-            "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
+            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
             toast.kind === "ok"
               ? "border-green-700 bg-green-950/90 text-green-200"
               : "border-red-700 bg-red-950/90 text-red-200",

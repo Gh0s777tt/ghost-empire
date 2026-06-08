@@ -161,7 +161,7 @@ export function ProfileClient({
       >
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="absolute top-3 right-4 z-10 flex items-center gap-1.5 px-2.5 py-1 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase transition-all"
+          className="absolute top-3 end-4 z-10 flex items-center gap-1.5 px-2.5 py-1 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase transition-all"
           title={t("logoutTitle")}
         >
           <LogOut className="w-3 h-3" /> {t("logout")}
@@ -184,7 +184,7 @@ export function ProfileClient({
               />
             )}
             <div
-              className="absolute -bottom-2 -right-2 px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
+              className="absolute -bottom-2 -end-2 px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
               style={{ background: rank.color, color: "#000" }}
             >
               LVL {user.level}
@@ -445,7 +445,7 @@ function StatTile({
       </div>
       <div className="font-mono text-xl font-bold text-white tabular-nums">
         {value}
-        {suffix && <span className="text-zinc-500 text-xs ml-1">{suffix}</span>}
+        {suffix && <span className="text-zinc-500 text-xs ms-1">{suffix}</span>}
       </div>
     </div>
   );
@@ -575,7 +575,7 @@ function SocialLinksEditor({
                 setDraft(next ? (existing?.handle ?? "") : "");
               }}
               aria-expanded={isOpen}
-              className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/[0.03] transition-colors"
+              className="w-full flex items-center gap-3 p-3 text-start hover:bg-white/[0.03] transition-colors"
             >
               <Icon className="w-5 h-5 shrink-0" style={{ color: meta.color }} strokeWidth={2} />
               <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-300 flex-1">{meta.label}</span>
