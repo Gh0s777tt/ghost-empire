@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: chiński (ZH) cz.2 — profil + strony gier** **(#277)** — `messages/zh.json` +profile/userProfile (139) +schedule/quests/kasyno/welcome/seasons/wheel (118) = **257 kluczy** (łącznie ZH = **581**). Tablice dni/miesięcy (chiński 星期日…/1月…), plurale `other`, tagi `<code>`/`<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało ZH: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: chiński (ZH, uproszczony) cz.1 — rdzeń + funkcje** **(#276)** — start 7. języka (pierwszy CJK). `messages/zh.json` z 16 namespace'ami (**324 klucze**). **Chiński NIE ma liczby mnogiej → plurale ICU tylko `other`** (`{count, plural, other {…}}`) + słowa miarowe (张/名). Interpunkcja pełnej szerokości （）：！, brak spacji między znakami CJK (spacja tylko wokół łaciny/liczb), tagi `<b>` zachowane; walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. **⚠️ Font: fallback systemowy (bez webfontu Noto CJK); tłumaczenie maszynowe → review natywny przed sprzedażą.** Reszta ZH = fallback EN. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: ukraiński (UK) cz.3 — about + legal → UK user-facing KOMPLETNE** **(#275)** — `messages/uk.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **UK = 767 = 100% stron użytkownika** (6. pełny język). Tagi `t.rich` zachowane; ukraińskie `«…»` + apострофи. **⚠️ LEGAL = baza maszynowa — przegląd prawnika przed sprzedażą w UA.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE (CJK): ZH/JA/KO — fallback fontu systemowego, review natywny przed sprzedażą.**
