@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — hiszpański (ES) cz.2/5 — społeczność + gry** **(#291)** — `messages/es.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → ES = 1288/1963 (admin 521/1196). Tablice `previewOpts` + `\n\n` w `resolveConfirm` zachowane; tagi `<b>`/`<code>`. Walidacja `IntlMessageFormat` (locale `es`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — hiszpański (ES) cz.1/5 — overlaye** **(#290)** — 2. język admina. `messages/es.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → ES = 1035/1963 (admin 268/1196). Tagi `<b>`/`<em>`/`<code>` + placeholdery zachowane; technika bezgotchowa (zero surowych `"`), `¿`/`¡` bezpieczne. Walidacja `IntlMessageFormat` (locale `es`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **🎉 i18n: panel `admin` — niemiecki (DE) cz.5/5 — bot/czat + chrome → DE KOMPLETNY 100%** **(#289)** — `messages/de.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 kluczy chrome: sec*/grp*/stat*/dash* = **209 kluczy**) → **DE = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — pierwszy język w PEŁNI przetłumaczony (z adminem). Tagi `<b>`/`<code>` + placeholdery (`{q}`/`{trigger}`/`{event}`/`{size}`/`{pct}`/`{user}`/`{cmd}`/`{count}`…); skrót „Strg+K" (DE). Walidacja `IntlMessageFormat` (locale `de`): 0 błędów. **Wzorzec admina ustalony — pozostałe 8 języków pójdzie tym samym 5-chunkowym pipeline'em.** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
