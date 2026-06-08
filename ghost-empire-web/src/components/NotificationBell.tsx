@@ -117,7 +117,7 @@ export function NotificationBell() {
       >
         <Bell className="w-3.5 h-3.5 text-zinc-400" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-600 text-white text-[9px] font-bold flex items-center justify-center font-mono leading-none">
+          <span className="absolute -top-1 -end-1 min-w-[16px] h-4 px-1 bg-red-600 text-white text-[9px] font-bold flex items-center justify-center font-mono leading-none">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
@@ -128,7 +128,7 @@ export function NotificationBell() {
           id="notif-panel"
           role="dialog"
           aria-label={t("title")}
-          className="absolute right-0 top-full mt-1 w-80 sm:w-96 max-w-[calc(100vw-2rem)] border border-zinc-800 bg-zinc-950/98 backdrop-blur-md shadow-2xl z-50"
+          className="absolute end-0 top-full mt-1 w-80 sm:w-96 max-w-[calc(100vw-2rem)] border border-zinc-800 bg-zinc-950/98 backdrop-blur-md shadow-2xl z-50"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2.5 border-b border-zinc-800">

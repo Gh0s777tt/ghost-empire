@@ -65,7 +65,7 @@ export function LocaleSwitcher() {
         <ul
           role="listbox"
           aria-label="Język / Language"
-          className="absolute right-0 z-50 mt-1 max-h-80 w-44 overflow-auto border border-zinc-800 bg-zinc-950 py-1 shadow-xl"
+          className="absolute end-0 z-50 mt-1 max-h-80 w-44 overflow-auto border border-zinc-800 bg-zinc-950 py-1 shadow-xl"
         >
           {routing.locales.map((code) => {
             const active = code === locale;
@@ -78,7 +78,7 @@ export function LocaleSwitcher() {
                     if (!active) router.replace(pathname, { locale: code });
                   }}
                   className={cn(
-                    "flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-xs transition-colors",
+                    "flex w-full items-center gap-2.5 px-3 py-1.5 text-start text-xs transition-colors",
                     active ? "bg-zinc-800 text-white" : "text-zinc-400 hover:bg-white/5 hover:text-white",
                   )}
                 >
