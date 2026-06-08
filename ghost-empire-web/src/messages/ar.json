@@ -1702,6 +1702,315 @@
       "submit": "منح",
       "err": "خطأ",
       "granted": "{delta} GT لـ {user}. الرصيد: {balance}"
+    },
+    "userRoles": {
+      "permGroup": {
+        "economy": "الاقتصاد",
+        "events": "الفعاليات",
+        "moderation": "الإشراف"
+      },
+      "perm": {
+        "grant_tokens": {
+          "label": "منح التوكنات",
+          "desc": "إضافة / إزالة Ghost Tokens للمستخدمين (قسم المستخدمين)."
+        },
+        "manage_shop": {
+          "label": "تعديل المتجر",
+          "desc": "تعديل المتجر وجدول البث وبوت Discord."
+        },
+        "deliver_orders": {
+          "label": "تنفيذ الطلبات",
+          "desc": "وضع علامة مُنفّذ على طلبات المتجر المعلّقة."
+        },
+        "create_events": {
+          "label": "إنشاء الفعاليات",
+          "desc": "إنشاء الفعاليات والتوقعات (رهانات GT)."
+        },
+        "edit_events": {
+          "label": "تعديل الفعاليات",
+          "desc": "تعديل الفعاليات الموجودة."
+        },
+        "draw_events": {
+          "label": "سحب الفائزين",
+          "desc": "سحب الفائزين في الفعاليات / الهدايا."
+        },
+        "create_drops": {
+          "label": "إنشاء أكواد الإسقاط",
+          "desc": "إنشاء وإدارة أكواد الإسقاط (أكواد على البث)."
+        },
+        "ban_users": {
+          "label": "حظر المستخدمين",
+          "desc": "حظر المستخدمين — قفل الحساب (مؤقت أو دائم)."
+        },
+        "mute_users": {
+          "label": "كتم المستخدمين",
+          "desc": "كتم المستخدمين."
+        },
+        "mark_subs": {
+          "label": "تمييز المشتركين",
+          "desc": "تعيين حالة مشترك / مشرف / VIP لكل منصة."
+        },
+        "view_audit": {
+          "label": "عرض سجلّ التدقيق",
+          "desc": "الاطّلاع على سجلّ إجراءات الإدارة والإشراف."
+        }
+      },
+      "err": "خطأ",
+      "roleGranted": "تم منح دور {role} لـ {user}",
+      "roleRevoked": "تم سحب دور {role} من {user}",
+      "title": "أدوار المستخدمين (مسؤول/مشرف/متبرّع)",
+      "userLabel": "المستخدم (اسم المستخدم، Discord ID، أو معرّف الحساب)",
+      "roleLabel": "الدور",
+      "actionLabel": "الإجراء",
+      "grant": "✓ منح",
+      "revoke": "✗ سحب",
+      "donationAmount": "مبلغ التبرّع (اختياري، يُجمع)",
+      "donationPh": "مثال: 50 (PLN)",
+      "apply": "تطبيق",
+      "permsTitle": "صلاحيات المشرف",
+      "selectAll": "تحديد الكل",
+      "clearAll": "مسح",
+      "permsNote": "المسؤولون يملكون كل الصلاحيات تلقائيًا. المشرفون — فقط المحدّدة.",
+      "connTitle": "حالة المنصة (مشترك/مشرف/VIP)",
+      "userShort": "المستخدم",
+      "userPh": "اسم المستخدم / Discord ID / معرّف الحساب",
+      "platformLabel": "المنصة",
+      "subMonths": "أشهر الاشتراك",
+      "update": "تحديث",
+      "statusUpdated": "تم تحديث حالة {platform} لـ {target}"
+    },
+    "moderation": {
+      "err": "خطأ",
+      "saved": "تم حفظ الإشراف",
+      "title": "إشراف الدردشة (automod)",
+      "loading": "جارٍ التحميل…",
+      "intro": "إشراف تلقائي على Twitch / Kick / YouTube. يفحص البوت كل رسالة ويتّخذ إجراءً (حذف / حظر مؤقت / تحذير). يتطلّب صلاحيات مشرف لحساب البوت على المنصة. <b>أعد تشغيل البوت بعد التغييرات.</b> يحصل المخالفون المتكرّرون على عقوبات أشدّ تلقائيًا (تصعيد: تحذير → حذف → حظر مؤقت ×2 لكل مخالفة إضافية خلال نافذة 30 دقيقة).",
+      "masterSwitch": "تفعيل automod (المفتاح الرئيسي)",
+      "actionDelete": "حذف",
+      "actionTimeout": "حظر مؤقت",
+      "actionWarn": "تحذير",
+      "timeoutTitle": "مدة الحظر المؤقت (ثوانٍ)",
+      "profanityTitle": "الألفاظ النابية",
+      "profanityDesc": "قاموس الكلمات المحظورة. يكتشف أيضًا التحايل: leetspeak (b4d→bad) والفواصل (b.a.d / b a d).",
+      "wordsLabel": "الكلمات (واحدة في كل سطر)",
+      "wordsPh": "كلمة1\nكلمة2",
+      "regexLabel": "أنماط Regex (واحد في كل سطر، اختياري — مثل <code>v-?bucks</code>)",
+      "regexPh": "free\\w* gt\nv-?bucks",
+      "linkTitle": "الروابط / URL",
+      "linkDesc": "يحظر الروابط ما لم يكن النطاق في القائمة البيضاء. يكتشف أيضًا النطاقات المجرّدة (scam.com) والمختصرات (bit.ly).",
+      "whitelistLabel": "القائمة البيضاء للنطاقات (واحد في كل سطر — مثل <code>twitch.tv</code>، <code>youtube.com</code>)",
+      "whitelistPh": "twitch.tv\nyoutube.com\nclips.twitch.tv",
+      "linkAllowSubs": "يمكن للمشتركين / VIP / المشرفين نشر الروابط",
+      "capsTitle": "الأحرف الكبيرة المفرطة (CAPS)",
+      "capsDesc": "يُعلّم الرسائل التي تكون فيها نسبة عالية جدًا من الأحرف كبيرة (يتجاهل القصيرة).",
+      "capsMinLetters": "أدنى عدد أحرف",
+      "capsMaxRatio": "أقصى % CAPS",
+      "lengthTitle": "حدّ الطول",
+      "lengthDesc": "أقصى عدد أحرف في الرسالة.",
+      "lengthMax": "أقصى عدد أحرف",
+      "repeatTitle": "التكرار / الإغراق",
+      "repeatDesc": "تكرار الحرف أو الكلمة نفسها مرات كثيرة جدًا (سبام الإيموت، copypasta).",
+      "repeatCharRun": "أقصى تكرار للحرف نفسه",
+      "repeatWordRun": "أقصى تكرار للكلمة نفسها",
+      "zalgoTitle": "نص Zalgo",
+      "zalgoDesc": "نص مشوّه — علامات Unicode تجميعية مفرطة (ḩ̸̢̛e̵l̶l̷o). لا يُبلّغ عن الحروف البولندية.",
+      "zalgoMaxRatio": "أقصى % للعلامات التجميعية",
+      "exemptHeader": "تخطّي (قائمة بيضاء)",
+      "exemptSubs": "المشتركون",
+      "exemptVips": "VIP",
+      "exemptMods": "المشرفون",
+      "saveBtn": "حفظ إعدادات الإشراف"
+    },
+    "webhooksOut": {
+      "eventLabel": {
+        "shop_purchase": "شراء من المتجر",
+        "event_win": "فوز بفعالية",
+        "drop_claim_bonus": "استلام كود إسقاط",
+        "twitch_sub": "اشتراك (Twitch)",
+        "twitch_gift_sub": "اشتراك مُهدى",
+        "twitch_cheer": "Bits (تشجيع)",
+        "donation": "تبرّع",
+        "welcome": "ترحيب",
+        "level_up": "ترقية مستوى",
+        "wheel_win": "فوز بالعجلة"
+      },
+      "err": "خطأ",
+      "urlRequired": "أدخل رابطًا",
+      "eventRequired": "اختر حدثًا واحدًا على الأقل",
+      "created": "تمت إضافة webhook",
+      "deleteConfirm": "حذف webhook «{label}»؟",
+      "deleted": "تم الحذف",
+      "testOk": "نجح الاختبار (HTTP {status})",
+      "testFail": "فشل الاختبار ({err})",
+      "title": "Webhooks صادرة",
+      "loading": "جارٍ التحميل…",
+      "intro": "أرسل أحداث البث (اشتراكات، تبرّعات، مشتريات، فوز…) كـ <b>POST JSON</b> إلى أي رابط — <b>Discord webhook</b> أو n8n أو Zapier أو خادمك الخاص. سرّ اختياري يوقّع المحتوى (<code>X-GhostEmpire-Signature: sha256=…</code>). تتعطّل نقطة النهاية الميتة تلقائيًا بعد سلسلة من الأخطاء.",
+      "empty": "لا webhooks. أضف الأول أدناه.",
+      "signedTitle": "موقّع بسرّ",
+      "testTitle": "إرسال اختبار",
+      "disable": "تعطيل",
+      "enable": "تفعيل",
+      "deleteTitle": "حذف",
+      "allBadge": "الكل",
+      "lastFired": "الأخير: {date} · الحالة {status}",
+      "errorsCount": "· أخطاء: {count}",
+      "newWebhook": "webhook جديد",
+      "labelPh": "الاسم (مثل Discord #alerts)",
+      "secretPh": "سرّ HMAC (اختياري — يوقّع المحتوى)",
+      "allEvents": "كل الأحداث",
+      "addBtn": "إضافة webhook"
+    },
+    "auditLog": {
+      "title": "سجلّ التدقيق (آخر {count})",
+      "empty": "لا إجراءات إدارية في قاعدة البيانات. كل منح/سحب/ردّ سيظهر هنا — مَن ومتى.",
+      "accountDeleted": "حساب محذوف",
+      "action": {
+        "grant_tokens": "منح توكنات",
+        "create_drop": "إسقاط جديد",
+        "deactivate_drop": "تعطيل إسقاط",
+        "create_event": "فعالية جديدة",
+        "deactivate_event": "تعطيل فعالية",
+        "draw_event": "سحب",
+        "deliver_order": "تم التسليم",
+        "refund_order": "ردّ",
+        "set_user_role": "دور المستخدم",
+        "set_connection_role": "حالة المنصة",
+        "reset_database": "إعادة ضبط القاعدة",
+        "manage_codes": "الأكواد (إسقاط)",
+        "manage_achievements": "الإنجازات",
+        "manage_polls": "استطلاع",
+        "create_prediction": "توقّع جديد",
+        "resolve_prediction": "حسم",
+        "cancel_prediction": "إلغاء توقّع",
+        "test_alert": "تنبيه تجريبي",
+        "update_alert_settings": "إعدادات التنبيهات",
+        "merge_users": "دمج حسابات",
+        "update_moderation": "الإشراف (تلقائي)",
+        "update_integrations": "التكاملات / المفاتيح"
+      }
+    },
+    "mergeUsers": {
+      "reason": {
+        "shared_platform_id": "حساب OAuth مشترك (أقوى إشارة)",
+        "shared_email": "بريد إلكتروني مشترك",
+        "shared_discord_id": "Discord ID مشترك"
+      },
+      "loadError": "فشل تحميل مجموعات التكرار",
+      "netErr": "خطأ في الشبكة",
+      "title": "دمج التكرارات",
+      "warning": "<b>عملية تدميرية</b> — يُحذف الحساب الثاني بالكامل بعد نقل بياناته إلى الأساسي. الإجراء ذرّي (معاملة قاعدة بيانات واحدة) لكنه لا رجعة فيه.",
+      "rescan": "إعادة الفحص",
+      "detectHint": "الكشف: نفس معرّف حساب مزوّد OAuth أو البريد الإلكتروني أو Discord ID.",
+      "empty": "✓ لم يُكتشف تكرار — كل شيء نظيف.",
+      "confirmRequired": "اكتب اسم المستخدم الدقيق للحساب الثاني للتأكيد",
+      "merged": "تم الدمج. نُقل: {tokens} GT، {txn} معاملة",
+      "created": "أُنشئ",
+      "platforms": "المنصات:",
+      "showPreview": "عرض معاينة الدمج",
+      "willMoveHeader": "ما يُنقل من @{sec} → @{prim}",
+      "finalTokens": "التوكنات بعد الدمج: <b>{n} GT</b>",
+      "conflicts": "⚠ تعارضات (يُحتفظ بنسخ الأساسي):",
+      "confirmLabel": "التأكيد — اكتب اسم مستخدم الحساب الثاني: <code>{name}</code>",
+      "mergeNow": "ادمج الآن"
+    },
+    "modViolations": {
+      "violation": {
+        "profanity": "ألفاظ نابية",
+        "caps": "CAPS",
+        "length": "الطول",
+        "repeat": "سبام",
+        "zalgo": "zalgo"
+      },
+      "action": {
+        "delete": "حذف",
+        "timeout": "حظر مؤقت",
+        "warn": "تحذير"
+      },
+      "loading": "جارٍ تحميل الإحصاءات…",
+      "statsTitle": "إحصاءات المخالفات",
+      "refresh": "تحديث",
+      "last24h": "آخر 24 ساعة",
+      "last7d": "آخر 7 أيام",
+      "noViolations": "لا مخالفات في آخر 7 أيام.",
+      "topOffenders": "الأكثر تكرارًا (7 أيام)",
+      "recentSummary": "آخر {count} حدث"
+    },
+    "databaseReset": {
+      "err": "خطأ",
+      "netErr": "خطأ في الشبكة",
+      "lastWarning": "تحذير أخير\n\nسيحذف هذا بلا رجعة كل المستخدمين وبياناتهم (حسابك أيضًا — ستسجّل الدخول من جديد). تبقى الإعدادات والكتالوج.\n\nهل تتابع؟",
+      "resetDone": "تمت إعادة ضبط قاعدة البيانات — حُذف {count} مستخدم. جارٍ تسجيل الخروج…",
+      "title": "إعادة ضبط قاعدة البيانات",
+      "backupTitle": "نسخة احتياطية (JSON)",
+      "backupDesc": "يُنزّل نسخة من <b>الإعدادات والكتالوج وأرصدة المستخدمين</b> كملف JSON — <b>بلا أسرار</b> (تُحذف الإيميلات ورموز OAuth والجلسات والسجلات). اعمل نسخة احتياطية قبل حذف أي شيء.",
+      "downloadBackup": "تنزيل النسخة الاحتياطية",
+      "dangerZone": "منطقة خطر — عملية لا رجعة فيها",
+      "dangerDesc1": "يحذف <b>كل المستخدمين</b> وبياناتهم: الحسابات وتسجيلات الدخول، المنصات المتّصلة، التوكنات والمعاملات، الإنجازات، المهام، تقدّم battle pass، الرهانات، مشاركات الفعاليات، الإشعارات والروابط الاجتماعية. يمسح أيضًا طابور التنبيهات وموجز الدردشة وسجلات الأحداث (Twitch / Kick / YouTube). يسجّل المستخدمون الدخول من جديد (مع المكافأة الترحيبية).",
+      "dangerDesc2": "<b>يبقى:</b> الإعدادات والكتالوج — المتجر، تعريفات الفعاليات/الإنجازات/المهام/الإسقاطات، مواسم battle pass، أوامر الدردشة / المؤقتات / الأسئلة الشائعة، الجدول، إعدادات التنبيهات، التكاملات (Twitch / Kick / YouTube / Streamlabs) وسجلّ التدقيق. يعود حساب المالك كمسؤول بعد إعادة تسجيل الدخول.",
+      "unlockLabel": "اكتب <red>{p}</red> بالضبط لإلغاء القفل",
+      "resetBtn": "إعادة ضبط قاعدة البيانات"
+    },
+    "analytics": {
+      "loading": "جارٍ التحميل…",
+      "streamTimeTitle": "وقت البث",
+      "streamIntro": "جلسات البث من Twitch EventSub (<code>stream.online</code>/<code>stream.offline</code>). تقيس <b>وقت بثّ المبثّ</b>، لا وقت مشاهدة كل مشاهد.",
+      "streamEmpty": "لا جلسات — ستظهر بعد أول بث. يتطلّب إنشاء اشتراك <b>stream.online/offline</b> في قسم <mono>Twitch</mono> (زر «إنشاء الاشتراكات»).",
+      "statusLabel": "الحالة",
+      "offline": "غير متّصل",
+      "totalBroadcast": "إجمالي وقت البث",
+      "streamCount": "عدد البثوث",
+      "ongoing": "جارٍ…",
+      "heatmapTitle": "التحليلات — خريطة حرارة الدردشة",
+      "heatmapIntro": "متى تكون الدردشة أكثر نشاطًا (يوم الأسبوع × الساعة، توقيت Europe/Warsaw). يُحسب من النشاط على Twitch + Kick + YouTube (1/دقيقة/مشاهد).",
+      "heatmapEmpty": "لا بيانات — ستظهر عندما يكتب أحدهم في الدردشة أثناء البث.",
+      "heatmapFooter": "الإجمالي {total} دقيقة-مُحادث نشطة · الذروة {peak}/خانة",
+      "daysShort": [
+        "أحد",
+        "إثنين",
+        "ثلاثاء",
+        "أربعاء",
+        "خميس",
+        "جمعة",
+        "سبت"
+      ]
+    },
+    "setupStatus": {
+      "item": {
+        "ai": {
+          "label": "مفتاح الذكاء الاصطناعي (شخصية @bot + !imagine)",
+          "hint": "الصق مفتاح الذكاء الاصطناعي في قسم التكاملات"
+        },
+        "twitch": {
+          "label": "Twitch متّصل (EventSub)",
+          "hint": "اربط حساب المبثّ في قسم Twitch"
+        },
+        "twitchSubs": {
+          "label": "تم إنشاء اشتراكات EventSub",
+          "hint": "انقر «إنشاء الاشتراكات» في قسم Twitch"
+        },
+        "kick": {
+          "label": "Kick متّصل",
+          "hint": "اربط Kick"
+        },
+        "youtube": {
+          "label": "YouTube متّصل",
+          "hint": "اربط YouTube"
+        },
+        "moderation": {
+          "label": "إشراف الدردشة مُفعّل",
+          "hint": "فعّل القواعد في قسم الإشراف"
+        },
+        "overlay": {
+          "label": "رمز overlay الخاص بـ OBS",
+          "hint": "اذهب إلى Stream Alerts لإنشائه"
+        }
+      },
+      "title": "حالة الإعداد",
+      "done": "تم: <b>{done}/{total}</b>",
+      "allReqOk": "✓ كل المطلوب جاهز",
+      "reqProgress": "{done}/{total} مطلوب",
+      "optional": "اختياري",
+      "configure": "تهيئة"
     }
   }
 }
