@@ -194,7 +194,7 @@ export function Header() {
                   {menuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                      <div className="absolute right-0 top-full mt-1 w-52 border border-zinc-800 bg-zinc-950 shadow-xl z-50">
+                      <div className="absolute end-0 top-full mt-1 w-52 border border-zinc-800 bg-zinc-950 shadow-xl z-50">
                         <div className="p-3 border-b border-zinc-800">
                           <p className="text-xs font-bold text-white truncate">
                             {displayNick(session.user.name, session.user.username)}
@@ -267,7 +267,7 @@ function NavLink({ href, label, icon: Icon, pathname }: { href: string; label: s
         active ? "text-white" : "text-zinc-500 hover:text-zinc-300"
       }`}
     >
-      {active && <span className="absolute inset-0 bg-red-600/10 border-l-2 border-red-600" />}
+      {active && <span className="absolute inset-0 bg-red-600/10 border-s-2 border-red-600" />}
       <Icon className="w-3.5 h-3.5 relative z-10" />
       <span className="relative z-10">{label}</span>
     </Link>
@@ -286,12 +286,12 @@ function NavDropdown({ label, icon: Icon, items, pathname }: { label: string; ic
           anyActive ? "text-white" : "text-zinc-500 hover:text-zinc-300"
         }`}
       >
-        {anyActive && <span className="absolute inset-0 bg-red-600/10 border-l-2 border-red-600" />}
+        {anyActive && <span className="absolute inset-0 bg-red-600/10 border-s-2 border-red-600" />}
         <Icon className="w-3.5 h-3.5 relative z-10" />
         <span className="relative z-10">{label}</span>
         <ChevronDown className="w-3 h-3 relative z-10 text-zinc-600 transition-transform group-hover:rotate-180" />
       </button>
-      <div className="absolute left-0 top-full pt-1 hidden group-hover:block group-focus-within:block z-50">
+      <div className="absolute start-0 top-full pt-1 hidden group-hover:block group-focus-within:block z-50">
         <div
           className="min-w-[210px] border border-zinc-800 bg-zinc-950 shadow-xl"
           style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}
@@ -304,7 +304,7 @@ function NavDropdown({ label, icon: Icon, items, pathname }: { label: string; ic
                 key={c.href}
                 href={c.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-2 px-3 py-2.5 text-[11px] font-semibold tracking-widest uppercase transition-colors border-l-2 ${
+                className={`flex items-center gap-2 px-3 py-2.5 text-[11px] font-semibold tracking-widest uppercase transition-colors border-s-2 ${
                   active ? "bg-red-600/15 text-white border-red-600" : "text-zinc-400 hover:text-white hover:bg-zinc-900 border-transparent"
                 }`}
               >
