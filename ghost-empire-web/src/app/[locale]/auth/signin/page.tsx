@@ -162,7 +162,7 @@ export default function SignInPage() {
                     key={provider.id}
                     onClick={() => handleSignIn(provider.id)}
                     disabled={loading === provider.id}
-                    className="w-full p-4 border text-left transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-wait flex items-center gap-4 group"
+                    className="w-full p-4 border text-start transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-wait flex items-center gap-4 group"
                     style={{
                       borderColor: config.border,
                       background: config.bg,

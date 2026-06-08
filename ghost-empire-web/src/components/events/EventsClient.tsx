@@ -227,7 +227,7 @@ export function EventsClient({
       {toast && (
         <div
           className={cn(
-            "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
+            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
             toast.kind === "ok"
               ? "border-green-700 bg-green-950/90 text-green-200"
               : "border-red-700 bg-red-950/90 text-red-200",
@@ -284,7 +284,7 @@ function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
           "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
       }}
     >
-      <div className="absolute top-0 right-0 px-3 py-1 text-[9px] font-bold tracking-widest uppercase text-white"
+      <div className="absolute top-0 end-0 px-3 py-1 text-[9px] font-bold tracking-widest uppercase text-white"
         style={{ background: meta.color }}>
         {isActive ? t("hhLive") : t("hhSoon")}
       </div>
@@ -315,7 +315,7 @@ function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
             <p className="text-zinc-300 text-sm mt-1">{event.description}</p>
           )}
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
             {isActive ? t("hhEndsIn") : t("hhStartsIn")}
           </div>

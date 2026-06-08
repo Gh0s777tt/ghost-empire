@@ -241,7 +241,7 @@ export function QuestsClient({
       {toast && (
         <div
           className={cn(
-            "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
+            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
             toast.kind === "ok"
               ? "border-green-700 bg-green-950/90 text-green-200"
               : "border-red-700 bg-red-950/90 text-red-200",
@@ -275,7 +275,7 @@ function StatTile({
       </div>
       <div className="font-mono text-xl font-bold text-white tabular-nums">
         {value}
-        {suffix && <span className="text-zinc-500 text-xs ml-1">{suffix}</span>}
+        {suffix && <span className="text-zinc-500 text-xs ms-1">{suffix}</span>}
       </div>
     </div>
   );
@@ -376,7 +376,7 @@ function QuestCard({
         <span className="text-white text-sm normal-case font-bold tabular-nums">
           {fmt(task.reward)} GT
           {task.bonusReward > 0 && (
-            <span className="text-orange-400 text-xs ml-1.5">{t("bonus", { bonus: fmt(task.bonusReward) })}</span>
+            <span className="text-orange-400 text-xs ms-1.5">{t("bonus", { bonus: fmt(task.bonusReward) })}</span>
           )}
         </span>
       </div>

@@ -71,7 +71,7 @@ export default async function TermsPage() {
 
           <Section title={t("s6")}>
             <p className="mb-3">{t("s6intro")}</p>
-            <ul className="space-y-1.5 ml-4">
+            <ul className="space-y-1.5 ms-4">
               {BULLETS6.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
             </ul>
           </Section>
@@ -108,11 +108,11 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function Numbered({ children }: { children: ReactNode }) {
-  return <ol className="space-y-1.5 ml-4 list-decimal list-outside marker:text-red-500 marker:font-mono">{children}</ol>;
+  return <ol className="space-y-1.5 ms-4 list-decimal list-outside marker:text-red-500 marker:font-mono">{children}</ol>;
 }
 
 function Item({ children }: { children: ReactNode }) {
-  return <li className="pl-1">{children}</li>;
+  return <li className="ps-1">{children}</li>;
 }
 
 function Bullet({ children }: { children: ReactNode }) {

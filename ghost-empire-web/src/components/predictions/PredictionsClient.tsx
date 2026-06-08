@@ -138,7 +138,7 @@ export function PredictionsClient({
       {toast && (
         <div
           className={cn(
-            "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
+            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
             toast.kind === "ok"
               ? "border-green-700 bg-green-950/90 text-green-200"
               : "border-red-700 bg-red-950/90 text-red-200",
@@ -204,8 +204,8 @@ function ActivePredictionCard({
       style={{ borderColor: accent, boxShadow: `0 8px 30px -14px ${accent}66` }}
     >
       <div className="flex items-start justify-between gap-3 mb-4">
-        <h3 className="text-white font-bold text-base sm:text-lg flex-1 border-l-2 pl-2" style={{ borderColor: accent }}>{prediction.question}</h3>
-        <div className="text-right shrink-0">
+        <h3 className="text-white font-bold text-base sm:text-lg flex-1 border-s-2 ps-2" style={{ borderColor: accent }}>{prediction.question}</h3>
+        <div className="text-end shrink-0">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("pot")}</div>
           <div className="font-mono font-bold text-yellow-500 text-lg tabular-nums">{fmt(prediction.totalPot)} GT</div>
         </div>
@@ -230,7 +230,7 @@ function ActivePredictionCard({
               onClick={() => !alreadyWagered && !isLocked && setPickedOption(o.index)}
               disabled={alreadyWagered || isLocked || !isAuthenticated}
               className={cn(
-                "w-full text-left border bg-black/30 p-3 transition-all relative overflow-hidden",
+                "w-full text-start border bg-black/30 p-3 transition-all relative overflow-hidden",
                 isPicked && !alreadyWagered ? "border-red-600 bg-red-950/20" :
                 isMine ? "border-green-700 bg-green-950/15" :
                 "border-zinc-800",
@@ -240,7 +240,7 @@ function ActivePredictionCard({
             >
               {/* Pot share bar background */}
               <div
-                className="absolute inset-y-0 left-0 opacity-15"
+                className="absolute inset-y-0 start-0 opacity-15"
                 style={{ width: `${pct}%`, background: isMine ? "#10b981" : "#E50914" }}
               />
               <div className="relative flex items-center justify-between gap-2">
@@ -255,7 +255,7 @@ function ActivePredictionCard({
                     </span>
                   )}
                 </div>
-                <div className="text-right shrink-0">
+                <div className="text-end shrink-0">
                   <div className="font-mono text-xs text-white tabular-nums">{fmt(o.totalWagered)} GT</div>
                   <div className="text-[10px] text-zinc-500">{o.wagerCount} {t("wagers", { count: o.wagerCount })} · {pct.toFixed(0)}%</div>
                 </div>

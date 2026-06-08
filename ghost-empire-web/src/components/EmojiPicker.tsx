@@ -49,7 +49,7 @@ export function EmojiPicker({ onPick, title = "Wstaw emoji" }: { onPick: (emoji:
         <div
           role="dialog"
           aria-label="Wybór emoji"
-          className="absolute right-0 z-50 mt-1 w-64 max-h-72 overflow-y-auto border border-zinc-700 bg-zinc-950 shadow-2xl p-2"
+          className="absolute end-0 z-50 mt-1 w-64 max-h-72 overflow-y-auto border border-zinc-700 bg-zinc-950 shadow-2xl p-2"
         >
           <div className="flex items-center gap-1.5 mb-2 border border-zinc-800 px-2 py-1">
             <Search className="w-3 h-3 text-zinc-500 shrink-0" />
