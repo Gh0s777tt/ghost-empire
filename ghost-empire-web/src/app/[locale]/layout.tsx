@@ -35,9 +35,13 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   const messages = await getMessages();
   const t = await getTranslations("common");
+  // Arabic is the only RTL locale so far — flip the document direction so text,
+  // alignment and punctuation flow correctly. (Full bidi layout mirroring of
+  // physical-property components is a follow-up; dir="rtl" fixes the text itself.)
+  const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} className="dark">
+    <html lang={locale} dir={dir} className="dark">
       <head>
         {/* Display fonts (Anton, Bebas Neue, Oswald…) used by widgets/overlays/chat —
             not in next/font's bundled set, so loaded by literal name via one <link>. */}
