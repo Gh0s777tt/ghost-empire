@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — japoński (JA) cz.2/5 — społeczność + gry** **(#321)** — `messages/ja.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → JA = 1288/1963 (admin 521/1196). Tablice `previewOpts` (CJK) + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`; interpunkcja pełnej szerokości. Walidacja `IntlMessageFormat` (locale `ja`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — japoński (JA) cz.1/5 — overlaye** **(#320)** — 8. język admina (CJK). `messages/ja.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → JA = 1035/1963 (admin 268/1196). Interpunkcja pełnej szerokości（）「…」, 「…」 zamiast surowych `"`; tagi `<b>`/`<em>`/`<code>` + placeholdery; font systemowy + review natywny przed sprzedażą. Walidacja `IntlMessageFormat` (locale `ja`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **🎉 i18n: panel `admin` — chiński (ZH) cz.5/5 — bot/czat + chrome → ZH KOMPLETNY 100%** **(#319)** — `messages/zh.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **ZH = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 7. język w pełni przetłumaczony (1. CJK). Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. **⚠️ CJK font systemowy + review natywny przed sprzedażą.** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
