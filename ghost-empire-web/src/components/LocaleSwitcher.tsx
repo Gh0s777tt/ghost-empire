@@ -17,6 +17,12 @@ const NATIVE_NAME: Record<string, string> = {
   fr: "Français", zh: "中文", ja: "日本語", ko: "한국어", ru: "Русский", uk: "Українська",
 };
 
+// Short badge override where the ISO-639 language code reads as the wrong thing:
+// Ukrainian's language code is "uk", which users mistake for "United Kingdom" —
+// show "UA" (Ukraine) instead. The routing locale stays "uk" (Intl/CLDR/URL).
+const SHORT_CODE: Record<string, string> = { uk: "UA" };
+const shortCode = (c: string) => SHORT_CODE[c] ?? c;
+
 export function LocaleSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
@@ -50,7 +56,7 @@ export function LocaleSwitcher() {
         title={NATIVE_NAME[locale] ?? locale}
         className="flex items-center gap-1.5 border border-zinc-800 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
       >
-        {locale}
+        {shortCode(locale)}
         <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
       </button>
 
@@ -76,7 +82,7 @@ export function LocaleSwitcher() {
                   )}
                 >
                   <span className="w-6 shrink-0 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                    {code}
+                    {shortCode(code)}
                   </span>
                   <span className="truncate">{NATIVE_NAME[code] ?? code}</span>
                 </button>
