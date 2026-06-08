@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — ukraiński (UK) cz.4/5 — użytkownicy + moderacja** **(#313)** — `messages/uk.json` +`admin` (userRoles/moderation/webhooksOut/auditLog/mergeUsers/modViolations/databaseReset/analytics/setupStatus = **231 kluczy**) → UK = 1754/1963 (admin 987/1196, 82%). Zagnieżdżone mapy + `\n`/`\n\n` + regex `\\w` + `<red>{p}</red>`; `analytics.daysShort` cyrylica. Walidacja `IntlMessageFormat` (locale `uk`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — ukraiński (UK) cz.3/5 — ekonomia + platformy** **(#312)** — `messages/uk.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → UK = 1523/1963 (admin 756/1196). **Plurale ukraińskie one/few/many/other** (`shop.title`/`schedule.title`) + `schedule.days` cyrylica + tagi. Walidacja `IntlMessageFormat` (locale `uk`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — ukraiński (UK) cz.2/5 — społeczność + gry** **(#311)** — `messages/uk.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → UK = 1288/1963 (admin 521/1196). Tablice `previewOpts` (cyrylica) + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`. Walidacja `IntlMessageFormat` (locale `uk`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
