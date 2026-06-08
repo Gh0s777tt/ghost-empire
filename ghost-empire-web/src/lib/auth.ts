@@ -353,15 +353,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               .replace(/[^a-z0-9_]/g, "_")
               .slice(0, 32);
 
-            await prisma.user.update({
-              where: { id: dbUser.id },
-              data: {
-                username: slug,
-                // For Google, user.name is the real full name — never expose it.
-                // Prefer the YouTube channel title, else the derived handle (slug).
-                displayName: isGoogle ? (ytTitle || slug) : (user.name ?? slug),
-              },
-            });
+            const nick = isGoogle ? (ytTitle || slug) : (user.name ?? slug);
+            // username is @unique — on a slug collision, retry with an id-suffixed handle
+            // so the account still gets a name instead of silently staying "Anonim".
+            try {
+              await prisma.user.update({
+                where: { id: dbUser.id },
+                data: { username: slug, displayName: nick },
+              });
+            } catch {
+              await prisma.user
+                .update({
+                  where: { id: dbUser.id },
+                  data: { username: `${slug.slice(0, 24)}_${dbUser.id.slice(-6)}`, displayName: nick },
+                })
+                .catch(() => {});
+            }
+          }
+
+          // Google nick: the OIDC profile has no handle, so keep displayName = the YouTube
+          // channel title ("Yukon") whenever we can fetch it — even if a placeholder
+          // username already exists. Makes Google users show their channel name instead of
+          // an email-prefix or "Anonim". [audit fix]
+          if (isGoogle && ytTitle && dbUser.displayName !== ytTitle) {
+            await prisma.user
+              .update({ where: { id: dbUser.id }, data: { displayName: ytTitle } })
+              .catch(() => {});
           }
 
           // Self-heal: attach legacy accounts (created before tenant assignment) to the
@@ -496,9 +513,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // like the ranking/leaderboard. Single-tenant → default tenant; multi-tenant →
         // the signup host's tenant. [audit fix]
         const tenantId = await currentTenantId();
+        // Public nick at signup so a new account is never shown as "Anonim". user.name for
+        // a Google login is the real full name — only use it as a nick when it's a single
+        // token (a real handle); otherwise fall back to the email local-part. signIn()
+        // later upgrades Google users to their YouTube channel title once available.
+        const safeNick =
+          (user.name && !/\s/.test(user.name) ? user.name : undefined) ||
+          user.email?.split("@")[0] ||
+          `ghost_${user.id.slice(-6)}`;
         await prisma.user.update({
           where: { id: user.id },
-          data: { tokens: 500, totalEarned: 500, ...(tenantId ? { tenantId } : {}) },
+          data: { tokens: 500, totalEarned: 500, displayName: safeNick, ...(tenantId ? { tenantId } : {}) },
         });
 
         await prisma.transaction.create({
