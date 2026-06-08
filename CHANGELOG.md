@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **🎉 i18n: panel `admin` — japoński (JA) cz.5/5 — bot/czat + chrome → JA KOMPLETNY 100%** **(#324)** — `messages/ja.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **JA = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 8. język w pełni przetłumaczony. **Zostaje tylko KO.** Walidacja `IntlMessageFormat` (locale `ja`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — japoński (JA) cz.4/5 — użytkownicy + moderacja** **(#323)** — `messages/ja.json` +`admin` (userRoles/moderation/webhooksOut/auditLog/mergeUsers/modViolations/databaseReset/analytics/setupStatus = **231 kluczy**) → JA = 1754/1963 (admin 987/1196, 82%). Zagnieżdżone mapy + `\n`/`\n\n` + regex `\\w` + `<red>{p}</red>`; `analytics.daysShort`（日月火…）. Walidacja `IntlMessageFormat` (locale `ja`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — japoński (JA) cz.3/5 — ekonomia + platformy** **(#322)** — `messages/ja.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → JA = 1523/1963 (admin 756/1196). **Plurale CJK tylko `other`** (`shop.title`/`schedule.title`) + `schedule.days`（日曜日…）+ tagi; klucze env zachowane. Walidacja `IntlMessageFormat` (locale `ja`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
