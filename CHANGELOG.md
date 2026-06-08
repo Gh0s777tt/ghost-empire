@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: hiszpański (ES) cz.4 — strony gier/planu** **(#262)** — `messages/es.json` +schedule/quests/kasyno/welcome/seasons/wheel = **118 kluczy** (łącznie ES = **581**): plan (dni/miesiące jako tablice), questy, kasyno, welcome, battle pass, koło. Plurale ICU + tagi `<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało ES: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: hiszpański (ES) cz.3 — profil + konta** **(#261)** — `messages/es.json` +profile (113) +userProfile (26) = **139 kluczy** (łącznie ES = **463**): strona profilu + profil publiczny `/u/[username]`. Placeholdery/plurale ICU + tag `<code>` zachowane. Walidacja `IntlMessageFormat`: 0 błędów. Zostało ES: legal (186) + welcome/quests/seasons/wheel/kasyno/schedule. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: hiszpański (ES) cz.2 — strony interaktywne** **(#260)** — `messages/es.json` +events/ranking/predictions/achievements/drops/polls = **170 kluczy** (łącznie ES = **324**): wszystkie strony funkcji + modal mod-akcji. Plurale ICU (`one/other`) + tagi `<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. Zostało ES: profil/legal/welcome/quests/seasons/wheel/kasyno/schedule/userProfile. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
