@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — włoski (IT) cz.2/5 — społeczność + gry** **(#296)** — `messages/it.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → IT = 1288/1963 (admin 521/1196). Tablice `previewOpts` + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`. Walidacja `IntlMessageFormat` (locale `it`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — włoski (IT) cz.1/5 — overlaye** **(#295)** — 3. język admina. `messages/it.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → IT = 1035/1963 (admin 268/1196). Tagi `<b>`/`<em>`/`<code>` + placeholdery; apostrofy ASCII `'` bezpieczne w JSON. Walidacja `IntlMessageFormat` (locale `it`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **🎉 i18n: panel `admin` — hiszpański (ES) cz.5/5 — bot/czat + chrome → ES KOMPLETNY 100%** **(#294)** — `messages/es.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **ES = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 2. język w pełni przetłumaczony. Walidacja `IntlMessageFormat` (locale `es`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
