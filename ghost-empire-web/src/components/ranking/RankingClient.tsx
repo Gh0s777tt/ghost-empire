@@ -112,7 +112,7 @@ export function RankingClient({
             {t("subtitle")}
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
             {t("rankedLabel")}
           </div>
@@ -271,10 +271,10 @@ export function RankingClient({
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800 text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-                    <th className="text-left p-3 w-16">#</th>
-                    <th className="text-left p-3">{t("thUser")}</th>
-                    <th className="text-right p-3 hidden sm:table-cell">{t("thLevel")}</th>
-                    <th className="text-right p-3">{sortShorts[sort]}</th>
+                    <th className="text-start p-3 w-16">#</th>
+                    <th className="text-start p-3">{t("thUser")}</th>
+                    <th className="text-end p-3 hidden sm:table-cell">{t("thLevel")}</th>
+                    <th className="text-end p-3">{sortShorts[sort]}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -406,7 +406,7 @@ function UserRow({
           </div>
         </div>
       </td>
-      <td className="p-3 text-right hidden sm:table-cell">
+      <td className="p-3 text-end hidden sm:table-cell">
         <span
           className="text-[10px] font-mono uppercase tracking-widest"
           style={{ color: rank.color }}
@@ -414,7 +414,7 @@ function UserRow({
           {rank.emoji} LVL {user.level}{user.prestige ? ` ✦${user.prestige}` : ""}
         </span>
       </td>
-      <td className="p-3 text-right">
+      <td className="p-3 text-end">
         <span className="font-mono text-sm font-bold text-white tabular-nums">
           {sortLabel}
         </span>
