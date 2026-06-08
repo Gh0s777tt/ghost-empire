@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-08",
+    title: "Stabilniejsze naliczanie Ghost Tokens 🛡️",
+    items: [
+      "Wzmocniliśmy spójność przyznawania Ghost Tokens przy równoczesnych żądaniach — nagrody za zadania dzienne oraz tokeny z subskrypcji są teraz naliczane dokładnie raz, nawet gdy to samo zdarzenie dotrze do nas kilka razy naraz.",
+    ],
+  },
+  {
+    date: "2026-06-08",
     title: "Płynniejsze przełączanie stron 🚀",
     items: [
       "Naprawiony błąd, przez który przy przechodzeniu między stronami na ułamek sekundy migał komunikat 404 (nie znaleziono strony), zanim załadowała się właściwa strona. Nawigacja jest teraz natychmiastowa i płynna.",

@@ -49,6 +49,7 @@ export async function POST(req: Request) {
     if (typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2002") {
       return jsonError("Już dołączyłeś do tego eventu", 409);
     }
-    throw e;
+    console.error("[events/join] entry create failed:", e);
+    return jsonError("Błąd serwera", 500);
   }
 }

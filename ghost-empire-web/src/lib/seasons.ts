@@ -113,9 +113,11 @@ export async function awardSeasonXp(userId: string, source: SeasonXpSource, mult
       update: { xp: { increment: amount } },
     });
 
-    // Recompute tier (upsert's create already set it for new rows; update needs recompute)
+    // Recompute tier from the post-increment xp the upsert returned. XP only ever grows
+    // within a season, so tier is monotonic — only bump it UP. Guarding on `>` (not `!==`)
+    // also stops a slower concurrent award from writing back a stale, lower tier.
     const newTier = tierFromXp(progress.xp, season.xpPerTier, season.totalTiers);
-    if (newTier !== progress.tier) {
+    if (newTier > progress.tier) {
       await prisma.userSeasonProgress.update({
         where: { id: progress.id },
         data: { tier: newTier },
