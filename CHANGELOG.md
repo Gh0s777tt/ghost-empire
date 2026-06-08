@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: japoński (JA) cz.1 — rdzeń + funkcje** **(#279)** — start 8. języka (CJK). `messages/ja.json` z 16 namespace'ami (**324 klucze**). Plurale ICU tylko `other`, liczniki (枚/名/本), interpunkcja pełnej szerokości （）：！, tagi `<b>` zachowane; walidacja `IntlMessageFormat` (locale `ja`): 0 błędów. **⚠️ Font fallback systemowy + review natywny przed sprzedażą.** Reszta JA = fallback EN. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: chiński (ZH) cz.3 — about + legal → ZH user-facing KOMPLETNE** **(#278)** — `messages/zh.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **ZH = 767 = 100% stron użytkownika** (7. pełny język, 1. CJK). Tagi `t.rich` zachowane; chińskie 「…」 + interpunkcja pełnej szerokości. **⚠️ LEGAL = baza maszynowa + CJK → review natywny przed sprzedażą.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE: JA → KO.**
 
 - **i18n: chiński (ZH) cz.2 — profil + strony gier** **(#277)** — `messages/zh.json` +profile/userProfile (139) +schedule/quests/kasyno/welcome/seasons/wheel (118) = **257 kluczy** (łącznie ZH = **581**). Tablice dni/miesięcy (chiński 星期日…/1月…), plurale `other`, tagi `<code>`/`<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało ZH: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
