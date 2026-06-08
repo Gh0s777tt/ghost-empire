@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Added
+
+- **admin: endpoint `POST /api/admin/backfill-tenant` — masowy backfill tenanta z prod** **(#370)** — uzupełnienie fixu #369: admin-only (`requireAdmin`), idempotentny route przypinający wszystkie wiersze z `tenantId = NULL` do tenanta domyślnego (mirror `scripts/backfill-tenant.ts`: `user` + 9 singletonów konfigu + 9 kolekcji; sekwencyjnie, bo free-tier Supabase ma mało połączeń). Powstał, bo lokalny `npm run db:backfill:tenant` nie łączy się z Supabase z maszyny dev (ETIMEDOUT), a deploy (Vercel→DB) łączy się normalnie. Trigger jako zalogowany admin: wejdź URL-em `/api/admin/backfill-tenant` w przeglądarce (route obsługuje GET) albo `fetch("/api/admin/backfill-tenant",{method:"POST"}).then(r=>r.json()).then(console.log)` w konsoli. Loguje akcję `backfill_tenant` w audycie. Bez zmian schematu. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 ### Security
 
 - **hardening: timing-safe weryfikacja sekretu bota + Host-only rozwiązywanie tenanta (anty-spoofing nagłówka)** **(#368)** — z audytu bezpieczeństwa (P2 + P1 multi-tenant):

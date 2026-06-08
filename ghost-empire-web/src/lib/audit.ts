@@ -27,7 +27,8 @@ type AdminActionType =
   | "manage_polls"
   | "update_moderation"
   | "update_integrations"
-  | "update_wheel";
+  | "update_wheel"
+  | "backfill_tenant";
 
 export async function logAdminAction(opts: {
   adminId: string;
