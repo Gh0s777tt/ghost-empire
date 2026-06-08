@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — chiński (ZH) cz.1/5 — overlaye** **(#315)** — 7. język admina (pierwszy CJK). `messages/zh.json` +`admin` (widgets/streamAlerts/customAlerts/streamGoals/subathon/overlayPreview = **268 kluczy**) → ZH = 1035/1963 (admin 268/1196). CJK: interpunkcja pełnej szerokości（）、「…」 zamiast surowych `"`; tagi `<b>`/`<em>`/`<code>` + placeholdery; font systemowy + review natywny przed sprzedażą. Walidacja `IntlMessageFormat` (locale `zh`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **🎉 i18n: panel `admin` — ukraiński (UK) cz.5/5 — bot/czat + chrome → UK KOMPLETNY 100%** **(#314)** — `messages/uk.json` +`admin` (commandPalette/botConfig/chatCommands/chatOverlay/chatTimers/faq/welcome/songQueue + ~68 chrome = **209 kluczy**) → **UK = 1963/1963 = 100% (admin 1196/1196, 0 braków)** — 6. język w pełni przetłumaczony; **wszystkie cyrylickie (RU/UK) gotowe**. Walidacja `IntlMessageFormat` (locale `uk`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — ukraiński (UK) cz.4/5 — użytkownicy + moderacja** **(#313)** — `messages/uk.json` +`admin` (userRoles/moderation/webhooksOut/auditLog/mergeUsers/modViolations/databaseReset/analytics/setupStatus = **231 kluczy**) → UK = 1754/1963 (admin 987/1196, 82%). Zagnieżdżone mapy + `\n`/`\n\n` + regex `\\w` + `<red>{p}</red>`; `analytics.daysShort` cyrylica. Walidacja `IntlMessageFormat` (locale `uk`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
