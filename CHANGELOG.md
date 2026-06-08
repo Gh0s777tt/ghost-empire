@@ -7,6 +7,14 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Security
+
+- **hardening: timing-safe weryfikacja sekretu bota + Host-only rozwiązywanie tenanta (anty-spoofing nagłówka)** **(#368)** — z audytu bezpieczeństwa (P2 + P1 multi-tenant):
+  - **`verifyBotSecret` (`lib/utils.ts`):** porównanie `===` → stałoczasowe (XOR po znakach) + twardy guard na nieustawiony/pusty `BOT_SECRET` (wcześniej `"Bearer "` mogłoby zmatchować `""`). Chroni endpointy `/api/bot/*` i `/api/internal/*`. Bez `node:crypto` (util współdzielony z klientem).
+  - **rozwiązywanie tenanta Host-only (`lib/tenant-host.ts` + `lib/tenant.ts` + `src/proxy.ts`):** `resolveTenantSlug` ufał nagłówkowi `x-tenant-slug` ponad Host (test wprost: „header wins even over apex host”). Ponieważ `/api/*` omija proxy, klient mógł podać własny `x-tenant-slug` i przełączyć kontekst tenanta (odczyt/zapis cudzych danych po wdrożeniu 2. tenanta). Teraz tenant ustalany WYŁĄCZNIE z Host; proxy dodatkowo **usuwa** każdy przychodzący `x-tenant-slug` i ustawia tylko wartość z Host (defense-in-depth). Dziś (1 tenant, `ROOT_DOMAIN` nieustawiony) zero zmian zachowania; zamyka wektor przed sprzedażą multi-tenant. Test `tenant-host.test.ts` zaktualizowany (Host-authoritative + przypadek anty-spoofing).
+
+  Bez zmian schematu/`db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 ### Fixed
 
 - **fix: szczelność/atomowość ekonomii — eliminacja podwójnego naliczenia Ghost Tokens** **(#367)** — audyt kodu wykrył kilka okien na duplikację GT przy równoczesnych/ponawianych żądaniach; uszczelnione w 4 ścieżkach:

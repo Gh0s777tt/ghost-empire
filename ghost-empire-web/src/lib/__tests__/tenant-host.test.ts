@@ -44,21 +44,25 @@ describe("tenantSlugFromHost", () => {
 describe("resolveTenantSlug", () => {
   const ROOT = "myapp.com";
 
-  it("prefers the proxy header (trimmed) when present", () => {
-    expect(resolveTenantSlug("gh0st", "other.myapp.com", ROOT)).toBe("gh0st");
-    expect(resolveTenantSlug("  gh0st  ", null, ROOT)).toBe("gh0st");
-    expect(resolveTenantSlug("hdr", "myapp.com", ROOT)).toBe("hdr"); // header wins even over apex host
+  it("resolves the tenant strictly from the Host subdomain", () => {
+    expect(resolveTenantSlug("gh0st.myapp.com", ROOT)).toBe("gh0st");
+    expect(resolveTenantSlug("streamer-two.myapp.com", ROOT)).toBe("streamer-two");
+    expect(resolveTenantSlug("gh0st.myapp.com:3000", ROOT)).toBe("gh0st");
   });
 
-  it("falls back to the Host when the header is absent/blank (the /api/* case)", () => {
-    expect(resolveTenantSlug(null, "gh0st.myapp.com", ROOT)).toBe("gh0st");
-    expect(resolveTenantSlug("", "gh0st.myapp.com", ROOT)).toBe("gh0st");
-    expect(resolveTenantSlug("   ", "gh0st.myapp.com", ROOT)).toBe("gh0st");
+  it("returns null for apex / www / non-matching host (caller → default tenant)", () => {
+    expect(resolveTenantSlug("myapp.com", ROOT)).toBeNull();
+    expect(resolveTenantSlug("www.myapp.com", ROOT)).toBeNull();
+    expect(resolveTenantSlug("ghost-empire-web.vercel.app", ROOT)).toBeNull();
+    expect(resolveTenantSlug(null, ROOT)).toBeNull();
+    expect(resolveTenantSlug(undefined, ROOT)).toBeNull();
   });
 
-  it("returns null when neither yields a tenant", () => {
-    expect(resolveTenantSlug(null, "myapp.com", ROOT)).toBeNull();
-    expect(resolveTenantSlug(null, "ghost-empire-web.vercel.app", ROOT)).toBeNull();
-    expect(resolveTenantSlug(undefined, undefined, ROOT)).toBeNull();
+  it("does NOT trust a forgeable x-tenant-slug header (Host is authoritative)", () => {
+    // The header is no longer a resolution input — only the Host matters, so a client
+    // forging a tenant header (e.g. on apex, or on /api/* which bypasses the proxy)
+    // cannot switch tenant context.
+    expect(resolveTenantSlug("myapp.com", ROOT)).toBeNull();           // apex stays default
+    expect(resolveTenantSlug("gh0st.myapp.com", ROOT)).toBe("gh0st");  // real subdomain wins
   });
 });

@@ -110,9 +110,22 @@ export function pluralPL(
   return `${n} ${many}`;
 }
 
-// Verify bot secret from incoming requests
+/** Constant-time string compare — avoids leaking the secret via early-exit timing
+ *  (plain `===` short-circuits on the first differing byte). A length mismatch returns
+ *  early; the secret's length is not itself sensitive. Dependency-free on purpose so this
+ *  shared util never pulls `node:crypto` into a client bundle. */
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+// Verify bot secret from incoming requests (Authorization: Bearer <secret>).
 export function verifyBotSecret(authHeader: string | null): boolean {
-  if (!authHeader) return false;
+  const expected = process.env.BOT_SECRET;
+  // Never authenticate against an unset/empty secret (would let "Bearer " match "").
+  if (!expected || !authHeader) return false;
   const secret = authHeader.replace("Bearer ", "");
-  return secret === process.env.BOT_SECRET;
+  return timingSafeEqualStr(secret, expected);
 }

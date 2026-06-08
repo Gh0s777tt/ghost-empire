@@ -9,7 +9,7 @@
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/site";
-import { resolveTenantSlug, TENANT_HEADER } from "@/lib/tenant-host";
+import { resolveTenantSlug } from "@/lib/tenant-host";
 
 /** Slug (and future subdomain) of the original single-streamer tenant. */
 export const DEFAULT_TENANT_SLUG = "ghost-empire";
@@ -33,18 +33,17 @@ export const FALLBACK_TENANT: TenantBrand = {
 };
 
 /**
- * Resolve the active tenant's brand for the current request. Reads the tenant slug
- * from the proxy-set `x-tenant-slug` header (page routes) or, when absent, parses it
- * from the request Host — `/api/*` routes bypass the proxy, so overlay-data and bot
- * endpoints rely on the Host fallback. Falls back to the default tenant when there's
- * no subdomain. Looks the slug up in the DB; before the table exists, or outside a
- * request scope, returns the SITE-derived fallback.
+ * Resolve the active tenant's brand for the current request. Derives the tenant slug
+ * from the request Host (subdomain) — never from the forgeable `x-tenant-slug` header
+ * (see resolveTenantSlug). Falls back to the default tenant when there's no subdomain.
+ * Looks the slug up in the DB; before the table exists, or outside a request scope,
+ * returns the SITE-derived fallback.
  */
 export async function getCurrentTenant(): Promise<TenantBrand> {
   let slug = DEFAULT_TENANT_SLUG;
   try {
     const h = await headers();
-    slug = resolveTenantSlug(h.get(TENANT_HEADER), h.get("host")) || DEFAULT_TENANT_SLUG;
+    slug = resolveTenantSlug(h.get("host")) || DEFAULT_TENANT_SLUG;
   } catch {
     // headers() unavailable outside a request scope — keep the default slug.
   }

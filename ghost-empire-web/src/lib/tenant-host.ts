@@ -30,18 +30,19 @@ export function tenantSlugFromHost(
 }
 
 /**
- * Resolve the tenant slug for a request from two sources, in priority order:
- *   1. the proxy-set header (TENANT_HEADER) — present on page routes;
- *   2. the request Host — needed on `/api/*` routes, which bypass the proxy (see its
- *      matcher) and so never receive the header.
- * Returns null when neither yields a tenant (caller then uses the default tenant).
+ * Resolve the tenant slug for a request STRICTLY from its Host. Returns null when the
+ * Host carries no tenant subdomain (apex / www / non-matching host / no root domain),
+ * in which case the caller falls back to the default tenant.
+ *
+ * SECURITY: resolution is Host-only on purpose. The proxy forwards a convenience
+ * `x-tenant-slug` header, but it is FORGEABLE — `/api/*` routes bypass the proxy, so a
+ * client could set the header directly and switch tenant context (read/write another
+ * tenant's data). We therefore never trust the header for resolution; the proxy still
+ * strips any client-sent copy and re-sets it from the Host as defense-in-depth.
  */
 export function resolveTenantSlug(
-  headerSlug: string | null | undefined,
   host: string | null | undefined,
   rootDomain: string | undefined = process.env.NEXT_PUBLIC_ROOT_DOMAIN,
 ): string | null {
-  const fromHeader = headerSlug?.trim();
-  if (fromHeader) return fromHeader;
   return tenantSlugFromHost(host, rootDomain);
 }
