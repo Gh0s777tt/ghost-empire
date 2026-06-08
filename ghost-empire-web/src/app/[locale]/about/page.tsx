@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-08",
+    title: "Płynniejsze przełączanie stron 🚀",
+    items: [
+      "Naprawiony błąd, przez który przy przechodzeniu między stronami na ułamek sekundy migał komunikat 404 (nie znaleziono strony), zanim załadowała się właściwa strona. Nawigacja jest teraz natychmiastowa i płynna.",
+    ],
+  },
+  {
+    date: "2026-06-08",
     title: "Portal w 14 językach 🌍",
     items: [
       "Ghost Empire jest już dostępny w 14 językach: polskim, angielskim, niemieckim, hiszpańskim, włoskim, francuskim, rosyjskim, ukraińskim, chińskim, japońskim, koreańskim, arabskim, portugalskim i indonezyjskim. Przełącz język w nagłówku. (Ten dziennik zmian zostaje po polsku.)",

@@ -32,6 +32,34 @@ function buildCsp(nonce: string): string {
 }
 
 export function proxy(request: NextRequest) {
+  const isOverlay = request.nextUrl.pathname.startsWith("/overlay");
+
+  // Multi-tenant (SaaS): derive the tenant slug from the request subdomain and
+  // forward it so server code can resolve it to a tenant. No DB call here — the
+  // proxy runs on the edge. No-op until NEXT_PUBLIC_ROOT_DOMAIN is set (→ null).
+  const tenantSlug = tenantSlugFromHost(request.headers.get("host"));
+
+  // Prefetch RSC requests (<Link> hover/viewport prefetch) MUST still pass through
+  // next-intl locale routing. With localePrefix:"as-needed" the default locale (PL)
+  // is unprefixed, so next-intl REWRITES "/shop" → "/[locale]/shop" internally. If a
+  // prefetch skips that rewrite, "/shop" resolves to [locale]="shop", fails
+  // hasLocale() in [locale]/layout.tsx → notFound() — so the *prefetched* payload is
+  // a 404 that flashes on click before the real navigation lands. We just skip the
+  // per-request CSP nonce here: a nonce minted now is stale vs. the live document's
+  // CSP by the time the prefetched payload is navigated to (so the prefetch response
+  // carries no nonce — matching its prior behaviour, minus the 404).
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") !== null ||
+    request.headers.get("purpose") === "prefetch";
+
+  if (isPrefetch) {
+    if (isOverlay) return NextResponse.next();
+    if (!tenantSlug) return handleI18n(request);
+    const h = new Headers(request.headers);
+    h.set(TENANT_HEADER, tenantSlug);
+    return handleI18n(new NextRequest(request, { headers: h }));
+  }
+
   const nonce = btoa(crypto.randomUUID());
   const csp = buildCsp(nonce);
 
@@ -39,15 +67,10 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("content-security-policy", csp);
-
-  // Multi-tenant (SaaS): derive the tenant slug from the request subdomain and
-  // forward it so server code can resolve it to a tenant. No DB call here — the
-  // proxy runs on the edge. No-op until NEXT_PUBLIC_ROOT_DOMAIN is set (→ null).
-  const tenantSlug = tenantSlugFromHost(request.headers.get("host"));
   if (tenantSlug) requestHeaders.set(TENANT_HEADER, tenantSlug);
 
   let response: NextResponse;
-  if (request.nextUrl.pathname.startsWith("/overlay")) {
+  if (isOverlay) {
     // OBS overlays: CSP only, no locale prefixing.
     response = NextResponse.next({ request: { headers: requestHeaders } });
   } else {
@@ -61,15 +84,9 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    {
-      // All document routes except API, Next internals and static assets. Skipping
-      // prefetch requests keeps a prefetched RSC payload's nonce from going stale.
-      source:
-        "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|map)$).*)",
-      missing: [
-        { type: "header", key: "next-router-prefetch" },
-        { type: "header", key: "purpose", value: "prefetch" },
-      ],
-    },
+    // All document routes except API, Next internals and static assets. Prefetch
+    // requests are NOT excluded here — they must run through next-intl for locale
+    // rewriting (see the isPrefetch branch above); they just skip the CSP nonce.
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|map)$).*)",
   ],
 };
