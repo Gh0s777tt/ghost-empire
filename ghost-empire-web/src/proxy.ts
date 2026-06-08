@@ -54,9 +54,10 @@ export function proxy(request: NextRequest) {
 
   if (isPrefetch) {
     if (isOverlay) return NextResponse.next();
-    if (!tenantSlug) return handleI18n(request);
+    // Strip any client-sent tenant header; only a host-derived slug is trusted.
     const h = new Headers(request.headers);
-    h.set(TENANT_HEADER, tenantSlug);
+    h.delete(TENANT_HEADER);
+    if (tenantSlug) h.set(TENANT_HEADER, tenantSlug);
     return handleI18n(new NextRequest(request, { headers: h }));
   }
 
@@ -67,6 +68,8 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("content-security-policy", csp);
+  // Never trust a client-sent tenant header: strip it, then set only the host-derived slug.
+  requestHeaders.delete(TENANT_HEADER);
   if (tenantSlug) requestHeaders.set(TENANT_HEADER, tenantSlug);
 
   let response: NextResponse;

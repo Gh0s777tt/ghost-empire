@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-08",
+    title: "Wzmocnienia bezpieczeństwa 🔒",
+    items: [
+      "Rutynowe wzmocnienia pod maską: odporne na ataki czasowe porównania sekretów usług wewnętrznych oraz szczelniejsze rozpoznawanie adresu portalu. Bez zmian w działaniu dla użytkowników.",
+    ],
+  },
+  {
+    date: "2026-06-08",
     title: "Stabilniejsze naliczanie Ghost Tokens 🛡️",
     items: [
       "Wzmocniliśmy spójność przyznawania Ghost Tokens przy równoczesnych żądaniach — nagrody za zadania dzienne oraz tokeny z subskrypcji są teraz naliczane dokładnie raz, nawet gdy to samo zdarzenie dotrze do nas kilka razy naraz.",
