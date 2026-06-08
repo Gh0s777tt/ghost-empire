@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: hiszpański (ES) cz.5 — about + legal → ES user-facing KOMPLETNE** **(#263)** — `messages/es.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **ES = 767 = 100% stron użytkownika** (drugi pełny język po DE; admin nadal fallback EN). Tagi `t.rich` zachowane; GDPR→RGPD; hiszpańskie `«…»` (U+00AB/BB — bezpieczne w JSON, brak gotchy cudzysłowów). **⚠️ LEGAL = baza maszynowa — przegląd prawnika przed sprzedażą w ES.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE: IT/FR/RU/UK/ZH/JA/KO.**
+
 - **i18n: hiszpański (ES) cz.4 — strony gier/planu** **(#262)** — `messages/es.json` +schedule/quests/kasyno/welcome/seasons/wheel = **118 kluczy** (łącznie ES = **581**): plan (dni/miesiące jako tablice), questy, kasyno, welcome, battle pass, koło. Plurale ICU + tagi `<b>` zachowane; walidacja `IntlMessageFormat`: 0 błędów. **Zostało ES: tylko legal (186).** Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: hiszpański (ES) cz.3 — profil + konta** **(#261)** — `messages/es.json` +profile (113) +userProfile (26) = **139 kluczy** (łącznie ES = **463**): strona profilu + profil publiczny `/u/[username]`. Placeholdery/plurale ICU + tag `<code>` zachowane. Walidacja `IntlMessageFormat`: 0 błędów. Zostało ES: legal (186) + welcome/quests/seasons/wheel/kasyno/schedule. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
