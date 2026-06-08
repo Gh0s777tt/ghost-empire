@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: koreański (KO) cz.2 — profil + strony gier** **(#283)** — `messages/ko.json` +8 namespace'ów (profile/userProfile/schedule/quests/kasyno/welcome/seasons/wheel = **257 kluczy**) → **KO = 581/767**. Plurale `other`, partykuły koreańskie (을/를, 과/와, (으)로), tagi `<b>`/`<code>` zachowane; walidacja `IntlMessageFormat` (locale `ko`): 0 błędów, 0 braków w tych namespace'ach. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: koreański (KO) cz.1 — rdzeń + funkcje** **(#282)** — start 9. (ostatniego) języka. `messages/ko.json` z 16 namespace'ami (**324 klucze**). Plurale ICU tylko `other`, partykuły koreańskie (을/를, (으)로), tagi `<b>` zachowane; walidacja `IntlMessageFormat` (locale `ko`): 0 błędów. **⚠️ Font fallback systemowy + review natywny przed sprzedażą.** Reszta KO = fallback EN. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: japoński (JA) cz.3 — about + legal → JA user-facing KOMPLETNE** **(#281)** — `messages/ja.json` +about (64) +terms (63) +privacy (59) = **186 kluczy** → **JA = 767 = 100% stron użytkownika** (8. pełny język). Tagi `t.rich` zachowane; japońskie 「…」 + interpunkcja pełnej szerokości. **⚠️ LEGAL = baza maszynowa + CJK → review natywny przed sprzedażą.** Walidacja `IntlMessageFormat` + build. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **NASTĘPNE: KO (ostatni język).**
