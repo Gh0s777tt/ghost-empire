@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 const NATIVE_NAME: Record<string, string> = {
   pl: "Polski", en: "English", de: "Deutsch", es: "Español", it: "Italiano",
   fr: "Français", zh: "中文", ja: "日本語", ko: "한국어", ru: "Русский", uk: "Українська",
+  ar: "العربية", pt: "Português", id: "Bahasa Indonesia",
 };
 
 // Short badge override where the ISO-639 language code reads as the wrong thing:
