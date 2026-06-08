@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **i18n: panel `admin` — włoski (IT) cz.4/5 — użytkownicy + moderacja** **(#298)** — `messages/it.json` +`admin` (userRoles/moderation/webhooksOut/auditLog/mergeUsers/modViolations/databaseReset/analytics/setupStatus = **231 kluczy**) → IT = 1754/1963 (admin 987/1196, 82%). Zagnieżdżone mapy + `\n`/`\n\n` + regex `\\w` + `<red>{p}</red>`; `analytics.daysShort` tablica. Walidacja `IntlMessageFormat` (locale `it`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **i18n: panel `admin` — włoski (IT) cz.3/5 — ekonomia + platformy** **(#297)** — `messages/it.json` +`admin` (shop/seasons/streamlabs/integrations/kickEvents/youtubeLive/twitchEventSub/gamesLibrary/schedule/createDrop/activeDrops/pendingOrders/grantTokens = **235 kluczy**) → IT = 1523/1963 (admin 756/1196). Plurale ICU + `schedule.days` + tagi `<b>`/`<code>`/`<muted>`/`<link>`; klucze env zachowane. Walidacja `IntlMessageFormat` (locale `it`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 - **i18n: panel `admin` — włoski (IT) cz.2/5 — społeczność + gry** **(#296)** — `messages/it.json` +`admin` (events/predictions/polls/achievements/wheel/codeDrops = **253 klucze**) → IT = 1288/1963 (admin 521/1196). Tablice `previewOpts` + `\n\n` w `resolveConfirm`; tagi `<b>`/`<code>`. Walidacja `IntlMessageFormat` (locale `it`): 0 błędów. Bez `db push`. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
