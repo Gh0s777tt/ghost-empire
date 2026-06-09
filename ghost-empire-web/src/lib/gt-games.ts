@@ -37,6 +37,41 @@ export function flipCoin(rng: () => number = Math.random): { win: boolean; multi
   return { win, multiplier: win ? 2 : 0 };
 }
 
+// Dice: roll 0-99 (uniform). Bet "under T" (win if roll < T) or "over T" (win if roll ≥ T),
+// T in 2..98. Fair multiplier = 1 / winChance; we shave a 5% house edge → RTP ≈ 0.95 (GT sink).
+const DICE_EDGE = 0.05;
+export const DICE_MIN_TARGET = 2;
+export const DICE_MAX_TARGET = 98;
+
+export type DiceDir = "under" | "over";
+export type DiceOutcome = { roll: number; win: boolean; multiplier: number };
+
+/** Win probability for a (dir,target) bet — `target` is the 2..98 threshold. */
+export function diceWinChance(dir: DiceDir, target: number): number {
+  return (dir === "under" ? target : 100 - target) / 100;
+}
+
+/** Applied multiplier (incl. 5% house edge) for a (dir,target) bet. */
+export function diceMultiplier(dir: DiceDir, target: number): number {
+  return (1 - DICE_EDGE) / diceWinChance(dir, target);
+}
+
+/** Canonical dice bet "under:NN" / "over:NN" (separator may be ":" or a space), or null. */
+export function normDiceChoice(choice?: string): { dir: DiceDir; target: number } | null {
+  const m = (choice ?? "").trim().toLowerCase().match(/^(under|over)\s*[:\s]\s*(\d{1,3})$/);
+  if (!m) return null;
+  const target = parseInt(m[2], 10);
+  if (target < DICE_MIN_TARGET || target > DICE_MAX_TARGET) return null;
+  return { dir: m[1] as DiceDir, target };
+}
+
+/** Roll the die (0..99) + resolve a (pre-normalized) bet. `rng()` is a [0,1) source. */
+export function rollDice(dir: DiceDir, target: number, rng: () => number = Math.random): DiceOutcome {
+  const roll = Math.floor(rng() * 100); // 0..99 uniform
+  const win = dir === "under" ? roll < target : roll >= target;
+  return { roll, win, multiplier: diceMultiplier(dir, target) };
+}
+
 // Roulette: American double-zero wheel — 38 pockets (0, 00, 1-36). "00" is encoded as the
 // sentinel pocket value n = 37. Bets: red/black (2×) or a straight number incl. 0/00 (36×).
 // The two green pockets (0, 00) are the house edge → RTP ≈ 0.947 on every bet type (a GT sink).
@@ -78,7 +113,7 @@ export function spinRoulette(choice: string, rng: () => number = Math.random): R
 }
 
 export type GtGameResult =
-  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor } }
+  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor }; dice?: { roll: number; target: number; dir: DiceDir; win: boolean } }
   | { ok: false; status: number; error: string };
 
 export class GtGameError extends Error {
@@ -89,7 +124,7 @@ export class GtGameError extends Error {
  *  used by roulette (red/black or a number 0-36). */
 export async function playGtGame(
   userId: string,
-  game: "slots" | "coinflip" | "roulette",
+  game: "slots" | "coinflip" | "roulette" | "dice",
   bet: number,
   choice?: string,
 ): Promise<GtGameResult> {
@@ -101,6 +136,7 @@ export async function playGtGame(
   let detail = "";
   let reels: string[] | undefined;
   let roll: { n: number; color: RouletteColor } | undefined;
+  let dice: { roll: number; target: number; dir: DiceDir; win: boolean } | undefined;
   if (game === "slots") {
     const o = spinSlots();
     reels = o.reels;
@@ -118,6 +154,13 @@ export async function playGtGame(
     detail = `${emoji} ${o.n === 37 ? "00" : o.n}`;
     roll = { n: o.n, color: o.color };
     payout = o.multiplier > 0 ? bet * o.multiplier : 0;
+  } else if (game === "dice") {
+    const c = normDiceChoice(choice);
+    if (!c) return { ok: false, status: 400, error: `Wybierz under/over + próg ${DICE_MIN_TARGET}-${DICE_MAX_TARGET}` };
+    const o = rollDice(c.dir, c.target);
+    detail = `🎲 ${o.roll} ${c.dir === "under" ? "<" : "≥"} ${c.target} → ${o.win ? "✅" : "❌"}`;
+    dice = { roll: o.roll, target: c.target, dir: c.dir, win: o.win };
+    payout = o.win ? Math.floor(bet * o.multiplier) : 0;
   } else {
     return { ok: false, status: 400, error: "Nieznana gra" };
   }
@@ -147,7 +190,7 @@ export async function playGtGame(
     const { checkAndGrantAchievements } = await import("@/lib/achievements");
     await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
 
-    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll };
+    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice };
   } catch (e) {
     if (e instanceof GtGameError) return { ok: false, status: e.status, error: e.message };
     return { ok: false, status: 500, error: "Błąd serwera" };

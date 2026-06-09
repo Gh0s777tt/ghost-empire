@@ -4,21 +4,27 @@
 // animations (CSS `transform` transitions → run at the display's native refresh rate,
 // 60/120/240 Hz; we never compute outcomes client-side — the wheel/reels/coin always
 // LAND on the server-decided result). Respects prefers-reduced-motion.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { Link } from "@/i18n/navigation";
 
 type PlayResult = {
   ok?: boolean; bet: number; payout: number; net: number; newBalance: number;
-  detail: string; reels?: string[]; roll?: { n: number; color: "green" | "red" | "black" }; error?: string;
+  detail: string; reels?: string[]; roll?: { n: number; color: "green" | "red" | "black" };
+  dice?: { roll: number; target: number; dir: "under" | "over"; win: boolean }; error?: string;
 };
 type Leaderboard = {
   bigWins: Array<{ id: string; name: string; game: string; net: number; detail: string | null }>;
   topNet: Array<{ name: string; net: number }>;
 };
-type Game = "slots" | "coinflip" | "roulette";
+type Game = "slots" | "coinflip" | "roulette" | "dice";
 type Phase = "spin" | "land";
+
+// Dice odds mirror lib/gt-games.ts (pure, replicated here so the client never imports the server lib).
+const DICE_MIN = 2, DICE_MAX = 98, DICE_EDGE = 0.05;
+const diceChanceOf = (dir: "under" | "over", t: number) => (dir === "under" ? t : 100 - t) / 100;
+const diceMultOf = (dir: "under" | "over", t: number) => (1 - DICE_EDGE) / diceChanceOf(dir, t);
 type Stage = { id: number; game: Game; phase: Phase; result: PlayResult | null; settled: boolean };
 
 // ── Roulette wheel data (American double-zero, real wheel sequence; 37 = "00") ────
@@ -406,16 +412,81 @@ function CoinFlip({ phase, win, onSettle }: { phase: Phase; win: boolean | null;
   );
 }
 
+// ── Dice: a 0-99 track with a green win-zone; the pointer slides to the rolled value
+//    while a counter ticks up to it. Win-zone = left of the threshold (under) or right (over). ─
+function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: number; target: number; dir: "under" | "over"; win: boolean } | null; onSettle: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const done = useRef(false);
+  const [shown, setShown] = useState<number | null>(null);
+  const target = dice?.target ?? 50;
+  const dir = dice?.dir ?? "under";
+
+  useEffect(() => {
+    if (phase !== "land" || !dice || done.current) return;
+    done.current = true;
+    const place = () => { const el = ref.current; if (el) el.style.left = `${dice.roll}%`; };
+    if (reducedMotion()) { place(); setShown(dice.roll); const t = setTimeout(onSettle, 250); return () => clearTimeout(t); }
+    const el = ref.current;
+    if (el) {
+      el.style.transition = "none";
+      el.style.left = "50%";
+      void el.offsetHeight;
+      el.style.transition = "left 1500ms cubic-bezier(0.16,0.84,0.24,1)";
+      requestAnimationFrame(place);
+    }
+    const DUR = 1500;
+    let raf = 0, startTs = 0;
+    const tick = (now: number) => {
+      if (!startTs) startTs = now;
+      const k = Math.min(1, (now - startTs) / DUR);
+      setShown(Math.round(k * dice.roll));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const t = setTimeout(onSettle, DUR + 80);
+    return () => { clearTimeout(t); cancelAnimationFrame(raf); };
+  }, [phase, dice, onSettle]);
+
+  const pointerColor = dice ? (dice.win ? "#34d399" : "#fb7185") : "#ffffff";
+  const winZone: CSSProperties = dir === "under"
+    ? { left: 0, width: `${target}%`, background: "linear-gradient(90deg,#0f7a3d,#1aa356)" }
+    : { left: `${target}%`, right: 0, background: "linear-gradient(90deg,#1aa356,#0f7a3d)" };
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-6" style={{ width: 380 }}>
+      <div className={`text-7xl font-black tabular-nums ${dice ? (dice.win ? "text-emerald-300" : "text-rose-300") : "text-zinc-500"}`} style={{ textShadow: "0 3px 16px rgba(0,0,0,.6)" }}>
+        {shown ?? "—"}
+      </div>
+      <div className="relative w-full">
+        <div className="relative rounded-full overflow-hidden" style={{ height: 14, background: "#3a0d12", boxShadow: "inset 0 2px 5px rgba(0,0,0,.6)" }}>
+          <div className="absolute inset-y-0" style={winZone} />
+        </div>
+        {/* threshold marker */}
+        <div className="absolute" style={{ left: `${target}%`, top: -5, height: 24, width: 2, background: "#ffd54a", boxShadow: "0 0 6px #ffd54a", transform: "translateX(-1px)" }} />
+        {/* sliding result pointer (▼) */}
+        <div ref={ref} className="absolute will-change-[left]" style={{ left: "50%", top: -14, transform: "translateX(-50%)" }}>
+          <div style={{ width: 0, height: 0, borderLeft: "7px solid transparent", borderRight: "7px solid transparent", borderTop: `11px solid ${pointerColor}`, filter: "drop-shadow(0 1px 3px rgba(0,0,0,.7))" }} />
+        </div>
+        <div className="flex justify-between font-mono mt-2.5" style={{ fontSize: 10, color: "#71717a" }}>
+          <span>0</span><span>25</span><span>50</span><span>75</span><span>99</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
-  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette") };
+  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   const [bet, setBet] = useState(100);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lb, setLb] = useState<Leaderboard | null>(null);
   const [rouletteNum, setRouletteNum] = useState("");
+  const [diceTarget, setDiceTarget] = useState(50);
+  const [diceDir, setDiceDir] = useState<"under" | "over">("under");
   const [stage, setStage] = useState<Stage | null>(null);
   const playId = useRef(0);
 
@@ -470,6 +541,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               <SlotReels key={stage.id} phase={stage.phase} reels={stage.result?.reels ?? null} onSettle={settle} />
             ) : stage?.game === "coinflip" ? (
               <CoinFlip key={stage.id} phase={stage.phase} win={stage.result ? stage.result.payout > 0 : null} onSettle={settle} />
+            ) : stage?.game === "dice" ? (
+              <DiceTrack key={stage.id} phase={stage.phase} dice={stage.result?.dice ?? null} onSettle={settle} />
             ) : (
               <div className="text-zinc-700 text-5xl tracking-widest">🎰</div>
             )}
@@ -518,6 +591,24 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               className="w-20 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500 disabled:opacity-50" />
             <button onClick={() => play("roulette", rouletteNum)} disabled={busy || (balance ?? 0) < bet || !/^\d+$/.test(rouletteNum)}
               className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 disabled:opacity-40 transition-all">{t("number")}</button>
+          </div>
+
+          {/* Dice: bet under/over a threshold — multiplier scales with the risk */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-zinc-500 self-center me-1">{t("diceLabel")}</span>
+            <div className="flex rounded-full overflow-hidden border border-zinc-700">
+              <button onClick={() => setDiceDir("under")} disabled={busy}
+                className={`px-3 py-2 text-sm font-bold transition-all ${diceDir === "under" ? "bg-emerald-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}>{t("diceUnder")}</button>
+              <button onClick={() => setDiceDir("over")} disabled={busy}
+                className={`px-3 py-2 text-sm font-bold transition-all ${diceDir === "over" ? "bg-emerald-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}>{t("diceOver")}</button>
+            </div>
+            <input type="range" min={DICE_MIN} max={DICE_MAX} value={diceTarget} disabled={busy}
+              onChange={(e) => setDiceTarget(parseInt(e.target.value, 10))} className="w-36 accent-amber-500 disabled:opacity-50" aria-label={t("diceLabel")} />
+            <span className="text-xs text-zinc-300 font-mono tabular-nums w-32 text-center">
+              {diceTarget} · {(diceChanceOf(diceDir, diceTarget) * 100).toFixed(0)}% · {diceMultOf(diceDir, diceTarget).toFixed(2)}×
+            </span>
+            <button onClick={() => play("dice", `${diceDir}:${diceTarget}`)} disabled={busy || (balance ?? 0) < bet}
+              className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 disabled:opacity-40 transition-all">{t("diceRoll")}</button>
           </div>
 
           <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} GT</span></div>

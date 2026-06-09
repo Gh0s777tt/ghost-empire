@@ -575,7 +575,12 @@
     "topNet": "Лучший нетто (30 дней)",
     "gameSlots": "Слоты",
     "gameCoinflip": "Коинфлип",
-    "gameRoulette": "Рулетка"
+    "gameRoulette": "Рулетка",
+    "diceLabel": "🎲 Кости:",
+    "diceUnder": "Меньше",
+    "diceOver": "Больше",
+    "diceRoll": "🎲 Бросок",
+    "gameDice": "Кости"
   },
   "welcome": {
     "metaTitle": "Добро пожаловать в Ghost Empire",

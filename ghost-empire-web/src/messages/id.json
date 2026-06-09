@@ -604,7 +604,12 @@
     "topNet": "Laba bersih teratas (30 hari)",
     "gameSlots": "Slot",
     "gameCoinflip": "Coinflip",
-    "gameRoulette": "Roulette"
+    "gameRoulette": "Roulette",
+    "diceLabel": "🎲 Dadu:",
+    "diceUnder": "Bawah",
+    "diceOver": "Atas",
+    "diceRoll": "🎲 Lempar",
+    "gameDice": "Dadu"
   },
   "welcome": {
     "metaTitle": "Selamat datang di Ghost Empire",

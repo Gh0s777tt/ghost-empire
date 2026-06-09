@@ -575,7 +575,12 @@
     "topNet": "最佳净收益（30 天）",
     "gameSlots": "老虎机",
     "gameCoinflip": "抛硬币",
-    "gameRoulette": "轮盘"
+    "gameRoulette": "轮盘",
+    "diceLabel": "🎲 骰子：",
+    "diceUnder": "小于",
+    "diceOver": "大于",
+    "diceRoll": "🎲 投掷",
+    "gameDice": "骰子"
   },
   "welcome": {
     "metaTitle": "欢迎来到 Ghost Empire",

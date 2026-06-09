@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-09",
+    title: "Nowa gra: Kości 🎲",
+    items: [
+      "W kasynie pojawiła się nowa gra — Kości. Wybierasz, czy wynik (0-99) padnie poniżej czy powyżej Twojego progu; im mniejsza szansa, tym wyższa wypłata. Animowany tor pokazuje na żywo, jak wskaźnik wjeżdża na wylosowaną liczbę. Wynik liczy serwer — fair jak w pozostałych grach.",
+    ],
+  },
+  {
+    date: "2026-06-09",
     title: "Nowe sloty i moneta — własna grafika 🎰",
     items: [
       "Sloty dostały własne, wektorowe symbole (wiśnie, cytryna, dzwonek, gwiazda, diament i szczęśliwa „7”) w złotej obudowie maszyny — a linia wygranej rozświetla się na złoto, gdy trafisz trzy takie same. Moneta w coinflipie to teraz prawdziwy kruszec z reliefem: złoty duch (wygrana) i stalowa czaszka (przegrana). Wszystko wektorowo, ostre na każdym ekranie.",

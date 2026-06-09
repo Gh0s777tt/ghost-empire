@@ -575,7 +575,12 @@
     "topNet": "أعلى صافٍ (30 يومًا)",
     "gameSlots": "سلوتس",
     "gameCoinflip": "رمي العملة",
-    "gameRoulette": "روليت"
+    "gameRoulette": "روليت",
+    "diceLabel": "🎲 النرد:",
+    "diceUnder": "أقل",
+    "diceOver": "أكثر",
+    "diceRoll": "🎲 ارمِ",
+    "gameDice": "النرد"
   },
   "welcome": {
     "metaTitle": "مرحبًا بك في Ghost Empire",

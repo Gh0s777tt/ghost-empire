@@ -575,7 +575,12 @@
     "topNet": "최고 순이익 (30일)",
     "gameSlots": "슬롯",
     "gameCoinflip": "코인플립",
-    "gameRoulette": "룰렛"
+    "gameRoulette": "룰렛",
+    "diceLabel": "🎲 주사위:",
+    "diceUnder": "미만",
+    "diceOver": "이상",
+    "diceRoll": "🎲 굴리기",
+    "gameDice": "주사위"
   },
   "welcome": {
     "metaTitle": "Ghost Empire에 오신 것을 환영합니다",

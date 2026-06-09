@@ -575,7 +575,12 @@
     "topNet": "Top-Netto (30 Tage)",
     "gameSlots": "Slots",
     "gameCoinflip": "Coinflip",
-    "gameRoulette": "Roulette"
+    "gameRoulette": "Roulette",
+    "diceLabel": "🎲 Würfel:",
+    "diceUnder": "Unter",
+    "diceOver": "Über",
+    "diceRoll": "🎲 Würfeln",
+    "gameDice": "Würfel"
   },
   "welcome": {
     "metaTitle": "Willkommen im Ghost Empire",

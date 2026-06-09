@@ -604,7 +604,12 @@
     "topNet": "Maior lucro (30 dias)",
     "gameSlots": "Caça-níqueis",
     "gameCoinflip": "Coinflip",
-    "gameRoulette": "Roleta"
+    "gameRoulette": "Roleta",
+    "diceLabel": "🎲 Dados:",
+    "diceUnder": "Menor",
+    "diceOver": "Maior",
+    "diceRoll": "🎲 Rolar",
+    "gameDice": "Dados"
   },
   "welcome": {
     "metaTitle": "Bem-vindo ao Ghost Empire",
