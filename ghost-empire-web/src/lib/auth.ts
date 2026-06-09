@@ -553,6 +553,54 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         console.error("Error granting welcome bonus:", e);
       }
     },
+
+    // Fires ONCE, on a new account's FIRST OAuth link, AFTER createUser — unlike the
+    // signIn callback, the user row already exists here AND we have the OAuth token. This
+    // completes the setup signIn otherwise only does on the user's SECOND login (signIn
+    // runs before the user is persisted → its `if (dbUser)` block is skipped on login #1):
+    // the public @username, the Google→YouTube channel nick (e.g. "Yukon"), and
+    // permanent-admin-by-email. Fully guarded — never blocks login. [audit fix]
+    async linkAccount({ user, account }) {
+      try {
+        const id = user.id;
+        if (!id) return;
+        const isGoogle = account.provider === "google";
+        let handle: string | undefined;   // → @username
+        let display: string | undefined;  // → displayName (never the Google real name)
+        if (isGoogle && account.access_token) {
+          try {
+            const yt = await fetch("https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true", { headers: { Authorization: `Bearer ${account.access_token}` } });
+            if (yt.ok) {
+              const data = (await yt.json()) as { items?: { snippet?: { title?: string; customUrl?: string } }[] };
+              const snip = data.items?.[0]?.snippet;
+              display = snip?.title || undefined;
+              handle = snip?.customUrl || snip?.title || undefined;
+            }
+          } catch { /* YouTube API not ready (scope not granted) — signIn upgrades it on next login */ }
+        } else if (!isGoogle) {
+          display = user.name || undefined; // Twitch/Kick/Discord: user.name IS the public handle
+          handle = user.name || undefined;
+        }
+        // permanent-admin-by-email + Google nick upgrade (no unique cols → one safe update)
+        const patch: Record<string, unknown> = {};
+        if (isPermanentAdminEmail(user.email)) patch.isAdmin = true;
+        if (isGoogle && display) patch.displayName = display;
+        if (Object.keys(patch).length > 0) {
+          await prisma.user.update({ where: { id }, data: patch }).catch((e) => console.error("[linkAccount] patch failed:", e));
+        }
+        // public @username (UNIQUE → its own collision-safe update so a clash can't lose the patch)
+        if (handle) {
+          const dbUser = await prisma.user.findUnique({ where: { id }, select: { username: true } });
+          if (dbUser && !dbUser.username) {
+            const slug = handle.toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 32) || `ghost_${id.slice(-6)}`;
+            await prisma.user.update({ where: { id }, data: { username: slug } })
+              .catch(async () => { await prisma.user.update({ where: { id }, data: { username: `${slug.slice(0, 26)}_${id.slice(-4)}` } }).catch(() => {}); });
+          }
+        }
+      } catch (e) {
+        console.error("linkAccount setup error:", e);
+      }
+    },
   },
 
   debug: process.env.NODE_ENV === "development",
