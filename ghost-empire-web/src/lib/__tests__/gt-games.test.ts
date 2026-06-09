@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash, dropPlinko, PLINKO_MULTS, PLINKO_ROWS } from "@/lib/gt-games";
+import { minesMultiplier, MINES_TILES, MINES_MAX_MULT } from "@/lib/gt-mines";
 
 describe("slots", () => {
   it("always returns 3 reels and a non-negative multiplier", () => {
@@ -188,6 +189,39 @@ describe("plinko", () => {
     // center bucket is the most common
     const maxIdx = counts.indexOf(Math.max(...counts));
     expect(maxIdx).toBe(PLINKO_ROWS / 2);
+  });
+});
+
+describe("mines", () => {
+  it("is break-even at 0 reveals and rises with each safe reveal", () => {
+    expect(minesMultiplier(0, 3)).toBe(1);
+    // first safe reveal with 3 bombs: (1-0.05)·(25/22) ≈ 1.08×
+    expect(minesMultiplier(1, 3)).toBeCloseTo(0.95 * (25 / 22), 4);
+    // strictly increasing in the number of revealed tiles
+    let prev = 0;
+    for (let k = 1; k <= 10; k++) { const m = minesMultiplier(k, 3); expect(m).toBeGreaterThan(prev); prev = m; }
+  });
+
+  it("pays more for more bombs (more risk) at the same reveal count", () => {
+    expect(minesMultiplier(3, 5)).toBeGreaterThan(minesMultiplier(3, 3));
+    expect(minesMultiplier(3, 1)).toBeLessThan(minesMultiplier(3, 3));
+  });
+
+  it("caps the multiplier (runaway-jackpot guard)", () => {
+    // many reveals with many bombs would explode without the cap
+    expect(minesMultiplier(14, 10)).toBe(MINES_MAX_MULT);
+  });
+
+  it("has RTP ≈ 0.95: P(survive k) × multiplier(k) = (1 − edge) for any k (where uncapped)", () => {
+    const N = MINES_TILES;
+    for (const bombs of [1, 3, 5]) {
+      for (let k = 1; k <= 4; k++) {
+        let survive = 1;
+        for (let i = 0; i < k; i++) survive *= (N - bombs - i) / (N - i); // P(first k reveals all safe)
+        const ev = survive * minesMultiplier(k, bombs);
+        expect(ev).toBeCloseTo(0.95, 5);
+      }
+    }
   });
 });
 

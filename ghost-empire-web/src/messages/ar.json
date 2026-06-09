@@ -586,7 +586,11 @@
     "gameCrash": "الصاروخ",
     "plinkoLabel": "🔵 بلينكو:",
     "plinkoDrop": "🔵 أسقط",
-    "gamePlinko": "بلينكو"
+    "gamePlinko": "بلينكو",
+    "minesLabel": "💣 الألغام:",
+    "minesStart": "💣 العب",
+    "minesCashout": "اسحب",
+    "gameMines": "الألغام"
   },
   "welcome": {
     "metaTitle": "مرحبًا بك في Ghost Empire",

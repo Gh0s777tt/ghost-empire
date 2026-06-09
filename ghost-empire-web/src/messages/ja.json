@@ -586,7 +586,11 @@
     "gameCrash": "クラッシュ",
     "plinkoLabel": "🔵 プリンコ：",
     "plinkoDrop": "🔵 落とす",
-    "gamePlinko": "プリンコ"
+    "gamePlinko": "プリンコ",
+    "minesLabel": "💣 マイン：",
+    "minesStart": "💣 プレイ",
+    "minesCashout": "換金",
+    "gameMines": "マイン"
   },
   "welcome": {
     "metaTitle": "Ghost Empire へようこそ",

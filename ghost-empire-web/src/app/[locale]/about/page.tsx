@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-09",
+    title: "Nowa gra: Pole minowe (Mines) 💣",
+    items: [
+      "Czwarta nowa gra w kasynie — Pole minowe. Wybierasz liczbę bomb, a potem odkrywasz pola na siatce 5×5: każde bezpieczne pole podbija mnożnik, ale trafienie bomby kończy grę. Możesz wypłacić w dowolnym momencie. Im więcej bomb i odkrytych pól, tym większa wygrana. Tym samym mamy komplet czterech nowych gier: Kości, Crash, Plinko i Pole minowe!",
+    ],
+  },
+  {
+    date: "2026-06-09",
     title: "Nowa gra: Plinko 🔵",
     items: [
       "Trzecia nowa gra w kasynie — Plinko. Upuszczasz kulkę, która odbija się od kołków i ląduje w jednej z przegródek z mnożnikiem; przegródki na krawędziach płacą najwięcej (do 13×), a te w środku najmniej. Kulka zjeżdża dokładnie po ścieżce wylosowanej przez serwer — w pełni fair. Przy okazji wynik gry pokazuje teraz zmianę salda netto.",

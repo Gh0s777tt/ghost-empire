@@ -586,7 +586,11 @@
     "gameCrash": "Crash",
     "plinkoLabel": "🔵 Plinko:",
     "plinkoDrop": "🔵 Soltar",
-    "gamePlinko": "Plinko"
+    "gamePlinko": "Plinko",
+    "minesLabel": "💣 Minas:",
+    "minesStart": "💣 Jugar",
+    "minesCashout": "Retirar",
+    "gameMines": "Minas"
   },
   "welcome": {
     "metaTitle": "Bienvenido a Ghost Empire",

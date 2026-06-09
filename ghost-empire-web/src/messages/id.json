@@ -615,7 +615,11 @@
     "gameCrash": "Crash",
     "plinkoLabel": "🔵 Plinko:",
     "plinkoDrop": "🔵 Jatuhkan",
-    "gamePlinko": "Plinko"
+    "gamePlinko": "Plinko",
+    "minesLabel": "💣 Ranjau:",
+    "minesStart": "💣 Main",
+    "minesCashout": "Tarik",
+    "gameMines": "Ranjau"
   },
   "welcome": {
     "metaTitle": "Selamat datang di Ghost Empire",

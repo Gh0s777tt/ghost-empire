@@ -586,7 +586,11 @@
     "gameCrash": "크래시",
     "plinkoLabel": "🔵 플린코:",
     "plinkoDrop": "🔵 떨어뜨리기",
-    "gamePlinko": "플린코"
+    "gamePlinko": "플린코",
+    "minesLabel": "💣 지뢰:",
+    "minesStart": "💣 플레이",
+    "minesCashout": "현금화",
+    "gameMines": "지뢰"
   },
   "welcome": {
     "metaTitle": "Ghost Empire에 오신 것을 환영합니다",

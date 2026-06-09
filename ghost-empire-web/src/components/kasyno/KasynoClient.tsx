@@ -589,10 +589,61 @@ function PlinkoBoard({ phase, plinko, onSettle }: { phase: Phase; plinko: { path
   );
 }
 
+// ── Mines ("Pole minowe"): interactive 5×5 grid (the one stateful game). Reveal tiles → 💎 and the
+//    multiplier climbs; hit a 💣 and it's over. Cash out any time. State is driven by the server. ─
+type MinesGameState = { sessionId: string; bombs: number; revealed: number[]; multiplier: number; status: "active" | "bust" | "cashed"; bombSet: number[] | null; bet: number; payout?: number };
+
+function MinesGrid({ game, onReveal, onCashout, busy, fmt, t }: {
+  game: MinesGameState; onReveal: (tile: number) => void; onCashout: () => void; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
+}) {
+  const over = game.status !== "active";
+  const revealedSet = new Set(game.revealed);
+  const bombSet = new Set(game.bombSet ?? []);
+  const potential = Math.floor(game.bet * game.multiplier);
+  return (
+    <div className="flex flex-col items-center gap-3" style={{ width: 300 }}>
+      <div className="flex items-center gap-3 h-9">
+        <div className="text-sm font-mono text-zinc-300">{game.bombs} 💣 · <span className="text-amber-300 font-bold">{game.multiplier.toFixed(2)}×</span></div>
+        {game.status === "active" ? (
+          <button onClick={onCashout} disabled={busy || game.revealed.length === 0}
+            className="px-4 py-1.5 rounded-full text-sm font-extrabold text-black bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-300 disabled:opacity-40 transition-all">
+            {t("minesCashout")} {fmt(potential)} GT
+          </button>
+        ) : (
+          <div className={`text-sm font-extrabold ${game.status === "cashed" ? "text-emerald-300" : "text-rose-400"}`}>
+            {game.status === "cashed" ? `✅ +${fmt((game.payout ?? 0) - game.bet)} GT` : `💥 −${fmt(game.bet)} GT`}
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-5 gap-1.5">
+        {Array.from({ length: 25 }, (_, i) => {
+          const isRevealed = revealedSet.has(i);
+          const showBomb = over && bombSet.has(i);
+          const showGem = isRevealed && !bombSet.has(i);
+          return (
+            <button key={i} onClick={() => !over && !isRevealed && onReveal(i)} disabled={busy || over || isRevealed}
+              className="rounded-lg flex items-center justify-center transition-all"
+              style={{
+                width: 50, height: 50, fontSize: 24,
+                background: showBomb ? "radial-gradient(circle at 50% 40%, #5b1a1f, #1a0a0c)" : showGem ? "radial-gradient(circle at 50% 35%, #145c3a, #0a2a1c)" : "linear-gradient(160deg,#2a2a36,#16161e)",
+                border: showGem ? "1px solid #34d399" : showBomb ? "1px solid #fb7185" : "1px solid #3a3a48",
+                boxShadow: showGem ? "0 0 8px rgba(52,211,153,.5)" : "inset 0 2px 4px rgba(0,0,0,.5)",
+                cursor: !over && !isRevealed ? "pointer" : "default",
+                opacity: over && !showBomb && !showGem ? 0.4 : 1,
+              }}>
+              {showBomb ? "💣" : showGem ? "💎" : ""}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
-  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko") };
+  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   const [bet, setBet] = useState(100);
   const [busy, setBusy] = useState(false);
@@ -602,6 +653,9 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const [diceTarget, setDiceTarget] = useState(50);
   const [diceDir, setDiceDir] = useState<"under" | "over">("under");
   const [crashTarget, setCrashTarget] = useState(2);
+  const [minesBombs, setMinesBombs] = useState(3);
+  const [minesGame, setMinesGame] = useState<MinesGameState | null>(null);
+  const [minesBusy, setMinesBusy] = useState(false);
   const [stage, setStage] = useState<Stage | null>(null);
   const playId = useRef(0);
 
@@ -621,8 +675,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   }, [loadLb]);
 
   async function play(game: Game, choice?: string) {
-    if (busy) return;
-    setBusy(true); setError(null);
+    if (busy || minesBusy) return;
+    setBusy(true); setError(null); setMinesGame(null); // single-shot games take over the stage
     const id = ++playId.current;
     setStage({ id, game, phase: "spin", result: null, settled: false });
     try {
@@ -631,6 +685,45 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       if (!res.ok) { setError(d.error ?? t("err")); setStage(null); setBusy(false); return; }
       setStage((s) => (s && s.id === id ? { ...s, phase: "land", result: d } : s));
     } catch { setError(t("connError")); setStage(null); setBusy(false); }
+  }
+
+  // ── Mines (stateful: start → reveal tiles → cash out / bust) ──
+  async function minesStartFn() {
+    if (minesBusy || busy || minesGame?.status === "active") return;
+    setMinesBusy(true); setError(null); setStage(null); // mines takes over the stage
+    try {
+      const res = await fetch("/api/gt-games/mines/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bet, bombs: minesBombs }) });
+      const d = await res.json();
+      if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
+      setBalance(d.newBalance);
+      setMinesGame({ sessionId: d.sessionId, bombs: d.bombs, revealed: [], multiplier: 1, status: "active", bombSet: null, bet });
+    } catch { setError(t("connError")); }
+    setMinesBusy(false);
+  }
+  async function minesRevealFn(tile: number) {
+    if (minesBusy || !minesGame || minesGame.status !== "active") return;
+    setMinesBusy(true);
+    try {
+      const res = await fetch("/api/gt-games/mines/reveal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: minesGame.sessionId, tile }) });
+      const d = await res.json();
+      if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
+      if (d.bomb) { setMinesGame((g) => (g ? { ...g, status: "bust", revealed: d.revealed, bombSet: d.bombSet } : g)); void loadLb(); }
+      else setMinesGame((g) => (g ? { ...g, revealed: d.revealed, multiplier: d.multiplier } : g));
+    } catch { setError(t("connError")); }
+    setMinesBusy(false);
+  }
+  async function minesCashoutFn() {
+    if (minesBusy || !minesGame || minesGame.status !== "active" || minesGame.revealed.length === 0) return;
+    setMinesBusy(true);
+    try {
+      const res = await fetch("/api/gt-games/mines/cashout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: minesGame.sessionId }) });
+      const d = await res.json();
+      if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
+      setBalance(d.newBalance);
+      setMinesGame((g) => (g ? { ...g, status: "cashed", multiplier: d.multiplier, bombSet: d.bombSet, payout: d.payout } : g));
+      void loadLb();
+    } catch { setError(t("connError")); }
+    setMinesBusy(false);
   }
 
   const rouletteTarget = stage?.result?.roll?.n ?? (stage?.result?.detail ? (stage.result.detail.includes("00") ? 37 : (parseInt(stage.result.detail.replace(/\D/g, ""), 10) || 0)) : null);
@@ -650,7 +743,9 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
         <>
           {/* animation stage */}
           <div className="flex items-center justify-center" style={{ minHeight: 312 }}>
-            {stage?.game === "roulette" ? (
+            {minesGame ? (
+              <MinesGrid game={minesGame} onReveal={minesRevealFn} onCashout={minesCashoutFn} busy={minesBusy} fmt={fmt} t={t} />
+            ) : stage?.game === "roulette" ? (
               <RouletteWheel key={stage.id} phase={stage.phase} target={rouletteTarget} onSettle={settle} />
             ) : stage?.game === "slots" ? (
               <SlotReels key={stage.id} phase={stage.phase} reels={stage.result?.reels ?? null} onSettle={settle} />
@@ -750,6 +845,17 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <span className="text-xs text-zinc-500 self-center me-1">{t("plinkoLabel")}</span>
             <button onClick={() => play("plinko")} disabled={busy || (balance ?? 0) < bet}
               className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 disabled:opacity-40 transition-all">{t("plinkoDrop")}</button>
+          </div>
+
+          {/* Mines: pick bombs, reveal tiles, dodge bombs, cash out anytime */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-zinc-500 self-center me-1">{t("minesLabel")}</span>
+            {[1, 3, 5, 10].map((b) => (
+              <button key={b} onClick={() => setMinesBombs(b)} disabled={minesGame?.status === "active"}
+                className={`px-3 py-2 rounded-full text-sm font-bold transition-all ${minesBombs === b ? "bg-rose-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-700"} disabled:opacity-40`}>{b} 💣</button>
+            ))}
+            <button onClick={minesStartFn} disabled={minesBusy || minesGame?.status === "active" || (balance ?? 0) < bet}
+              className="px-5 py-2 rounded-full font-bold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 disabled:opacity-40 transition-all">{t("minesStart")}</button>
           </div>
 
           <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} GT</span></div>
