@@ -15,8 +15,16 @@ export async function GET() {
     db = "error";
   }
   const healthy = db === "ok";
+  // Config presence (booleans + lengths only — NO secret values) so ops can see if the shared
+  // Redis (Upstash) is wired without exposing credentials. `redis: false` → falls back to in-memory.
+  const redis = {
+    url: Boolean(process.env.UPSTASH_REDIS_REST_URL),
+    token: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN),
+    urlLen: (process.env.UPSTASH_REDIS_REST_URL ?? "").length,
+    tokenLen: (process.env.UPSTASH_REDIS_REST_TOKEN ?? "").length,
+  };
   return NextResponse.json(
-    { status: healthy ? "ok" : "degraded", db, time: new Date().toISOString() },
+    { status: healthy ? "ok" : "degraded", db, redis, time: new Date().toISOString() },
     { status: healthy ? 200 : 503 },
   );
 }
