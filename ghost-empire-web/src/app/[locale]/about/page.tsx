@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-09",
+    title: "Animacje w kasynie 🎰",
+    items: [
+      "Ruletka kręci się jak prawdziwe koło i zatrzymuje na wylosowanej liczbie, sloty mają bębny, a coinflip — obracającą się monetę. Animacje są w pełni płynne (wykorzystują GPU i pełną częstotliwość odświeżania Twojego monitora). Wyniki są takie same jak wcześniej — losuje je serwer, a animacja tylko je pokazuje.",
+    ],
+  },
+  {
+    date: "2026-06-09",
     title: "Czytelniejsze komunikaty przy logowaniu 💬",
     items: [
       "Gdy logowanie się nie powiedzie, zamiast technicznego „błędu konfiguracji" zobaczysz teraz jasny komunikat z podpowiedzią (np. żeby spróbować zalogować się inną platformą). We wszystkich językach portalu.",

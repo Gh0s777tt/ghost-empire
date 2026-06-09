@@ -9,6 +9,13 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **kasyno: animacje gier (ruletka / sloty / coinflip) — GPU, lądowanie na wyniku serwera** **(#375)** — gry w `/kasyno` nie miały żadnej animacji (klik → od razu wynik tekstowy). Dodane:
+  - **Ruletka** — obracające się koło (europejskie 0-36, prawdziwa sekwencja; `conic-gradient` + numery + wskaźnik): po kliknięciu ciągły spin → płynne wyhamowanie (ease-out, 5 obrotów) i **lądowanie dokładnie na numerze z serwera** (hand-off z `getComputedStyle`/matrix → bez przeskoku klatki).
+  - **Sloty** — 3 bębny zjeżdżają i wyhamowują na symbolach wyniku (staggered stop).
+  - **Coinflip** — moneta 3D (`rotateY`) ląduje na 👑 (wygrana) / 💀 (przegrana).
+  - **Płynność:** wyłącznie CSS `transform` na kompozytorze (GPU) → animacje chodzą w natywnym odświeżaniu monitora (60/120/240 Hz), `will-change`, zero przeliczania layoutu per-klatkę. `prefers-reduced-motion` → wynik natychmiast, bez animacji.
+  - **Fairness:** wynik liczy serwer (`spinRoulette`/`spinSlots`/`flipCoin` w `lib/gt-games.ts`); klient tylko animuje DO niego. Backend dodaje `roll:{n,color}` w wyniku ruletki (precyzyjne lądowanie). Bez zmian schematu. Zielone: `tsc`/`eslint`/`build`/**183 testy**. **⚠️ Wizualnie do weryfikacji na prodzie (strona za loginem — niemożliwa do podejrzenia lokalnie przy obecnym braku połączenia dev→DB).**
+
 - **admin: endpoint `POST /api/admin/backfill-tenant` — masowy backfill tenanta z prod** **(#370)** — uzupełnienie fixu #369: admin-only (`requireAdmin`), idempotentny route przypinający wszystkie wiersze z `tenantId = NULL` do tenanta domyślnego (mirror `scripts/backfill-tenant.ts`: `user` + 9 singletonów konfigu + 9 kolekcji; sekwencyjnie, bo free-tier Supabase ma mało połączeń). Powstał, bo lokalny `npm run db:backfill:tenant` nie łączy się z Supabase z maszyny dev (ETIMEDOUT), a deploy (Vercel→DB) łączy się normalnie. Trigger jako zalogowany admin: wejdź URL-em `/api/admin/backfill-tenant` w przeglądarce (route obsługuje GET) albo `fetch("/api/admin/backfill-tenant",{method:"POST"}).then(r=>r.json()).then(console.log)` w konsoli. Loguje akcję `backfill_tenant` w audycie. Bez zmian schematu. Zielone: `tsc`/`eslint`/`build`/**183 testy**.
 
 ### Security
