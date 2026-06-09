@@ -1864,7 +1864,12 @@
     "topNet": "Top bilans (30 dni)",
     "gameSlots": "Sloty",
     "gameCoinflip": "Coinflip",
-    "gameRoulette": "Ruletka"
+    "gameRoulette": "Ruletka",
+    "diceLabel": "🎲 Kości:",
+    "diceUnder": "Poniżej",
+    "diceOver": "Powyżej",
+    "diceRoll": "🎲 Rzuć",
+    "gameDice": "Kości"
   },
   "wheel": {
     "title": "🎡 Koło Fortuny",

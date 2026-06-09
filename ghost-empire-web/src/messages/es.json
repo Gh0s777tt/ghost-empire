@@ -575,7 +575,12 @@
     "topNet": "Mejor neto (30 días)",
     "gameSlots": "Tragaperras",
     "gameCoinflip": "Coinflip",
-    "gameRoulette": "Ruleta"
+    "gameRoulette": "Ruleta",
+    "diceLabel": "🎲 Dados:",
+    "diceUnder": "Menor",
+    "diceOver": "Mayor",
+    "diceRoll": "🎲 Tirar",
+    "gameDice": "Dados"
   },
   "welcome": {
     "metaTitle": "Bienvenido a Ghost Empire",

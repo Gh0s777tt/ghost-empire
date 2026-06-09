@@ -575,7 +575,12 @@
     "topNet": "Meilleur net (30 jours)",
     "gameSlots": "Machines à sous",
     "gameCoinflip": "Coinflip",
-    "gameRoulette": "Roulette"
+    "gameRoulette": "Roulette",
+    "diceLabel": "🎲 Dés :",
+    "diceUnder": "Moins",
+    "diceOver": "Plus",
+    "diceRoll": "🎲 Lancer",
+    "gameDice": "Dés"
   },
   "welcome": {
     "metaTitle": "Bienvenue sur Ghost Empire",

@@ -1864,7 +1864,12 @@
     "topNet": "Top net (30 days)",
     "gameSlots": "Slots",
     "gameCoinflip": "Coinflip",
-    "gameRoulette": "Roulette"
+    "gameRoulette": "Roulette",
+    "diceLabel": "🎲 Dice:",
+    "diceUnder": "Under",
+    "diceOver": "Over",
+    "diceRoll": "🎲 Roll",
+    "gameDice": "Dice"
   },
   "wheel": {
     "title": "🎡 Wheel of Fortune",

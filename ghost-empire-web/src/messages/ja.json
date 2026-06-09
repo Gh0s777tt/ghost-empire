@@ -575,7 +575,12 @@
     "topNet": "最高純利益（30 日）",
     "gameSlots": "スロット",
     "gameCoinflip": "コインフリップ",
-    "gameRoulette": "ルーレット"
+    "gameRoulette": "ルーレット",
+    "diceLabel": "🎲 サイコロ：",
+    "diceUnder": "未満",
+    "diceOver": "以上",
+    "diceRoll": "🎲 振る",
+    "gameDice": "サイコロ"
   },
   "welcome": {
     "metaTitle": "Ghost Empire へようこそ",
