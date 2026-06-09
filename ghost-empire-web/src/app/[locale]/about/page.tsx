@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-09",
+    title: "Nowe sloty i moneta — własna grafika 🎰",
+    items: [
+      "Sloty dostały własne, wektorowe symbole (wiśnie, cytryna, dzwonek, gwiazda, diament i szczęśliwa „7”) w złotej obudowie maszyny — a linia wygranej rozświetla się na złoto, gdy trafisz trzy takie same. Moneta w coinflipie to teraz prawdziwy kruszec z reliefem: złoty duch (wygrana) i stalowa czaszka (przegrana). Wszystko wektorowo, ostre na każdym ekranie.",
+    ],
+  },
+  {
+    date: "2026-06-09",
     title: "Nowa ruletka — jak prawdziwa 🎡",
     items: [
       "Koło ruletki dostało realistyczny wygląd (złota obręcz z diamentami, numerowane pola, centralny krzyż) i przeszło na wariant amerykański z polami 0 oraz 00 (38 pól). Całość wektorowo — ostra na każdym ekranie.",
