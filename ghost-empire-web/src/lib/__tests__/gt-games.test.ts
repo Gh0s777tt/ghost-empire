@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier } from "@/lib/gt-games";
+import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash } from "@/lib/gt-games";
 
 describe("slots", () => {
   it("always returns 3 reels and a non-negative multiplier", () => {
@@ -95,6 +95,57 @@ describe("dice", () => {
         const o = rollDice(dir, target);
         if (o.win) returned += o.multiplier; // bet of 1 → payout = multiplier
       }
+      const rtp = returned / N;
+      expect(rtp).toBeGreaterThan(0.92);
+      expect(rtp).toBeLessThan(0.98);
+    }
+  });
+});
+
+describe("crash", () => {
+  it("normalizes the auto-cashout target (1.01..50, ',' or '.') and rejects out-of-range/junk", () => {
+    expect(normCrashChoice("2")).toBe(2);
+    expect(normCrashChoice("2.5")).toBe(2.5);
+    expect(normCrashChoice("2,5")).toBe(2.5);   // comma decimal
+    expect(normCrashChoice("1.01")).toBe(1.01);
+    expect(normCrashChoice("50")).toBe(50);
+    expect(normCrashChoice("1")).toBeNull();     // below min
+    expect(normCrashChoice("50.01")).toBeNull(); // above max
+    expect(normCrashChoice("abc")).toBeNull();
+    expect(normCrashChoice("")).toBeNull();
+  });
+
+  it("samples a crash point and resolves auto-cashout (cash before bust = win)", () => {
+    // small u → high crash → win for a 2× target (FP: 0.95/0.1 floors to ~9.49)
+    const hi = rollCrash(2, () => 0.1);
+    expect(hi.crash).toBeCloseTo(9.5, 1);
+    expect(hi.win).toBe(true);
+    expect(hi.multiplier).toBe(2);
+    // u near 1 → crash just above 1 → bust before a 2× target
+    const lo = rollCrash(2, () => 0.9); // raw = 0.95/0.9 ≈ 1.05
+    expect(lo.crash).toBeLessThan(2);
+    expect(lo.win).toBe(false);
+    expect(lo.multiplier).toBe(0);
+    // u in the top `edge` slice → instant bust at exactly 1.00×
+    expect(rollCrash(2, () => 0.99).crash).toBe(1);
+    // tiny u → crash capped at 100×
+    expect(rollCrash(2, () => 0.000001).crash).toBe(100);
+  });
+
+  it("busts at 1.00× roughly the house-edge fraction of the time (~6% incl. floor of raw∈[1,1.01))", () => {
+    const N = 200_000;
+    let busts = 0;
+    for (let i = 0; i < N; i++) if (rollCrash(2).crash === 1) busts++;
+    const p = busts / N; // ~0.05 (raw<1) + ~0.009 (raw∈[1,1.01) floors to 1.00)
+    expect(p).toBeGreaterThan(0.045);
+    expect(p).toBeLessThan(0.075);
+  });
+
+  it("has a flat RTP ≈ 0.95 for any auto-cashout target (Monte-Carlo)", () => {
+    const N = 200_000;
+    for (const target of [1.5, 2, 5]) {
+      let returned = 0;
+      for (let i = 0; i < N; i++) returned += rollCrash(target).multiplier; // bet 1 → payout = multiplier
       const rtp = returned / N;
       expect(rtp).toBeGreaterThan(0.92);
       expect(rtp).toBeLessThan(0.98);

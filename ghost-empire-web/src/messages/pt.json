@@ -609,7 +609,10 @@
     "diceUnder": "Menor",
     "diceOver": "Maior",
     "diceRoll": "🎲 Rolar",
-    "gameDice": "Dados"
+    "gameDice": "Dados",
+    "crashLabel": "🚀 Crash:",
+    "crashStart": "🚀 Iniciar",
+    "gameCrash": "Crash"
   },
   "welcome": {
     "metaTitle": "Bem-vindo ao Ghost Empire",

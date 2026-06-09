@@ -580,7 +580,10 @@
     "diceUnder": "小于",
     "diceOver": "大于",
     "diceRoll": "🎲 投掷",
-    "gameDice": "骰子"
+    "gameDice": "骰子",
+    "crashLabel": "🚀 火箭：",
+    "crashStart": "🚀 开始",
+    "gameCrash": "火箭"
   },
   "welcome": {
     "metaTitle": "欢迎来到 Ghost Empire",

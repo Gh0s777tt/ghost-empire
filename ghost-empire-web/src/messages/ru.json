@@ -580,7 +580,10 @@
     "diceUnder": "Меньше",
     "diceOver": "Больше",
     "diceRoll": "🎲 Бросок",
-    "gameDice": "Кости"
+    "gameDice": "Кости",
+    "crashLabel": "🚀 Краш:",
+    "crashStart": "🚀 Старт",
+    "gameCrash": "Краш"
   },
   "welcome": {
     "metaTitle": "Добро пожаловать в Ghost Empire",

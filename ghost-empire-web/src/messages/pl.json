@@ -1869,7 +1869,10 @@
     "diceUnder": "Poniżej",
     "diceOver": "Powyżej",
     "diceRoll": "🎲 Rzuć",
-    "gameDice": "Kości"
+    "gameDice": "Kości",
+    "crashLabel": "🚀 Rakieta:",
+    "crashStart": "🚀 Start",
+    "gameCrash": "Rakieta"
   },
   "wheel": {
     "title": "🎡 Koło Fortuny",

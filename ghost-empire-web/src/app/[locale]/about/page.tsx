@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-09",
+    title: "Nowa gra: Crash (Rakieta) 🚀",
+    items: [
+      "Kolejna nowa gra w kasynie — Crash. Rakieta startuje, a mnożnik rośnie coraz szybciej; ustalasz swój próg auto-wypłaty (np. 2×) i wygrywasz, jeśli rakieta go osiągnie, zanim wybuchnie. Im wyższy próg, tym mniejsza szansa, ale większa wygrana. Punkt wybuchu losuje serwer — w pełni fair.",
+    ],
+  },
+  {
+    date: "2026-06-09",
     title: "Nowa gra: Kości 🎲",
     items: [
       "W kasynie pojawiła się nowa gra — Kości. Wybierasz, czy wynik (0-99) padnie poniżej czy powyżej Twojego progu; im mniejsza szansa, tym wyższa wypłata. Animowany tor pokazuje na żywo, jak wskaźnik wjeżdża na wylosowaną liczbę. Wynik liczy serwer — fair jak w pozostałych grach.",

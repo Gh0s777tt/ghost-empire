@@ -580,7 +580,10 @@
     "diceUnder": "أقل",
     "diceOver": "أكثر",
     "diceRoll": "🎲 ارمِ",
-    "gameDice": "النرد"
+    "gameDice": "النرد",
+    "crashLabel": "🚀 الصاروخ:",
+    "crashStart": "🚀 ابدأ",
+    "gameCrash": "الصاروخ"
   },
   "welcome": {
     "metaTitle": "مرحبًا بك في Ghost Empire",
