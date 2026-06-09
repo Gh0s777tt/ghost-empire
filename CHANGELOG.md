@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **kasyno: koło ruletki na wektorze (SVG) — ostra grafika bez ząbkowania (HiDPI/zoom)** **(#378)** — koło z #375 było rysowane `conic-gradient`, którego krawędzie segmentów potrafiły ząbkować. Przepisane na **SVG**: 37 anty-aliasowanych łuków (czyste krawędzie), wektorowe numery, metaliczna obręcz + piasta (radialne gradienty) i statyczny połysk od góry. Wektor = **ostro na każdym DPI/zoomie, zero pikseli** (rozdzielczość-niezależne). Mechanika spinu bez zmian (ciągły obrót → hand-off `getComputedStyle`/matrix → lądowanie na numerze z serwera). Spójne z Kołem Fortuny (też SVG). Sloty (emoji) + moneta (gradienty CSS) były już wektorowe. Zweryfikowane **CZYSTYM buildem** (`Remove-Item .next` → `npm run build` = exit 0). Zielone: `tsc`/`eslint`/`build`/**183 testy**.
+
 - **kasyno: animacje gier (ruletka / sloty / coinflip) — GPU, lądowanie na wyniku serwera** **(#375)** — gry w `/kasyno` nie miały żadnej animacji (klik → od razu wynik tekstowy). Dodane:
   - **Ruletka** — obracające się koło (europejskie 0-36, prawdziwa sekwencja; `conic-gradient` + numery + wskaźnik): po kliknięciu ciągły spin → płynne wyhamowanie (ease-out, 5 obrotów) i **lądowanie dokładnie na numerze z serwera** (hand-off z `getComputedStyle`/matrix → bez przeskoku klatki).
   - **Sloty** — 3 bębny zjeżdżają i wyhamowują na symbolach wyniku (staggered stop).

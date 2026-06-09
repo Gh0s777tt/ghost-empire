@@ -27,7 +27,11 @@ const SEG = 360 / EU_WHEEL.length;
 const RED_SET = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 const HEX: Record<string, string> = { green: "#15803d", red: "#b91c1c", black: "#0a0a0a" };
 function rcolor(n: number): "green" | "red" | "black" { return n === 0 ? "green" : RED_SET.has(n) ? "red" : "black"; }
-const WHEEL_GRADIENT = `conic-gradient(from -${(SEG / 2).toFixed(4)}deg, ${EU_WHEEL.map((n, i) => `${HEX[rcolor(n)]} ${(i * SEG).toFixed(4)}deg ${((i + 1) * SEG).toFixed(4)}deg`).join(", ")})`;
+// Cartesian point on a circle — `deg` measured clockwise from the top (12 o'clock).
+function polar(cx: number, cy: number, r: number, deg: number): { x: number; y: number } {
+  const rad = (deg * Math.PI) / 180;
+  return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+}
 const SLOT_FACES = ["🍒", "🍋", "🔔", "⭐", "💎", "7️⃣"];
 const CELL = 72;
 const STRIP = 24;
@@ -36,9 +40,9 @@ function reducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-// ── Roulette: continuous spin → ease-out land on `target` under the top pointer ──
-function RouletteWheel({ phase, target, onSettle, size = 300 }: { phase: Phase; target: number | null; onSettle: () => void; size?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
+// ── Roulette: crisp vector (SVG) wheel; continuous spin → ease-out land on server's number ──
+function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; target: number | null; onSettle: () => void; size?: number }) {
+  const ref = useRef<SVGSVGElement>(null);
   const done = useRef(false);
 
   useEffect(() => {
@@ -54,7 +58,8 @@ function RouletteWheel({ phase, target, onSettle, size = 300 }: { phase: Phase; 
     if (!el || phase !== "land" || target == null || done.current) return;
     done.current = true;
     const tIdx = EU_WHEEL.indexOf(target);
-    const targetMod = ((((-tIdx * SEG) % 360) + 360) % 360);
+    const center = tIdx * SEG + SEG / 2; // SVG segments span [i·SEG,(i+1)·SEG] → center at i·SEG+SEG/2
+    const targetMod = (((360 - (center % 360)) % 360) + 360) % 360;
 
     if (reducedMotion()) {
       el.style.animation = "none"; el.style.transition = "none";
@@ -68,7 +73,7 @@ function RouletteWheel({ phase, target, onSettle, size = 300 }: { phase: Phase; 
     el.style.animation = "none";
     el.style.transition = "none";
     el.style.transform = `rotate(${cur}deg)`;
-    void el.offsetHeight; // reflow → lock the frozen frame (no jump)
+    void el.getBoundingClientRect(); // reflow → lock the frozen frame (SVG has no offsetHeight)
     const curMod = (((cur % 360) + 360) % 360);
     let delta = targetMod - curMod;
     if (delta < 0) delta += 360;
@@ -80,16 +85,41 @@ function RouletteWheel({ phase, target, onSettle, size = 300 }: { phase: Phase; 
     return () => clearTimeout(t);
   }, [phase, target, onSettle]);
 
-  const r = size / 2;
+  const cx = size / 2, cy = size / 2;
+  const rRim = size / 2 - 2, rSeg = size / 2 - 13, rLabel = size / 2 - 26, rHub = size * 0.15;
   return (
     <div className="relative select-none" style={{ width: size, height: size }}>
-      <div className="absolute left-1/2 -translate-x-1/2 z-30" style={{ top: -8, width: 0, height: 0, borderLeft: "12px solid transparent", borderRight: "12px solid transparent", borderTop: "20px solid #fbbf24", filter: "drop-shadow(0 2px 2px rgba(0,0,0,.6))" }} />
-      <div ref={ref} className="absolute inset-0 rounded-full will-change-transform" style={{ background: WHEEL_GRADIENT, boxShadow: "inset 0 0 0 8px #27272a, inset 0 0 0 11px #52525b, 0 0 0 3px #18181b, 0 8px 40px rgba(0,0,0,.55)", transform: "rotate(0deg)" }}>
-        {EU_WHEEL.map((n, i) => (
-          <span key={n} className="absolute left-1/2 top-1/2 font-bold tabular-nums text-white" style={{ fontSize: 11, lineHeight: 1, transform: `translate(-50%, -50%) rotate(${i * SEG}deg) translateY(-${r * 0.8}px) rotate(${-i * SEG}deg)`, textShadow: "0 1px 1px rgba(0,0,0,.85)" }}>{n}</span>
-        ))}
-      </div>
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-zinc-950 border-2 border-zinc-700 z-20" style={{ width: r * 0.66, height: r * 0.66 }} />
+      {/* fixed pointer */}
+      <div className="absolute left-1/2 -translate-x-1/2 z-30" style={{ top: -4, width: 0, height: 0, borderLeft: "13px solid transparent", borderRight: "13px solid transparent", borderTop: "22px solid #fbbf24", filter: "drop-shadow(0 2px 3px rgba(0,0,0,.6))" }} />
+      <svg ref={ref} width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="will-change-transform" style={{ display: "block", transform: "rotate(0deg)", transformOrigin: "50% 50%", filter: "drop-shadow(0 12px 32px rgba(0,0,0,.55))" }}>
+        <defs>
+          <radialGradient id="ge-rim" cx="50%" cy="32%" r="80%">
+            <stop offset="0%" stopColor="#52525b" />
+            <stop offset="62%" stopColor="#27272a" />
+            <stop offset="100%" stopColor="#09090b" />
+          </radialGradient>
+          <radialGradient id="ge-hub" cx="50%" cy="32%" r="72%">
+            <stop offset="0%" stopColor="#e4e4e7" />
+            <stop offset="55%" stopColor="#71717a" />
+            <stop offset="100%" stopColor="#27272a" />
+          </radialGradient>
+        </defs>
+        <circle cx={cx} cy={cy} r={rRim} fill="url(#ge-rim)" />
+        {EU_WHEEL.map((n, i) => {
+          const start = i * SEG, mid = i * SEG + SEG / 2;
+          const p1 = polar(cx, cy, rSeg, start), p2 = polar(cx, cy, rSeg, start + SEG), lp = polar(cx, cy, rLabel, mid);
+          return (
+            <g key={n}>
+              <path d={`M ${cx} ${cy} L ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${rSeg} ${rSeg} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} Z`} fill={HEX[rcolor(n)]} stroke="#000000" strokeWidth={0.6} />
+              <text x={lp.x.toFixed(2)} y={lp.y.toFixed(2)} fill="#ffffff" fontSize={(size * 0.042).toFixed(1)} fontWeight={700} textAnchor="middle" dominantBaseline="central" transform={`rotate(${mid.toFixed(2)} ${lp.x.toFixed(2)} ${lp.y.toFixed(2)})`} style={{ pointerEvents: "none" }}>{n}</text>
+            </g>
+          );
+        })}
+        <circle cx={cx} cy={cy} r={rHub} fill="url(#ge-hub)" stroke="#18181b" strokeWidth={2} />
+        <circle cx={cx} cy={cy} r={Number((rHub * 0.42).toFixed(1))} fill="#0a0a0a" />
+      </svg>
+      {/* static gloss (does NOT rotate — light from above) */}
+      <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle at 50% 26%, rgba(255,255,255,0.16), rgba(255,255,255,0) 46%)" }} />
     </div>
   );
 }
