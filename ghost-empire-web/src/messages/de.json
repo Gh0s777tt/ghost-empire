@@ -155,7 +155,7 @@
   "authError": {
     "title": "ANMELDEFEHLER",
     "retry": "ERNEUT VERSUCHEN",
-    "errConfiguration": "Server-Konfigurationsfehler. Bitte kontaktiere einen Administrator.",
+    "errConfiguration": "Diese Anmeldemethode ist vorübergehend nicht verfügbar. Bitte melde dich mit einer anderen Plattform an (z. B. Google oder Discord) oder versuche es später erneut.",
     "errAccessDenied": "Zugriff verweigert. Dein Konto ist möglicherweise gesperrt — kontaktiere einen Administrator auf Discord.",
     "errVerification": "Der Verifizierungslink ist abgelaufen oder ungültig.",
     "errOAuthSignin": "Fehler bei der OAuth-Anmeldung.",
@@ -164,7 +164,7 @@
     "errEmailCreateAccount": "E-Mail-Konto konnte nicht erstellt werden.",
     "errCallback": "Callback-Fehler.",
     "errOAuthAccountNotLinked": "Ein Konto mit dieser E-Mail ist bereits mit einem anderen Anbieter verknüpft.",
-    "errDefault": "Ein unbekannter Fehler ist aufgetreten."
+    "errDefault": "Bei der Anmeldung ist etwas schiefgelaufen. Bitte versuche es erneut oder nutze eine andere Plattform."
   },
   "games": {
     "metaTitle": "Spielebibliothek",

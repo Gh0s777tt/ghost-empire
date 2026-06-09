@@ -155,7 +155,7 @@
   "authError": {
     "title": "ERRO DE LOGIN",
     "retry": "TENTAR DE NOVO",
-    "errConfiguration": "Erro de configuração do servidor. Entre em contato com um administrador.",
+    "errConfiguration": "Este método de login está temporariamente indisponível. Faça login com outra plataforma (ex.: Google ou Discord) ou tente novamente mais tarde.",
     "errAccessDenied": "Acesso negado. Sua conta pode estar banida — contate um administrador no Discord.",
     "errVerification": "O link de verificação expirou ou é inválido.",
     "errOAuthSignin": "Erro durante o login OAuth.",
@@ -164,7 +164,7 @@
     "errEmailCreateAccount": "Não foi possível criar a conta de e-mail.",
     "errCallback": "Erro de callback.",
     "errOAuthAccountNotLinked": "Uma conta com este e-mail já está vinculada a outro provedor.",
-    "errDefault": "Ocorreu um erro desconhecido."
+    "errDefault": "Algo deu errado durante o login. Tente novamente ou use outra plataforma."
   },
   "games": {
     "metaTitle": "Biblioteca de jogos",

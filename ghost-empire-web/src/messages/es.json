@@ -155,7 +155,7 @@
   "authError": {
     "title": "ERROR DE INICIO DE SESIÓN",
     "retry": "REINTENTAR",
-    "errConfiguration": "Error de configuración del servidor. Contacta con un administrador.",
+    "errConfiguration": "Este método de inicio de sesión no está disponible temporalmente. Inicia sesión con otra plataforma (p. ej. Google o Discord) o inténtalo más tarde.",
     "errAccessDenied": "Acceso denegado. Tu cuenta podría estar baneada — contacta con un administrador en Discord.",
     "errVerification": "El enlace de verificación ha caducado o no es válido.",
     "errOAuthSignin": "Error durante el inicio de sesión OAuth.",
@@ -164,7 +164,7 @@
     "errEmailCreateAccount": "No se pudo crear la cuenta de correo.",
     "errCallback": "Error de callback.",
     "errOAuthAccountNotLinked": "Ya existe una cuenta con este correo vinculada a otro proveedor.",
-    "errDefault": "Ha ocurrido un error desconocido."
+    "errDefault": "Algo salió mal durante el inicio de sesión. Inténtalo de nuevo o usa otra plataforma."
   },
   "games": {
     "metaTitle": "Biblioteca de juegos",

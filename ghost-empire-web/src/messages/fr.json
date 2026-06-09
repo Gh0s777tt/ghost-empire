@@ -155,7 +155,7 @@
   "authError": {
     "title": "ERREUR DE CONNEXION",
     "retry": "RÉESSAYER",
-    "errConfiguration": "Erreur de configuration du serveur. Contacte un administrateur.",
+    "errConfiguration": "Cette méthode de connexion est temporairement indisponible. Connectez-vous avec une autre plateforme (par ex. Google ou Discord) ou réessayez plus tard.",
     "errAccessDenied": "Accès refusé. Ton compte est peut-être banni — contacte un administrateur sur Discord.",
     "errVerification": "Le lien de vérification a expiré ou n'est pas valide.",
     "errOAuthSignin": "Erreur lors de la connexion OAuth.",
@@ -164,7 +164,7 @@
     "errEmailCreateAccount": "Impossible de créer le compte e-mail.",
     "errCallback": "Erreur de callback.",
     "errOAuthAccountNotLinked": "Un compte avec cet e-mail est déjà lié à un autre fournisseur.",
-    "errDefault": "Une erreur inconnue s'est produite."
+    "errDefault": "Une erreur s'est produite lors de la connexion. Réessayez ou utilisez une autre plateforme."
   },
   "games": {
     "metaTitle": "Ludothèque",
