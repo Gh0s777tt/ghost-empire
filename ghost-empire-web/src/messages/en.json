@@ -1872,7 +1872,10 @@
     "gameDice": "Dice",
     "crashLabel": "🚀 Crash:",
     "crashStart": "🚀 Start",
-    "gameCrash": "Crash"
+    "gameCrash": "Crash",
+    "plinkoLabel": "🔵 Plinko:",
+    "plinkoDrop": "🔵 Drop",
+    "gamePlinko": "Plinko"
   },
   "wheel": {
     "title": "🎡 Wheel of Fortune",

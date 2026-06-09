@@ -583,7 +583,10 @@
     "gameDice": "Dés",
     "crashLabel": "🚀 Crash :",
     "crashStart": "🚀 Lancer",
-    "gameCrash": "Crash"
+    "gameCrash": "Crash",
+    "plinkoLabel": "🔵 Plinko :",
+    "plinkoDrop": "🔵 Lâcher",
+    "gamePlinko": "Plinko"
   },
   "welcome": {
     "metaTitle": "Bienvenue sur Ghost Empire",

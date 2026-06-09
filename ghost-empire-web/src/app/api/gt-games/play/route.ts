@@ -19,7 +19,8 @@ export async function POST(req: Request) {
     body.game === "slots" ? "slots" :
     body.game === "roulette" ? "roulette" :
     body.game === "dice" ? "dice" :
-    body.game === "crash" ? "crash" : null;
+    body.game === "crash" ? "crash" :
+    body.game === "plinko" ? "plinko" : null;
   if (!game) return jsonError("Nieznana gra", 400);
 
   const rl = await rateLimit(`gtgame:web:${session.user.id}`, 30, 60_000);

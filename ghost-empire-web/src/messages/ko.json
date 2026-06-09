@@ -583,7 +583,10 @@
     "gameDice": "주사위",
     "crashLabel": "🚀 크래시:",
     "crashStart": "🚀 시작",
-    "gameCrash": "크래시"
+    "gameCrash": "크래시",
+    "plinkoLabel": "🔵 플린코:",
+    "plinkoDrop": "🔵 떨어뜨리기",
+    "gamePlinko": "플린코"
   },
   "welcome": {
     "metaTitle": "Ghost Empire에 오신 것을 환영합니다",

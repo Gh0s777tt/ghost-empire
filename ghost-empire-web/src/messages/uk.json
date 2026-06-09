@@ -583,7 +583,10 @@
     "gameDice": "Кості",
     "crashLabel": "🚀 Креш:",
     "crashStart": "🚀 Старт",
-    "gameCrash": "Креш"
+    "gameCrash": "Креш",
+    "plinkoLabel": "🔵 Плінко:",
+    "plinkoDrop": "🔵 Кинути",
+    "gamePlinko": "Плінко"
   },
   "welcome": {
     "metaTitle": "Ласкаво просимо в Ghost Empire",

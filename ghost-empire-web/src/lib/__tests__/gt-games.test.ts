@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash } from "@/lib/gt-games";
+import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash, dropPlinko, PLINKO_MULTS, PLINKO_ROWS } from "@/lib/gt-games";
 
 describe("slots", () => {
   it("always returns 3 reels and a non-negative multiplier", () => {
@@ -150,6 +150,44 @@ describe("crash", () => {
       expect(rtp).toBeGreaterThan(0.92);
       expect(rtp).toBeLessThan(0.98);
     }
+  });
+});
+
+describe("plinko", () => {
+  it("has a symmetric 13-bucket multiplier ladder (high at the edges)", () => {
+    expect(PLINKO_MULTS).toHaveLength(PLINKO_ROWS + 1);
+    expect(PLINKO_MULTS[0]).toBe(PLINKO_MULTS[PLINKO_ROWS]); // symmetric edges
+    expect(PLINKO_MULTS[0]).toBeGreaterThan(PLINKO_MULTS[PLINKO_ROWS / 2]); // edges >> center
+  });
+
+  it("drops through ROWS bounces; bucket = number of rights; multiplier = ladder[bucket]", () => {
+    const o = dropPlinko();
+    expect(o.path).toHaveLength(PLINKO_ROWS);
+    expect(o.path.every((d) => d === 0 || d === 1)).toBe(true);
+    expect(o.bucket).toBe(o.path.reduce((a, b) => a + b, 0));
+    expect(o.multiplier).toBe(PLINKO_MULTS[o.bucket]);
+    // all-left → bucket 0 (edge); all-right → bucket ROWS (edge)
+    expect(dropPlinko(() => 0).bucket).toBe(0);
+    expect(dropPlinko(() => 0).multiplier).toBe(PLINKO_MULTS[0]);
+    expect(dropPlinko(() => 0.9).bucket).toBe(PLINKO_ROWS);
+    expect(dropPlinko(() => 0.9).multiplier).toBe(PLINKO_MULTS[PLINKO_ROWS]);
+  });
+
+  it("lands center-heavy (binomial) and has RTP ≈ 0.94 (Monte-Carlo)", () => {
+    const N = 300_000;
+    let returned = 0;
+    const counts = new Array(PLINKO_ROWS + 1).fill(0);
+    for (let i = 0; i < N; i++) {
+      const o = dropPlinko();
+      returned += o.multiplier; // bet 1 → payout = multiplier
+      counts[o.bucket]++;
+    }
+    const rtp = returned / N;
+    expect(rtp).toBeGreaterThan(0.9);
+    expect(rtp).toBeLessThan(0.97);
+    // center bucket is the most common
+    const maxIdx = counts.indexOf(Math.max(...counts));
+    expect(maxIdx).toBe(PLINKO_ROWS / 2);
   });
 });
 

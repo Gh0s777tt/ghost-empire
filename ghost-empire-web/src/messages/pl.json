@@ -1872,7 +1872,10 @@
     "gameDice": "Kości",
     "crashLabel": "🚀 Rakieta:",
     "crashStart": "🚀 Start",
-    "gameCrash": "Rakieta"
+    "gameCrash": "Rakieta",
+    "plinkoLabel": "🔵 Plinko:",
+    "plinkoDrop": "🔵 Upuść",
+    "gamePlinko": "Plinko"
   },
   "wheel": {
     "title": "🎡 Koło Fortuny",

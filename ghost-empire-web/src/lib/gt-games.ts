@@ -101,6 +101,23 @@ export function rollCrash(target: number, rng: () => number = Math.random): Cras
   return { crash, target, win, multiplier: win ? target : 0 };
 }
 
+// Plinko: a ball drops through PLINKO_ROWS peg rows, bouncing left/right (50/50) at each, landing in
+// one of ROWS+1 buckets. Bucket k (= number of rights) ~ Binomial(ROWS, 0.5) → center-heavy. The
+// symmetric multiplier ladder (high at the rare edges, sub-1 in the likely center) is tuned so
+// Σ P(k)·m_k ≈ 0.94 → RTP ~0.94 (GT sink). No bet choice — the player just drops the ball.
+export const PLINKO_ROWS = 12;
+export const PLINKO_MULTS = [13, 4, 1.8, 1.3, 1.05, 0.9, 0.5, 0.9, 1.05, 1.3, 1.8, 4, 13];
+
+export type PlinkoOutcome = { path: number[]; bucket: number; multiplier: number };
+
+/** Drop the ball: ROWS independent 50/50 bounces (0 = left, 1 = right). `rng()` is a [0,1) source. */
+export function dropPlinko(rng: () => number = Math.random): PlinkoOutcome {
+  const path: number[] = [];
+  let bucket = 0;
+  for (let i = 0; i < PLINKO_ROWS; i++) { const r = rng() < 0.5 ? 0 : 1; path.push(r); bucket += r; }
+  return { path, bucket, multiplier: PLINKO_MULTS[bucket] };
+}
+
 // Roulette: American double-zero wheel — 38 pockets (0, 00, 1-36). "00" is encoded as the
 // sentinel pocket value n = 37. Bets: red/black (2×) or a straight number incl. 0/00 (36×).
 // The two green pockets (0, 00) are the house edge → RTP ≈ 0.947 on every bet type (a GT sink).
@@ -142,7 +159,7 @@ export function spinRoulette(choice: string, rng: () => number = Math.random): R
 }
 
 export type GtGameResult =
-  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor }; dice?: { roll: number; target: number; dir: DiceDir; win: boolean }; crash?: { crash: number; target: number; win: boolean } }
+  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor }; dice?: { roll: number; target: number; dir: DiceDir; win: boolean }; crash?: { crash: number; target: number; win: boolean }; plinko?: { path: number[]; bucket: number; multiplier: number } }
   | { ok: false; status: number; error: string };
 
 export class GtGameError extends Error {
@@ -153,7 +170,7 @@ export class GtGameError extends Error {
  *  used by roulette (red/black or a number 0-36). */
 export async function playGtGame(
   userId: string,
-  game: "slots" | "coinflip" | "roulette" | "dice" | "crash",
+  game: "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko",
   bet: number,
   choice?: string,
 ): Promise<GtGameResult> {
@@ -167,6 +184,7 @@ export async function playGtGame(
   let roll: { n: number; color: RouletteColor } | undefined;
   let dice: { roll: number; target: number; dir: DiceDir; win: boolean } | undefined;
   let crash: { crash: number; target: number; win: boolean } | undefined;
+  let plinko: { path: number[]; bucket: number; multiplier: number } | undefined;
   if (game === "slots") {
     const o = spinSlots();
     reels = o.reels;
@@ -198,6 +216,11 @@ export async function playGtGame(
     detail = o.win ? `🚀 ${o.crash.toFixed(2)}× — wypłata @ ${target.toFixed(2)}× ✅` : `💥 crash @ ${o.crash.toFixed(2)}× (cel ${target.toFixed(2)}×) ❌`;
     crash = { crash: o.crash, target, win: o.win };
     payout = o.win ? Math.floor(bet * target) : 0;
+  } else if (game === "plinko") {
+    const o = dropPlinko();
+    detail = `🔵 ${o.multiplier.toFixed(2)}× (przegródka ${o.bucket + 1}/${PLINKO_ROWS + 1})`;
+    plinko = { path: o.path, bucket: o.bucket, multiplier: o.multiplier };
+    payout = Math.floor(bet * o.multiplier);
   } else {
     return { ok: false, status: 400, error: "Nieznana gra" };
   }
@@ -227,7 +250,7 @@ export async function playGtGame(
     const { checkAndGrantAchievements } = await import("@/lib/achievements");
     await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
 
-    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash };
+    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash, plinko };
   } catch (e) {
     if (e instanceof GtGameError) return { ok: false, status: e.status, error: e.message };
     return { ok: false, status: 500, error: "Błąd serwera" };

@@ -583,7 +583,10 @@
     "gameDice": "骰子",
     "crashLabel": "🚀 火箭：",
     "crashStart": "🚀 开始",
-    "gameCrash": "火箭"
+    "gameCrash": "火箭",
+    "plinkoLabel": "🔵 Plinko：",
+    "plinkoDrop": "🔵 投放",
+    "gamePlinko": "Plinko"
   },
   "welcome": {
     "metaTitle": "欢迎来到 Ghost Empire",
