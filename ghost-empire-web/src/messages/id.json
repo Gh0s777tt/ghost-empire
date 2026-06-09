@@ -609,7 +609,10 @@
     "diceUnder": "Bawah",
     "diceOver": "Atas",
     "diceRoll": "🎲 Lempar",
-    "gameDice": "Dadu"
+    "gameDice": "Dadu",
+    "crashLabel": "🚀 Crash:",
+    "crashStart": "🚀 Mulai",
+    "gameCrash": "Crash"
   },
   "welcome": {
     "metaTitle": "Selamat datang di Ghost Empire",

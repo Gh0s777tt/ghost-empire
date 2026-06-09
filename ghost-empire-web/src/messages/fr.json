@@ -580,7 +580,10 @@
     "diceUnder": "Moins",
     "diceOver": "Plus",
     "diceRoll": "🎲 Lancer",
-    "gameDice": "Dés"
+    "gameDice": "Dés",
+    "crashLabel": "🚀 Crash :",
+    "crashStart": "🚀 Lancer",
+    "gameCrash": "Crash"
   },
   "welcome": {
     "metaTitle": "Bienvenue sur Ghost Empire",

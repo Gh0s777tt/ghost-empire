@@ -72,6 +72,35 @@ export function rollDice(dir: DiceDir, target: number, rng: () => number = Math.
   return { roll, win, multiplier: diceMultiplier(dir, target) };
 }
 
+// Crash ("Rakieta"): the multiplier climbs from 1.00× and busts at a random crash point C with
+// the provably-fair tail P(C ≥ m) = (1 − edge) / m. The player pre-sets an auto-cashout target T;
+// they win T× if C ≥ T (cashed out before the bust), else lose. Expected payout = T·(1−edge)/T =
+// (1 − edge) for ANY target → flat RTP ≈ 0.95 (GT sink). C is capped at 100× for sane animation.
+const CRASH_EDGE = 0.05;
+const CRASH_MAX_CRASH = 100;
+export const CRASH_MIN_TARGET = 1.01;
+export const CRASH_MAX_TARGET = 50;
+
+export type CrashOutcome = { crash: number; target: number; win: boolean; multiplier: number };
+
+/** Canonical crash auto-cashout target (1.01..50, 2 decimals), or null if invalid. */
+export function normCrashChoice(choice?: string): number | null {
+  const v = parseFloat((choice ?? "").trim().replace(",", "."));
+  if (!Number.isFinite(v)) return null;
+  const t = Math.round(v * 100) / 100;
+  if (t < CRASH_MIN_TARGET || t > CRASH_MAX_TARGET) return null;
+  return t;
+}
+
+/** Sample the crash point and resolve a (pre-normalized) auto-cashout target. `rng()` is [0,1). */
+export function rollCrash(target: number, rng: () => number = Math.random): CrashOutcome {
+  const u = rng();
+  const raw = (1 - CRASH_EDGE) / (u <= 0 ? 1e-9 : u); // ≥1 with prob (1−edge); <1 (instant bust) with prob edge
+  const crash = raw < 1 ? 1 : Math.min(CRASH_MAX_CRASH, Math.floor(raw * 100) / 100);
+  const win = crash >= target;
+  return { crash, target, win, multiplier: win ? target : 0 };
+}
+
 // Roulette: American double-zero wheel — 38 pockets (0, 00, 1-36). "00" is encoded as the
 // sentinel pocket value n = 37. Bets: red/black (2×) or a straight number incl. 0/00 (36×).
 // The two green pockets (0, 00) are the house edge → RTP ≈ 0.947 on every bet type (a GT sink).
@@ -113,7 +142,7 @@ export function spinRoulette(choice: string, rng: () => number = Math.random): R
 }
 
 export type GtGameResult =
-  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor }; dice?: { roll: number; target: number; dir: DiceDir; win: boolean } }
+  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor }; dice?: { roll: number; target: number; dir: DiceDir; win: boolean }; crash?: { crash: number; target: number; win: boolean } }
   | { ok: false; status: number; error: string };
 
 export class GtGameError extends Error {
@@ -124,7 +153,7 @@ export class GtGameError extends Error {
  *  used by roulette (red/black or a number 0-36). */
 export async function playGtGame(
   userId: string,
-  game: "slots" | "coinflip" | "roulette" | "dice",
+  game: "slots" | "coinflip" | "roulette" | "dice" | "crash",
   bet: number,
   choice?: string,
 ): Promise<GtGameResult> {
@@ -137,6 +166,7 @@ export async function playGtGame(
   let reels: string[] | undefined;
   let roll: { n: number; color: RouletteColor } | undefined;
   let dice: { roll: number; target: number; dir: DiceDir; win: boolean } | undefined;
+  let crash: { crash: number; target: number; win: boolean } | undefined;
   if (game === "slots") {
     const o = spinSlots();
     reels = o.reels;
@@ -161,6 +191,13 @@ export async function playGtGame(
     detail = `🎲 ${o.roll} ${c.dir === "under" ? "<" : "≥"} ${c.target} → ${o.win ? "✅" : "❌"}`;
     dice = { roll: o.roll, target: c.target, dir: c.dir, win: o.win };
     payout = o.win ? Math.floor(bet * o.multiplier) : 0;
+  } else if (game === "crash") {
+    const target = normCrashChoice(choice);
+    if (target == null) return { ok: false, status: 400, error: `Auto-cashout musi być ${CRASH_MIN_TARGET}-${CRASH_MAX_TARGET}×` };
+    const o = rollCrash(target);
+    detail = o.win ? `🚀 ${o.crash.toFixed(2)}× — wypłata @ ${target.toFixed(2)}× ✅` : `💥 crash @ ${o.crash.toFixed(2)}× (cel ${target.toFixed(2)}×) ❌`;
+    crash = { crash: o.crash, target, win: o.win };
+    payout = o.win ? Math.floor(bet * target) : 0;
   } else {
     return { ok: false, status: 400, error: "Nieznana gra" };
   }
@@ -190,7 +227,7 @@ export async function playGtGame(
     const { checkAndGrantAchievements } = await import("@/lib/achievements");
     await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
 
-    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice };
+    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash };
   } catch (e) {
     if (e instanceof GtGameError) return { ok: false, status: e.status, error: e.message };
     return { ok: false, status: 500, error: "Błąd serwera" };

@@ -580,7 +580,10 @@
     "diceUnder": "Sotto",
     "diceOver": "Sopra",
     "diceRoll": "🎲 Lancia",
-    "gameDice": "Dadi"
+    "gameDice": "Dadi",
+    "crashLabel": "🚀 Crash:",
+    "crashStart": "🚀 Avvia",
+    "gameCrash": "Crash"
   },
   "welcome": {
     "metaTitle": "Benvenuto su Ghost Empire",

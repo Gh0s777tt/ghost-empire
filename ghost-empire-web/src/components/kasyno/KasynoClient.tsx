@@ -12,13 +12,14 @@ import { Link } from "@/i18n/navigation";
 type PlayResult = {
   ok?: boolean; bet: number; payout: number; net: number; newBalance: number;
   detail: string; reels?: string[]; roll?: { n: number; color: "green" | "red" | "black" };
-  dice?: { roll: number; target: number; dir: "under" | "over"; win: boolean }; error?: string;
+  dice?: { roll: number; target: number; dir: "under" | "over"; win: boolean };
+  crash?: { crash: number; target: number; win: boolean }; error?: string;
 };
 type Leaderboard = {
   bigWins: Array<{ id: string; name: string; game: string; net: number; detail: string | null }>;
   topNet: Array<{ name: string; net: number }>;
 };
-type Game = "slots" | "coinflip" | "roulette" | "dice";
+type Game = "slots" | "coinflip" | "roulette" | "dice" | "crash";
 type Phase = "spin" | "land";
 
 // Dice odds mirror lib/gt-games.ts (pure, replicated here so the client never imports the server lib).
@@ -475,10 +476,59 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
   );
 }
 
+// ── Crash ("Rakieta"): the multiplier climbs exponentially and the rocket flies up; it either
+//    cashes out at the player's target (win, green) or bursts at the crash point below it (💥). ─
+function CrashRocket({ phase, crash, onSettle }: { phase: Phase; crash: { crash: number; target: number; win: boolean } | null; onSettle: () => void }) {
+  const numRef = useRef<HTMLDivElement>(null);
+  const rocketRef = useRef<HTMLDivElement>(null);
+  const done = useRef(false);
+  const [ended, setEnded] = useState(false);
+  const target = crash?.target ?? 2;
+  const win = crash?.win ?? false;
+
+  useEffect(() => {
+    if (phase !== "land" || !crash || done.current) return;
+    done.current = true;
+    const endMult = win ? crash.target : crash.crash; // cash out at target, or burst at crash
+    const setNum = (m: number) => { if (numRef.current) numRef.current.textContent = m.toFixed(2) + "×"; };
+    const place = (p: number) => { const rk = rocketRef.current; if (rk) { rk.style.left = `${10 + 70 * p}%`; rk.style.bottom = `${8 + 64 * p}%`; } };
+    if (reducedMotion()) { setNum(endMult); place(1); setEnded(true); const t = setTimeout(onSettle, 250); return () => clearTimeout(t); }
+    const DUR = Math.min(3200, Math.max(1300, 900 + endMult * 130));
+    let raf = 0, startTs = 0;
+    const tick = (now: number) => {
+      if (!startTs) startTs = now;
+      const p = Math.min(1, (now - startTs) / DUR);
+      setNum(endMult <= 1 ? 1 : Math.pow(endMult, p)); // exponential climb 1 → endMult
+      place(p);
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else setEnded(true);
+    };
+    raf = requestAnimationFrame(tick);
+    const t = setTimeout(onSettle, DUR + 450);
+    return () => { clearTimeout(t); cancelAnimationFrame(raf); };
+  }, [phase, crash, onSettle, win]);
+
+  const numColor = !crash ? "text-zinc-400" : ended ? (win ? "text-emerald-300" : "text-rose-400") : "text-white";
+  return (
+    <div className="relative rounded-2xl overflow-hidden" style={{ width: 380, height: 300, background: "radial-gradient(130% 100% at 50% 120%, #241a4d, #0a0a14 72%)", border: "1px solid #2a2a3a" }}>
+      <div className="absolute right-3 top-3 text-xs font-mono px-2 py-1 rounded-md" style={{ background: "rgba(255,213,74,.12)", color: "#ffd54a" }}>🎯 {target.toFixed(2)}×</div>
+      <div ref={rocketRef} className="absolute will-change-transform" style={{ left: "10%", bottom: "8%", transform: "translate(-50%,50%) rotate(-40deg)", fontSize: 40, filter: "drop-shadow(0 0 8px rgba(255,150,60,.6))" }}>{ended && !win ? "💥" : "🚀"}</div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div ref={numRef} className={`text-6xl font-black tabular-nums ${numColor}`} style={{ textShadow: "0 3px 18px rgba(0,0,0,.8)" }}>1.00×</div>
+      </div>
+      {ended && (
+        <div className={`absolute left-0 right-0 text-center text-lg font-extrabold ${win ? "text-emerald-300" : "text-rose-400"}`} style={{ bottom: 16 }}>
+          {win ? `✅ ${target.toFixed(2)}×` : `💥 ${crash?.crash.toFixed(2)}×`}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
-  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice") };
+  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   const [bet, setBet] = useState(100);
   const [busy, setBusy] = useState(false);
@@ -487,6 +537,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const [rouletteNum, setRouletteNum] = useState("");
   const [diceTarget, setDiceTarget] = useState(50);
   const [diceDir, setDiceDir] = useState<"under" | "over">("under");
+  const [crashTarget, setCrashTarget] = useState(2);
   const [stage, setStage] = useState<Stage | null>(null);
   const playId = useRef(0);
 
@@ -543,6 +594,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               <CoinFlip key={stage.id} phase={stage.phase} win={stage.result ? stage.result.payout > 0 : null} onSettle={settle} />
             ) : stage?.game === "dice" ? (
               <DiceTrack key={stage.id} phase={stage.phase} dice={stage.result?.dice ?? null} onSettle={settle} />
+            ) : stage?.game === "crash" ? (
+              <CrashRocket key={stage.id} phase={stage.phase} crash={stage.result?.crash ?? null} onSettle={settle} />
             ) : (
               <div className="text-zinc-700 text-5xl tracking-widest">🎰</div>
             )}
@@ -609,6 +662,21 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             </span>
             <button onClick={() => play("dice", `${diceDir}:${diceTarget}`)} disabled={busy || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 disabled:opacity-40 transition-all">{t("diceRoll")}</button>
+          </div>
+
+          {/* Crash: auto-cashout at a target multiplier; the rocket busts at a random point */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-zinc-500 self-center me-1">{t("crashLabel")}</span>
+            {[1.5, 2, 5, 10].map((m) => (
+              <button key={m} onClick={() => setCrashTarget(m)} disabled={busy}
+                className={`px-3 py-2 rounded-full text-sm font-bold transition-all ${crashTarget === m ? "bg-violet-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-700"}`}>{m % 1 ? m.toFixed(1) : m.toFixed(0)}×</button>
+            ))}
+            <input type="number" min={1.01} max={50} step={0.1} value={crashTarget} disabled={busy}
+              onChange={(e) => setCrashTarget(Math.min(50, Math.max(1.01, parseFloat(e.target.value || "2"))))}
+              className="w-20 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500 disabled:opacity-50" />
+            <span className="text-xs text-zinc-400 font-mono tabular-nums w-16 text-center">{(95 / crashTarget).toFixed(1)}%</span>
+            <button onClick={() => play("crash", String(crashTarget))} disabled={busy || (balance ?? 0) < bet}
+              className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 disabled:opacity-40 transition-all">{t("crashStart")}</button>
           </div>
 
           <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} GT</span></div>

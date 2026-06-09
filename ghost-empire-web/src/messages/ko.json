@@ -580,7 +580,10 @@
     "diceUnder": "미만",
     "diceOver": "이상",
     "diceRoll": "🎲 굴리기",
-    "gameDice": "주사위"
+    "gameDice": "주사위",
+    "crashLabel": "🚀 크래시:",
+    "crashStart": "🚀 시작",
+    "gameCrash": "크래시"
   },
   "welcome": {
     "metaTitle": "Ghost Empire에 오신 것을 환영합니다",

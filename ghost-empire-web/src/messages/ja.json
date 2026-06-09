@@ -580,7 +580,10 @@
     "diceUnder": "未満",
     "diceOver": "以上",
     "diceRoll": "🎲 振る",
-    "gameDice": "サイコロ"
+    "gameDice": "サイコロ",
+    "crashLabel": "🚀 クラッシュ：",
+    "crashStart": "🚀 スタート",
+    "gameCrash": "クラッシュ"
   },
   "welcome": {
     "metaTitle": "Ghost Empire へようこそ",

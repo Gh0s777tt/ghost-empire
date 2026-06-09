@@ -580,7 +580,10 @@
     "diceUnder": "Unter",
     "diceOver": "Über",
     "diceRoll": "🎲 Würfeln",
-    "gameDice": "Würfel"
+    "gameDice": "Würfel",
+    "crashLabel": "🚀 Crash:",
+    "crashStart": "🚀 Start",
+    "gameCrash": "Crash"
   },
   "welcome": {
     "metaTitle": "Willkommen im Ghost Empire",

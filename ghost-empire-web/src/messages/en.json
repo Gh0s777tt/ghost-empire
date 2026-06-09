@@ -1869,7 +1869,10 @@
     "diceUnder": "Under",
     "diceOver": "Over",
     "diceRoll": "🎲 Roll",
-    "gameDice": "Dice"
+    "gameDice": "Dice",
+    "crashLabel": "🚀 Crash:",
+    "crashStart": "🚀 Start",
+    "gameCrash": "Crash"
   },
   "wheel": {
     "title": "🎡 Wheel of Fortune",
