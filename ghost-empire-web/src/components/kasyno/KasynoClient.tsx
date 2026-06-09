@@ -21,16 +21,22 @@ type Game = "slots" | "coinflip" | "roulette";
 type Phase = "spin" | "land";
 type Stage = { id: number; game: Game; phase: Phase; result: PlayResult | null; settled: boolean };
 
-// ── Roulette wheel data (European single-zero, real wheel sequence) ──────────────
-const EU_WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-const SEG = 360 / EU_WHEEL.length;
+// ── Roulette wheel data (American double-zero, real wheel sequence; 37 = "00") ────
+const US_WHEEL = [0, 28, 9, 26, 30, 11, 7, 20, 32, 17, 5, 22, 34, 15, 3, 24, 36, 13, 1, 37, 27, 10, 25, 29, 12, 8, 19, 31, 18, 6, 21, 33, 16, 4, 23, 35, 14, 2];
+const SEG = 360 / US_WHEEL.length; // 38 pockets
 const RED_SET = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
-const HEX: Record<string, string> = { green: "#15803d", red: "#b91c1c", black: "#0a0a0a" };
-function rcolor(n: number): "green" | "red" | "black" { return n === 0 ? "green" : RED_SET.has(n) ? "red" : "black"; }
+const HEX: Record<string, string> = { green: "#157a3d", red: "#c01722", black: "#0c0c0c" };
+function rcolor(n: number): "green" | "red" | "black" { return n === 0 || n === 37 ? "green" : RED_SET.has(n) ? "red" : "black"; }
+const pocketLabel = (n: number) => (n === 37 ? "00" : String(n));
 // Cartesian point on a circle — `deg` measured clockwise from the top (12 o'clock).
 function polar(cx: number, cy: number, r: number, deg: number): { x: number; y: number } {
   const rad = (deg * Math.PI) / 180;
   return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+}
+// Donut (annulus) wedge between inner radius ri / outer ro, from a1° to a2° (clockwise from top).
+function annulus(cx: number, cy: number, ri: number, ro: number, a1: number, a2: number): string {
+  const f = (p: { x: number; y: number }) => `${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
+  return `M ${f(polar(cx, cy, ro, a1))} A ${ro} ${ro} 0 0 1 ${f(polar(cx, cy, ro, a2))} L ${f(polar(cx, cy, ri, a2))} A ${ri} ${ri} 0 0 0 ${f(polar(cx, cy, ri, a1))} Z`;
 }
 const SLOT_FACES = ["🍒", "🍋", "🔔", "⭐", "💎", "7️⃣"];
 const CELL = 72;
@@ -57,8 +63,8 @@ function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; 
     const el = ref.current;
     if (!el || phase !== "land" || target == null || done.current) return;
     done.current = true;
-    const tIdx = EU_WHEEL.indexOf(target);
-    const center = tIdx * SEG + SEG / 2; // SVG segments span [i·SEG,(i+1)·SEG] → center at i·SEG+SEG/2
+    const tIdx = US_WHEEL.indexOf(target);
+    const center = tIdx * SEG + SEG / 2; // segments span [i·SEG,(i+1)·SEG] → center at i·SEG+SEG/2
     const targetMod = (((360 - (center % 360)) % 360) + 360) % 360;
 
     if (reducedMotion()) {
@@ -85,43 +91,81 @@ function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; 
     return () => clearTimeout(t);
   }, [phase, target, onSettle]);
 
-  const cx = size / 2, cy = size / 2;
-  const rRim = size / 2 - 2, rSeg = size / 2 - 13, rLabel = size / 2 - 26, rHub = size * 0.15;
+  const cx = size / 2, cy = size / 2, R = size / 2;
+  const rRimIn = R * 0.85;                          // gold rim inner edge → black bezel
+  const rNumOut = R * 0.73, rNumIn = R * 0.50;      // numbered pocket ring
+  const rPockOut = R * 0.475, rPockIn = R * 0.39;   // inner ball-track ring
+  const rCone = R * 0.37, arm = R * 0.30, knob = size * 0.020;
+  const numFont = (size * 0.034).toFixed(1);
   return (
     <div className="relative select-none" style={{ width: size, height: size }}>
-      {/* fixed pointer */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-30" style={{ top: -4, width: 0, height: 0, borderLeft: "13px solid transparent", borderRight: "13px solid transparent", borderTop: "22px solid #fbbf24", filter: "drop-shadow(0 2px 3px rgba(0,0,0,.6))" }} />
-      <div ref={ref} className="absolute inset-0 will-change-transform" style={{ transform: "rotate(0deg)" }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block", filter: "drop-shadow(0 12px 32px rgba(0,0,0,.55))" }}>
+      {/* fixed gold pointer — points down at the winning pocket */}
+      <div className="absolute left-1/2 -translate-x-1/2 z-30" style={{ top: cy - rNumOut - 16, width: 0, height: 0, borderLeft: "11px solid transparent", borderRight: "11px solid transparent", borderTop: "18px solid #fcd34d", filter: "drop-shadow(0 2px 2px rgba(0,0,0,.7))" }} />
+
+      {/* STATIC bowl — gold rim + diamonds + black bezel */}
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0" style={{ display: "block", filter: "drop-shadow(0 12px 34px rgba(0,0,0,.55))" }}>
         <defs>
-          <radialGradient id="ge-rim" cx="50%" cy="32%" r="80%">
-            <stop offset="0%" stopColor="#52525b" />
-            <stop offset="62%" stopColor="#27272a" />
-            <stop offset="100%" stopColor="#09090b" />
-          </radialGradient>
-          <radialGradient id="ge-hub" cx="50%" cy="32%" r="72%">
-            <stop offset="0%" stopColor="#e4e4e7" />
-            <stop offset="55%" stopColor="#71717a" />
-            <stop offset="100%" stopColor="#27272a" />
+          <radialGradient id="ge-gold" cx="50%" cy="28%" r="80%">
+            <stop offset="0%" stopColor="#fde9a9" />
+            <stop offset="42%" stopColor="#d8a82a" />
+            <stop offset="100%" stopColor="#6e5210" />
           </radialGradient>
         </defs>
-        <circle cx={cx} cy={cy} r={rRim} fill="url(#ge-rim)" />
-        {EU_WHEEL.map((n, i) => {
-          const start = i * SEG, mid = i * SEG + SEG / 2;
-          const p1 = polar(cx, cy, rSeg, start), p2 = polar(cx, cy, rSeg, start + SEG), lp = polar(cx, cy, rLabel, mid);
-          return (
-            <g key={n}>
-              <path d={`M ${cx} ${cy} L ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${rSeg} ${rSeg} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} Z`} fill={HEX[rcolor(n)]} stroke="#000000" strokeWidth={0.6} />
-              <text x={lp.x.toFixed(2)} y={lp.y.toFixed(2)} fill="#ffffff" fontSize={(size * 0.042).toFixed(1)} fontWeight={700} textAnchor="middle" dominantBaseline="central" transform={`rotate(${mid.toFixed(2)} ${lp.x.toFixed(2)} ${lp.y.toFixed(2)})`} style={{ pointerEvents: "none" }}>{n}</text>
-            </g>
-          );
+        <circle cx={cx} cy={cy} r={R} fill="url(#ge-gold)" />
+        <circle cx={cx} cy={cy} r={rRimIn} fill="#0a0a0a" />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
+          const p = polar(cx, cy, R * 0.925, a), s = size * 0.026;
+          return <rect key={a} x={(p.x - s).toFixed(2)} y={(p.y - s).toFixed(2)} width={(s * 2).toFixed(2)} height={(s * 2).toFixed(2)} rx={2} fill="url(#ge-gold)" stroke="#6e5210" strokeWidth={0.8} transform={`rotate(45 ${p.x.toFixed(2)} ${p.y.toFixed(2)})`} />;
         })}
-        <circle cx={cx} cy={cy} r={rHub} fill="url(#ge-hub)" stroke="#18181b" strokeWidth={2} />
-        <circle cx={cx} cy={cy} r={Number((rHub * 0.42).toFixed(1))} fill="#0a0a0a" />
+      </svg>
+
+      {/* ROTATING rotor — numbers + frets + inner ring + cone + turret */}
+      <div ref={ref} className="absolute inset-0 will-change-transform" style={{ transform: "rotate(0deg)" }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block" }}>
+          <defs>
+            <radialGradient id="ge-cone" cx="50%" cy="34%" r="72%">
+              <stop offset="0%" stopColor="#2c2c30" />
+              <stop offset="70%" stopColor="#0d0d10" />
+              <stop offset="100%" stopColor="#000000" />
+            </radialGradient>
+            <radialGradient id="ge-knob" cx="38%" cy="32%" r="75%">
+              <stop offset="0%" stopColor="#fff6d5" />
+              <stop offset="48%" stopColor="#e6bb33" />
+              <stop offset="100%" stopColor="#8a6a12" />
+            </radialGradient>
+          </defs>
+          <circle cx={cx} cy={cy} r={rNumOut} fill="none" stroke="#caa030" strokeWidth={1.5} />
+          {US_WHEEL.map((n, i) => {
+            const a1 = i * SEG, mid = i * SEG + SEG / 2;
+            const lp = polar(cx, cy, (rNumIn + rNumOut) / 2, mid);
+            return (
+              <g key={n}>
+                <path d={annulus(cx, cy, rNumIn, rNumOut, a1, a1 + SEG)} fill={HEX[rcolor(n)]} stroke="#caa030" strokeWidth={0.5} />
+                <text x={lp.x.toFixed(2)} y={lp.y.toFixed(2)} fill="#ffffff" fontSize={numFont} fontWeight={700} textAnchor="middle" dominantBaseline="central" transform={`rotate(${mid.toFixed(2)} ${lp.x.toFixed(2)} ${lp.y.toFixed(2)})`} style={{ pointerEvents: "none" }}>{pocketLabel(n)}</text>
+              </g>
+            );
+          })}
+          <circle cx={cx} cy={cy} r={rNumIn} fill="none" stroke="#caa030" strokeWidth={1.5} />
+          {US_WHEEL.map((n, i) => (
+            <path key={`p${n}`} d={annulus(cx, cy, rPockIn, rPockOut, i * SEG, i * SEG + SEG)} fill={HEX[rcolor(n)]} stroke="#000000" strokeWidth={0.4} />
+          ))}
+          <circle cx={cx} cy={cy} r={rPockIn} fill="none" stroke="#caa030" strokeWidth={1.5} />
+          <circle cx={cx} cy={cy} r={rCone} fill="url(#ge-cone)" />
+          {[45, 135, 225, 315].map((a) => {
+            const e = polar(cx, cy, arm, a);
+            return (
+              <g key={a}>
+                <line x1={cx} y1={cy} x2={e.x.toFixed(2)} y2={e.y.toFixed(2)} stroke="url(#ge-knob)" strokeWidth={(size * 0.016).toFixed(1)} strokeLinecap="round" />
+                <circle cx={e.x.toFixed(2)} cy={e.y.toFixed(2)} r={knob.toFixed(1)} fill="url(#ge-knob)" />
+              </g>
+            );
+          })}
+          <circle cx={cx} cy={cy} r={(size * 0.032).toFixed(1)} fill="url(#ge-knob)" />
         </svg>
       </div>
+
       {/* static gloss (does NOT rotate — light from above) */}
-      <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle at 50% 26%, rgba(255,255,255,0.16), rgba(255,255,255,0) 46%)" }} />
+      <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle at 50% 26%, rgba(255,255,255,0.14), rgba(255,255,255,0) 44%)" }} />
     </div>
   );
 }
@@ -245,7 +289,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
     } catch { setError(t("connError")); setStage(null); setBusy(false); }
   }
 
-  const rouletteTarget = stage?.result?.roll?.n ?? (stage?.result?.detail ? (parseInt(stage.result.detail.replace(/\D/g, ""), 10) || 0) : null);
+  const rouletteTarget = stage?.result?.roll?.n ?? (stage?.result?.detail ? (stage.result.detail.includes("00") ? 37 : (parseInt(stage.result.detail.replace(/\D/g, ""), 10) || 0)) : null);
   const reveal = stage?.settled ? stage.result : null;
 
   return (
@@ -308,6 +352,10 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               className="px-4 py-2 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 transition-all">{t("red")}</button>
             <button onClick={() => play("roulette", "black")} disabled={busy || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 disabled:opacity-40 transition-all">{t("black")}</button>
+            <button onClick={() => play("roulette", "0")} disabled={busy || (balance ?? 0) < bet}
+              className="px-3 py-2 rounded-full font-extrabold text-white bg-green-700 hover:bg-green-600 disabled:opacity-40 transition-all" title="36×">0</button>
+            <button onClick={() => play("roulette", "00")} disabled={busy || (balance ?? 0) < bet}
+              className="px-3 py-2 rounded-full font-extrabold text-white bg-green-700 hover:bg-green-600 disabled:opacity-40 transition-all" title="36×">00</button>
             <input type="number" min={0} max={36} value={rouletteNum} disabled={busy} onChange={(e) => setRouletteNum(e.target.value)} placeholder="0-36"
               className="w-20 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500 disabled:opacity-50" />
             <button onClick={() => play("roulette", rouletteNum)} disabled={busy || (balance ?? 0) < bet || !/^\d+$/.test(rouletteNum)}

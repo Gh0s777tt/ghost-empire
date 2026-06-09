@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-09",
+    title: "Nowa ruletka — jak prawdziwa 🎡",
+    items: [
+      "Koło ruletki dostało realistyczny wygląd (złota obręcz z diamentami, numerowane pola, centralny krzyż) i przeszło na wariant amerykański z polami 0 oraz 00 (38 pól). Całość wektorowo — ostra na każdym ekranie.",
+    ],
+  },
+  {
+    date: "2026-06-09",
     title: "Animacje w kasynie 🎰",
     items: [
       "Ruletka kręci się jak prawdziwe koło i zatrzymuje na wylosowanej liczbie, sloty mają bębny, a coinflip — obracającą się monetę. Animacje są w pełni płynne (wykorzystują GPU i pełną częstotliwość odświeżania Twojego monitora). Wyniki są takie same jak wcześniej — losuje je serwer, a animacja tylko je pokazuje.",

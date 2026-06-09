@@ -37,22 +37,26 @@ export function flipCoin(rng: () => number = Math.random): { win: boolean; multi
   return { win, multiplier: win ? 2 : 0 };
 }
 
-// Roulette: European single-zero wheel (0-36). Bets: red/black (2×) or a straight number
-// (36×). The single green 0 is the house edge → RTP ≈ 0.973 on every bet type (a GT sink).
+// Roulette: American double-zero wheel — 38 pockets (0, 00, 1-36). "00" is encoded as the
+// sentinel pocket value n = 37. Bets: red/black (2×) or a straight number incl. 0/00 (36×).
+// The two green pockets (0, 00) are the house edge → RTP ≈ 0.947 on every bet type (a GT sink).
 const ROULETTE_RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+export const ROULETTE_DOUBLE_ZERO = 37; // sentinel pocket value representing "00"
 
 export type RouletteColor = "green" | "red" | "black";
 
 export function rouletteColor(n: number): RouletteColor {
-  if (n === 0) return "green";
+  if (n === 0 || n === ROULETTE_DOUBLE_ZERO) return "green";
   return ROULETTE_RED.has(n) ? "red" : "black";
 }
 
-/** Canonical roulette bet, or null if invalid. Accepts red/black (+ PL/short aliases) or 0-36. */
+/** Canonical roulette bet, or null if invalid. Accepts red/black (+ PL/short aliases),
+ *  a straight number 0-36, or "00" (double zero). */
 export function normRouletteChoice(choice?: string): string | null {
   const s = (choice ?? "").trim().toLowerCase();
   if (["red", "r", "czerwone", "czerwony", "🔴"].includes(s)) return "red";
   if (["black", "b", "czarne", "czarny", "⚫"].includes(s)) return "black";
+  if (s === "00") return "00";
   if (/^\d+$/.test(s)) {
     const n = parseInt(s, 10);
     if (n >= 0 && n <= 36) return String(n);
@@ -64,10 +68,11 @@ export type RouletteOutcome = { n: number; color: RouletteColor; multiplier: num
 
 /** Spin the wheel + resolve a (pre-normalized) bet. `rng()` is a [0,1) source. */
 export function spinRoulette(choice: string, rng: () => number = Math.random): RouletteOutcome {
-  const n = Math.floor(rng() * 37); // 0-36 uniform
+  const n = Math.floor(rng() * 38); // 0..37 uniform; 37 = "00"
   const color = rouletteColor(n);
   let multiplier = 0;
   if (choice === "red" || choice === "black") multiplier = color === choice ? 2 : 0;
+  else if (choice === "00") multiplier = n === ROULETTE_DOUBLE_ZERO ? 36 : 0;
   else if (/^\d+$/.test(choice)) multiplier = n === parseInt(choice, 10) ? 36 : 0;
   return { n, color, multiplier };
 }
@@ -110,7 +115,7 @@ export async function playGtGame(
     if (!c) return { ok: false, status: 400, error: "Wybierz: red / black / liczba 0-36" };
     const o = spinRoulette(c);
     const emoji = o.color === "red" ? "🔴" : o.color === "black" ? "⚫" : "🟢";
-    detail = `${emoji} ${o.n}`;
+    detail = `${emoji} ${o.n === 37 ? "00" : o.n}`;
     roll = { n: o.n, color: o.color };
     payout = o.multiplier > 0 ? bet * o.multiplier : 0;
   } else {
