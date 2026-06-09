@@ -155,7 +155,7 @@
   "authError": {
     "title": "KESALAHAN MASUK",
     "retry": "COBA LAGI",
-    "errConfiguration": "Kesalahan konfigurasi server. Silakan hubungi administrator.",
+    "errConfiguration": "Metode masuk ini sementara tidak tersedia. Masuklah dengan platform lain (mis. Google atau Discord) atau coba lagi nanti.",
     "errAccessDenied": "Akses ditolak. Akunmu mungkin diblokir — hubungi administrator di Discord.",
     "errVerification": "Tautan verifikasi telah kedaluwarsa atau tidak valid.",
     "errOAuthSignin": "Kesalahan saat masuk OAuth.",
@@ -164,7 +164,7 @@
     "errEmailCreateAccount": "Tidak dapat membuat akun email.",
     "errCallback": "Kesalahan callback.",
     "errOAuthAccountNotLinked": "Akun dengan email ini sudah tertaut ke penyedia lain.",
-    "errDefault": "Terjadi kesalahan tak dikenal."
+    "errDefault": "Terjadi kesalahan saat masuk. Coba lagi atau gunakan platform lain."
   },
   "games": {
     "metaTitle": "Perpustakaan game",

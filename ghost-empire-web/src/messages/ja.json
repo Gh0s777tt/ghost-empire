@@ -155,7 +155,7 @@
   "authError": {
     "title": "ログインエラー",
     "retry": "再試行",
-    "errConfiguration": "サーバー設定エラー。管理者に連絡してください。",
+    "errConfiguration": "このログイン方法は現在ご利用いただけません。別のプラットフォーム（Google や Discord など）でログインするか、後ほどお試しください。",
     "errAccessDenied": "アクセス拒否。アカウントが BAN されている可能性があります——Discord で管理者に連絡してください。",
     "errVerification": "確認リンクの有効期限が切れているか、無効です。",
     "errOAuthSignin": "OAuth ログイン中にエラー。",
@@ -164,7 +164,7 @@
     "errEmailCreateAccount": "メールアカウントを作成できませんでした。",
     "errCallback": "Callback エラー。",
     "errOAuthAccountNotLinked": "このメールのアカウントはすでに別のプロバイダーに連携されています。",
-    "errDefault": "不明なエラーが発生しました。"
+    "errDefault": "ログイン中に問題が発生しました。もう一度お試しいただくか、別のプラットフォームをご利用ください。"
   },
   "games": {
     "metaTitle": "ゲームライブラリ",

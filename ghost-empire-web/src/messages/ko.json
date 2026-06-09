@@ -155,7 +155,7 @@
   "authError": {
     "title": "로그인 오류",
     "retry": "다시 시도",
-    "errConfiguration": "서버 구성 오류. 관리자에게 문의하세요.",
+    "errConfiguration": "이 로그인 방법은 현재 사용할 수 없습니다. 다른 플랫폼(예: Google 또는 Discord)으로 로그인하거나 나중에 다시 시도해 주세요.",
     "errAccessDenied": "접근이 거부되었습니다. 계정이 차단되었을 수 있습니다——Discord에서 관리자에게 문의하세요.",
     "errVerification": "인증 링크가 만료되었거나 유효하지 않습니다.",
     "errOAuthSignin": "OAuth 로그인 중 오류.",
@@ -164,7 +164,7 @@
     "errEmailCreateAccount": "이메일 계정을 만들 수 없습니다.",
     "errCallback": "Callback 오류.",
     "errOAuthAccountNotLinked": "이 이메일의 계정은 이미 다른 제공자에 연동되어 있습니다.",
-    "errDefault": "알 수 없는 오류가 발생했습니다."
+    "errDefault": "로그인 중 문제가 발생했습니다. 다시 시도하거나 다른 플랫폼을 사용해 주세요."
   },
   "games": {
     "metaTitle": "게임 라이브러리",

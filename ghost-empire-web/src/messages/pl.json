@@ -1656,7 +1656,7 @@
   "authError": {
     "title": "BŁĄD LOGOWANIA",
     "retry": "SPRÓBUJ PONOWNIE",
-    "errConfiguration": "Błąd konfiguracji serwera. Skontaktuj się z administratorem.",
+    "errConfiguration": "Ta metoda logowania jest chwilowo niedostępna. Zaloguj się inną platformą (np. Google lub Discord) albo spróbuj później.",
     "errAccessDenied": "Odmowa dostępu. Twoje konto może być zablokowane — skontaktuj się z administratorem przez Discord.",
     "errVerification": "Link weryfikacyjny wygasł lub jest nieprawidłowy.",
     "errOAuthSignin": "Błąd podczas logowania przez OAuth.",
@@ -1665,7 +1665,7 @@
     "errEmailCreateAccount": "Nie udało się stworzyć konta email.",
     "errCallback": "Błąd wywołania zwrotnego.",
     "errOAuthAccountNotLinked": "Konto z tym emailem jest już połączone z innym providerem.",
-    "errDefault": "Wystąpił nieznany błąd."
+    "errDefault": "Coś poszło nie tak podczas logowania. Spróbuj ponownie lub użyj innej platformy."
   },
   "polls": {
     "title": "ANKIETY",

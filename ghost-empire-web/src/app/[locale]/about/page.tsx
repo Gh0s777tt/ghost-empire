@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-09",
+    title: "Czytelniejsze komunikaty przy logowaniu 💬",
+    items: [
+      "Gdy logowanie się nie powiedzie, zamiast technicznego „błędu konfiguracji" zobaczysz teraz jasny komunikat z podpowiedzią (np. żeby spróbować zalogować się inną platformą). We wszystkich językach portalu.",
+    ],
+  },
+  {
+    date: "2026-06-09",
     title: "Poprawione nazwy graczy (logowanie Google) 🙂",
     items: [
       "Naprawiony błąd, przez który nowe konta — zwłaszcza logujące się przez Google — pokazywały się jako „Anonim”. Każde nowe konto dostaje teraz nick od razu, a konta Google przyjmują nazwę kanału YouTube (po zgodzie na dostęp do YouTube przy logowaniu).",

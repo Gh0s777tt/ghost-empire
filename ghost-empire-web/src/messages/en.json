@@ -1656,7 +1656,7 @@
   "authError": {
     "title": "SIGN-IN ERROR",
     "retry": "TRY AGAIN",
-    "errConfiguration": "Server configuration error. Please contact an administrator.",
+    "errConfiguration": "This sign-in method is temporarily unavailable. Please sign in with another platform (e.g. Google or Discord) or try again later.",
     "errAccessDenied": "Access denied. Your account may be banned — contact an administrator on Discord.",
     "errVerification": "The verification link has expired or is invalid.",
     "errOAuthSignin": "Error during OAuth sign-in.",
@@ -1665,7 +1665,7 @@
     "errEmailCreateAccount": "Could not create the email account.",
     "errCallback": "Callback error.",
     "errOAuthAccountNotLinked": "An account with this email is already linked to another provider.",
-    "errDefault": "An unknown error occurred."
+    "errDefault": "Something went wrong during sign-in. Please try again or use another platform."
   },
   "polls": {
     "title": "POLLS",

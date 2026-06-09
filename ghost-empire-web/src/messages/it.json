@@ -155,7 +155,7 @@
   "authError": {
     "title": "ERRORE DI ACCESSO",
     "retry": "RIPROVA",
-    "errConfiguration": "Errore di configurazione del server. Contatta un amministratore.",
+    "errConfiguration": "Questo metodo di accesso non è temporaneamente disponibile. Accedi con un'altra piattaforma (ad es. Google o Discord) o riprova più tardi.",
     "errAccessDenied": "Accesso negato. Il tuo account potrebbe essere bannato — contatta un amministratore su Discord.",
     "errVerification": "Il link di verifica è scaduto o non è valido.",
     "errOAuthSignin": "Errore durante l'accesso OAuth.",
@@ -164,7 +164,7 @@
     "errEmailCreateAccount": "Impossibile creare l'account email.",
     "errCallback": "Errore di callback.",
     "errOAuthAccountNotLinked": "Esiste già un account con questa email collegato a un altro provider.",
-    "errDefault": "Si è verificato un errore sconosciuto."
+    "errDefault": "Qualcosa è andato storto durante l'accesso. Riprova o usa un'altra piattaforma."
   },
   "games": {
     "metaTitle": "Libreria giochi",
