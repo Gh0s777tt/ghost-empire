@@ -170,10 +170,105 @@ function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; 
   );
 }
 
-// ── Slots: 3 reels scroll down and decelerate onto the result symbols (staggered) ─
+// ── Custom slot symbols: crisp vector art (replaces flat emojis); shared <defs> so
+//    the 6 gradients are declared once and reused by every cell across all 3 reels. ──
+function SlotDefs() {
+  return (
+    <svg aria-hidden width={0} height={0} style={{ position: "absolute" }}>
+      <defs>
+        <radialGradient id="ge-cher" cx="38%" cy="30%" r="75%">
+          <stop offset="0" stopColor="#ff8a8a" /><stop offset="55%" stopColor="#e01e37" /><stop offset="100%" stopColor="#7d0010" />
+        </radialGradient>
+        <radialGradient id="ge-lem" cx="38%" cy="32%" r="80%">
+          <stop offset="0" stopColor="#fff7a8" /><stop offset="55%" stopColor="#f5d000" /><stop offset="100%" stopColor="#b58900" />
+        </radialGradient>
+        <linearGradient id="ge-bel" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe9a8" /><stop offset="45%" stopColor="#f7c948" /><stop offset="100%" stopColor="#a9760f" />
+        </linearGradient>
+        <linearGradient id="ge-str" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff3b0" /><stop offset="50%" stopColor="#ffce3a" /><stop offset="100%" stopColor="#e08a00" />
+        </linearGradient>
+        <linearGradient id="ge-gem" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#d6fbff" /><stop offset="50%" stopColor="#3ec9e0" /><stop offset="100%" stopColor="#1c7fa8" />
+        </linearGradient>
+        <linearGradient id="ge-sev" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ff5d5d" /><stop offset="100%" stopColor="#a00018" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function SlotSymbol({ s, size = 52 }: { s: string; size?: number }) {
+  const common = { width: size, height: size, viewBox: "0 0 64 64" } as const;
+  switch (s) {
+    case "🍒": // cherries (10×)
+      return (
+        <svg {...common}>
+          <path d="M32 16 C26 27,22 35,20 45" stroke="#3f7d3f" strokeWidth={3} fill="none" strokeLinecap="round" />
+          <path d="M32 16 C38 27,42 35,44 45" stroke="#3f7d3f" strokeWidth={3} fill="none" strokeLinecap="round" />
+          <path d="M32 16 C42 9,53 11,55 18 C46 22,36 20,32 16 Z" fill="#4caf50" />
+          <circle cx={20} cy={50} r={11} fill="url(#ge-cher)" />
+          <circle cx={44} cy={50} r={11} fill="url(#ge-cher)" />
+          <circle cx={16} cy={46} r={3} fill="#fff" opacity={0.6} />
+          <circle cx={40} cy={46} r={3} fill="#fff" opacity={0.6} />
+        </svg>
+      );
+    case "🍋": // lemon (12×)
+      return (
+        <svg {...common}>
+          <g transform="rotate(-22 32 32)">
+            <ellipse cx={32} cy={32} rx={23} ry={15} fill="url(#ge-lem)" stroke="#b58900" strokeWidth={1} />
+            <circle cx={9} cy={32} r={2.4} fill="#caa400" />
+            <circle cx={55} cy={32} r={2.4} fill="#caa400" />
+            <ellipse cx={24} cy={26} rx={7} ry={3.5} fill="#fff" opacity={0.45} />
+          </g>
+        </svg>
+      );
+    case "🔔": // bell (20×)
+      return (
+        <svg {...common}>
+          <circle cx={32} cy={13} r={4} fill="#e0a800" />
+          <path d="M32 15 C20 17,16 31,13 45 L51 45 C48 31,44 17,32 15 Z" fill="url(#ge-bel)" stroke="#8a5e00" strokeWidth={1.5} />
+          <rect x={11} y={44} width={42} height={5} rx={2.5} fill="#d9a400" />
+          <circle cx={32} cy={54} r={5} fill="#e0a800" />
+        </svg>
+      );
+    case "⭐": // star (50×)
+      return (
+        <svg {...common}>
+          <path d="M32 8 L37.9 23.9 L54.8 24.6 L41.5 35.1 L46.1 51.4 L32 42 L17.9 51.4 L22.5 35.1 L9.2 24.6 L26.1 23.9 Z" fill="url(#ge-str)" stroke="#b56a00" strokeWidth={1.5} strokeLinejoin="round" />
+        </svg>
+      );
+    case "💎": // diamond (150×)
+      return (
+        <svg {...common}>
+          <polygon points="20,20 44,20 50,30 14,30" fill="#dffaff" />
+          <polygon points="14,30 50,30 32,53" fill="url(#ge-gem)" />
+          <polygon points="20,20 26,30 14,30" fill="#9fe8f5" />
+          <polygon points="44,20 38,30 50,30" fill="#9fe8f5" />
+          <polygon points="14,30 26,30 32,53" fill="#2fb6d0" opacity={0.45} />
+          <polyline points="26,30 32,53 38,30" fill="none" stroke="#eafdff" strokeWidth={1} />
+        </svg>
+      );
+    case "7️⃣": // lucky seven (800× — jackpot)
+      return (
+        <svg {...common}>
+          <path d="M16 14 H50 V23 L34 54 H21 L38 25 H16 Z" fill="url(#ge-sev)" stroke="#ffd54a" strokeWidth={2.5} strokeLinejoin="round" paintOrder="stroke" />
+        </svg>
+      );
+    default:
+      return <span style={{ fontSize: size * 0.78 }}>{s}</span>;
+  }
+}
+
+// ── Slots: 3 reels scroll down and decelerate onto the result symbols (staggered),
+//    framed in a premium gold cabinet with a payline that lights up on a 3-of-a-kind. ─
 function SlotReels({ phase, reels, onSettle }: { phase: Phase; reels: string[] | null; onSettle: () => void }) {
   const refs = useRef<(HTMLDivElement | null)[]>([]);
   const done = useRef(false);
+  const [glow, setGlow] = useState(false);
+  const isWin = !!reels && reels[0] === reels[1] && reels[1] === reels[2];
   const strips = useMemo(() => {
     if (!reels) return null;
     return reels.map((target) => {
@@ -186,9 +281,10 @@ function SlotReels({ phase, reels, onSettle }: { phase: Phase; reels: string[] |
   useEffect(() => {
     if (phase !== "land" || !strips || done.current) return;
     done.current = true;
+    setGlow(false);
     if (reducedMotion()) {
       strips.forEach((s, i) => { const el = refs.current[i]; if (el) el.style.transform = `translateY(-${(s.length - 1) * CELL}px)`; });
-      const t = setTimeout(onSettle, 250); return () => clearTimeout(t);
+      const t = setTimeout(() => { setGlow(isWin); onSettle(); }, 250); return () => clearTimeout(t);
     }
     let maxDur = 0;
     strips.forEach((s, i) => {
@@ -202,22 +298,47 @@ function SlotReels({ phase, reels, onSettle }: { phase: Phase; reels: string[] |
       el.style.transition = `transform ${dur}ms cubic-bezier(0.18, 0.86, 0.22, 1)`;
       requestAnimationFrame(() => { const e = refs.current[i]; if (e) e.style.transform = `translateY(-${dist}px)`; });
     });
-    const t = setTimeout(onSettle, maxDur + 80);
+    const t = setTimeout(() => { setGlow(isWin); onSettle(); }, maxDur + 80);
     return () => clearTimeout(t);
-  }, [phase, strips, onSettle]);
+  }, [phase, strips, onSettle, isWin]);
 
   const display = strips ?? [["❔"], ["❔"], ["❔"]];
   return (
-    <div className="flex gap-2 items-center justify-center h-full">
-      {display.map((strip, i) => (
-        <div key={i} className="overflow-hidden rounded-xl bg-black border-2 border-zinc-700 shadow-inner" style={{ width: CELL, height: CELL }}>
-          <div ref={(el) => { refs.current[i] = el; }} className="will-change-transform" style={{ transform: "translateY(0px)" }}>
-            {strip.map((s, j) => (
-              <div key={j} className="flex items-center justify-center" style={{ height: CELL, fontSize: 40 }}>{s}</div>
-            ))}
-          </div>
+    <div className="flex items-center justify-center h-full">
+      <SlotDefs />
+      <div className="relative rounded-2xl p-3" style={{
+        backgroundImage: "linear-gradient(160deg,#1a0e05,#0c0703), linear-gradient(145deg,#ffe9a8,#b8860b 42%,#5c4208 72%,#ffd96b)",
+        backgroundOrigin: "border-box", backgroundClip: "padding-box, border-box",
+        border: "3px solid transparent",
+        boxShadow: glow
+          ? "0 0 28px 4px rgba(255,213,74,.55), 0 12px 40px rgba(0,0,0,.6), inset 0 0 24px rgba(0,0,0,.7)"
+          : "0 12px 40px rgba(0,0,0,.6), inset 0 0 24px rgba(0,0,0,.7)",
+        transition: "box-shadow 300ms ease",
+      }}>
+        <div className="flex gap-2 relative">
+          {display.map((strip, i) => (
+            <div key={i} className="overflow-hidden rounded-lg" style={{
+              width: CELL, height: CELL,
+              background: "linear-gradient(180deg,#23232c,#070709 50%,#23232c)",
+              boxShadow: "inset 0 9px 12px rgba(0,0,0,.85), inset 0 -9px 12px rgba(0,0,0,.85)",
+            }}>
+              <div ref={(el) => { refs.current[i] = el; }} className="will-change-transform" style={{ transform: "translateY(0px)" }}>
+                {strip.map((s, j) => (
+                  <div key={j} className="flex items-center justify-center" style={{ height: CELL }}>
+                    <SlotSymbol s={s} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div className="pointer-events-none absolute left-1 right-1" style={{
+            top: "50%", transform: "translateY(-50%)", height: 2,
+            background: glow ? "linear-gradient(90deg,transparent,#ffd54a,transparent)" : "linear-gradient(90deg,transparent,rgba(192,23,34,.55),transparent)",
+            boxShadow: glow ? "0 0 14px 3px rgba(255,213,74,.85)" : "none",
+            transition: "all 300ms ease",
+          }} />
         </div>
-      ))}
+      </div>
     </div>
   );
 }
@@ -241,8 +362,45 @@ function CoinFlip({ phase, win, onSettle }: { phase: Phase; win: boolean | null;
   return (
     <div className="flex items-center justify-center h-full" style={{ perspective: 900 }}>
       <div ref={ref} className="relative will-change-transform" style={{ width: 128, height: 128, transformStyle: "preserve-3d", transform: "rotateY(0deg)" }}>
-        <div className="absolute inset-0 rounded-full flex items-center justify-center text-6xl bg-gradient-to-br from-amber-300 to-amber-600 border-4 border-amber-200" style={{ backfaceVisibility: "hidden" }}>👑</div>
-        <div className="absolute inset-0 rounded-full flex items-center justify-center text-6xl bg-gradient-to-br from-zinc-400 to-zinc-700 border-4 border-zinc-300" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>💀</div>
+        {/* WIN face — gold coin, embossed Ghost Empire ghost, reeded edge */}
+        <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
+          <svg width={128} height={128} viewBox="0 0 128 128">
+            <defs>
+              <radialGradient id="coin-gold" cx="38%" cy="30%" r="75%">
+                <stop offset="0" stopColor="#fff2c0" /><stop offset="45%" stopColor="#f2c14e" /><stop offset="80%" stopColor="#c8901f" /><stop offset="100%" stopColor="#8a5e0e" />
+              </radialGradient>
+            </defs>
+            <circle cx={64} cy={64} r={62} fill="#7a510c" />
+            <circle cx={64} cy={64} r={62} fill="none" stroke="#5c3d08" strokeWidth={4} strokeDasharray="3 3" />
+            <circle cx={64} cy={64} r={54} fill="url(#coin-gold)" stroke="#fff2c0" strokeWidth={1.5} />
+            <circle cx={64} cy={64} r={46} fill="none" stroke="#a9760f" strokeWidth={2} opacity={0.55} />
+            <path d="M64 35 C49 35,41 47,41 61 L41 86 L49 80 L57 86 L64 80 L71 86 L79 80 L87 86 L87 61 C87 47,79 35,64 35 Z" fill="#a9760f" opacity={0.6} />
+            <path d="M64 33 C49 33,41 45,41 59 L41 84 L49 78 L57 84 L64 78 L71 84 L79 78 L87 84 L87 59 C87 45,79 33,64 33 Z" fill="#fff6d8" />
+            <circle cx={56} cy={57} r={4} fill="#8a5e0e" />
+            <circle cx={73} cy={57} r={4} fill="#8a5e0e" />
+          </svg>
+        </div>
+        {/* LOSE face — steel coin, embossed skull */}
+        <div className="absolute inset-0" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
+          <svg width={128} height={128} viewBox="0 0 128 128">
+            <defs>
+              <radialGradient id="coin-steel" cx="38%" cy="30%" r="75%">
+                <stop offset="0" stopColor="#eef1f6" /><stop offset="45%" stopColor="#9aa3b0" /><stop offset="80%" stopColor="#5b626e" /><stop offset="100%" stopColor="#33373f" />
+              </radialGradient>
+            </defs>
+            <circle cx={64} cy={64} r={62} fill="#2b2e34" />
+            <circle cx={64} cy={64} r={62} fill="none" stroke="#1c1f24" strokeWidth={4} strokeDasharray="3 3" />
+            <circle cx={64} cy={64} r={54} fill="url(#coin-steel)" stroke="#eef1f6" strokeWidth={1.5} />
+            <circle cx={64} cy={64} r={46} fill="none" stroke="#4a4f59" strokeWidth={2} opacity={0.55} />
+            <path d="M64 38 C48 38,40 50,40 64 C40 73,45 79,50 82 L50 90 C50 93,53 95,56 95 L72 95 C75 95,78 93,78 90 L78 82 C83 79,88 73,88 64 C88 50,80 38,64 38 Z" fill="#cfd4db" />
+            <circle cx={54} cy={64} r={7} fill="#2b2e34" />
+            <circle cx={74} cy={64} r={7} fill="#2b2e34" />
+            <path d="M61 77 L64 71 L67 77 Z" fill="#2b2e34" />
+            <rect x={55} y={88} width={3} height={6} fill="#2b2e34" />
+            <rect x={62.5} y={88} width={3} height={6} fill="#2b2e34" />
+            <rect x={70} y={88} width={3} height={6} fill="#2b2e34" />
+          </svg>
+        </div>
       </div>
     </div>
   );
