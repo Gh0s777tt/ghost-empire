@@ -13,14 +13,20 @@ type PlayResult = {
   ok?: boolean; bet: number; payout: number; net: number; newBalance: number;
   detail: string; reels?: string[]; roll?: { n: number; color: "green" | "red" | "black" };
   dice?: { roll: number; target: number; dir: "under" | "over"; win: boolean };
-  crash?: { crash: number; target: number; win: boolean }; error?: string;
+  crash?: { crash: number; target: number; win: boolean };
+  plinko?: { path: number[]; bucket: number; multiplier: number }; error?: string;
 };
 type Leaderboard = {
   bigWins: Array<{ id: string; name: string; game: string; net: number; detail: string | null }>;
   topNet: Array<{ name: string; net: number }>;
 };
-type Game = "slots" | "coinflip" | "roulette" | "dice" | "crash";
+type Game = "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko";
 type Phase = "spin" | "land";
+
+// Plinko board mirrors lib/gt-games.ts (replicated so the client never imports the server lib).
+const PLINKO_MULTS_UI = [13, 4, 1.8, 1.3, 1.05, 0.9, 0.5, 0.9, 1.05, 1.3, 1.8, 4, 13];
+const PLINKO_ROWS_UI = 12;
+const plinkoBucketColor = (m: number) => (m >= 4 ? "#c01722" : m >= 1.3 ? "#b8860b" : m >= 1 ? "#3f3f46" : "#18181b");
 
 // Dice odds mirror lib/gt-games.ts (pure, replicated here so the client never imports the server lib).
 const DICE_MIN = 2, DICE_MAX = 98, DICE_EDGE = 0.05;
@@ -525,10 +531,68 @@ function CrashRocket({ phase, crash, onSettle }: { phase: Phase; crash: { crash:
   );
 }
 
+// ── Plinko: the gold ball drops through a peg triangle, zig-zagging along the server's real path,
+//    and settles into a multiplier bucket (which lights up). Edge buckets pay big, center sub-1. ─
+function PlinkoBoard({ phase, plinko, onSettle }: { phase: Phase; plinko: { path: number[]; bucket: number; multiplier: number } | null; onSettle: () => void }) {
+  const ballRef = useRef<HTMLDivElement>(null);
+  const done = useRef(false);
+  const [landed, setLanded] = useState<number | null>(null);
+  const W = 360, H = 300, topY = 18, bottomY = 250;
+  const rows = PLINKO_ROWS_UI;
+  const rowH = (bottomY - topY) / rows;
+  const laneW = W / (rows + 1);
+  const bucketCenterX = (k: number) => (k + 0.5) * laneW; // aligns with the flex buckets below
+
+  useEffect(() => {
+    if (phase !== "land" || !plinko || done.current) return;
+    done.current = true;
+    const xs = [W / 2];
+    let off = 0;
+    for (const d of plinko.path) { off += (d ? 1 : -1) * (laneW / 2); xs.push(W / 2 + off); }
+    const place = (x: number, y: number) => { const b = ballRef.current; if (b) { b.style.left = `${x}px`; b.style.top = `${y}px`; } };
+    if (reducedMotion()) { place(bucketCenterX(plinko.bucket), bottomY); setLanded(plinko.bucket); const t = setTimeout(onSettle, 250); return () => clearTimeout(t); }
+    const DUR = 1700;
+    let raf = 0, startTs = 0;
+    const tick = (now: number) => {
+      if (!startTs) startTs = now;
+      const p = Math.min(1, (now - startTs) / DUR);
+      const fr = p * rows;
+      const i = Math.floor(fr), t = fr - i;
+      const x0 = xs[Math.min(i, xs.length - 1)], x1 = xs[Math.min(i + 1, xs.length - 1)];
+      place(x0 + (x1 - x0) * t, topY + fr * rowH + Math.sin(t * Math.PI) * 6); // slight hop between rows
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else { place(bucketCenterX(plinko.bucket), bottomY); setLanded(plinko.bucket); }
+    };
+    raf = requestAnimationFrame(tick);
+    const t = setTimeout(onSettle, DUR + 350);
+    return () => { clearTimeout(t); cancelAnimationFrame(raf); };
+  }, [phase, plinko, onSettle, laneW, rowH]);
+
+  const pegs: { x: number; y: number }[] = [];
+  for (let r = 1; r <= rows; r++) for (let j = 0; j <= r; j++) pegs.push({ x: W / 2 + (j - r / 2) * laneW, y: topY + r * rowH });
+
+  return (
+    <div className="relative rounded-2xl overflow-hidden" style={{ width: W, height: H, background: "radial-gradient(120% 100% at 50% 0%, #15172e, #0a0a12 70%)", border: "1px solid #2a2a3a" }}>
+      {pegs.map((p, i) => (
+        <div key={i} className="absolute rounded-full" style={{ left: p.x - 2, top: p.y - 2, width: 4, height: 4, background: "#5b5b73" }} />
+      ))}
+      <div className="absolute left-0 right-0 flex gap-px px-px" style={{ bottom: 6, height: 28 }}>
+        {PLINKO_MULTS_UI.map((m, k) => (
+          <div key={k} className="flex-1 rounded-sm flex items-center justify-center text-white font-bold"
+            style={{ fontSize: 9, background: plinkoBucketColor(m), opacity: landed === null || landed === k ? 1 : 0.4, transform: landed === k ? "translateY(-3px)" : "none", boxShadow: landed === k ? "0 0 10px 2px rgba(255,213,74,.85)" : "none", transition: "all 200ms ease" }}>
+            {m}
+          </div>
+        ))}
+      </div>
+      <div ref={ballRef} className="absolute rounded-full will-change-transform" style={{ left: W / 2, top: topY, width: 12, height: 12, marginLeft: -6, marginTop: -6, background: "radial-gradient(circle at 35% 30%, #fff, #f5c842 60%, #b8860b)", boxShadow: "0 0 8px rgba(245,200,66,.85)" }} />
+    </div>
+  );
+}
+
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
-  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash") };
+  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   const [bet, setBet] = useState(100);
   const [busy, setBusy] = useState(false);
@@ -596,6 +660,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               <DiceTrack key={stage.id} phase={stage.phase} dice={stage.result?.dice ?? null} onSettle={settle} />
             ) : stage?.game === "crash" ? (
               <CrashRocket key={stage.id} phase={stage.phase} crash={stage.result?.crash ?? null} onSettle={settle} />
+            ) : stage?.game === "plinko" ? (
+              <PlinkoBoard key={stage.id} phase={stage.phase} plinko={stage.result?.plinko ?? null} onSettle={settle} />
             ) : (
               <div className="text-zinc-700 text-5xl tracking-widest">🎰</div>
             )}
@@ -605,9 +671,9 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           <div className="min-h-[52px] flex flex-col items-center justify-center text-center">
             {reveal ? (
               <>
-                <div className={`text-2xl font-bold ${reveal.payout > 0 ? "text-emerald-300" : "text-zinc-400"}`}>{reveal.detail}</div>
-                <div className={`font-extrabold mt-0.5 ${reveal.payout > 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                  {reveal.payout > 0 ? `+${fmt(reveal.payout)} GT 🎉` : `−${fmt(reveal.bet)} GT`}
+                <div className={`text-2xl font-bold ${reveal.net >= 0 ? "text-emerald-300" : "text-zinc-400"}`}>{reveal.detail}</div>
+                <div className={`font-extrabold mt-0.5 ${reveal.net > 0 ? "text-emerald-400" : reveal.net < 0 ? "text-rose-400" : "text-zinc-300"}`}>
+                  {reveal.net > 0 ? `+${fmt(reveal.net)} GT 🎉` : reveal.net < 0 ? `−${fmt(-reveal.net)} GT` : `±0 GT`}
                 </div>
               </>
             ) : stage ? (
@@ -677,6 +743,13 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <span className="text-xs text-zinc-400 font-mono tabular-nums w-16 text-center">{(95 / crashTarget).toFixed(1)}%</span>
             <button onClick={() => play("crash", String(crashTarget))} disabled={busy || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 disabled:opacity-40 transition-all">{t("crashStart")}</button>
+          </div>
+
+          {/* Plinko: drop the ball — no bet choice; edge buckets pay big, center sub-1 */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-zinc-500 self-center me-1">{t("plinkoLabel")}</span>
+            <button onClick={() => play("plinko")} disabled={busy || (balance ?? 0) < bet}
+              className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 disabled:opacity-40 transition-all">{t("plinkoDrop")}</button>
           </div>
 
           <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} GT</span></div>

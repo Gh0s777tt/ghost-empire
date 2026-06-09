@@ -612,7 +612,10 @@
     "gameDice": "Dadu",
     "crashLabel": "🚀 Crash:",
     "crashStart": "🚀 Mulai",
-    "gameCrash": "Crash"
+    "gameCrash": "Crash",
+    "plinkoLabel": "🔵 Plinko:",
+    "plinkoDrop": "🔵 Jatuhkan",
+    "gamePlinko": "Plinko"
   },
   "welcome": {
     "metaTitle": "Selamat datang di Ghost Empire",

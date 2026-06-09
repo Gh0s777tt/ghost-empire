@@ -583,7 +583,10 @@
     "gameDice": "النرد",
     "crashLabel": "🚀 الصاروخ:",
     "crashStart": "🚀 ابدأ",
-    "gameCrash": "الصاروخ"
+    "gameCrash": "الصاروخ",
+    "plinkoLabel": "🔵 بلينكو:",
+    "plinkoDrop": "🔵 أسقط",
+    "gamePlinko": "بلينكو"
   },
   "welcome": {
     "metaTitle": "مرحبًا بك في Ghost Empire",

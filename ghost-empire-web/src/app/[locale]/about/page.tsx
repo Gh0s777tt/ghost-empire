@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-09",
+    title: "Nowa gra: Plinko 🔵",
+    items: [
+      "Trzecia nowa gra w kasynie — Plinko. Upuszczasz kulkę, która odbija się od kołków i ląduje w jednej z przegródek z mnożnikiem; przegródki na krawędziach płacą najwięcej (do 13×), a te w środku najmniej. Kulka zjeżdża dokładnie po ścieżce wylosowanej przez serwer — w pełni fair. Przy okazji wynik gry pokazuje teraz zmianę salda netto.",
+    ],
+  },
+  {
+    date: "2026-06-09",
     title: "Nowa gra: Crash (Rakieta) 🚀",
     items: [
       "Kolejna nowa gra w kasynie — Crash. Rakieta startuje, a mnożnik rośnie coraz szybciej; ustalasz swój próg auto-wypłaty (np. 2×) i wygrywasz, jeśli rakieta go osiągnie, zanim wybuchnie. Im wyższy próg, tym mniejsza szansa, ale większa wygrana. Punkt wybuchu losuje serwer — w pełni fair.",

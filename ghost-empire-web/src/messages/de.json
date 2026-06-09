@@ -583,7 +583,10 @@
     "gameDice": "Würfel",
     "crashLabel": "🚀 Crash:",
     "crashStart": "🚀 Start",
-    "gameCrash": "Crash"
+    "gameCrash": "Crash",
+    "plinkoLabel": "🔵 Plinko:",
+    "plinkoDrop": "🔵 Fallen lassen",
+    "gamePlinko": "Plinko"
   },
   "welcome": {
     "metaTitle": "Willkommen im Ghost Empire",

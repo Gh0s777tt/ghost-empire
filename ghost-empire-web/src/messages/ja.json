@@ -583,7 +583,10 @@
     "gameDice": "サイコロ",
     "crashLabel": "🚀 クラッシュ：",
     "crashStart": "🚀 スタート",
-    "gameCrash": "クラッシュ"
+    "gameCrash": "クラッシュ",
+    "plinkoLabel": "🔵 プリンコ：",
+    "plinkoDrop": "🔵 落とす",
+    "gamePlinko": "プリンコ"
   },
   "welcome": {
     "metaTitle": "Ghost Empire へようこそ",
