@@ -1875,7 +1875,11 @@
     "gameCrash": "Rakieta",
     "plinkoLabel": "🔵 Plinko:",
     "plinkoDrop": "🔵 Upuść",
-    "gamePlinko": "Plinko"
+    "gamePlinko": "Plinko",
+    "minesLabel": "💣 Miny:",
+    "minesStart": "💣 Graj",
+    "minesCashout": "Wypłać",
+    "gameMines": "Miny"
   },
   "wheel": {
     "title": "🎡 Koło Fortuny",

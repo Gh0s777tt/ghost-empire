@@ -586,7 +586,11 @@
     "gameCrash": "火箭",
     "plinkoLabel": "🔵 Plinko：",
     "plinkoDrop": "🔵 投放",
-    "gamePlinko": "Plinko"
+    "gamePlinko": "Plinko",
+    "minesLabel": "💣 扫雷：",
+    "minesStart": "💣 开始",
+    "minesCashout": "提现",
+    "gameMines": "扫雷"
   },
   "welcome": {
     "metaTitle": "欢迎来到 Ghost Empire",

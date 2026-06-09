@@ -1875,7 +1875,11 @@
     "gameCrash": "Crash",
     "plinkoLabel": "🔵 Plinko:",
     "plinkoDrop": "🔵 Drop",
-    "gamePlinko": "Plinko"
+    "gamePlinko": "Plinko",
+    "minesLabel": "💣 Mines:",
+    "minesStart": "💣 Play",
+    "minesCashout": "Cash out",
+    "gameMines": "Mines"
   },
   "wheel": {
     "title": "🎡 Wheel of Fortune",
