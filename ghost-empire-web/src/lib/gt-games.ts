@@ -73,7 +73,7 @@ export function spinRoulette(choice: string, rng: () => number = Math.random): R
 }
 
 export type GtGameResult =
-  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[] }
+  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor } }
   | { ok: false; status: number; error: string };
 
 export class GtGameError extends Error {
@@ -95,6 +95,7 @@ export async function playGtGame(
   let payout = 0;
   let detail = "";
   let reels: string[] | undefined;
+  let roll: { n: number; color: RouletteColor } | undefined;
   if (game === "slots") {
     const o = spinSlots();
     reels = o.reels;
@@ -110,6 +111,7 @@ export async function playGtGame(
     const o = spinRoulette(c);
     const emoji = o.color === "red" ? "🔴" : o.color === "black" ? "⚫" : "🟢";
     detail = `${emoji} ${o.n}`;
+    roll = { n: o.n, color: o.color };
     payout = o.multiplier > 0 ? bet * o.multiplier : 0;
   } else {
     return { ok: false, status: 400, error: "Nieznana gra" };
@@ -140,7 +142,7 @@ export async function playGtGame(
     const { checkAndGrantAchievements } = await import("@/lib/achievements");
     await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
 
-    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels };
+    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll };
   } catch (e) {
     if (e instanceof GtGameError) return { ok: false, status: e.status, error: e.message };
     return { ok: false, status: 500, error: "Błąd serwera" };
