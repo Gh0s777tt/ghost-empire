@@ -42,7 +42,7 @@ function reducedMotion(): boolean {
 
 // ── Roulette: crisp vector (SVG) wheel; continuous spin → ease-out land on server's number ──
 function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; target: number | null; onSettle: () => void; size?: number }) {
-  const ref = useRef<SVGSVGElement>(null);
+  const ref = useRef<HTMLDivElement>(null); // rotating wrapper (CSS transform animations don't apply to <svg> itself)
   const done = useRef(false);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; 
     el.style.animation = "none";
     el.style.transition = "none";
     el.style.transform = `rotate(${cur}deg)`;
-    void el.getBoundingClientRect(); // reflow → lock the frozen frame (SVG has no offsetHeight)
+    void el.offsetHeight; // reflow → lock the frozen frame (no jump)
     const curMod = (((cur % 360) + 360) % 360);
     let delta = targetMod - curMod;
     if (delta < 0) delta += 360;
@@ -91,7 +91,8 @@ function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; 
     <div className="relative select-none" style={{ width: size, height: size }}>
       {/* fixed pointer */}
       <div className="absolute left-1/2 -translate-x-1/2 z-30" style={{ top: -4, width: 0, height: 0, borderLeft: "13px solid transparent", borderRight: "13px solid transparent", borderTop: "22px solid #fbbf24", filter: "drop-shadow(0 2px 3px rgba(0,0,0,.6))" }} />
-      <svg ref={ref} width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="will-change-transform" style={{ display: "block", transform: "rotate(0deg)", transformOrigin: "50% 50%", filter: "drop-shadow(0 12px 32px rgba(0,0,0,.55))" }}>
+      <div ref={ref} className="absolute inset-0 will-change-transform" style={{ transform: "rotate(0deg)" }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block", filter: "drop-shadow(0 12px 32px rgba(0,0,0,.55))" }}>
         <defs>
           <radialGradient id="ge-rim" cx="50%" cy="32%" r="80%">
             <stop offset="0%" stopColor="#52525b" />
@@ -117,7 +118,8 @@ function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; 
         })}
         <circle cx={cx} cy={cy} r={rHub} fill="url(#ge-hub)" stroke="#18181b" strokeWidth={2} />
         <circle cx={cx} cy={cy} r={Number((rHub * 0.42).toFixed(1))} fill="#0a0a0a" />
-      </svg>
+        </svg>
+      </div>
       {/* static gloss (does NOT rotate — light from above) */}
       <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle at 50% 26%, rgba(255,255,255,0.16), rgba(255,255,255,0) 46%)" }} />
     </div>
