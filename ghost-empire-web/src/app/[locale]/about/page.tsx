@@ -29,7 +29,7 @@ const CHANGELOG = [
     date: "2026-06-09",
     title: "Czytelniejsze komunikaty przy logowaniu 💬",
     items: [
-      "Gdy logowanie się nie powiedzie, zamiast technicznego „błędu konfiguracji" zobaczysz teraz jasny komunikat z podpowiedzią (np. żeby spróbować zalogować się inną platformą). We wszystkich językach portalu.",
+      "Gdy logowanie się nie powiedzie, zamiast technicznego komunikatu o błędzie konfiguracji zobaczysz teraz jasny komunikat z podpowiedzią (np. żeby spróbować zalogować się inną platformą). We wszystkich językach portalu.",
     ],
   },
   {
