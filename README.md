@@ -117,13 +117,14 @@ flowchart LR
 | **Framework** | Next.js **16** (App Router, RSC) · React **19** · TypeScript **6** |
 | **Styl** | Tailwind CSS **4** (`@theme`, `@tailwindcss/postcss`) · Lucide **1.x** · własne ikony marek (SVG) |
 | **Backend / DB** | Next API routes · Prisma **7** (driver adapter `@prisma/adapter-pg`) · PostgreSQL (Supabase / Supavisor) · Zod **4** |
-| **Auth** | NextAuth **4.24** + PrismaAdapter · OAuth: Twitch / Kick / Discord / Google→YouTube |
+| **Auth** | NextAuth **5** (Auth.js, beta) + PrismaAdapter · OAuth: Twitch / Kick / Discord / Google→YouTube |
+| **i18n** | next-intl **4** · **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID) · **RTL** dla arabskiego |
 | **Realtime** | DB-backed kolejki + polling (overlaye, notyfikacje) — Vercel Hobby = bez websocketów |
 | **Boty** | discord.js **14.26** · tmi.js (Twitch) · Kick/YT API · `tsx`, TypeScript 6 |
-| **Jakość** | Vitest **4** (41 testów) · ESLint **9** (flat config) · GitHub Actions CI · Dependabot · GitGuardian |
+| **Jakość** | Vitest **4** (**183 testy**) · ESLint **9** (flat config) · GitHub Actions CI · Dependabot · GitGuardian |
 | **Deploy** | Vercel (web, auto-deploy z `main`) · bot na PC/Docker (gotowy na VPS/Railway) |
 
-> Cały stack jest na **najnowszych majorach** (modernizacja udokumentowana w [CHANGELOG.md](CHANGELOG.md)). Świadomie pominięte: `next-auth v5` (beta) i `eslint 10` (ekosystem `eslint-config-next` 16 jeszcze go nie wspiera).
+> Cały stack jest na **najnowszych majorach** (modernizacja udokumentowana w [CHANGELOG.md](CHANGELOG.md)). Świadomie pominięte: `eslint 10` (ekosystem `eslint-config-next` 16 jeszcze go nie wspiera).
 
 ---
 
@@ -171,7 +172,7 @@ flowchart LR
 | **Security** | **szyfrowanie sekretów at-rest (AES-256-GCM)** — klucze API + tokeny OAuth · HSTS, CSP, COOP, X-Frame-Options, Permissions-Policy · `noindex`/`no-store` na overlayach · rate-limit (DB sliding-window) · webhook verify (HMAC/RSA) · HMAC-signed cookies · audit log z IP · skan sekretów (GitGuardian) |
 | **Performance** | `unstable_cache`, indeksy DB, lazy-load sekcji admina, Router `staleTimes`, `Promise.all`, pula DB `max:3` pod Supabase |
 | **a11y** | `:focus-visible`, skip-link, `prefers-reduced-motion`, `aria-label`/`aria-current` na nav, `role="dialog"` na modalach |
-| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest **111 unit + 11 integration** (realny Postgres w CI) · Dependabot · dokumentacja na bieżąco |
+| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest **183 testy** (+ integracyjne na realnym Postgresie w CI) · Dependabot · dokumentacja na bieżąco |
 
 ---
 

@@ -27,7 +27,7 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 - **F6 — security/backup** (zrobione: backup JSON, sanityzacja URL, ✅ **szyfrowanie sekretów at-rest AES-256-GCM**, ✅ **nagłówki overlay `noindex`/`no-store`**, ✅ **cron czyszczący bazę**). Zostaje: auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
 - **Hardware (3C):** OBS WebSocket (panel integracji już przyjmuje adres+hasło), Philips Hue / Govee (efekty świetlne na donejty) — konta dev.
 - ✅ **Emotki 7TV/BTTV/FFZ + prawdziwe grafiki odznak** — zrobione (#149).
-- **i18n PL/EN**, testy integracyjne (Docker Postgres) + E2E (Playwright), Lighthouse CI.
+- ~~**i18n PL/EN**~~ → ✅ **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID, AR=RTL); testy integracyjne (Docker Postgres) + E2E (Playwright), Lighthouse CI.
 
 > Decyzja: priorytet (AI vs security vs hardware vs emotki). Hardware (Hue/Govee) + AI wymagają kont/kluczy.
 
@@ -99,7 +99,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 |---|---|---|
 | **Audyt a11y** (axe / Lighthouse) | 🟡 | ✅ focus-visible, nawigacja klawiaturą, `aria-label` na navach, `aria-current`, **`role="dialog"`+`aria-modal` na modalach edytorów** (A4 + a11y passes). Zostaje: kontrast (czerwień na czerni), reszta modali/dropdownów |
 | ~~**Skip-to-content + landmarki**~~ ✅ | — | **Zrobione** — skip-link „Przejdź do treści" (A4) + `<main>` per-strona + opisane nawigacje/stopka |
-| **i18n (PL/EN)** | 🛠️ w toku | ✅ **(#194)** scaffold next-intl: routing `/en` (`localePrefix: as-needed`, PL pod `/`), przełącznik PL/EN, nawigacja + stopka przetłumaczone (`messages/{pl,en}.json`). **Zostaje:** tłumaczenie treści stron — przyrostowo |
+| **i18n (14 lokalizacji)** | ✅ **done** | ✅ **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID) = po 1963 klucze = 100% (#194 scaffold → #253–#359 pełne tłumaczenia), **AR = RTL**. Przyszłe i18n = tylko klucze nowych funkcji |
 | ~~**Empty/error states**~~ ✅ | — | **Zrobione** — `EmptyState` (Ankiety / Eventy / Questy / Ranking / Osiągnięcia / Predykcje) + `ErrorState` z retry (LazySection admina). Pozostałe listy — opcjonalnie iteracyjnie |
 | **OG images — dopieszczenie** | 🧊 | Wzbogacić share-preview (np. dynamiczne tła per ranga/tier) |
 
