@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Gift, Sparkles, Loader2, Check, X, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { emitBalance } from "@/lib/balance-bus";
 
 type RedeemResult =
   | {
@@ -51,6 +52,7 @@ export function DropRedeemBox({
       setLastResult(data);
       if (res.ok && "ok" in data) {
         setCode("");
+        emitBalance(data.newBalance);
         await refreshSession();
         startTransition(() => router.refresh());
         // Auto-clear success message after a while

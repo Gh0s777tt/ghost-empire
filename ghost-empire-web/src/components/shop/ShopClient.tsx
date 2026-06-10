@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
+import { emitBalance } from "@/lib/balance-bus";
 import { ShoppingBag, Flame, Lock, Check, X, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
@@ -110,6 +111,7 @@ export function ShopClient({
         setToast({ kind: "err", msg: err });
         return;
       }
+      emitBalance(data.newBalance);
       setToast({
         kind: "ok",
         msg: data.deliveryPending

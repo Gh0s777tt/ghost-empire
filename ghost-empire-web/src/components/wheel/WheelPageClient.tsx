@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
+import { emitBalance } from "@/lib/balance-bus";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { Link } from "@/i18n/navigation";
 import { WheelGraphic, rotationForIndex, type WheelSeg } from "@/components/WheelGraphic";
@@ -72,6 +73,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
         setSpinning(false);
         setResult({ label: data.segmentLabel, reward: data.rewardTokens });
         setState((s) => (s ? { ...s, balance: data.newBalance } : s));
+        emitBalance(data.newBalance);
         void load(); // refresh recent wins
       }, SPIN_MS);
     } catch {

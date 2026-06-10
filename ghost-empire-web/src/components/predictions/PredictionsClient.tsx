@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
+import { emitBalance } from "@/lib/balance-bus";
 import { Link } from "@/i18n/navigation";
 import { Dice5, Coins, Trophy, Clock, Check, X, Loader2, History } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
@@ -189,6 +190,7 @@ function ActivePredictionCard({
       if (!res.ok) {
         onToast("err", data.error ?? t("err"));
       } else {
+        emitBalance(data.newBalance);
         onToast("ok", t("wagered", { wager, balance: data.newBalance }));
         setWagerInput("");
         onSuccess();

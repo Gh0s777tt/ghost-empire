@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
+import { emitBalance } from "@/lib/balance-bus";
 import {
   Zap, Check, Loader2, MessageCircle, Mic2, Gift, Flame, X, Clock,
 } from "lucide-react";
@@ -109,6 +110,7 @@ export function QuestsClient({
             : t,
         ),
       );
+      emitBalance(data.newBalance);
       showToast("ok", t("claimedToast", { reward: fmt(data.reward), balance: fmt(data.newBalance) }));
       await refreshSession();
       startTransition(() => router.refresh());
