@@ -7,13 +7,13 @@ import HowItWorks from "@/components/HowItWorks";
 import { Link } from "@/i18n/navigation";
 import {
   Trophy, TrendingUp, Sparkles, Flame, Crown, Medal, ShieldCheck,
-  X, Loader2, Check, Coins, Heart, UserCog, Ban,
+  X, Loader2, Check, Coins, Heart, UserCog, Ban, CalendarDays,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { rankForLevel, cn, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 
-type Sort = "tokens" | "totalEarned" | "level" | "streak";
+type Sort = "tokens" | "totalEarned" | "weekly" | "level" | "streak";
 
 type User = {
   id: string;
@@ -26,6 +26,7 @@ type User = {
   xp: number;
   prestige?: number;
   streak: number;
+  weekly?: number; // GT earned in the last 7 days (only present for sort="weekly")
   isAdmin: boolean;
   isBanned?: boolean;
 };
@@ -34,10 +35,11 @@ const SORT_META: Record<
   Sort,
   { icon: typeof Trophy; suffix: string; color: string }
 > = {
-  tokens:      { icon: Trophy,     suffix: "GT", color: "#E50914" },
-  totalEarned: { icon: TrendingUp, suffix: "GT", color: "#10b981" },
-  level:       { icon: Sparkles,   suffix: "",   color: "#a855f7" },
-  streak:      { icon: Flame,      suffix: "",   color: "#FF4500" },
+  tokens:      { icon: Trophy,       suffix: "GT", color: "#E50914" },
+  totalEarned: { icon: TrendingUp,   suffix: "GT", color: "#10b981" },
+  weekly:      { icon: CalendarDays, suffix: "GT", color: "#38bdf8" },
+  level:       { icon: Sparkles,     suffix: "",   color: "#a855f7" },
+  streak:      { icon: Flame,        suffix: "",   color: "#FF4500" },
 };
 
 const PODIUM_STYLE = [
@@ -77,11 +79,11 @@ export function RankingClient({
   const meta = SORT_META[sort];
   const Icon = meta.icon;
   const sortShorts: Record<Sort, string> = {
-    tokens: t("sortTokensShort"), totalEarned: t("sortEarnedShort"),
+    tokens: t("sortTokensShort"), totalEarned: t("sortEarnedShort"), weekly: t("sortWeeklyShort"),
     level: t("sortLevelShort"), streak: t("sortStreakShort"),
   };
   const sortLabels: Record<Sort, string> = {
-    tokens: t("sortTokensLabel"), totalEarned: t("sortEarnedLabel"),
+    tokens: t("sortTokensLabel"), totalEarned: t("sortEarnedLabel"), weekly: t("sortWeeklyLabel"),
     level: t("sortLevelLabel"), streak: t("sortStreakLabel"),
   };
 
@@ -89,7 +91,7 @@ export function RankingClient({
   const rest = topUsers.slice(3);
 
   function formatValue(u: User): string {
-    const v = u[sort];
+    const v = sort === "weekly" ? (u.weekly ?? 0) : u[sort];
     if (sort === "level") return `LVL ${v}`;
     if (sort === "streak") return `${v} ${t("streakUnit", { count: v })}`;
     return `${fmt(v)} ${meta.suffix}`;

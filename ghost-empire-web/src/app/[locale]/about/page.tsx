@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Ranking tygodnia 📅",
+    items: [
+      "W rankingu pojawiła się zakładka Tydzień — pokazuje, kto zdobył najwięcej Ghost Tokens w ostatnich 7 dniach. Świetna szansa dla nowych graczy, bo okno przesuwa się codziennie i każdy tydzień zaczyna się od zera.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Dzienny bonus za wejście 🎁",
     items: [
       "Na stronie głównej czeka codzienny bonus Ghost Tokens: pierwszego dnia 50 GT, a każdy kolejny dzień serii dorzuca +25 GT (maks. 200 GT dziennie od 7. dnia). Wystarczy kliknąć Odbierz — seria rośnie, dopóki zaglądasz codziennie!",

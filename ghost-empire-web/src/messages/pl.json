@@ -2158,6 +2158,8 @@
     "trgManual": "Ręcznie"
   },
   "ranking": {
+    "sortWeeklyShort": "Tydzień",
+    "sortWeeklyLabel": "GT zdobyte w ostatnich 7 dniach",
     "help": "Ranking graczy społeczności — sortuj po Ghost Tokens, XP i innych statystykach. Pozycję budujesz aktywnością: czat, oglądanie, questy i gry.",
     "metaTitle": "Ranking",
     "metaDesc": "Najlepsi członkowie Ghost Empire — top tokeny, level, streak.",

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { RankingClient } from "@/components/ranking/RankingClient";
-import { getCachedRanking } from "@/lib/cached";
+import { getCachedRanking, getCachedWeeklyRanking } from "@/lib/cached";
 import { currentTenantId } from "@/lib/tenant";
 
 import type { Metadata } from "next";
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/ranking", locale) };
 }
 
-const VALID_SORTS = ["tokens", "totalEarned", "level", "streak"] as const;
+const VALID_SORTS = ["tokens", "totalEarned", "weekly", "level", "streak"] as const;
 type Sort = (typeof VALID_SORTS)[number];
 
 export default async function RankingPage({
@@ -51,14 +51,12 @@ export default async function RankingPage({
   }
   const canDoAnything = canGrantTokens || canSetRole || canBan;
 
-  // Only count users with non-zero value on the sorted field — keeps the
-  // ranking from being polluted by brand-new accounts with all zeros.
-  const where = { [sort]: { gt: 0 } };
-
   // Cached 45s per sort metric — ranking is the heaviest public query and the
   // result is identical for everyone, so we serve it from cache instead of
-  // hammering the (free-tier) DB on every visit.
-  const { topUsers, totalRanked, totalUsers } = await getCachedRanking(sort, tid);
+  // hammering the (free-tier) DB on every visit. "weekly" is computed from the
+  // transaction log (GT earned in the last 7 days) instead of user-table fields.
+  const { topUsers, totalRanked, totalUsers } =
+    sort === "weekly" ? await getCachedWeeklyRanking(tid) : await getCachedRanking(sort, tid);
 
   // Compute current user's rank if not in top 100
   let myRank: {
@@ -66,7 +64,8 @@ export default async function RankingPage({
     user: (typeof topUsers)[number];
   } | null = null;
 
-  if (session?.user?.id) {
+  if (session?.user?.id && sort !== "weekly") {
+    // (weekly: computing an out-of-top-100 position would need a full groupBy — skipped)
     const inTop = topUsers.find((u) => u.id === session.user.id);
     if (!inTop) {
       const me = await prisma.user.findUnique({

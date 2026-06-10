@@ -280,6 +280,8 @@
     "cost": "コスト：{cost} GT"
   },
   "ranking": {
+    "sortWeeklyShort": "週間",
+    "sortWeeklyLabel": "過去 7 日間に獲得した GT",
     "help": "コミュニティのランキング：Ghost Tokens や XP などで並べ替え。チャット、視聴、クエスト、ゲームの活動で順位が上がります。",
     "metaTitle": "ランキング",
     "metaDesc": "Ghost Empire のトップメンバー——トークン、レベル、連続日数のリーダー。",

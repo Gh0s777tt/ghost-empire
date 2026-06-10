@@ -280,6 +280,8 @@
     "cost": "Kosten: {cost} GT"
   },
   "ranking": {
+    "sortWeeklyShort": "Woche",
+    "sortWeeklyLabel": "In den letzten 7 Tagen verdiente GT",
     "help": "Die Community-Rangliste — sortiere nach Ghost Tokens, XP und mehr. Du steigst durch Aktivität auf: Chat, Zuschauen, Quests und Spiele.",
     "metaTitle": "Rangliste",
     "metaDesc": "Die besten Ghost-Empire-Mitglieder — führend bei Tokens, Level und Streak.",

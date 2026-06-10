@@ -2158,6 +2158,8 @@
     "trgManual": "Manual"
   },
   "ranking": {
+    "sortWeeklyShort": "Week",
+    "sortWeeklyLabel": "GT earned in the last 7 days",
     "help": "The community leaderboard — sort by Ghost Tokens, XP and more. You climb through activity: chat, watching, quests and games.",
     "metaTitle": "Ranking",
     "metaDesc": "The top Ghost Empire members — leading tokens, level and streak.",
