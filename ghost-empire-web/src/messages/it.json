@@ -641,6 +641,13 @@
     "unitPurchase": "acquisto"
   },
   "kasyno": {
+    "gameHilo": "Hi-Lo",
+    "helpHilo": "Vedi una carta e indovini se la prossima sarà più alta o più bassa (Asso basso, Re alto; il pareggio perde). Ogni colpo moltiplica il piatto — incassa prima di sbagliare!",
+    "hiloDeal": "Distribuisci carta",
+    "hiloHi": "Più alta",
+    "hiloLo": "Più bassa",
+    "hiloCash": "Incassa",
+    "hiloBust": "Errore — puntata persa",
     "gameBlackjack": "Blackjack",
     "helpBlackjack": "Blackjack classico contro il banco: chiedi fino a 21, il banco pesca fino a 17. La vittoria paga 2×, il blackjack naturale 2,5×, il pareggio restituisce la puntata. Raddoppio: ×2 puntata e una carta.",
     "bjDeal": "Distribuisci",

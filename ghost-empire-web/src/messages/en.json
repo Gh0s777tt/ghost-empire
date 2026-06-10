@@ -1931,6 +1931,13 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "gameHilo": "Hi-Lo",
+    "helpHilo": "You see a card and guess whether the next one is higher or lower (Ace low, King high; a tie loses). Every correct guess multiplies the pot — cash out before you miss!",
+    "hiloDeal": "Deal a card",
+    "hiloHi": "Higher",
+    "hiloLo": "Lower",
+    "hiloCash": "Cash out",
+    "hiloBust": "Miss — stake lost",
     "gameBlackjack": "Blackjack",
     "helpBlackjack": "Classic blackjack vs the dealer: draw to 21, the dealer draws to 17. A win pays 2×, a natural blackjack 2.5×, a push returns the stake. Double: ×2 stake and one card.",
     "bjDeal": "Deal",

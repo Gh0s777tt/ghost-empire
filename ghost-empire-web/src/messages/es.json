@@ -641,6 +641,13 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "gameHilo": "Hi-Lo",
+    "helpHilo": "Ves una carta y adivinas si la siguiente será mayor o menor (As bajo, Rey alto; el empate pierde). Cada acierto multiplica el bote — ¡retira antes de fallar!",
+    "hiloDeal": "Repartir carta",
+    "hiloHi": "Mayor",
+    "hiloLo": "Menor",
+    "hiloCash": "Retirar",
+    "hiloBust": "Fallo — apuesta perdida",
     "gameBlackjack": "Blackjack",
     "helpBlackjack": "Blackjack clásico contra el crupier: pide hasta 21, el crupier pide hasta 17. La victoria paga 2×, el blackjack natural 2,5×, el empate devuelve la apuesta. Doblar: ×2 apuesta y una carta.",
     "bjDeal": "Repartir",

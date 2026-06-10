@@ -670,6 +670,13 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "gameHilo": "Hi-Lo",
+    "helpHilo": "Kamu melihat satu kartu dan menebak apakah kartu berikutnya lebih tinggi atau lebih rendah (As terendah, King tertinggi; seri kalah). Setiap tebakan benar menggandakan pot — tarik sebelum meleset!",
+    "hiloDeal": "Bagikan kartu",
+    "hiloHi": "Lebih tinggi",
+    "hiloLo": "Lebih rendah",
+    "hiloCash": "Tarik",
+    "hiloBust": "Meleset — taruhan hangus",
     "gameBlackjack": "Blackjack",
     "helpBlackjack": "Blackjack klasik melawan dealer: tarik sampai 21, dealer menarik sampai 17. Menang bayar 2×, blackjack alami 2,5×, seri mengembalikan taruhan. Double: taruhan ×2 dan satu kartu.",
     "bjDeal": "Bagikan",
