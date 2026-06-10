@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Fundamenty wersji dla innych streamerów 🏗️",
+    items: [
+      "Pod maską ruszyła przebudowa pod produkt white-label: każdy przyszły portal-klient będzie mieć własną nazwę tokenów, markę, kolory i logo z jednego wpisu w bazie, a plany Basic/Pro/Elite sterują dostępem do funkcji. Dla Ghost Empire nic się nie zmienia — to nasza wersja założycielska ze wszystkim odblokowanym.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Panel admina: asystent AI ✨",
     items: [
       "W panelu pojawił się asystent AI: opisz własnymi słowami, co chcesz osiągnąć (np. dodać nagrodę do sklepu albo nagradzać suby), a dostaniesz instrukcję krok po kroku z przyciskami przenoszącymi prosto do właściwej sekcji. Wymaga skonfigurowanego klucza AI w Integracjach.",
