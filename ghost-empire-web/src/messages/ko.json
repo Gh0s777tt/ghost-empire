@@ -7,6 +7,8 @@
     "skip": "건너뛰기",
     "progress": "{step} / {total}",
     "steps": {
+      "gamesGridTitle": "게임을 고르세요 🎰",
+      "gamesGridBody": "진짜 카지노처럼: 타일을 클릭하면 그 게임이 화면을 차지합니다. 모든 게임 버튼으로 돌아올 수 있어요.",
       "welcomeTitle": "Ghost Empire에 오신 걸 환영합니다! 👻",
       "welcomeBody": "포털을 한 바퀴 빠르게 — 무엇이 어디에 있고 어떻게 시작하는지 알려드릴게요. 건너뛰기로 닫고, 상단 바의 ?로 언제든 다시 시작할 수 있어요.",
       "tokensTitle": "Ghost Tokens 👻",
@@ -639,6 +641,7 @@
     "unitPurchase": "구매"
   },
   "kasyno": {
+    "backToGames": "모든 게임",
     "myHistory": "최근 게임",
     "myStats": "내 통계",
     "statGames": "게임 수",

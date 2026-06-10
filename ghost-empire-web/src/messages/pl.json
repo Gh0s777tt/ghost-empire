@@ -7,6 +7,8 @@
     "skip": "Pomiń",
     "progress": "{step} / {total}",
     "steps": {
+      "gamesGridTitle": "Wybierz grę 🎰",
+      "gamesGridBody": "Jak w prawdziwym kasynie: kliknij kafelek, a gra otworzy się na całym ekranie. Wrócisz tu przyciskiem Wszystkie gry.",
       "welcomeTitle": "Witaj w Ghost Empire! 👻",
       "welcomeBody": "Krótki spacer po portalu — pokażę Ci, gdzie co jest i jak zacząć. Zamkniesz mnie przyciskiem Pomiń, a wrócisz w każdej chwili, klikając ? na górnym pasku.",
       "tokensTitle": "Ghost Tokens 👻",
@@ -1924,6 +1926,7 @@
     "unitPurchase": "zakup"
   },
   "kasyno": {
+    "backToGames": "Wszystkie gry",
     "myHistory": "Twoje ostatnie gry",
     "myStats": "Twoje statystyki",
     "statGames": "Gry",

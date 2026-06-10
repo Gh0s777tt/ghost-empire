@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Kasyno jak prawdziwe — lobby z grami 🎰",
+    items: [
+      "Kasyno wita Cię teraz kafelkami gier: wybierasz jedną, a ona zajmuje cały ekran — bez rozpraszania pozostałymi. Wrócisz przyciskiem „Wszystkie gry”. Przy okazji naprawiliśmy pole stawki: można je wyczyścić i wpisać dowolną kwotę od zera.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Ranking tygodnia 📅",
     items: [
       "W rankingu pojawiła się zakładka Tydzień — pokazuje, kto zdobył najwięcej Ghost Tokens w ostatnich 7 dniach. Świetna szansa dla nowych graczy, bo okno przesuwa się codziennie i każdy tydzień zaczyna się od zera.",

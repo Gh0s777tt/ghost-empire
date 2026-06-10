@@ -7,6 +7,8 @@
     "skip": "Lewati",
     "progress": "{step} / {total}",
     "steps": {
+      "gamesGridTitle": "Pilih game 🎰",
+      "gamesGridBody": "Seperti kasino sungguhan: klik ubin dan game itu memenuhi layar. Kembali lewat tombol Semua game.",
       "welcomeTitle": "Selamat datang di Ghost Empire! 👻",
       "welcomeBody": "Jalan-jalan singkat keliling portal — kutunjukkan di mana semuanya dan cara memulai. Tutup dengan Lewati, dan kembali kapan saja lewat ? di bar atas.",
       "tokensTitle": "Ghost Tokens 👻",
@@ -668,6 +670,7 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "backToGames": "Semua game",
     "myHistory": "Permainan terakhirmu",
     "myStats": "Statistikmu",
     "statGames": "Permainan",

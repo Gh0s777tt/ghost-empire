@@ -7,6 +7,8 @@
     "skip": "Pular",
     "progress": "{step} / {total}",
     "steps": {
+      "gamesGridTitle": "Escolha um jogo 🎰",
+      "gamesGridBody": "Como num cassino de verdade: clique num cartão e o jogo toma a tela. Volte pelo botão Todos os jogos.",
       "welcomeTitle": "Bem-vindo ao Ghost Empire! 👻",
       "welcomeBody": "Um passeio rápido pelo portal: mostro onde está tudo e como começar. Feche com Pular e volte quando quiser pelo ? na barra superior.",
       "tokensTitle": "Ghost Tokens 👻",
@@ -668,6 +670,7 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "backToGames": "Todos os jogos",
     "myHistory": "Suas últimas partidas",
     "myStats": "Suas estatísticas",
     "statGames": "Partidas",

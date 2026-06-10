@@ -7,6 +7,8 @@
     "skip": "تخطّي",
     "progress": "{step} / {total}",
     "steps": {
+      "gamesGridTitle": "اختر لعبة 🎰",
+      "gamesGridBody": "مثل كازينو حقيقي: انقر على بطاقة لتملأ تلك اللعبة الشاشة. عُد بزر كل الألعاب.",
       "welcomeTitle": "مرحبًا بك في Ghost Empire! 👻",
       "welcomeBody": "جولة سريعة في البوابة — سأريك أين كل شيء وكيف تبدأ. أغلقني بزر تخطّي وعد في أي وقت عبر ? في الشريط العلوي.",
       "tokensTitle": "Ghost Tokens 👻",
@@ -639,6 +641,7 @@
     "unitPurchase": "شراء"
   },
   "kasyno": {
+    "backToGames": "كل الألعاب",
     "myHistory": "آخر ألعابك",
     "myStats": "إحصاءاتك",
     "statGames": "الألعاب",
