@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { placeWager } from "@/lib/predictions";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { featureGateResponse } from "@/lib/entitlements";
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id: predictionId } = await ctx.params;
@@ -14,6 +15,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     return jsonError("Musisz być zalogowany", 401);
   }
   const userId = session.user.id;
+  const gated = await featureGateResponse("predictions");
+  if (gated) return gated;
 
   // 5 wager actions per minute per user (anti-spam, anti-double-click)
   const rl = await rateLimit(`prediction:wager:${userId}`, 5, 60_000);

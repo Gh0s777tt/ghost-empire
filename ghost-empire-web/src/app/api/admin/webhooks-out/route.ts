@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { WEBHOOK_EVENTS, testOutgoingWebhook } from "@/lib/webhooks-out";
+import { featureGateResponse } from "@/lib/entitlements";
 
 function isHttpUrl(u: unknown): u is string {
   if (typeof u !== "string") return false;
@@ -43,6 +44,8 @@ export async function GET() {
 export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const gated = await featureGateResponse("webhooks_out");
+  if (gated) return gated;
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch {
