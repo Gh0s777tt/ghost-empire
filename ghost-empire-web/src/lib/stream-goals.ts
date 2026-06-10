@@ -2,6 +2,7 @@
 // Stream Goal counters + hype train state — called from event handlers
 // (Twitch EventSub webhook, Streamlabs poller, YouTube poller).
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 
 export type GoalType =
   | "subs"
@@ -17,12 +18,18 @@ export type GoalType =
  *
  * Goals that hit their target are stamped with completedAt but stay visible until
  * an admin resets/deletes them — completion is celebration, not removal.
+ *
+ * `tenantId`: webhook/poller handlers pass the tenant mapped from the event's
+ * broadcaster (or connection row) so one tenant's sub never bumps another tenant's
+ * goals; omitted → resolve from the request Host. Legacy NULL-tenant rows are
+ * included alongside (pre-backfill safety).
  */
-export async function incrementGoals(type: GoalType, amount: number): Promise<void> {
+export async function incrementGoals(type: GoalType, amount: number, tenantId?: string | null): Promise<void> {
   if (amount <= 0) return;
   try {
+    const tid = tenantId === undefined ? await currentTenantId() : tenantId;
     const goals = await prisma.streamGoal.findMany({
-      where: { type, active: true },
+      where: { type, active: true, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
       select: { id: true, current: true, target: true, completedAt: true },
     });
     if (goals.length === 0) return;

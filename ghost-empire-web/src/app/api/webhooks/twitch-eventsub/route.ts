@@ -10,6 +10,8 @@ import { verifyEventSubSignature, isMessageFresh } from "@/lib/twitch";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals, setHypeTrainStart, setHypeTrainProgress, setHypeTrainEnded } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
+import { tenantIdForTwitchBroadcaster } from "@/lib/platform-tokens";
+import { currentTenantId } from "@/lib/tenant";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { createLogger } from "@/lib/logger";
@@ -131,21 +133,28 @@ export async function POST(req: Request) {
     }).catch(() => {});
   }
 
+  // Tenant of the channel this event belongs to: the event's broadcaster id maps
+  // to the streamer-token row (#416). Fallback = Host-resolved (single-tenant).
+  const broadcasterId = String(event.broadcaster_user_id ?? "");
+  const tenantId =
+    (broadcasterId ? await tenantIdForTwitchBroadcaster(broadcasterId) : null)
+    ?? (await currentTenantId());
+
   // Run grant handlers; matchedUserId/tokensGranted are backfilled into the dedup row after.
   let matchedUserId: string | null = null;
   let tokensGranted: number | null = null;
 
   try {
     if (eventType === "channel.subscribe") {
-      const result = await handleSubscribe(event);
+      const result = await handleSubscribe(event, tenantId);
       matchedUserId = result.userId;
       tokensGranted = result.tokens;
     } else if (eventType === "channel.subscription.gift") {
-      const result = await handleGiftSub(event);
+      const result = await handleGiftSub(event, tenantId);
       matchedUserId = result.userId;
       tokensGranted = result.tokens;
     } else if (eventType === "channel.cheer") {
-      const result = await handleCheer(event);
+      const result = await handleCheer(event, tenantId);
       matchedUserId = result.userId;
       tokensGranted = result.tokens;
     } else if (eventType === "channel.hype_train.begin") {
@@ -212,7 +221,7 @@ async function handleFollow(event: Record<string, unknown>): Promise<void> {
   log.info("new follower", { userName });
 }
 
-async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId: string | null; tokens: number | null }> {
+async function handleSubscribe(event: Record<string, unknown>, tenantId: string | null): Promise<{ userId: string | null; tokens: number | null }> {
   const userLogin = (event.user_login as string)?.toLowerCase();
   const userName = event.user_name as string | undefined;
   const tier = (event.tier as string) ?? "1000";
@@ -236,8 +245,8 @@ async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId
   });
 
   // Bump any active "subs" stream goals
-  await incrementGoals("subs", 1);
-  void extendSubathon({ subs: 1 });
+  await incrementGoals("subs", 1, tenantId);
+  void extendSubathon({ subs: 1 }, tenantId);
 
   // Find Ghost Empire user via Connection.username on Twitch
   const connection = await prisma.connection.findFirst({
@@ -291,7 +300,7 @@ async function handleSubscribe(event: Record<string, unknown>): Promise<{ userId
   return { userId: connection.userId, tokens };
 }
 
-async function handleGiftSub(event: Record<string, unknown>): Promise<{ userId: string | null; tokens: number | null }> {
+async function handleGiftSub(event: Record<string, unknown>, tenantId: string | null): Promise<{ userId: string | null; tokens: number | null }> {
   const gifterLogin = (event.user_login as string)?.toLowerCase();
   const gifterName = event.user_name as string | undefined;
   const isAnonymous = event.is_anonymous as boolean | undefined;
@@ -310,9 +319,9 @@ async function handleGiftSub(event: Record<string, unknown>): Promise<{ userId: 
   });
 
   // Bump goals — both gift_subs (count) and subs (because each gift = a sub for someone)
-  await incrementGoals("gift_subs", total);
-  await incrementGoals("subs", total);
-  void extendSubathon({ subs: total });
+  await incrementGoals("gift_subs", total, tenantId);
+  await incrementGoals("subs", total, tenantId);
+  void extendSubathon({ subs: total }, tenantId);
 
   if (isAnonymous || !gifterLogin) {
     log.info("anonymous gift sub — no reward");
@@ -360,7 +369,7 @@ async function handleGiftSub(event: Record<string, unknown>): Promise<{ userId: 
   return { userId: connection.userId, tokens };
 }
 
-async function handleCheer(event: Record<string, unknown>): Promise<{ userId: string | null; tokens: number | null }> {
+async function handleCheer(event: Record<string, unknown>, tenantId: string | null): Promise<{ userId: string | null; tokens: number | null }> {
   const userLogin = (event.user_login as string)?.toLowerCase();
   const userName = event.user_name as string | undefined;
   const isAnonymous = event.is_anonymous as boolean | undefined;
@@ -377,7 +386,7 @@ async function handleCheer(event: Record<string, unknown>): Promise<{ userId: st
       amount: bits,
       amountLabel: "bits",
     });
-    await incrementGoals("cheers_bits", bits);
+    await incrementGoals("cheers_bits", bits, tenantId);
   }
 
   if (isAnonymous || !userLogin || bits <= 0) {

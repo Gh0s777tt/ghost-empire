@@ -139,6 +139,7 @@ async function runPoll() {
         message: msg.message ?? null,
         amountMicros: msg.amountMicros ?? 0n,
         currency: msg.currency ?? "USD",
+        tenantId: streamer.tenantId,
       });
       if (result) superChatsProcessed++;
     } else if (msg.type === "newSponsorEvent" || msg.type === "memberMilestoneChatEvent") {
@@ -149,6 +150,7 @@ async function runPoll() {
         authorChannelId: msg.authorChannelId ?? null,
         authorName: msg.authorDisplayName ?? null,
         message: msg.message ?? null,
+        tenantId: streamer.tenantId,
       });
       if (result) memberEventsProcessed++;
     } else if (msg.type === "textMessageEvent") {
@@ -202,6 +204,7 @@ async function handleSuperChat(input: {
   message: string | null;
   amountMicros: bigint;
   currency: string;
+  tenantId: string | null;
 }): Promise<boolean> {
   const amountFloat = Number(input.amountMicros) / 1_000_000;
   if (!Number.isFinite(amountFloat) || amountFloat <= 0) return false;
@@ -308,8 +311,8 @@ async function handleSuperChat(input: {
   const plnAmount = ["PLN", "ZL"].includes(input.currency.toUpperCase())
     ? amountFloat
     : amountFloat * 4;
-  await incrementGoals("donations_pln", Math.floor(plnAmount));
-  void extendSubathon({ pln: Math.floor(plnAmount) });
+  await incrementGoals("donations_pln", Math.floor(plnAmount), input.tenantId);
+  void extendSubathon({ pln: Math.floor(plnAmount) }, input.tenantId);
 
   // Achievements — both general donation and YT super chat specific
   if (matchedUserId) {
@@ -329,6 +332,7 @@ async function handleMemberEvent(input: {
   authorChannelId: string | null;
   authorName: string | null;
   message: string | null;
+  tenantId: string | null;
 }): Promise<boolean> {
   let matchedUserId: string | null = null;
   let tokensGranted: number | null = null;
@@ -396,7 +400,7 @@ async function handleMemberEvent(input: {
     actorName: input.authorName ?? "Anonim",
   });
 
-  await incrementGoals("yt_members", 1);
+  await incrementGoals("yt_members", 1, input.tenantId);
 
   if (matchedUserId) {
     await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "yt_member" });
