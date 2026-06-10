@@ -7,6 +7,8 @@
     "skip": "Skip",
     "progress": "{step} / {total}",
     "steps": {
+      "gamesGridTitle": "Pick a game 🎰",
+      "gamesGridBody": "Like a real casino: click a tile and that game takes the screen. Come back with the All games button.",
       "welcomeTitle": "Welcome to Ghost Empire! 👻",
       "welcomeBody": "A quick walk around the portal — I will show you where everything is and how to start. Close me with Skip and come back anytime via the ? in the top bar.",
       "tokensTitle": "Ghost Tokens 👻",
@@ -1924,6 +1926,7 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "backToGames": "All games",
     "myHistory": "Your recent games",
     "myStats": "Your stats",
     "statGames": "Games",

@@ -7,6 +7,8 @@
     "skip": "スキップ",
     "progress": "{step} / {total}",
     "steps": {
+      "gamesGridTitle": "ゲームを選ぼう 🎰",
+      "gamesGridBody": "本物のカジノのように：タイルをクリックするとそのゲームが画面いっぱいに。すべてのゲームボタンで戻れます。",
       "welcomeTitle": "Ghost Empire へようこそ！👻",
       "welcomeBody": "ポータルをサクッと一周——どこに何があるか、どう始めるかをご案内します。スキップで閉じて、上部バーの ? からいつでも再開できます。",
       "tokensTitle": "Ghost Tokens 👻",
@@ -639,6 +641,7 @@
     "unitPurchase": "購入"
   },
   "kasyno": {
+    "backToGames": "すべてのゲーム",
     "myHistory": "最近のプレイ",
     "myStats": "あなたの統計",
     "statGames": "プレイ数",

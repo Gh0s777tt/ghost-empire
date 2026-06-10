@@ -759,7 +759,13 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const fmt = useLocaleFmt();
   const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
-  const [bet, setBet] = useState(100);
+  // Stake as a STRING so the field can be cleared and retyped freely ("" → invalid,
+  // play buttons disable); the numeric `bet` derives from it, clamped to the API range.
+  const [betInput, setBetInput] = useState("100");
+  const bet = Math.min(100_000, parseInt(betInput, 10) || 0);
+  const betValid = bet >= 10;
+  // Casino lobby: pick a game tile first, then only that game is on screen.
+  const [selected, setSelected] = useState<Game | "mines" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lb, setLb] = useState<Leaderboard | null>(null);
@@ -810,7 +816,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   }, [stage]);
 
   async function play(game: Game, choice?: string) {
-    if (busy || minesBusy) return;
+    if (busy || minesBusy || !betValid) return;
     setBusy(true); setError(null); setMinesGame(null); // single-shot games take over the stage
     const id = ++playId.current;
     sfxPlay("spin");
@@ -825,7 +831,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
   // ── Mines (stateful: start → reveal tiles → cash out / bust) ──
   async function minesStartFn() {
-    if (minesBusy || busy || minesGame?.status === "active") return;
+    if (minesBusy || busy || !betValid || minesGame?.status === "active") return;
     setMinesBusy(true); setError(null); setStage(null); // mines takes over the stage
     try {
       const res = await fetch("/api/gt-games/mines/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bet, bombs: minesBombs }) });
@@ -898,8 +904,34 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
       {!isAuthenticated ? (
         <Link href="/" className="px-8 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500">{t("loginToPlay")}</Link>
+      ) : selected === null ? (
+        /* ── LOBBY: pick a game tile — only that game goes on screen, like a real casino ── */
+        <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-tour="kasyno-games">
+          {([
+            { id: "slots", emoji: "🎰" }, { id: "coinflip", emoji: "🪙" }, { id: "roulette", emoji: "🎡" },
+            { id: "dice", emoji: "🎲" }, { id: "crash", emoji: "🚀" }, { id: "plinko", emoji: "⚪" }, { id: "mines", emoji: "💣" },
+          ] as Array<{ id: Game | "mines"; emoji: string }>).map((g) => (
+            <button
+              key={g.id}
+              onClick={() => { setSelected(g.id); setError(null); sfxPlay("click"); }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/70 py-7 transition-all hover:border-amber-500 hover:bg-zinc-900/80 hover:shadow-[0_0_24px_rgba(245,193,66,0.15)]"
+            >
+              <span className="text-5xl transition-transform group-hover:scale-110">{g.emoji}</span>
+              <span className="font-bold text-zinc-300 group-hover:text-amber-300 transition-colors">{gameLabel[g.id]}</span>
+            </button>
+          ))}
+        </div>
       ) : (
         <>
+          {/* back to lobby (blocked mid-Mines so an active stake can't be abandoned by accident) */}
+          <button
+            onClick={() => { setSelected(null); setStage(null); setError(null); if (minesGame?.status !== "active") setMinesGame(null); }}
+            disabled={minesGame?.status === "active"}
+            className="self-start text-xs font-bold tracking-widest uppercase text-zinc-500 hover:text-amber-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ← {t("backToGames")}
+          </button>
+
           {/* animation stage */}
           <div className="flex items-center justify-center" style={{ minHeight: 312 }}>
             {minesGame ? (
@@ -950,17 +982,20 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
           <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-stake">
             <label className="text-xs text-zinc-400">{t("stake")}
-              <input type="number" min={10} max={100000} value={bet} disabled={busy} onChange={(e) => setBet(Math.max(10, parseInt(e.target.value || "10", 10)))}
-                className="ms-2 w-28 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500 disabled:opacity-50" />
+              <input
+                type="text" inputMode="numeric" value={betInput} disabled={busy} placeholder="10"
+                onChange={(e) => setBetInput(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                className={`ms-2 w-28 bg-black border px-2 py-1.5 text-sm text-white font-mono outline-hidden disabled:opacity-50 ${betValid ? "border-zinc-700 focus:border-amber-500" : "border-rose-700 focus:border-rose-500"}`}
+              />
             </label>
             {/* quick-bet chips */}
             {[10, 50, 100, 500].map((v) => (
-              <button key={v} onClick={() => { setBet(v); sfxPlay("click"); }} disabled={busy}
+              <button key={v} onClick={() => { setBetInput(String(v)); sfxPlay("click"); }} disabled={busy}
                 className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all ${bet === v ? "border-amber-500 bg-amber-500/15 text-amber-300" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500"} disabled:opacity-40`}>
                 {v}
               </button>
             ))}
-            <button onClick={() => { setBet(Math.max(10, Math.min(100000, balance ?? 10))); sfxPlay("click"); }} disabled={busy || (balance ?? 0) < 10}
+            <button onClick={() => { setBetInput(String(Math.max(10, Math.min(100_000, balance ?? 10)))); sfxPlay("click"); }} disabled={busy || (balance ?? 0) < 10}
               className="px-2.5 py-1 rounded-full text-xs font-extrabold border border-amber-700 bg-amber-900/20 text-amber-400 hover:border-amber-500 transition-all disabled:opacity-40">
               MAX
             </button>
@@ -974,33 +1009,42 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               {sound ? "🔊" : "🔇"}
             </button>
           </div>
-          <div className="flex gap-3" data-tour="kasyno-slots">
-            <button onClick={() => play("slots")} disabled={busy || (balance ?? 0) < bet}
-              className="px-6 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 disabled:opacity-40 transition-all">{t("slots")}</button>
-            <InfoTip text={t("helpSlots")} />
-            <button onClick={() => play("coinflip")} disabled={busy || (balance ?? 0) < bet}
-              className="px-6 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 disabled:opacity-40 transition-all">{t("coinflip")}</button>
-            <InfoTip text={t("helpCoinflip")} />
-          </div>
+          {selected === "slots" && (
+            <div className="flex gap-3" data-tour="kasyno-slots">
+              <button onClick={() => play("slots")} disabled={busy || !betValid || (balance ?? 0) < bet}
+                className="px-6 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 disabled:opacity-40 transition-all">{t("slots")}</button>
+              <InfoTip text={t("helpSlots")} />
+            </div>
+          )}
+          {selected === "coinflip" && (
+            <div className="flex gap-3">
+              <button onClick={() => play("coinflip")} disabled={busy || !betValid || (balance ?? 0) < bet}
+                className="px-6 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 disabled:opacity-40 transition-all">{t("coinflip")}</button>
+              <InfoTip text={t("helpCoinflip")} />
+            </div>
+          )}
 
           {/* Roulette: red/black (2×) or a straight number (36×) */}
+          {selected === "roulette" && (
           <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-roulette">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("rouletteLabel")} <InfoTip text={t("helpRoulette")} /></span>
-            <button onClick={() => play("roulette", "red")} disabled={busy || (balance ?? 0) < bet}
+            <button onClick={() => play("roulette", "red")} disabled={busy || !betValid || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 transition-all">{t("red")}</button>
-            <button onClick={() => play("roulette", "black")} disabled={busy || (balance ?? 0) < bet}
+            <button onClick={() => play("roulette", "black")} disabled={busy || !betValid || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 disabled:opacity-40 transition-all">{t("black")}</button>
-            <button onClick={() => play("roulette", "0")} disabled={busy || (balance ?? 0) < bet}
+            <button onClick={() => play("roulette", "0")} disabled={busy || !betValid || (balance ?? 0) < bet}
               className="px-3 py-2 rounded-full font-extrabold text-white bg-green-700 hover:bg-green-600 disabled:opacity-40 transition-all" title="36×">0</button>
-            <button onClick={() => play("roulette", "00")} disabled={busy || (balance ?? 0) < bet}
+            <button onClick={() => play("roulette", "00")} disabled={busy || !betValid || (balance ?? 0) < bet}
               className="px-3 py-2 rounded-full font-extrabold text-white bg-green-700 hover:bg-green-600 disabled:opacity-40 transition-all" title="36×">00</button>
             <input type="number" min={0} max={36} value={rouletteNum} disabled={busy} onChange={(e) => setRouletteNum(e.target.value)} placeholder="0-36"
               className="w-20 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500 disabled:opacity-50" />
             <button onClick={() => play("roulette", rouletteNum)} disabled={busy || (balance ?? 0) < bet || !/^\d+$/.test(rouletteNum)}
               className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 disabled:opacity-40 transition-all">{t("number")}</button>
           </div>
+          )}
 
           {/* Dice: bet under/over a threshold — multiplier scales with the risk */}
+          {selected === "dice" && (
           <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-dice">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("diceLabel")} <InfoTip text={t("helpDice")} /></span>
             <div className="flex rounded-full overflow-hidden border border-zinc-700">
@@ -1014,11 +1058,13 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <span className="text-xs text-zinc-300 font-mono tabular-nums w-32 text-center">
               {diceTarget} · {(diceChanceOf(diceDir, diceTarget) * 100).toFixed(0)}% · {diceMultOf(diceDir, diceTarget).toFixed(2)}×
             </span>
-            <button onClick={() => play("dice", `${diceDir}:${diceTarget}`)} disabled={busy || (balance ?? 0) < bet}
+            <button onClick={() => play("dice", `${diceDir}:${diceTarget}`)} disabled={busy || !betValid || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 disabled:opacity-40 transition-all">{t("diceRoll")}</button>
           </div>
+          )}
 
           {/* Crash: auto-cashout at a target multiplier; the rocket busts at a random point */}
+          {selected === "crash" && (
           <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-crash">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("crashLabel")} <InfoTip text={t("helpCrash")} /></span>
             {[1.5, 2, 5, 10].map((m) => (
@@ -1029,27 +1075,32 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               onChange={(e) => setCrashTarget(Math.min(50, Math.max(1.01, parseFloat(e.target.value || "2"))))}
               className="w-20 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500 disabled:opacity-50" />
             <span className="text-xs text-zinc-400 font-mono tabular-nums w-16 text-center">{(95 / crashTarget).toFixed(1)}%</span>
-            <button onClick={() => play("crash", String(crashTarget))} disabled={busy || (balance ?? 0) < bet}
+            <button onClick={() => play("crash", String(crashTarget))} disabled={busy || !betValid || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 disabled:opacity-40 transition-all">{t("crashStart")}</button>
           </div>
+          )}
 
           {/* Plinko: drop the ball — no bet choice; edge buckets pay big, center sub-1 */}
+          {selected === "plinko" && (
           <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-plinko">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("plinkoLabel")} <InfoTip text={t("helpPlinko")} /></span>
-            <button onClick={() => play("plinko")} disabled={busy || (balance ?? 0) < bet}
+            <button onClick={() => play("plinko")} disabled={busy || !betValid || (balance ?? 0) < bet}
               className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 disabled:opacity-40 transition-all">{t("plinkoDrop")}</button>
           </div>
+          )}
 
           {/* Mines: pick bombs, reveal tiles, dodge bombs, cash out anytime */}
+          {selected === "mines" && (
           <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-mines">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("minesLabel")} <InfoTip text={t("helpMines")} /></span>
             {[1, 3, 5, 10].map((b) => (
               <button key={b} onClick={() => setMinesBombs(b)} disabled={minesGame?.status === "active"}
                 className={`px-3 py-2 rounded-full text-sm font-bold transition-all ${minesBombs === b ? "bg-rose-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-700"} disabled:opacity-40`}>{b} 💣</button>
             ))}
-            <button onClick={minesStartFn} disabled={minesBusy || minesGame?.status === "active" || (balance ?? 0) < bet}
+            <button onClick={minesStartFn} disabled={minesBusy || !betValid || minesGame?.status === "active" || (balance ?? 0) < bet}
               className="px-5 py-2 rounded-full font-bold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 disabled:opacity-40 transition-all">{t("minesStart")}</button>
           </div>
+          )}
 
           <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} GT</span></div>
         </>

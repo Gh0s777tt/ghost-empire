@@ -25,6 +25,7 @@ const PAGE_STEPS: Array<{ match: RegExp; steps: Step[] }> = [
   {
     match: /\/kasyno$/,
     steps: [
+      { key: "gamesGrid", target: "kasyno-games" },
       { key: "stake", target: "kasyno-stake" },
       { key: "slots", target: "kasyno-slots" },
       { key: "roulette", target: "kasyno-roulette" },

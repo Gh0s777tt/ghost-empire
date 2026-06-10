@@ -7,6 +7,8 @@
     "skip": "跳过",
     "progress": "{step} / {total}",
     "steps": {
+      "gamesGridTitle": "选择游戏 🎰",
+      "gamesGridBody": "就像真正的赌场：点击卡片，该游戏就会全屏显示。点「所有游戏」即可返回。",
       "welcomeTitle": "欢迎来到 Ghost Empire！👻",
       "welcomeBody": "快速逛一圈门户——我带你看看每个功能在哪、怎么开始。点跳过即可关闭，随时点顶栏的 ? 再回来。",
       "tokensTitle": "Ghost Tokens 👻",
@@ -639,6 +641,7 @@
     "unitPurchase": "次购买"
   },
   "kasyno": {
+    "backToGames": "所有游戏",
     "myHistory": "你最近的对局",
     "myStats": "你的统计",
     "statGames": "局数",
