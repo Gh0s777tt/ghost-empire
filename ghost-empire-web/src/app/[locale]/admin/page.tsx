@@ -1,6 +1,6 @@
 // src/app/admin/page.tsx
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { auth, isPermanentAdminEmail } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
@@ -18,7 +18,7 @@ export default async function AdminPage() {
 
   const me = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { isAdmin: true, isModerator: true, modPermissions: true, isBanned: true },
+    select: { isAdmin: true, isModerator: true, modPermissions: true, isBanned: true, tenantId: true, email: true },
   });
 
   // Allow admins + moderators (any permissions). Block everyone else.
@@ -26,12 +26,20 @@ export default async function AdminPage() {
     redirect("/?denied=admin");
   }
 
+
   // Admin has implicit all permissions; mod has whatever's in their array.
   const myPermissions: string[] = me.isAdmin
     ? ["__all__"]   // sentinel — AdminClient treats this as "all"
     : me.modPermissions;
 
   const tid = await currentTenantId();
+
+  // Cross-tenant guard (SaaS Phase 4): admin of tenant A on tenant B's subdomain
+  // gets bounced — global isAdmin alone must not grant another tenant's panel.
+  // Platform owner passes; NULL tenantId (legacy) self-heals on login.
+  if (me.tenantId && tid && me.tenantId !== tid && !isPermanentAdminEmail(me.email)) {
+    redirect("/?denied=admin");
+  }
 
   // Only the DEFAULT (Dashboard) view's data is fetched server-side. Every other
   // section lazy-loads its own data on open via /api/admin/section-data, so the
