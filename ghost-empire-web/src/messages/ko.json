@@ -641,6 +641,15 @@
     "unitPurchase": "구매"
   },
   "kasyno": {
+    "gameBlackjack": "블랙잭",
+    "helpBlackjack": "딜러를 상대하는 클래식 블랙잭: 21까지 카드를 받고, 딜러는 17까지 받습니다. 승리 2×, 내추럴 블랙잭 2.5×, 무승부는 베팅 반환. 더블: 베팅 ×2에 한 장만.",
+    "bjDeal": "딜",
+    "bjHit": "히트",
+    "bjStand": "스탠드",
+    "bjDouble": "더블",
+    "bjDealer": "딜러",
+    "bjYou": "나",
+    "bjPush": "푸시 — 베팅 반환",
     "jackpot": "잭팟",
     "jackpotHint": "모든 베팅의 1%가 풀에 쌓입니다. 슬롯에서 7️⃣7️⃣7️⃣을 맞히면 전부 가져갑니다!",
     "animForced": "애니메이션 강제 켜짐 — 클릭하면 시스템 설정을 따릅니다",

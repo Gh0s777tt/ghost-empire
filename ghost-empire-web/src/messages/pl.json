@@ -1931,6 +1931,15 @@
     "unitPurchase": "zakup"
   },
   "kasyno": {
+    "gameBlackjack": "Blackjack",
+    "helpBlackjack": "Klasyczny blackjack przeciwko krupierowi: dobieraj do 21, krupier dobiera do 17. Wygrana płaci 2×, naturalny blackjack 2,5×, remis zwraca stawkę. Podwojenie: ×2 stawka i jedna karta.",
+    "bjDeal": "Rozdaj",
+    "bjHit": "Dobierz",
+    "bjStand": "Stój",
+    "bjDouble": "Podwój",
+    "bjDealer": "Krupier",
+    "bjYou": "Ty",
+    "bjPush": "Remis — stawka wraca",
     "jackpot": "Jackpot",
     "jackpotHint": "1% każdej stawki zasila pulę. Trafienie 7️⃣7️⃣7️⃣ w slotach wygrywa całość!",
     "animForced": "Animacje wymuszone — kliknij, aby wrócić do ustawień systemu",

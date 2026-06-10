@@ -641,6 +641,15 @@
     "unitPurchase": "achat"
   },
   "kasyno": {
+    "gameBlackjack": "Blackjack",
+    "helpBlackjack": "Blackjack classique contre le croupier : tire jusqu'à 21, le croupier tire jusqu'à 17. La victoire paie 2×, le blackjack naturel 2,5×, l'égalité rend la mise. Doubler : mise ×2 et une carte.",
+    "bjDeal": "Distribuer",
+    "bjHit": "Tirer",
+    "bjStand": "Rester",
+    "bjDouble": "Doubler",
+    "bjDealer": "Croupier",
+    "bjYou": "Toi",
+    "bjPush": "Égalité — mise rendue",
     "jackpot": "Jackpot",
     "jackpotHint": "1 % de chaque mise alimente la cagnotte. Fais 7️⃣7️⃣7️⃣ aux machines pour tout gagner !",
     "animForced": "Animations forcées — clique pour suivre le réglage système",

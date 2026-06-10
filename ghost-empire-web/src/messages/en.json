@@ -1931,6 +1931,15 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "gameBlackjack": "Blackjack",
+    "helpBlackjack": "Classic blackjack vs the dealer: draw to 21, the dealer draws to 17. A win pays 2×, a natural blackjack 2.5×, a push returns the stake. Double: ×2 stake and one card.",
+    "bjDeal": "Deal",
+    "bjHit": "Hit",
+    "bjStand": "Stand",
+    "bjDouble": "Double",
+    "bjDealer": "Dealer",
+    "bjYou": "You",
+    "bjPush": "Push — stake returned",
     "jackpot": "Jackpot",
     "jackpotHint": "1% of every bet feeds the pool. Hit 7️⃣7️⃣7️⃣ on slots to win it all!",
     "animForced": "Animations forced on — click to follow your system setting",

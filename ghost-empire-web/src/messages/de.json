@@ -641,6 +641,15 @@
     "unitPurchase": "Kauf"
   },
   "kasyno": {
+    "gameBlackjack": "Blackjack",
+    "helpBlackjack": "Klassisches Blackjack gegen den Dealer: ziehe bis 21, der Dealer zieht bis 17. Sieg zahlt 2×, natürliches Blackjack 2,5×, Unentschieden gibt den Einsatz zurück. Verdoppeln: ×2 Einsatz und eine Karte.",
+    "bjDeal": "Geben",
+    "bjHit": "Ziehen",
+    "bjStand": "Halten",
+    "bjDouble": "Verdoppeln",
+    "bjDealer": "Dealer",
+    "bjYou": "Du",
+    "bjPush": "Push — Einsatz zurück",
     "jackpot": "Jackpot",
     "jackpotHint": "1% jedes Einsatzes speist den Pool. 7️⃣7️⃣7️⃣ in den Slots gewinnt alles!",
     "animForced": "Animationen erzwungen — klicken, um der Systemeinstellung zu folgen",

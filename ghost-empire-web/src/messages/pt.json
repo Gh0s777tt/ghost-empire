@@ -670,6 +670,15 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "gameBlackjack": "Blackjack",
+    "helpBlackjack": "Blackjack clássico contra o dealer: compre até 21, o dealer compra até 17. Vitória paga 2×, blackjack natural 2,5×, empate devolve a aposta. Dobrar: aposta ×2 e uma carta.",
+    "bjDeal": "Dar cartas",
+    "bjHit": "Comprar",
+    "bjStand": "Parar",
+    "bjDouble": "Dobrar",
+    "bjDealer": "Dealer",
+    "bjYou": "Você",
+    "bjPush": "Empate — aposta devolvida",
     "jackpot": "Jackpot",
     "jackpotHint": "1% de cada aposta alimenta o prêmio. Tire 7️⃣7️⃣7️⃣ nos caça-níqueis e leve tudo!",
     "animForced": "Animações forçadas — clique para seguir o ajuste do sistema",
