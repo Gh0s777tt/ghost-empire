@@ -963,6 +963,16 @@
     "s9p": "Nous publions les modifications sur cette page. Les modifications importantes sont annoncées sur Discord. Utiliser le Portail après l'entrée en vigueur des modifications signifie les accepter."
   },
   "admin": {
+    "aiTitle": "Assistant du panneau",
+    "aiOpenLabel": "Assistant",
+    "aiGreeting": "Salut ! Décris ce que tu veux faire (p. ex. « je veux ajouter une récompense à 500 GT à la boutique » ou « comment récompenser les subs Twitch ? ») et je détaillerai les étapes en pointant les bonnes sections.",
+    "aiPlaceholder": "Décris ce que tu veux faire…",
+    "aiSend": "Envoyer",
+    "aiThinking": "Je réfléchis…",
+    "aiNotConfigured": "L'assistant a besoin d'un fournisseur d'IA configuré (clé API).",
+    "aiGoConfigure": "Configurer dans Intégrations →",
+    "aiError": "Un problème est survenu — réessaie.",
+    "aiClose": "Fermer",
     "modeLabel": "Mode du panneau",
     "mode_simple": "Simple",
     "mode_advanced": "Avancé",

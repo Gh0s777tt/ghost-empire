@@ -50,6 +50,16 @@
     }
   },
   "admin": {
+    "aiTitle": "Panel assistant",
+    "aiOpenLabel": "Assistant",
+    "aiGreeting": "Hi! Describe what you want to do (e.g. „I want to add a 500 GT shop reward” or „how do I reward Twitch subs?”) and I'll lay out the steps and point you to the right panel sections.",
+    "aiPlaceholder": "Describe what you want to do…",
+    "aiSend": "Send",
+    "aiThinking": "Thinking…",
+    "aiNotConfigured": "The assistant needs a configured AI provider (API key).",
+    "aiGoConfigure": "Configure in Integrations →",
+    "aiError": "Something went wrong — try again.",
+    "aiClose": "Close",
     "modeLabel": "Panel mode",
     "mode_simple": "Simple",
     "mode_advanced": "Adv.",

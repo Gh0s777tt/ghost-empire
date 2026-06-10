@@ -963,6 +963,16 @@
     "s9p": "Wir veröffentlichen Änderungen auf dieser Seite. Wesentliche Änderungen werden auf Discord angekündigt. Die Nutzung des Portals nach Inkrafttreten der Änderungen bedeutet deren Annahme."
   },
   "admin": {
+    "aiTitle": "Panel-Assistent",
+    "aiOpenLabel": "Assistent",
+    "aiGreeting": "Hi! Beschreibe, was du tun willst (z. B. „Ich will eine Shop-Belohnung für 500 GT anlegen“ oder „wie belohne ich Twitch-Subs?“), und ich liste die Schritte auf und zeige dir die richtigen Bereiche.",
+    "aiPlaceholder": "Beschreibe, was du tun willst…",
+    "aiSend": "Senden",
+    "aiThinking": "Denke nach…",
+    "aiNotConfigured": "Der Assistent braucht einen konfigurierten KI-Anbieter (API-Schlüssel).",
+    "aiGoConfigure": "In Integrationen einrichten →",
+    "aiError": "Etwas ist schiefgelaufen — versuch es erneut.",
+    "aiClose": "Schließen",
     "modeLabel": "Panel-Modus",
     "mode_simple": "Einfach",
     "mode_advanced": "Erw.",

@@ -15,6 +15,7 @@ import { fmt, formatDate, cn } from "@/lib/utils";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { CommandPalette, openCommandPalette } from "./CommandPalette";
 import { SetupStatusCard } from "./SetupStatusCard";
+import { AdminAssistant } from "./AdminAssistant";
 import dynamic from "next/dynamic";
 import { SectionCard, FieldInput } from "./shared";
 import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, StreamlabsConnectionData, UnmatchedDonation, ShopItemRow, CodeRow, CodeConfig, EventRow, Drop, PendingOrder, StreamAlertsData } from "./types";
@@ -499,6 +500,12 @@ export function AdminClient({
           )}
         </div>
       </div>
+
+      {/* AI helper — describe a goal, get steps with section-jump buttons */}
+      <AdminAssistant
+        sections={permittedSections.map((s) => ({ id: s.id, label: s.label }))}
+        onJump={(id) => goToSection(id as SectionId)}
+      />
 
       {toast && (
         <div
