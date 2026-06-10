@@ -21,6 +21,9 @@ export type TenantBrand = {
   name: string;
   shortName: string;
   brandColor: string;
+  /** White-label currency naming (Phase 5) — replaces %tokenName%/%gt% in i18n. */
+  tokenName: string;
+  tokenSymbol: string;
 };
 
 /** Brand used before a tenant row exists or outside any request context. */
@@ -30,6 +33,8 @@ export const FALLBACK_TENANT: TenantBrand = {
   name: SITE.name,
   shortName: SITE.shortName,
   brandColor: SITE.brandColor,
+  tokenName: "Ghost Tokens",
+  tokenSymbol: "GT",
 };
 
 /**
@@ -50,7 +55,15 @@ export async function getCurrentTenant(): Promise<TenantBrand> {
   try {
     const t = await prisma.tenant.findUnique({ where: { slug } });
     if (t) {
-      return { id: t.id, slug: t.slug, name: t.name, shortName: t.shortName ?? t.name, brandColor: t.brandColor };
+      return {
+        id: t.id,
+        slug: t.slug,
+        name: t.name,
+        shortName: t.shortName ?? t.name,
+        brandColor: t.brandColor,
+        tokenName: t.tokenName,
+        tokenSymbol: t.tokenSymbol,
+      };
     }
   } catch {
     // Tenant table not migrated yet (before `prisma db push`) — fall back gracefully.

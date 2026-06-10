@@ -4,6 +4,8 @@
 import { getRequestConfig } from "next-intl/server";
 import { hasLocale } from "next-intl";
 import { routing } from "./routing";
+import { getCurrentTenant } from "@/lib/tenant";
+import { brandedMessages } from "@/lib/i18n-branding";
 
 type Messages = Record<string, unknown>;
 
@@ -27,14 +29,19 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
   const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
 
+  // White-label (Phase 5): catalogs carry %tokenName%/%gt% markers — replace
+  // them with the active tenant's currency naming before ICU ever parses them.
+  const tenant = await getCurrentTenant();
+  const branding = { tokenName: tenant.tokenName, tokenSymbol: tenant.tokenSymbol };
+
   const en = ((await import(`../messages/en.json`)).default ?? {}) as Messages;
-  if (locale === "en") return { locale, messages: en };
+  if (locale === "en") return { locale, messages: brandedMessages("en", en, branding) };
 
   try {
     const localized = ((await import(`../messages/${locale}.json`)).default ?? {}) as Messages;
-    return { locale, messages: deepMerge(en, localized) };
+    return { locale, messages: brandedMessages(locale, deepMerge(en, localized), branding) };
   } catch {
     // No catalog for this locale yet → serve EN (incremental rollout).
-    return { locale, messages: en };
+    return { locale, messages: brandedMessages("en", en, branding) };
   }
 });
