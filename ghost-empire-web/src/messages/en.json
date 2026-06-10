@@ -1919,6 +1919,13 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "myHistory": "Your recent games",
+    "myStats": "Your stats",
+    "statGames": "Games",
+    "statWinrate": "Win rate",
+    "statBest": "Best win",
+    "statNet": "Net",
+    "noHistory": "Play your first game and your history will show up here.",
     "soundOn": "Sound on — click to mute",
     "soundOff": "Sound off — click to unmute",
     "help": "The GT Casino runs on Ghost Tokens — the portal virtual currency (not real money). Set your stake and pick a game: the server draws the result, the animation just shows it. Winnings land on your balance instantly.",

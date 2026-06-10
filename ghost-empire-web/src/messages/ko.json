@@ -632,6 +632,13 @@
     "unitPurchase": "구매"
   },
   "kasyno": {
+    "myHistory": "최근 게임",
+    "myStats": "내 통계",
+    "statGames": "게임 수",
+    "statWinrate": "승률",
+    "statBest": "최고 승리",
+    "statNet": "수지",
+    "noHistory": "첫 게임을 플레이하면 기록이 여기에 표시됩니다.",
     "soundOn": "소리 켜짐 — 클릭하면 음소거",
     "soundOff": "소리 꺼짐 — 클릭하면 켜기",
     "help": "GT 카지노는 포털의 가상 화폐인 Ghost Tokens로 즐깁니다(실제 돈이 아닙니다). 베팅 금액을 정하고 게임을 고르면 결과는 서버가 추첨하고, 애니메이션은 그것을 보여줄 뿐입니다. 상금은 즉시 잔액에 반영됩니다.",

@@ -661,6 +661,13 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "myHistory": "Suas últimas partidas",
+    "myStats": "Suas estatísticas",
+    "statGames": "Partidas",
+    "statWinrate": "Taxa de vitória",
+    "statBest": "Melhor prêmio",
+    "statNet": "Saldo",
+    "noHistory": "Jogue sua primeira partida e o histórico aparecerá aqui.",
     "soundOn": "Som ligado — clique para silenciar",
     "soundOff": "Som desligado — clique para ativar",
     "help": "O Cassino GT funciona com Ghost Tokens, a moeda virtual do portal (não é dinheiro real). Defina a aposta e escolha um jogo: o servidor sorteia o resultado e a animação só o exibe. Os ganhos caem na hora no seu saldo.",

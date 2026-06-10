@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Twoja historia gier i statystyki 📜",
+    items: [
+      "Pod tablicą wygranych w kasynie znajdziesz teraz swoje statystyki (liczba gier, winrate, najlepsza wygrana, bilans) oraz listę ostatnich 12 gier z wynikami — odświeżaną na żywo po każdej rozgrywce.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Dźwięki w kasynie + szybkie stawki 🔊",
     items: [
       "Kasyno gra teraz dźwiękiem: start gry, wygrana, przegrana, bomba i wypłata mają własne, krótkie efekty (możesz je wyciszyć przyciskiem 🔊 przy stawce — ustawienie się zapamiętuje). Obok pola stawki pojawiły się też chipy 10 / 50 / 100 / 500 / MAX do błyskawicznej zmiany kwoty.",

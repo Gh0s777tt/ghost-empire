@@ -11,6 +11,7 @@ import InfoTip from "@/components/InfoTip";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { emitBalance } from "@/lib/balance-bus";
 import { sfxEnabled, sfxToggle, sfxPlay } from "@/lib/sfx";
+import { apiGet } from "@/lib/api-client";
 import { Link } from "@/i18n/navigation";
 
 type PlayResult = {
@@ -23,6 +24,10 @@ type PlayResult = {
 type Leaderboard = {
   bigWins: Array<{ id: string; name: string; game: string; net: number; detail: string | null }>;
   topNet: Array<{ name: string; net: number }>;
+};
+type History = {
+  recent: Array<{ id: string; game: string; bet: number; payout: number; net: number; detail: string | null; createdAt: string }>;
+  stats: { games: number; wins: number; net: number; best: number };
 };
 type Game = "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko";
 type Phase = "spin" | "land";
@@ -754,6 +759,14 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   }, []);
   useEffect(() => { void loadLb(); }, [loadLb]);
 
+  // Personal history + lifetime stats (signed-in only); refreshed after every game.
+  const [hist, setHist] = useState<History | null>(null);
+  const loadHist = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try { setHist(await apiGet<History>("/api/gt-games/history")); } catch { /* ignore */ }
+  }, [isAuthenticated]);
+  useEffect(() => { void loadHist(); }, [loadHist]);
+
   const settle = useCallback(() => {
     setStage((s) => {
       if (!s || s.settled) return s;
@@ -762,7 +775,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
     });
     setBusy(false);
     void loadLb();
-  }, [loadLb]);
+    void loadHist();
+  }, [loadLb, loadHist]);
 
   // Result sound — fires once per settled stage (effect, not inside the setStage updater).
   const sfxFor = useRef<number | null>(null);
@@ -807,7 +821,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       const res = await fetch("/api/gt-games/mines/reveal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: minesGame.sessionId, tile }) });
       const d = await res.json();
       if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
-      if (d.bomb) { sfxPlay("bomb"); setMinesGame((g) => (g ? { ...g, status: "bust", revealed: d.revealed, bombSet: d.bombSet } : g)); void loadLb(); }
+      if (d.bomb) { sfxPlay("bomb"); setMinesGame((g) => (g ? { ...g, status: "bust", revealed: d.revealed, bombSet: d.bombSet } : g)); void loadLb(); void loadHist(); }
       else { sfxPlay("click"); setMinesGame((g) => (g ? { ...g, revealed: d.revealed, multiplier: d.multiplier } : g)); }
     } catch { setError(t("connError")); }
     setMinesBusy(false);
@@ -823,6 +837,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       sfxPlay("cashout");
       setMinesGame((g) => (g ? { ...g, status: "cashed", multiplier: d.multiplier, bombSet: d.bombSet, payout: d.payout } : g));
       void loadLb();
+      void loadHist();
     } catch { setError(t("connError")); }
     setMinesBusy(false);
   }
@@ -1042,6 +1057,49 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               ))}
             </ul>
           </div>
+        </div>
+      )}
+
+      {/* personal stats + recent games (signed-in) */}
+      {isAuthenticated && hist && (
+        <div className="w-full mt-2">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-2">{t("myStats")}</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+            <div className="bg-zinc-950 border border-zinc-900 px-3 py-2 text-center">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">{t("statGames")}</div>
+              <div className="text-white font-bold tabular-nums">{fmt(hist.stats.games)}</div>
+            </div>
+            <div className="bg-zinc-950 border border-zinc-900 px-3 py-2 text-center">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">{t("statWinrate")}</div>
+              <div className="text-white font-bold tabular-nums">{hist.stats.games > 0 ? Math.round((hist.stats.wins / hist.stats.games) * 100) : 0}%</div>
+            </div>
+            <div className="bg-zinc-950 border border-zinc-900 px-3 py-2 text-center">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">{t("statBest")}</div>
+              <div className="text-emerald-400 font-bold tabular-nums">+{fmt(hist.stats.best)}</div>
+            </div>
+            <div className="bg-zinc-950 border border-zinc-900 px-3 py-2 text-center">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">{t("statNet")}</div>
+              <div className={`font-bold tabular-nums ${hist.stats.net >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{hist.stats.net >= 0 ? "+" : ""}{fmt(hist.stats.net)}</div>
+            </div>
+          </div>
+          <h2 className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-2">{t("myHistory")}</h2>
+          {hist.recent.length === 0 ? (
+            <div className="text-sm text-zinc-600 bg-zinc-950 border border-zinc-900 px-3 py-2.5">{t("noHistory")}</div>
+          ) : (
+            <ul className="space-y-1">
+              {hist.recent.map((h) => (
+                <li key={h.id} className="flex items-center justify-between gap-2 text-sm bg-zinc-950 border border-zinc-900 px-3 py-1.5">
+                  <span className="text-zinc-400 truncate">
+                    <span className="text-zinc-600">{gameLabel[h.game] ?? h.game}</span>
+                    {h.detail ? <span className="ms-2 text-zinc-300">{h.detail}</span> : null}
+                  </span>
+                  <span className={`shrink-0 font-bold tabular-nums ${h.net > 0 ? "text-emerald-400" : h.net < 0 ? "text-rose-400" : "text-zinc-400"}`}>
+                    {h.net > 0 ? "+" : ""}{fmt(h.net)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>

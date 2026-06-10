@@ -661,6 +661,13 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "myHistory": "Permainan terakhirmu",
+    "myStats": "Statistikmu",
+    "statGames": "Permainan",
+    "statWinrate": "Tingkat menang",
+    "statBest": "Kemenangan terbaik",
+    "statNet": "Saldo bersih",
+    "noHistory": "Mainkan game pertamamu dan riwayatnya akan muncul di sini.",
     "soundOn": "Suara aktif — klik untuk membisukan",
     "soundOff": "Suara mati — klik untuk mengaktifkan",
     "help": "Kasino GT memakai Ghost Tokens — mata uang virtual portal (bukan uang sungguhan). Atur taruhan dan pilih permainan: hasil diundi server, animasi hanya menampilkannya. Kemenangan langsung masuk ke saldomu.",
