@@ -9,6 +9,7 @@ import { aiChat, type ChatMessage } from "@/lib/ai";
 import { getIntegrationConfig } from "@/lib/integrations";
 import { buildAdminAssistantPrompt } from "@/lib/admin-assistant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { featureGateResponse } from "@/lib/entitlements";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,10 @@ export async function POST(req: Request) {
   if (!user || user.isBanned || (!user.isAdmin && !user.isModerator)) {
     return NextResponse.json({ error: "Brak uprawnień" }, { status: 403 });
   }
+
+  // Plan gate (Phase 6): the AI assistant is an elite feature for paying tenants.
+  const gated = await featureGateResponse("ai");
+  if (gated) return gated;
 
   // AI calls cost real money — keep a per-user lid on it.
   const rl = await rateLimit(`ai-assistant:${session.user.id}`, 15, 5 * 60_000);
