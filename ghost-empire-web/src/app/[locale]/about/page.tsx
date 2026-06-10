@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Drobna poprawka strony głównej 🩹",
+    items: [
+      "Plakietka „HOT” w sekcji „Gorące w sklepie” nie zasłania już nazw produktów — dłuższe nazwy są teraz elegancko skracane wielokropkiem tuż przed plakietką.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Interaktywny samouczek 🧭",
     items: [
       "Kliknij ? na górnym pasku, a przewodnik oprowadzi Cię po portalu — podświetla kolejne elementy i wyjaśnia, do czego służą. Na stronie kasyna pokazuje po kolei wszystkie gry, a na innych stronach ich najważniejsze funkcje. Możesz go włączyć w każdej chwili i na każdej stronie, także bez logowania. Dostępny w 14 językach.",
