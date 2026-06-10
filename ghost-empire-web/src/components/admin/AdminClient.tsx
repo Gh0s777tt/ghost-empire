@@ -67,6 +67,12 @@ const ActiveDropsList = dynamic(() => import("./sections/ActiveDrops").then((m) 
 const PendingOrdersList = dynamic(() => import("./sections/PendingOrders").then((m) => m.PendingOrdersList), { ssr: false, loading: SectionLoading });
 const StreamAlertsManager = dynamic(() => import("./sections/StreamAlerts").then((m) => m.StreamAlertsManager), { ssr: false, loading: SectionLoading });
 
+// Panel modes: how much of the admin is shown in the nav. Persisted per browser
+// (localStorage "ge-admin-mode"); defaults to "dev" = everything, the pre-modes behavior.
+type AdminMode = "simple" | "advanced" | "dev";
+const MODE_RANK: Record<AdminMode, number> = { simple: 1, advanced: 2, dev: 3 };
+const MODES: AdminMode[] = ["simple", "advanced", "dev"];
+
 type Stats = {
   totalUsers: number;
   totalTokensInCirculation: number;
@@ -116,67 +122,86 @@ export function AdminClient({
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
     | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit" | "integrations" | "wheel" | "webhooks" | "games";
 
+  // `level` maps a section to the panel mode that reveals it in the nav:
+  // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
+  // Deep links / palette / dashboard jumps still open ANY permitted section.
   const SECTIONS: Array<{
     id: SectionId;
     label: string;
     icon: typeof Users;
     group: string;
+    level: 1 | 2 | 3;
     permission: () => boolean;
   }> = [
-    { id: "dashboard", label: t("secDashboard"),   icon: LayoutDashboard, group: "main",       permission: () => true },
-    { id: "analytics", label: t("secAnalytics"),    icon: TrendingUp,     group: "main",       permission: () => isAdmin },
-    { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       permission: () => isAdmin },
-    { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       permission: () => isAdmin },
+    { id: "dashboard", label: t("secDashboard"),   icon: LayoutDashboard, group: "main",       level: 1, permission: () => true },
+    { id: "analytics", label: t("secAnalytics"),    icon: TrendingUp,     group: "main",       level: 2, permission: () => isAdmin },
+    { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
+    { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
 
-    { id: "users",     label: t("secUsers"), icon: UserCog,         group: "moderation", permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
-    { id: "merge",     label: t("secMerge"), icon: GitMerge,   group: "moderation", permission: () => isAdmin },
-    { id: "moderation", label: t("secModeration"),    icon: ShieldCheck,   group: "moderation", permission: () => isAdmin },
-    { id: "audit",     label: t("secAudit"),   icon: History,         group: "moderation", permission: () => can("view_audit") },
+    { id: "users",     label: t("secUsers"), icon: UserCog,         group: "moderation", level: 1, permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
+    { id: "merge",     label: t("secMerge"), icon: GitMerge,   group: "moderation", level: 2, permission: () => isAdmin },
+    { id: "moderation", label: t("secModeration"),    icon: ShieldCheck,   group: "moderation", level: 2, permission: () => isAdmin },
+    { id: "audit",     label: t("secAudit"),   icon: History,         group: "moderation", level: 2, permission: () => can("view_audit") },
 
-    { id: "twitch",    label: t("secTwitch"),      icon: Tv,              group: "platforms",  permission: () => isAdmin },
-    { id: "kick",      label: t("secKick"),        icon: Radio,           group: "platforms",  permission: () => isAdmin },
-    { id: "youtube",   label: t("secYoutube"),     icon: MonitorPlay,     group: "platforms",  permission: () => isAdmin },
+    { id: "twitch",    label: t("secTwitch"),      icon: Tv,              group: "platforms",  level: 2, permission: () => isAdmin },
+    { id: "kick",      label: t("secKick"),        icon: Radio,           group: "platforms",  level: 2, permission: () => isAdmin },
+    { id: "youtube",   label: t("secYoutube"),     icon: MonitorPlay,     group: "platforms",  level: 2, permission: () => isAdmin },
 
-    { id: "bot",       label: t("secBot"), icon: Bot,             group: "bot",        permission: () => can("manage_shop") },
-    { id: "chat",      label: t("secChat"), icon: MessageSquare, group: "bot",        permission: () => isAdmin },
-    { id: "timers",    label: t("secTimers"),        icon: Clock,         group: "bot",        permission: () => isAdmin },
-    { id: "faq",       label: t("secFaq"),    icon: HelpCircle,    group: "bot",        permission: () => isAdmin },
-    { id: "welcome",   label: t("secWelcome"),     icon: UserPlus,      group: "bot",        permission: () => isAdmin },
-    { id: "songs",     label: t("secSongs"), icon: Music,         group: "bot",        permission: () => isAdmin },
+    { id: "bot",       label: t("secBot"), icon: Bot,             group: "bot",        level: 2, permission: () => can("manage_shop") },
+    { id: "chat",      label: t("secChat"), icon: MessageSquare, group: "bot",        level: 2, permission: () => isAdmin },
+    { id: "timers",    label: t("secTimers"),        icon: Clock,         group: "bot",        level: 2, permission: () => isAdmin },
+    { id: "faq",       label: t("secFaq"),    icon: HelpCircle,    group: "bot",        level: 2, permission: () => isAdmin },
+    { id: "welcome",   label: t("secWelcome"),     icon: UserPlus,      group: "bot",        level: 2, permission: () => isAdmin },
+    { id: "songs",     label: t("secSongs"), icon: Music,         group: "bot",        level: 2, permission: () => isAdmin },
 
-    { id: "widgets",   label: t("secWidgets"), icon: LayoutGrid,    group: "overlays",   permission: () => isAdmin },
-    { id: "alerts",    label: t("secAlerts"), icon: Bell,          group: "overlays",   permission: () => isAdmin },
-    { id: "goals",     label: t("secGoals"), icon: Target,         group: "overlays",   permission: () => isAdmin },
-    { id: "subathon",  label: t("secSubathon"),      icon: Hourglass,     group: "overlays",   permission: () => isAdmin },
+    { id: "widgets",   label: t("secWidgets"), icon: LayoutGrid,    group: "overlays",   level: 2, permission: () => isAdmin },
+    { id: "alerts",    label: t("secAlerts"), icon: Bell,          group: "overlays",   level: 1, permission: () => isAdmin },
+    { id: "goals",     label: t("secGoals"), icon: Target,         group: "overlays",   level: 1, permission: () => isAdmin },
+    { id: "subathon",  label: t("secSubathon"),      icon: Hourglass,     group: "overlays",   level: 2, permission: () => isAdmin },
 
-    { id: "shop",      label: t("secShop"),       icon: ShoppingBag,     group: "economy",    permission: () => can("manage_shop") || can("deliver_orders") },
-    { id: "drops",     label: t("secDrops"),       icon: Gift,            group: "economy",    permission: () => can("create_drops") },
-    { id: "seasons",   label: t("secSeasons"), icon: Ticket,          group: "economy",    permission: () => isAdmin },
-    { id: "wheel",     label: t("secWheel"), icon: Disc3,          group: "economy",    permission: () => isAdmin },
-    { id: "donations", label: t("secDonations"),     icon: Heart,           group: "economy",    permission: () => isAdmin },
+    { id: "shop",      label: t("secShop"),       icon: ShoppingBag,     group: "economy",    level: 1, permission: () => can("manage_shop") || can("deliver_orders") },
+    { id: "drops",     label: t("secDrops"),       icon: Gift,            group: "economy",    level: 1, permission: () => can("create_drops") },
+    { id: "seasons",   label: t("secSeasons"), icon: Ticket,          group: "economy",    level: 2, permission: () => isAdmin },
+    { id: "wheel",     label: t("secWheel"), icon: Disc3,          group: "economy",    level: 2, permission: () => isAdmin },
+    { id: "donations", label: t("secDonations"),     icon: Heart,           group: "economy",    level: 2, permission: () => isAdmin },
 
-    { id: "events",    label: t("secEvents"),      icon: Calendar,        group: "community",  permission: () => can("create_events") || can("edit_events") || can("draw_events") },
-    { id: "predictions", label: t("secPredictions"), icon: Dice5,         group: "community",  permission: () => can("create_events") },
-    { id: "polls",     label: t("secPolls"),     icon: BarChart3,       group: "community",  permission: () => isAdmin },
-    { id: "achievements", label: t("secAchievements"), icon: Award,        group: "community",  permission: () => isAdmin },
-    { id: "schedule",  label: t("secSchedule"), icon: CalendarDays,    group: "community",  permission: () => can("manage_shop") },
-    { id: "games",     label: t("secGames"), icon: Gamepad2,    group: "community",  permission: () => isAdmin },
+    { id: "events",    label: t("secEvents"),      icon: Calendar,        group: "community",  level: 1, permission: () => can("create_events") || can("edit_events") || can("draw_events") },
+    { id: "predictions", label: t("secPredictions"), icon: Dice5,         group: "community",  level: 1, permission: () => can("create_events") },
+    { id: "polls",     label: t("secPolls"),     icon: BarChart3,       group: "community",  level: 1, permission: () => isAdmin },
+    { id: "achievements", label: t("secAchievements"), icon: Award,        group: "community",  level: 2, permission: () => isAdmin },
+    { id: "schedule",  label: t("secSchedule"), icon: CalendarDays,    group: "community",  level: 1, permission: () => can("manage_shop") },
+    { id: "games",     label: t("secGames"), icon: Gamepad2,    group: "community",  level: 2, permission: () => isAdmin },
   ];
 
-  const visibleSections = SECTIONS.filter((s) => s.permission());
+  // Panel mode: filters the NAV only — never what a user is permitted to open.
+  const [adminMode, setAdminMode] = useState<AdminMode>("dev");
+  useEffect(() => {
+    const saved = localStorage.getItem("ge-admin-mode");
+    if (saved === "simple" || saved === "advanced" || saved === "dev") setAdminMode(saved);
+  }, []);
+  const changeMode = useCallback((m: AdminMode) => {
+    setAdminMode(m);
+    try { localStorage.setItem("ge-admin-mode", m); } catch { /* private mode */ }
+  }, []);
+
+  const permittedSections = SECTIONS.filter((s) => s.permission());
+  const visibleSections = permittedSections.filter((s) => s.level <= MODE_RANK[adminMode]);
+  const hiddenByMode = permittedSections.length - visibleSections.length;
 
   // URL hash → active section (deep-linkable: /admin#shop)
   const [activeSection, setActiveSection] = useState<SectionId>("dashboard");
   useEffect(() => {
     const fromHash = () => {
       const raw = window.location.hash.replace(/^#/, "");
-      const known = visibleSections.find((s) => s.id === raw);
+      // permitted (not mode-visible): a deep link must open the section even
+      // when the current panel mode hides it from the nav
+      const known = permittedSections.find((s) => s.id === raw);
       setActiveSection(known ? known.id : "dashboard");
     };
     fromHash();
     window.addEventListener("hashchange", fromHash);
     return () => window.removeEventListener("hashchange", fromHash);
-    // visibleSections recomputed each render — depending on perms, not on every state change
+    // permittedSections recomputed each render — depending on perms, not on every state change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const goToSection = useCallback((id: SectionId) => {
@@ -263,10 +288,20 @@ export function AdminClient({
           sections={visibleSections}
           active={activeSection}
           onSelect={goToSection}
+          mode={adminMode}
+          onModeChange={changeMode}
+          hiddenByMode={hiddenByMode}
         />
-        <CommandPalette sections={visibleSections} onSelect={goToSection} />
+        {/* palette searches everything permitted — it's the escape hatch in simple mode */}
+        <CommandPalette sections={permittedSections} onSelect={goToSection} />
 
         <div key={activeSection} className="flex-1 min-w-0 space-y-6 animate-fade-in-up">
+          {activeSection !== "dashboard" && (
+            <div className="border border-zinc-800/80 bg-zinc-950/50 px-4 py-2.5 flex items-start gap-2.5 text-xs text-zinc-400 leading-relaxed">
+              <span aria-hidden className="shrink-0">💡</span>
+              <p>{t(`secDesc_${activeSection}`)}</p>
+            </div>
+          )}
           {activeSection === "dashboard" && (
             <DashboardSection
               stats={stats}
@@ -540,11 +575,14 @@ const NAV_GROUPS: Array<{ key: string; label: string }> = [
 ];
 
 function AdminNav<T extends string>({
-  sections, active, onSelect,
+  sections, active, onSelect, mode, onModeChange, hiddenByMode,
 }: {
   sections: Array<{ id: T; label: string; icon: typeof Users; group: string }>;
   active: T;
   onSelect: (id: T) => void;
+  mode: AdminMode;
+  onModeChange: (m: AdminMode) => void;
+  hiddenByMode: number;
 }) {
   const t = useTranslations("admin");
   const activeGroup = sections.find((s) => s.id === active)?.group ?? "main";
@@ -567,6 +605,24 @@ function AdminNav<T extends string>({
             "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
         }}
       >
+        <div className="grid grid-cols-3 gap-0.5 mb-1" role="group" aria-label={t("modeLabel")}>
+          {MODES.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => onModeChange(m)}
+              title={t(`modeTip_${m}`)}
+              className={cn(
+                "px-1 py-1.5 text-[9px] font-mono uppercase tracking-wider border transition-colors truncate",
+                mode === m
+                  ? "border-red-700 bg-red-950/40 text-white"
+                  : "border-zinc-800 text-zinc-500 hover:text-zinc-200 hover:border-zinc-600",
+              )}
+            >
+              {t(`mode_${m}`)}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           onClick={() => openCommandPalette()}
@@ -628,6 +684,15 @@ function AdminNav<T extends string>({
             </div>
           );
         })}
+        {hiddenByMode > 0 && (
+          <button
+            type="button"
+            onClick={() => onModeChange(mode === "simple" ? "advanced" : "dev")}
+            className="px-2 py-1.5 text-left text-[9px] text-zinc-600 hover:text-zinc-400 transition-colors"
+          >
+            {t("modeHidden", { count: hiddenByMode })} ▸
+          </button>
+        )}
       </nav>
     </aside>
   );

@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Panel admina: tryby trudności i opisy wszystkich sekcji 🧭",
+    items: [
+      "Panel administracyjny ma teraz trzy tryby: Prosty (tylko codzienne narzędzia), Zaawansowany i Developer — nowi moderatorzy nie toną już w 30 sekcjach naraz. Każda sekcja dostała też opis: co robi, gdzie widać efekt i dlaczego połączenia z platformami potrzebują autoryzacji (oraz do czego NIE mają dostępu).",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Nowa gra: Zdrapki 🎫",
     items: [
       "Kup los za swoją stawkę i zdrapuj 9 pól — trzy takie same symbole nagrody wygrywają mnożnik: od 1× za koniczynkę aż po 100× za jokera! Zdrapuj pojedynczo dla emocji albo odsłoń wszystko jednym kliknięciem. Tym samym kasyno ma już 10 gier!",
