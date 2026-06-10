@@ -24,6 +24,8 @@ export type TenantBrand = {
   /** White-label currency naming (Phase 5) — replaces %tokenName%/%gt% in i18n. */
   tokenName: string;
   tokenSymbol: string;
+  /** Streamer's public handle (no leading @) — replaces %owner% in i18n. */
+  ownerHandle: string;
 };
 
 /** Brand used before a tenant row exists or outside any request context. */
@@ -35,6 +37,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   brandColor: SITE.brandColor,
   tokenName: "Ghost Tokens",
   tokenSymbol: "GT",
+  ownerHandle: SITE.owner,
 };
 
 /**
@@ -63,6 +66,7 @@ export async function getCurrentTenant(): Promise<TenantBrand> {
         brandColor: t.brandColor,
         tokenName: t.tokenName,
         tokenSymbol: t.tokenSymbol,
+        ownerHandle: t.ownerHandle ?? t.shortName ?? t.name,
       };
     }
   } catch {

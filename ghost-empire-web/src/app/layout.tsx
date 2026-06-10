@@ -6,50 +6,59 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SITE } from "@/lib/site";
+import { getCurrentTenant } from "@/lib/tenant";
 
 // CSP nonce (src/proxy.ts) is per-request → every route must render dynamically to
 // receive it (a statically-prerendered page ships build-time scripts WITHOUT the
 // nonce and they'd be blocked by script-src). Cascades to all routes from here.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
-  title: {
-    default: SITE.name,
-    template: `%s | ${SITE.name}`,
-  },
-  description:
-    `Oficjalny portal społeczności ${SITE.name}. Zbieraj Ghost Tokens, wymieniaj na nagrody, rywalizuj w rankingu.`,
-  keywords: [...SITE.keywords],
-  authors: [{ name: SITE.owner }],
-  creator: SITE.owner,
-  openGraph: {
-    title: SITE.name,
-    description: `Oficjalny portal społeczności streamera ${SITE.owner}. Ekonomia Ghost Tokens, eventy, sklep, ranking.`,
-    type: "website",
-    locale: "pl_PL",
-    siteName: SITE.shortName,
-    url: SITE.url,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE.name,
-    description: `Oficjalny portal społeczności streamera ${SITE.owner}`,
-    creator: SITE.ownerHandle,
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+// Per-tenant brand in titles / OG / Twitter (Phase 5). force-dynamic above means
+// this runs per request, so the Host-resolved tenant is always the right one.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getCurrentTenant();
+  return {
+    metadataBase: new URL(SITE.url),
+    title: {
+      default: t.name,
+      template: `%s | ${t.name}`,
+    },
+    description:
+      `Oficjalny portal społeczności ${t.name}. Zbieraj ${t.tokenName}, wymieniaj na nagrody, rywalizuj w rankingu.`,
+    keywords: [...SITE.keywords],
+    authors: [{ name: t.ownerHandle }],
+    creator: t.ownerHandle,
+    openGraph: {
+      title: t.name,
+      description: `Oficjalny portal społeczności streamera ${t.ownerHandle}. Ekonomia ${t.tokenName}, eventy, sklep, ranking.`,
+      type: "website",
+      locale: "pl_PL",
+      siteName: t.shortName,
+      url: SITE.url,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t.name,
+      description: `Oficjalny portal społeczności streamera ${t.ownerHandle}`,
+      creator: `@${t.ownerHandle}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 // Next 15+: themeColor/colorScheme live in viewport, not metadata.
-export const viewport: Viewport = {
-  themeColor: SITE.brandColor,
-  colorScheme: "dark",
-  width: "device-width",
-  initialScale: 1,
-};
+export async function generateViewport(): Promise<Viewport> {
+  const t = await getCurrentTenant();
+  return {
+    themeColor: t.brandColor,
+    colorScheme: "dark",
+    width: "device-width",
+    initialScale: 1,
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return children;

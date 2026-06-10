@@ -9,11 +9,17 @@ import { createContext, useContext } from "react";
 export type TenantBrandingValue = {
   tokenName: string;
   tokenSymbol: string;
+  brandName: string;
+  brandShort: string;
+  owner: string;
 };
 
 const TenantBrandingContext = createContext<TenantBrandingValue>({
   tokenName: "Ghost Tokens",
   tokenSymbol: "GT",
+  brandName: "GH0ST EMPIRE",
+  brandShort: "Ghost Empire",
+  owner: "Gh0s77tt",
 });
 
 export function TenantBrandingProvider({

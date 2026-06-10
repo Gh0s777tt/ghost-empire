@@ -31,6 +31,10 @@ async function main() {
   });
   console.log(`✅ default tenant "${tenant.slug}" (${tenant.id}); attached ${count} user(s)`);
 
+  // Phase 5: the default tenant's owner handle (used by the %owner% i18n marker).
+  const oh = await prisma.tenant.updateMany({ where: { slug: DEFAULT.slug, ownerHandle: null }, data: { ownerHandle: "Gh0s77tt" } });
+  console.log(`   tenant.ownerHandle: set on ${oh.count} row(s)`);
+
   // Attach the existing config singletons to the default tenant (one row per tenant).
   // Each Phase 3 model that gains a tenantId adds a line here; re-run after its db push.
   const ic = await prisma.integrationConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
