@@ -1926,6 +1926,8 @@
     "unitPurchase": "zakup"
   },
   "kasyno": {
+    "jackpot": "Jackpot",
+    "jackpotHint": "1% każdej stawki zasila pulę. Trafienie 7️⃣7️⃣7️⃣ w slotach wygrywa całość!",
     "animForced": "Animacje wymuszone — kliknij, aby wrócić do ustawień systemu",
     "animSystem": "System ogranicza animacje — kliknij, aby je wymusić",
     "backToGames": "Wszystkie gry",

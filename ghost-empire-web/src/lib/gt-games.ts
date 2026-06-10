@@ -4,9 +4,48 @@
 // transaction so GT can never be created or lost incorrectly.
 import { prisma } from "@/lib/prisma";
 import { pickWeightedIndex } from "@/lib/economy";
+import { redis } from "@/lib/redis";
 
 export const MIN_BET = 10;
 export const MAX_BET = 100_000;
+
+// ── Progressive jackpot: 1% of EVERY casino bet feeds a shared Redis pool; hitting
+//    7️⃣7️⃣7️⃣ on slots wins seed + surplus and the pool resets to the seed. The Redis
+//    key stores only the SURPLUS (display/claim add the seed), so no init is needed.
+//    Without Redis the jackpot quietly shows the seed and never grows (best-effort).
+export const JACKPOT_KEY = "jackpot:surplus";
+export const JACKPOT_SEED = 5_000;
+export const JACKPOT_CUT = 0.01;
+
+export function isJackpotHit(reels: string[]): boolean {
+  return reels.length === 3 && reels.every((r) => r === "7️⃣");
+}
+
+/** Feed 1% of a bet into the pool (fire-and-forget; jackpot is best-effort). */
+export async function feedJackpot(bet: number): Promise<void> {
+  if (!redis) return;
+  const cut = Math.floor(bet * JACKPOT_CUT);
+  if (cut <= 0) return;
+  try { await redis.incrby(JACKPOT_KEY, cut); } catch { /* ignore */ }
+}
+
+/** Current pool for display (seed + surplus). */
+export async function jackpotPool(): Promise<number> {
+  if (!redis) return JACKPOT_SEED;
+  try { return JACKPOT_SEED + (Number(await redis.get(JACKPOT_KEY)) || 0); } catch { return JACKPOT_SEED; }
+}
+
+/** Atomically claim the pool (GETDEL surplus) — returns seed + surplus. */
+async function claimJackpot(): Promise<number> {
+  if (!redis) return JACKPOT_SEED;
+  try { return JACKPOT_SEED + (Number(await redis.getdel(JACKPOT_KEY)) || 0); } catch { return JACKPOT_SEED; }
+}
+
+/** Put a claimed surplus back (only used when the charge fails after a claim). */
+async function refundJackpotSurplus(surplus: number): Promise<void> {
+  if (!redis || surplus <= 0) return;
+  try { await redis.incrby(JACKPOT_KEY, surplus); } catch { /* ignore */ }
+}
 
 // Slots: 3 reels. Only a 3-of-a-kind pays, with the symbol's multiplier. House edge
 // is intentional (this is a GT sink) — RTP ≈ 0.86, verified by a Monte-Carlo test.
@@ -185,11 +224,17 @@ export async function playGtGame(
   let dice: { roll: number; target: number; dir: DiceDir; win: boolean } | undefined;
   let crash: { crash: number; target: number; win: boolean } | undefined;
   let plinko: { path: number[]; bucket: number; multiplier: number } | undefined;
+  let jackpotWon = 0; // claimed surplus is refunded if the charge fails below
   if (game === "slots") {
     const o = spinSlots();
     reels = o.reels;
     detail = o.reels.join("");
     payout = o.multiplier > 0 ? bet * o.multiplier : 0;
+    if (isJackpotHit(o.reels)) {
+      jackpotWon = await claimJackpot();
+      payout += jackpotWon;
+      detail += " 💰JACKPOT!";
+    }
   } else if (game === "coinflip") {
     const o = flipCoin();
     detail = o.win ? "✅ orzeł" : "❌ reszka";
@@ -246,12 +291,17 @@ export async function playGtGame(
       return fresh?.tokens ?? 0;
     });
 
+    // Feed the progressive pool AFTER a successful charge (1% of the bet, best-effort).
+    void feedJackpot(bet);
+
     // Casino achievements (best-effort; helper swallows its own errors, never throws).
     const { checkAndGrantAchievements } = await import("@/lib/achievements");
     await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
 
     return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash, plinko };
   } catch (e) {
+    // The pot was grabbed before the charge — put the surplus back on failure.
+    if (jackpotWon > JACKPOT_SEED) void refundJackpotSurplus(jackpotWon - JACKPOT_SEED);
     if (e instanceof GtGameError) return { ok: false, status: e.status, error: e.message };
     return { ok: false, status: 500, error: "Błąd serwera" };
   }

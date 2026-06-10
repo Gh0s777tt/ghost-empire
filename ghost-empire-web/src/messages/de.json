@@ -641,6 +641,8 @@
     "unitPurchase": "Kauf"
   },
   "kasyno": {
+    "jackpot": "Jackpot",
+    "jackpotHint": "1% jedes Einsatzes speist den Pool. 7️⃣7️⃣7️⃣ in den Slots gewinnt alles!",
     "animForced": "Animationen erzwungen — klicken, um der Systemeinstellung zu folgen",
     "animSystem": "Dein System reduziert Bewegung — klicken, um Animationen zu erzwingen",
     "backToGames": "Alle Spiele",

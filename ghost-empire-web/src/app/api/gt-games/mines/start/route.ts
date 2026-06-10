@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { minesStart } from "@/lib/gt-mines";
+import { feedJackpot } from "@/lib/gt-games";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -18,5 +19,6 @@ export async function POST(req: Request) {
 
   const result = await minesStart(session.user.id, Math.floor(Number(body.bet ?? 0)), Math.floor(Number(body.bombs ?? 3)));
   if (!result.ok) return jsonError(result.error, result.status);
+  void feedJackpot(Math.floor(Number(body.bet ?? 0))); // 1% of every casino bet feeds the pool
   return NextResponse.json(result);
 }

@@ -641,6 +641,8 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "jackpot": "Bote",
+    "jackpotHint": "El 1% de cada apuesta alimenta el bote. ¡Saca 7️⃣7️⃣7️⃣ en las tragaperras y llévatelo todo!",
     "animForced": "Animaciones forzadas — clic para seguir el ajuste del sistema",
     "animSystem": "Tu sistema reduce el movimiento — clic para forzar animaciones",
     "backToGames": "Todos los juegos",
