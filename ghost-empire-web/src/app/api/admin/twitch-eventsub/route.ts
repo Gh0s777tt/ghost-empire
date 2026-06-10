@@ -11,13 +11,14 @@ import {
   deleteEventSubscription,
   EVENT_TYPES_TO_SUBSCRIBE,
 } from "@/lib/twitch";
+import { getTwitchStreamerToken } from "@/lib/platform-tokens";
 
 // GET — current Twitch subscriptions state + streamer connection info
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const streamerToken = await prisma.twitchStreamerToken.findUnique({ where: { id: "default" } });
+  const streamerToken = await getTwitchStreamerToken();
   const local = await prisma.twitchEventSubscription.findMany({
     orderBy: { type: "asc" },
   });
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "setup") {
-    const streamerToken = await prisma.twitchStreamerToken.findUnique({ where: { id: "default" } });
+    const streamerToken = await getTwitchStreamerToken();
     if (!streamerToken) {
       return NextResponse.json({
         error: "Streamer Twitch jeszcze nie autoryzowany — kliknij 'Autoryzuj jako streamer' najpierw",

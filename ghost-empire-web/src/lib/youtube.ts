@@ -10,6 +10,7 @@
 // Caller (cron / admin) is responsible for not polling when not live.
 import { prisma } from "@/lib/prisma";
 import { encryptSecret, decryptSecret } from "@/lib/crypto";
+import { getYouTubeStreamerToken } from "@/lib/platform-tokens";
 
 const YT_API = "https://www.googleapis.com/youtube/v3";
 const YT_OAUTH_TOKEN = "https://oauth2.googleapis.com/token";
@@ -21,7 +22,7 @@ export const YT_STREAMER_SCOPES = "openid email profile https://www.googleapis.c
 // =====================================================
 
 export async function getValidAccessToken(): Promise<string> {
-  const tok = await prisma.youTubeStreamerToken.findUnique({ where: { id: "default" } });
+  const tok = await getYouTubeStreamerToken();
   if (!tok) throw new Error("YouTube streamer not authorized — go to /admin#youtube");
 
   // Refresh if expiring within 2 minutes
@@ -30,7 +31,7 @@ export async function getValidAccessToken(): Promise<string> {
     if (!refreshToken) throw new Error("YouTube refresh token unreadable — re-auth at /admin#youtube");
     const refreshed = await refreshAccessToken(refreshToken);
     await prisma.youTubeStreamerToken.update({
-      where: { id: "default" },
+      where: { id: tok.id },
       data: {
         accessToken: encryptSecret(refreshed.access_token),
         tokenExpiresAt: new Date(Date.now() + (refreshed.expires_in ?? 3600) * 1000),

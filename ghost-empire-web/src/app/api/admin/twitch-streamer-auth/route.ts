@@ -5,9 +5,10 @@
 // Result: TwitchStreamerToken row saved with the streamer's user access token,
 // which is then used to create EventSub subscriptions for their channel.
 import { NextResponse } from "next/server";
-import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
+import { signOAuthState } from "@/lib/oauth-state";
+import { currentTenantId } from "@/lib/tenant";
 
 const STREAMER_SCOPES = "channel:read:subscriptions bits:read channel:read:hype_train moderator:read:followers";
 
@@ -18,9 +19,15 @@ export async function GET() {
       process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app"));
   }
 
-  const state = randomBytes(32).toString("hex");
+  // Signed state carries {tenantId, userId} — the shared OAuth app returns all
+  // tenants to ONE callback URL, so the state is what identifies the tenant.
+  const { state, nonce } = signOAuthState({
+    tenantId: await currentTenantId(),
+    userId: auth.userId,
+    provider: "twitch-streamer",
+  });
   const cookieStore = await cookies();
-  cookieStore.set("twitch_streamer_state", state, {
+  cookieStore.set("twitch_streamer_state", nonce, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",

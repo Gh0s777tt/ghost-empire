@@ -12,13 +12,14 @@ import {
   deleteEventSubscription,
   KICK_EVENT_TYPES_TO_SUBSCRIBE,
 } from "@/lib/kick";
+import { getKickStreamerToken } from "@/lib/platform-tokens";
 
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const [streamerToken, local, recentEvents] = await Promise.all([
-    prisma.kickStreamerToken.findUnique({ where: { id: "default" } }),
+    getKickStreamerToken(),
     prisma.kickEventSubscription.findMany({ orderBy: { type: "asc" } }),
     prisma.kickEvent.findMany({ orderBy: { receivedAt: "desc" }, take: 10 }),
   ]);
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "setup") {
-    const streamerToken = await prisma.kickStreamerToken.findUnique({ where: { id: "default" } });
+    const streamerToken = await getKickStreamerToken();
     if (!streamerToken) {
       return NextResponse.json({
         error: "Streamer Kick jeszcze nie autoryzowany — kliknij 'Autoryzuj Kick' najpierw",
@@ -143,7 +144,7 @@ export async function POST(req: Request) {
 
   if (body.action === "delete") {
     if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
-    const streamerToken = await prisma.kickStreamerToken.findUnique({ where: { id: "default" } });
+    const streamerToken = await getKickStreamerToken();
     if (!streamerToken) {
       return NextResponse.json({ error: "Brak Kick streamer tokenu" }, { status: 400 });
     }

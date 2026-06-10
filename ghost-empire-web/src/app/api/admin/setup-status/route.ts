@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getIntegrationConfig } from "@/lib/integrations";
+import { getTwitchStreamerToken, getKickStreamerToken, getYouTubeStreamerToken } from "@/lib/platform-tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +16,10 @@ export async function GET() {
   const [integ, mod, twitch, twitchSubs, kick, youtube, alertSettings] = await Promise.all([
     getIntegrationConfig(),
     prisma.moderationConfig.findFirst(),
-    prisma.twitchStreamerToken.findFirst(),
+    getTwitchStreamerToken(),
     prisma.twitchEventSubscription.count(),
-    prisma.kickStreamerToken.findFirst(),
-    prisma.youTubeStreamerToken.findFirst(),
+    getKickStreamerToken(),
+    getYouTubeStreamerToken(),
     prisma.streamAlertSettings.findFirst(),
   ]);
 

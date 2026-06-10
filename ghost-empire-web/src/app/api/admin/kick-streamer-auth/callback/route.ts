@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeUserCode, getOwnUser } from "@/lib/kick";
+import { verifyOAuthState } from "@/lib/oauth-state";
+import { tokenUpsertKeys } from "@/lib/platform-tokens";
 
 // Must byte-match the redirect_uri used in the authorize step — strip trailing slash too.
 const BASE = (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app").replace(/\/+$/, "");
@@ -28,13 +30,18 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/admin?kick_error=no_code#kick", BASE));
   }
 
+  const payload = verifyOAuthState(state, "kick-streamer");
+  if (!payload) {
+    return NextResponse.redirect(new URL("/admin?kick_error=state_mismatch#kick", BASE));
+  }
   const cookieStore = await cookies();
-  const expectedState = cookieStore.get("kick_streamer_state")?.value;
+  const cookieNonce = cookieStore.get("kick_streamer_state")?.value;
   const verifier = cookieStore.get("kick_streamer_verifier")?.value;
-  if (!expectedState || expectedState !== state) {
+  if (cookieNonce && cookieNonce !== payload.nonce) {
     return NextResponse.redirect(new URL("/admin?kick_error=state_mismatch#kick", BASE));
   }
   if (!verifier) {
+    // PKCE verifier lives ONLY in the cookie — this flow can't complete cross-host.
     return NextResponse.redirect(new URL("/admin?kick_error=missing_verifier#kick", BASE));
   }
   cookieStore.delete("kick_streamer_state");
@@ -57,11 +64,12 @@ export async function GET(req: Request) {
   const expiresAt = tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : null;
   const broadcasterLogin = user.name || `kick_${user.userId}`;  // never empty — column is required
 
+  const keys = tokenUpsertKeys(payload.tenantId);
   try {
     await prisma.kickStreamerToken.upsert({
-      where: { id: "default" },
+      where: keys.where,
       create: {
-        id: "default",
+        ...keys.createKey,
         broadcasterId: user.userId,
         broadcasterLogin,
         accessToken: encryptSecret(tokenData.access_token),

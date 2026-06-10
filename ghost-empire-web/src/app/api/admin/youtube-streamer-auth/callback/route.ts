@@ -8,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeCodeForToken, getOwnChannel } from "@/lib/youtube";
+import { verifyOAuthState } from "@/lib/oauth-state";
+import { tokenUpsertKeys } from "@/lib/platform-tokens";
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
@@ -29,9 +31,13 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/admin?yt_error=no_code", BASE));
   }
 
+  const payload = verifyOAuthState(state, "youtube-streamer");
+  if (!payload) {
+    return NextResponse.redirect(new URL("/admin?yt_error=state_mismatch", BASE));
+  }
   const cookieStore = await cookies();
-  const expected = cookieStore.get("yt_streamer_state")?.value;
-  if (!expected || expected !== state) {
+  const cookieNonce = cookieStore.get("yt_streamer_state")?.value;
+  if (cookieNonce && cookieNonce !== payload.nonce) {
     return NextResponse.redirect(new URL("/admin?yt_error=state_mismatch", BASE));
   }
   cookieStore.delete("yt_streamer_state");
@@ -63,10 +69,11 @@ export async function GET(req: Request) {
 
   const expiresAt = new Date(Date.now() + (tokenData.expires_in ?? 3600) * 1000);
 
+  const keys = tokenUpsertKeys(payload.tenantId);
   await prisma.youTubeStreamerToken.upsert({
-    where: { id: "default" },
+    where: keys.where,
     create: {
-      id: "default",
+      ...keys.createKey,
       channelId: channel.id,
       channelTitle: channel.title,
       accessToken: encryptSecret(tokenData.access_token),

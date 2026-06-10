@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { pollAndProcessDonations } from "@/lib/streamlabs";
+import { getStreamlabsConnection } from "@/lib/platform-tokens";
 
 // POST { action: "sync" | "disconnect" }
 export async function POST(req: Request) {
@@ -27,7 +28,8 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "disconnect") {
-    await prisma.streamlabsConnection.delete({ where: { id: "default" } }).catch(() => {});
+    const conn = await getStreamlabsConnection();
+    if (conn) await prisma.streamlabsConnection.delete({ where: { id: conn.id } }).catch(() => {});
     await logAdminAction({
       adminId: auth.userId,
       action: "set_user_role",

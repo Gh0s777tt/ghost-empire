@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { exchangeCode, fetchUserInfo } from "@/lib/streamlabs";
 import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
+import { verifyOAuthState } from "@/lib/oauth-state";
+import { tokenUpsertKeys } from "@/lib/platform-tokens";
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
@@ -28,10 +30,14 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/admin?streamlabs_error=no_code", BASE));
   }
 
-  // Verify CSRF state
+  // Signed state → {tenantId, userId}; cookie nonce pins it to this browser.
+  const payload = verifyOAuthState(state, "streamlabs");
+  if (!payload) {
+    return NextResponse.redirect(new URL("/admin?streamlabs_error=state_mismatch", BASE));
+  }
   const cookieStore = await cookies();
-  const expectedState = cookieStore.get("streamlabs_oauth_state")?.value;
-  if (!expectedState || expectedState !== state) {
+  const cookieNonce = cookieStore.get("streamlabs_oauth_state")?.value;
+  if (cookieNonce && cookieNonce !== payload.nonce) {
     return NextResponse.redirect(new URL("/admin?streamlabs_error=state_mismatch", BASE));
   }
   cookieStore.delete("streamlabs_oauth_state");
@@ -64,10 +70,11 @@ export async function GET(req: Request) {
     ? new Date(Date.now() + token.expires_in * 1000)
     : null;
 
+  const keys = tokenUpsertKeys(payload.tenantId);
   await prisma.streamlabsConnection.upsert({
-    where: { id: "default" },
+    where: keys.where,
     create: {
-      id: "default",
+      ...keys.createKey,
       accessToken: encryptSecret(token.access_token),
       refreshToken: encryptSecret(token.refresh_token),
       tokenExpiresAt: expiresAt,

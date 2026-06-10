@@ -1,10 +1,11 @@
 // src/app/api/auth/streamlabs/route.ts
 // Initiate Streamlabs OAuth — admin-only. Redirects user to Streamlabs to authorize.
 import { NextResponse } from "next/server";
-import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
 import { getAuthorizeUrl } from "@/lib/streamlabs";
+import { signOAuthState } from "@/lib/oauth-state";
+import { currentTenantId } from "@/lib/tenant";
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -13,10 +14,15 @@ export async function GET() {
       process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app"));
   }
 
-  // Generate CSRF state, store in cookie for callback validation
-  const state = randomBytes(32).toString("hex");
+  // Signed state carries {tenantId, userId} (shared OAuth app → one callback URL);
+  // the nonce mirrors into the cookie for same-host CSRF matching.
+  const { state, nonce } = signOAuthState({
+    tenantId: await currentTenantId(),
+    userId: auth.userId,
+    provider: "streamlabs",
+  });
   const cookieStore = await cookies();
-  cookieStore.set("streamlabs_oauth_state", state, {
+  cookieStore.set("streamlabs_oauth_state", nonce, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",

@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, requirePermission, requireAnyPermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { getTwitchStreamerToken, getStreamlabsConnection } from "@/lib/platform-tokens";
 import { currentTenantId } from "@/lib/tenant";
 import { getSettings as getAlertSettings } from "@/lib/alerts";
 import { getCodeConfig } from "@/lib/codes";
@@ -187,7 +188,7 @@ export async function GET(req: Request) {
 
     case "streamlabs": {
       const [conn, unmatched] = await Promise.all([
-        prisma.streamlabsConnection.findUnique({ where: { id: "default" } }),
+        getStreamlabsConnection(),
         prisma.donation.findMany({
           where: { userId: null, matchType: null },
           orderBy: { donatedAt: "desc" },
@@ -211,7 +212,7 @@ export async function GET(req: Request) {
 
     case "twitch": {
       const [streamer, subs, recent] = await Promise.all([
-        prisma.twitchStreamerToken.findUnique({ where: { id: "default" } }),
+        getTwitchStreamerToken(),
         prisma.twitchEventSubscription.findMany({ orderBy: { type: "asc" } }),
         prisma.twitchEvent.findMany({ orderBy: { receivedAt: "desc" }, take: 10 }),
       ]);
