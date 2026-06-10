@@ -963,6 +963,12 @@
     "s9p": "Publicamos los cambios en esta página. Los cambios importantes se anuncian en Discord. Usar el Portal tras la entrada en vigor de los cambios implica aceptarlos."
   },
   "onboarding": {
+    "bSuccessTitle": "¡Pago recibido!",
+    "bSuccessBody": "Tu suscripción se activa en un minuto — el plan y la caducidad se fijan automáticamente.",
+    "bCancelled": "Pago cancelado",
+    "bActivate": "Activar suscripción",
+    "bActivateHint": "¿Quieres saltarte la prueba? Activa la suscripción ya — elige el período:",
+    "bMonths": "{n} mes.",
     "metaTitle": "Lanza tu propio portal",
     "metaDesc": "Crea un portal de comunidad para tu canal — tu marca, tokens y colores en minutos.",
     "title": "LANZA TU PROPIO PORTAL",

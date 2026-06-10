@@ -50,6 +50,12 @@
     }
   },
   "onboarding": {
+    "bSuccessTitle": "Payment received!",
+    "bSuccessBody": "Your subscription activates within a minute — the plan and expiry are set automatically.",
+    "bCancelled": "Payment cancelled",
+    "bActivate": "Activate subscription",
+    "bActivateHint": "Want to skip the trial? Activate the subscription right away — pick a billing period:",
+    "bMonths": "{n} mo",
     "metaTitle": "Launch your own portal",
     "metaDesc": "Spin up a community portal for your channel — your brand, tokens and colors in minutes.",
     "title": "LAUNCH YOUR OWN PORTAL",

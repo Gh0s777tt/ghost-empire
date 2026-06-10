@@ -963,6 +963,12 @@
     "s9p": "我们在此页面发布变更。重大变更将在 Discord 上公布。在变更生效后使用门户即表示接受变更。"
   },
   "onboarding": {
+    "bSuccessTitle": "已收到付款!",
+    "bSuccessBody": "订阅将在一分钟内激活 — 套餐和有效期会自动设置。",
+    "bCancelled": "付款已取消",
+    "bActivate": "激活订阅",
+    "bActivateHint": "想跳过试用?立即激活订阅 — 选择计费周期:",
+    "bMonths": "{n}个月",
     "metaTitle": "启动你自己的门户",
     "metaDesc": "几分钟内为你的频道创建社区门户 — 你的品牌、代币和颜色。",
     "title": "启动你自己的门户",

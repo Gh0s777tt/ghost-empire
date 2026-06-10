@@ -992,6 +992,12 @@
     "s9p": "Kami memublikasikan perubahan di halaman ini. Perubahan besar diumumkan di Discord. Menggunakan Portal setelah perubahan berlaku berarti menyetujuinya."
   },
   "onboarding": {
+    "bSuccessTitle": "Pembayaran diterima!",
+    "bSuccessBody": "Langganan Anda aktif dalam satu menit — paket dan masa berlaku diatur otomatis.",
+    "bCancelled": "Pembayaran dibatalkan",
+    "bActivate": "Aktifkan langganan",
+    "bActivateHint": "Mau lewati uji coba? Aktifkan langganan sekarang — pilih periode:",
+    "bMonths": "{n} bln",
     "metaTitle": "Luncurkan portal Anda",
     "metaDesc": "Buat portal komunitas untuk channel Anda — brand, token, dan warna Anda dalam hitungan menit.",
     "title": "LUNCURKAN PORTAL ANDA",

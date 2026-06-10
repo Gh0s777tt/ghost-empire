@@ -963,6 +963,12 @@
     "s9p": "Pubblichiamo le modifiche su questa pagina. Le modifiche importanti vengono annunciate su Discord. Usare il Portale dopo l'entrata in vigore delle modifiche significa accettarle."
   },
   "onboarding": {
+    "bSuccessTitle": "Pagamento ricevuto!",
+    "bSuccessBody": "L'abbonamento si attiva entro un minuto — piano e scadenza si impostano da soli.",
+    "bCancelled": "Pagamento annullato",
+    "bActivate": "Attiva abbonamento",
+    "bActivateHint": "Vuoi saltare la prova? Attiva subito l'abbonamento — scegli il periodo:",
+    "bMonths": "{n} mesi",
     "metaTitle": "Lancia il tuo portale",
     "metaDesc": "Crea un portale community per il tuo canale — il tuo brand, i tuoi token e i tuoi colori in pochi minuti.",
     "title": "LANCIA IL TUO PORTALE",
