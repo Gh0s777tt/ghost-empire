@@ -313,6 +313,14 @@
    ANIMATIONS
    ========================================================= */
 
+/* Header GT balance count-up: brief golden pulse while the number rolls. */
+@keyframes ge-bal-pulse {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.14); color: #fcd34d; }
+  100% { transform: scale(1); }
+}
+.ge-bal-pulse { animation: ge-bal-pulse 600ms ease-out; }
+
 @keyframes fade-in-up {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }

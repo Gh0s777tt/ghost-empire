@@ -1,6 +1,6 @@
 "use client";
 // src/components/Header.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 // Locale-aware Link + usePathname (next-intl): links auto-carry the active locale
@@ -138,9 +138,7 @@ export function Header() {
                 {/* Token balance */}
                 <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-zinc-800 bg-zinc-950" data-tour="tokens">
                   <span className="text-sm">👻</span>
-                  <span className="font-mono text-sm font-bold text-white tabular-nums">
-                    {fmt(liveBalance ?? session.user.tokens)}
-                  </span>
+                  <AnimatedBalance value={liveBalance ?? session.user.tokens} fmt={fmt} />
                 </div>
 
                 {/* Drop code shortcut */}
@@ -342,5 +340,46 @@ function NavDropdown({ label, icon: Icon, items, pathname }: { label: string; ic
         </div>
       </div>
     </div>
+  );
+}
+
+// GT balance with a count-up roll: when the value changes, the number eases to the new
+// value over ~600 ms (writes go straight to the DOM — no per-frame re-renders) with a
+// brief golden pulse. A timeout guarantees the final value even if rAF is paused
+// (hidden tab) and prefers-reduced-motion skips straight to the result.
+function AnimatedBalance({ value, fmt }: { value: number; fmt: (n: number) => string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const prev = useRef(value);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const from = prev.current;
+    const to = value;
+    prev.current = value;
+    if (from === to) { el.textContent = fmt(to); return; }
+    const reduced = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) { el.textContent = fmt(to); return; }
+    const DUR = 600;
+    let raf = 0, start = 0;
+    el.classList.remove("ge-bal-pulse");
+    void el.offsetWidth; // restart the pulse animation
+    el.classList.add("ge-bal-pulse");
+    const tick = (now: number) => {
+      if (!start) start = now;
+      const k = Math.min(1, (now - start) / DUR);
+      const e = 1 - Math.pow(1 - k, 3);
+      el.textContent = fmt(Math.round(from + (to - from) * e));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const t = setTimeout(() => { cancelAnimationFrame(raf); el.textContent = fmt(to); }, DUR + 120);
+    return () => { clearTimeout(t); cancelAnimationFrame(raf); };
+  }, [value, fmt]);
+
+  return (
+    <span ref={ref} className="font-mono text-sm font-bold text-white tabular-nums inline-block">
+      {fmt(value)}
+    </span>
   );
 }
