@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Kasyno wygodniejsze na telefonie 📱",
+    items: [
+      "Plansze gier Crash i Plinko skalują się teraz do szerokości ekranu — nic się nie ucina na mniejszych telefonach.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Twoja historia gier i statystyki 📜",
     items: [
       "Pod tablicą wygranych w kasynie znajdziesz teraz swoje statystyki (liczba gier, winrate, najlepsza wygrana, bilans) oraz listę ostatnich 12 gier z wynikami — odświeżaną na żywo po każdej rozgrywce.",
