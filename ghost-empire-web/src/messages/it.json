@@ -632,6 +632,13 @@
     "unitPurchase": "acquisto"
   },
   "kasyno": {
+    "myHistory": "Le tue ultime partite",
+    "myStats": "Le tue statistiche",
+    "statGames": "Partite",
+    "statWinrate": "Percentuale vittorie",
+    "statBest": "Miglior vincita",
+    "statNet": "Bilancio",
+    "noHistory": "Gioca la prima partita e la cronologia apparirà qui.",
     "soundOn": "Audio attivo — clicca per silenziare",
     "soundOff": "Audio disattivato — clicca per attivare",
     "help": "Il Casinò GT funziona con i Ghost Tokens, la valuta virtuale del portale (non sono soldi veri). Imposta la puntata e scegli un gioco: il server estrae il risultato, l'animazione lo mostra soltanto. Le vincite arrivano subito sul tuo saldo.",

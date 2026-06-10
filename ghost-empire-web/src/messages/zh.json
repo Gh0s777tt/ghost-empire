@@ -632,6 +632,13 @@
     "unitPurchase": "次购买"
   },
   "kasyno": {
+    "myHistory": "你最近的对局",
+    "myStats": "你的统计",
+    "statGames": "局数",
+    "statWinrate": "胜率",
+    "statBest": "最大赢局",
+    "statNet": "净收益",
+    "noHistory": "玩一局之后，这里会显示你的历史记录。",
     "soundOn": "声音已开启——点击静音",
     "soundOff": "声音已关闭——点击开启",
     "help": "GT 赌场使用 Ghost Tokens（门户的虚拟货币，不是真钱）。设置注额并选择游戏：结果由服务器抽取，动画只是把它演示出来。奖金会立即进入你的余额。",

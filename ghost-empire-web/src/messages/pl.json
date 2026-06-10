@@ -1919,6 +1919,13 @@
     "unitPurchase": "zakup"
   },
   "kasyno": {
+    "myHistory": "Twoje ostatnie gry",
+    "myStats": "Twoje statystyki",
+    "statGames": "Gry",
+    "statWinrate": "Winrate",
+    "statBest": "Najlepsza wygrana",
+    "statNet": "Bilans",
+    "noHistory": "Zagraj pierwszą grę, a pojawi się tu Twoja historia.",
     "soundOn": "Dźwięki włączone — kliknij, aby wyciszyć",
     "soundOff": "Dźwięki wyłączone — kliknij, aby włączyć",
     "help": "Kasyno GT to gry za Ghost Tokens — wirtualną walutę portalu (to nie są prawdziwe pieniądze). Ustaw stawkę i wybierz grę: wynik losuje serwer, a animacja tylko go pokazuje. Wygrana od razu wpada na Twoje saldo.",

@@ -632,6 +632,13 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "myHistory": "Tus últimas partidas",
+    "myStats": "Tus estadísticas",
+    "statGames": "Partidas",
+    "statWinrate": "Tasa de victoria",
+    "statBest": "Mejor premio",
+    "statNet": "Balance",
+    "noHistory": "Juega tu primera partida y tu historial aparecerá aquí.",
     "soundOn": "Sonido activado — clic para silenciar",
     "soundOff": "Sonido desactivado — clic para activar",
     "help": "El Casino GT funciona con Ghost Tokens, la moneda virtual del portal (no es dinero real). Fija tu apuesta y elige un juego: el servidor sortea el resultado y la animación solo lo muestra. Las ganancias llegan a tu saldo al instante.",

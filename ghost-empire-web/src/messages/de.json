@@ -632,6 +632,13 @@
     "unitPurchase": "Kauf"
   },
   "kasyno": {
+    "myHistory": "Deine letzten Spiele",
+    "myStats": "Deine Statistiken",
+    "statGames": "Spiele",
+    "statWinrate": "Gewinnrate",
+    "statBest": "Bester Gewinn",
+    "statNet": "Bilanz",
+    "noHistory": "Spiel dein erstes Spiel — deine Historie erscheint hier.",
     "soundOn": "Ton an — zum Stummschalten klicken",
     "soundOff": "Ton aus — zum Aktivieren klicken",
     "help": "Das GT-Casino läuft mit Ghost Tokens — der virtuellen Währung des Portals (kein echtes Geld). Einsatz festlegen, Spiel wählen: das Ergebnis lost der Server aus, die Animation zeigt es nur. Gewinne landen sofort auf deinem Guthaben.",

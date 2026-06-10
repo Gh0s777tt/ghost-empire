@@ -853,6 +853,7 @@ model GtGamePlay {
 
   @@index([createdAt])
   @@index([net])
+  @@index([userId, createdAt]) // per-user history (casino "your recent games")
   @@map("gt_game_plays")
 }
 
