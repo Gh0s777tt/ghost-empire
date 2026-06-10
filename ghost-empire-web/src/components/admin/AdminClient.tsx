@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
@@ -68,6 +68,7 @@ const EventsManager = dynamic(() => import("./sections/Events").then((m) => m.Ev
 const ActiveDropsList = dynamic(() => import("./sections/ActiveDrops").then((m) => m.ActiveDropsList), { ssr: false, loading: SectionLoading });
 const PendingOrdersList = dynamic(() => import("./sections/PendingOrders").then((m) => m.PendingOrdersList), { ssr: false, loading: SectionLoading });
 const StreamAlertsManager = dynamic(() => import("./sections/StreamAlerts").then((m) => m.StreamAlertsManager), { ssr: false, loading: SectionLoading });
+const TenantsManager = dynamic(() => import("./sections/Tenants").then((m) => m.TenantsManager), { ssr: false, loading: SectionLoading });
 
 // Panel modes: how much of the admin is shown in the nav. Persisted per browser
 // (localStorage "ge-admin-mode"); defaults to "dev" = everything, the pre-modes behavior.
@@ -94,10 +95,12 @@ type AdminEvent = {
 };
 
 export function AdminClient({
-  isAdmin, myPermissions,
+  isAdmin, isPlatformOwner = false, myPermissions,
   stats, drops, events, pendingOrders,
 }: {
   isAdmin: boolean;
+  /** Permanent-admin email (admin-of-admins) — unlocks the Tenants section. */
+  isPlatformOwner?: boolean;
   myPermissions: string[];
   stats: Stats;
   drops: Drop[];
@@ -123,7 +126,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit" | "integrations" | "wheel" | "webhooks" | "games";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "audit" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -140,6 +143,7 @@ export function AdminClient({
     { id: "analytics", label: t("secAnalytics"),    icon: TrendingUp,     group: "main",       level: 2, permission: () => isAdmin },
     { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
     { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
+    { id: "tenants",   label: t("secTenants"),      icon: Building2,       group: "main",       level: 3, permission: () => isPlatformOwner },
 
     { id: "users",     label: t("secUsers"), icon: UserCog,         group: "moderation", level: 1, permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
     { id: "merge",     label: t("secMerge"), icon: GitMerge,   group: "moderation", level: 2, permission: () => isAdmin },
@@ -363,6 +367,10 @@ export function AdminClient({
 
           {activeSection === "games" && isAdmin && (
             <GamesLibraryManager {...sharedProps} />
+          )}
+
+          {activeSection === "tenants" && isPlatformOwner && (
+            <TenantsManager {...sharedProps} />
           )}
 
           {activeSection === "events" && (

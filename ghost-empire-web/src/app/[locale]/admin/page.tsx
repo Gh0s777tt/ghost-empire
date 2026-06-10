@@ -90,6 +90,7 @@ export default async function AdminPage() {
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-6">
         <AdminClient
           isAdmin={me.isAdmin}
+          isPlatformOwner={isPermanentAdminEmail(me.email)}
           myPermissions={myPermissions}
           stats={{
             totalUsers,

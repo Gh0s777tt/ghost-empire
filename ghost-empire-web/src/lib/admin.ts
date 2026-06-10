@@ -10,6 +10,26 @@ type AuthResult =
   | { ok: false; status: number; error: string };
 
 /**
+ * Platform-owner gate (SaaS Phase 6, admin-of-admins): ONLY the permanent-admin
+ * email may manage tenants (create portals, set plans/branding). A tenant's own
+ * admin must never see other tenants — requireAdmin is NOT enough here.
+ */
+export async function requirePlatformOwner(): Promise<AuthResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, status: 401, error: "Musisz być zalogowany" };
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isAdmin: true, isBanned: true, email: true },
+  });
+  if (!user || user.isBanned || !user.isAdmin || !isPermanentAdminEmail(user.email)) {
+    return { ok: false, status: 403, error: "Tylko właściciel platformy" };
+  }
+  return { ok: true, userId: session.user.id, isAdmin: true };
+}
+
+/**
  * Cross-tenant guard (SaaS Phase 4): an admin/moderator of tenant A must not
  * administer tenant B's subdomain — global `isAdmin` alone would let them.
  * The platform owner (permanent admin email) passes everywhere
