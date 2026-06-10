@@ -963,6 +963,12 @@
     "s9p": "Nous publions les modifications sur cette page. Les modifications importantes sont annoncées sur Discord. Utiliser le Portail après l'entrée en vigueur des modifications signifie les accepter."
   },
   "onboarding": {
+    "bSuccessTitle": "Paiement reçu !",
+    "bSuccessBody": "Votre abonnement s'active en une minute — le plan et l'échéance se règlent automatiquement.",
+    "bCancelled": "Paiement annulé",
+    "bActivate": "Activer l'abonnement",
+    "bActivateHint": "Envie de sauter l'essai ? Activez l'abonnement tout de suite — choisissez la période :",
+    "bMonths": "{n} mois",
     "metaTitle": "Lancez votre propre portail",
     "metaDesc": "Créez un portail communautaire pour votre chaîne — votre marque, vos tokens et vos couleurs en quelques minutes.",
     "title": "LANCEZ VOTRE PROPRE PORTAIL",

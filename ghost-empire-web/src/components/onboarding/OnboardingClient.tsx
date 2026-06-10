@@ -3,10 +3,10 @@
 // 3-step portal wizard: brand → currency → plan. Slug auto-derives from the
 // name (still editable); everything is changeable later in the admin panel,
 // so the wizard stays deliberately short.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Rocket, ChevronLeft, ChevronRight, Check, Loader2, PartyPopper } from "lucide-react";
-import { apiPost, ApiError } from "@/lib/api-client";
+import { Rocket, ChevronLeft, ChevronRight, Check, Loader2, PartyPopper, CreditCard } from "lucide-react";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 const PLANS = ["basic", "pro", "elite"] as const;
 type Plan = (typeof PLANS)[number];
@@ -28,6 +28,31 @@ export function OnboardingClient() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ slug: string; trialDays: number } | null>(null);
+  // Billing (dry-wired Stripe): the activate button only shows once the env is
+  // configured; until then the trial flow is the whole story.
+  const [billingReady, setBillingReady] = useState(false);
+  const [billingReturn, setBillingReturn] = useState<"success" | "cancelled" | null>(null);
+  const [months, setMonths] = useState<1 | 3 | 6 | 12>(3);
+  useEffect(() => {
+    apiGet<{ configured: boolean }>("/api/billing/checkout")
+      .then((d) => setBillingReady(d.configured))
+      .catch(() => setBillingReady(false));
+    const q = new URLSearchParams(window.location.search).get("billing");
+    if (q === "success" || q === "cancelled") setBillingReturn(q);
+  }, []);
+
+  async function activate() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiPost<{ ok: true; url: string }>("/api/billing/checkout", { plan, months });
+      window.location.href = res.url;
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t("error"));
+      setBusy(false);
+    }
+  }
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -57,6 +82,20 @@ export function OnboardingClient() {
     }
   }
 
+  if (billingReturn) {
+    return (
+      <div className={`border p-8 text-center space-y-4 ${billingReturn === "success" ? "border-green-800 bg-green-950/20" : "border-zinc-800 bg-zinc-950/50"}`}>
+        <PartyPopper className={`w-10 h-10 mx-auto ${billingReturn === "success" ? "text-green-400" : "text-zinc-500"}`} />
+        <h1 className="font-display text-3xl text-white tracking-wider">
+          {billingReturn === "success" ? t("bSuccessTitle") : t("bCancelled")}
+        </h1>
+        {billingReturn === "success" && (
+          <p className="text-zinc-300 text-sm max-w-md mx-auto">{t("bSuccessBody")}</p>
+        )}
+      </div>
+    );
+  }
+
   if (done) {
     return (
       <div className="border border-green-800 bg-green-950/20 p-8 text-center space-y-4">
@@ -66,6 +105,33 @@ export function OnboardingClient() {
           {t("doneBody", { slug: done.slug, days: done.trialDays })}
         </p>
         <p className="text-zinc-500 text-xs max-w-md mx-auto">{t("doneNext")}</p>
+        {billingReady && plan !== "basic" && (
+          <div className="pt-2 space-y-3">
+            <p className="text-zinc-400 text-xs max-w-md mx-auto">{t("bActivateHint")}</p>
+            <div className="flex items-center justify-center gap-2">
+              {([1, 3, 6, 12] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMonths(m)}
+                  className={`px-3 py-1.5 border text-xs font-mono uppercase tracking-widest transition-colors ${months === m ? "border-red-600 bg-red-950/40 text-white" : "border-zinc-800 text-zinc-500 hover:text-white"}`}
+                >
+                  {t("bMonths", { n: m })}
+                </button>
+              ))}
+            </div>
+            {error && <p className="text-sm text-red-400">⚠️ {error}</p>}
+            <button
+              type="button"
+              onClick={() => void activate()}
+              disabled={busy}
+              className="px-5 py-2.5 bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2 transition-colors"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+              {t("bActivate")}
+            </button>
+          </div>
+        )}
       </div>
     );
   }

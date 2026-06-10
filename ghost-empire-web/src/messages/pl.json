@@ -50,6 +50,12 @@
     }
   },
   "onboarding": {
+    "bSuccessTitle": "Płatność przyjęta!",
+    "bSuccessBody": "Subskrypcja aktywuje się w ciągu minuty — plan i data ważności ustawią się automatycznie.",
+    "bCancelled": "Płatność anulowana",
+    "bActivate": "Aktywuj subskrypcję",
+    "bActivateHint": "Chcesz pominąć trial? Aktywuj subskrypcję od razu — wybierz okres rozliczenia:",
+    "bMonths": "{n} mies.",
     "metaTitle": "Załóż własny portal",
     "metaDesc": "Uruchom portal społeczności dla swojego kanału — własna marka, tokeny i kolory w kilka minut.",
     "title": "ZAŁÓŻ WŁASNY PORTAL",

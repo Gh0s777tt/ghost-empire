@@ -963,6 +963,12 @@
     "s9p": "Wir veröffentlichen Änderungen auf dieser Seite. Wesentliche Änderungen werden auf Discord angekündigt. Die Nutzung des Portals nach Inkrafttreten der Änderungen bedeutet deren Annahme."
   },
   "onboarding": {
+    "bSuccessTitle": "Zahlung erhalten!",
+    "bSuccessBody": "Dein Abo aktiviert sich innerhalb einer Minute — Plan und Ablaufdatum werden automatisch gesetzt.",
+    "bCancelled": "Zahlung abgebrochen",
+    "bActivate": "Abo aktivieren",
+    "bActivateHint": "Testphase überspringen? Aktiviere das Abo sofort — wähle den Abrechnungszeitraum:",
+    "bMonths": "{n} Mon.",
     "metaTitle": "Starte dein eigenes Portal",
     "metaDesc": "Erstelle in Minuten ein Community-Portal für deinen Kanal — deine Marke, Tokens und Farben.",
     "title": "STARTE DEIN EIGENES PORTAL",
