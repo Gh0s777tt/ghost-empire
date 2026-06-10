@@ -50,6 +50,7 @@
     }
   },
   "admin": {
+    "aiProviderError": "Dostawca AI odrzucił żądanie (model, limity albo klucz). Sprawdź ustawienia AI w Integracjach i logi.",
     "aiTitle": "Asystent panelu",
     "aiOpenLabel": "Asystent",
     "aiGreeting": "Cześć! Opisz, co chcesz zrobić (np. „chcę dodać nagrodę do sklepu za 500 GT” albo „jak nagradzać suby na Twitchu?”), a rozpiszę kroki i wskażę właściwe sekcje panelu.",

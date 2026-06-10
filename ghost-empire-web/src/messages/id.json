@@ -992,6 +992,7 @@
     "s9p": "Kami memublikasikan perubahan di halaman ini. Perubahan besar diumumkan di Discord. Menggunakan Portal setelah perubahan berlaku berarti menyetujuinya."
   },
   "admin": {
+    "aiProviderError": "Penyedia AI menolak permintaan (model, batas, atau kunci). Periksa pengaturan AI di Integrasi dan log.",
     "aiTitle": "Asisten panel",
     "aiOpenLabel": "Asisten",
     "aiGreeting": "Hai! Jelaskan apa yang ingin Anda lakukan (mis. “saya mau menambah hadiah toko 500 GT” atau “bagaimana memberi hadiah sub Twitch?”), dan saya akan merinci langkahnya sambil menunjuk bagian yang tepat.",

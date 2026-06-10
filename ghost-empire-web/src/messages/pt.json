@@ -992,6 +992,7 @@
     "s9p": "Publicamos as alterações nesta página. Alterações importantes são anunciadas no Discord. Usar o Portal após a entrada em vigor das alterações significa aceitá-las."
   },
   "admin": {
+    "aiProviderError": "O provedor de IA rejeitou a solicitação (modelo, limites ou chave). Verifique as configurações de IA em Integrações e os logs.",
     "aiTitle": "Assistente do painel",
     "aiOpenLabel": "Assistente",
     "aiGreeting": "Oi! Descreva o que você quer fazer (ex.: “quero adicionar uma recompensa de 500 GT à loja” ou “como premiar subs da Twitch?”) e eu listo os passos apontando as seções certas.",

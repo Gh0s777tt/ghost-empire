@@ -48,7 +48,9 @@ export async function aiChat(messages: ChatMessage[], opts?: { maxTokens?: numbe
     }
 
     if (provider === "anthropic") {
-      const model = cfg.aiModel || "claude-3-5-haiku-latest";
+      // claude-3-5-haiku-latest is a retired alias — calls with it 404 and the
+      // whole chat silently degrades to null. Pin a current model id instead.
+      const model = cfg.aiModel || "claude-haiku-4-5-20251001";
       const sys = messages.find((m) => m.role === "system")?.content;
       const res = await timed(fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -72,7 +74,7 @@ export async function aiChat(messages: ChatMessage[], opts?: { maxTokens?: numbe
     const d = await res.json();
     return d?.choices?.[0]?.message?.content?.trim() ?? null;
   } catch (e) {
-    log.error("aiChat failed", e, { provider });
+    log.error("aiChat failed", e, { provider, model: cfg.aiModel || "(default)" });
     return null;
   }
 }

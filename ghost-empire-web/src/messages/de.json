@@ -963,6 +963,7 @@
     "s9p": "Wir veröffentlichen Änderungen auf dieser Seite. Wesentliche Änderungen werden auf Discord angekündigt. Die Nutzung des Portals nach Inkrafttreten der Änderungen bedeutet deren Annahme."
   },
   "admin": {
+    "aiProviderError": "Der KI-Anbieter hat die Anfrage abgelehnt (Modell, Limits oder Schlüssel). Prüfe die KI-Einstellungen in Integrationen und die Logs.",
     "aiTitle": "Panel-Assistent",
     "aiOpenLabel": "Assistent",
     "aiGreeting": "Hi! Beschreibe, was du tun willst (z. B. „Ich will eine Shop-Belohnung für 500 GT anlegen“ oder „wie belohne ich Twitch-Subs?“), und ich liste die Schritte auf und zeige dir die richtigen Bereiche.",
