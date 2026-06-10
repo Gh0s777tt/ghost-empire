@@ -98,6 +98,11 @@
     "empty": "Немає сповіщень"
   },
   "home": {
+    "bonusTitle": "Щоденний бонус",
+    "bonusStreak": "Серія: {days} 🔥",
+    "bonusClaim": "Забрати +{amount} GT",
+    "bonusClaimed": "Забрано — повертайся завтра!",
+    "bonusTomorrow": "завтра: +{amount} GT",
     "metaDesc": "Офіційний хаб спільноти GH0ST EMPIRE. Заробляй Ghost Tokens, обмінюй на нагороди та піднімайся в рейтингу.",
     "dailyQuests": "ЩОДЕННІ КВЕСТИ",
     "resetMidnight": "СКИДАННЯ: ОПІВНОЧІ",

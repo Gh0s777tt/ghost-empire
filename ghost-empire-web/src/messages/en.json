@@ -1632,6 +1632,11 @@
     "switchTo": "Switch language to Polish"
   },
   "home": {
+    "bonusTitle": "Daily bonus",
+    "bonusStreak": "Streak: {days} 🔥",
+    "bonusClaim": "Claim +{amount} GT",
+    "bonusClaimed": "Claimed — come back tomorrow!",
+    "bonusTomorrow": "tomorrow: +{amount} GT",
     "metaDesc": "The official GH0ST EMPIRE community hub. Earn Ghost Tokens, redeem rewards and climb the ranking.",
     "dailyQuests": "DAILY QUESTS",
     "resetMidnight": "RESET: MIDNIGHT",

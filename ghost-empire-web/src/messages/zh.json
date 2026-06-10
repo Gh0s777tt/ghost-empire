@@ -98,6 +98,11 @@
     "empty": "暂无通知"
   },
   "home": {
+    "bonusTitle": "每日奖励",
+    "bonusStreak": "连续天数：{days} 🔥",
+    "bonusClaim": "领取 +{amount} GT",
+    "bonusClaimed": "已领取——明天再来！",
+    "bonusTomorrow": "明天：+{amount} GT",
     "metaDesc": "GH0ST EMPIRE 官方社区中心。赚取 Ghost Tokens，兑换奖励，登上排行榜。",
     "dailyQuests": "每日任务",
     "resetMidnight": "重置：午夜",

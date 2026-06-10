@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Dzienny bonus za wejście 🎁",
+    items: [
+      "Na stronie głównej czeka codzienny bonus Ghost Tokens: pierwszego dnia 50 GT, a każdy kolejny dzień serii dorzuca +25 GT (maks. 200 GT dziennie od 7. dnia). Wystarczy kliknąć Odbierz — seria rośnie, dopóki zaglądasz codziennie!",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Kasyno wygodniejsze na telefonie 📱",
     items: [
       "Plansze gier Crash i Plinko skalują się teraz do szerokości ekranu — nic się nie ucina na mniejszych telefonach.",

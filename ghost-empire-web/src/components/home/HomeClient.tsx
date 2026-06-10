@@ -1,5 +1,6 @@
 "use client";
 // src/components/home/HomeClient.tsx
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
@@ -7,6 +8,9 @@ import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, Check, Clock,
 import { timeLeft, rankForLevel, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { EmptyState } from "@/components/EmptyState";
+import { apiGet, apiPost } from "@/lib/api-client";
+import { emitBalance } from "@/lib/balance-bus";
+import { sfxPlay } from "@/lib/sfx";
 import type { Session } from "next-auth";
 
 type Props = {
@@ -42,6 +46,9 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
 
       {/* Profile hero */}
       {user && <ProfileHero user={user} />}
+
+      {/* Daily login bonus */}
+      <DailyBonusCard />
 
       {/* Two-column row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -143,6 +150,64 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
             ))}
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ---- DAILY LOGIN BONUS ----
+// Growing-streak daily claim (50 GT +25/day, cap 200). Status comes from the API;
+// claiming updates the header balance instantly via the balance-bus.
+function DailyBonusCard() {
+  const t = useTranslations("home");
+  const fmt = useLocaleFmt();
+  const [st, setSt] = useState<{ claimedToday: boolean; streak: number; nextReward: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [justClaimed, setJustClaimed] = useState<number | null>(null);
+
+  const load = useCallback(async () => {
+    try { setSt(await apiGet("/api/daily-bonus")); } catch { /* ignore */ }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  async function claim() {
+    if (busy || !st || st.claimedToday) return;
+    setBusy(true);
+    try {
+      const d = await apiPost<{ ok: true; reward: number; streak: number; newBalance: number }>("/api/daily-bonus");
+      emitBalance(d.newBalance);
+      sfxPlay("win");
+      setJustClaimed(d.reward);
+      setSt({ claimedToday: true, streak: d.streak, nextReward: Math.min(50 + 25 * d.streak, 200) });
+    } catch {
+      void load(); // 409 (already claimed elsewhere) → refresh status
+    }
+    setBusy(false);
+  }
+
+  if (!st) return null;
+  return (
+    <div className="border border-amber-900/50 bg-gradient-to-r from-amber-950/40 via-zinc-950/60 to-zinc-950/60 clip-corner p-4 flex flex-wrap items-center gap-3">
+      <span className="text-2xl">🎁</span>
+      <div className="min-w-0 flex-1">
+        <div className="font-display text-lg tracking-wider text-white">{t("bonusTitle")}</div>
+        <div className="text-xs text-zinc-400 font-mono">
+          {t("bonusStreak", { days: st.streak })}
+          {st.claimedToday && <span className="ms-2 text-zinc-500">· {t("bonusTomorrow", { amount: fmt(st.nextReward) })}</span>}
+        </div>
+      </div>
+      {st.claimedToday ? (
+        <div className="text-sm font-bold text-emerald-300">
+          {justClaimed != null ? `+${fmt(justClaimed)} GT 🎉` : t("bonusClaimed")}
+        </div>
+      ) : (
+        <button
+          onClick={claim}
+          disabled={busy}
+          className="px-5 py-2.5 rounded-full text-sm font-extrabold text-black bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 disabled:opacity-50 transition-all"
+        >
+          {t("bonusClaim", { amount: fmt(st.nextReward) })}
+        </button>
       )}
     </div>
   );

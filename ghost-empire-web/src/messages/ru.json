@@ -98,6 +98,11 @@
     "empty": "Нет уведомлений"
   },
   "home": {
+    "bonusTitle": "Ежедневный бонус",
+    "bonusStreak": "Серия: {days} 🔥",
+    "bonusClaim": "Забрать +{amount} GT",
+    "bonusClaimed": "Забрано — возвращайся завтра!",
+    "bonusTomorrow": "завтра: +{amount} GT",
     "metaDesc": "Официальный хаб сообщества GH0ST EMPIRE. Зарабатывай Ghost Tokens, обменивай на награды и поднимайся в рейтинге.",
     "dailyQuests": "ЕЖЕДНЕВНЫЕ КВЕСТЫ",
     "resetMidnight": "СБРОС: ПОЛНОЧЬ",

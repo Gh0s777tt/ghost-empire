@@ -98,6 +98,11 @@
     "empty": "Tidak ada notifikasi"
   },
   "home": {
+    "bonusTitle": "Bonus harian",
+    "bonusStreak": "Runtunan: {days} 🔥",
+    "bonusClaim": "Klaim +{amount} GT",
+    "bonusClaimed": "Sudah diklaim — kembali besok!",
+    "bonusTomorrow": "besok: +{amount} GT",
     "metaDesc": "Hub komunitas resmi GH0ST EMPIRE. Kumpulkan Ghost Tokens, tukarkan hadiah, dan naik peringkat.",
     "dailyQuests": "MISI HARIAN",
     "resetMidnight": "RESET: TENGAH MALAM",
