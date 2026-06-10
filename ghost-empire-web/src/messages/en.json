@@ -1926,6 +1926,8 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "jackpot": "Jackpot",
+    "jackpotHint": "1% of every bet feeds the pool. Hit 7️⃣7️⃣7️⃣ on slots to win it all!",
     "animForced": "Animations forced on — click to follow your system setting",
     "animSystem": "Your system reduces motion — click to force animations on",
     "backToGames": "All games",

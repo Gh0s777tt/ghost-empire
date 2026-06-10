@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Progresywny JACKPOT w kasynie 💰",
+    items: [
+      "Nad grami w kasynie rośnie wspólna pula: 1% każdej stawki ją zasila, a startuje od 5000 GT. Trafienie trzech siódemek 7️⃣7️⃣7️⃣ w slotach wygrywa CAŁĄ pulę (plus zwykłą wygraną ×800)! Po trafieniu pula wraca do 5000 i rośnie od nowa.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Prawdziwe kości 3D 🎲",
     items: [
       "W grze Kości rzucają się teraz dwie prawdziwe trójwymiarowe kostki — kotłują się w trakcie losowania i lądują dokładnie na cyfrach wyniku. Dodatkowo: jeśli Twój system ogranicza animacje (częsta przyczyna „braku animacji” np. w Firefoksie), przy stawce pojawi się przycisk 🎬, który jednym kliknięciem je wymusza.",

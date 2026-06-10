@@ -866,6 +866,13 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   }, [isAuthenticated]);
   useEffect(() => { void loadHist(); }, [loadHist]);
 
+  // Progressive jackpot pool (public; refreshed after every game).
+  const [jackpot, setJackpot] = useState<number | null>(null);
+  const loadJackpot = useCallback(async () => {
+    try { setJackpot((await apiGet<{ pool: number }>("/api/gt-games/jackpot")).pool); } catch { /* ignore */ }
+  }, []);
+  useEffect(() => { void loadJackpot(); }, [loadJackpot]);
+
   const settle = useCallback(() => {
     setStage((s) => {
       if (!s || s.settled) return s;
@@ -875,7 +882,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
     setBusy(false);
     void loadLb();
     void loadHist();
-  }, [loadLb, loadHist]);
+    void loadJackpot();
+  }, [loadLb, loadHist, loadJackpot]);
 
   // Result sound — fires once per settled stage (effect, not inside the setStage updater).
   const sfxFor = useRef<number | null>(null);
@@ -976,22 +984,33 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       {!isAuthenticated ? (
         <Link href="/" className="px-8 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500">{t("loginToPlay")}</Link>
       ) : selected === null ? (
-        /* ── LOBBY: pick a game tile — only that game goes on screen, like a real casino ── */
-        <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-tour="kasyno-games">
-          {([
-            { id: "slots", emoji: "🎰" }, { id: "coinflip", emoji: "🪙" }, { id: "roulette", emoji: "🎡" },
-            { id: "dice", emoji: "🎲" }, { id: "crash", emoji: "🚀" }, { id: "plinko", emoji: "⚪" }, { id: "mines", emoji: "💣" },
-          ] as Array<{ id: Game | "mines"; emoji: string }>).map((g) => (
-            <button
-              key={g.id}
-              onClick={() => { setSelected(g.id); setError(null); sfxPlay("click"); }}
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/70 py-7 transition-all hover:border-amber-500 hover:bg-zinc-900/80 hover:shadow-[0_0_24px_rgba(245,193,66,0.15)]"
-            >
-              <span className="text-5xl transition-transform group-hover:scale-110">{g.emoji}</span>
-              <span className="font-bold text-zinc-300 group-hover:text-amber-300 transition-colors">{gameLabel[g.id]}</span>
-            </button>
-          ))}
-        </div>
+        /* ── LOBBY: jackpot banner + game tiles — pick one, like a real casino ── */
+        <>
+          {jackpot != null && (
+            <div className="w-full rounded-xl border border-amber-700/60 bg-gradient-to-r from-amber-950/50 via-zinc-950 to-zinc-950 px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-display text-lg tracking-wider text-amber-200">💰 {t("jackpot")}</span>
+                <span className="font-mono text-2xl font-black text-amber-300 tabular-nums" style={{ textShadow: "0 0 18px rgba(245,193,66,.45)" }}>{fmt(jackpot)} GT</span>
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-1">{t("jackpotHint")}</p>
+            </div>
+          )}
+          <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-tour="kasyno-games">
+            {([
+              { id: "slots", emoji: "🎰" }, { id: "coinflip", emoji: "🪙" }, { id: "roulette", emoji: "🎡" },
+              { id: "dice", emoji: "🎲" }, { id: "crash", emoji: "🚀" }, { id: "plinko", emoji: "⚪" }, { id: "mines", emoji: "💣" },
+            ] as Array<{ id: Game | "mines"; emoji: string }>).map((g) => (
+              <button
+                key={g.id}
+                onClick={() => { setSelected(g.id); setError(null); sfxPlay("click"); }}
+                className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/70 py-7 transition-all hover:border-amber-500 hover:bg-zinc-900/80 hover:shadow-[0_0_24px_rgba(245,193,66,0.15)]"
+              >
+                <span className="text-5xl transition-transform group-hover:scale-110">{g.emoji}</span>
+                <span className="font-bold text-zinc-300 group-hover:text-amber-300 transition-colors">{gameLabel[g.id]}</span>
+              </button>
+            ))}
+          </div>
+        </>
       ) : (
         <>
           {/* back to lobby (blocked mid-Mines so an active stake can't be abandoned by accident) */}

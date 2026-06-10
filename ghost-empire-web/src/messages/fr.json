@@ -641,6 +641,8 @@
     "unitPurchase": "achat"
   },
   "kasyno": {
+    "jackpot": "Jackpot",
+    "jackpotHint": "1 % de chaque mise alimente la cagnotte. Fais 7️⃣7️⃣7️⃣ aux machines pour tout gagner !",
     "animForced": "Animations forcées — clique pour suivre le réglage système",
     "animSystem": "Ton système réduit les animations — clique pour les forcer",
     "backToGames": "Tous les jeux",

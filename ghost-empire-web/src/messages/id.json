@@ -670,6 +670,8 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "jackpot": "Jackpot",
+    "jackpotHint": "1% dari setiap taruhan masuk ke pool. Dapatkan 7️⃣7️⃣7️⃣ di slot dan menangkan semuanya!",
     "animForced": "Animasi dipaksa aktif — klik untuk mengikuti pengaturan sistem",
     "animSystem": "Sistemmu mengurangi gerakan — klik untuk memaksa animasi",
     "backToGames": "Semua game",

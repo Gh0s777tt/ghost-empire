@@ -641,6 +641,8 @@
     "unitPurchase": "購入"
   },
   "kasyno": {
+    "jackpot": "ジャックポット",
+    "jackpotHint": "全ベットの1%がプールに積み立て。スロットで 7️⃣7️⃣7️⃣ を出せば総取り！",
     "animForced": "アニメーション強制ON——クリックでシステム設定に従う",
     "animSystem": "システムが動きを制限しています——クリックで強制ON",
     "backToGames": "すべてのゲーム",

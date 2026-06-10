@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash, dropPlinko, PLINKO_MULTS, PLINKO_ROWS } from "@/lib/gt-games";
+import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash, dropPlinko, PLINKO_MULTS, PLINKO_ROWS, isJackpotHit } from "@/lib/gt-games";
 import { minesMultiplier, MINES_TILES, MINES_MAX_MULT } from "@/lib/gt-mines";
+
+describe("jackpot", () => {
+  it("hits only on triple seven", () => {
+    expect(isJackpotHit(["7️⃣", "7️⃣", "7️⃣"])).toBe(true);
+    expect(isJackpotHit(["7️⃣", "7️⃣", "💎"])).toBe(false);
+    expect(isJackpotHit(["🍒", "🍒", "🍒"])).toBe(false);
+    expect(isJackpotHit([])).toBe(false);
+  });
+});
 
 describe("slots", () => {
   it("always returns 3 reels and a non-negative multiplier", () => {

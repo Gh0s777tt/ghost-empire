@@ -670,6 +670,8 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "jackpot": "Jackpot",
+    "jackpotHint": "1% de cada aposta alimenta o prêmio. Tire 7️⃣7️⃣7️⃣ nos caça-níqueis e leve tudo!",
     "animForced": "Animações forçadas — clique para seguir o ajuste do sistema",
     "animSystem": "Seu sistema reduz o movimento — clique para forçar animações",
     "backToGames": "Todos os jogos",

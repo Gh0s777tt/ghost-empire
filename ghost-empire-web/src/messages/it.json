@@ -641,6 +641,8 @@
     "unitPurchase": "acquisto"
   },
   "kasyno": {
+    "jackpot": "Jackpot",
+    "jackpotHint": "L'1% di ogni puntata alimenta il montepremi. Fai 7️⃣7️⃣7️⃣ alle slot e vinci tutto!",
     "animForced": "Animazioni forzate — clicca per seguire le impostazioni di sistema",
     "animSystem": "Il sistema riduce il movimento — clicca per forzare le animazioni",
     "backToGames": "Tutti i giochi",
