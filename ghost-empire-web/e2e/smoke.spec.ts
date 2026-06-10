@@ -14,19 +14,37 @@ test.describe("public pages smoke", () => {
     });
   }
 
-  test("home renders the primary navigation", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("link", { name: /SKLEP/i }).first()).toBeVisible();
+  test("a public page renders the primary navigation", async ({ page }) => {
+    // (not "/" — a first visit redirects guests to /welcome, which has no nav)
+    await page.goto("/shop");
+    await expect(page.getByRole("link", { name: /RANKING/i }).first()).toBeVisible();
   });
 
-  test("the Wheel page shows its heading", async ({ page }) => {
+  test("the Wheel page shows its how-it-works box", async ({ page }) => {
+    // ASCII-only assertion (this file once had broken PL diacritics encoding)
     await page.goto("/wheel");
-    await expect(page.getByText(/Koło Fortuny/i).first()).toBeVisible();
+    await expect(page.locator("details summary").first()).toBeVisible();
   });
 
   test("404 page responds for an unknown route", async ({ page }) => {
     const res = await page.goto("/this-route-does-not-exist-xyz");
     expect(res?.status()).toBe(404);
+  });
+
+  test("the casino help box lists all 10 games (guest view)", async ({ page }) => {
+    // The tile lobby itself sits behind login; the public how-it-works box mirrors it.
+    await page.goto("/kasyno", { waitUntil: "load" });
+    await expect(page.locator("details li")).toHaveCount(10, { timeout: 10_000 });
+  });
+
+  test("ranking has 5 sort tabs (incl. weekly)", async ({ page }) => {
+    await page.goto("/ranking?sort=weekly");
+    await expect(page.locator('[data-tour="ranking-sort"] a')).toHaveCount(5);
+  });
+
+  test("english locale renders the casino help box", async ({ page }) => {
+    await page.goto("/en/kasyno");
+    await expect(page.getByText(/HOW DOES IT WORK\?/i).first()).toBeVisible();
   });
 
   test("no Content-Security-Policy violations on key pages", async ({ page }) => {
@@ -43,5 +61,26 @@ test.describe("public pages smoke", () => {
       await page.goto(path, { waitUntil: "load" });
     }
     expect(violations, violations.join("\n")).toHaveLength(0);
+  });
+});
+
+test.describe("public APIs smoke", () => {
+  test("health responds ok with db up", async ({ request }) => {
+    const res = await request.get("/api/health");
+    expect(res.ok()).toBeTruthy();
+    const body = await res.json();
+    expect(body.status).toBe("ok");
+    expect(body.db).toBe("ok");
+  });
+
+  test("jackpot pool responds with at least the seed", async ({ request }) => {
+    const res = await request.get("/api/gt-games/jackpot");
+    expect(res.ok()).toBeTruthy();
+    expect((await res.json()).pool).toBeGreaterThanOrEqual(5000);
+  });
+
+  test("the play API rejects guests (auth wall)", async ({ request }) => {
+    const res = await request.post("/api/gt-games/play", { data: { game: "coinflip", bet: 10 } });
+    expect(res.status()).toBe(401);
   });
 });
