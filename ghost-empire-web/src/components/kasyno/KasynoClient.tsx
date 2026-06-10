@@ -68,6 +68,19 @@ function reducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+// Scale-to-fit for fixed-size boards (Crash/Plinko keep their px math intact and the
+// whole board scales down on narrow screens — 24px margin each side).
+function useFitScale(designWidth: number): number {
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const calc = () => setScale(Math.min(1, (window.innerWidth - 48) / designWidth));
+    calc();
+    window.addEventListener("resize", calc);
+    return () => window.removeEventListener("resize", calc);
+  }, [designWidth]);
+  return scale;
+}
+
 // ── Roulette: crisp vector (SVG) wheel; continuous spin → ease-out land on server's number ──
 function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; target: number | null; onSettle: () => void; size?: number }) {
   const ref = useRef<HTMLDivElement>(null); // rotating wrapper (CSS transform animations don't apply to <svg> itself)
@@ -606,7 +619,10 @@ function CrashRocket({ phase, crash, onSettle }: { phase: Phase; crash: { crash:
   }, [phase, crash, onSettle, win]);
 
   const numColor = !crash ? "text-zinc-400" : ended ? (win ? "text-emerald-300" : "text-rose-400") : "text-white";
+  const s = useFitScale(380);
   return (
+    <div className="w-full flex justify-center" style={{ height: 300 * s }}>
+    <div style={{ transform: `scale(${s})`, transformOrigin: "top center" }}>
     <div className="relative rounded-2xl overflow-hidden" style={{ width: 380, height: 300, background: "radial-gradient(130% 100% at 50% 120%, #241a4d, #0a0a14 72%)", border: "1px solid #2a2a3a" }}>
       <div className="absolute right-3 top-3 text-xs font-mono px-2 py-1 rounded-md" style={{ background: "rgba(255,213,74,.12)", color: "#ffd54a" }}>🎯 {target.toFixed(2)}×</div>
       <div ref={rocketRef} className="absolute will-change-transform" style={{ left: "10%", bottom: "8%", transform: "translate(-50%,50%) rotate(-40deg)", fontSize: 40, filter: "drop-shadow(0 0 8px rgba(255,150,60,.6))" }}>{ended && !win ? "💥" : "🚀"}</div>
@@ -618,6 +634,8 @@ function CrashRocket({ phase, crash, onSettle }: { phase: Phase; crash: { crash:
           {win ? `✅ ${target.toFixed(2)}×` : `💥 ${crash?.crash.toFixed(2)}×`}
         </div>
       )}
+    </div>
+    </div>
     </div>
   );
 }
@@ -662,7 +680,10 @@ function PlinkoBoard({ phase, plinko, onSettle }: { phase: Phase; plinko: { path
   const pegs: { x: number; y: number }[] = [];
   for (let r = 1; r <= rows; r++) for (let j = 0; j <= r; j++) pegs.push({ x: W / 2 + (j - r / 2) * laneW, y: topY + r * rowH });
 
+  const s = useFitScale(W);
   return (
+    <div className="w-full flex justify-center" style={{ height: H * s }}>
+    <div style={{ transform: `scale(${s})`, transformOrigin: "top center" }}>
     <div className="relative rounded-2xl overflow-hidden" style={{ width: W, height: H, background: "radial-gradient(120% 100% at 50% 0%, #15172e, #0a0a12 70%)", border: "1px solid #2a2a3a" }}>
       {pegs.map((p, i) => (
         <div key={i} className="absolute rounded-full" style={{ left: p.x - 2, top: p.y - 2, width: 4, height: 4, background: "#5b5b73" }} />
@@ -676,6 +697,8 @@ function PlinkoBoard({ phase, plinko, onSettle }: { phase: Phase; plinko: { path
         ))}
       </div>
       <div ref={ballRef} className="absolute rounded-full will-change-transform" style={{ left: W / 2, top: topY, width: 12, height: 12, marginLeft: -6, marginTop: -6, background: "radial-gradient(circle at 35% 30%, #fff, #f5c842 60%, #b8860b)", boxShadow: "0 0 8px rgba(245,200,66,.85)" }} />
+    </div>
+    </div>
     </div>
   );
 }
