@@ -396,9 +396,16 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
       <div className="flex items-start gap-3">
         <div className="text-3xl shrink-0">{item.imageEmoji}</div>
         <div className="min-w-0 flex-1">
-          <h4 className="text-xs font-bold text-white leading-tight truncate group-hover:text-red-300 transition-colors">
-            {item.name}
-          </h4>
+          {/* Title + HOT badge inline so the badge reserves its own space (flex) and the
+              truncated title ellipsises right before it — never overlapping it. */}
+          <div className="flex items-center gap-1.5">
+            <h4 className="min-w-0 flex-1 text-xs font-bold text-white leading-tight truncate group-hover:text-red-300 transition-colors">
+              {item.name}
+            </h4>
+            <span className="shrink-0 px-1.5 py-0.5 bg-red-600/20 border border-red-500/50 font-mono text-[8px] font-bold text-red-300 tracking-widest leading-none">
+              HOT
+            </span>
+          </div>
           <div className="flex items-center gap-1 mt-1.5">
             <span className="text-xs">👻</span>
             <span className={`font-mono text-xs font-bold tabular-nums ${canAfford ? "text-white" : "text-zinc-600"}`}>
@@ -411,9 +418,6 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
             </div>
           )}
         </div>
-      </div>
-      <div className="absolute top-1 end-1 px-1.5 py-0.5 bg-red-600/20 border border-red-500/50">
-        <span className="font-mono text-[8px] font-bold text-red-300 tracking-widest">HOT</span>
       </div>
     </button>
   );
