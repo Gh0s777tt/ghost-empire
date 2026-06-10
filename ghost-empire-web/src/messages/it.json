@@ -632,6 +632,8 @@
     "unitPurchase": "acquisto"
   },
   "kasyno": {
+    "soundOn": "Audio attivo — clicca per silenziare",
+    "soundOff": "Audio disattivato — clicca per attivare",
     "help": "Il Casinò GT funziona con i Ghost Tokens, la valuta virtuale del portale (non sono soldi veri). Imposta la puntata e scegli un gioco: il server estrae il risultato, l'animazione lo mostra soltanto. Le vincite arrivano subito sul tuo saldo.",
     "helpSlots": "3 rulli: tre simboli uguali vincono il moltiplicatore del simbolo — da 10× per le ciliegie a 800× per il sette.",
     "helpCoinflip": "Testa o croce: il fantasma raddoppia la puntata (2×), il teschio se la prende.",

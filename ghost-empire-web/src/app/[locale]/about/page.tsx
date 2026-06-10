@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Dźwięki w kasynie + szybkie stawki 🔊",
+    items: [
+      "Kasyno gra teraz dźwiękiem: start gry, wygrana, przegrana, bomba i wypłata mają własne, krótkie efekty (możesz je wyciszyć przyciskiem 🔊 przy stawce — ustawienie się zapamiętuje). Obok pola stawki pojawiły się też chipy 10 / 50 / 100 / 500 / MAX do błyskawicznej zmiany kwoty.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Saldo Ghost Tokens odświeża się natychmiast ⚡",
     items: [
       "Licznik GT na górnym pasku aktualizuje się teraz od razu po każdej grze, zakupie, odebraniu questa, kodzie drop czy zakładzie — bez przeładowania strony. Tokeny zarabiane za oglądanie i czat pojawiają się automatycznie najpóźniej po minucie.",
