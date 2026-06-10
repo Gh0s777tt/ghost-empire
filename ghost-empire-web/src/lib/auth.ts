@@ -521,9 +521,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (user.name && !/\s/.test(user.name) ? user.name : undefined) ||
           user.email?.split("@")[0] ||
           `ghost_${user.id.slice(-6)}`;
+        // Tenant-owner bootstrap (Phase 6 onboarding): the FIRST account signing
+        // in on a tenant's subdomain with the owner's email becomes that portal's
+        // admin. Tenant-scoped by definition — isWrongTenant (#418) keeps this
+        // admin out of every other tenant's panel.
+        let ownerAdmin = false;
+        if (tenantId && user.email) {
+          try {
+            const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { ownerEmail: true } });
+            ownerAdmin = !!t?.ownerEmail && t.ownerEmail.toLowerCase() === user.email.toLowerCase();
+          } catch { /* tenant lookup is best-effort */ }
+        }
         await prisma.user.update({
           where: { id: user.id },
-          data: { tokens: 500, totalEarned: 500, displayName: safeNick, ...(tenantId ? { tenantId } : {}) },
+          data: { tokens: 500, totalEarned: 500, displayName: safeNick, ...(tenantId ? { tenantId } : {}), ...(ownerAdmin ? { isAdmin: true } : {}) },
         });
 
         await prisma.transaction.create({
