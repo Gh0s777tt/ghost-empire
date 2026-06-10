@@ -7,6 +7,7 @@ import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
 import { updateDailyTaskProgress } from "@/lib/daily-tasks";
+import { happyHourBoost } from "@/lib/happy-hour";
 
 // Per-user safety caps: even with valid bot secret, no user can earn more than X
 // in a window. Prevents farm attacks if BOT_SECRET leaks.
@@ -85,7 +86,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, reason: "user_not_linked" });
   }
 
-  const finalAmount = Math.round(amount * multiplier);
+  // Happy hours (admin-configured window, Europe/Warsaw) apply portal-side.
+  const finalAmount = Math.round(amount * multiplier * (await happyHourBoost()));
 
   const [, updatedUser] = await prisma.$transaction([
     prisma.transaction.create({

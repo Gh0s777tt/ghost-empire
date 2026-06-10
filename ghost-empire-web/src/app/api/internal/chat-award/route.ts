@@ -11,6 +11,7 @@ import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
 import { levelGtMultiplier, prestigeGtMultiplier } from "@/lib/economy";
+import { happyHourBoost } from "@/lib/happy-hour";
 
 // Per-user caps: even with a valid secret, no single viewer can be farmed.
 const PER_USER_HITS = 30;
@@ -101,9 +102,11 @@ export async function POST(req: Request) {
 
   // Account-level + prestige perks: higher level/prestige = bigger GT earn multiplier
   // (level +0.5%/lvl cap +50%; prestige +2%/star cap +50%), stacked multiplicatively.
+  // Happy hours (admin-configured window, Europe/Warsaw) stack on top.
   const levelMult = levelGtMultiplier(connection.user?.level ?? 1);
   const prestigeMult = prestigeGtMultiplier(connection.user?.prestige ?? 0);
-  const finalAmount = Math.round(amount * multiplier * levelMult * prestigeMult);
+  const hhBoost = await happyHourBoost();
+  const finalAmount = Math.round(amount * multiplier * levelMult * prestigeMult * hhBoost);
 
   const [, updatedUser] = await prisma.$transaction([
     prisma.transaction.create({

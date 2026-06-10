@@ -2140,6 +2140,11 @@
       "noResults": "没有 {q} 的结果"
     },
     "botConfig": {
+      "happyTitle": "欢乐时光（GT 倍率）",
+      "happyDesc": "在所选时段（波兰时间），聊天和 Discord 的所有 GT 奖励都会加倍。由门户端处理——机器人无需改动。",
+      "happyStart": "从（0-23）",
+      "happyEnd": "到（0-23）",
+      "happyMult": "倍率",
       "err": "错误",
       "saved": "机器人配置已更新。机器人将在下次获取时（约 60 秒）应用。",
       "title": "Discord 机器人 — 奖励配置",

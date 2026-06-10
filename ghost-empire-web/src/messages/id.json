@@ -2169,6 +2169,11 @@
       "noResults": "Tidak ada hasil untuk «{q}»"
     },
     "botConfig": {
+      "happyTitle": "Happy hours (pengali GT)",
+      "happyDesc": "Pada jam yang dipilih (waktu Polandia) semua hadiah GT dari chat dan Discord dikalikan. Berjalan di sisi portal — bot tidak perlu diubah.",
+      "happyStart": "Dari (0-23)",
+      "happyEnd": "Sampai (0-23)",
+      "happyMult": "Pengali",
       "err": "Kesalahan",
       "saved": "Konfigurasi bot diperbarui. Bot akan menerapkannya pada pengambilan berikutnya (~60 dtk).",
       "title": "Bot Discord — konfigurasi hadiah",
