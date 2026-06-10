@@ -1,0 +1,31 @@
+# E2E smoke against PRODUCTION (read-only: public pages + public APIs, no login,
+# no GT spent). Runs daily and on demand; fails loudly if prod is broken.
+name: e2e-smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 6 * * *" # daily 06:30 UTC
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ghost-empire-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+        env:
+          E2E_BASE_URL: https://ghost-empire-web.vercel.app
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: ghost-empire-web/test-results/
+          retention-days: 7
