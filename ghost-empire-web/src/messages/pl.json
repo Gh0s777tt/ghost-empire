@@ -50,6 +50,16 @@
     }
   },
   "admin": {
+    "aiTitle": "Asystent panelu",
+    "aiOpenLabel": "Asystent",
+    "aiGreeting": "Cześć! Opisz, co chcesz zrobić (np. „chcę dodać nagrodę do sklepu za 500 GT” albo „jak nagradzać suby na Twitchu?”), a rozpiszę kroki i wskażę właściwe sekcje panelu.",
+    "aiPlaceholder": "Opisz, co chcesz zrobić…",
+    "aiSend": "Wyślij",
+    "aiThinking": "Myślę…",
+    "aiNotConfigured": "Asystent potrzebuje skonfigurowanego dostawcy AI (klucz API).",
+    "aiGoConfigure": "Skonfiguruj w Integracjach →",
+    "aiError": "Coś poszło nie tak — spróbuj ponownie.",
+    "aiClose": "Zamknij",
     "modeLabel": "Tryb panelu",
     "mode_simple": "Prosty",
     "mode_advanced": "Zaaw.",

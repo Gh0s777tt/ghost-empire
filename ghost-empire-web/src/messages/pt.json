@@ -992,6 +992,16 @@
     "s9p": "Publicamos as alterações nesta página. Alterações importantes são anunciadas no Discord. Usar o Portal após a entrada em vigor das alterações significa aceitá-las."
   },
   "admin": {
+    "aiTitle": "Assistente do painel",
+    "aiOpenLabel": "Assistente",
+    "aiGreeting": "Oi! Descreva o que você quer fazer (ex.: “quero adicionar uma recompensa de 500 GT à loja” ou “como premiar subs da Twitch?”) e eu listo os passos apontando as seções certas.",
+    "aiPlaceholder": "Descreva o que você quer fazer…",
+    "aiSend": "Enviar",
+    "aiThinking": "Pensando…",
+    "aiNotConfigured": "O assistente precisa de um provedor de IA configurado (chave de API).",
+    "aiGoConfigure": "Configurar em Integrações →",
+    "aiError": "Algo deu errado — tente novamente.",
+    "aiClose": "Fechar",
     "modeLabel": "Modo do painel",
     "mode_simple": "Simples",
     "mode_advanced": "Avanç.",

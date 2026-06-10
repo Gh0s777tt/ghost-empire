@@ -963,6 +963,16 @@
     "s9p": "我们在此页面发布变更。重大变更将在 Discord 上公布。在变更生效后使用门户即表示接受变更。"
   },
   "admin": {
+    "aiTitle": "面板助手",
+    "aiOpenLabel": "助手",
+    "aiGreeting": "你好！描述你想做的事（例如“我想在商店添加一个500 GT的奖励”或“怎么奖励Twitch订阅？”），我会列出步骤并指向正确的版块。",
+    "aiPlaceholder": "描述你想做的事…",
+    "aiSend": "发送",
+    "aiThinking": "思考中…",
+    "aiNotConfigured": "助手需要已配置的AI提供商（API密钥）。",
+    "aiGoConfigure": "在集成中配置 →",
+    "aiError": "出了点问题 — 请重试。",
+    "aiClose": "关闭",
     "modeLabel": "面板模式",
     "mode_simple": "简洁",
     "mode_advanced": "高级",

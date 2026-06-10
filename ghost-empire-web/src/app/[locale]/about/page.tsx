@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Panel admina: asystent AI ✨",
+    items: [
+      "W panelu pojawił się asystent AI: opisz własnymi słowami, co chcesz osiągnąć (np. dodać nagrodę do sklepu albo nagradzać suby), a dostaniesz instrukcję krok po kroku z przyciskami przenoszącymi prosto do właściwej sekcji. Wymaga skonfigurowanego klucza AI w Integracjach.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Panel admina: tryby trudności i opisy wszystkich sekcji 🧭",
     items: [
       "Panel administracyjny ma teraz trzy tryby: Prosty (tylko codzienne narzędzia), Zaawansowany i Developer — nowi moderatorzy nie toną już w 30 sekcjach naraz. Każda sekcja dostała też opis: co robi, gdzie widać efekt i dlaczego połączenia z platformami potrzebują autoryzacji (oraz do czego NIE mają dostępu).",
