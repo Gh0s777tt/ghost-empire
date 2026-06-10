@@ -1632,6 +1632,11 @@
     "switchTo": "Zmień język na angielski"
   },
   "home": {
+    "bonusTitle": "Dzienny bonus",
+    "bonusStreak": "Seria: {days} 🔥",
+    "bonusClaim": "Odbierz +{amount} GT",
+    "bonusClaimed": "Odebrano — wróć jutro!",
+    "bonusTomorrow": "jutro: +{amount} GT",
     "metaDesc": "Oficjalny portal społeczności GH0ST EMPIRE. Zbieraj Ghost Tokens, wymieniaj na nagrody, rywalizuj w rankingu.",
     "dailyQuests": "DAILY QUESTY",
     "resetMidnight": "RESET: PÓŁNOC",

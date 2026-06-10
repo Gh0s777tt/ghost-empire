@@ -98,6 +98,11 @@
     "empty": "Sin notificaciones"
   },
   "home": {
+    "bonusTitle": "Bono diario",
+    "bonusStreak": "Racha: {days} 🔥",
+    "bonusClaim": "Reclamar +{amount} GT",
+    "bonusClaimed": "Reclamado — ¡vuelve mañana!",
+    "bonusTomorrow": "mañana: +{amount} GT",
     "metaDesc": "El hub oficial de la comunidad GH0ST EMPIRE. Gana Ghost Tokens, canjéalos por recompensas y sube en la clasificación.",
     "dailyQuests": "MISIONES DIARIAS",
     "resetMidnight": "REINICIO: MEDIANOCHE",

@@ -98,6 +98,11 @@
     "empty": "لا توجد إشعارات"
   },
   "home": {
+    "bonusTitle": "المكافأة اليومية",
+    "bonusStreak": "السلسلة: {days} 🔥",
+    "bonusClaim": "استلم +{amount} GT",
+    "bonusClaimed": "تم الاستلام — عد غدًا!",
+    "bonusTomorrow": "غدًا: +{amount} GT",
     "metaDesc": "المركز الرسمي لمجتمع GH0ST EMPIRE. اكسب Ghost Tokens، استبدل المكافآت، وتسلّق الترتيب.",
     "dailyQuests": "المهام اليومية",
     "resetMidnight": "إعادة الضبط: منتصف الليل",

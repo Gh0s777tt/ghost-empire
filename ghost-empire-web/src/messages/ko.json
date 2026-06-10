@@ -98,6 +98,11 @@
     "empty": "알림이 없습니다"
   },
   "home": {
+    "bonusTitle": "일일 보너스",
+    "bonusStreak": "연속: {days} 🔥",
+    "bonusClaim": "+{amount} GT 받기",
+    "bonusClaimed": "받았어요 — 내일 또 오세요!",
+    "bonusTomorrow": "내일: +{amount} GT",
     "metaDesc": "GH0ST EMPIRE 공식 커뮤니티 허브. Ghost Tokens를 획득하고, 보상으로 교환하고, 랭킹에 오르세요.",
     "dailyQuests": "일일 퀘스트",
     "resetMidnight": "초기화: 자정",
