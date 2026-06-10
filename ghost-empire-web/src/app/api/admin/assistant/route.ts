@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { aiChat, type ChatMessage } from "@/lib/ai";
+import { getIntegrationConfig } from "@/lib/integrations";
 import { buildAdminAssistantPrompt } from "@/lib/admin-assistant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
@@ -59,14 +60,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
 
+  // Distinguish "no key at all" from "the provider rejected the call" — the
+  // client shows a different message for each (configure vs check model/limits).
+  const cfg = await getIntegrationConfig();
+  if (!cfg.aiApiKey) {
+    return NextResponse.json({ error: "ai-not-configured" }, { status: 503 });
+  }
+
   const system = buildAdminAssistantPrompt(typeof locale === "string" && locale ? locale : "pl");
   const reply = await aiChat([{ role: "system", content: system }, ...history], {
     maxTokens: 700,
     temperature: 0.3,
   });
   if (!reply) {
-    // No key configured (or provider down) — the client links to /admin#integrations.
-    return NextResponse.json({ error: "ai-not-configured" }, { status: 503 });
+    // Key exists but the call failed (bad model, quota, provider outage) —
+    // details are in the Vercel function logs ("aiChat failed").
+    return NextResponse.json({ error: "ai-provider-error" }, { status: 502 });
   }
   return NextResponse.json({ reply });
 }

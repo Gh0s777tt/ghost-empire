@@ -50,6 +50,7 @@
     }
   },
   "admin": {
+    "aiProviderError": "The AI provider rejected the request (model, limits or key). Check the AI settings in Integrations and the logs.",
     "aiTitle": "Panel assistant",
     "aiOpenLabel": "Assistant",
     "aiGreeting": "Hi! Describe what you want to do (e.g. „I want to add a 500 GT shop reward” or „how do I reward Twitch subs?”) and I'll lay out the steps and point you to the right panel sections.",

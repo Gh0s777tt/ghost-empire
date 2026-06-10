@@ -60,6 +60,8 @@ export function AdminAssistant({
       const data = (await res.json().catch(() => ({}))) as { reply?: string; error?: string };
       if (res.status === 503 && data.error === "ai-not-configured") {
         setNotConfigured(true);
+      } else if (res.status === 502 && data.error === "ai-provider-error") {
+        setMsgs((m) => [...m, { role: "assistant", content: `⚠️ ${t("aiProviderError")}` }]);
       } else if (!res.ok || !data.reply) {
         setMsgs((m) => [...m, { role: "assistant", content: `⚠️ ${data.error ?? t("aiError")}` }]);
       } else {
