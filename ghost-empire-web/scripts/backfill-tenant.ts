@@ -69,6 +69,15 @@ async function main() {
   console.log(`   streamCode: attached ${scd.count} row(s)`);
   const ach = await prisma.achievement.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   achievement: attached ${ach.count} row(s)`);
+  // Phase 4: per-streamer platform credentials (legacy id "default" rows stay; they just gain a tenant)
+  const tst = await prisma.twitchStreamerToken.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   twitchStreamerToken: attached ${tst.count} row(s)`);
+  const kst = await prisma.kickStreamerToken.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   kickStreamerToken: attached ${kst.count} row(s)`);
+  const yst = await prisma.youTubeStreamerToken.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   youTubeStreamerToken: attached ${yst.count} row(s)`);
+  const slc = await prisma.streamlabsConnection.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   streamlabsConnection: attached ${slc.count} row(s)`);
 
   await prisma.$disconnect();
 }

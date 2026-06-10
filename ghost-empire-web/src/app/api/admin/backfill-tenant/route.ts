@@ -58,6 +58,11 @@ async function run(req: Request) {
   counts.streamDrop = (await prisma.streamDrop.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.streamCode = (await prisma.streamCode.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.achievement = (await prisma.achievement.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  // Phase 4: per-streamer platform credentials
+  counts.twitchStreamerToken = (await prisma.twitchStreamerToken.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.kickStreamerToken = (await prisma.kickStreamerToken.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.youTubeStreamerToken = (await prisma.youTubeStreamerToken.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.streamlabsConnection = (await prisma.streamlabsConnection.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
 
   await logAdminAction({
     adminId: gate.userId,

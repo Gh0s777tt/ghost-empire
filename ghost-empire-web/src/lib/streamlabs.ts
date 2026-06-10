@@ -8,6 +8,7 @@ import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { plnFromCurrency } from "@/lib/economy";
+import { getStreamlabsConnection } from "@/lib/platform-tokens";
 
 const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v2.0/authorize";
 const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v2.0/token";
@@ -149,7 +150,7 @@ export async function pollAndProcessDonations(): Promise<{
   unmatched: number;
   error?: string;
 }> {
-  const conn = await prisma.streamlabsConnection.findUnique({ where: { id: "default" } });
+  const conn = await getStreamlabsConnection();
   if (!conn) return { ok: false, fetched: 0, matched: 0, unmatched: 0, error: "not_connected" };
 
   let donations: StreamlabsDonation[];
@@ -298,7 +299,7 @@ export async function pollAndProcessDonations(): Promise<{
   // Update lastSeenDonationId to most recent (donations[0] is newest by default)
   const newest = donations[0]?.donation_id;
   await prisma.streamlabsConnection.update({
-    where: { id: "default" },
+    where: { id: conn.id },
     data: {
       lastPolledAt: new Date(),
       ...(newest ? { lastSeenDonationId: String(newest) } : {}),

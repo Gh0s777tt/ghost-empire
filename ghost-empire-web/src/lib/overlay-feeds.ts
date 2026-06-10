@@ -14,6 +14,7 @@ import { lockExpiredPredictions } from "@/lib/predictions";
 import { displayNick } from "@/lib/utils";
 import { cacheJson } from "@/lib/redis";
 import { getAppAccessToken, helixGet } from "@/lib/twitch";
+import { getTwitchStreamerToken } from "@/lib/platform-tokens";
 
 export type OverlayFeedKey =
   | "goals"
@@ -266,7 +267,9 @@ async function viewersFeed(): Promise<unknown> {
   // Shared Redis cache (Upstash) so many overlay connections across serverless
   // instances don't each hammer Helix — falls back to in-process cache without Redis.
   return cacheJson<Record<string, unknown>>("viewers:default", VIEWERS_CACHE_MS, async () => {
-    const streamer = await prisma.twitchStreamerToken.findUnique({ where: { id: "default" } });
+    // null = legacy row on purpose: this cache key isn't tenant-keyed yet and the
+    // producer runs in the SSE tick (no request ctx) — overlay-feeds tenant pass.
+    const streamer = await getTwitchStreamerToken(null);
     if (!streamer?.broadcasterId) return { live: false, configured: false };
     try {
       const appToken = await getAppAccessToken();

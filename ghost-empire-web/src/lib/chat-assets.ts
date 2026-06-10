@@ -6,8 +6,8 @@
 // Both change rarely, so they're cached with generous TTLs to avoid hammering
 // external APIs on every overlay poll. All fetches fail soft (return what we have)
 // so a flaky third-party API never breaks the chat overlay.
-import { prisma } from "@/lib/prisma";
 import { getAppAccessToken, helixGet } from "@/lib/twitch";
+import { getTwitchStreamerToken } from "@/lib/platform-tokens";
 import type { ChatAssets, ChatBadges, ThirdPartyEmotes } from "@/components/ChatMessageRow";
 
 const BADGE_TTL_MS = 60 * 60_000; // 1h — badge art basically never changes
@@ -17,7 +17,9 @@ let badgeCache: { at: number; data: ChatBadges } | null = null;
 let emoteCache: { at: number; data: ThirdPartyEmotes } | null = null;
 
 async function getBroadcasterId(): Promise<string | null> {
-  const tok = await prisma.twitchStreamerToken.findUnique({ where: { id: "default" } });
+  // null = legacy row on purpose: the in-process badge/emote caches above are
+  // NOT tenant-keyed yet — per-tenant overlays land with the overlay-feeds pass.
+  const tok = await getTwitchStreamerToken(null);
   return tok?.broadcasterId ?? null;
 }
 

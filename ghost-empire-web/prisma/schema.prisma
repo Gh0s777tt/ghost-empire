@@ -983,7 +983,8 @@ model StreamScheduleSlot {
 // =====================================================
 
 model TwitchStreamerToken {
-  id              String    @id @default("default")  // singleton
+  id              String    @id @default(cuid())      // legacy singleton rows keep id "default"
+  tenantId        String?   @unique                   // one streamer token per tenant (null = legacy)
   broadcasterId   String                              // Twitch user_id of the streamer (Gh0s77tt)
   broadcasterLogin String                             // Twitch username for display
   accessToken     String    @db.Text
@@ -993,6 +994,7 @@ model TwitchStreamerToken {
   connectedAt     DateTime  @default(now())
   connectedById   String?                             // admin user id who authorized
 
+  @@index([broadcasterId]) // webhook events carry broadcaster_user_id → tenant lookup
   @@map("twitch_streamer_token")
 }
 
@@ -1026,7 +1028,8 @@ model TwitchEvent {
 // =====================================================
 
 model StreamlabsConnection {
-  id                  String    @id @default("default")
+  id                  String    @id @default(cuid())    // legacy singleton rows keep id "default"
+  tenantId            String?   @unique                 // one connection per tenant (null = legacy)
   accessToken         String    @db.Text
   refreshToken        String?   @db.Text
   tokenExpiresAt      DateTime?
@@ -1212,7 +1215,8 @@ model UserSeasonRewardClaim {
 // =====================================================
 
 model KickStreamerToken {
-  id                String    @id @default("default")  // singleton
+  id                String    @id @default(cuid())      // legacy singleton rows keep id "default"
+  tenantId          String?   @unique                   // one streamer token per tenant (null = legacy)
   broadcasterId     String                              // Kick user_id (numeric, stored as string)
   broadcasterLogin  String                              // Kick username/slug for display
   accessToken       String    @db.Text
@@ -1222,6 +1226,7 @@ model KickStreamerToken {
   connectedAt       DateTime  @default(now())
   connectedById     String?                             // admin user id who authorized
 
+  @@index([broadcasterId]) // webhook events carry broadcaster id → tenant lookup
   @@map("kick_streamer_token")
 }
 
@@ -1344,7 +1349,8 @@ model HypeTrainState {
 // =====================================================
 
 model YouTubeStreamerToken {
-  id              String    @id @default("default")  // singleton
+  id              String    @id @default(cuid())      // legacy singleton rows keep id "default"
+  tenantId        String?   @unique                   // one streamer token per tenant (null = legacy)
   channelId       String                              // YouTube channel id (e.g. UCxxx)
   channelTitle    String?
   accessToken     String    @db.Text

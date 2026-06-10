@@ -8,7 +8,7 @@
 // ⚠️ The key must stay stable: if ENCRYPTION_KEY / NEXTAUTH_SECRET changes, previously
 // encrypted secrets become unreadable (API keys → re-paste in /admin#integrations; OAuth
 // tokens → users re-auth). Set a dedicated ENCRYPTION_KEY in prod to decouple from auth.
-import { createCipheriv, createDecipheriv, randomBytes, createHash } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 const PREFIX = "enc:v1:";
 
@@ -54,4 +54,20 @@ export function decryptSecret(value: string | null | undefined): string | null {
 /** True when a stored value is already encrypted (has the prefix). */
 export function isEncrypted(value: string | null | undefined): boolean {
   return typeof value === "string" && value.startsWith(PREFIX);
+}
+
+/** HMAC-SHA256 of a message with the same derived key (base64url). */
+export function hmacSign(message: string): string {
+  return createHmac("sha256", key()).update(message, "utf8").digest("base64url");
+}
+
+/** Constant-time verify of hmacSign output. */
+export function hmacVerify(message: string, signature: string): boolean {
+  try {
+    const expected = Buffer.from(hmacSign(message), "utf8");
+    const given = Buffer.from(signature, "utf8");
+    return expected.length === given.length && timingSafeEqual(expected, given);
+  } catch {
+    return false;
+  }
 }

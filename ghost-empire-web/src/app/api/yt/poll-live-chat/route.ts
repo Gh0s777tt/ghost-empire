@@ -17,6 +17,7 @@ import {
   getActiveLiveBroadcast,
   getLiveChatMessages,
 } from "@/lib/youtube";
+import { getYouTubeStreamerToken } from "@/lib/platform-tokens";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
 }
 
 async function runPoll() {
-  const streamer = await prisma.youTubeStreamerToken.findUnique({ where: { id: "default" } });
+  const streamer = await getYouTubeStreamerToken();
   if (!streamer) {
     return NextResponse.json(
       { error: "Streamer YouTube nie autoryzowany — kliknij 'Autoryzuj YouTube' w /admin#youtube" },
@@ -77,7 +78,7 @@ async function runPoll() {
     const broadcast = await getActiveLiveBroadcast(accessToken);
     if (!broadcast) {
       await prisma.youTubeStreamerToken.update({
-        where: { id: "default" },
+        where: { id: streamer.id },
         data: { lastPolledAt: new Date() },
       });
       return NextResponse.json({ ok: true, status: "no_active_broadcast" });
@@ -89,7 +90,7 @@ async function runPoll() {
     videoId = broadcast.videoId;
     rediscovered = true;
     await prisma.youTubeStreamerToken.update({
-      where: { id: "default" },
+      where: { id: streamer.id },
       data: {
         currentLiveChatId: liveChatId,
         currentLiveVideoId: videoId,
@@ -109,7 +110,7 @@ async function runPoll() {
   if (messages.length === 0 && !nextPageToken) {
     // Likely stream ended — clear cached broadcast so next poll rediscovers
     await prisma.youTubeStreamerToken.update({
-      where: { id: "default" },
+      where: { id: streamer.id },
       data: {
         lastPolledAt: new Date(),
         currentLiveChatId: null,
@@ -169,7 +170,7 @@ async function runPoll() {
   }
 
   await prisma.youTubeStreamerToken.update({
-    where: { id: "default" },
+    where: { id: streamer.id },
     data: {
       lastPolledAt: new Date(),
       lastChatPageToken: nextPageToken,
@@ -406,7 +407,7 @@ async function handleMemberEvent(input: {
 
 // Health check
 export async function GET() {
-  const streamer = await prisma.youTubeStreamerToken.findUnique({ where: { id: "default" } });
+  const streamer = await getYouTubeStreamerToken();
   return NextResponse.json({
     ok: true,
     streamerConnected: !!streamer,

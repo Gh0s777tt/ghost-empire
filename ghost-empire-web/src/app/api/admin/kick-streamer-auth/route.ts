@@ -6,6 +6,8 @@ import { randomBytes, createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
 import { getStreamerAuthorizeUrl } from "@/lib/kick";
+import { signOAuthState } from "@/lib/oauth-state";
+import { currentTenantId } from "@/lib/tenant";
 
 // Strip any trailing slash so we never build "...app//api/..." which Kick rejects
 // as an invalid redirect_uri (must byte-match the registered URI).
@@ -24,10 +26,15 @@ export async function GET() {
   // PKCE — Kick requires code_challenge / code_verifier
   const verifier = base64url(randomBytes(32));
   const challenge = base64url(createHash("sha256").update(verifier).digest());
-  const state = randomBytes(16).toString("hex");
+  // Signed state carries {tenantId, userId} (shared OAuth app → one callback URL)
+  const { state, nonce } = signOAuthState({
+    tenantId: await currentTenantId(),
+    userId: auth.userId,
+    provider: "kick-streamer",
+  });
 
   const cookieStore = await cookies();
-  cookieStore.set("kick_streamer_state", state, {
+  cookieStore.set("kick_streamer_state", nonce, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
