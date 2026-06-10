@@ -9,6 +9,7 @@ import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TenantBrandingProvider } from "@/components/TenantBranding";
 import { getCurrentTenant } from "@/lib/tenant";
+import { hexToRgbTriplet } from "@/lib/tenant-host";
 import TourProvider from "@/components/tour/SiteTour";
 import { ClientErrorReporter } from "@/components/ClientErrorReporter";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
@@ -47,7 +48,13 @@ export default async function LocaleLayout({
     brandName: tenant.name,
     brandShort: tenant.shortName,
     owner: tenant.ownerHandle,
+    logoUrl: tenant.logoUrl,
   };
+  // Tenant accent → CSS variables; globals.css derives every red/glow from these.
+  const brandStyle = {
+    "--brand": tenant.brandColor,
+    "--brand-rgb": hexToRgbTriplet(tenant.brandColor),
+  } as React.CSSProperties;
   // Arabic is the only RTL locale so far — flip the document direction so text,
   // alignment and punctuation flow correctly. (Full bidi layout mirroring of
   // physical-property components is a follow-up; dir="rtl" fixes the text itself.)
@@ -62,7 +69,7 @@ export default async function LocaleLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href={GOOGLE_FONTS_HREF} rel="stylesheet" />
       </head>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
+      <body style={brandStyle} className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-100000 focus:bg-red-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:outline-hidden"

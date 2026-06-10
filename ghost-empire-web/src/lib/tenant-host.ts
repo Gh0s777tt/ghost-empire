@@ -46,3 +46,15 @@ export function resolveTenantSlug(
 ): string | null {
   return tenantSlugFromHost(host, rootDomain);
 }
+
+/**
+ * "#E50914" → "229 9 20" for the `--brand-rgb` CSS variable (alpha-capable
+ * `rgb(var(--brand-rgb) / .3)` usages). Invalid input falls back to the default
+ * brand red so a malformed tenant color can't break the whole stylesheet.
+ */
+export function hexToRgbTriplet(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return "229 9 20";
+  const n = parseInt(m[1], 16);
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+}

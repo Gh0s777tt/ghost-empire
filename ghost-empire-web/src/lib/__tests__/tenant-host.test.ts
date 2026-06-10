@@ -1,5 +1,18 @@
 import { describe, it, expect } from "vitest";
-import { tenantSlugFromHost, resolveTenantSlug } from "@/lib/tenant-host";
+import { tenantSlugFromHost, resolveTenantSlug, hexToRgbTriplet } from "@/lib/tenant-host";
+
+describe("hexToRgbTriplet", () => {
+  it("decodes a hex color with or without the hash", () => {
+    expect(hexToRgbTriplet("#E50914")).toBe("229 9 20");
+    expect(hexToRgbTriplet("00ff80")).toBe("0 255 128");
+  });
+  it("falls back to brand red on malformed input", () => {
+    expect(hexToRgbTriplet("")).toBe("229 9 20");
+    expect(hexToRgbTriplet("#abc")).toBe("229 9 20");
+    expect(hexToRgbTriplet("red")).toBe("229 9 20");
+    expect(hexToRgbTriplet("#12345g")).toBe("229 9 20");
+  });
+});
 
 describe("tenantSlugFromHost", () => {
   const ROOT = "myapp.com";

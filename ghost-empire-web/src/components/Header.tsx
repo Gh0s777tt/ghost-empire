@@ -13,6 +13,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { useTour } from "@/components/tour/SiteTour";
 import { BALANCE_EVENT } from "@/lib/balance-bus";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 // Grouped navigation. Labels are i18n keys (namespace "nav") resolved at render.
 type NavKey =
@@ -59,6 +60,7 @@ export function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const { brandName, logoUrl } = useTenantBranding();
   const tTour = useTranslations("tour");
   const fmt = useLocaleFmt();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -89,14 +91,14 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-9 h-9 shrink-0 overflow-hidden rounded-md ring-1 ring-red-600/50 bg-black transition-transform group-hover:scale-105">
-              <img src="/brand/skull.png" alt="GH0ST EMPIRE" width={36} height={36} className="w-full h-full object-cover" />
+              <img src={logoUrl ?? "/brand/skull.png"} alt={brandName} width={36} height={36} className="w-full h-full object-cover" />
             </div>
             <div className="hidden sm:block leading-none">
               <span
                 className="font-display text-xl text-white tracking-wider"
-                style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
+                style={{ textShadow: "2px 0 0 rgb(var(--brand-rgb) / 0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
               >
-                GH0ST EMPIRE
+                {brandName}
               </span>
               <p className="text-[9px] text-zinc-600 uppercase tracking-widest font-mono mt-0.5">
                 {t("tagline")}
