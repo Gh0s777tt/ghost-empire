@@ -661,6 +661,8 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "soundOn": "Som ligado — clique para silenciar",
+    "soundOff": "Som desligado — clique para ativar",
     "help": "O Cassino GT funciona com Ghost Tokens, a moeda virtual do portal (não é dinheiro real). Defina a aposta e escolha um jogo: o servidor sorteia o resultado e a animação só o exibe. Os ganhos caem na hora no seu saldo.",
     "helpSlots": "3 rolos: três símbolos iguais ganham o multiplicador do símbolo — de 10× pelas cerejas até 800× pelo sete.",
     "helpCoinflip": "Cara ou coroa: o fantasma dobra a aposta (2×), a caveira a leva.",

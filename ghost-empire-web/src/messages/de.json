@@ -632,6 +632,8 @@
     "unitPurchase": "Kauf"
   },
   "kasyno": {
+    "soundOn": "Ton an — zum Stummschalten klicken",
+    "soundOff": "Ton aus — zum Aktivieren klicken",
     "help": "Das GT-Casino läuft mit Ghost Tokens — der virtuellen Währung des Portals (kein echtes Geld). Einsatz festlegen, Spiel wählen: das Ergebnis lost der Server aus, die Animation zeigt es nur. Gewinne landen sofort auf deinem Guthaben.",
     "helpSlots": "3 Walzen: drei gleiche Symbole gewinnen den Multiplikator des Symbols — von 10× für Kirschen bis 800× für die Sieben.",
     "helpCoinflip": "Münzwurf: der Geist verdoppelt den Einsatz (2×), der Totenkopf nimmt ihn.",

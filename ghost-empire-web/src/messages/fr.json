@@ -632,6 +632,8 @@
     "unitPurchase": "achat"
   },
   "kasyno": {
+    "soundOn": "Son activé — cliquer pour couper",
+    "soundOff": "Son coupé — cliquer pour activer",
     "help": "Le Casino GT fonctionne avec les Ghost Tokens, la monnaie virtuelle du portail (pas de l'argent réel). Fixe ta mise et choisis un jeu : le serveur tire le résultat, l'animation ne fait que l'afficher. Les gains arrivent aussitôt sur ton solde.",
     "helpSlots": "3 rouleaux : trois symboles identiques gagnent le multiplicateur du symbole — de 10× pour les cerises à 800× pour le sept.",
     "helpCoinflip": "Pile ou face : le fantôme double la mise (2×), le crâne l'emporte.",

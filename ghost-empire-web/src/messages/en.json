@@ -1919,6 +1919,8 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "soundOn": "Sound on — click to mute",
+    "soundOff": "Sound off — click to unmute",
     "help": "The GT Casino runs on Ghost Tokens — the portal virtual currency (not real money). Set your stake and pick a game: the server draws the result, the animation just shows it. Winnings land on your balance instantly.",
     "helpSlots": "3 reels: three matching symbols win that symbol multiplier — from 10× for cherries up to 800× for the seven.",
     "helpCoinflip": "Coin flip: the ghost doubles your stake (2×), the skull takes it.",

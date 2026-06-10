@@ -10,6 +10,7 @@ import HowItWorks from "@/components/HowItWorks";
 import InfoTip from "@/components/InfoTip";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { emitBalance } from "@/lib/balance-bus";
+import { sfxEnabled, sfxToggle, sfxPlay } from "@/lib/sfx";
 import { Link } from "@/i18n/navigation";
 
 type PlayResult = {
@@ -743,6 +744,10 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const [minesBusy, setMinesBusy] = useState(false);
   const [stage, setStage] = useState<Stage | null>(null);
   const playId = useRef(0);
+  // Sound toggle (synthesized SFX, opt-out persisted in localStorage). Initialized in an
+  // effect so SSR markup never depends on localStorage.
+  const [sound, setSound] = useState(true);
+  useEffect(() => { setSound(sfxEnabled()); }, []);
 
   const loadLb = useCallback(async () => {
     try { const r = await fetch("/api/gt-games/leaderboard", { cache: "no-store" }); if (r.ok) setLb(await r.json()); } catch { /* ignore */ }
@@ -759,10 +764,19 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
     void loadLb();
   }, [loadLb]);
 
+  // Result sound — fires once per settled stage (effect, not inside the setStage updater).
+  const sfxFor = useRef<number | null>(null);
+  useEffect(() => {
+    if (!stage?.settled || !stage.result || sfxFor.current === stage.id) return;
+    sfxFor.current = stage.id;
+    sfxPlay(stage.result.net > 0 ? "win" : "lose");
+  }, [stage]);
+
   async function play(game: Game, choice?: string) {
     if (busy || minesBusy) return;
     setBusy(true); setError(null); setMinesGame(null); // single-shot games take over the stage
     const id = ++playId.current;
+    sfxPlay("spin");
     setStage({ id, game, phase: "spin", result: null, settled: false });
     try {
       const res = await fetch("/api/gt-games/play", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ game, bet, choice }) });
@@ -781,6 +795,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       const d = await res.json();
       if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
       setBalance(d.newBalance); emitBalance(d.newBalance);
+      sfxPlay("spin");
       setMinesGame({ sessionId: d.sessionId, bombs: d.bombs, revealed: [], multiplier: 1, status: "active", bombSet: null, bet });
     } catch { setError(t("connError")); }
     setMinesBusy(false);
@@ -792,8 +807,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       const res = await fetch("/api/gt-games/mines/reveal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: minesGame.sessionId, tile }) });
       const d = await res.json();
       if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
-      if (d.bomb) { setMinesGame((g) => (g ? { ...g, status: "bust", revealed: d.revealed, bombSet: d.bombSet } : g)); void loadLb(); }
-      else setMinesGame((g) => (g ? { ...g, revealed: d.revealed, multiplier: d.multiplier } : g));
+      if (d.bomb) { sfxPlay("bomb"); setMinesGame((g) => (g ? { ...g, status: "bust", revealed: d.revealed, bombSet: d.bombSet } : g)); void loadLb(); }
+      else { sfxPlay("click"); setMinesGame((g) => (g ? { ...g, revealed: d.revealed, multiplier: d.multiplier } : g)); }
     } catch { setError(t("connError")); }
     setMinesBusy(false);
   }
@@ -805,6 +820,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       const d = await res.json();
       if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
       setBalance(d.newBalance); emitBalance(d.newBalance);
+      sfxPlay("cashout");
       setMinesGame((g) => (g ? { ...g, status: "cashed", multiplier: d.multiplier, bombSet: d.bombSet, payout: d.payout } : g));
       void loadLb();
     } catch { setError(t("connError")); }
@@ -894,11 +910,31 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </div>
           {error && <div className="text-rose-400 text-sm">{error}</div>}
 
-          <div className="flex items-center gap-2" data-tour="kasyno-stake">
+          <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-stake">
             <label className="text-xs text-zinc-400">{t("stake")}
               <input type="number" min={10} max={100000} value={bet} disabled={busy} onChange={(e) => setBet(Math.max(10, parseInt(e.target.value || "10", 10)))}
                 className="ms-2 w-28 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500 disabled:opacity-50" />
             </label>
+            {/* quick-bet chips */}
+            {[10, 50, 100, 500].map((v) => (
+              <button key={v} onClick={() => { setBet(v); sfxPlay("click"); }} disabled={busy}
+                className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all ${bet === v ? "border-amber-500 bg-amber-500/15 text-amber-300" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500"} disabled:opacity-40`}>
+                {v}
+              </button>
+            ))}
+            <button onClick={() => { setBet(Math.max(10, Math.min(100000, balance ?? 10))); sfxPlay("click"); }} disabled={busy || (balance ?? 0) < 10}
+              className="px-2.5 py-1 rounded-full text-xs font-extrabold border border-amber-700 bg-amber-900/20 text-amber-400 hover:border-amber-500 transition-all disabled:opacity-40">
+              MAX
+            </button>
+            {/* sound toggle (synthesized SFX, persisted) */}
+            <button
+              onClick={() => { const on = sfxToggle(); setSound(on); if (on) sfxPlay("click"); }}
+              title={sound ? t("soundOn") : t("soundOff")}
+              aria-label={sound ? t("soundOn") : t("soundOff")}
+              className={`w-8 h-8 inline-flex items-center justify-center rounded-full border transition-all ${sound ? "border-amber-600 text-amber-300" : "border-zinc-700 text-zinc-600"}`}
+            >
+              {sound ? "🔊" : "🔇"}
+            </button>
           </div>
           <div className="flex gap-3" data-tour="kasyno-slots">
             <button onClick={() => play("slots")} disabled={busy || (balance ?? 0) < bet}

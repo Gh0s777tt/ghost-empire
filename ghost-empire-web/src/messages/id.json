@@ -661,6 +661,8 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "soundOn": "Suara aktif — klik untuk membisukan",
+    "soundOff": "Suara mati — klik untuk mengaktifkan",
     "help": "Kasino GT memakai Ghost Tokens — mata uang virtual portal (bukan uang sungguhan). Atur taruhan dan pilih permainan: hasil diundi server, animasi hanya menampilkannya. Kemenangan langsung masuk ke saldomu.",
     "helpSlots": "3 gulungan: tiga simbol sama memenangkan pengali simbol itu — dari 10× untuk ceri sampai 800× untuk angka tujuh.",
     "helpCoinflip": "Lempar koin: hantu menggandakan taruhan (2×), tengkorak mengambilnya.",
