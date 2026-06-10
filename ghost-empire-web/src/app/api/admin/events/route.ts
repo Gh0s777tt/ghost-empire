@@ -203,7 +203,7 @@ export async function PATCH(req: Request) {
 
   await logAdminAction({
     adminId: auth.userId,
-    action: "create_event", // TODO add "edit_event" type
+    action: "edit_event",
     targetType: "event",
     targetId: body.id,
     details: { changed: Object.keys(data), values: data },

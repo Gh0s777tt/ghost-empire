@@ -8,6 +8,7 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
 import TourProvider from "@/components/tour/SiteTour";
+import { ClientErrorReporter } from "@/components/ClientErrorReporter";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -70,6 +71,8 @@ export default async function LocaleLayout({
         {/* Privacy-friendly, cookieless analytics + Core Web Vitals (no-op outside Vercel). */}
         <Analytics />
         <SpeedInsights />
+        {/* Uncaught client errors → Vercel logs (Sentry-lite, no deps). */}
+        <ClientErrorReporter />
       </body>
     </html>
   );

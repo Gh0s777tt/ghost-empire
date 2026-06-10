@@ -215,11 +215,14 @@ async function handleSuperChat(input: {
     });
     if (connection) {
       matchedUserId = connection.userId;
-      // Currency to PLN-equivalent — for now treat 1 USD = 4 PLN (simplification).
-      // TODO: real currency conversion. Mostly correct for USD/EUR.
-      const pln = ["PLN", "ZL"].includes(input.currency.toUpperCase())
-        ? amountFloat
-        : amountFloat * 4;
+      // Static approximate FX → PLN, for GT crediting only (not accounting). Unknown
+      // currencies fall back to the USD rate (the old behavior for everything).
+      const PLN_PER: Record<string, number> = {
+        PLN: 1, ZL: 1, USD: 4.0, EUR: 4.3, GBP: 5.0, CHF: 4.5, CAD: 2.9, AUD: 2.6,
+        NOK: 0.38, SEK: 0.38, DKK: 0.58, CZK: 0.17, UAH: 0.1, JPY: 0.027, KRW: 0.003,
+        BRL: 0.7, MXN: 0.2, INR: 0.048,
+      };
+      const pln = amountFloat * (PLN_PER[input.currency.toUpperCase()] ?? 4.0);
       tokensGranted = Math.round(pln * YT_SUPERCHAT_GT_PER_PLN);
 
       const amountGrosze = Math.round(pln * 100);

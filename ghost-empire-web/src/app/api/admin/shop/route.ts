@@ -115,7 +115,7 @@ export async function PATCH(req: Request) {
 
   await logAdminAction({
     adminId: auth.userId,
-    action: "create_drop", // reusing closest type — TODO add "edit_shop_item"
+    action: "edit_shop_item",
     targetType: "shop_item",
     targetId: body.id,
     details: { changed: Object.keys(data), values: data },
