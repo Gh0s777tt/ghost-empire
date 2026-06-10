@@ -19,6 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 const CHANGELOG = [
   {
+    date: "2026-06-10",
+    title: "Wszystko jest teraz opisane ❓",
+    items: [
+      "Każda sekcja portalu ma rozwijany box „Jak to działa?” z prostym wyjaśnieniem — co to jest, gdzie tego użyć i co z tego masz. W kasynie dodatkowo każda gra ma dymek z zasadami i mnożnikami. Wszystko w 14 językach portalu.",
+    ],
+  },
+  {
     date: "2026-06-09",
     title: "Nowa gra: Pole minowe (Mines) 💣",
     items: [

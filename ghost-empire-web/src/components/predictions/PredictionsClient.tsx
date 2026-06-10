@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { Link } from "@/i18n/navigation";
 import { Dice5, Coins, Trophy, Clock, Check, X, Loader2, History } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
@@ -74,6 +75,7 @@ export function PredictionsClient({
         <p className="text-zinc-500 text-sm max-w-2xl">
           {t.rich("subtitle", { b: (c) => <strong className="text-white">{c}</strong> })}
         </p>
+        <HowItWorks>{t("help")}</HowItWorks>
       </div>
 
       {/* Balance */}

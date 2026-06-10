@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
+import HowItWorks from "@/components/HowItWorks";
 import { DropRedeemBox } from "@/components/drops/DropRedeemBox";
 import { Gift, Trophy, Clock, Sparkles } from "lucide-react";
 import { fmt, formatDate, timeAgo } from "@/lib/utils";
@@ -23,6 +24,7 @@ export default async function DropsPage() {
   const session = await auth();
   const isAuthenticated = !!session?.user?.id;
   const locale = await getLocale();
+  const t = await getTranslations("drops");
   const tid = await currentTenantId();
 
   let myClaims: Array<{
@@ -98,6 +100,7 @@ export default async function DropsPage() {
               Wpisz sekretny kod który Ghost wrzucił na czat. Pierwsi {" "}
               <span className="text-orange-400 font-bold">N osób</span> dostają bonus.
             </p>
+            <HowItWorks>{t("help")}</HowItWorks>
           </div>
 
           {/* Redeem box */}

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { Link } from "@/i18n/navigation";
 import {
   Trophy, TrendingUp, Sparkles, Flame, Crown, Medal, ShieldCheck,
@@ -111,6 +112,7 @@ export function RankingClient({
           <p className="text-zinc-500 text-sm">
             {t("subtitle")}
           </p>
+          <HowItWorks>{t("help")}</HowItWorks>
         </div>
         <div className="text-end">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">

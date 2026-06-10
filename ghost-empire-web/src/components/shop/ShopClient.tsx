@@ -4,6 +4,7 @@ import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { ShoppingBag, Flame, Lock, Check, X, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
@@ -141,6 +142,7 @@ export function ShopClient({
           <p className="text-zinc-500 text-sm">
             {t("subtitle")}
           </p>
+          <HowItWorks>{t("help")}</HowItWorks>
         </div>
 
         {isAuthenticated && userContext && (

@@ -23,6 +23,7 @@
     "mainNav": "Navegação principal"
   },
   "common": {
+    "howItWorks": "Como funciona?",
     "loading": "Carregando…",
     "back": "Voltar",
     "save": "Salvar",
@@ -82,6 +83,7 @@
     "watch": "Assistir"
   },
   "shop": {
+    "help": "Aqui você gasta Ghost Tokens em recompensas do streamer (cargos, vantagens, surpresas). Após a compra, o streamer é notificado e entrega o pedido.",
     "metaTitle": "Loja",
     "metaDesc": "Gaste Ghost Tokens em chaves Steam, skins de CS2, subs de presente e mais.",
     "title": "LOJA",
@@ -174,6 +176,7 @@
     "empty": "A biblioteca está vazia por enquanto — volte mais tarde."
   },
   "events": {
+    "help": "Eventos são encontros da comunidade: torneios e sorteios. Participe, ganhe bilhetes com atividade e concorra aos prêmios.",
     "metaTitle": "Eventos",
     "metaDesc": "Sorteios, rifas, happy hours e concursos no Ghost Empire.",
     "title": "EVENTOS",
@@ -224,6 +227,7 @@
     "cost": "Custo: {cost} GT"
   },
   "ranking": {
+    "help": "O ranking da comunidade: ordene por Ghost Tokens, XP e mais. Você sobe com atividade: chat, assistir, missões e jogos.",
     "metaTitle": "Ranking",
     "metaDesc": "Os principais membros do Ghost Empire — líderes em tokens, nível e sequência.",
     "subtitle": "Os principais membros do Ghost Empire. Reordene por métrica.",
@@ -272,6 +276,7 @@
     "admFullAdmin": "→ Admin completo"
   },
   "predictions": {
+    "help": "Aposte Ghost Tokens em um resultado. O prêmio é dividido entre quem acertou, proporcional às apostas: quanto mais ousado o palpite, maior o ganho.",
     "metaTitle": "Previsões",
     "metaDesc": "Aposte Ghost Tokens em eventos da transmissão — os vencedores dividem o pote.",
     "subtitle": "Aposte em eventos da transmissão com Ghost Tokens. A opção vencedora divide <b>todo o pote</b> (incluindo as apostas dos perdedores) proporcionalmente aos GT apostados.",
@@ -298,6 +303,7 @@
     "you": "Você:"
   },
   "achievements": {
+    "help": "Conquistas desbloqueiam sozinhas pela atividade (chat, jogos, missões…). Cada uma dá XP. O cartão mostra a condição.",
     "metaTitle": "Conquistas",
     "metaDesc": "Todas as conquistas do Ghost Empire — comuns, raras, épicas e lendárias.",
     "title": "CONQUISTAS",
@@ -329,6 +335,7 @@
     "trgManual": "Manual"
   },
   "drops": {
+    "help": "O streamer solta códigos secretos no chat. Digite o código aqui antes dos outros: as recompensas são limitadas e os mais rápidos ganham Ghost Tokens.",
     "metaTitle": "Códigos de drop",
     "metaDesc": "Insira códigos secretos da transmissão ao vivo para pegar Ghost Tokens — quem resgatar primeiro ganha bônus.",
     "loginPrompt": "Entre para inserir códigos de drop durante a transmissão.",
@@ -343,6 +350,7 @@
     "bonusGone": "Os bônus já foram resgatados por outros 🐢"
   },
   "polls": {
+    "help": "Enquetes da comunidade: vote no que vem a seguir (ex.: o que o streamer joga). Resultados ao vivo e seu voto conta na hora.",
     "title": "ENQUETES",
     "subtitle": "Vote nas decisões da comunidade. Você pode mudar seu voto enquanto a enquete estiver aberta.",
     "emptyTitle": "Sem enquetes",
@@ -356,6 +364,7 @@
     "errNet": "Erro de rede"
   },
   "profile": {
+    "help": "Seu perfil: vincule contas (Twitch, Kick, YouTube, Discord), defina o apelido e veja as estatísticas. Contas vinculadas somam sua atividade nas lives para missões e ranking.",
     "phHandle": "seu_usuario",
     "phYoutube": "@canal ou link",
     "phChannel": "canal ou link",
@@ -555,6 +564,7 @@
     "footnote": "A agenda pode mudar — confira o Discord para as informações mais recentes"
   },
   "quests": {
+    "help": "Missões são tarefas (chat, assistir, atividade) que dão Ghost Tokens e XP. Quando a barra chegar a 100%, toque em Resgatar: a recompensa cai na hora.",
     "metaTitle": "Missões Diárias",
     "metaDesc": "Tarefas diárias no Ghost Empire — complete-as e resgate suas recompensas.",
     "title": "MISSÕES DIÁRIAS",
@@ -587,6 +597,14 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "help": "O Cassino GT funciona com Ghost Tokens, a moeda virtual do portal (não é dinheiro real). Defina a aposta e escolha um jogo: o servidor sorteia o resultado e a animação só o exibe. Os ganhos caem na hora no seu saldo.",
+    "helpSlots": "3 rolos: três símbolos iguais ganham o multiplicador do símbolo — de 10× pelas cerejas até 800× pelo sete.",
+    "helpCoinflip": "Cara ou coroa: o fantasma dobra a aposta (2×), a caveira a leva.",
+    "helpRoulette": "Roleta americana (0 e 00): vermelho/preto paga 2×, o número exato paga 36×.",
+    "helpDice": "Escolha o limite e a direção (abaixo/acima). Menos chance = multiplicador maior — você vê os dois antes de rolar.",
+    "helpCrash": "O multiplicador sobe até o foguete estourar num momento aleatório. Defina sua meta de saque automático: se o foguete chegar lá, você ganha aposta × meta.",
+    "helpPlinko": "A bolinha cai pelos pinos até uma casa com multiplicador. O centro paga pouco; as bordas pagam mais.",
+    "helpMines": "Tabuleiro 5×5: escolha o número de bombas e revele casas. Cada casa segura aumenta o multiplicador — saque antes de acertar uma bomba.",
     "title": "🎰 Cassino GT",
     "subtitlePre": "Caça-níqueis, coinflip e roleta por Ghost Tokens. No chat também:",
     "loginToPlay": "Entre para jogar",
@@ -640,6 +658,7 @@
     "learnMore": "Saiba mais →"
   },
   "seasons": {
+    "help": "O Battle Pass da temporada: ganhe XP, suba de nível e resgate recompensas na trilha. A temporada é por tempo limitado; a barra mostra o progresso.",
     "metaTitle": "Battle Pass",
     "metaDesc": "Ganhe XP de temporada pela atividade e desbloqueie recompensas em vários níveis.",
     "daysLeft": "{days, plural, one {# dia restante} other {# dias restantes}}",
@@ -657,6 +676,7 @@
     "claimedItem": "Resgatado: {label}"
   },
   "wheel": {
+    "help": "Roda da Fortuna: gire por Ghost Tokens e ganhe um dos prêmios definidos pelo streamer. O custo do giro aparece no botão; o servidor sorteia o resultado.",
     "title": "🎡 Roda da Fortuna",
     "subtitle": "Gire e ganhe Ghost Tokens.",
     "loading": "Carregando…",
