@@ -23,6 +23,7 @@
     "mainNav": "Navegación principal"
   },
   "common": {
+    "howItWorks": "¿Cómo funciona?",
     "loading": "Cargando…",
     "back": "Atrás",
     "save": "Guardar",
@@ -82,6 +83,7 @@
     "watch": "Ver"
   },
   "shop": {
+    "help": "Aquí gastas Ghost Tokens en recompensas del streamer (roles, ventajas, sorpresas). Tras la compra, el streamer recibe un aviso y entrega el pedido.",
     "metaTitle": "Tienda",
     "metaDesc": "Gasta Ghost Tokens en claves de Steam, skins de CS2, subs regalados y más.",
     "title": "TIENDA",
@@ -174,6 +176,7 @@
     "empty": "La biblioteca está vacía por ahora — vuelve más tarde."
   },
   "events": {
+    "help": "Los eventos son actividades de la comunidad: torneos y sorteos. Únete, gana boletos con tu actividad y participa en los sorteos de premios.",
     "metaTitle": "Eventos",
     "metaDesc": "Sorteos, rifas, happy hours y concursos en Ghost Empire.",
     "title": "EVENTOS",
@@ -224,6 +227,7 @@
     "cost": "Coste: {cost} GT"
   },
   "ranking": {
+    "help": "La clasificación de la comunidad: ordena por Ghost Tokens, XP y más. Subes con actividad: chat, ver el directo, misiones y juegos.",
     "metaTitle": "Clasificación",
     "metaDesc": "Los mejores miembros de Ghost Empire — líderes en tokens, nivel y racha.",
     "subtitle": "Los mejores miembros de Ghost Empire. Reordena por métrica.",
@@ -272,6 +276,7 @@
     "admFullAdmin": "→ Admin completo"
   },
   "predictions": {
+    "help": "Apuesta Ghost Tokens a un resultado. El bote se reparte entre los aciertos en proporción a lo apostado: cuanto más audaz el pronóstico, mayor la ganancia.",
     "metaTitle": "Predicciones",
     "metaDesc": "Apuesta Ghost Tokens a los eventos del stream — los ganadores se reparten el bote.",
     "subtitle": "Apuesta a los eventos del stream con Ghost Tokens. La opción ganadora se reparte <b>todo el bote</b> (incluidas las apuestas de los perdedores) proporcionalmente a los GT apostados.",
@@ -298,6 +303,7 @@
     "you": "Tú:"
   },
   "achievements": {
+    "help": "Los logros se desbloquean solos por tu actividad (chat, juegos, misiones…). Cada uno da XP. La tarjeta muestra la condición.",
     "metaTitle": "Logros",
     "metaDesc": "Todos los logros de Ghost Empire — común, raro, épico y legendario.",
     "title": "LOGROS",
@@ -329,6 +335,7 @@
     "trgManual": "Manual"
   },
   "drops": {
+    "help": "El streamer suelta códigos secretos en el chat. Escribe el código aquí antes que los demás: las recompensas son limitadas y los primeros reciben Ghost Tokens.",
     "metaTitle": "Códigos drop",
     "metaDesc": "Introduce códigos secretos del directo para conseguir Ghost Tokens — el primero en reclamar se lleva un bonus.",
     "loginPrompt": "Inicia sesión para introducir códigos drop durante el stream.",
@@ -343,6 +350,7 @@
     "bonusGone": "Los bonus ya los han reclamado otros 🐢"
   },
   "polls": {
+    "help": "Encuestas de la comunidad: vota qué pasa después (p. ej., a qué juega el streamer). Los resultados van en vivo y tu voto cuenta al momento.",
     "title": "ENCUESTAS",
     "subtitle": "Vota en las decisiones de la comunidad. Puedes cambiar tu voto mientras la encuesta esté abierta.",
     "emptyTitle": "Sin encuestas",
@@ -356,6 +364,7 @@
     "errNet": "Error de red"
   },
   "profile": {
+    "help": "Tu perfil: vincula cuentas (Twitch, Kick, YouTube, Discord), elige tu apodo y mira tus estadísticas. Las cuentas vinculadas suman tu actividad en directo a misiones y clasificación.",
     "phHandle": "tu_usuario",
     "phYoutube": "@canal o enlace",
     "phChannel": "canal o enlace",
@@ -526,6 +535,7 @@
     "footnote": "El horario puede cambiar — consulta Discord para la info más reciente"
   },
   "quests": {
+    "help": "Las misiones son tareas (chat, ver el directo, actividad) que dan Ghost Tokens y XP. Cuando la barra llegue al 100%, pulsa Reclamar: la recompensa entra al instante.",
     "metaTitle": "Misiones diarias",
     "metaDesc": "Tareas diarias en Ghost Empire — complétalas y reclama tus recompensas.",
     "title": "MISIONES DIARIAS",
@@ -558,6 +568,14 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "help": "El Casino GT funciona con Ghost Tokens, la moneda virtual del portal (no es dinero real). Fija tu apuesta y elige un juego: el servidor sortea el resultado y la animación solo lo muestra. Las ganancias llegan a tu saldo al instante.",
+    "helpSlots": "3 rodillos: tres símbolos iguales ganan el multiplicador del símbolo — de 10× por cerezas a 800× por el siete.",
+    "helpCoinflip": "Cara o cruz: el fantasma duplica la apuesta (2×), la calavera se la lleva.",
+    "helpRoulette": "Ruleta americana (0 y 00): rojo/negro paga 2×, el número exacto 36×.",
+    "helpDice": "Elige umbral y dirección (debajo/encima). Menos probabilidad = mayor multiplicador — ves ambos antes de tirar.",
+    "helpCrash": "El multiplicador sube hasta que el cohete estalla en un momento aleatorio. Fija tu objetivo de retiro automático: si el cohete llega, ganas apuesta × objetivo.",
+    "helpPlinko": "La bola cae entre clavijas hasta una casilla con multiplicador. El centro paga poco; los extremos, lo máximo.",
+    "helpMines": "Tablero 5×5: elige cuántas bombas y destapa casillas. Cada casilla segura sube el multiplicador — retira antes de tocar una bomba.",
     "title": "🎰 Casino GT",
     "subtitlePre": "Tragaperras, coinflip y ruleta por Ghost Tokens. También en el chat:",
     "loginToPlay": "Inicia sesión para jugar",
@@ -611,6 +629,7 @@
     "learnMore": "Más información →"
   },
   "seasons": {
+    "help": "El Battle Pass de la temporada: gana XP, sube niveles y reclama recompensas del camino. La temporada dura un tiempo limitado; la barra muestra tu progreso.",
     "metaTitle": "Battle Pass",
     "metaDesc": "Gana XP de temporada con tu actividad y desbloquea recompensas por niveles.",
     "daysLeft": "{days, plural, one {queda # día} other {quedan # días}}",
@@ -628,6 +647,7 @@
     "claimedItem": "Reclamado: {label}"
   },
   "wheel": {
+    "help": "Rueda de la Fortuna: gira por Ghost Tokens y gana uno de los premios configurados por el streamer. El coste del giro aparece en el botón; el servidor sortea el resultado.",
     "title": "🎡 Ruleta de la suerte",
     "subtitle": "Gira y gana Ghost Tokens.",
     "loading": "Cargando…",

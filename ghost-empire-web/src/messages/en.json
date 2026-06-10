@@ -1426,6 +1426,7 @@
     "empty": "No notifications"
   },
   "profile": {
+    "help": "Your profile: link accounts (Twitch, Kick, YouTube, Discord), set your nickname and see your stats. Linked accounts count your stream activity towards quests and the ranking.",
     "phHandle": "your_handle",
     "phYoutube": "@channel or link",
     "phChannel": "channel or link",
@@ -1564,6 +1565,7 @@
     "mainNav": "Main navigation"
   },
   "common": {
+    "howItWorks": "How does it work?",
     "loading": "Loading…",
     "back": "Back",
     "save": "Save",
@@ -1615,6 +1617,7 @@
     "watch": "Watch"
   },
   "shop": {
+    "help": "Spend Ghost Tokens on rewards from the streamer (roles, perks, surprises). After a purchase the streamer gets notified and delivers the order.",
     "metaTitle": "Shop",
     "metaDesc": "Spend Ghost Tokens on Steam keys, CS2 skins, gifted subs and more.",
     "title": "SHOP",
@@ -1668,6 +1671,7 @@
     "errDefault": "Something went wrong during sign-in. Please try again or use another platform."
   },
   "polls": {
+    "help": "Community polls — vote on what happens next (e.g. what the streamer plays). Results update live and your vote counts right away.",
     "title": "POLLS",
     "subtitle": "Vote in community decisions. You can change your vote while the poll is open.",
     "emptyTitle": "No polls",
@@ -1731,6 +1735,7 @@
     "learnMore": "Learn more about Ghost Empire"
   },
   "predictions": {
+    "help": "Bet Ghost Tokens on an outcome. The pool is split among correct picks in proportion to their stakes — the bolder the call, the bigger the win.",
     "metaTitle": "Predictions",
     "metaDesc": "Bet Ghost Tokens on stream events — winners split the pool.",
     "subtitle": "Bet on stream events with Ghost Tokens. The winning option splits <b>the entire pot</b> (including losers' stakes) proportionally to the GT wagered.",
@@ -1757,6 +1762,7 @@
     "you": "You:"
   },
   "drops": {
+    "help": "The streamer drops secret codes in chat. Type the code here before others do — rewards are limited and the fastest get Ghost Tokens.",
     "metaTitle": "Drop codes",
     "metaDesc": "Enter secret codes from the live stream to grab Ghost Tokens — first to claim gets a bonus.",
     "loginPrompt": "Sign in to enter drop codes during the stream.",
@@ -1771,6 +1777,7 @@
     "bonusGone": "Bonuses have already been claimed by others 🐢"
   },
   "seasons": {
+    "help": "The season Battle Pass: earn XP, level up and claim rewards along the track. A season runs for a limited time — the bar shows your progress.",
     "metaTitle": "Battle Pass",
     "metaDesc": "Earn seasonal XP through activity and unlock rewards across tiers.",
     "daysLeft": "{days, plural, one {# day} other {# days}} left",
@@ -1815,6 +1822,7 @@
     "footnote": "The schedule may change — check Discord for the latest info"
   },
   "quests": {
+    "help": "Quests are tasks (chat, watching, activity) that pay Ghost Tokens and XP. When the bar hits 100%, hit Claim — the reward lands on your balance instantly.",
     "metaTitle": "Daily Quests",
     "metaDesc": "Daily tasks in Ghost Empire — complete them and claim your rewards.",
     "title": "DAILY QUESTS",
@@ -1847,6 +1855,14 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "help": "The GT Casino runs on Ghost Tokens — the portal virtual currency (not real money). Set your stake and pick a game: the server draws the result, the animation just shows it. Winnings land on your balance instantly.",
+    "helpSlots": "3 reels: three matching symbols win that symbol multiplier — from 10× for cherries up to 800× for the seven.",
+    "helpCoinflip": "Coin flip: the ghost doubles your stake (2×), the skull takes it.",
+    "helpRoulette": "American roulette (0 and 00): red/black pays 2×, an exact number 36×.",
+    "helpDice": "Pick a threshold and direction (under/over). Lower odds = higher multiplier — you see both before you roll.",
+    "helpCrash": "The multiplier climbs until the rocket bursts at a random moment. Set your auto-cashout target: if the rocket reaches it, you win stake × target.",
+    "helpPlinko": "The ball drops through pegs into a multiplier bucket. The middle pays little, the edge buckets pay the most.",
+    "helpMines": "A 5×5 board: choose the number of bombs and reveal tiles. Every safe tile raises the multiplier — cash out before you hit a bomb.",
     "title": "🎰 GT Casino",
     "subtitlePre": "Slots, coinflip and roulette for Ghost Tokens. In chat too:",
     "loginToPlay": "Sign in to play",
@@ -1882,6 +1898,7 @@
     "gameMines": "Mines"
   },
   "wheel": {
+    "help": "Wheel of Fortune: spin for Ghost Tokens and win one of the rewards set by the streamer. The spin cost is shown by the button; the server draws the result.",
     "title": "🎡 Wheel of Fortune",
     "subtitle": "Spin and win Ghost Tokens.",
     "loading": "Loading…",
@@ -2031,6 +2048,7 @@
     "s9p": "We publish changes on this page. Major changes are announced on Discord. Using the Portal after changes take effect means accepting them."
   },
   "achievements": {
+    "help": "Achievements unlock automatically for activity (chat, games, quests…). Each one grants XP. The card shows how to earn it.",
     "metaTitle": "Achievements",
     "metaDesc": "Every Ghost Empire achievement — common, rare, epic and legendary.",
     "title": "ACHIEVEMENTS",
@@ -2062,6 +2080,7 @@
     "trgManual": "Manual"
   },
   "ranking": {
+    "help": "The community leaderboard — sort by Ghost Tokens, XP and more. You climb through activity: chat, watching, quests and games.",
     "metaTitle": "Ranking",
     "metaDesc": "The top Ghost Empire members — leading tokens, level and streak.",
     "subtitle": "The top members of Ghost Empire. Re-sort by metric.",
@@ -2110,6 +2129,7 @@
     "admFullAdmin": "→ Full admin"
   },
   "events": {
+    "help": "Events are community happenings: tournaments and raffles. Join, earn tickets through activity and take part in prize draws.",
     "metaTitle": "Events",
     "metaDesc": "Giveaways, raffles, happy hours and contests in Ghost Empire.",
     "title": "EVENTS",

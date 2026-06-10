@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { Link } from "@/i18n/navigation";
 import { Ticket, Lock, Check, Loader2, Clock, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -103,6 +104,7 @@ export function SeasonsClient({
           </span>
         </div>
         {season.description && <p className="text-zinc-500 text-sm mt-1">{season.description}</p>}
+        <HowItWorks>{t("help")}</HowItWorks>
       </div>
 
       {!isAuthenticated && (

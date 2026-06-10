@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import {
   Calendar, Gift, Ticket, Trophy, Zap, Users, Clock, Check, X, Loader2, Minus, Plus, Crown,
 } from "lucide-react";
@@ -146,6 +147,7 @@ export function EventsClient({
         <p className="text-zinc-500 text-sm">
           {t("subtitle")}
         </p>
+        <HowItWorks>{t("help")}</HowItWorks>
       </div>
 
       {events.length === 0 && (

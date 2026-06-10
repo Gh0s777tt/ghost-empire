@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import {
   Zap, Check, Loader2, MessageCircle, Mic2, Gift, Flame, X, Clock,
 } from "lucide-react";
@@ -133,6 +134,7 @@ export function QuestsClient({
           <p className="text-zinc-500 text-sm">
             {t("subtitle")}
           </p>
+          <HowItWorks>{t("help")}</HowItWorks>
         </div>
 
         <div className="flex items-center gap-3 border border-zinc-800 bg-zinc-950/80 px-4 py-2.5">

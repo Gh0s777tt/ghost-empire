@@ -5,6 +5,7 @@
 // and shows a recent-wins feed.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { Link } from "@/i18n/navigation";
 import { WheelGraphic, rotationForIndex, type WheelSeg } from "@/components/WheelGraphic";
@@ -91,6 +92,8 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
         <h1 className="text-3xl font-black text-white tracking-tight">{t("title")}</h1>
         <p className="text-zinc-400 mt-1 text-sm">{t("subtitle")}</p>
       </div>
+
+      <HowItWorks>{t("help")}</HowItWorks>
 
       {!state.enabled ? (
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-6 py-10 text-center text-zinc-400">

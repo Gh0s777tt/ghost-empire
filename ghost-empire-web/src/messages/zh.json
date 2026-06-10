@@ -23,6 +23,7 @@
     "mainNav": "主导航"
   },
   "common": {
+    "howItWorks": "使用说明",
     "loading": "加载中…",
     "back": "返回",
     "save": "保存",
@@ -82,6 +83,7 @@
     "watch": "观看"
   },
   "shop": {
+    "help": "在这里用 Ghost Tokens 兑换主播的奖励（身份组、特权、惊喜）。购买后主播会收到通知并发放订单。",
     "metaTitle": "商店",
     "metaDesc": "用 Ghost Tokens 兑换 Steam 密钥、CS2 皮肤、赠送订阅等。",
     "title": "商店",
@@ -174,6 +176,7 @@
     "empty": "游戏库暂时为空——稍后再来。"
   },
   "events": {
+    "help": "活动是社区盛事：锦标赛和抽奖。加入活动，通过活跃度赚取奖券，参与奖品抽取。",
     "metaTitle": "活动",
     "metaDesc": "Ghost Empire 中的抽奖、抽签、欢乐时光和比赛。",
     "title": "活动",
@@ -224,6 +227,7 @@
     "cost": "花费：{cost} GT"
   },
   "ranking": {
+    "help": "社区排行榜：按 Ghost Tokens、XP 等排序。通过活跃度提升排名：聊天、观看、任务和游戏。",
     "metaTitle": "排行榜",
     "metaDesc": "Ghost Empire 的顶级成员——代币、等级和连续天数的领先者。",
     "subtitle": "Ghost Empire 的顶级成员。按指标重新排序。",
@@ -272,6 +276,7 @@
     "admFullAdmin": "→ 完整管理"
   },
   "predictions": {
+    "help": "用 Ghost Tokens 押注结果。奖池按注额比例分给猜中的人——预测越大胆，赢得越多。",
     "metaTitle": "预测",
     "metaDesc": "用 Ghost Tokens 押注直播事件——获胜者瓜分奖池。",
     "subtitle": "用 Ghost Tokens 押注直播事件。获胜选项按押注的 GT 比例瓜分<b>整个奖池</b>（包括失败者的押注）。",
@@ -298,6 +303,7 @@
     "you": "你："
   },
   "achievements": {
+    "help": "成就会因活跃度自动解锁（聊天、游戏、任务…）。每个成就都给 XP。卡片上写着达成条件。",
     "metaTitle": "成就",
     "metaDesc": "Ghost Empire 的所有成就——普通、稀有、史诗和传奇。",
     "title": "成就",
@@ -329,6 +335,7 @@
     "trgManual": "手动"
   },
   "drops": {
+    "help": "主播会在聊天里发布秘密代码。抢先在这里输入代码——奖励数量有限，最快的人获得 Ghost Tokens。",
     "metaTitle": "掉落码",
     "metaDesc": "输入直播中的秘密代码以获取 Ghost Tokens——最先领取者获得奖励。",
     "loginPrompt": "登录以在直播期间输入掉落码。",
@@ -343,6 +350,7 @@
     "bonusGone": "奖励已被其他人领走 🐢"
   },
   "polls": {
+    "help": "社区投票：决定接下来发生什么（比如主播玩什么）。结果实时更新，你的票立即生效。",
     "title": "投票",
     "subtitle": "为社区决定投票。投票开放期间你可以更改你的投票。",
     "emptyTitle": "暂无投票",
@@ -356,6 +364,7 @@
     "errNet": "网络错误"
   },
   "profile": {
+    "help": "你的个人资料：绑定账号（Twitch、Kick、YouTube、Discord）、设置昵称并查看统计。绑定的账号会把直播活跃度计入任务和排行榜。",
     "phHandle": "你的_用户名",
     "phYoutube": "@频道或链接",
     "phChannel": "频道或链接",
@@ -526,6 +535,7 @@
     "footnote": "日程可能变动——最新信息请查看 Discord"
   },
   "quests": {
+    "help": "任务（聊天、观看、活跃度）可获得 Ghost Tokens 和 XP。进度条到 100% 后点击领取，奖励立即到账。",
     "metaTitle": "每日任务",
     "metaDesc": "Ghost Empire 的每日任务——完成它们并领取奖励。",
     "title": "每日任务",
@@ -558,6 +568,14 @@
     "unitPurchase": "次购买"
   },
   "kasyno": {
+    "help": "GT 赌场使用 Ghost Tokens（门户的虚拟货币，不是真钱）。设置注额并选择游戏：结果由服务器抽取，动画只是把它演示出来。奖金会立即进入你的余额。",
+    "helpSlots": "3 个转轮：三个相同符号即可赢得该符号的倍数——樱桃 10×，幸运 7 高达 800×。",
+    "helpCoinflip": "抛硬币：幽灵面让注额翻倍（2×），骷髅面则输掉注额。",
+    "helpRoulette": "美式轮盘（0 和 00）：红/黑赔 2×，猜中数字赔 36×。",
+    "helpDice": "选择阈值和方向（低于/高于）。概率越小倍数越高——掷骰前两者都能看到。",
+    "helpCrash": "倍数不断上升，火箭会在随机时刻爆炸。设定自动提现目标：火箭到达目标即赢得注额 × 目标。",
+    "helpPlinko": "小球穿过钉桩落入带倍数的格子。中间格子赔得少，两端格子赔得最多。",
+    "helpMines": "5×5 棋盘：选择炸弹数量并翻开格子。每翻开一个安全格倍数就会上升——在踩到炸弹前提现。",
     "title": "🎰 GT 赌场",
     "subtitlePre": "用 Ghost Tokens 玩老虎机、抛硬币和轮盘。聊天里也可以：",
     "loginToPlay": "登录以游玩",
@@ -611,6 +629,7 @@
     "learnMore": "了解更多 →"
   },
   "seasons": {
+    "help": "赛季 Battle Pass：赚取 XP、提升等级并领取路线上的奖励。赛季限时进行——进度条显示你的进度。",
     "metaTitle": "战斗通行证",
     "metaDesc": "通过活动赚取赛季 XP，逐级解锁奖励。",
     "daysLeft": "{days, plural, other {还剩 # 天}}",
@@ -628,6 +647,7 @@
     "claimedItem": "已领取：{label}"
   },
   "wheel": {
+    "help": "幸运转盘：用 Ghost Tokens 转动，赢取主播设置的奖品。转动费用显示在按钮上；结果由服务器抽取。",
     "title": "🎡 幸运转盘",
     "subtitle": "转动并赢取 Ghost Tokens。",
     "loading": "加载中…",

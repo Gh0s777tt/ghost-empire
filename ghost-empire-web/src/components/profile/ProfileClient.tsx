@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, type ComponentType, type CSSPropert
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
   Globe, Music2, Flame, MessageCircle, Mic2,
@@ -288,6 +289,8 @@ export function ProfileClient({
           </div>
         </div>
       </div>
+
+      <HowItWorks>{t("help")}</HowItWorks>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">

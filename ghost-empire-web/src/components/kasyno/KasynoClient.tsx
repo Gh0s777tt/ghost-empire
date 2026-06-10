@@ -6,6 +6,8 @@
 // LAND on the server-decided result). Respects prefers-reduced-motion.
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
+import InfoTip from "@/components/InfoTip";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { Link } from "@/i18n/navigation";
 
@@ -737,6 +739,19 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
         <p className="text-zinc-400 mt-1 text-sm">{t("subtitlePre")} <code className="text-zinc-500">!slots 100</code> · <code className="text-zinc-500">!coinflip 50</code> · <code className="text-zinc-500">!roulette 100 red</code></p>
       </div>
 
+      <HowItWorks>
+        <p className="mb-2">{t("help")}</p>
+        <ul className="space-y-1.5">
+          <li><b className="text-white">🎰 {t("gameSlots")}:</b> {t("helpSlots")}</li>
+          <li><b className="text-white">🪙 {t("gameCoinflip")}:</b> {t("helpCoinflip")}</li>
+          <li><b className="text-white">🎡 {t("gameRoulette")}:</b> {t("helpRoulette")}</li>
+          <li><b className="text-white">🎲 {t("gameDice")}:</b> {t("helpDice")}</li>
+          <li><b className="text-white">🚀 {t("gameCrash")}:</b> {t("helpCrash")}</li>
+          <li><b className="text-white">⚪ {t("gamePlinko")}:</b> {t("helpPlinko")}</li>
+          <li><b className="text-white">💣 {t("gameMines")}:</b> {t("helpMines")}</li>
+        </ul>
+      </HowItWorks>
+
       {!isAuthenticated ? (
         <Link href="/" className="px-8 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500">{t("loginToPlay")}</Link>
       ) : (
@@ -786,13 +801,15 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           <div className="flex gap-3">
             <button onClick={() => play("slots")} disabled={busy || (balance ?? 0) < bet}
               className="px-6 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 disabled:opacity-40 transition-all">{t("slots")}</button>
+            <InfoTip text={t("helpSlots")} />
             <button onClick={() => play("coinflip")} disabled={busy || (balance ?? 0) < bet}
               className="px-6 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 disabled:opacity-40 transition-all">{t("coinflip")}</button>
+            <InfoTip text={t("helpCoinflip")} />
           </div>
 
           {/* Roulette: red/black (2×) or a straight number (36×) */}
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs text-zinc-500 self-center me-1">{t("rouletteLabel")}</span>
+            <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("rouletteLabel")} <InfoTip text={t("helpRoulette")} /></span>
             <button onClick={() => play("roulette", "red")} disabled={busy || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 transition-all">{t("red")}</button>
             <button onClick={() => play("roulette", "black")} disabled={busy || (balance ?? 0) < bet}
@@ -809,7 +826,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
           {/* Dice: bet under/over a threshold — multiplier scales with the risk */}
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs text-zinc-500 self-center me-1">{t("diceLabel")}</span>
+            <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("diceLabel")} <InfoTip text={t("helpDice")} /></span>
             <div className="flex rounded-full overflow-hidden border border-zinc-700">
               <button onClick={() => setDiceDir("under")} disabled={busy}
                 className={`px-3 py-2 text-sm font-bold transition-all ${diceDir === "under" ? "bg-emerald-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}>{t("diceUnder")}</button>
@@ -827,7 +844,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
           {/* Crash: auto-cashout at a target multiplier; the rocket busts at a random point */}
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs text-zinc-500 self-center me-1">{t("crashLabel")}</span>
+            <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("crashLabel")} <InfoTip text={t("helpCrash")} /></span>
             {[1.5, 2, 5, 10].map((m) => (
               <button key={m} onClick={() => setCrashTarget(m)} disabled={busy}
                 className={`px-3 py-2 rounded-full text-sm font-bold transition-all ${crashTarget === m ? "bg-violet-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-700"}`}>{m % 1 ? m.toFixed(1) : m.toFixed(0)}×</button>
@@ -842,14 +859,14 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
           {/* Plinko: drop the ball — no bet choice; edge buckets pay big, center sub-1 */}
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs text-zinc-500 self-center me-1">{t("plinkoLabel")}</span>
+            <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("plinkoLabel")} <InfoTip text={t("helpPlinko")} /></span>
             <button onClick={() => play("plinko")} disabled={busy || (balance ?? 0) < bet}
               className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 disabled:opacity-40 transition-all">{t("plinkoDrop")}</button>
           </div>
 
           {/* Mines: pick bombs, reveal tiles, dodge bombs, cash out anytime */}
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs text-zinc-500 self-center me-1">{t("minesLabel")}</span>
+            <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("minesLabel")} <InfoTip text={t("helpMines")} /></span>
             {[1, 3, 5, 10].map((b) => (
               <button key={b} onClick={() => setMinesBombs(b)} disabled={minesGame?.status === "active"}
                 className={`px-3 py-2 rounded-full text-sm font-bold transition-all ${minesBombs === b ? "bg-rose-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-700"} disabled:opacity-40`}>{b} 💣</button>

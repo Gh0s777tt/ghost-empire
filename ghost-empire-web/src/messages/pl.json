@@ -1426,6 +1426,7 @@
     "empty": "Brak powiadomień"
   },
   "profile": {
+    "help": "Twój profil: łączysz konta (Twitch, Kick, YouTube, Discord), ustawiasz nick i widzisz statystyki. Połączone konta zliczają aktywność ze streamów do questów i rankingu.",
     "phHandle": "twoj_handle",
     "phYoutube": "@channel lub link",
     "phChannel": "kanał lub link",
@@ -1564,6 +1565,7 @@
     "mainNav": "Główna nawigacja"
   },
   "common": {
+    "howItWorks": "Jak to działa?",
     "loading": "Ładowanie…",
     "back": "Wstecz",
     "save": "Zapisz",
@@ -1615,6 +1617,7 @@
     "watch": "Oglądaj"
   },
   "shop": {
+    "help": "Tu wydajesz Ghost Tokens na nagrody od streamera (role, bonusy, niespodzianki). Po zakupie streamer dostaje powiadomienie i realizuje zamówienie.",
     "metaTitle": "Sklep",
     "metaDesc": "Wymień Ghost Tokens na klucze Steam, skiny CS2, gifted suby i więcej.",
     "title": "SKLEP",
@@ -1668,6 +1671,7 @@
     "errDefault": "Coś poszło nie tak podczas logowania. Spróbuj ponownie lub użyj innej platformy."
   },
   "polls": {
+    "help": "Ankiety społeczności — głosujesz na to, co dalej (np. w co gra streamer). Wyniki widzisz na żywo, głos liczy się od razu.",
     "title": "ANKIETY",
     "subtitle": "Głosuj w decyzjach społeczności. Możesz zmienić swój głos, dopóki ankieta jest otwarta.",
     "emptyTitle": "Brak ankiet",
@@ -1731,6 +1735,7 @@
     "learnMore": "Dowiedz się więcej o Ghost Empire"
   },
   "predictions": {
+    "help": "Obstaw wynik wydarzenia za Ghost Tokens. Pula dzieli się między trafiających proporcjonalnie do wpłat — im śmielszy typ, tym większa wygrana.",
     "metaTitle": "Predictions",
     "metaDesc": "Obstawiaj wydarzenia streamowe za Ghost Tokens — wygrywający dzielą się pulą.",
     "subtitle": "Obstawiaj wydarzenia streamowe za Ghost Tokens. Wygrywająca opcja dzieli między siebie <b>całą pulę</b> (włącznie ze stawkami przegranych) proporcjonalnie do wpłaconych GT.",
@@ -1757,6 +1762,7 @@
     "you": "Ty:"
   },
   "drops": {
+    "help": "Streamer wrzuca na czat sekretne kody. Wpisz kod tutaj szybciej niż inni — liczba nagród jest ograniczona, pierwsi dostają Ghost Tokens.",
     "metaTitle": "Drop codes",
     "metaDesc": "Wpisuj sekretne kody z live'a — zgarniaj Ghost Tokens. Pierwszy łapie bonus.",
     "loginPrompt": "Zaloguj się żeby wpisywać drop codes podczas streama.",
@@ -1771,6 +1777,7 @@
     "bonusGone": "Bonusy zostały już rozdane innym 🐢"
   },
   "seasons": {
+    "help": "Battle Pass sezonu: zdobywaj XP, wbijaj poziomy i odbieraj nagrody ze ścieżki. Sezon trwa ograniczony czas — pasek pokazuje postęp.",
     "metaTitle": "Battle Pass",
     "metaDesc": "Zdobywaj XP sezonowe za aktywność i odbieraj nagrody na kolejnych tierach.",
     "daysLeft": "{days, plural, one {# dzień} few {# dni} many {# dni} other {# dni}} do końca",
@@ -1815,6 +1822,7 @@
     "footnote": "Harmonogram może się zmienić — sprawdź Discord po aktualne info"
   },
   "quests": {
+    "help": "Questy to zadania (czat, oglądanie, aktywność), za które dostajesz Ghost Tokens i XP. Gdy pasek dojdzie do 100%, kliknij Odbierz — nagroda od razu wpada na saldo.",
     "metaTitle": "Daily Questy",
     "metaDesc": "Codzienne zadania w Ghost Empire — wykonuj, claimuj nagrody.",
     "title": "DAILY QUESTY",
@@ -1847,6 +1855,14 @@
     "unitPurchase": "zakup"
   },
   "kasyno": {
+    "help": "Kasyno GT to gry za Ghost Tokens — wirtualną walutę portalu (to nie są prawdziwe pieniądze). Ustaw stawkę i wybierz grę: wynik losuje serwer, a animacja tylko go pokazuje. Wygrana od razu wpada na Twoje saldo.",
+    "helpSlots": "3 bębny: trzy takie same symbole wygrywają mnożnik symbolu — od 10× za wiśnie do 800× za siódemkę.",
+    "helpCoinflip": "Rzut monetą: duch podwaja stawkę (2×), czaszka ją zabiera.",
+    "helpRoulette": "Ruletka amerykańska (0 i 00): czerwone/czarne płaci 2×, trafiona liczba 36×.",
+    "helpDice": "Ustaw próg i kierunek (poniżej/powyżej). Mniejsza szansa = wyższy mnożnik — oba widzisz przed rzutem.",
+    "helpCrash": "Mnożnik rośnie, aż rakieta pęknie w losowym momencie. Ustaw próg auto-wypłaty: jeśli rakieta do niego doleci, wygrywasz stawkę × próg.",
+    "helpPlinko": "Kulka spada przez kołki do przegródki z mnożnikiem. Środek płaci mało, skrajne przegródki najwięcej.",
+    "helpMines": "Pole 5×5: wybierz liczbę bomb i odkrywaj pola. Każde bezpieczne pole podnosi mnożnik — wypłać, zanim trafisz bombę.",
     "title": "🎰 Kasyno GT",
     "subtitlePre": "Sloty, coinflip i ruletka za Ghost Tokens. Na czacie też:",
     "loginToPlay": "Zaloguj się, aby grać",
@@ -1882,6 +1898,7 @@
     "gameMines": "Miny"
   },
   "wheel": {
+    "help": "Koło Fortuny: zakręć za Ghost Tokens i wygraj jedną z nagród ustawionych przez streamera. Koszt zakręcenia widać przy przycisku, wynik losuje serwer.",
     "title": "🎡 Koło Fortuny",
     "subtitle": "Zakręć i wygraj Ghost Tokens.",
     "loading": "Ładowanie…",
@@ -2031,6 +2048,7 @@
     "s9p": "Zmiany publikujemy na tej stronie. Większe zmiany ogłaszamy na Discord. Korzystanie z Portalu po wprowadzeniu zmian oznacza ich akceptację."
   },
   "achievements": {
+    "help": "Osiągnięcia odblokowują się same za aktywność (czat, gry, questy…). Każde daje XP. Karta pokazuje warunek zdobycia.",
     "metaTitle": "Osiągnięcia",
     "metaDesc": "Wszystkie osiągnięcia Ghost Empire — common, rare, epic, legendary.",
     "title": "OSIĄGNIĘCIA",
@@ -2062,6 +2080,7 @@
     "trgManual": "Ręcznie"
   },
   "ranking": {
+    "help": "Ranking graczy społeczności — sortuj po Ghost Tokens, XP i innych statystykach. Pozycję budujesz aktywnością: czat, oglądanie, questy i gry.",
     "metaTitle": "Ranking",
     "metaDesc": "Najlepsi członkowie Ghost Empire — top tokeny, level, streak.",
     "subtitle": "Najlepsi członkowie Ghost Empire. Przegrupowuj wg metryki.",
@@ -2110,6 +2129,7 @@
     "admFullAdmin": "→ Pełen admin"
   },
   "events": {
+    "help": "Eventy to wydarzenia społeczności: turnieje i loterie. Dołącz, zbieraj bilety za aktywność i bierz udział w losowaniach nagród.",
     "metaTitle": "Eventy",
     "metaDesc": "Giveawaye, raffle, happy hours i konkursy w Ghost Empire.",
     "title": "EVENTY",

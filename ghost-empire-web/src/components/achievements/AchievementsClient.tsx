@@ -2,6 +2,7 @@
 // src/components/achievements/AchievementsClient.tsx
 import { useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { Award, Lock, Check, Eye, EyeOff } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { formatDate, timeAgo, cn } from "@/lib/utils";
@@ -164,6 +165,7 @@ export function AchievementsClient({
               ? t("progressNote", { earned: earnedCount, total: visibleCount, pct: completionPct })
               : t("galleryNote", { count: achievements.length })}
           </p>
+          <HowItWorks>{t("help")}</HowItWorks>
         </div>
 
         {isAuthenticated && (

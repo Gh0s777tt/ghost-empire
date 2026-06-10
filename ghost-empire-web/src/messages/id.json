@@ -23,6 +23,7 @@
     "mainNav": "Navigasi utama"
   },
   "common": {
+    "howItWorks": "Bagaimana cara kerjanya?",
     "loading": "Memuat…",
     "back": "Kembali",
     "save": "Simpan",
@@ -82,6 +83,7 @@
     "watch": "Tonton"
   },
   "shop": {
+    "help": "Di sini kamu membelanjakan Ghost Tokens untuk hadiah dari streamer (role, bonus, kejutan). Setelah membeli, streamer mendapat notifikasi dan mengirim pesanan.",
     "metaTitle": "Toko",
     "metaDesc": "Belanjakan Ghost Tokens untuk kunci Steam, skin CS2, sub hadiah, dan lainnya.",
     "title": "TOKO",
@@ -174,6 +176,7 @@
     "empty": "Perpustakaan masih kosong — periksa lagi nanti."
   },
   "events": {
+    "help": "Event adalah acara komunitas: turnamen dan undian. Ikut serta, kumpulkan tiket lewat aktivitas, dan menangkan hadiahnya.",
     "metaTitle": "Acara",
     "metaDesc": "Giveaway, undian, happy hour, dan kontes di Ghost Empire.",
     "title": "ACARA",
@@ -224,6 +227,7 @@
     "cost": "Biaya: {cost} GT"
   },
   "ranking": {
+    "help": "Peringkat komunitas: urutkan berdasarkan Ghost Tokens, XP, dan lainnya. Naik lewat aktivitas: chat, menonton, quest, dan game.",
     "metaTitle": "Peringkat",
     "metaDesc": "Anggota teratas Ghost Empire — pemimpin token, level, dan streak.",
     "subtitle": "Anggota teratas Ghost Empire. Urutkan ulang berdasarkan metrik.",
@@ -272,6 +276,7 @@
     "admFullAdmin": "→ Admin penuh"
   },
   "predictions": {
+    "help": "Pasang Ghost Tokens pada sebuah hasil. Pool dibagi di antara yang menebak benar sebanding taruhannya — makin berani tebakanmu, makin besar kemenanganmu.",
     "metaTitle": "Prediksi",
     "metaDesc": "Pertaruhkan Ghost Tokens pada peristiwa siaran — pemenang membagi pot.",
     "subtitle": "Pertaruhkan peristiwa siaran dengan Ghost Tokens. Opsi pemenang membagi <b>seluruh pot</b> (termasuk taruhan pihak yang kalah) secara proporsional dengan GT yang dipertaruhkan.",
@@ -298,6 +303,7 @@
     "you": "Kamu:"
   },
   "achievements": {
+    "help": "Pencapaian terbuka otomatis lewat aktivitas (chat, game, quest…). Masing-masing memberi XP. Kartunya menampilkan syaratnya.",
     "metaTitle": "Pencapaian",
     "metaDesc": "Setiap pencapaian Ghost Empire — biasa, langka, epik, dan legendaris.",
     "title": "PENCAPAIAN",
@@ -329,6 +335,7 @@
     "trgManual": "Manual"
   },
   "drops": {
+    "help": "Streamer melempar kode rahasia di chat. Ketik kodenya di sini lebih cepat dari yang lain — hadiah terbatas, yang tercepat dapat Ghost Tokens.",
     "metaTitle": "Kode drop",
     "metaDesc": "Masukkan kode rahasia dari siaran langsung untuk meraih Ghost Tokens — yang klaim pertama dapat bonus.",
     "loginPrompt": "Masuk untuk memasukkan kode drop selama siaran.",
@@ -343,6 +350,7 @@
     "bonusGone": "Bonus sudah diklaim orang lain 🐢"
   },
   "polls": {
+    "help": "Polling komunitas: pilih apa yang terjadi selanjutnya (mis. game yang dimainkan streamer). Hasil tampil langsung dan suaramu langsung dihitung.",
     "title": "POLLING",
     "subtitle": "Pilih dalam keputusan komunitas. Kamu bisa mengubah pilihan selama polling masih terbuka.",
     "emptyTitle": "Tidak ada polling",
@@ -356,6 +364,7 @@
     "errNet": "Kesalahan jaringan"
   },
   "profile": {
+    "help": "Profilmu: tautkan akun (Twitch, Kick, YouTube, Discord), atur nickname, dan lihat statistik. Akun tertaut menghitung aktivitas streaming-mu untuk quest dan peringkat.",
     "phHandle": "username_kamu",
     "phYoutube": "@kanal atau tautan",
     "phChannel": "kanal atau tautan",
@@ -555,6 +564,7 @@
     "footnote": "Jadwal bisa berubah — cek Discord untuk info terbaru"
   },
   "quests": {
+    "help": "Quest adalah tugas (chat, menonton, aktivitas) yang memberi Ghost Tokens dan XP. Saat bar mencapai 100%, tekan Klaim — hadiah langsung masuk saldo.",
     "metaTitle": "Misi Harian",
     "metaDesc": "Tugas harian di Ghost Empire — selesaikan dan klaim hadiahmu.",
     "title": "MISI HARIAN",
@@ -587,6 +597,14 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "help": "Kasino GT memakai Ghost Tokens — mata uang virtual portal (bukan uang sungguhan). Atur taruhan dan pilih permainan: hasil diundi server, animasi hanya menampilkannya. Kemenangan langsung masuk ke saldomu.",
+    "helpSlots": "3 gulungan: tiga simbol sama memenangkan pengali simbol itu — dari 10× untuk ceri sampai 800× untuk angka tujuh.",
+    "helpCoinflip": "Lempar koin: hantu menggandakan taruhan (2×), tengkorak mengambilnya.",
+    "helpRoulette": "Roulette Amerika (0 dan 00): merah/hitam membayar 2×, angka tepat 36×.",
+    "helpDice": "Pilih ambang dan arah (di bawah/di atas). Peluang makin kecil = pengali makin besar — keduanya terlihat sebelum melempar.",
+    "helpCrash": "Pengali terus naik sampai roket meledak di momen acak. Atur target tarik otomatis: jika roket mencapainya, kamu menang taruhan × target.",
+    "helpPlinko": "Bola jatuh melewati pasak ke kotak berpengali. Bagian tengah membayar kecil; tepi membayar paling besar.",
+    "helpMines": "Papan 5×5: pilih jumlah bom lalu buka kotak. Setiap kotak aman menaikkan pengali — tarik sebelum kena bom.",
     "title": "🎰 Kasino GT",
     "subtitlePre": "Slot, coinflip, dan roulette untuk Ghost Tokens. Di chat juga:",
     "loginToPlay": "Masuk untuk bermain",
@@ -640,6 +658,7 @@
     "learnMore": "Pelajari lebih lanjut →"
   },
   "seasons": {
+    "help": "Battle Pass musim: kumpulkan XP, naik level, dan klaim hadiah di jalurnya. Musim berlangsung terbatas — bar menunjukkan progresmu.",
     "metaTitle": "Battle Pass",
     "metaDesc": "Dapatkan XP musiman dari aktivitas dan buka hadiah di berbagai tingkat.",
     "daysLeft": "{days, plural, other {# hari tersisa}}",
@@ -657,6 +676,7 @@
     "claimedItem": "Diklaim: {label}"
   },
   "wheel": {
+    "help": "Roda Keberuntungan: putar dengan Ghost Tokens dan menangkan hadiah yang diatur streamer. Biaya putaran ada di tombol; hasil diundi server.",
     "title": "🎡 Roda Keberuntungan",
     "subtitle": "Putar dan menangkan Ghost Tokens.",
     "loading": "Memuat…",
