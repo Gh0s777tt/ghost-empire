@@ -9,6 +9,8 @@ import { verifyKickSignature, isMessageFresh } from "@/lib/kick";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
+import { tenantIdForKickBroadcaster } from "@/lib/platform-tokens";
+import { currentTenantId } from "@/lib/tenant";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { createLogger } from "@/lib/logger";
@@ -65,20 +67,29 @@ export async function POST(req: Request) {
       .catch(() => {});
   }
 
+  // Tenant of the channel this event belongs to (Kick payloads carry a
+  // `broadcaster` object) — maps via the streamer-token row (#416);
+  // fallback = Host-resolved (single-tenant).
+  const broadcaster = payload.broadcaster as Record<string, unknown> | undefined;
+  const kickBroadcasterId = broadcaster?.user_id != null ? String(broadcaster.user_id) : "";
+  const tenantId =
+    (kickBroadcasterId ? await tenantIdForKickBroadcaster(kickBroadcasterId) : null)
+    ?? (await currentTenantId());
+
   let matchedUserId: string | null = null;
   let tokensGranted: number | null = null;
 
   try {
     if (eventType === "channel.subscription.new" || eventType === "channel.subscription.renewal") {
-      const result = await handleSubscription(payload, eventType);
+      const result = await handleSubscription(payload, eventType, tenantId);
       matchedUserId = result.userId;
       tokensGranted = result.tokens;
     } else if (eventType === "channel.subscription.gifts") {
-      const result = await handleGiftSubs(payload);
+      const result = await handleGiftSubs(payload, tenantId);
       matchedUserId = result.userId;
       tokensGranted = result.tokens;
     } else if (eventType === "channel.followed") {
-      const result = await handleFollow(payload);
+      const result = await handleFollow(payload, tenantId);
       matchedUserId = result.userId;
       tokensGranted = result.tokens;
     } else if (eventType === "livestream.status.updated") {
@@ -121,6 +132,7 @@ export async function POST(req: Request) {
 async function handleSubscription(
   payload: Record<string, unknown>,
   eventType: string,
+  tenantId: string | null,
 ): Promise<{ userId: string | null; tokens: number | null }> {
   const subscriber = (payload.subscriber ?? payload.user) as Record<string, unknown> | undefined;
   const username = (subscriber?.username as string)?.toLowerCase();
@@ -135,8 +147,8 @@ async function handleSubscription(
     actorName: displayName ?? username ?? "Anonim",
   });
 
-  await incrementGoals("subs", 1);
-  void extendSubathon({ subs: 1 });
+  await incrementGoals("subs", 1, tenantId);
+  void extendSubathon({ subs: 1 }, tenantId);
 
   if (!username) return { userId: null, tokens: null };
 
@@ -188,7 +200,7 @@ async function handleSubscription(
   return { userId: connection.userId, tokens };
 }
 
-async function handleGiftSubs(payload: Record<string, unknown>): Promise<{ userId: string | null; tokens: number | null }> {
+async function handleGiftSubs(payload: Record<string, unknown>, tenantId: string | null): Promise<{ userId: string | null; tokens: number | null }> {
   const gifter = payload.gifter as Record<string, unknown> | undefined;
   const gifterLogin = (gifter?.username as string)?.toLowerCase();
   const gifterName = (gifter?.username as string) ?? null;
@@ -206,9 +218,9 @@ async function handleGiftSubs(payload: Record<string, unknown>): Promise<{ userI
     amountLabel: "sub" + (total === 1 ? "" : "y"),
   });
 
-  await incrementGoals("gift_subs", total);
-  await incrementGoals("subs", total);
-  void extendSubathon({ subs: total });
+  await incrementGoals("gift_subs", total, tenantId);
+  await incrementGoals("subs", total, tenantId);
+  void extendSubathon({ subs: total }, tenantId);
 
   if (isAnonymous) return { userId: null, tokens: null };
 
@@ -247,12 +259,12 @@ async function handleGiftSubs(payload: Record<string, unknown>): Promise<{ userI
   return { userId: connection.userId, tokens };
 }
 
-async function handleFollow(payload: Record<string, unknown>): Promise<{ userId: string | null; tokens: number | null }> {
+async function handleFollow(payload: Record<string, unknown>, tenantId: string | null): Promise<{ userId: string | null; tokens: number | null }> {
   const follower = payload.follower as Record<string, unknown> | undefined;
   const username = (follower?.username as string)?.toLowerCase();
   const displayName = (follower?.username as string) ?? null;
 
-  await incrementGoals("follows", 1);
+  await incrementGoals("follows", 1, tenantId);
 
   // Optional follow alert — disabled by default in StreamAlertSettings.enabledTypes
   // (admin can enable via toggle). Reusing the welcome type as it's similar in nature.

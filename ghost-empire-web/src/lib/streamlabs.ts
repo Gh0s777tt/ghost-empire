@@ -292,8 +292,8 @@ export async function pollAndProcessDonations(): Promise<{
     // Bump donations_pln goal — applies to BOTH matched and unmatched donations.
     // Currency conversion shared with YouTube super chats (see economy.ts).
     const plnAmount = plnFromCurrency(amountFloat, d.currency);
-    await incrementGoals("donations_pln", Math.floor(plnAmount));
-    void extendSubathon({ pln: Math.floor(plnAmount) });
+    await incrementGoals("donations_pln", Math.floor(plnAmount), conn.tenantId);
+    void extendSubathon({ pln: Math.floor(plnAmount) }, conn.tenantId);
   }
 
   // Update lastSeenDonationId to most recent (donations[0] is newest by default)
