@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { spinWheel, WheelError } from "@/lib/wheel";
+import { featureGateResponse } from "@/lib/entitlements";
 
 export async function POST() {
   const session = await auth();
@@ -13,6 +14,8 @@ export async function POST() {
     return jsonError("Musisz być zalogowany", 401);
   }
   const userId = session.user.id;
+  const gated = await featureGateResponse("wheel");
+  if (gated) return gated;
 
   // Max 20 spins/min — generous for fun, stops scripted draining/double-clicks.
   const rl = await rateLimit(`wheel:spin:${userId}`, 20, 60_000);

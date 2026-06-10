@@ -6,10 +6,13 @@ import { jsonError } from "@/lib/api-i18n";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { minesStart } from "@/lib/gt-mines";
 import { feedJackpot } from "@/lib/gt-games";
+import { featureGateResponse } from "@/lib/entitlements";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
+  const gated = await featureGateResponse("casino");
+  if (gated) return gated;
 
   let body: { bet?: number; bombs?: number };
   try { body = await req.json(); } catch { return jsonError("Nieprawidłowe dane", 400); }
