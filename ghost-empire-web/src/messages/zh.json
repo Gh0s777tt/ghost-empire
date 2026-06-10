@@ -641,6 +641,15 @@
     "unitPurchase": "次购买"
   },
   "kasyno": {
+    "gameBlackjack": "21点",
+    "helpBlackjack": "经典21点对庄家：要牌到21点，庄家补到17点。获胜赔2×，天生21点赔2.5×，平局退回注额。加倍：注额×2并只拿一张牌。",
+    "bjDeal": "发牌",
+    "bjHit": "要牌",
+    "bjStand": "停牌",
+    "bjDouble": "加倍",
+    "bjDealer": "庄家",
+    "bjYou": "你",
+    "bjPush": "平局——退回注额",
     "jackpot": "奖池",
     "jackpotHint": "每注的 1% 注入奖池。老虎机摇出 7️⃣7️⃣7️⃣ 即可全部赢走！",
     "animForced": "已强制开启动画——点击改回系统设置",

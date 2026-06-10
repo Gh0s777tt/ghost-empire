@@ -641,6 +641,15 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "gameBlackjack": "Blackjack",
+    "helpBlackjack": "Blackjack clásico contra el crupier: pide hasta 21, el crupier pide hasta 17. La victoria paga 2×, el blackjack natural 2,5×, el empate devuelve la apuesta. Doblar: ×2 apuesta y una carta.",
+    "bjDeal": "Repartir",
+    "bjHit": "Pedir",
+    "bjStand": "Plantarse",
+    "bjDouble": "Doblar",
+    "bjDealer": "Crupier",
+    "bjYou": "Tú",
+    "bjPush": "Empate — apuesta devuelta",
     "jackpot": "Bote",
     "jackpotHint": "El 1% de cada apuesta alimenta el bote. ¡Saca 7️⃣7️⃣7️⃣ en las tragaperras y llévatelo todo!",
     "animForced": "Animaciones forzadas — clic para seguir el ajuste del sistema",

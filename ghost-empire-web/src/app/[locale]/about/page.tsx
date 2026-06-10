@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Nowa gra: Blackjack 🃏",
+    items: [
+      "W kasynie wylądował klasyczny Blackjack przeciwko krupierowi! Dobieraj do 21, krupier dobiera do 17. Wygrana płaci 2×, naturalny blackjack aż 2,5×, a remis zwraca stawkę. Możesz też podwoić zakład na pierwszych dwóch kartach. Karty rozdawane są z animacją, a zakryta karta krupiera odkrywa się na koniec.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Happy hours — podwójne GT wieczorami 🔥",
     items: [
       "W godzinach 19:00-22:00 (czasu polskiego) wszystkie nagrody Ghost Tokens za czat i aktywność są mnożone ×2 — idealna pora, żeby wpaść na stream! Streamer może zmienić godziny i mnożnik w panelu.",

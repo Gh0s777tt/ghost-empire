@@ -641,6 +641,15 @@
     "unitPurchase": "acquisto"
   },
   "kasyno": {
+    "gameBlackjack": "Blackjack",
+    "helpBlackjack": "Blackjack classico contro il banco: chiedi fino a 21, il banco pesca fino a 17. La vittoria paga 2×, il blackjack naturale 2,5×, il pareggio restituisce la puntata. Raddoppio: ×2 puntata e una carta.",
+    "bjDeal": "Distribuisci",
+    "bjHit": "Carta",
+    "bjStand": "Stai",
+    "bjDouble": "Raddoppia",
+    "bjDealer": "Banco",
+    "bjYou": "Tu",
+    "bjPush": "Pareggio — puntata restituita",
     "jackpot": "Jackpot",
     "jackpotHint": "L'1% di ogni puntata alimenta il montepremi. Fai 7️⃣7️⃣7️⃣ alle slot e vinci tutto!",
     "animForced": "Animazioni forzate — clicca per seguire le impostazioni di sistema",

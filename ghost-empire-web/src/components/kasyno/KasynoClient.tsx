@@ -11,7 +11,7 @@ import InfoTip from "@/components/InfoTip";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { emitBalance } from "@/lib/balance-bus";
 import { sfxEnabled, sfxToggle, sfxPlay } from "@/lib/sfx";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
 import { Link } from "@/i18n/navigation";
 
 type PlayResult = {
@@ -28,6 +28,17 @@ type Leaderboard = {
 type History = {
   recent: Array<{ id: string; game: string; bet: number; payout: number; net: number; detail: string | null; createdAt: string }>;
   stats: { games: number; wins: number; net: number; best: number };
+};
+type BjState = {
+  sessionId: string;
+  player: number[];
+  dealer: number[];
+  playerTotal: number;
+  dealerTotal: number | null;
+  status: "active" | "done";
+  result?: { multiplier: number; payout: number; net: number; newBalance: number };
+  doubled: boolean;
+  canDouble: boolean;
 };
 type Game = "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko";
 type Phase = "spin" | "land";
@@ -816,10 +827,85 @@ function MinesGrid({ game, onReveal, onCashout, busy, fmt, t }: {
   );
 }
 
+// ── Blackjack table: dealer row (hole card hidden while active) + player row + actions.
+//    Cards render as styled rectangles; ranks/suits decode the 0-51 card codes. ──
+const BJ_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const BJ_SUITS = ["♠", "♥", "♦", "♣"];
+
+function PlayingCard({ code, hidden = false, delay = 0 }: { code?: number; hidden?: boolean; delay?: number }) {
+  if (hidden || code === undefined) {
+    return (
+      <div className="w-12 h-[68px] rounded-lg border border-zinc-600 flex items-center justify-center text-xl shrink-0"
+        style={{ background: "repeating-linear-gradient(45deg, #1d1d2b, #1d1d2b 4px, #15151f 4px, #15151f 8px)" }}>
+        👻
+      </div>
+    );
+  }
+  const suit = BJ_SUITS[Math.floor(code / 13)];
+  const rank = BJ_RANKS[code % 13];
+  const red = suit === "♥" || suit === "♦";
+  return (
+    <div className="w-12 h-[68px] rounded-lg border border-zinc-300 bg-gradient-to-br from-white to-zinc-200 flex flex-col items-center justify-center shrink-0"
+      style={{ animation: `gefx-pop 320ms cubic-bezier(.34,1.56,.64,1) both`, animationDelay: `${delay}ms`, boxShadow: "0 2px 6px rgba(0,0,0,.45)" }}>
+      <span className={`text-base font-black leading-none ${red ? "text-red-600" : "text-zinc-900"}`}>{rank}</span>
+      <span className={`text-lg leading-none ${red ? "text-red-600" : "text-zinc-900"}`}>{suit}</span>
+    </div>
+  );
+}
+
+function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, balance, bet }: {
+  game: BjState; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
+  onHit: () => void; onStand: () => void; onDouble: () => void; balance: number | null; bet: number;
+}) {
+  const active = game.status === "active";
+  const r = game.result;
+  return (
+    <div className="flex flex-col items-center gap-4 w-full" style={{ maxWidth: 420 }}>
+      {/* dealer */}
+      <div className="flex flex-col items-center gap-1.5">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("bjDealer")} {game.dealerTotal != null ? `· ${game.dealerTotal}` : ""}</span>
+        <div className="flex gap-1.5">
+          {game.dealer.map((c, i) => <PlayingCard key={i} code={c} delay={i * 120} />)}
+          {active && <PlayingCard hidden />}
+        </div>
+      </div>
+      {/* player */}
+      <div className="flex flex-col items-center gap-1.5">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("bjYou")} · {game.playerTotal}{game.doubled ? " · ×2" : ""}</span>
+        <div className="flex gap-1.5 flex-wrap justify-center">
+          {game.player.map((c, i) => <PlayingCard key={i} code={c} delay={i * 120} />)}
+        </div>
+      </div>
+      {/* actions / result */}
+      {active ? (
+        <div className="flex gap-2">
+          <button onClick={onHit} disabled={busy}
+            className="px-5 py-2 rounded-full font-extrabold text-white bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 disabled:opacity-40 transition-all">{t("bjHit")}</button>
+          <button onClick={onStand} disabled={busy}
+            className="px-5 py-2 rounded-full font-extrabold text-white bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 disabled:opacity-40 transition-all">{t("bjStand")}</button>
+          {game.canDouble && (
+            <button onClick={onDouble} disabled={busy || (balance ?? 0) < bet}
+              className="px-5 py-2 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 disabled:opacity-40 transition-all">{t("bjDouble")} ×2</button>
+          )}
+        </div>
+      ) : r ? (
+        <div className="relative text-center">
+          {r.net > 0 && !reducedMotion() && <WinBurst seed={game.playerTotal * 7 + r.payout} />}
+          <div className={`text-xl font-extrabold ${r.net > 0 ? "text-emerald-300" : r.net === 0 ? "text-zinc-300" : "text-rose-400"}`}
+            style={{ animation: reducedMotion() ? undefined : "gefx-pop 420ms cubic-bezier(.34,1.56,.64,1)" }}>
+            {r.multiplier === 2.5 ? "🃏 BLACKJACK! " : ""}
+            {r.net > 0 ? `+${fmt(r.net)} GT 🎉` : r.net === 0 ? `🤝 ${t("bjPush")}` : `−${fmt(-r.net)} GT`}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
-  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines") };
+  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines"), blackjack: t("gameBlackjack") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   // Stake as a STRING so the field can be cleared and retyped freely ("" → invalid,
   // play buttons disable); the numeric `bet` derives from it, clamped to the API range.
@@ -827,7 +913,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const bet = Math.min(100_000, parseInt(betInput, 10) || 0);
   const betValid = bet >= 10;
   // Casino lobby: pick a game tile first, then only that game is on screen.
-  const [selected, setSelected] = useState<Game | "mines" | null>(null);
+  const [selected, setSelected] = useState<Game | "mines" | "blackjack" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lb, setLb] = useState<Leaderboard | null>(null);
@@ -838,6 +924,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const [minesBombs, setMinesBombs] = useState(3);
   const [minesGame, setMinesGame] = useState<MinesGameState | null>(null);
   const [minesBusy, setMinesBusy] = useState(false);
+  const [bjGame, setBjGame] = useState<BjState | null>(null);
+  const [bjBusy, setBjBusy] = useState(false);
   const [stage, setStage] = useState<Stage | null>(null);
   const playId = useRef(0);
   // Sound toggle (synthesized SFX, opt-out persisted in localStorage). Initialized in an
@@ -949,6 +1037,32 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
     setMinesBusy(false);
   }
 
+  // ── Blackjack (stateful: deal → hit/stand/double → settle) ──
+  function applyBjState(s: BjState) {
+    setBjGame(s);
+    if (s.status === "done" && s.result) {
+      setBalance(s.result.newBalance);
+      emitBalance(s.result.newBalance);
+      sfxPlay(s.result.multiplier >= 2 ? "win" : s.result.multiplier === 1 ? "click" : "lose");
+      void loadLb(); void loadHist(); void loadJackpot();
+    }
+  }
+  async function bjAction(path: "start" | "hit" | "stand" | "double") {
+    if (bjBusy || busy) return;
+    if (path === "start" && (!betValid || bjGame?.status === "active")) return;
+    if (path !== "start" && bjGame?.status !== "active") return;
+    setBjBusy(true); setError(null);
+    if (path === "start") { setStage(null); sfxPlay("spin"); }
+    else sfxPlay("click");
+    try {
+      const payload = path === "start" ? { bet } : { sessionId: bjGame?.sessionId };
+      const d = await apiPost<{ ok: true; state: BjState; newBalance?: number }>(`/api/gt-games/blackjack/${path}`, payload);
+      if (path === "start" && typeof d.newBalance === "number") { setBalance(d.newBalance); emitBalance(d.newBalance); }
+      applyBjState(d.state);
+    } catch (e) { setError(e instanceof Error ? e.message : t("connError")); }
+    setBjBusy(false);
+  }
+
   const rouletteTarget = stage?.result?.roll?.n ?? (stage?.result?.detail ? (stage.result.detail.includes("00") ? 37 : (parseInt(stage.result.detail.replace(/\D/g, ""), 10) || 0)) : null);
   const reveal = stage?.settled ? stage.result : null;
 
@@ -975,6 +1089,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           <li><b className="text-white">🪙 {t("gameCoinflip")}:</b> {t("helpCoinflip")}</li>
           <li><b className="text-white">🎡 {t("gameRoulette")}:</b> {t("helpRoulette")}</li>
           <li><b className="text-white">🎲 {t("gameDice")}:</b> {t("helpDice")}</li>
+          <li><b className="text-white">🃏 {t("gameBlackjack")}:</b> {t("helpBlackjack")}</li>
           <li><b className="text-white">🚀 {t("gameCrash")}:</b> {t("helpCrash")}</li>
           <li><b className="text-white">⚪ {t("gamePlinko")}:</b> {t("helpPlinko")}</li>
           <li><b className="text-white">💣 {t("gameMines")}:</b> {t("helpMines")}</li>
@@ -998,11 +1113,16 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-tour="kasyno-games">
             {([
               { id: "slots", emoji: "🎰" }, { id: "coinflip", emoji: "🪙" }, { id: "roulette", emoji: "🎡" },
-              { id: "dice", emoji: "🎲" }, { id: "crash", emoji: "🚀" }, { id: "plinko", emoji: "⚪" }, { id: "mines", emoji: "💣" },
-            ] as Array<{ id: Game | "mines"; emoji: string }>).map((g) => (
+              { id: "dice", emoji: "🎲" }, { id: "blackjack", emoji: "🃏" }, { id: "crash", emoji: "🚀" },
+              { id: "plinko", emoji: "⚪" }, { id: "mines", emoji: "💣" },
+            ] as Array<{ id: Game | "mines" | "blackjack"; emoji: string }>).map((g) => (
               <button
                 key={g.id}
-                onClick={() => { setSelected(g.id); setError(null); sfxPlay("click"); }}
+                onClick={() => {
+                  setSelected(g.id); setError(null); sfxPlay("click");
+                  if (bjGame?.status !== "active") setBjGame(null);
+                  if (minesGame?.status !== "active") setMinesGame(null);
+                }}
                 className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/70 py-7 transition-all hover:border-amber-500 hover:bg-zinc-900/80 hover:shadow-[0_0_24px_rgba(245,193,66,0.15)]"
               >
                 <span className="text-5xl transition-transform group-hover:scale-110">{g.emoji}</span>
@@ -1013,10 +1133,14 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
         </>
       ) : (
         <>
-          {/* back to lobby (blocked mid-Mines so an active stake can't be abandoned by accident) */}
+          {/* back to lobby (blocked mid-game so an active stake can't be abandoned by accident) */}
           <button
-            onClick={() => { setSelected(null); setStage(null); setError(null); if (minesGame?.status !== "active") setMinesGame(null); }}
-            disabled={minesGame?.status === "active"}
+            onClick={() => {
+              setSelected(null); setStage(null); setError(null);
+              if (minesGame?.status !== "active") setMinesGame(null);
+              if (bjGame?.status !== "active") setBjGame(null);
+            }}
+            disabled={minesGame?.status === "active" || bjGame?.status === "active"}
             className="self-start text-xs font-bold tracking-widest uppercase text-zinc-500 hover:text-amber-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             ← {t("backToGames")}
@@ -1024,7 +1148,9 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
           {/* animation stage */}
           <div className="flex items-center justify-center" style={{ minHeight: 312 }}>
-            {minesGame ? (
+            {bjGame ? (
+              <BlackjackTable game={bjGame} busy={bjBusy} fmt={fmt} t={t} onHit={() => bjAction("hit")} onStand={() => bjAction("stand")} onDouble={() => bjAction("double")} balance={balance} bet={bet} />
+            ) : minesGame ? (
               <MinesGrid game={minesGame} onReveal={minesRevealFn} onCashout={minesCashoutFn} busy={minesBusy} fmt={fmt} t={t} />
             ) : stage?.game === "roulette" ? (
               <RouletteWheel key={stage.id} phase={stage.phase} target={rouletteTarget} onSettle={settle} />
@@ -1190,6 +1316,15 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("plinkoLabel")} <InfoTip text={t("helpPlinko")} /></span>
             <button onClick={() => play("plinko")} disabled={busy || !betValid || (balance ?? 0) < bet}
               className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 disabled:opacity-40 transition-all">{t("plinkoDrop")}</button>
+          </div>
+          )}
+
+          {/* Blackjack: deal a hand vs the dealer (controls live on the table while active) */}
+          {selected === "blackjack" && (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{gameLabel.blackjack} <InfoTip text={t("helpBlackjack")} /></span>
+            <button onClick={() => bjAction("start")} disabled={bjBusy || !betValid || bjGame?.status === "active" || (balance ?? 0) < bet}
+              className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 disabled:opacity-40 transition-all">{t("bjDeal")}</button>
           </div>
           )}
 

@@ -670,6 +670,15 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "gameBlackjack": "Blackjack",
+    "helpBlackjack": "Blackjack klasik melawan dealer: tarik sampai 21, dealer menarik sampai 17. Menang bayar 2×, blackjack alami 2,5×, seri mengembalikan taruhan. Double: taruhan ×2 dan satu kartu.",
+    "bjDeal": "Bagikan",
+    "bjHit": "Tarik",
+    "bjStand": "Berhenti",
+    "bjDouble": "Gandakan",
+    "bjDealer": "Dealer",
+    "bjYou": "Kamu",
+    "bjPush": "Seri — taruhan kembali",
     "jackpot": "Jackpot",
     "jackpotHint": "1% dari setiap taruhan masuk ke pool. Dapatkan 7️⃣7️⃣7️⃣ di slot dan menangkan semuanya!",
     "animForced": "Animasi dipaksa aktif — klik untuk mengikuti pengaturan sistem",
