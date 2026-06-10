@@ -1,6 +1,6 @@
 "use client";
 // src/components/Header.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 // Locale-aware Link + usePathname (next-intl): links auto-carry the active locale
@@ -12,6 +12,7 @@ import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { NotificationBell } from "@/components/NotificationBell";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { useTour } from "@/components/tour/SiteTour";
+import { BALANCE_EVENT } from "@/lib/balance-bus";
 
 // Grouped navigation. Labels are i18n keys (namespace "nav") resolved at render.
 type NavKey =
@@ -62,6 +63,18 @@ export function Header() {
   const fmt = useLocaleFmt();
   const [menuOpen, setMenuOpen] = useState(false);
   const { start: startTour } = useTour();
+
+  // Live GT balance: actions emit the server-returned balance on the balance-bus and the
+  // header updates instantly; a fresh session value (60s refetch / focus) clears the
+  // override so the newest source always wins.
+  const [liveBalance, setLiveBalance] = useState<number | null>(null);
+  const sessionTokens = session?.user?.tokens;
+  useEffect(() => {
+    const onBalance = (e: Event) => setLiveBalance((e as CustomEvent<number>).detail);
+    window.addEventListener(BALANCE_EVENT, onBalance);
+    return () => window.removeEventListener(BALANCE_EVENT, onBalance);
+  }, []);
+  useEffect(() => { setLiveBalance(null); }, [sessionTokens]);
 
   return (
     <header
@@ -126,7 +139,7 @@ export function Header() {
                 <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-zinc-800 bg-zinc-950" data-tour="tokens">
                   <span className="text-sm">👻</span>
                   <span className="font-mono text-sm font-bold text-white tabular-nums">
-                    {fmt(session.user.tokens)}
+                    {fmt(liveBalance ?? session.user.tokens)}
                   </span>
                 </div>
 

@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import InfoTip from "@/components/InfoTip";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { emitBalance } from "@/lib/balance-bus";
 import { Link } from "@/i18n/navigation";
 
 type PlayResult = {
@@ -741,7 +742,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const settle = useCallback(() => {
     setStage((s) => {
       if (!s || s.settled) return s;
-      if (s.result) setBalance(s.result.newBalance);
+      if (s.result) { setBalance(s.result.newBalance); emitBalance(s.result.newBalance); }
       return { ...s, settled: true };
     });
     setBusy(false);
@@ -769,7 +770,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       const res = await fetch("/api/gt-games/mines/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bet, bombs: minesBombs }) });
       const d = await res.json();
       if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
-      setBalance(d.newBalance);
+      setBalance(d.newBalance); emitBalance(d.newBalance);
       setMinesGame({ sessionId: d.sessionId, bombs: d.bombs, revealed: [], multiplier: 1, status: "active", bombSet: null, bet });
     } catch { setError(t("connError")); }
     setMinesBusy(false);
@@ -793,7 +794,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       const res = await fetch("/api/gt-games/mines/cashout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: minesGame.sessionId }) });
       const d = await res.json();
       if (!res.ok) { setError(d.error ?? t("err")); setMinesBusy(false); return; }
-      setBalance(d.newBalance);
+      setBalance(d.newBalance); emitBalance(d.newBalance);
       setMinesGame((g) => (g ? { ...g, status: "cashed", multiplier: d.multiplier, bombSet: d.bombSet, payout: d.payout } : g));
       void loadLb();
     } catch { setError(t("connError")); }

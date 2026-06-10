@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Saldo Ghost Tokens odświeża się natychmiast ⚡",
+    items: [
+      "Licznik GT na górnym pasku aktualizuje się teraz od razu po każdej grze, zakupie, odebraniu questa, kodzie drop czy zakładzie — bez przeładowania strony. Tokeny zarabiane za oglądanie i czat pojawiają się automatycznie najpóźniej po minucie.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Kości z prawdziwą animacją + konfetti przy wygranej 🎲",
     items: [
       "Gra w kości dostała pełną animację: licznik migocze, a wskaźnik zamiata tor już od momentu kliknięcia, po czym płynnie dojeżdża na wylosowaną liczbę. Każda wygrana — we wszystkich grach kasyna — kończy się teraz rozbłyskiem konfetti i podświetleniem kwoty.",
