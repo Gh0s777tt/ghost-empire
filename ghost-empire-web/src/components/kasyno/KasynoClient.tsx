@@ -428,8 +428,9 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
   const ref = useRef<HTMLDivElement>(null);
   const done = useRef(false);
   const [shown, setShown] = useState<number | null>(null);
-  const shownRef = useRef<number | null>(null);
-  shownRef.current = shown;
+  // Last flicker value, written ONLY inside the spin effect (mutating a ref during
+  // render breaks React Compiler memoization — the counter froze on prod).
+  const lastFlicker = useRef<number | null>(null);
   const [landed, setLanded] = useState(false);
   const target = dice?.target ?? 50;
   const dir = dice?.dir ?? "under";
@@ -440,7 +441,12 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
     if (phase !== "spin" || reducedMotion()) return;
     let raf = 0, last = 0;
     const tick = (now: number) => {
-      if (now - last > 70) { setShown(Math.floor(Math.random() * 100)); last = now; }
+      if (now - last > 70) {
+        const v = Math.floor(Math.random() * 100);
+        lastFlicker.current = v;
+        setShown(v);
+        last = now;
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -467,7 +473,7 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
       requestAnimationFrame(() => { el.style.left = `${dice.roll}%`; });
     }
     const DUR = 1600;
-    const from = shownRef.current ?? 50;
+    const from = lastFlicker.current ?? 50;
     let raf = 0, startTs = 0;
     const tick = (now: number) => {
       if (!startTs) startTs = now;
