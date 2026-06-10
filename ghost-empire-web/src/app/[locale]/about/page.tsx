@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Happy hours — podwójne GT wieczorami 🔥",
+    items: [
+      "W godzinach 19:00-22:00 (czasu polskiego) wszystkie nagrody Ghost Tokens za czat i aktywność są mnożone ×2 — idealna pora, żeby wpaść na stream! Streamer może zmienić godziny i mnożnik w panelu.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Nagrody za ranking tygodnia 🏆",
     items: [
       "Co poniedziałek o północy trójka graczy z największą liczbą zdobytych GT w minionym tygodniu dostaje automatyczne nagrody: 1000, 500 i 250 GT — wraz z powiadomieniem. Okno tygodniowe startuje od zera, więc każdy ma szansę!",

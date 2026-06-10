@@ -843,6 +843,11 @@
       "saveRates": "Zapisz tempo"
     },
     "botConfig": {
+      "happyTitle": "Happy hours (mnożnik GT)",
+      "happyDesc": "W wybranych godzinach (czas polski) wszystkie nagrody GT z czatu i Discorda są mnożone. Działa po stronie portalu — bot nie wymaga zmian.",
+      "happyStart": "Od (0-23)",
+      "happyEnd": "Do (0-23)",
+      "happyMult": "Mnożnik",
       "err": "Błąd",
       "saved": "Bot config zaktualizowany. Bot zaaplikuje przy następnym fetch'u (~60s).",
       "title": "Bot Discord — konfiguracja nagród",

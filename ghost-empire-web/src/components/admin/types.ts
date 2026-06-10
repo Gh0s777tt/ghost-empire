@@ -23,6 +23,10 @@ export type BotConfigData = {
   afkGivesReward: boolean;
   mutedGivesReward: boolean;
   enabled: boolean;
+  happyHourEnabled: boolean;
+  happyHourStart: number;
+  happyHourEnd: number;
+  happyHourMultiplier: number;
 };
 
 export type ScheduleSlot = {

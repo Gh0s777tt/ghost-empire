@@ -843,6 +843,11 @@
       "saveRates": "Save rates"
     },
     "botConfig": {
+      "happyTitle": "Happy hours (GT multiplier)",
+      "happyDesc": "During the chosen hours (Polish time) all GT rewards from chat and Discord are multiplied. Applied portal-side — the bot needs no changes.",
+      "happyStart": "From (0-23)",
+      "happyEnd": "To (0-23)",
+      "happyMult": "Multiplier",
       "err": "Error",
       "saved": "Bot config updated. The bot will apply it on its next fetch (~60s).",
       "title": "Discord bot — reward config",

@@ -551,6 +551,12 @@ model BotConfig {
   afkGivesReward          Boolean  @default(false)
   mutedGivesReward        Boolean  @default(true)
   enabled                 Boolean  @default(true)
+  // Happy hours: GT-earn multiplier applied PORTAL-SIDE (chat-award / award routes)
+  // inside the [start, end) window in Europe/Warsaw — the bot needs no changes.
+  happyHourEnabled        Boolean  @default(false)
+  happyHourStart          Int      @default(19) // hour 0-23, Europe/Warsaw
+  happyHourEnd            Int      @default(22) // exclusive; start>end = overnight window
+  happyHourMultiplier     Float    @default(2)
   updatedAt               DateTime @updatedAt
 
   @@map("bot_config")

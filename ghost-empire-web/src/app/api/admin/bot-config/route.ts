@@ -35,6 +35,10 @@ export async function PATCH(req: Request) {
     afkGivesReward?: boolean;
     mutedGivesReward?: boolean;
     enabled?: boolean;
+    happyHourEnabled?: boolean;
+    happyHourStart?: number;
+    happyHourEnd?: number;
+    happyHourMultiplier?: number;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -72,6 +76,22 @@ export async function PATCH(req: Request) {
   if (body.afkGivesReward !== undefined) data.afkGivesReward = !!body.afkGivesReward;
   if (body.mutedGivesReward !== undefined) data.mutedGivesReward = !!body.mutedGivesReward;
   if (body.enabled !== undefined) data.enabled = !!body.enabled;
+  if (body.happyHourEnabled !== undefined) data.happyHourEnabled = !!body.happyHourEnabled;
+  if (body.happyHourStart !== undefined) {
+    const v = Math.floor(Number(body.happyHourStart));
+    if (!Number.isFinite(v) || v < 0 || v > 23) return NextResponse.json({ error: "happyHourStart 0-23" }, { status: 400 });
+    data.happyHourStart = v;
+  }
+  if (body.happyHourEnd !== undefined) {
+    const v = Math.floor(Number(body.happyHourEnd));
+    if (!Number.isFinite(v) || v < 0 || v > 23) return NextResponse.json({ error: "happyHourEnd 0-23" }, { status: 400 });
+    data.happyHourEnd = v;
+  }
+  if (body.happyHourMultiplier !== undefined) {
+    const v = Number(body.happyHourMultiplier);
+    if (!Number.isFinite(v) || v < 1 || v > 10) return NextResponse.json({ error: "happyHourMultiplier 1-10" }, { status: 400 });
+    data.happyHourMultiplier = v;
+  }
 
   const row = await getBotCfg();
   const updated = await prisma.botConfig.update({ where: { id: row.id }, data });

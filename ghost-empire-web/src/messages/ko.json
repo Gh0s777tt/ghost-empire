@@ -2140,6 +2140,11 @@
       "noResults": "{q}에 대한 결과가 없습니다"
     },
     "botConfig": {
+      "happyTitle": "해피 아워(GT 배수)",
+      "happyDesc": "선택한 시간대(폴란드 시간)에 채팅·Discord의 모든 GT 보상이 배가됩니다. 포털 측에서 적용 — 봇 변경 불필요.",
+      "happyStart": "시작(0-23)",
+      "happyEnd": "종료(0-23)",
+      "happyMult": "배수",
       "err": "오류",
       "saved": "봇 구성이 업데이트되었습니다. 봇은 다음 가져오기(약 60초) 시 적용합니다.",
       "title": "Discord 봇 — 보상 구성",

@@ -2140,6 +2140,11 @@
       "noResults": "{q} の結果がありません"
     },
     "botConfig": {
+      "happyTitle": "ハッピーアワー（GT倍率）",
+      "happyDesc": "指定した時間帯（ポーランド時間）はチャットと Discord の GT 報酬がすべて倍増。ポータル側で適用——ボットの変更は不要。",
+      "happyStart": "開始（0-23）",
+      "happyEnd": "終了（0-23）",
+      "happyMult": "倍率",
       "err": "エラー",
       "saved": "ボット設定を更新しました。ボットは次回の取得時（約60秒）に適用します。",
       "title": "Discord ボット — 報酬設定",

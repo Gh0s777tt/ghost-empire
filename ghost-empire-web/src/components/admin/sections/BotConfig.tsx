@@ -22,6 +22,10 @@ export function BotConfigCard({
   const [afkGivesReward, setAfkGivesReward] = useState(config.afkGivesReward);
   const [mutedGivesReward, setMutedGivesReward] = useState(config.mutedGivesReward);
   const [enabled, setEnabled] = useState(config.enabled);
+  const [hhEnabled, setHhEnabled] = useState(config.happyHourEnabled ?? false);
+  const [hhStart, setHhStart] = useState(String(config.happyHourStart ?? 19));
+  const [hhEnd, setHhEnd] = useState(String(config.happyHourEnd ?? 22));
+  const [hhMult, setHhMult] = useState(String(config.happyHourMultiplier ?? 2));
   const [busy, setBusy] = useState(false);
 
   async function save() {
@@ -38,6 +42,10 @@ export function BotConfigCard({
           afkGivesReward,
           mutedGivesReward,
           enabled,
+          happyHourEnabled: hhEnabled,
+          happyHourStart: parseInt(hhStart),
+          happyHourEnd: parseInt(hhEnd),
+          happyHourMultiplier: parseFloat(hhMult),
         }),
       });
       const data = await res.json();
@@ -98,6 +106,27 @@ export function BotConfigCard({
               {t("mutedLabel")}
             </span>
           </label>
+        </div>
+
+        {/* Happy hours: portal-side GT-earn multiplier inside a Europe/Warsaw window */}
+        <div className="border border-amber-900/50 bg-amber-950/15 rounded p-3 space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={hhEnabled}
+              onChange={(e) => setHhEnabled(e.target.checked)}
+              className="accent-amber-500"
+            />
+            <span className="text-xs font-bold tracking-widest uppercase text-amber-300">
+              🔥 {t("happyTitle")}
+            </span>
+          </label>
+          <p className="text-[10px] text-zinc-500">{t("happyDesc")}</p>
+          <div className="grid grid-cols-3 gap-2">
+            <FieldInput label={t("happyStart")} value={hhStart} onChange={setHhStart} type="number" />
+            <FieldInput label={t("happyEnd")} value={hhEnd} onChange={setHhEnd} type="number" />
+            <FieldInput label={t("happyMult")} value={hhMult} onChange={setHhMult} type="number" />
+          </div>
         </div>
 
         <button

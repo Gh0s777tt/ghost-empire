@@ -2140,6 +2140,11 @@
       "noResults": "Sin resultados para {q}"
     },
     "botConfig": {
+      "happyTitle": "Happy hours (multiplicador GT)",
+      "happyDesc": "Durante las horas elegidas (hora polaca) todas las recompensas GT del chat y Discord se multiplican. Funciona en el portal — el bot no necesita cambios.",
+      "happyStart": "Desde (0-23)",
+      "happyEnd": "Hasta (0-23)",
+      "happyMult": "Multiplicador",
       "err": "Error",
       "saved": "Configuración del bot actualizada. El bot la aplicará en su próxima consulta (~60 s).",
       "title": "Bot de Discord — configuración de recompensas",
