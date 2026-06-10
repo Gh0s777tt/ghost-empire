@@ -670,6 +670,8 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "animForced": "Animasi dipaksa aktif — klik untuk mengikuti pengaturan sistem",
+    "animSystem": "Sistemmu mengurangi gerakan — klik untuk memaksa animasi",
     "backToGames": "Semua game",
     "myHistory": "Permainan terakhirmu",
     "myStats": "Statistikmu",

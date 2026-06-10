@@ -641,6 +641,8 @@
     "unitPurchase": "acquisto"
   },
   "kasyno": {
+    "animForced": "Animazioni forzate — clicca per seguire le impostazioni di sistema",
+    "animSystem": "Il sistema riduce il movimento — clicca per forzare le animazioni",
     "backToGames": "Tutti i giochi",
     "myHistory": "Le tue ultime partite",
     "myStats": "Le tue statistiche",

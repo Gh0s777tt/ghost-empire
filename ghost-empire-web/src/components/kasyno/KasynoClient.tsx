@@ -65,7 +65,12 @@ const CELL = 72;
 const STRIP = 24;
 
 function reducedMotion(): boolean {
-  return typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (typeof window === "undefined") return false;
+  // "ge-anim=force" overrides the OS/browser "reduce motion" setting — some users
+  // (e.g. Firefox with system animations off) reported "no animations" without
+  // realizing their system asked for that; the casino offers an explicit switch.
+  try { if (localStorage.getItem("ge-anim") === "force") return false; } catch { /* ignore */ }
+  return !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 // Scale-to-fit for fixed-size boards (Crash/Plinko keep their px math intact and the
@@ -441,8 +446,52 @@ function CoinFlip({ phase, win, onSettle }: { phase: Phase; win: boolean | null;
   );
 }
 
-// ── Dice: a 0-99 track with a green win-zone; the pointer slides to the rolled value
-//    while a counter ticks up to it. Win-zone = left of the threshold (under) or right (over). ─
+// ── Die3D: a CSS 3D cube that tumbles while `spinning` and springs to its front face
+//    when it stops. The front face's digit is set via `frontRef` (textContent) right
+//    before the stop, so the die always "lands" on the real result. ──
+function Die3D({ spinning, frontRef, delay = "0s" }: { spinning: boolean; frontRef: React.Ref<HTMLDivElement>; delay?: string }) {
+  const Z = 26;
+  const faces: Array<{ tr: string; n: string }> = [
+    { tr: `rotateY(0deg) translateZ(${Z}px)`, n: "?" },
+    { tr: `rotateY(90deg) translateZ(${Z}px)`, n: "3" },
+    { tr: `rotateY(180deg) translateZ(${Z}px)`, n: "9" },
+    { tr: `rotateY(-90deg) translateZ(${Z}px)`, n: "1" },
+    { tr: `rotateX(90deg) translateZ(${Z}px)`, n: "5" },
+    { tr: `rotateX(-90deg) translateZ(${Z}px)`, n: "8" },
+  ];
+  return (
+    <div style={{ perspective: 240 }} aria-hidden>
+      <div
+        style={{
+          width: 52, height: 52, position: "relative", transformStyle: "preserve-3d",
+          animation: spinning ? "gefx-tumble 0.9s linear infinite" : undefined,
+          animationDelay: delay,
+          transition: spinning ? undefined : "transform 800ms cubic-bezier(.2,1.4,.4,1)",
+          transform: spinning ? undefined : "rotateX(0deg) rotateY(0deg)",
+        }}
+      >
+        {faces.map((f, i) => (
+          <div
+            key={i}
+            ref={i === 0 ? frontRef : undefined}
+            style={{
+              position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+              fontWeight: 900, fontSize: 26, color: "#16161e", borderRadius: 10,
+              background: "linear-gradient(145deg, #ffffff, #d7d7e2)",
+              border: "1px solid #b9b9c6", boxShadow: "inset 0 -3px 6px rgba(0,0,0,.12)",
+              transform: f.tr, backfaceVisibility: "hidden",
+            }}
+          >
+            {f.n}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Dice: two 3D dice tumble while the server rolls, then settle on the result's
+//    digits (tens/units); a 0-99 track with a green win-zone shows the bet visually. ─
 function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: number; target: number; dir: "under" | "over"; win: boolean } | null; onSettle: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   // Per-frame values are written STRAIGHT to the DOM via refs (textContent), like
@@ -450,12 +499,19 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
   // (React Compiler), leaving the counter frozen at "—". State is only used for the
   // low-frequency `landed` flip (colors/pop/burst).
   const numRef = useRef<HTMLDivElement>(null);
+  const tensRef = useRef<HTMLDivElement>(null);
+  const unitsRef = useRef<HTMLDivElement>(null);
   const done = useRef(false);
   const lastFlicker = useRef<number | null>(null);
   const [landed, setLanded] = useState(false);
+  const [diceSettled, setDiceSettled] = useState(false);
   const target = dice?.target ?? 50;
   const dir = dice?.dir ?? "under";
   const setNum = (v: number) => { if (numRef.current) numRef.current.textContent = String(v); };
+  const setDieFaces = (roll: number) => {
+    if (tensRef.current) tensRef.current.textContent = String(Math.floor(roll / 10));
+    if (unitsRef.current) unitsRef.current.textContent = String(roll % 10);
+  };
 
   // SPIN: while we wait for the server, the counter flickers random numbers and the
   // pointer sweeps the track (CSS keyframes) — the game is visibly "rolling".
@@ -483,9 +539,13 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
     const el = ref.current;
     if (reducedMotion()) {
       if (el) { el.style.animation = "none"; el.style.left = `${dice.roll}%`; }
-      setNum(dice.roll); setLanded(true);
+      setNum(dice.roll); setDieFaces(dice.roll); setDiceSettled(true); setLanded(true);
       const t = setTimeout(onSettle, 250); return () => clearTimeout(t);
     }
+    // The dice land first (front faces get the real digits, then the tumble springs
+    // to a stop), while the counter and pointer keep easing toward the roll.
+    setDieFaces(dice.roll);
+    setDiceSettled(true);
     if (el) {
       const cur = getComputedStyle(el).left; // current sweep position (keyframes expose it)
       el.style.animation = "none";
@@ -517,7 +577,8 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
 
   return (
     <div className="flex flex-col items-center justify-center gap-6 w-full" style={{ maxWidth: 380 }}>
-      <div className="relative">
+      <div className="relative flex items-center gap-5">
+        <Die3D spinning={!diceSettled} frontRef={tensRef} />
         <div
           ref={numRef}
           className={`text-7xl font-black tabular-nums ${landed ? (dice?.win ? "text-emerald-300" : "text-rose-300") : "text-zinc-300"}`}
@@ -528,6 +589,7 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
         >
           —
         </div>
+        <Die3D spinning={!diceSettled} frontRef={unitsRef} delay="-0.45s" />
         {landed && dice?.win && !reducedMotion() && <WinBurst seed={dice.roll + 1} />}
       </div>
       <div className="relative w-full">
@@ -782,6 +844,14 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   // effect so SSR markup never depends on localStorage.
   const [sound, setSound] = useState(true);
   useEffect(() => { setSound(sfxEnabled()); }, []);
+  // Animations override: only surfaced when the OS/browser requests reduced motion
+  // (the most common cause of "animations don't work in my browser" reports).
+  const [systemReduced, setSystemReduced] = useState(false);
+  const [animForced, setAnimForced] = useState(false);
+  useEffect(() => {
+    setSystemReduced(!!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    try { setAnimForced(localStorage.getItem("ge-anim") === "force"); } catch { /* ignore */ }
+  }, []);
 
   const loadLb = useCallback(async () => {
     try { const r = await fetch("/api/gt-games/leaderboard", { cache: "no-store" }); if (r.ok) setLb(await r.json()); } catch { /* ignore */ }
@@ -883,6 +953,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
         @keyframes gefx-shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
         @keyframes gefx-flash { 0% { filter: brightness(1); } 30% { filter: brightness(2); } 100% { filter: brightness(1); } }
         @keyframes gefx-part { 0% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; } }
+        @keyframes gefx-tumble { from { transform: rotateX(0deg) rotateY(0deg); } to { transform: rotateX(360deg) rotateY(720deg); } }
       `}</style>
       <div className="text-center">
         <h1 className="text-3xl font-black text-white tracking-tight">{t("title")}</h1>
@@ -1008,6 +1079,20 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             >
               {sound ? "🔊" : "🔇"}
             </button>
+            {systemReduced && (
+              <button
+                onClick={() => {
+                  const next = !animForced;
+                  setAnimForced(next);
+                  try { localStorage.setItem("ge-anim", next ? "force" : "auto"); } catch { /* ignore */ }
+                }}
+                title={animForced ? t("animForced") : t("animSystem")}
+                aria-label={animForced ? t("animForced") : t("animSystem")}
+                className={`w-8 h-8 inline-flex items-center justify-center rounded-full border transition-all ${animForced ? "border-amber-600 text-amber-300" : "border-zinc-700 text-zinc-600"}`}
+              >
+                🎬
+              </button>
+            )}
           </div>
           {selected === "slots" && (
             <div className="flex gap-3" data-tour="kasyno-slots">

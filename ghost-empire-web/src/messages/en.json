@@ -1926,6 +1926,8 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "animForced": "Animations forced on — click to follow your system setting",
+    "animSystem": "Your system reduces motion — click to force animations on",
     "backToGames": "All games",
     "myHistory": "Your recent games",
     "myStats": "Your stats",
