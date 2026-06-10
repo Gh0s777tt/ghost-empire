@@ -207,7 +207,7 @@ export function ShopClient({
           message={t("emptyMsg")}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="shop-grid">
           {visible.map((item) => {
             const req = meetsRequirements(item);
             const price = priceFor(item);

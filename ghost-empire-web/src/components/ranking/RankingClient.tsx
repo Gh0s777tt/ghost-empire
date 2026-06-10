@@ -126,7 +126,7 @@ export function RankingClient({
       </div>
 
       {/* Sort tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" data-tour="ranking-sort">
         {(Object.keys(SORT_META) as Sort[]).map((k) => {
           const m = SORT_META[k];
           const TabIcon = m.icon;

@@ -120,6 +120,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
                 <button
                   onClick={spin}
                   disabled={spinning || !canAfford}
+                  data-tour="wheel-spin"
                   className="px-8 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-900/40"
                 >
                   {spinning ? t("spinning") : t("spinCost", { cost: fmt(state.costPerSpin) })}

@@ -7,6 +7,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
+import TourProvider from "@/components/tour/SiteTour";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -58,10 +59,12 @@ export default async function LocaleLayout({
         </a>
         <NextIntlClientProvider messages={messages}>
           <Providers>
-            <div id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-hidden">
-              {children}
-            </div>
-            <SiteFooter />
+            <TourProvider>
+              <div id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-hidden">
+                {children}
+              </div>
+              <SiteFooter />
+            </TourProvider>
           </Providers>
         </NextIntlClientProvider>
         {/* Privacy-friendly, cookieless analytics + Core Web Vitals (no-op outside Vercel). */}
