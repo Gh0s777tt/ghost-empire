@@ -426,14 +426,17 @@ function CoinFlip({ phase, win, onSettle }: { phase: Phase; win: boolean | null;
 //    while a counter ticks up to it. Win-zone = left of the threshold (under) or right (over). ─
 function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: number; target: number; dir: "under" | "over"; win: boolean } | null; onSettle: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  // Per-frame values are written STRAIGHT to the DOM via refs (textContent), like
+  // CrashRocket — setState-per-frame in this component was being dropped on prod
+  // (React Compiler), leaving the counter frozen at "—". State is only used for the
+  // low-frequency `landed` flip (colors/pop/burst).
+  const numRef = useRef<HTMLDivElement>(null);
   const done = useRef(false);
-  const [shown, setShown] = useState<number | null>(null);
-  // Last flicker value, written ONLY inside the spin effect (mutating a ref during
-  // render breaks React Compiler memoization — the counter froze on prod).
   const lastFlicker = useRef<number | null>(null);
   const [landed, setLanded] = useState(false);
   const target = dice?.target ?? 50;
   const dir = dice?.dir ?? "under";
+  const setNum = (v: number) => { if (numRef.current) numRef.current.textContent = String(v); };
 
   // SPIN: while we wait for the server, the counter flickers random numbers and the
   // pointer sweeps the track (CSS keyframes) — the game is visibly "rolling".
@@ -444,7 +447,7 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
       if (now - last > 70) {
         const v = Math.floor(Math.random() * 100);
         lastFlicker.current = v;
-        setShown(v);
+        setNum(v);
         last = now;
       }
       raf = requestAnimationFrame(tick);
@@ -461,7 +464,7 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
     const el = ref.current;
     if (reducedMotion()) {
       if (el) { el.style.animation = "none"; el.style.left = `${dice.roll}%`; }
-      setShown(dice.roll); setLanded(true);
+      setNum(dice.roll); setLanded(true);
       const t = setTimeout(onSettle, 250); return () => clearTimeout(t);
     }
     if (el) {
@@ -479,7 +482,7 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
       if (!startTs) startTs = now;
       const k = Math.min(1, (now - startTs) / DUR);
       const e = 1 - Math.pow(1 - k, 3);
-      setShown(Math.round(from + (dice.roll - from) * e));
+      setNum(Math.round(from + (dice.roll - from) * e));
       if (k < 1) raf = requestAnimationFrame(tick);
       else setLanded(true);
     };
@@ -497,13 +500,14 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
     <div className="flex flex-col items-center justify-center gap-6 w-full" style={{ maxWidth: 380 }}>
       <div className="relative">
         <div
+          ref={numRef}
           className={`text-7xl font-black tabular-nums ${landed ? (dice?.win ? "text-emerald-300" : "text-rose-300") : "text-zinc-300"}`}
           style={{
             textShadow: landed && dice?.win ? "0 0 28px rgba(52,211,153,.55), 0 3px 16px rgba(0,0,0,.6)" : "0 3px 16px rgba(0,0,0,.6)",
             animation: landed ? (dice?.win ? "gefx-pop 450ms cubic-bezier(.34,1.56,.64,1)" : "gefx-shake 420ms ease-in-out") : undefined,
           }}
         >
-          {shown ?? "—"}
+          —
         </div>
         {landed && dice?.win && !reducedMotion() && <WinBurst seed={dice.roll + 1} />}
       </div>
