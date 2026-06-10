@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Prawdziwe kości 3D 🎲",
+    items: [
+      "W grze Kości rzucają się teraz dwie prawdziwe trójwymiarowe kostki — kotłują się w trakcie losowania i lądują dokładnie na cyfrach wyniku. Dodatkowo: jeśli Twój system ogranicza animacje (częsta przyczyna „braku animacji” np. w Firefoksie), przy stawce pojawi się przycisk 🎬, który jednym kliknięciem je wymusza.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Kasyno jak prawdziwe — lobby z grami 🎰",
     items: [
       "Kasyno wita Cię teraz kafelkami gier: wybierasz jedną, a ona zajmuje cały ekran — bez rozpraszania pozostałymi. Wrócisz przyciskiem „Wszystkie gry”. Przy okazji naprawiliśmy pole stawki: można je wyczyścić i wpisać dowolną kwotę od zera.",

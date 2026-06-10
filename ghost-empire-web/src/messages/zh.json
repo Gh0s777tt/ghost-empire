@@ -641,6 +641,8 @@
     "unitPurchase": "次购买"
   },
   "kasyno": {
+    "animForced": "已强制开启动画——点击改回系统设置",
+    "animSystem": "系统正在减少动态效果——点击强制开启动画",
     "backToGames": "所有游戏",
     "myHistory": "你最近的对局",
     "myStats": "你的统计",

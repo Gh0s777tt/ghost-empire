@@ -641,6 +641,8 @@
     "unitPurchase": "購入"
   },
   "kasyno": {
+    "animForced": "アニメーション強制ON——クリックでシステム設定に従う",
+    "animSystem": "システムが動きを制限しています——クリックで強制ON",
     "backToGames": "すべてのゲーム",
     "myHistory": "最近のプレイ",
     "myStats": "あなたの統計",

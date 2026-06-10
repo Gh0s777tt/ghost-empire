@@ -1926,6 +1926,8 @@
     "unitPurchase": "zakup"
   },
   "kasyno": {
+    "animForced": "Animacje wymuszone — kliknij, aby wrócić do ustawień systemu",
+    "animSystem": "System ogranicza animacje — kliknij, aby je wymusić",
     "backToGames": "Wszystkie gry",
     "myHistory": "Twoje ostatnie gry",
     "myStats": "Twoje statystyki",
