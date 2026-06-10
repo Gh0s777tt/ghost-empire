@@ -31,8 +31,12 @@ export async function SiteFooter() {
             <SocialLinksRow />
           </div>
 
-          {/* Right — legal links */}
+          {/* Right — legal links + the white-label funnel entry */}
           <nav aria-label={t("legalNav")} className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-widest">
+            <Link href="/onboarding" className="text-red-400/80 hover:text-red-300 transition-colors">
+              🚀 {t("launchPortal")}
+            </Link>
+            <span className="text-zinc-800">·</span>
             <Link href="/about" className="text-zinc-500 hover:text-red-400 transition-colors">
               {t("about")}
             </Link>
