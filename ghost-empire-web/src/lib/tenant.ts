@@ -26,6 +26,8 @@ export type TenantBrand = {
   tokenSymbol: string;
   /** Streamer's public handle (no leading @) — replaces %owner% in i18n. */
   ownerHandle: string;
+  /** Tenant logo (header/footer mark); null = default skull. */
+  logoUrl: string | null;
 };
 
 /** Brand used before a tenant row exists or outside any request context. */
@@ -38,6 +40,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   tokenName: "Ghost Tokens",
   tokenSymbol: "GT",
   ownerHandle: SITE.owner,
+  logoUrl: null,
 };
 
 /**
@@ -67,6 +70,7 @@ export async function getCurrentTenant(): Promise<TenantBrand> {
         tokenName: t.tokenName,
         tokenSymbol: t.tokenSymbol,
         ownerHandle: t.ownerHandle ?? t.shortName ?? t.name,
+        logoUrl: t.logoUrl,
       };
     }
   } catch {

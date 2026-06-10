@@ -1,12 +1,21 @@
 @import 'tailwindcss';
 
+/* White-label brand accent (SaaS Phase 5). The locale layout overrides these two
+   inline on <body> with the active tenant's color; everything below derives from
+   them, so one DB value re-skins the whole accent. --brand-rgb is a space-
+   separated triplet for alpha use: rgb(var(--brand-rgb) / .3). */
+:root {
+  --brand: #e50914;
+  --brand-rgb: 229 9 20;
+}
+
 @theme {
   --color-ghost-black: #0a0a0a;
   --color-ghost-charcoal: #1a1a1a;
   --color-ghost-graphite: #2a2a2a;
   --color-ghost-smoke: #6b6b6b;
   --color-ghost-bone: #e8e8e8;
-  --color-ghost-red: #e50914;
+  --color-ghost-red: var(--brand);
   --color-ghost-red-dark: #8b0000;
   --color-ghost-gold: #d4af37;
 
@@ -20,26 +29,26 @@
 
   --background-image-ghost-radial: radial-gradient(
     circle at 20% 50%,
-    rgba(229, 9, 20, 0.2) 0%,
+    rgb(var(--brand-rgb) / 0.2) 0%,
     transparent 50%
   );
 
   @keyframes glow-pulse {
     0%,
     100% {
-      box-shadow: 0 0 20px rgba(229, 9, 20, 0.3);
+      box-shadow: 0 0 20px rgb(var(--brand-rgb) / 0.3);
     }
     50% {
-      box-shadow: 0 0 40px rgba(229, 9, 20, 0.6);
+      box-shadow: 0 0 40px rgb(var(--brand-rgb) / 0.6);
     }
   }
   @keyframes pulse-red {
     0%,
     100% {
-      background: rgba(229, 9, 20, 0.1);
+      background: rgb(var(--brand-rgb) / 0.1);
     }
     50% {
-      background: rgba(229, 9, 20, 0.25);
+      background: rgb(var(--brand-rgb) / 0.25);
     }
   }
 }
@@ -95,19 +104,19 @@
 @utility text-glitch {
   /* Glitch text effect */
   text-shadow:
-    2px 0 0 rgba(229, 9, 20, 0.7),
+    2px 0 0 rgb(var(--brand-rgb) / 0.7),
     -2px 0 0 rgba(139, 0, 0, 0.5);
 }
 
 @utility glow-red {
   /* Glow effects */
   box-shadow:
-    0 0 20px rgba(229, 9, 20, 0.3),
-    inset 0 0 20px rgba(229, 9, 20, 0.05);
+    0 0 20px rgb(var(--brand-rgb) / 0.3),
+    inset 0 0 20px rgb(var(--brand-rgb) / 0.05);
 }
 
 @utility glow-red-strong {
-  box-shadow: 0 0 40px rgba(229, 9, 20, 0.6);
+  box-shadow: 0 0 40px rgb(var(--brand-rgb) / 0.6);
 }
 
 @utility glow-gold {
@@ -125,8 +134,8 @@
       0deg,
       transparent 0px,
       transparent 2px,
-      rgba(229, 9, 20, 0.025) 2px,
-      rgba(229, 9, 20, 0.025) 4px
+      rgb(var(--brand-rgb) / 0.025) 2px,
+      rgb(var(--brand-rgb) / 0.025) 4px
     );
     border-radius: inherit;
   }
@@ -159,7 +168,7 @@
     content: '';
     position: absolute;
     inset: -1px;
-    background: linear-gradient(45deg, #e50914, #8b0000, #e50914);
+    background: linear-gradient(45deg, var(--brand), color-mix(in srgb, var(--brand) 55%, black), var(--brand));
     z-index: -1;
     background-size: 200%;
     animation: border-rotate 3s linear infinite;
@@ -241,7 +250,7 @@
 
 @layer base {
   :root {
-    --ghost-red:      #E50914;
+    --ghost-red:      var(--brand);
     --ghost-red-dark: #8B0000;
     --ghost-black:    #0A0A0A;
     --ghost-charcoal: #1A1A1A;
@@ -268,15 +277,15 @@
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: #0a0a0a; }
   ::-webkit-scrollbar-thumb { background: #8B0000; border-radius: 0; }
-  ::-webkit-scrollbar-thumb:hover { background: #E50914; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
   * { scrollbar-width: thin; scrollbar-color: #8B0000 #0a0a0a; }
 
   /* Selection */
-  ::selection { background: rgba(229, 9, 20, 0.3); color: white; }
+  ::selection { background: rgb(var(--brand-rgb) / 0.3); color: white; }
 
   /* a11y — visible keyboard focus (only on keyboard nav, not mouse clicks) */
   :focus-visible {
-    outline: 2px solid #E50914;
+    outline: 2px solid var(--brand);
     outline-offset: 2px;
     border-radius: 2px;
   }

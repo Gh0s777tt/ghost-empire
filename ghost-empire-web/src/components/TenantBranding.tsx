@@ -12,6 +12,8 @@ export type TenantBrandingValue = {
   brandName: string;
   brandShort: string;
   owner: string;
+  /** Tenant logo url; null = default skull mark. */
+  logoUrl: string | null;
 };
 
 const TenantBrandingContext = createContext<TenantBrandingValue>({
@@ -20,6 +22,7 @@ const TenantBrandingContext = createContext<TenantBrandingValue>({
   brandName: "GH0ST EMPIRE",
   brandShort: "Ghost Empire",
   owner: "Gh0s77tt",
+  logoUrl: null,
 });
 
 export function TenantBrandingProvider({
