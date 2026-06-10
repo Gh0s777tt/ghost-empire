@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Kości z prawdziwą animacją + konfetti przy wygranej 🎲",
+    items: [
+      "Gra w kości dostała pełną animację: licznik migocze, a wskaźnik zamiata tor już od momentu kliknięcia, po czym płynnie dojeżdża na wylosowaną liczbę. Każda wygrana — we wszystkich grach kasyna — kończy się teraz rozbłyskiem konfetti i podświetleniem kwoty.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Strona dropów mówi w Twoim języku 🌍",
     items: [
       "Strona z drop code’ami była częściowo po polsku nawet po przełączeniu języka — teraz opis, licznik aktywnych dropów, statystyki, historia i sekcja „Jak to działa” są przetłumaczone na wszystkie 14 języków portalu.",
