@@ -29,6 +29,7 @@ model Tenant {
   // markers that the message loader replaces with these per-tenant values.
   tokenName   String   @default("Ghost Tokens")  // full currency name, e.g. "Neo Coins"
   tokenSymbol String   @default("GT")            // short unit shown next to amounts
+  ownerHandle String?                            // streamer's public handle (%owner% in i18n), e.g. "Gh0s77tt"
   ownerUserId String?                    // streamer-admin who owns this tenant (plain ref — no relation, to avoid a second User<->Tenant edge)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

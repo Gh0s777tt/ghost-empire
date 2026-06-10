@@ -4,9 +4,11 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { SocialLinksRow } from "@/components/SocialLinks";
 import { SITE } from "@/lib/site";
+import { getCurrentTenant } from "@/lib/tenant";
 
 export async function SiteFooter() {
   const t = await getTranslations("footer");
+  const tenant = await getCurrentTenant();
   return (
     <footer
       className="relative z-30 border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-md mt-auto"
@@ -20,7 +22,7 @@ export async function SiteFooter() {
               <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              {SITE.name} © {SITE.year} · {t("community")}
+              {tenant.name} © {SITE.year} · {t("community")}
             </div>
           </div>
 

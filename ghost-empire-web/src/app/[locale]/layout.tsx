@@ -41,7 +41,13 @@ export default async function LocaleLayout({
   const t = await getTranslations("common");
   // White-label branding for client components ("123 GT" suffixes outside i18n).
   const tenant = await getCurrentTenant();
-  const branding = { tokenName: tenant.tokenName, tokenSymbol: tenant.tokenSymbol };
+  const branding = {
+    tokenName: tenant.tokenName,
+    tokenSymbol: tenant.tokenSymbol,
+    brandName: tenant.name,
+    brandShort: tenant.shortName,
+    owner: tenant.ownerHandle,
+  };
   // Arabic is the only RTL locale so far — flip the document direction so text,
   // alignment and punctuation flow correctly. (Full bidi layout mirroring of
   // physical-property components is a follow-up; dir="rtl" fixes the text itself.)

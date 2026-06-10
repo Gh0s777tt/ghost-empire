@@ -4,18 +4,20 @@
 // /manifest.webmanifest and auto-injects <link rel="manifest">.
 import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/site";
+import { getCurrentTenant } from "@/lib/tenant";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const t = await getCurrentTenant();
   return {
-    name: SITE.name,
-    short_name: SITE.shortName,
+    name: t.name,
+    short_name: t.shortName,
     description:
-      `Oficjalny portal społeczności ${SITE.name} — Ghost Tokens, eventy, sklep, ranking.`,
+      `Oficjalny portal społeczności ${t.name} — ${t.tokenName}, eventy, sklep, ranking.`,
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
     background_color: SITE.backgroundColor,
-    theme_color: SITE.brandColor,
+    theme_color: t.brandColor,
     lang: "pl",
     categories: ["entertainment", "social", "games"],
     icons: [

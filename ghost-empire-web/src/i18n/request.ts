@@ -32,7 +32,13 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // White-label (Phase 5): catalogs carry %tokenName%/%gt% markers — replace
   // them with the active tenant's currency naming before ICU ever parses them.
   const tenant = await getCurrentTenant();
-  const branding = { tokenName: tenant.tokenName, tokenSymbol: tenant.tokenSymbol };
+  const branding = {
+    tokenName: tenant.tokenName,
+    tokenSymbol: tenant.tokenSymbol,
+    brandName: tenant.name,
+    brandShort: tenant.shortName,
+    owner: tenant.ownerHandle,
+  };
 
   const en = ((await import(`../messages/en.json`)).default ?? {}) as Messages;
   if (locale === "en") return { locale, messages: brandedMessages("en", en, branding) };
