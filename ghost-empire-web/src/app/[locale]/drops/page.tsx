@@ -93,12 +93,13 @@ export default async function DropsPage() {
                 className="font-display text-4xl text-white tracking-wider"
                 style={{ textShadow: "2px 0 0 rgba(255,69,0,0.7), -2px 0 0 rgba(139,0,0,0.4)" }}
               >
-                DROP CODES
+                {t("title")}
               </h1>
             </div>
             <p className="text-zinc-500 text-sm">
-              Wpisz sekretny kod który Ghost wrzucił na czat. Pierwsi {" "}
-              <span className="text-orange-400 font-bold">N osób</span> dostają bonus.
+              {t.rich("subtitle", {
+                b: (chunks) => <span className="text-orange-400 font-bold">{chunks}</span>,
+              })}
             </p>
             <HowItWorks>{t("help")}</HowItWorks>
           </div>
@@ -112,11 +113,11 @@ export default async function DropsPage() {
           <div className="flex items-center gap-3 border border-zinc-800 bg-zinc-950/50 px-4 py-2.5">
             <Sparkles className="w-4 h-4 text-orange-400" />
             <span className="text-xs text-zinc-400">
-              Aktywnych dropów:{" "}
+              {t("activeDrops")}{" "}
               <span className="text-white font-mono font-bold">{activeDropsCount}</span>
             </span>
             <span className="text-zinc-700 text-xs ml-auto font-mono uppercase tracking-widest">
-              Live na twitch.tv/gh0s77tt
+              {t("liveAt", { channel: "twitch.tv/gh0s77tt" })}
             </span>
           </div>
 
@@ -124,12 +125,12 @@ export default async function DropsPage() {
           {isAuthenticated && (
             <div className="grid grid-cols-2 gap-3">
               <StatTile
-                label="Złapane dropy"
+                label={t("statClaimed")}
                 value={fmt(myClaims.length, locale)}
                 emoji="🎁"
               />
               <StatTile
-                label="Łącznie z dropów"
+                label={t("statEarned")}
                 value={fmt(totalEarnedFromDrops, locale)}
                 suffix="GT"
                 emoji="💰"
@@ -149,16 +150,16 @@ export default async function DropsPage() {
               <div className="flex items-center gap-2 mb-4">
                 <Trophy className="w-4 h-4 text-red-500" />
                 <h2 className="font-display text-lg text-white tracking-wider">
-                  TWOJA HISTORIA
+                  {t("historyTitle")}
                 </h2>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 ml-auto">
-                  Ostatnie {myClaims.length}
+                  {t("historyLast", { count: myClaims.length })}
                 </span>
               </div>
 
               {myClaims.length === 0 ? (
                 <p className="text-zinc-500 text-sm py-4 text-center">
-                  Jeszcze nie złapałeś żadnego dropa. Bądź pierwszym podczas najbliższego live'a.
+                  {t("historyEmpty")}
                 </p>
               ) : (
                 <div className="divide-y divide-zinc-900">
@@ -174,7 +175,7 @@ export default async function DropsPage() {
                             {c.drop.code}
                             {wasBonus && (
                               <span className="ms-2 text-[9px] font-bold tracking-widest uppercase text-yellow-400 px-1.5 py-0.5 border border-yellow-700">
-                                BONUS
+                                {t("bonusBadge")}
                               </span>
                             )}
                           </div>
@@ -196,28 +197,36 @@ export default async function DropsPage() {
           {/* How it works */}
           <div className="border border-zinc-800 bg-zinc-950/40 p-5">
             <h3 className="font-display text-base text-white tracking-wider mb-3">
-              JAK TO DZIAŁA
+              {t("howTitle")}
             </h3>
             <ul className="text-xs text-zinc-400 space-y-1.5">
               <li className="flex gap-2">
                 <span className="text-orange-500 shrink-0">▸</span>
-                Ghost podczas live'a wrzuca na czat sekretny kod (np. <code className="font-mono text-white">GHOST24</code>).
+                <span>
+                  {t.rich("how1", {
+                    code: (chunks) => <code className="font-mono text-white">{chunks}</code>,
+                  })}
+                </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-orange-500 shrink-0">▸</span>
-                Wpisujesz tutaj. Pierwsze N osób dostaje <strong className="text-orange-300">bonus reward</strong> (czasem ×4 standard reward).
+                <span>
+                  {t.rich("how2", {
+                    b: (chunks) => <strong className="text-orange-300">{chunks}</strong>,
+                  })}
+                </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-orange-500 shrink-0">▸</span>
-                Każdy kod możesz odebrać tylko raz. Próba claimowania ponownie = 409.
+                {t("how3")}
               </li>
               <li className="flex gap-2">
                 <span className="text-orange-500 shrink-0">▸</span>
-                Kody wygasają (najczęściej po 60 minutach). Spóźnisz się = przepadło.
+                {t("how4")}
               </li>
               <li className="flex gap-2">
                 <span className="text-orange-500 shrink-0">▸</span>
-                Drop też nabija progress daily questa "Odbierz drop code".
+                {t("how5")}
               </li>
             </ul>
           </div>
