@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Nagrody za ranking tygodnia 🏆",
+    items: [
+      "Co poniedziałek o północy trójka graczy z największą liczbą zdobytych GT w minionym tygodniu dostaje automatyczne nagrody: 1000, 500 i 250 GT — wraz z powiadomieniem. Okno tygodniowe startuje od zera, więc każdy ma szansę!",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Progresywny JACKPOT w kasynie 💰",
     items: [
       "Nad grami w kasynie rośnie wspólna pula: 1% każdej stawki ją zasila, a startuje od 5000 GT. Trafienie trzech siódemek 7️⃣7️⃣7️⃣ w slotach wygrywa CAŁĄ pulę (plus zwykłą wygraną ×800)! Po trafieniu pula wraca do 5000 i rośnie od nowa.",
