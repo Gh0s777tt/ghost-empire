@@ -205,7 +205,7 @@ export function QuestsClient({
           message={t("emptyMsg")}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-tour="quest-list">
           {tasks.map((t) => (
             <QuestCard
               key={t.id}

@@ -792,13 +792,13 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </div>
           {error && <div className="text-rose-400 text-sm">{error}</div>}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-tour="kasyno-stake">
             <label className="text-xs text-zinc-400">{t("stake")}
               <input type="number" min={10} max={100000} value={bet} disabled={busy} onChange={(e) => setBet(Math.max(10, parseInt(e.target.value || "10", 10)))}
                 className="ms-2 w-28 bg-black border border-zinc-700 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-amber-500 disabled:opacity-50" />
             </label>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3" data-tour="kasyno-slots">
             <button onClick={() => play("slots")} disabled={busy || (balance ?? 0) < bet}
               className="px-6 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 disabled:opacity-40 transition-all">{t("slots")}</button>
             <InfoTip text={t("helpSlots")} />
@@ -808,7 +808,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </div>
 
           {/* Roulette: red/black (2×) or a straight number (36×) */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-roulette">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("rouletteLabel")} <InfoTip text={t("helpRoulette")} /></span>
             <button onClick={() => play("roulette", "red")} disabled={busy || (balance ?? 0) < bet}
               className="px-4 py-2 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 transition-all">{t("red")}</button>
@@ -825,7 +825,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </div>
 
           {/* Dice: bet under/over a threshold — multiplier scales with the risk */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-dice">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("diceLabel")} <InfoTip text={t("helpDice")} /></span>
             <div className="flex rounded-full overflow-hidden border border-zinc-700">
               <button onClick={() => setDiceDir("under")} disabled={busy}
@@ -843,7 +843,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </div>
 
           {/* Crash: auto-cashout at a target multiplier; the rocket busts at a random point */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-crash">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("crashLabel")} <InfoTip text={t("helpCrash")} /></span>
             {[1.5, 2, 5, 10].map((m) => (
               <button key={m} onClick={() => setCrashTarget(m)} disabled={busy}
@@ -858,14 +858,14 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </div>
 
           {/* Plinko: drop the ball — no bet choice; edge buckets pay big, center sub-1 */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-plinko">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("plinkoLabel")} <InfoTip text={t("helpPlinko")} /></span>
             <button onClick={() => play("plinko")} disabled={busy || (balance ?? 0) < bet}
               className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 disabled:opacity-40 transition-all">{t("plinkoDrop")}</button>
           </div>
 
           {/* Mines: pick bombs, reveal tiles, dodge bombs, cash out anytime */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2" data-tour="kasyno-mines">
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{t("minesLabel")} <InfoTip text={t("helpMines")} /></span>
             {[1, 3, 5, 10].map((b) => (
               <button key={b} onClick={() => setMinesBombs(b)} disabled={minesGame?.status === "active"}
@@ -881,7 +881,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
       {/* leaderboard */}
       {lb && (lb.bigWins.length > 0 || lb.topNet.length > 0) && (
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4" data-tour="kasyno-leaderboard">
           <div>
             <h2 className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-2">{t("bigWins")}</h2>
             <ul className="space-y-1">

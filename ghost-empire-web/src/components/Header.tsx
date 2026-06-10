@@ -6,11 +6,12 @@ import { useTranslations } from "next-intl";
 // Locale-aware Link + usePathname (next-intl): links auto-carry the active locale
 // (add /en when needed); usePathname returns the path WITHOUT the locale prefix.
 import { Link, usePathname } from "@/i18n/navigation";
-import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, type LucideIcon } from "lucide-react";
+import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, HelpCircle, type LucideIcon } from "lucide-react";
 import { displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { NotificationBell } from "@/components/NotificationBell";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { useTour } from "@/components/tour/SiteTour";
 
 // Grouped navigation. Labels are i18n keys (namespace "nav") resolved at render.
 type NavKey =
@@ -57,8 +58,10 @@ export function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const tTour = useTranslations("tour");
   const fmt = useLocaleFmt();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { start: startTour } = useTour();
 
   return (
     <header
@@ -89,7 +92,7 @@ export function Header() {
           </Link>
 
           {/* Desktop nav — direct links + dropdown groups (hover / keyboard-focus) */}
-          <nav className="hidden lg:flex items-center gap-0.5" aria-label={t("mainNav")}>
+          <nav className="hidden lg:flex items-center gap-0.5" aria-label={t("mainNav")} data-tour="nav">
             {NAV.map((entry) =>
               isGroup(entry) ? (
                 <NavDropdown
@@ -107,11 +110,20 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            {/* Interactive tour — available anytime, also for guests */}
+            <button
+              onClick={startTour}
+              title={tTour("startLabel")}
+              aria-label={tTour("startLabel")}
+              className="w-8 h-8 inline-flex items-center justify-center border border-zinc-800 text-zinc-500 hover:text-amber-300 hover:border-amber-500 transition-colors"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
             <LocaleSwitcher />
             {session ? (
               <>
                 {/* Token balance */}
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-zinc-800 bg-zinc-950">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-zinc-800 bg-zinc-950" data-tour="tokens">
                   <span className="text-sm">👻</span>
                   <span className="font-mono text-sm font-bold text-white tabular-nums">
                     {fmt(session.user.tokens)}
@@ -121,6 +133,7 @@ export function Header() {
                 {/* Drop code shortcut */}
                 <Link
                   href="/drops"
+                  data-tour="drop"
                   className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 border text-[10px] font-bold tracking-widest uppercase transition-all ${
                     pathname.startsWith("/drops")
                       ? "border-orange-500 bg-orange-600 text-white"
@@ -133,7 +146,7 @@ export function Header() {
                 </Link>
 
                 {/* Notifications */}
-                <NotificationBell />
+                <span data-tour="bell" className="inline-flex"><NotificationBell /></span>
 
                 {/* Donator badge (visual only, no link) */}
                 {session.user.isDonator && (
@@ -177,7 +190,7 @@ export function Header() {
                 )}
 
                 {/* User avatar + account menu */}
-                <div className="relative">
+                <div className="relative" data-tour="avatar">
                   <button
                     onClick={() => setMenuOpen((o) => !o)}
                     className="flex items-center gap-2"
@@ -233,7 +246,7 @@ export function Header() {
         </div>
 
         {/* Mobile nav — flat horizontal scroll of every destination (groups expanded) */}
-        <nav className="lg:hidden flex overflow-x-auto no-scrollbar items-center gap-1 pb-2 -mt-1" aria-label={t("mainNav")}>
+        <nav className="lg:hidden flex overflow-x-auto no-scrollbar items-center gap-1 pb-2 -mt-1" aria-label={t("mainNav")} data-tour="nav">
           {NAV_LEAVES.map(({ href, tk, icon: Icon }) => {
             const active = isLeafActive(href, pathname);
             return (
