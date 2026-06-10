@@ -29,6 +29,18 @@ type History = {
   recent: Array<{ id: string; game: string; bet: number; payout: number; net: number; detail: string | null; createdAt: string }>;
   stats: { games: number; wins: number; net: number; best: number };
 };
+type HiloState = {
+  sessionId: string;
+  card: { rank: number; suit: number };
+  prevCard?: { rank: number; suit: number };
+  multiplier: number;
+  steps: number;
+  potential: number;
+  status: "active" | "busted" | "cashed";
+  payout?: number;
+  net?: number;
+  newBalance?: number;
+};
 type BjState = {
   sessionId: string;
   player: number[];
@@ -853,6 +865,56 @@ function PlayingCard({ code, hidden = false, delay = 0 }: { code?: number; hidde
   );
 }
 
+// ── Hi-Lo table: the current card + higher/lower buttons (with live odds) + cash-out.
+//    hilo cards are {rank 1-13, suit} → PlayingCard code = suit*13 + (rank-1). ──
+function HiloTable({ game, busy, fmt, t, onGuess, onCashout }: {
+  game: HiloState; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
+  onGuess: (g: "hi" | "lo") => void; onCashout: () => void;
+}) {
+  const code = (c: { rank: number; suit: number }) => c.suit * 13 + (c.rank - 1);
+  const pHi = (13 - game.card.rank) / 13;
+  const pLo = (game.card.rank - 1) / 13;
+  const multHi = pHi > 0 ? 0.95 / pHi : 0;
+  const multLo = pLo > 0 ? 0.95 / pLo : 0;
+  const active = game.status === "active";
+  return (
+    <div className="flex flex-col items-center gap-4 w-full" style={{ maxWidth: 420 }}>
+      <div className="flex items-center gap-3">
+        {game.prevCard && <div className="opacity-50 scale-90"><PlayingCard code={code(game.prevCard)} /></div>}
+        <div className="scale-125"><PlayingCard code={code(game.card)} delay={60} /></div>
+      </div>
+      <div className="text-sm font-mono text-zinc-300">
+        {game.steps > 0 && <span className="text-amber-300 font-bold">{game.multiplier.toFixed(2)}×</span>}
+        {game.steps > 0 && <span className="text-zinc-500"> · {game.steps}🔥</span>}
+      </div>
+      {active ? (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <button onClick={() => onGuess("hi")} disabled={busy || multHi === 0}
+            className="px-5 py-2 rounded-full font-extrabold text-white bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 disabled:opacity-40 transition-all">
+            ⬆ {t("hiloHi")} {multHi > 0 ? `${multHi.toFixed(2)}×` : ""}
+          </button>
+          <button onClick={() => onGuess("lo")} disabled={busy || multLo === 0}
+            className="px-5 py-2 rounded-full font-extrabold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 disabled:opacity-40 transition-all">
+            ⬇ {t("hiloLo")} {multLo > 0 ? `${multLo.toFixed(2)}×` : ""}
+          </button>
+          <button onClick={onCashout} disabled={busy || game.steps === 0}
+            className="px-5 py-2 rounded-full font-extrabold text-black bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 disabled:opacity-40 transition-all">
+            💰 {t("hiloCash")} {fmt(game.potential)} GT
+          </button>
+        </div>
+      ) : (
+        <div className="relative text-center">
+          {game.status === "cashed" && (game.net ?? 0) > 0 && !reducedMotion() && <WinBurst seed={game.steps * 13 + game.card.rank} />}
+          <div className={`text-xl font-extrabold ${game.status === "cashed" ? "text-emerald-300" : "text-rose-400"}`}
+            style={{ animation: reducedMotion() ? undefined : "gefx-pop 420ms cubic-bezier(.34,1.56,.64,1)" }}>
+            {game.status === "cashed" ? `+${fmt(game.net ?? 0)} GT 🎉` : `💥 ${t("hiloBust")}`}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, balance, bet }: {
   game: BjState; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
   onHit: () => void; onStand: () => void; onDouble: () => void; balance: number | null; bet: number;
@@ -905,7 +967,7 @@ function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, balance,
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
-  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines"), blackjack: t("gameBlackjack") };
+  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines"), blackjack: t("gameBlackjack"), hilo: t("gameHilo") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   // Stake as a STRING so the field can be cleared and retyped freely ("" → invalid,
   // play buttons disable); the numeric `bet` derives from it, clamped to the API range.
@@ -913,7 +975,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const bet = Math.min(100_000, parseInt(betInput, 10) || 0);
   const betValid = bet >= 10;
   // Casino lobby: pick a game tile first, then only that game is on screen.
-  const [selected, setSelected] = useState<Game | "mines" | "blackjack" | null>(null);
+  const [selected, setSelected] = useState<Game | "mines" | "blackjack" | "hilo" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lb, setLb] = useState<Leaderboard | null>(null);
@@ -926,6 +988,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const [minesBusy, setMinesBusy] = useState(false);
   const [bjGame, setBjGame] = useState<BjState | null>(null);
   const [bjBusy, setBjBusy] = useState(false);
+  const [hiloGame, setHiloGame] = useState<HiloState | null>(null);
+  const [hiloBusy, setHiloBusy] = useState(false);
   const [stage, setStage] = useState<Stage | null>(null);
   const playId = useRef(0);
   // Sound toggle (synthesized SFX, opt-out persisted in localStorage). Initialized in an
@@ -1037,6 +1101,28 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
     setMinesBusy(false);
   }
 
+  // ── Hi-Lo (stateful: deal → guess hi/lo (streak) → cash out / bust) ──
+  async function hiloAction(path: "start" | "guess" | "cashout", guess?: "hi" | "lo") {
+    if (hiloBusy || busy) return;
+    if (path === "start" && (!betValid || hiloGame?.status === "active")) return;
+    if (path !== "start" && hiloGame?.status !== "active") return;
+    setHiloBusy(true); setError(null);
+    if (path === "start") { setStage(null); sfxPlay("spin"); }
+    try {
+      const payload = path === "start" ? { bet } : path === "guess" ? { sessionId: hiloGame?.sessionId, guess } : { sessionId: hiloGame?.sessionId };
+      const d = await apiPost<{ ok: true; state: HiloState }>(`/api/gt-games/hilo/${path}`, payload);
+      const s = d.state;
+      setHiloGame(s);
+      if (path === "start" && typeof s.newBalance === "number") { setBalance(s.newBalance); emitBalance(s.newBalance); }
+      if (s.status === "busted") { sfxPlay("bomb"); void loadLb(); void loadHist(); void loadJackpot(); }
+      else if (s.status === "cashed") {
+        if (typeof s.newBalance === "number") { setBalance(s.newBalance); emitBalance(s.newBalance); }
+        sfxPlay("cashout"); void loadLb(); void loadHist(); void loadJackpot();
+      } else if (path === "guess") sfxPlay("click");
+    } catch (e) { setError(e instanceof Error ? e.message : t("connError")); }
+    setHiloBusy(false);
+  }
+
   // ── Blackjack (stateful: deal → hit/stand/double → settle) ──
   function applyBjState(s: BjState) {
     setBjGame(s);
@@ -1090,6 +1176,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           <li><b className="text-white">🎡 {t("gameRoulette")}:</b> {t("helpRoulette")}</li>
           <li><b className="text-white">🎲 {t("gameDice")}:</b> {t("helpDice")}</li>
           <li><b className="text-white">🃏 {t("gameBlackjack")}:</b> {t("helpBlackjack")}</li>
+          <li><b className="text-white">↕️ {t("gameHilo")}:</b> {t("helpHilo")}</li>
           <li><b className="text-white">🚀 {t("gameCrash")}:</b> {t("helpCrash")}</li>
           <li><b className="text-white">⚪ {t("gamePlinko")}:</b> {t("helpPlinko")}</li>
           <li><b className="text-white">💣 {t("gameMines")}:</b> {t("helpMines")}</li>
@@ -1113,15 +1200,16 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-tour="kasyno-games">
             {([
               { id: "slots", emoji: "🎰" }, { id: "coinflip", emoji: "🪙" }, { id: "roulette", emoji: "🎡" },
-              { id: "dice", emoji: "🎲" }, { id: "blackjack", emoji: "🃏" }, { id: "crash", emoji: "🚀" },
-              { id: "plinko", emoji: "⚪" }, { id: "mines", emoji: "💣" },
-            ] as Array<{ id: Game | "mines" | "blackjack"; emoji: string }>).map((g) => (
+              { id: "dice", emoji: "🎲" }, { id: "blackjack", emoji: "🃏" }, { id: "hilo", emoji: "↕️" },
+              { id: "crash", emoji: "🚀" }, { id: "plinko", emoji: "⚪" }, { id: "mines", emoji: "💣" },
+            ] as Array<{ id: Game | "mines" | "blackjack" | "hilo"; emoji: string }>).map((g) => (
               <button
                 key={g.id}
                 onClick={() => {
                   setSelected(g.id); setError(null); sfxPlay("click");
                   if (bjGame?.status !== "active") setBjGame(null);
                   if (minesGame?.status !== "active") setMinesGame(null);
+                  if (hiloGame?.status !== "active") setHiloGame(null);
                 }}
                 className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/70 py-7 transition-all hover:border-amber-500 hover:bg-zinc-900/80 hover:shadow-[0_0_24px_rgba(245,193,66,0.15)]"
               >
@@ -1139,8 +1227,9 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               setSelected(null); setStage(null); setError(null);
               if (minesGame?.status !== "active") setMinesGame(null);
               if (bjGame?.status !== "active") setBjGame(null);
+              if (hiloGame?.status !== "active") setHiloGame(null);
             }}
-            disabled={minesGame?.status === "active" || bjGame?.status === "active"}
+            disabled={minesGame?.status === "active" || bjGame?.status === "active" || hiloGame?.status === "active"}
             className="self-start text-xs font-bold tracking-widest uppercase text-zinc-500 hover:text-amber-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             ← {t("backToGames")}
@@ -1148,7 +1237,9 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
           {/* animation stage */}
           <div className="flex items-center justify-center" style={{ minHeight: 312 }}>
-            {bjGame ? (
+            {hiloGame ? (
+              <HiloTable game={hiloGame} busy={hiloBusy} fmt={fmt} t={t} onGuess={(g) => hiloAction("guess", g)} onCashout={() => hiloAction("cashout")} />
+            ) : bjGame ? (
               <BlackjackTable game={bjGame} busy={bjBusy} fmt={fmt} t={t} onHit={() => bjAction("hit")} onStand={() => bjAction("stand")} onDouble={() => bjAction("double")} balance={balance} bet={bet} />
             ) : minesGame ? (
               <MinesGrid game={minesGame} onReveal={minesRevealFn} onCashout={minesCashoutFn} busy={minesBusy} fmt={fmt} t={t} />
@@ -1325,6 +1416,15 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{gameLabel.blackjack} <InfoTip text={t("helpBlackjack")} /></span>
             <button onClick={() => bjAction("start")} disabled={bjBusy || !betValid || bjGame?.status === "active" || (balance ?? 0) < bet}
               className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 disabled:opacity-40 transition-all">{t("bjDeal")}</button>
+          </div>
+          )}
+
+          {/* Hi-Lo: deal a card, guess higher/lower, streak multiplies, cash out anytime */}
+          {selected === "hilo" && (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{gameLabel.hilo} <InfoTip text={t("helpHilo")} /></span>
+            <button onClick={() => hiloAction("start")} disabled={hiloBusy || !betValid || hiloGame?.status === "active" || (balance ?? 0) < bet}
+              className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-cyan-700 to-sky-600 hover:from-cyan-600 disabled:opacity-40 transition-all">{t("hiloDeal")}</button>
           </div>
           )}
 

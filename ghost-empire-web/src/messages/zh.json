@@ -641,6 +641,13 @@
     "unitPurchase": "次购买"
   },
   "kasyno": {
+    "gameHilo": "高低牌",
+    "helpHilo": "看一张牌，猜下一张更大还是更小（A最小，K最大；相同则输）。每猜对一次奖池翻倍——在失误前提现！",
+    "hiloDeal": "发牌",
+    "hiloHi": "更大",
+    "hiloLo": "更小",
+    "hiloCash": "提现",
+    "hiloBust": "猜错——注额没了",
     "gameBlackjack": "21点",
     "helpBlackjack": "经典21点对庄家：要牌到21点，庄家补到17点。获胜赔2×，天生21点赔2.5×，平局退回注额。加倍：注额×2并只拿一张牌。",
     "bjDeal": "发牌",

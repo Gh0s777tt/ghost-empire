@@ -670,6 +670,13 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "gameHilo": "Hi-Lo",
+    "helpHilo": "Você vê uma carta e adivinha se a próxima será maior ou menor (Ás baixo, Rei alto; empate perde). Cada acerto multiplica o pote — saque antes de errar!",
+    "hiloDeal": "Dar carta",
+    "hiloHi": "Maior",
+    "hiloLo": "Menor",
+    "hiloCash": "Sacar",
+    "hiloBust": "Errou — aposta perdida",
     "gameBlackjack": "Blackjack",
     "helpBlackjack": "Blackjack clássico contra o dealer: compre até 21, o dealer compra até 17. Vitória paga 2×, blackjack natural 2,5×, empate devolve a aposta. Dobrar: aposta ×2 e uma carta.",
     "bjDeal": "Dar cartas",

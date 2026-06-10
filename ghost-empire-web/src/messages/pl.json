@@ -1931,6 +1931,13 @@
     "unitPurchase": "zakup"
   },
   "kasyno": {
+    "gameHilo": "Hi-Lo",
+    "helpHilo": "Widzisz kartę i zgadujesz, czy następna będzie wyższa czy niższa (As najniższy, Król najwyższy; remis przegrywa). Każde trafienie mnoży pulę — wypłać, zanim się pomylisz!",
+    "hiloDeal": "Rozdaj kartę",
+    "hiloHi": "Wyżej",
+    "hiloLo": "Niżej",
+    "hiloCash": "Wypłać",
+    "hiloBust": "Pudło — stawka przepada",
     "gameBlackjack": "Blackjack",
     "helpBlackjack": "Klasyczny blackjack przeciwko krupierowi: dobieraj do 21, krupier dobiera do 17. Wygrana płaci 2×, naturalny blackjack 2,5×, remis zwraca stawkę. Podwojenie: ×2 stawka i jedna karta.",
     "bjDeal": "Rozdaj",

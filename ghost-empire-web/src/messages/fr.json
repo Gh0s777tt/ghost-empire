@@ -641,6 +641,13 @@
     "unitPurchase": "achat"
   },
   "kasyno": {
+    "gameHilo": "Hi-Lo",
+    "helpHilo": "Tu vois une carte et tu devines si la suivante sera plus haute ou plus basse (As bas, Roi haut ; l'égalité perd). Chaque bonne réponse multiplie la cagnotte — encaisse avant de te tromper !",
+    "hiloDeal": "Tirer une carte",
+    "hiloHi": "Plus haut",
+    "hiloLo": "Plus bas",
+    "hiloCash": "Encaisser",
+    "hiloBust": "Raté — mise perdue",
     "gameBlackjack": "Blackjack",
     "helpBlackjack": "Blackjack classique contre le croupier : tire jusqu'à 21, le croupier tire jusqu'à 17. La victoire paie 2×, le blackjack naturel 2,5×, l'égalité rend la mise. Doubler : mise ×2 et une carte.",
     "bjDeal": "Distribuer",

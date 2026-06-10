@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Nowa gra: Hi-Lo ↕️",
+    items: [
+      "Zgadnij, czy następna karta będzie wyższa czy niższa! Każde trafienie mnoży Twoją pulę (mnożnik zależy od szansy — widzisz go na przycisku), a serię możesz wypłacić w dowolnym momencie. Jedna pomyłka i wszystko przepada — ile razy odważysz się zgadywać?",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Nowa gra: Blackjack 🃏",
     items: [
       "W kasynie wylądował klasyczny Blackjack przeciwko krupierowi! Dobieraj do 21, krupier dobiera do 17. Wygrana płaci 2×, naturalny blackjack aż 2,5×, a remis zwraca stawkę. Możesz też podwoić zakład na pierwszych dwóch kartach. Karty rozdawane są z animacją, a zakryta karta krupiera odkrywa się na koniec.",

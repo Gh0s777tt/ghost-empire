@@ -641,6 +641,13 @@
     "unitPurchase": "Kauf"
   },
   "kasyno": {
+    "gameHilo": "Hi-Lo",
+    "helpHilo": "Du siehst eine Karte und rätst, ob die nächste höher oder niedriger ist (Ass niedrig, König hoch; Gleichstand verliert). Jeder Treffer multipliziert den Pott — zahle aus, bevor du danebenliegst!",
+    "hiloDeal": "Karte geben",
+    "hiloHi": "Höher",
+    "hiloLo": "Niedriger",
+    "hiloCash": "Auszahlen",
+    "hiloBust": "Daneben — Einsatz verloren",
     "gameBlackjack": "Blackjack",
     "helpBlackjack": "Klassisches Blackjack gegen den Dealer: ziehe bis 21, der Dealer zieht bis 17. Sieg zahlt 2×, natürliches Blackjack 2,5×, Unentschieden gibt den Einsatz zurück. Verdoppeln: ×2 Einsatz und eine Karte.",
     "bjDeal": "Geben",
