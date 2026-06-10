@@ -49,6 +49,33 @@
       "rankingSortBody": "Sortuj po %gt%, XP i innych statystykach. Pozycję budujesz aktywnością."
     }
   },
+  "onboarding": {
+    "metaTitle": "Załóż własny portal",
+    "metaDesc": "Uruchom portal społeczności dla swojego kanału — własna marka, tokeny i kolory w kilka minut.",
+    "title": "ZAŁÓŻ WŁASNY PORTAL",
+    "subtitle": "Portal społeczności jak ten — z Twoją marką, Twoimi tokenami i Twoimi kolorami. Wszystko zmienisz później w panelu.",
+    "step1": "Marka",
+    "step2": "Waluta",
+    "step3": "Plan",
+    "name": "Nazwa portalu",
+    "slug": "Adres (subdomena)",
+    "handle": "Twój nick streamerski",
+    "tokenName": "Nazwa tokenów",
+    "tokenSymbol": "Symbol",
+    "color": "Kolor przewodni",
+    "brandHint": "Tokeny to waluta Twojej społeczności — widzowie zarabiają je za oglądanie i czat, a wydają w Twoim sklepie i grach.",
+    "plan_basic": "Ekonomia, sklep, ranking, eventy i questy — solidny start.",
+    "plan_pro": "Wszystko z Basic + kasyno, koło fortuny, zakłady, overlaye OBS i subathon.",
+    "plan_elite": "Wszystko z Pro + asystent AI, webhooki i pełny custom branding.",
+    "trialNote": "Start = 14 dni okresu próbnego wybranego planu. Bez karty. Po okresie próbnym portal przechodzi na Basic, dopóki nie aktywujesz subskrypcji.",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "launch": "Uruchom portal",
+    "error": "Coś poszło nie tak",
+    "doneTitle": "Portal zarezerwowany!",
+    "doneBody": "Twój portal {slug} jest gotowy, a {days}-dniowy okres próbny właśnie ruszył.",
+    "doneNext": "Odezwiemy się z instrukcją podpięcia subdomeny i połączenia kanału. Wszystkie ustawienia zmienisz potem w panelu administracyjnym swojego portalu."
+  },
   "admin": {
     "secTenants": "Portale (SaaS)",
     "secDesc_tenants": "Zarządzanie portalami klientów (white-label): zakładanie nowych, edycja brandingu (nazwa, tokeny, kolor, logo) i planu. Widoczne tylko dla właściciela platformy.",

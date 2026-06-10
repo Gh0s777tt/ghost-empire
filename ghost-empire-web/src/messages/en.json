@@ -49,6 +49,33 @@
       "rankingSortBody": "Sort by %gt%, XP and other stats. You climb through activity."
     }
   },
+  "onboarding": {
+    "metaTitle": "Launch your own portal",
+    "metaDesc": "Spin up a community portal for your channel — your brand, tokens and colors in minutes.",
+    "title": "LAUNCH YOUR OWN PORTAL",
+    "subtitle": "A community portal like this one — with your brand, your tokens and your colors. Everything can be changed later in the panel.",
+    "step1": "Brand",
+    "step2": "Currency",
+    "step3": "Plan",
+    "name": "Portal name",
+    "slug": "Address (subdomain)",
+    "handle": "Your streamer handle",
+    "tokenName": "Token name",
+    "tokenSymbol": "Symbol",
+    "color": "Accent color",
+    "brandHint": "Tokens are your community's currency — viewers earn them for watching and chatting, and spend them in your shop and games.",
+    "plan_basic": "Economy, shop, ranking, events and quests — a solid start.",
+    "plan_pro": "Everything in Basic + casino, wheel, predictions, OBS overlays and subathon.",
+    "plan_elite": "Everything in Pro + AI assistant, webhooks and full custom branding.",
+    "trialNote": "You start with a 14-day trial of the chosen plan. No card needed. After the trial the portal drops to Basic until you activate a subscription.",
+    "back": "Back",
+    "next": "Next",
+    "launch": "Launch portal",
+    "error": "Something went wrong",
+    "doneTitle": "Portal reserved!",
+    "doneBody": "Your portal {slug} is ready and its {days}-day trial just started.",
+    "doneNext": "We'll follow up with subdomain setup and channel-connection steps. Everything is editable later in your portal's admin panel."
+  },
   "admin": {
     "secTenants": "Portals (SaaS)",
     "secDesc_tenants": "Manage client portals (white-label): provision new ones, edit branding (name, tokens, color, logo) and plan. Visible to the platform owner only.",
