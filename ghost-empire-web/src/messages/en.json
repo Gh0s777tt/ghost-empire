@@ -1931,6 +1931,10 @@
     "unitPurchase": "buy"
   },
   "kasyno": {
+    "gameScratch": "Scratch card",
+    "helpScratch": "Buy a ticket and scratch 9 fields: three matching prize symbols win that multiplier — from 1× (🍀) to 100× (🃏). Scratch one by one or reveal everything with one click.",
+    "scratchBuy": "Buy a ticket",
+    "scratchAll": "Reveal all",
     "gameHilo": "Hi-Lo",
     "helpHilo": "You see a card and guess whether the next one is higher or lower (Ace low, King high; a tie loses). Every correct guess multiplies the pot — cash out before you miss!",
     "hiloDeal": "Deal a card",

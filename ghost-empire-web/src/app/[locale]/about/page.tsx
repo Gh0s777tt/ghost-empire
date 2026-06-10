@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Nowa gra: Zdrapki 🎫",
+    items: [
+      "Kup los za swoją stawkę i zdrapuj 9 pól — trzy takie same symbole nagrody wygrywają mnożnik: od 1× za koniczynkę aż po 100× za jokera! Zdrapuj pojedynczo dla emocji albo odsłoń wszystko jednym kliknięciem. Tym samym kasyno ma już 10 gier!",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Nowa gra: Hi-Lo ↕️",
     items: [
       "Zgadnij, czy następna karta będzie wyższa czy niższa! Każde trafienie mnoży Twoją pulę (mnożnik zależy od szansy — widzisz go na przycisku), a serię możesz wypłacić w dowolnym momencie. Jedna pomyłka i wszystko przepada — ile razy odważysz się zgadywać?",

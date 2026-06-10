@@ -641,6 +641,10 @@
     "unitPurchase": "次购买"
   },
   "kasyno": {
+    "gameScratch": "刮刮乐",
+    "helpScratch": "买一张彩票刮开 9 个格子：三个相同的奖励符号即赢得对应倍数——从 1×（🍀）到 100×（🃏）。可以逐格刮，也可以一键全开。",
+    "scratchBuy": "买一张",
+    "scratchAll": "全部刮开",
     "gameHilo": "高低牌",
     "helpHilo": "看一张牌，猜下一张更大还是更小（A最小，K最大；相同则输）。每猜对一次奖池翻倍——在失误前提现！",
     "hiloDeal": "发牌",

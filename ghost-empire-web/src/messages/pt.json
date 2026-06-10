@@ -670,6 +670,10 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "gameScratch": "Raspadinha",
+    "helpScratch": "Compre um bilhete e raspe 9 campos: três símbolos de prêmio iguais ganham o multiplicador — de 1× (🍀) a 100× (🃏). Raspe um a um ou revele tudo com um clique.",
+    "scratchBuy": "Comprar bilhete",
+    "scratchAll": "Revelar tudo",
     "gameHilo": "Hi-Lo",
     "helpHilo": "Você vê uma carta e adivinha se a próxima será maior ou menor (Ás baixo, Rei alto; empate perde). Cada acerto multiplica o pote — saque antes de errar!",
     "hiloDeal": "Dar carta",

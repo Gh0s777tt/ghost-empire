@@ -641,6 +641,10 @@
     "unitPurchase": "compra"
   },
   "kasyno": {
+    "gameScratch": "Rasca y gana",
+    "helpScratch": "Compra un boleto y rasca 9 casillas: tres símbolos de premio iguales ganan su multiplicador — de 1× (🍀) a 100× (🃏). Rasca una a una o destápalo todo con un clic.",
+    "scratchBuy": "Comprar boleto",
+    "scratchAll": "Destapar todo",
     "gameHilo": "Hi-Lo",
     "helpHilo": "Ves una carta y adivinas si la siguiente será mayor o menor (As bajo, Rey alto; el empate pierde). Cada acierto multiplica el bote — ¡retira antes de fallar!",
     "hiloDeal": "Repartir carta",

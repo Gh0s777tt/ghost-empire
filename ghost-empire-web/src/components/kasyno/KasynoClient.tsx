@@ -19,7 +19,8 @@ type PlayResult = {
   detail: string; reels?: string[]; roll?: { n: number; color: "green" | "red" | "black" };
   dice?: { roll: number; target: number; dir: "under" | "over"; win: boolean };
   crash?: { crash: number; target: number; win: boolean };
-  plinko?: { path: number[]; bucket: number; multiplier: number }; error?: string;
+  plinko?: { path: number[]; bucket: number; multiplier: number };
+  scratch?: { grid: string[]; multiplier: number; sym: string | null }; error?: string;
 };
 type Leaderboard = {
   bigWins: Array<{ id: string; name: string; game: string; net: number; detail: string | null }>;
@@ -52,7 +53,7 @@ type BjState = {
   doubled: boolean;
   canDouble: boolean;
 };
-type Game = "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko";
+type Game = "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko" | "scratch";
 type Phase = "spin" | "land";
 
 // Plinko board mirrors lib/gt-games.ts (replicated so the client never imports the server lib).
@@ -865,6 +866,79 @@ function PlayingCard({ code, hidden = false, delay = 0 }: { code?: number; hidde
   );
 }
 
+// ── Scratch card: a 3×3 ticket — the result is server-decided on land; the player
+//    scratches fields at their own pace (click) and the round settles once all 9 are
+//    revealed (or via "reveal all"). Win = three matching prize symbols. ──
+function ScratchCardView({ phase, scratch, onSettle, revealAllLabel }: {
+  phase: Phase; scratch: { grid: string[]; multiplier: number; sym: string | null } | null; onSettle: () => void; revealAllLabel: string;
+}) {
+  const [revealed, setRevealed] = useState<ReadonlySet<number>>(new Set());
+  const done = useRef(false);
+  const allRevealed = revealed.size === 9;
+
+  useEffect(() => {
+    if (phase === "land" && scratch && reducedMotion()) setRevealed(new Set(Array.from({ length: 9 }, (_, i) => i)));
+  }, [phase, scratch]);
+
+  useEffect(() => {
+    if (!allRevealed || !scratch || done.current) return;
+    done.current = true;
+    const t = setTimeout(onSettle, 420);
+    return () => clearTimeout(t);
+  }, [allRevealed, scratch, onSettle]);
+
+  const reveal = (i: number) => {
+    if (phase !== "land" || !scratch || revealed.has(i)) return;
+    sfxPlay("click");
+    setRevealed((prev) => new Set(prev).add(i));
+  };
+
+  const winSym = allRevealed && scratch?.sym ? scratch.sym : null;
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="rounded-2xl border border-amber-700/50 bg-gradient-to-br from-amber-950/40 to-zinc-950 p-4">
+        <div className="grid grid-cols-3 gap-2">
+          {Array.from({ length: 9 }, (_, i) => {
+            const isRevealed = revealed.has(i);
+            const sym = scratch?.grid[i];
+            const isWinCell = winSym !== null && sym === winSym;
+            return (
+              <button
+                key={i}
+                onClick={() => reveal(i)}
+                disabled={phase !== "land" || !scratch || isRevealed}
+                className="rounded-xl flex items-center justify-center transition-all"
+                style={{
+                  width: 72, height: 72, fontSize: 32,
+                  background: isRevealed
+                    ? isWinCell ? "radial-gradient(circle at 50% 35%, #6b5310, #2a2008)" : "linear-gradient(160deg,#1c1c26,#101016)"
+                    : "linear-gradient(135deg,#9ea3ad,#6b7078 45%,#aeb3bd 70%,#7a7f88)",
+                  border: isWinCell ? "1px solid #ffd54a" : "1px solid #3a3a48",
+                  boxShadow: isWinCell ? "0 0 12px rgba(255,213,74,.6)" : "inset 0 2px 4px rgba(0,0,0,.35)",
+                  cursor: phase === "land" && scratch && !isRevealed ? "pointer" : "default",
+                  animation: !isRevealed && phase === "spin" && !reducedMotion() ? "pulse-live 1.4s ease-in-out infinite" : undefined,
+                }}
+              >
+                {isRevealed ? (
+                  <span style={{ animation: reducedMotion() ? undefined : "gefx-pop 320ms cubic-bezier(.34,1.56,.64,1)" }}>{sym}</span>
+                ) : (
+                  <span className="text-zinc-700 text-xl font-black">👻</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {phase === "land" && scratch && !allRevealed && (
+        <button onClick={() => { sfxPlay("click"); setRevealed(new Set(Array.from({ length: 9 }, (_, i) => i))); }}
+          className="text-xs font-bold tracking-widest uppercase text-zinc-500 hover:text-amber-300 transition-colors">
+          {revealAllLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Hi-Lo table: the current card + higher/lower buttons (with live odds) + cash-out.
 //    hilo cards are {rank 1-13, suit} → PlayingCard code = suit*13 + (rank-1). ──
 function HiloTable({ game, busy, fmt, t, onGuess, onCashout }: {
@@ -967,7 +1041,7 @@ function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, balance,
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
-  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines"), blackjack: t("gameBlackjack"), hilo: t("gameHilo") };
+  const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines"), blackjack: t("gameBlackjack"), hilo: t("gameHilo"), scratch: t("gameScratch") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   // Stake as a STRING so the field can be cleared and retyped freely ("" → invalid,
   // play buttons disable); the numeric `bet` derives from it, clamped to the API range.
@@ -1177,6 +1251,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           <li><b className="text-white">🎲 {t("gameDice")}:</b> {t("helpDice")}</li>
           <li><b className="text-white">🃏 {t("gameBlackjack")}:</b> {t("helpBlackjack")}</li>
           <li><b className="text-white">↕️ {t("gameHilo")}:</b> {t("helpHilo")}</li>
+          <li><b className="text-white">🎫 {t("gameScratch")}:</b> {t("helpScratch")}</li>
           <li><b className="text-white">🚀 {t("gameCrash")}:</b> {t("helpCrash")}</li>
           <li><b className="text-white">⚪ {t("gamePlinko")}:</b> {t("helpPlinko")}</li>
           <li><b className="text-white">💣 {t("gameMines")}:</b> {t("helpMines")}</li>
@@ -1202,6 +1277,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               { id: "slots", emoji: "🎰" }, { id: "coinflip", emoji: "🪙" }, { id: "roulette", emoji: "🎡" },
               { id: "dice", emoji: "🎲" }, { id: "blackjack", emoji: "🃏" }, { id: "hilo", emoji: "↕️" },
               { id: "crash", emoji: "🚀" }, { id: "plinko", emoji: "⚪" }, { id: "mines", emoji: "💣" },
+              { id: "scratch", emoji: "🎫" },
             ] as Array<{ id: Game | "mines" | "blackjack" | "hilo"; emoji: string }>).map((g) => (
               <button
                 key={g.id}
@@ -1255,6 +1331,8 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
               <CrashRocket key={stage.id} phase={stage.phase} crash={stage.result?.crash ?? null} onSettle={settle} />
             ) : stage?.game === "plinko" ? (
               <PlinkoBoard key={stage.id} phase={stage.phase} plinko={stage.result?.plinko ?? null} onSettle={settle} />
+            ) : stage?.game === "scratch" ? (
+              <ScratchCardView key={stage.id} phase={stage.phase} scratch={stage.result?.scratch ?? null} onSettle={settle} revealAllLabel={t("scratchAll")} />
             ) : (
               <div className="text-zinc-700 text-5xl tracking-widest">🎰</div>
             )}
@@ -1416,6 +1494,15 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{gameLabel.blackjack} <InfoTip text={t("helpBlackjack")} /></span>
             <button onClick={() => bjAction("start")} disabled={bjBusy || !betValid || bjGame?.status === "active" || (balance ?? 0) < bet}
               className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 disabled:opacity-40 transition-all">{t("bjDeal")}</button>
+          </div>
+          )}
+
+          {/* Scratch: buy a ticket, scratch the 9 fields — three matching symbols win */}
+          {selected === "scratch" && (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-zinc-500 self-center me-1 inline-flex items-center gap-1">{gameLabel.scratch} <InfoTip text={t("helpScratch")} /></span>
+            <button onClick={() => play("scratch")} disabled={busy || !betValid || (balance ?? 0) < bet}
+              className="px-6 py-2.5 rounded-full font-bold text-white bg-gradient-to-r from-lime-700 to-emerald-600 hover:from-lime-600 disabled:opacity-40 transition-all">{t("scratchBuy")}</button>
           </div>
           )}
 
