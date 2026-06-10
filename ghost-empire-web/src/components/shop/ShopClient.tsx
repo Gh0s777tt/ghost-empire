@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { shopDiscountFraction, discountedPrice } from "@/lib/economy";
+import { useTenantBranding } from "@/components/TenantBranding";
 import type { ShopItem } from "@prisma/client";
 
 type UserContext = {
@@ -57,6 +58,7 @@ export function ShopClient({
   const [busyItem, setBusyItem] = useState<string | null>(null);
   const [confirmItem, setConfirmItem] = useState<ShopItem | null>(null);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const { tokenSymbol } = useTenantBranding();
 
   const visible = useMemo(
     () => (category === "all" ? items : items.filter((i) => i.category === category)),
@@ -169,7 +171,7 @@ export function ShopClient({
                   {t("balance")}
                 </div>
                 <div className="font-mono text-xl font-bold text-white tabular-nums">
-                  {fmt(balance)} <span className="text-zinc-500 text-xs">GT</span>
+                  {fmt(balance)} <span className="text-zinc-500 text-xs">{tokenSymbol}</span>
                 </div>
               </div>
             </div>
@@ -313,7 +315,7 @@ export function ShopClient({
                         <span className="text-zinc-600 text-xs line-through font-normal">{fmt(item.price)}</span>
                       )}
                       <span className={discounted ? "text-emerald-300" : undefined}>
-                        {fmt(price)} <span className="text-zinc-500 text-xs">GT</span>
+                        {fmt(price)} <span className="text-zinc-500 text-xs">{tokenSymbol}</span>
                       </span>
                     </div>
                   </div>
@@ -397,7 +399,7 @@ export function ShopClient({
                     <span className="text-zinc-600 line-through me-2">{fmt(confirmItem.price)}</span>
                   )}
                   <span className={priceFor(confirmItem) < confirmItem.price ? "text-emerald-300" : undefined}>
-                    {fmt(priceFor(confirmItem))} GT
+                    {fmt(priceFor(confirmItem))} {tokenSymbol}
                   </span>
                 </span>
               </div>
@@ -409,12 +411,12 @@ export function ShopClient({
               )}
               <div className="flex justify-between">
                 <span className="text-zinc-500">{t("mBalance")}</span>
-                <span className="text-white">{fmt(balance)} GT</span>
+                <span className="text-white">{fmt(balance)} {tokenSymbol}</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-zinc-800">
                 <span className="text-zinc-500">{t("mAfter")}</span>
                 <span className="text-red-400 font-bold">
-                  {fmt(Math.max(0, balance - priceFor(confirmItem)))} GT
+                  {fmt(Math.max(0, balance - priceFor(confirmItem)))} {tokenSymbol}
                 </span>
               </div>
             </div>

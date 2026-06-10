@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
 import { sfxPlay } from "@/lib/sfx";
+import { useTenantBranding } from "@/components/TenantBranding";
 import type { Session } from "next-auth";
 
 type Props = {
@@ -164,6 +165,7 @@ function DailyBonusCard() {
   const [st, setSt] = useState<{ claimedToday: boolean; streak: number; nextReward: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [justClaimed, setJustClaimed] = useState<number | null>(null);
+  const { tokenSymbol } = useTenantBranding();
 
   const load = useCallback(async () => {
     try { setSt(await apiGet("/api/daily-bonus")); } catch { /* ignore */ }
@@ -198,7 +200,7 @@ function DailyBonusCard() {
       </div>
       {st.claimedToday ? (
         <div className="text-sm font-bold text-emerald-300">
-          {justClaimed != null ? `+${fmt(justClaimed)} GT 🎉` : t("bonusClaimed")}
+          {justClaimed != null ? `+${fmt(justClaimed)} ${tokenSymbol} 🎉` : t("bonusClaimed")}
         </div>
       ) : (
         <button

@@ -13,6 +13,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
 import { fmt, formatDate, cn } from "@/lib/utils";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
+import { useTenantBranding } from "@/components/TenantBranding";
 import { CommandPalette, openCommandPalette } from "./CommandPalette";
 import { SetupStatusCard } from "./SetupStatusCard";
 import { AdminAssistant } from "./AdminAssistant";
@@ -116,6 +117,7 @@ export function AdminClient({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const { tokenSymbol } = useTenantBranding();
 
   // Navigation sections — each maps to a group of cards previously rendered linearly.
   // `permission` returns true if the user can see ANY card in this section.
@@ -269,8 +271,8 @@ export function AdminClient({
       {/* Stats — always visible above the sidebar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatTile label={t("statUsers")} value={fmt(stats.totalUsers, locale)} icon={Users} />
-        <StatTile label={t("statTokensCirc")} value={fmt(stats.totalTokensInCirculation, locale)} suffix="GT" icon={Coins} />
-        <StatTile label={t("statEverEarned")} value={fmt(stats.totalEverEarned, locale)} suffix="GT" icon={TrendingUp} />
+        <StatTile label={t("statTokensCirc")} value={fmt(stats.totalTokensInCirculation, locale)} suffix={tokenSymbol} icon={Coins} />
+        <StatTile label={t("statEverEarned")} value={fmt(stats.totalEverEarned, locale)} suffix={tokenSymbol} icon={TrendingUp} />
         <StatTile label={t("statActiveEvents")} value={fmt(stats.eventsActive, locale)} icon={Calendar} />
         <StatTile label={t("statPendingOrders")} value={fmt(stats.ordersPending, locale)} icon={Package} accent={stats.ordersPending > 0} />
       </div>

@@ -12,6 +12,7 @@ import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { emitBalance } from "@/lib/balance-bus";
 import { sfxEnabled, sfxToggle, sfxPlay } from "@/lib/sfx";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { useTenantBranding } from "@/components/TenantBranding";
 import { Link } from "@/i18n/navigation";
 
 type PlayResult = {
@@ -796,6 +797,7 @@ type MinesGameState = { sessionId: string; bombs: number; revealed: number[]; mu
 function MinesGrid({ game, onReveal, onCashout, busy, fmt, t }: {
   game: MinesGameState; onReveal: (tile: number) => void; onCashout: () => void; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
 }) {
+  const { tokenSymbol } = useTenantBranding();
   const over = game.status !== "active";
   const revealedSet = new Set(game.revealed);
   const bombSet = new Set(game.bombSet ?? []);
@@ -807,11 +809,11 @@ function MinesGrid({ game, onReveal, onCashout, busy, fmt, t }: {
         {game.status === "active" ? (
           <button onClick={onCashout} disabled={busy || game.revealed.length === 0}
             className="px-4 py-1.5 rounded-full text-sm font-extrabold text-black bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-300 disabled:opacity-40 transition-all">
-            {t("minesCashout")} {fmt(potential)} GT
+            {t("minesCashout")} {fmt(potential)} {tokenSymbol}
           </button>
         ) : (
           <div className={`text-sm font-extrabold ${game.status === "cashed" ? "text-emerald-300" : "text-rose-400"}`}>
-            {game.status === "cashed" ? `✅ +${fmt((game.payout ?? 0) - game.bet)} GT` : `💥 −${fmt(game.bet)} GT`}
+            {game.status === "cashed" ? `✅ +${fmt((game.payout ?? 0) - game.bet)} ${tokenSymbol}` : `💥 −${fmt(game.bet)} ${tokenSymbol}`}
           </div>
         )}
       </div>
@@ -945,6 +947,7 @@ function HiloTable({ game, busy, fmt, t, onGuess, onCashout }: {
   game: HiloState; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
   onGuess: (g: "hi" | "lo") => void; onCashout: () => void;
 }) {
+  const { tokenSymbol } = useTenantBranding();
   const code = (c: { rank: number; suit: number }) => c.suit * 13 + (c.rank - 1);
   const pHi = (13 - game.card.rank) / 13;
   const pLo = (game.card.rank - 1) / 13;
@@ -973,7 +976,7 @@ function HiloTable({ game, busy, fmt, t, onGuess, onCashout }: {
           </button>
           <button onClick={onCashout} disabled={busy || game.steps === 0}
             className="px-5 py-2 rounded-full font-extrabold text-black bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 disabled:opacity-40 transition-all">
-            💰 {t("hiloCash")} {fmt(game.potential)} GT
+            💰 {t("hiloCash")} {fmt(game.potential)} {tokenSymbol}
           </button>
         </div>
       ) : (
@@ -981,7 +984,7 @@ function HiloTable({ game, busy, fmt, t, onGuess, onCashout }: {
           {game.status === "cashed" && (game.net ?? 0) > 0 && !reducedMotion() && <WinBurst seed={game.steps * 13 + game.card.rank} />}
           <div className={`text-xl font-extrabold ${game.status === "cashed" ? "text-emerald-300" : "text-rose-400"}`}
             style={{ animation: reducedMotion() ? undefined : "gefx-pop 420ms cubic-bezier(.34,1.56,.64,1)" }}>
-            {game.status === "cashed" ? `+${fmt(game.net ?? 0)} GT 🎉` : `💥 ${t("hiloBust")}`}
+            {game.status === "cashed" ? `+${fmt(game.net ?? 0)} ${tokenSymbol} 🎉` : `💥 ${t("hiloBust")}`}
           </div>
         </div>
       )}
@@ -993,6 +996,7 @@ function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, balance,
   game: BjState; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
   onHit: () => void; onStand: () => void; onDouble: () => void; balance: number | null; bet: number;
 }) {
+  const { tokenSymbol } = useTenantBranding();
   const active = game.status === "active";
   const r = game.result;
   return (
@@ -1030,7 +1034,7 @@ function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, balance,
           <div className={`text-xl font-extrabold ${r.net > 0 ? "text-emerald-300" : r.net === 0 ? "text-zinc-300" : "text-rose-400"}`}
             style={{ animation: reducedMotion() ? undefined : "gefx-pop 420ms cubic-bezier(.34,1.56,.64,1)" }}>
             {r.multiplier === 2.5 ? "🃏 BLACKJACK! " : ""}
-            {r.net > 0 ? `+${fmt(r.net)} GT 🎉` : r.net === 0 ? `🤝 ${t("bjPush")}` : `−${fmt(-r.net)} GT`}
+            {r.net > 0 ? `+${fmt(r.net)} ${tokenSymbol} 🎉` : r.net === 0 ? `🤝 ${t("bjPush")}` : `−${fmt(-r.net)} ${tokenSymbol}`}
           </div>
         </div>
       ) : null}
@@ -1041,6 +1045,7 @@ function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, balance,
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines"), blackjack: t("gameBlackjack"), hilo: t("gameHilo"), scratch: t("gameScratch") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   // Stake as a STRING so the field can be cleared and retyped freely ("" → invalid,
@@ -1267,7 +1272,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <div className="w-full rounded-xl border border-amber-700/60 bg-gradient-to-r from-amber-950/50 via-zinc-950 to-zinc-950 px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-display text-lg tracking-wider text-amber-200">💰 {t("jackpot")}</span>
-                <span className="font-mono text-2xl font-black text-amber-300 tabular-nums" style={{ textShadow: "0 0 18px rgba(245,193,66,.45)" }}>{fmt(jackpot)} GT</span>
+                <span className="font-mono text-2xl font-black text-amber-300 tabular-nums" style={{ textShadow: "0 0 18px rgba(245,193,66,.45)" }}>{fmt(jackpot)} {tokenSymbol}</span>
               </div>
               <p className="text-[11px] text-zinc-500 mt-1">{t("jackpotHint")}</p>
             </div>
@@ -1356,7 +1361,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
                     textShadow: reveal.net > 0 ? "0 0 22px rgba(52,211,153,.45)" : undefined,
                   }}
                 >
-                  {reveal.net > 0 ? `+${fmt(reveal.net)} GT 🎉` : reveal.net < 0 ? `−${fmt(-reveal.net)} GT` : `±0 GT`}
+                  {reveal.net > 0 ? `+${fmt(reveal.net)} ${tokenSymbol} 🎉` : reveal.net < 0 ? `−${fmt(-reveal.net)} ${tokenSymbol}` : `±0 ${tokenSymbol}`}
                 </div>
               </>
             ) : stage ? (
@@ -1528,7 +1533,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </div>
           )}
 
-          <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} GT</span></div>
+          <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} {tokenSymbol}</span></div>
         </>
       )}
 

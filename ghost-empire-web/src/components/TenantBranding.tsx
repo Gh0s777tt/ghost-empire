@@ -1,0 +1,28 @@
+"use client";
+// src/components/TenantBranding.tsx
+// Client-side access to the active tenant's white-label branding (Phase 5).
+// The [locale] layout resolves the tenant server-side and feeds the values in;
+// client components read them via useTenantBranding() — most commonly the
+// currency naming for "123 GT"-style suffixes that live outside i18n strings.
+import { createContext, useContext } from "react";
+
+export type TenantBrandingValue = {
+  tokenName: string;
+  tokenSymbol: string;
+};
+
+const TenantBrandingContext = createContext<TenantBrandingValue>({
+  tokenName: "Ghost Tokens",
+  tokenSymbol: "GT",
+});
+
+export function TenantBrandingProvider({
+  value, children,
+}: { value: TenantBrandingValue; children: React.ReactNode }) {
+  return <TenantBrandingContext.Provider value={value}>{children}</TenantBrandingContext.Provider>;
+}
+
+/** The active tenant's currency naming. Defaults to Ghost Tokens / GT. */
+export function useTenantBranding(): TenantBrandingValue {
+  return useContext(TenantBrandingContext);
+}
