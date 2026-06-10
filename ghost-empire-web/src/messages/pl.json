@@ -1931,6 +1931,10 @@
     "unitPurchase": "zakup"
   },
   "kasyno": {
+    "gameScratch": "Zdrapka",
+    "helpScratch": "Kup los i zdrap 9 pól: trzy takie same symbole nagrody wygrywają jej mnożnik — od 1× (🍀) do 100× (🃏). Zdrapuj pojedynczo albo odsłoń wszystko jednym kliknięciem.",
+    "scratchBuy": "Kup zdrapkę",
+    "scratchAll": "Odsłoń wszystkie",
     "gameHilo": "Hi-Lo",
     "helpHilo": "Widzisz kartę i zgadujesz, czy następna będzie wyższa czy niższa (As najniższy, Król najwyższy; remis przegrywa). Każde trafienie mnoży pulę — wypłać, zanim się pomylisz!",
     "hiloDeal": "Rozdaj kartę",

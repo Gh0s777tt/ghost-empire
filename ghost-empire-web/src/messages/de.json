@@ -641,6 +641,10 @@
     "unitPurchase": "Kauf"
   },
   "kasyno": {
+    "gameScratch": "Rubbellos",
+    "helpScratch": "Kauf ein Los und rubble 9 Felder frei: drei gleiche Gewinnsymbole zahlen den Multiplikator — von 1× (🍀) bis 100× (🃏). Einzeln rubbeln oder alles mit einem Klick aufdecken.",
+    "scratchBuy": "Los kaufen",
+    "scratchAll": "Alle aufdecken",
     "gameHilo": "Hi-Lo",
     "helpHilo": "Du siehst eine Karte und rätst, ob die nächste höher oder niedriger ist (Ass niedrig, König hoch; Gleichstand verliert). Jeder Treffer multipliziert den Pott — zahle aus, bevor du danebenliegst!",
     "hiloDeal": "Karte geben",

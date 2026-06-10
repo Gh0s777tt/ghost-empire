@@ -641,6 +641,10 @@
     "unitPurchase": "achat"
   },
   "kasyno": {
+    "gameScratch": "Carte à gratter",
+    "helpScratch": "Achète un ticket et gratte 9 cases : trois symboles de prix identiques gagnent leur multiplicateur — de 1× (🍀) à 100× (🃏). Gratte case par case ou révèle tout d'un clic.",
+    "scratchBuy": "Acheter un ticket",
+    "scratchAll": "Tout révéler",
     "gameHilo": "Hi-Lo",
     "helpHilo": "Tu vois une carte et tu devines si la suivante sera plus haute ou plus basse (As bas, Roi haut ; l'égalité perd). Chaque bonne réponse multiplie la cagnotte — encaisse avant de te tromper !",
     "hiloDeal": "Tirer une carte",

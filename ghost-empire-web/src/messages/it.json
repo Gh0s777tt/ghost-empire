@@ -641,6 +641,10 @@
     "unitPurchase": "acquisto"
   },
   "kasyno": {
+    "gameScratch": "Gratta e vinci",
+    "helpScratch": "Compra un biglietto e gratta 9 caselle: tre simboli premio uguali vincono il loro moltiplicatore — da 1× (🍀) a 100× (🃏). Gratta una alla volta o scopri tutto con un clic.",
+    "scratchBuy": "Compra biglietto",
+    "scratchAll": "Scopri tutto",
     "gameHilo": "Hi-Lo",
     "helpHilo": "Vedi una carta e indovini se la prossima sarà più alta o più bassa (Asso basso, Re alto; il pareggio perde). Ogni colpo moltiplica il piatto — incassa prima di sbagliare!",
     "hiloDeal": "Distribuisci carta",

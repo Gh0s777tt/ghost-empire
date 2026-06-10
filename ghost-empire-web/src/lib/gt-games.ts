@@ -197,8 +197,56 @@ export function spinRoulette(choice: string, rng: () => number = Math.random): R
   return { n, color, multiplier };
 }
 
+// ── Scratch cards: a 3×3 ticket — three matching PRIZE symbols anywhere win that
+//    tier's multiplier. The tier is drawn first (calibrated table, RTP ≈ 0.92) and the
+//    grid is then generated to MATCH it (a win shows exactly three of the tier symbol;
+//    a blank never contains any three-of-a-kind) — provably consistent with the payout.
+export const SCRATCH_TIERS = [
+  { sym: "🍀", mult: 1, p: 0.2 },
+  { sym: "🪙", mult: 2, p: 0.12 },
+  { sym: "👻", mult: 5, p: 0.05 },
+  { sym: "💎", mult: 20, p: 0.006 },
+  { sym: "🃏", mult: 100, p: 0.0011 },
+] as const; // P(blank) = 1 - Σp ≈ 0.6229 → EV = Σ p·mult ≈ 0.92
+
+const SCRATCH_FILLERS = ["💀", "🍀", "🪙", "👻", "💎", "🃏"];
+
+export type ScratchOutcome = { grid: string[]; multiplier: number; sym: string | null };
+
+/** Draw a tier, then lay out a consistent 3×3 grid. */
+export function scratchCard(rng: () => number = Math.random): ScratchOutcome {
+  let r = rng();
+  let tier: (typeof SCRATCH_TIERS)[number] | null = null;
+  for (const t of SCRATCH_TIERS) { if (r < t.p) { tier = t; break; } r -= t.p; }
+
+  const grid: string[] = [];
+  const count: Record<string, number> = {};
+  const cap = (s: string) => (count[s] ?? 0) >= 2; // never an accidental three-of-a-kind
+  if (tier) {
+    // place exactly three of the winning symbol on random cells
+    const cells = Array.from({ length: 9 }, (_, i) => i);
+    for (let i = cells.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [cells[i], cells[j]] = [cells[j], cells[i]]; }
+    const winCells = new Set(cells.slice(0, 3));
+    for (let i = 0; i < 9; i++) {
+      if (winCells.has(i)) { grid.push(tier.sym); continue; }
+      let s = SCRATCH_FILLERS[Math.floor(rng() * SCRATCH_FILLERS.length)];
+      while (s === tier.sym || cap(s)) s = SCRATCH_FILLERS[Math.floor(rng() * SCRATCH_FILLERS.length)];
+      count[s] = (count[s] ?? 0) + 1;
+      grid.push(s);
+    }
+    return { grid, multiplier: tier.mult, sym: tier.sym };
+  }
+  for (let i = 0; i < 9; i++) {
+    let s = SCRATCH_FILLERS[Math.floor(rng() * SCRATCH_FILLERS.length)];
+    while (cap(s)) s = SCRATCH_FILLERS[Math.floor(rng() * SCRATCH_FILLERS.length)];
+    count[s] = (count[s] ?? 0) + 1;
+    grid.push(s);
+  }
+  return { grid, multiplier: 0, sym: null };
+}
+
 export type GtGameResult =
-  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor }; dice?: { roll: number; target: number; dir: DiceDir; win: boolean }; crash?: { crash: number; target: number; win: boolean }; plinko?: { path: number[]; bucket: number; multiplier: number } }
+  | { ok: true; game: string; bet: number; payout: number; net: number; newBalance: number; detail: string; reels?: string[]; roll?: { n: number; color: RouletteColor }; dice?: { roll: number; target: number; dir: DiceDir; win: boolean }; crash?: { crash: number; target: number; win: boolean }; plinko?: { path: number[]; bucket: number; multiplier: number }; scratch?: { grid: string[]; multiplier: number; sym: string | null } }
   | { ok: false; status: number; error: string };
 
 export class GtGameError extends Error {
@@ -209,7 +257,7 @@ export class GtGameError extends Error {
  *  used by roulette (red/black or a number 0-36). */
 export async function playGtGame(
   userId: string,
-  game: "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko",
+  game: "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko" | "scratch",
   bet: number,
   choice?: string,
 ): Promise<GtGameResult> {
@@ -224,6 +272,7 @@ export async function playGtGame(
   let dice: { roll: number; target: number; dir: DiceDir; win: boolean } | undefined;
   let crash: { crash: number; target: number; win: boolean } | undefined;
   let plinko: { path: number[]; bucket: number; multiplier: number } | undefined;
+  let scratch: { grid: string[]; multiplier: number; sym: string | null } | undefined;
   let jackpotWon = 0; // claimed surplus is refunded if the charge fails below
   if (game === "slots") {
     const o = spinSlots();
@@ -266,6 +315,11 @@ export async function playGtGame(
     detail = `🔵 ${o.multiplier.toFixed(2)}× (przegródka ${o.bucket + 1}/${PLINKO_ROWS + 1})`;
     plinko = { path: o.path, bucket: o.bucket, multiplier: o.multiplier };
     payout = Math.floor(bet * o.multiplier);
+  } else if (game === "scratch") {
+    const o = scratchCard();
+    detail = o.sym ? `🎫 3×${o.sym} → ${o.multiplier}×` : "🎫 pusto";
+    scratch = o;
+    payout = o.multiplier > 0 ? Math.floor(bet * o.multiplier) : 0;
   } else {
     return { ok: false, status: 400, error: "Nieznana gra" };
   }
@@ -298,7 +352,7 @@ export async function playGtGame(
     const { checkAndGrantAchievements } = await import("@/lib/achievements");
     await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
 
-    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash, plinko };
+    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash, plinko, scratch };
   } catch (e) {
     // The pot was grabbed before the charge — put the surplus back on failure.
     if (jackpotWon > JACKPOT_SEED) void refundJackpotSurplus(jackpotWon - JACKPOT_SEED);

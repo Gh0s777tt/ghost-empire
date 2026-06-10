@@ -1,6 +1,41 @@
 import { describe, it, expect } from "vitest";
-import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash, dropPlinko, PLINKO_MULTS, PLINKO_ROWS, isJackpotHit } from "@/lib/gt-games";
+import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash, dropPlinko, PLINKO_MULTS, PLINKO_ROWS, isJackpotHit, scratchCard, SCRATCH_TIERS } from "@/lib/gt-games";
 import { minesMultiplier, MINES_TILES, MINES_MAX_MULT } from "@/lib/gt-mines";
+
+describe("scratch cards", () => {
+  it("tier probabilities are sane and EV ≈ 0.92", () => {
+    const pSum = SCRATCH_TIERS.reduce((a, t) => a + t.p, 0);
+    expect(pSum).toBeLessThan(1);
+    const ev = SCRATCH_TIERS.reduce((a, t) => a + t.p * t.mult, 0);
+    expect(ev).toBeGreaterThan(0.85);
+    expect(ev).toBeLessThan(0.97);
+  });
+
+  it("grids are consistent with the drawn tier", () => {
+    for (let i = 0; i < 500; i++) {
+      const o = scratchCard();
+      expect(o.grid).toHaveLength(9);
+      const counts: Record<string, number> = {};
+      for (const s of o.grid) counts[s] = (counts[s] ?? 0) + 1;
+      if (o.sym) {
+        expect(o.multiplier).toBeGreaterThan(0);
+        expect(counts[o.sym]).toBe(3);                       // winner: exactly three of the tier symbol
+        for (const [s, c] of Object.entries(counts)) if (s !== o.sym) expect(c).toBeLessThanOrEqual(2);
+      } else {
+        expect(o.multiplier).toBe(0);
+        for (const c of Object.values(counts)) expect(c).toBeLessThanOrEqual(2); // blank: no three-of-a-kind
+      }
+    }
+  });
+
+  it("Monte-Carlo RTP lands near 0.92", () => {
+    const N = 100_000;
+    let ret = 0;
+    for (let i = 0; i < N; i++) ret += scratchCard().multiplier;
+    expect(ret / N).toBeGreaterThan(0.8);
+    expect(ret / N).toBeLessThan(1.05);
+  });
+});
 
 describe("jackpot", () => {
   it("hits only on triple seven", () => {

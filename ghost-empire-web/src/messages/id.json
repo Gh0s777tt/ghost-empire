@@ -670,6 +670,10 @@
     "unitPurchase": "beli"
   },
   "kasyno": {
+    "gameScratch": "Kartu gosok",
+    "helpScratch": "Beli tiket dan gosok 9 kotak: tiga simbol hadiah yang sama memenangkan pengalinya — dari 1× (🍀) sampai 100× (🃏). Gosok satu per satu atau buka semua dengan sekali klik.",
+    "scratchBuy": "Beli tiket",
+    "scratchAll": "Buka semua",
     "gameHilo": "Hi-Lo",
     "helpHilo": "Kamu melihat satu kartu dan menebak apakah kartu berikutnya lebih tinggi atau lebih rendah (As terendah, King tertinggi; seri kalah). Setiap tebakan benar menggandakan pot — tarik sebelum meleset!",
     "hiloDeal": "Bagikan kartu",
