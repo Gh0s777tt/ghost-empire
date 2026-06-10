@@ -11,6 +11,7 @@ import {
 import { EmptyState } from "@/components/EmptyState";
 import { cn, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type Winner = {
   id: string;
@@ -566,6 +567,7 @@ function RaffleCard({
 }) {
   const t = useTranslations("events");
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const [qty, setQty] = useState(1);
   const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
@@ -621,7 +623,7 @@ function RaffleCard({
       {!drawn && (
         <div className="flex items-center justify-between gap-2 text-[10px] font-mono uppercase tracking-widest mb-3">
           <span className="text-zinc-500">{t("ticketPrice")}</span>
-          <span className="text-white text-sm normal-case font-bold">{fmt(price)} GT</span>
+          <span className="text-white text-sm normal-case font-bold">{fmt(price)} {tokenSymbol}</span>
         </div>
       )}
 

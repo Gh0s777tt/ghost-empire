@@ -7,6 +7,8 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
+import { TenantBrandingProvider } from "@/components/TenantBranding";
+import { getCurrentTenant } from "@/lib/tenant";
 import TourProvider from "@/components/tour/SiteTour";
 import { ClientErrorReporter } from "@/components/ClientErrorReporter";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
@@ -37,6 +39,9 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   const messages = await getMessages();
   const t = await getTranslations("common");
+  // White-label branding for client components ("123 GT" suffixes outside i18n).
+  const tenant = await getCurrentTenant();
+  const branding = { tokenName: tenant.tokenName, tokenSymbol: tenant.tokenSymbol };
   // Arabic is the only RTL locale so far — flip the document direction so text,
   // alignment and punctuation flow correctly. (Full bidi layout mirroring of
   // physical-property components is a follow-up; dir="rtl" fixes the text itself.)
@@ -59,6 +64,7 @@ export default async function LocaleLayout({
           {t("skipToContent")}
         </a>
         <NextIntlClientProvider messages={messages}>
+          <TenantBrandingProvider value={branding}>
           <Providers>
             <TourProvider>
               <div id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-hidden">
@@ -67,6 +73,7 @@ export default async function LocaleLayout({
               <SiteFooter />
             </TourProvider>
           </Providers>
+          </TenantBrandingProvider>
         </NextIntlClientProvider>
         {/* Privacy-friendly, cookieless analytics + Core Web Vitals (no-op outside Vercel). */}
         <Analytics />

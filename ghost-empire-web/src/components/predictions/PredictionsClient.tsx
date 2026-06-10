@@ -10,6 +10,7 @@ import { Dice5, Coins, Trophy, Clock, Check, X, Loader2, History } from "lucide-
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type ActivePrediction = {
   id: string;
@@ -52,6 +53,7 @@ export function PredictionsClient({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const { tokenSymbol } = useTenantBranding();
 
   function showToast(kind: "ok" | "err", msg: string) {
     setToast({ kind, msg });
@@ -84,7 +86,7 @@ export function PredictionsClient({
         <div className="border border-zinc-800 bg-zinc-950/70 p-3 flex items-center gap-3">
           <Coins className="w-5 h-5 text-yellow-500" />
           <div className="text-sm text-zinc-400">{t("balance")}</div>
-          <div className="font-mono font-bold text-white text-lg tabular-nums">{fmt(myTokens)} <span className="text-xs text-zinc-500">GT</span></div>
+          <div className="font-mono font-bold text-white text-lg tabular-nums">{fmt(myTokens)} <span className="text-xs text-zinc-500">{tokenSymbol}</span></div>
         </div>
       )}
 
@@ -169,6 +171,7 @@ function ActivePredictionCard({
   const [pickedOption, setPickedOption] = useState<number | null>(prediction.myEntry?.optionIndex ?? null);
   const [wagerInput, setWagerInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const { tokenSymbol } = useTenantBranding();
 
   const isLocked = prediction.status === "locked" || (prediction.closesAt && new Date(prediction.closesAt) < new Date());
   const alreadyWagered = prediction.myEntry !== null;
@@ -211,7 +214,7 @@ function ActivePredictionCard({
         <h3 className="text-white font-bold text-base sm:text-lg flex-1 border-s-2 ps-2" style={{ borderColor: accent }}>{prediction.question}</h3>
         <div className="text-end shrink-0">
           <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("pot")}</div>
-          <div className="font-mono font-bold text-yellow-500 text-lg tabular-nums">{fmt(prediction.totalPot)} GT</div>
+          <div className="font-mono font-bold text-yellow-500 text-lg tabular-nums">{fmt(prediction.totalPot)} {tokenSymbol}</div>
         </div>
       </div>
 
@@ -260,7 +263,7 @@ function ActivePredictionCard({
                   )}
                 </div>
                 <div className="text-end shrink-0">
-                  <div className="font-mono text-xs text-white tabular-nums">{fmt(o.totalWagered)} GT</div>
+                  <div className="font-mono text-xs text-white tabular-nums">{fmt(o.totalWagered)} {tokenSymbol}</div>
                   <div className="text-[10px] text-zinc-500">{o.wagerCount} {t("wagers", { count: o.wagerCount })} · {pct.toFixed(0)}%</div>
                 </div>
               </div>
@@ -277,7 +280,7 @@ function ActivePredictionCard({
             type="number"
             min={10}
             max={myTokens}
-            placeholder="GT"
+            placeholder={tokenSymbol}
             value={wagerInput}
             onChange={(e) => setWagerInput(e.target.value)}
             className="w-28 border border-zinc-700 bg-black/40 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-red-600"
@@ -328,6 +331,7 @@ function ActivePredictionCard({
 function RecentPredictionRow({ prediction }: { prediction: RecentPrediction }) {
   const t = useTranslations("predictions");
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const isCancelled = prediction.status === "cancelled";
   const winningLabel =
     prediction.resolvedOptionIndex != null ? prediction.options[prediction.resolvedOptionIndex] : null;
@@ -346,13 +350,13 @@ function RecentPredictionRow({ prediction }: { prediction: RecentPrediction }) {
         {winningLabel && !isCancelled && (
           <span>{t("winningOption")} <strong className="text-green-300">{winningLabel}</strong></span>
         )}
-        <span>{t("pot")}: <span className="text-zinc-300 font-mono">{fmt(prediction.totalPot)} GT</span></span>
+        <span>{t("pot")}: <span className="text-zinc-300 font-mono">{fmt(prediction.totalPot)} {tokenSymbol}</span></span>
         {prediction.myResult && (
           <span className={cn(
             "font-mono",
             prediction.myResult.won ? "text-green-400" : "text-red-400",
           )}>
-            {t("you")} {prediction.myResult.won ? `+${fmt(prediction.myResult.payout - prediction.myResult.tokensWagered)}` : `-${fmt(prediction.myResult.tokensWagered)}`} GT
+            {t("you")} {prediction.myResult.won ? `+${fmt(prediction.myResult.payout - prediction.myResult.tokensWagered)}` : `-${fmt(prediction.myResult.tokensWagered)}`} {tokenSymbol}
           </span>
         )}
       </div>

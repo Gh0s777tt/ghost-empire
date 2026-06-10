@@ -8,6 +8,7 @@ import { Gift, Sparkles, Loader2, Check, X, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { emitBalance } from "@/lib/balance-bus";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type RedeemResult =
   | {
@@ -160,6 +161,7 @@ export function DropRedeemBox({
 function ResultMessage({ result }: { result: RedeemResult }) {
   const t = useTranslations("drops");
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   if ("error" in result) {
     return (
       <div className="border border-red-700 bg-red-950/40 px-3 py-2 flex items-start gap-2">
@@ -185,7 +187,7 @@ function ResultMessage({ result }: { result: RedeemResult }) {
         <div className="flex items-center gap-2">
           <Check className={cn("w-4 h-4 shrink-0", result.gotBonus ? "text-yellow-400" : "text-green-400")} />
           <span className={cn("font-bold text-sm", result.gotBonus ? "text-yellow-200" : "text-green-200")}>
-            {result.gotBonus ? t("bonus") : t("success")} +{fmt(result.totalReward)} GT
+            {result.gotBonus ? t("bonus") : t("success")} +{fmt(result.totalReward)} {tokenSymbol}
           </span>
         </div>
         <div className="text-xs text-zinc-400 mt-0.5">
@@ -197,7 +199,7 @@ function ResultMessage({ result }: { result: RedeemResult }) {
             </>
           )}
           {" · "}
-          {t("balance")} <span className="text-white font-mono">{fmt(result.newBalance)} GT</span>
+          {t("balance")} <span className="text-white font-mono">{fmt(result.newBalance)} {tokenSymbol}</span>
         </div>
         {!result.gotBonus && result.bonusSlotsLeft === 0 && (
           <div className="text-[10px] text-zinc-500 mt-1">

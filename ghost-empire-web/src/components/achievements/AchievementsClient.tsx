@@ -7,6 +7,7 @@ import { Award, Lock, Check, Eye, EyeOff } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { formatDate, timeAgo, cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type Achievement = {
   id: string;
@@ -100,6 +101,7 @@ export function AchievementsClient({
 }) {
   const t = useTranslations("achievements");
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const [rarityFilter, setRarityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "earned" | "locked">(
     "all",
@@ -183,7 +185,7 @@ export function AchievementsClient({
                 {t("gtFrom")}
               </div>
               <div className="font-mono text-sm font-bold text-red-300 tabular-nums">
-                +{fmt(tokensFromAchievements)} GT
+                +{fmt(tokensFromAchievements)} {tokenSymbol}
               </div>
             </div>
           </div>
@@ -294,6 +296,7 @@ function AchievementCard({
   const t = useTranslations("achievements");
   const locale = useLocale();
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const triggerLabels: Record<string, string> = {
     level: t("trgLevel"),
     tokens_earned: t("trgTokens"),
@@ -404,7 +407,7 @@ function AchievementCard({
             <span className="text-purple-400">+{fmt(a.xpReward)} XP</span>
           )}
           {a.tokenReward > 0 && (
-            <span className="text-red-400">+{fmt(a.tokenReward)} GT</span>
+            <span className="text-red-400">+{fmt(a.tokenReward)} {tokenSymbol}</span>
           )}
           {a.xpReward === 0 && a.tokenReward === 0 && (
             <span className="text-zinc-700">{t("noReward")}</span>

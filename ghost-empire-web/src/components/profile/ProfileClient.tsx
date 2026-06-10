@@ -15,6 +15,7 @@ import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons
 import { formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscountFraction } from "@/lib/economy";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type Achievement = {
   id: string;
@@ -129,6 +130,7 @@ export function ProfileClient({
   const t = useTranslations("profile");
   const locale = useLocale();
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const rank = rankForLevel(user.level);
   const duelTotal = duelStats.wins + duelStats.losses;
   const duelWinrate = duelTotal > 0 ? Math.round((duelStats.wins / duelTotal) * 100) : 0;
@@ -294,9 +296,9 @@ export function ProfileClient({
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        <StatTile label={t("statBalance")} value={fmt(user.tokens)} suffix="GT" emoji="👻" accent />
-        <StatTile label={t("statEarned")} value={fmt(user.totalEarned)} suffix="GT" emoji="📈" />
-        <StatTile label={t("statSpent")} value={fmt(user.totalSpent)} suffix="GT" emoji="💸" />
+        <StatTile label={t("statBalance")} value={fmt(user.tokens)} suffix={tokenSymbol} emoji="👻" accent />
+        <StatTile label={t("statEarned")} value={fmt(user.totalEarned)} suffix={tokenSymbol} emoji="📈" />
+        <StatTile label={t("statSpent")} value={fmt(user.totalSpent)} suffix={tokenSymbol} emoji="💸" />
         <StatTile label={t("statStreak")} value={user.streak.toString()} suffix={t("streakUnit", { count: user.streak })} emoji="🔥" />
         <StatTile label={t("statMessages")} value={fmt(user.messageCount)} emoji="💬" />
         <StatTile label={t("statVoice")} value={fmt(user.voiceMinutes)} suffix="min" emoji="🎤" />
@@ -416,7 +418,7 @@ export function ProfileClient({
                     )}
                   >
                     {isEarn ? "+" : ""}
-                    {fmt(tx.amount)} GT
+                    {fmt(tx.amount)} {tokenSymbol}
                   </div>
                 </div>
               );

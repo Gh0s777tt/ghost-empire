@@ -12,6 +12,7 @@ import {
 import { EmptyState } from "@/components/EmptyState";
 import { rankForLevel, cn, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type Sort = "tokens" | "totalEarned" | "weekly" | "level" | "streak";
 
@@ -75,6 +76,7 @@ export function RankingClient({
 }) {
   const t = useTranslations("ranking");
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const [adminTarget, setAdminTarget] = useState<User | null>(null);
   const meta = SORT_META[sort];
   const Icon = meta.icon;
@@ -94,7 +96,7 @@ export function RankingClient({
     const v = sort === "weekly" ? (u.weekly ?? 0) : u[sort];
     if (sort === "level") return `LVL ${v}`;
     if (sort === "streak") return `${v} ${t("streakUnit", { count: v })}`;
-    return `${fmt(v)} ${meta.suffix}`;
+    return `${fmt(v)} ${meta.suffix === "GT" ? tokenSymbol : meta.suffix}`;
   }
 
   return (
@@ -440,6 +442,7 @@ function AdminUserActions({
 }) {
   const t = useTranslations("ranking");
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
@@ -572,7 +575,7 @@ function AdminUserActions({
               {user.isAdmin && <ShieldCheck className="w-4 h-4 text-red-500" />}
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-              @{user.username ?? "—"} · LVL {user.level}{user.prestige ? ` ✦${user.prestige}` : ""} · {fmt(user.tokens)} GT
+              @{user.username ?? "—"} · LVL {user.level}{user.prestige ? ` ✦${user.prestige}` : ""} · {fmt(user.tokens)} {tokenSymbol}
             </div>
           </div>
           <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400 shrink-0">
@@ -599,7 +602,7 @@ function AdminUserActions({
                     : "border-red-800 hover:border-red-500 text-red-300 hover:bg-red-950/40",
                 )}
               >
-                {v > 0 ? "+" : ""}{fmt(v)} GT
+                {v > 0 ? "+" : ""}{fmt(v)} {tokenSymbol}
               </button>
             ))}
           </div>

@@ -12,6 +12,7 @@ import {
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type UserTask = {
   id: string;
@@ -71,6 +72,7 @@ export function QuestsClient({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   const [resetIn, setResetIn] = useState(() => secondsUntilMidnight());
+  const { tokenSymbol } = useTenantBranding();
 
   useEffect(() => {
     const t = setInterval(() => setResetIn(secondsUntilMidnight()), 1000);
@@ -168,7 +170,7 @@ export function QuestsClient({
         <StatTile
           label={t("statClaimable")}
           value={`${fmt(totalClaimableTokens)}`}
-          suffix="GT"
+          suffix={tokenSymbol}
           emoji="💰"
           accent={totalClaimableTokens > 0}
         />
@@ -297,6 +299,7 @@ function QuestCard({
   const t = useTranslations("quests");
   const locale = useLocale();
   const fmt = useLocaleFmt();
+  const { tokenSymbol } = useTenantBranding();
   const { task, progress, claimed } = userTask;
   const done = progress >= task.target;
   const ratio = Math.min(100, (progress / task.target) * 100);
@@ -378,7 +381,7 @@ function QuestCard({
       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest mb-3">
         <span className="text-zinc-500">{t("reward")}</span>
         <span className="text-white text-sm normal-case font-bold tabular-nums">
-          {fmt(task.reward)} GT
+          {fmt(task.reward)} {tokenSymbol}
           {task.bonusReward > 0 && (
             <span className="text-orange-400 text-xs ms-1.5">{t("bonus", { bonus: fmt(task.bonusReward) })}</span>
           )}
@@ -402,7 +405,7 @@ function QuestCard({
             className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Gift className="w-3.5 h-3.5" />}
-            Claim {fmt(task.reward)} GT
+            Claim {fmt(task.reward)} {tokenSymbol}
           </button>
         ) : (
           <div className="w-full px-4 py-2.5 border border-zinc-800 bg-zinc-950 text-zinc-500 text-xs font-bold tracking-widest uppercase text-center">
