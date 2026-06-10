@@ -427,32 +427,57 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
   const ref = useRef<HTMLDivElement>(null);
   const done = useRef(false);
   const [shown, setShown] = useState<number | null>(null);
+  const shownRef = useRef<number | null>(null);
+  shownRef.current = shown;
+  const [landed, setLanded] = useState(false);
   const target = dice?.target ?? 50;
   const dir = dice?.dir ?? "under";
 
+  // SPIN: while we wait for the server, the counter flickers random numbers and the
+  // pointer sweeps the track (CSS keyframes) — the game is visibly "rolling".
+  useEffect(() => {
+    if (phase !== "spin" || reducedMotion()) return;
+    let raf = 0, last = 0;
+    const tick = (now: number) => {
+      if (now - last > 70) { setShown(Math.floor(Math.random() * 100)); last = now; }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [phase]);
+
+  // LAND: freeze the in-flight sweep where it is, then ease the pointer onto the
+  // server's roll while the counter counts toward it (easeOutCubic — fast then settle).
   useEffect(() => {
     if (phase !== "land" || !dice || done.current) return;
     done.current = true;
-    const place = () => { const el = ref.current; if (el) el.style.left = `${dice.roll}%`; };
-    if (reducedMotion()) { place(); setShown(dice.roll); const t = setTimeout(onSettle, 250); return () => clearTimeout(t); }
     const el = ref.current;
-    if (el) {
-      el.style.transition = "none";
-      el.style.left = "50%";
-      void el.offsetHeight;
-      el.style.transition = "left 1500ms cubic-bezier(0.16,0.84,0.24,1)";
-      requestAnimationFrame(place);
+    if (reducedMotion()) {
+      if (el) { el.style.animation = "none"; el.style.left = `${dice.roll}%`; }
+      setShown(dice.roll); setLanded(true);
+      const t = setTimeout(onSettle, 250); return () => clearTimeout(t);
     }
-    const DUR = 1500;
+    if (el) {
+      const cur = getComputedStyle(el).left; // current sweep position (keyframes expose it)
+      el.style.animation = "none";
+      el.style.left = cur;
+      void el.offsetHeight;
+      el.style.transition = "left 1600ms cubic-bezier(0.12,0.9,0.18,1)";
+      requestAnimationFrame(() => { el.style.left = `${dice.roll}%`; });
+    }
+    const DUR = 1600;
+    const from = shownRef.current ?? 50;
     let raf = 0, startTs = 0;
     const tick = (now: number) => {
       if (!startTs) startTs = now;
       const k = Math.min(1, (now - startTs) / DUR);
-      setShown(Math.round(k * dice.roll));
+      const e = 1 - Math.pow(1 - k, 3);
+      setShown(Math.round(from + (dice.roll - from) * e));
       if (k < 1) raf = requestAnimationFrame(tick);
+      else setLanded(true);
     };
     raf = requestAnimationFrame(tick);
-    const t = setTimeout(onSettle, DUR + 80);
+    const t = setTimeout(onSettle, DUR + 120);
     return () => { clearTimeout(t); cancelAnimationFrame(raf); };
   }, [phase, dice, onSettle]);
 
@@ -462,18 +487,27 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
     : { left: `${target}%`, right: 0, background: "linear-gradient(90deg,#1aa356,#0f7a3d)" };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-6" style={{ width: 380 }}>
-      <div className={`text-7xl font-black tabular-nums ${dice ? (dice.win ? "text-emerald-300" : "text-rose-300") : "text-zinc-500"}`} style={{ textShadow: "0 3px 16px rgba(0,0,0,.6)" }}>
-        {shown ?? "—"}
+    <div className="flex flex-col items-center justify-center gap-6 w-full" style={{ maxWidth: 380 }}>
+      <div className="relative">
+        <div
+          className={`text-7xl font-black tabular-nums ${landed ? (dice?.win ? "text-emerald-300" : "text-rose-300") : "text-zinc-300"}`}
+          style={{
+            textShadow: landed && dice?.win ? "0 0 28px rgba(52,211,153,.55), 0 3px 16px rgba(0,0,0,.6)" : "0 3px 16px rgba(0,0,0,.6)",
+            animation: landed ? (dice?.win ? "gefx-pop 450ms cubic-bezier(.34,1.56,.64,1)" : "gefx-shake 420ms ease-in-out") : undefined,
+          }}
+        >
+          {shown ?? "—"}
+        </div>
+        {landed && dice?.win && !reducedMotion() && <WinBurst seed={dice.roll + 1} />}
       </div>
       <div className="relative w-full">
         <div className="relative rounded-full overflow-hidden" style={{ height: 14, background: "#3a0d12", boxShadow: "inset 0 2px 5px rgba(0,0,0,.6)" }}>
-          <div className="absolute inset-y-0" style={winZone} />
+          <div className="absolute inset-y-0" style={{ ...winZone, animation: landed && dice?.win ? "gefx-flash 650ms ease-out 2" : undefined }} />
         </div>
         {/* threshold marker */}
         <div className="absolute" style={{ left: `${target}%`, top: -5, height: 24, width: 2, background: "#ffd54a", boxShadow: "0 0 6px #ffd54a", transform: "translateX(-1px)" }} />
-        {/* sliding result pointer (▼) */}
-        <div ref={ref} className="absolute will-change-[left]" style={{ left: "50%", top: -14, transform: "translateX(-50%)" }}>
+        {/* result pointer (▼): sweeps during spin, then slides onto the roll */}
+        <div ref={ref} className="absolute will-change-[left]" style={{ left: "50%", top: -14, transform: "translateX(-50%)", animation: phase === "spin" && !reducedMotion() ? "gefx-dice-sweep 1.1s ease-in-out infinite alternate" : undefined }}>
           <div style={{ width: 0, height: 0, borderLeft: "7px solid transparent", borderRight: "7px solid transparent", borderTop: `11px solid ${pointerColor}`, filter: "drop-shadow(0 1px 3px rgba(0,0,0,.7))" }} />
         </div>
         <div className="flex justify-between font-mono mt-2.5" style={{ fontSize: 10, color: "#71717a" }}>
@@ -481,6 +515,44 @@ function DiceTrack({ phase, dice, onSettle }: { phase: Phase; dice: { roll: numb
         </div>
       </div>
     </div>
+  );
+}
+
+// ── WinBurst: a small deterministic particle burst (gold/red/emerald confetti) shown on
+//    wins. Pure CSS animations; particles derive from `seed` (no Math.random → no
+//    hydration mismatch, replays identically per result). Parent must be `relative`. ──
+function WinBurst({ seed }: { seed: number }) {
+  const parts = useMemo(() => {
+    const COLORS = ["#ffd54a", "#ff9d2e", "#e50914", "#34d399", "#fff2c0"];
+    return Array.from({ length: 14 }, (_, i) => {
+      const a = (i / 14) * Math.PI * 2 + (seed % 7) * 0.13;
+      const d = 46 + ((i * 37 + seed) % 34);
+      return {
+        dx: Math.cos(a) * d,
+        dy: Math.sin(a) * d - 18,
+        c: COLORS[i % COLORS.length],
+        s: 5 + ((i * 13 + seed) % 5),
+        r: (i * 47 + seed * 11) % 360,
+        delay: (i % 5) * 18,
+      };
+    });
+  }, [seed]);
+  return (
+    <span aria-hidden className="pointer-events-none absolute inset-0">
+      {parts.map((p, i) => (
+        <span
+          key={i}
+          className="absolute left-1/2 top-1/2"
+          style={{
+            width: p.s, height: p.s, background: p.c, borderRadius: 1,
+            transform: "translate(-50%, -50%)",
+            animation: "gefx-part 850ms cubic-bezier(.17,.84,.32,1) forwards",
+            animationDelay: `${p.delay}ms`,
+            ...({ "--dx": `${p.dx}px`, "--dy": `${p.dy}px`, "--rot": `${p.r}deg` } as CSSProperties),
+          }}
+        />
+      ))}
+    </span>
   );
 }
 
@@ -733,7 +805,14 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <style>{`@keyframes gefx-spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes gefx-spin { to { transform: rotate(360deg); } }
+        @keyframes gefx-dice-sweep { from { left: 6%; } to { left: 94%; } }
+        @keyframes gefx-pop { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes gefx-shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        @keyframes gefx-flash { 0% { filter: brightness(1); } 30% { filter: brightness(2); } 100% { filter: brightness(1); } }
+        @keyframes gefx-part { 0% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; } }
+      `}</style>
       <div className="text-center">
         <h1 className="text-3xl font-black text-white tracking-tight">{t("title")}</h1>
         <p className="text-zinc-400 mt-1 text-sm">{t("subtitlePre")} <code className="text-zinc-500">!slots 100</code> · <code className="text-zinc-500">!coinflip 50</code> · <code className="text-zinc-500">!roulette 100 red</code></p>
@@ -777,12 +856,24 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             )}
           </div>
 
-          {/* reveal */}
-          <div className="min-h-[52px] flex flex-col items-center justify-center text-center">
+          {/* reveal (+ celebration burst on every win, all games) */}
+          <div className="relative min-h-[52px] flex flex-col items-center justify-center text-center">
             {reveal ? (
               <>
-                <div className={`text-2xl font-bold ${reveal.net >= 0 ? "text-emerald-300" : "text-zinc-400"}`}>{reveal.detail}</div>
-                <div className={`font-extrabold mt-0.5 ${reveal.net > 0 ? "text-emerald-400" : reveal.net < 0 ? "text-rose-400" : "text-zinc-300"}`}>
+                {reveal.net > 0 && !reducedMotion() && <WinBurst seed={(stage?.id ?? 0) + reveal.payout} />}
+                <div
+                  className={`text-2xl font-bold ${reveal.net >= 0 ? "text-emerald-300" : "text-zinc-400"}`}
+                  style={{ animation: reducedMotion() ? undefined : "gefx-pop 380ms cubic-bezier(.34,1.56,.64,1)" }}
+                >
+                  {reveal.detail}
+                </div>
+                <div
+                  className={`font-extrabold mt-0.5 ${reveal.net > 0 ? "text-emerald-400" : reveal.net < 0 ? "text-rose-400" : "text-zinc-300"}`}
+                  style={{
+                    animation: reducedMotion() ? undefined : "gefx-pop 460ms cubic-bezier(.34,1.56,.64,1)",
+                    textShadow: reveal.net > 0 ? "0 0 22px rgba(52,211,153,.45)" : undefined,
+                  }}
+                >
                   {reveal.net > 0 ? `+${fmt(reveal.net)} GT 🎉` : reveal.net < 0 ? `−${fmt(-reveal.net)} GT` : `±0 GT`}
                 </div>
               </>
