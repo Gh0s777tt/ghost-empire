@@ -25,7 +25,10 @@ const TYPE_ICON: Record<string, typeof Bell> = {
   system: AlertCircle,
 };
 
-const POLL_INTERVAL = 60_000;
+// Visibility-aware polling: a hidden tab doesn't poll at all; an open dropdown polls
+// faster (the user is looking at it), a closed bell just keeps the badge fresh.
+const POLL_OPEN = 30_000;
+const POLL_CLOSED = 120_000;
 
 export function NotificationBell() {
   const t = useTranslations("notifications");
@@ -47,12 +50,16 @@ export function NotificationBell() {
     }
   }, []);
 
-  // Initial + polling fetch
+  // Initial + visibility-aware polling: skip entirely while the tab is hidden and
+  // catch up the moment it becomes visible again.
   useEffect(() => {
     fetchNotifications();
-    const t = setInterval(fetchNotifications, POLL_INTERVAL);
-    return () => clearInterval(t);
-  }, [fetchNotifications]);
+    const tick = () => { if (document.visibilityState === "visible") void fetchNotifications(); };
+    const iv = setInterval(tick, open ? POLL_OPEN : POLL_CLOSED);
+    const onVisible = () => { if (document.visibilityState === "visible") void fetchNotifications(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(iv); document.removeEventListener("visibilitychange", onVisible); };
+  }, [fetchNotifications, open]);
 
   // Click outside to close
   useEffect(() => {
