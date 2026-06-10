@@ -280,6 +280,8 @@
     "cost": "花费：{cost} GT"
   },
   "ranking": {
+    "sortWeeklyShort": "本周",
+    "sortWeeklyLabel": "最近 7 天获得的 GT",
     "help": "社区排行榜：按 Ghost Tokens、XP 等排序。通过活跃度提升排名：聊天、观看、任务和游戏。",
     "metaTitle": "排行榜",
     "metaDesc": "Ghost Empire 的顶级成员——代币、等级和连续天数的领先者。",

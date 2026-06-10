@@ -280,6 +280,8 @@
     "cost": "Biaya: {cost} GT"
   },
   "ranking": {
+    "sortWeeklyShort": "Minggu",
+    "sortWeeklyLabel": "GT yang diperoleh dalam 7 hari terakhir",
     "help": "Peringkat komunitas: urutkan berdasarkan Ghost Tokens, XP, dan lainnya. Naik lewat aktivitas: chat, menonton, quest, dan game.",
     "metaTitle": "Peringkat",
     "metaDesc": "Anggota teratas Ghost Empire — pemimpin token, level, dan streak.",

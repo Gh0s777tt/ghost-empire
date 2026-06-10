@@ -280,6 +280,8 @@
     "cost": "비용: {cost} GT"
   },
   "ranking": {
+    "sortWeeklyShort": "주간",
+    "sortWeeklyLabel": "최근 7일 동안 획득한 GT",
     "help": "커뮤니티 랭킹 — Ghost Tokens, XP 등으로 정렬하세요. 채팅, 시청, 퀘스트, 게임 활동으로 순위가 올라갑니다.",
     "metaTitle": "랭킹",
     "metaDesc": "Ghost Empire의 최고 멤버——토큰, 레벨, 연속 기록의 선두주자.",

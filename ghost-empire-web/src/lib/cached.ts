@@ -54,6 +54,34 @@ export const getCachedRanking = (sort: "tokens" | "totalEarned" | "level" | "str
     { revalidate: 45, tags: ["ranking"] },
   )();
 
+/**
+ * Weekly leaderboard: top-100 by GT EARNED in the last 7 days (sum of positive
+ * `earn` transactions per user). Heavier than the user-table sorts (groupBy over
+ * transactions) → same 45s cache window; resets naturally as the window slides.
+ */
+export const getCachedWeeklyRanking = (tenantId: string | null = null) =>
+  unstable_cache(
+    async () => {
+      const since = new Date(Date.now() - 7 * 86_400_000);
+      const grouped = await prisma.transaction.groupBy({
+        by: ["userId"],
+        where: { type: "earn", amount: { gt: 0 }, createdAt: { gte: since }, ...(tenantId ? { user: { tenantId } } : {}) },
+        _sum: { amount: true },
+        orderBy: { _sum: { amount: "desc" } },
+        take: 100,
+      });
+      const users = await prisma.user.findMany({ where: { id: { in: grouped.map((g) => g.userId) } }, select: RANK_SELECT });
+      const byId = new Map(users.map((u) => [u.id, u]));
+      const topUsers = grouped
+        .map((g) => { const u = byId.get(g.userId); return u ? { ...(u as RankedUser), weekly: g._sum.amount ?? 0 } : null; })
+        .filter((u): u is RankedUser & { weekly: number } => u !== null);
+      const totalUsers = await prisma.user.count({ where: tenantId ? { tenantId } : {} });
+      return { topUsers, totalRanked: topUsers.length, totalUsers };
+    },
+    ["ranking-weekly", tenantId ?? "all"],
+    { revalidate: 45, tags: ["ranking"] },
+  )();
+
 export type CachedAchievement = {
   id: string; code: string; name: string; description: string; icon: string;
   rarity: string; hidden: boolean; triggerType: string | null; triggerValue: number | null;
