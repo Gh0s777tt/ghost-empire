@@ -20,6 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const CHANGELOG = [
   {
     date: "2026-06-10",
+    title: "Strona dropów mówi w Twoim języku 🌍",
+    items: [
+      "Strona z drop code’ami była częściowo po polsku nawet po przełączeniu języka — teraz opis, licznik aktywnych dropów, statystyki, historia i sekcja „Jak to działa” są przetłumaczone na wszystkie 14 języków portalu.",
+    ],
+  },
+  {
+    date: "2026-06-10",
     title: "Drobna poprawka strony głównej 🩹",
     items: [
       "Plakietka „HOT” w sekcji „Gorące w sklepie” nie zasłania już nazw produktów — dłuższe nazwy są teraz elegancko skracane wielokropkiem tuż przed plakietką.",
