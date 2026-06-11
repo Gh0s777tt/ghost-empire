@@ -8,6 +8,9 @@ import { encryptSecret } from "@/lib/crypto";
 import { exchangeUserCode, getOwnUser } from "@/lib/kick";
 import { verifyOAuthState } from "@/lib/oauth-state";
 import { tokenUpsertKeys } from "@/lib/platform-tokens";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("kick-streamer");
 
 // Must byte-match the redirect_uri used in the authorize step — strip trailing slash too.
 const BASE = (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app").replace(/\/+$/, "");
@@ -52,7 +55,7 @@ export async function GET(req: Request) {
   try {
     tokenData = await exchangeUserCode(code, redirectUri, verifier);
   } catch (e) {
-    console.error("[kick-streamer] token exchange failed:", e);
+    log.error("token exchange failed", e);
     return NextResponse.redirect(new URL("/admin?kick_error=token_exchange#kick", BASE));
   }
 
@@ -90,7 +93,7 @@ export async function GET(req: Request) {
       },
     });
   } catch (e) {
-    console.error("[kick-streamer] DB upsert failed:", e);
+    log.error("DB upsert failed", e);
     return NextResponse.redirect(new URL("/admin?kick_error=db_save#kick", BASE));
   }
 

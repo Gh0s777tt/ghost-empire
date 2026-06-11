@@ -9,6 +9,9 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("drops");
 
 const CODE_REGEX = /^[A-Z0-9_-]{3,24}$/;
 
@@ -148,7 +151,7 @@ export async function POST(req: Request) {
     ) {
       return jsonError("Już odebrałeś ten kod", 409);
     }
-    console.error("drops/claim error:", e);
+    log.error("claim error", e);
     return jsonError("Błąd serwera", 500);
   }
 }

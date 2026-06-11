@@ -7,6 +7,9 @@ import { jsonError } from "@/lib/api-i18n";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { spinWheel, WheelError } from "@/lib/wheel";
 import { featureGateResponse } from "@/lib/entitlements";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("wheel");
 
 export async function POST() {
   const session = await auth();
@@ -39,7 +42,7 @@ export async function POST() {
     if (e instanceof WheelError) {
       return jsonError(e.message, e.status);
     }
-    console.error("wheel/spin error:", e);
+    log.error("spin error", e);
     return jsonError("Błąd serwera", 500);
   }
 }

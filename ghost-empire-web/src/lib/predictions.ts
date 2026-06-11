@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { awardSeasonXp } from "@/lib/seasons";
 import { computePayouts } from "@/lib/economy";
 import { currentTenantId } from "@/lib/tenant";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("predictions");
 
 export const MAX_OPTIONS = 4;
 export const MIN_WAGER = 10;
@@ -114,7 +117,7 @@ export async function placeWager(opts: {
       } as const;
     });
   } catch (e) {
-    console.error("[predictions] placeWager failed:", e);
+    log.error("placeWager failed", e);
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
 }
@@ -288,7 +291,7 @@ export async function resolvePrediction(opts: {
 
     return result;
   } catch (e) {
-    console.error("[predictions] resolve failed:", e);
+    log.error("resolve failed", e);
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
 }
@@ -341,7 +344,7 @@ export async function cancelPrediction(predictionId: string): Promise<{ ok: true
       return { ok: true, refunded: prediction.entries.length } as const;
     });
   } catch (e) {
-    console.error("[predictions] cancel failed:", e);
+    log.error("cancel failed", e);
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
 }

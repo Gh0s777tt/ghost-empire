@@ -3,6 +3,9 @@
 // (Twitch EventSub webhook, Streamlabs poller, YouTube poller).
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("stream-goals");
 
 export type GoalType =
   | "subs"
@@ -46,7 +49,7 @@ export async function incrementGoals(type: GoalType, amount: number, tenantId?: 
       });
     }
   } catch (e) {
-    console.error("[stream-goals] increment failed:", type, amount, e);
+    log.error("increment failed", e, { type, amount });
   }
 }
 
@@ -81,7 +84,7 @@ export async function setHypeTrainStart(opts: {
         create: { id: "default", ...data },
         update: data,
       })
-  ).catch((e) => console.error("[hype-train] start failed:", e));
+  ).catch((e) => log.error("hype-train start failed", e));
 }
 
 export async function setHypeTrainProgress(opts: {

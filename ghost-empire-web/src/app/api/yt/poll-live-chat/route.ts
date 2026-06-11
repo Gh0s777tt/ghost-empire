@@ -23,6 +23,9 @@ import { incrementGoals } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("yt-poll");
 
 const YT_SUPERCHAT_GT_PER_PLN = 100;  // matches DONATION_GT_PER_PLN default
 const YT_MEMBER_REWARD = 5000;        // new sponsor / member milestone
@@ -51,7 +54,7 @@ export async function POST(req: Request) {
   } catch (e) {
     // Surface the real error to cron-job / admin UI — endpoint is auth-gated so OK to expose
     const msg = e instanceof Error ? e.message : String(e);
-    console.error("[yt/poll-live-chat] FAILED:", msg, e);
+    log.error("FAILED", e);
     return NextResponse.json(
       { error: "poll_failed", detail: msg.slice(0, 500) },
       { status: 500 },

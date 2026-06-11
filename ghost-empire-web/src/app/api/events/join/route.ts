@@ -5,6 +5,9 @@ import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("events-join");
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -49,7 +52,7 @@ export async function POST(req: Request) {
     if (typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2002") {
       return jsonError("Już dołączyłeś do tego eventu", 409);
     }
-    console.error("[events/join] entry create failed:", e);
+    log.error("entry create failed", e);
     return jsonError("Błąd serwera", 500);
   }
 }

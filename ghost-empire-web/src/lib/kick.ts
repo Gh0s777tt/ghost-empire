@@ -9,6 +9,9 @@
 // (fetched once from /public-key, cached). Signed payload format:
 //   `${messageId}.${timestamp}.${body}`
 import { createPublicKey, createVerify, KeyObject } from "node:crypto";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("kick");
 
 const KICK_API = "https://api.kick.com/public/v1";
 const KICK_OAUTH_TOKEN = "https://id.kick.com/oauth/token";
@@ -92,7 +95,7 @@ export async function getOwnUser(userAccessToken: string): Promise<KickUser | nu
     headers: { Authorization: `Bearer ${userAccessToken}` },
   });
   if (!res.ok) {
-    console.error(`[kick] getOwnUser failed: ${res.status} ${await res.text().catch(() => "")}`);
+    log.error("getOwnUser failed", undefined, { status: res.status, body: await res.text().catch(() => "") });
     return null;
   }
   const data = await res.json();
@@ -223,7 +226,7 @@ export async function verifyKickSignature(
     verifier.end();
     return verifier.verify(publicKey, signatureBase64, "base64");
   } catch (e) {
-    console.error("[kick] signature verify failed:", e);
+    log.error("signature verify failed", e);
     return false;
   }
 }

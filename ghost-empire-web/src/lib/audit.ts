@@ -3,6 +3,9 @@
 // user state through admin authority. Never blocks the calling request on failure
 // — auditing should never break the user flow.
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("audit");
 
 type AdminActionType =
   | "grant_tokens"
@@ -56,7 +59,7 @@ export async function logAdminAction(opts: {
     });
   } catch (e) {
     // Never throw — audit failure should not break admin actions.
-    console.error("[audit] failed to log action:", e);
+    log.error("failed to log action", e);
   }
 }
 

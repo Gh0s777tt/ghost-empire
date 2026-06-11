@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Changed
+
+- **Observability: koniec ad-hoc `console.*` na serwerze — komplet structured loggera** **(#437)** — domknięcie zaległości z audytu 2026-06-09 („console→logger incremental"): **48 wywołań w 27 plikach serwerowych** (trasy API + lib, w tym 13 w `lib/auth.ts` — callbacki Auth.js, zmieniane chirurgicznie tylko linie logów) przepisanych na `createLogger(scope)` z nazwanymi polami kontekstu zamiast sklejanych stringów — na prodzie JSON-lines filtrowalne w Vercel po `level`/`scope`. Debugowe dumpy tokenów Kick zeszły na `log.debug` (niewidoczne na prod-progu `info`). Celowo zostają: `lib/logger.ts` (sam logger) i 4 komponenty klienckie (konsola przeglądarki to właściwe miejsce; błędy klienta i tak płyną do `/api/telemetry/client-error` — teraz też przez logger). Kontrolny grep = zero `console.*` poza wyjątkami. Zielone: `tsc`/**242 testy**/`build`.
+
 ### Added
 
 - **OG: edge-cache na `/api/og` + testy e2e + zaległy docs-sync** **(#436)** — domknięcia po passie 5d: **(1)** publiczny `/api/og` renderował obraz na CPU przy każdym wywołaniu — teraz `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400` (crawlery social biją w edge; rebrand widoczny w preview do godziny). **(2) e2e +2 (= 25):** `/api/og` → 200 `image/png`; strony niosą `og:image` per tenant (founder-jpg lub `/api/og`) — oba przeszły przeciw prod. **(3) Docs:** wpis on-site `/about` „Wersja dla innych streamerów: komplet" (zaległość docs-discipline za #432/#433/#435) + ROADMAP: akapit „świeżo dowiezione #431–#436" i zaktualizowany blok odblokowań usera (②③ kodowo gotowe, doszło ④ `ownerUserId`). Zielone: `tsc`/**242 testy**/`build`/e2e 2/2.

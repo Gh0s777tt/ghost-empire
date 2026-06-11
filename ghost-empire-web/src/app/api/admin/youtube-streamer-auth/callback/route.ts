@@ -10,6 +10,9 @@ import { encryptSecret } from "@/lib/crypto";
 import { exchangeCodeForToken, getOwnChannel } from "@/lib/youtube";
 import { verifyOAuthState } from "@/lib/oauth-state";
 import { tokenUpsertKeys } from "@/lib/platform-tokens";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("yt-streamer");
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
@@ -48,7 +51,7 @@ export async function GET(req: Request) {
   try {
     tokenData = await exchangeCodeForToken(code, redirectUri);
   } catch (e) {
-    console.error("[yt-streamer] token exchange failed:", e);
+    log.error("token exchange failed", e);
     return NextResponse.redirect(new URL("/admin?yt_error=token_exchange", BASE));
   }
 

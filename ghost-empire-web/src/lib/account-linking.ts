@@ -9,6 +9,9 @@
 // Signed with NEXTAUTH_SECRET; expires in 5 minutes; one-shot (cleared after read).
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("link");
 
 const COOKIE_NAME = "ghost_link_intent";
 const TTL_MS = 5 * 60 * 1000;
@@ -192,7 +195,7 @@ export async function executeAccountLink(opts: {
       orphan._count.donations > 0;
 
     if (hasMeaningfulData) {
-      console.warn(`[link] orphan user ${orphanUserId} retained — has economy data`);
+      log.warn("orphan user retained — has economy data", { orphanUserId });
       return;
     }
 

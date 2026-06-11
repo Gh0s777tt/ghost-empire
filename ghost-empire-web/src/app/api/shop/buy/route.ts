@@ -9,6 +9,9 @@ import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { discountedPrice } from "@/lib/economy";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("shop-buy");
 
 const TIER_RANK: Record<string, number> = { T1: 1, T2: 2, T3: 3, Prime: 1 };
 
@@ -197,7 +200,7 @@ export async function POST(req: Request) {
     if (e instanceof ShopError) {
       return jsonError(e.message, e.status);
     }
-    console.error("shop/buy error:", e);
+    log.error("error", e);
     return jsonError("Błąd serwera", 500);
   }
 }

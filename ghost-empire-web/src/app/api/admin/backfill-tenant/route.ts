@@ -9,8 +9,8 @@
 // filters by tenantId). New users are now attached at signup (lib/auth.ts) and existing
 // users self-heal on login; this endpoint fixes everyone at once, including inactive ones.
 //
-// Trigger (as a logged-in admin, in the browser console on the live site):
-//   fetch("/api/admin/backfill-tenant", { method: "POST" }).then(r => r.json()).then(console.log)
+// Trigger (as a logged-in admin on the live site): open the URL in the browser (GET below),
+//   or from devtools: await fetch("/api/admin/backfill-tenant", { method: "POST" }).then(r => r.json())
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";

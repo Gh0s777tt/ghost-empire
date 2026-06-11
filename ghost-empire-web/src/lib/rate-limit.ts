@@ -2,6 +2,9 @@
 // DB-backed sliding window rate limiter. Survives serverless cold starts and
 // is consistent across Vercel instances. Cheap (one upsert + count per request).
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("rate-limit");
 
 export type RateLimitResult =
   | { allowed: true; remaining: number; resetAt: Date }
@@ -82,7 +85,7 @@ export async function rateLimit(
     };
   } catch (e) {
     // On DB error — fail-open (don't block legitimate traffic).
-    console.error("[rate-limit] DB error, allowing request:", e);
+    log.error("DB error, allowing request", e);
     return { allowed: true, remaining: maxHits, resetAt: new Date(now.getTime() + windowMs) };
   }
 }

@@ -14,6 +14,9 @@
 // $transaction (helper runs OUTSIDE the transaction, dispatched after commit).
 import { prisma } from "@/lib/prisma";
 import { dispatchAlertSafe } from "@/lib/alerts";
+import { createLogger, errContext } from "@/lib/logger";
+
+const log = createLogger("achievements");
 
 export type AchievementTriggerType =
   | "donations_count"        // # of donations made (Streamlabs + YouTube super chats)
@@ -53,7 +56,7 @@ export async function checkAndGrantAchievements(opts: {
   try {
     return await runCheck(opts);
   } catch (e) {
-    console.error("[achievements] check failed:", opts.triggerType, e);
+    log.error("check failed", e, { triggerType: opts.triggerType });
     return { granted: [] };
   }
 }
@@ -149,7 +152,7 @@ async function runCheck(opts: {
       }
     } catch (e) {
       // Unique constraint race — someone else granted in parallel
-      console.warn(`[achievements] grant failed for ${a.code}:`, e);
+      log.warn("grant failed", { code: a.code, ...errContext(e) });
     }
   }
   return { granted };
@@ -304,7 +307,7 @@ export async function grantManualAchievement(userId: string, code: string): Prom
     });
     return true;
   } catch (e) {
-    console.error("[achievements] manual grant failed:", code, e);
+    log.error("manual grant failed", e, { code });
     return false;
   }
 }

@@ -5,6 +5,9 @@ import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("raffle-tickets");
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -120,7 +123,7 @@ export async function POST(req: Request) {
     if (e instanceof HttpError) {
       return jsonError(e.message, e.status);
     }
-    console.error("raffle-tickets error:", e);
+    log.error("error", e);
     return jsonError("Błąd serwera", 500);
   }
 }
