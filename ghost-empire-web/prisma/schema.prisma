@@ -249,6 +249,11 @@ model Transaction {
   reason     String
   multiplier Float   @default(1.0)
 
+  // External payment id (e.g. "paymedia:<payment_id>") — unique, so a concurrent
+  // webhook retry loses with P2002 instead of double-crediting. NULL for
+  // non-payment transactions (Postgres allows many NULLs in a unique column).
+  externalId String? @unique
+
   // If purchase
   shopItemId String?
   shopItem   ShopItem? @relation(fields: [shopItemId], references: [id])

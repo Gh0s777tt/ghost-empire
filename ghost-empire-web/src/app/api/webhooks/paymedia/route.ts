@@ -115,7 +115,8 @@ export async function POST(req: Request) {
     });
   }
 
-  // Idempotency — don't double-credit if PayMedia retries
+  // Idempotency, soft pre-check — catches retries of payments credited before
+  // `externalId` existed (legacy rows carry the payment_id only in `reason`).
   if (payload.payment_id) {
     const existing = await prisma.transaction.findFirst({
       where: { reason: { contains: payload.payment_id } },
@@ -129,37 +130,48 @@ export async function POST(req: Request) {
   const tokensGranted = Math.round(amountPLN * GT_PER_PLN);
   const donationGrosze = Math.round(amountPLN * 100); // store in grosze for precision
 
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: user.id },
-      data: {
-        isDonator: true,
-        totalDonated: { increment: donationGrosze },
-        tokens: { increment: tokensGranted },
-        totalEarned: { increment: tokensGranted },
-      },
-    }),
-    prisma.transaction.create({
-      data: {
-        userId: user.id,
-        type: "earn",
-        amount: tokensGranted,
-        reason: `paymedia:${payload.payment_id ?? "unknown"}`,
-        status: "completed",
-        note: payload.metadata?.message?.slice(0, 500) ?? null,
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        userId: user.id,
-        type: "system",
-        title: `Dzięki za donację ${amountPLN.toFixed(2)} PLN!`,
-        message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT. Jesteś teraz oficjalnie Donatorem.`,
-        icon: "❤️",
-        link: "/profile",
-      },
-    }),
-  ]);
+  // Idempotency LOCK — the unique `externalId` makes a concurrent retry of the
+  // same payment lose with P2002, rolling back the whole transaction (the
+  // pre-check above can't stop two parallel deliveries on its own).
+  try {
+    await prisma.$transaction([
+      prisma.transaction.create({
+        data: {
+          userId: user.id,
+          type: "earn",
+          amount: tokensGranted,
+          reason: `paymedia:${payload.payment_id ?? "unknown"}`,
+          externalId: payload.payment_id ? `paymedia:${payload.payment_id}` : null,
+          status: "completed",
+          note: payload.metadata?.message?.slice(0, 500) ?? null,
+        },
+      }),
+      prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isDonator: true,
+          totalDonated: { increment: donationGrosze },
+          tokens: { increment: tokensGranted },
+          totalEarned: { increment: tokensGranted },
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: "system",
+          title: `Dzięki za donację ${amountPLN.toFixed(2)} PLN!`,
+          message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT. Jesteś teraz oficjalnie Donatorem.`,
+          icon: "❤️",
+          link: "/profile",
+        },
+      }),
+    ]);
+  } catch (e: unknown) {
+    if (typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2002") {
+      return NextResponse.json({ ok: true, ignored: "already processed", paymentId: payload.payment_id });
+    }
+    throw e;
+  }
 
   return NextResponse.json({
     ok: true,
