@@ -33,20 +33,9 @@ export default function GlobalError({
           padding: "1rem",
         }}
       >
+        {/* No brand assets here — this boundary serves every tenant and has no
+            tenant context (the root layout that resolves it just crashed). */}
         <div style={{ maxWidth: "28rem", width: "100%", textAlign: "center" }}>
-          <img
-            src="/brand/skull.png"
-            alt=""
-            style={{
-              width: "5rem",
-              height: "5rem",
-              margin: "0 auto 1.5rem",
-              display: "block",
-              objectFit: "cover",
-              borderRadius: "1rem",
-              border: "2px solid rgba(229,9,20,0.4)",
-            }}
-          />
           <h1
             style={{
               fontSize: "1.75rem",

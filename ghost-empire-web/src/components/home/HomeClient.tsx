@@ -219,6 +219,7 @@ function DailyBonusCard() {
 function GuestView({ topUsers }: any) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
+  const { brandName, logoUrl } = useTenantBranding();
   const stats = [
     { label: t("statPlayers"), value: "847+" },
     { label: t("statTokens"), value: "12M+" },
@@ -230,15 +231,18 @@ function GuestView({ topUsers }: any) {
       {/* Hero */}
       <div className="text-center py-16">
         <div className="flex justify-center mb-8">
-          <div className="w-28 h-28 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_60px_rgba(229,9,20,0.35)]">
-            <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
+          <div
+            className="w-28 h-28 overflow-hidden rounded-2xl"
+            style={{ border: "2px solid rgba(var(--brand-rgb), 0.4)", boxShadow: "0 0 60px rgba(var(--brand-rgb), 0.35)" }}
+          >
+            <img src={logoUrl ?? "/brand/skull.png"} alt={brandName} className="w-full h-full object-cover" />
           </div>
         </div>
         <h1
           className="font-display text-6xl sm:text-7xl text-white mb-4"
-          style={{ textShadow: "3px 0 0 rgba(229,9,20,0.7), -3px 0 0 rgba(139,0,0,0.5)" }}
+          style={{ textShadow: "3px 0 0 rgba(var(--brand-rgb), 0.7), -3px 0 0 color-mix(in srgb, var(--brand), black 60%)" }}
         >
-          GH0ST EMPIRE
+          {brandName}
         </h1>
         <p className="text-zinc-400 text-lg mb-8 max-w-xl mx-auto">
           {t("heroSubtitle")}
@@ -565,7 +569,7 @@ function LiveBanner() {
     >
       <div
         className="absolute inset-0 opacity-30"
-        style={{ background: "radial-gradient(circle at 20% 50%, #E50914 0%, transparent 50%)" }}
+        style={{ background: "radial-gradient(circle at 20% 50%, var(--brand) 0%, transparent 50%)" }}
       />
       <div className="relative p-4 flex items-center gap-4">
         <div className="relative shrink-0">

@@ -4,6 +4,7 @@ import { signIn, getProviders } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type Provider = {
   id: string;
@@ -25,6 +26,7 @@ const PROVIDER_CONFIG: Record<
 
 export default function SignInPage() {
   const t = useTranslations("signin");
+  const { brandName, logoUrl } = useTenantBranding();
   const [providers, setProviders] = useState<Record<string, Provider> | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,11 +69,11 @@ export default function SignInPage() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[150px] opacity-20"
-          style={{ background: "radial-gradient(circle, #E50914, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, var(--brand), transparent 70%)" }}
         />
         <div
           className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-10"
-          style={{ background: "radial-gradient(circle, #8B0000, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand), black 55%), transparent 70%)" }}
         />
       </div>
 
@@ -79,17 +81,20 @@ export default function SignInPage() {
         {/* Logo */}
         <div className="text-center mb-10">
           <div className="flex items-center justify-center mb-5">
-            <div className="w-20 h-20 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_50px_rgba(229,9,20,0.35)]">
-              <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
+            <div
+              className="w-20 h-20 overflow-hidden rounded-2xl"
+              style={{ border: "2px solid rgba(var(--brand-rgb), 0.4)", boxShadow: "0 0 50px rgba(var(--brand-rgb), 0.35)" }}
+            >
+              <img src={logoUrl ?? "/brand/skull.png"} alt={brandName} className="w-full h-full object-cover" />
             </div>
           </div>
           <h1
             className="font-display text-5xl text-white mb-2"
             style={{
-              textShadow: "2px 0 0 rgba(229,9,20,0.7), -2px 0 0 rgba(139,0,0,0.5)",
+              textShadow: "2px 0 0 rgba(var(--brand-rgb), 0.7), -2px 0 0 color-mix(in srgb, var(--brand), black 60%)",
             }}
           >
-            GH0ST EMPIRE
+            {brandName}
           </h1>
           <p className="text-zinc-500 text-sm font-mono tracking-widest">
             {t("tagline")}

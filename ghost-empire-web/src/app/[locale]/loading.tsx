@@ -8,7 +8,7 @@ export default function Loading() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-[150px] opacity-10"
-          style={{ background: "radial-gradient(circle, #E50914 0%, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, var(--brand) 0%, transparent 70%)" }}
         />
       </div>
 
@@ -17,7 +17,7 @@ export default function Loading() {
           {/* Pulsing glow ring */}
           <div
             className="absolute inset-0 rounded-full blur-xl animate-ping opacity-40"
-            style={{ background: "#E50914" }}
+            style={{ background: "var(--brand)" }}
           />
           <div className="relative w-16 h-16 overflow-hidden rounded-2xl ring-2 ring-red-600/40 animate-pulse">
             <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />

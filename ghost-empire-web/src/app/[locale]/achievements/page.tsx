@@ -65,7 +65,7 @@ export default async function AchievementsPage() {
         />
         <div
           className="absolute bottom-1/4 left-0 w-[500px] h-[500px] rounded-full blur-[130px] opacity-10"
-          style={{ background: "radial-gradient(circle, #E50914 0%, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, var(--brand) 0%, transparent 70%)" }}
         />
       </div>
 

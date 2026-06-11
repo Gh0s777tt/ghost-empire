@@ -51,7 +51,7 @@ export default async function SeasonsPage() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full blur-[150px] opacity-15"
-          style={{ background: "radial-gradient(circle, #E50914 0%, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, var(--brand) 0%, transparent 70%)" }}
         />
       </div>
 
