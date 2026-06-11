@@ -226,6 +226,12 @@ const offenders = new Map<string, { count: number; first: number }>();
 export function escalate(platform: string, username: string | undefined, verdict: Verdict): Verdict & { priorCount: number } {
   const key = `${platform}:${(username ?? "anon").toLowerCase()}`;
   const now = Date.now();
+  // Opportunistic prune: drop offenders whose strike window has fully elapsed, so
+  // the map stays bounded to recent offenders over a long-running session (it was
+  // never pruned before). Cheap — escalate() only runs on an actual violation.
+  for (const [k, v] of offenders) {
+    if (now - v.first >= ESCALATION_WINDOW_MS) offenders.delete(k);
+  }
   const prev = offenders.get(key);
   const inWindow = prev !== undefined && now - prev.first < ESCALATION_WINDOW_MS;
   const prior = inWindow ? prev.count : 0;

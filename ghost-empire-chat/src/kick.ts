@@ -17,7 +17,16 @@ import { registerSender, markActivity } from "./broadcast";
 const AWARD_AMOUNT = 1;
 const AWARD_COOLDOWN_MS = 60_000; // 1 GT per chatter per minute
 const REFRESH_EVERY_MS = 60 * 60 * 1000; // proactively refresh the send-token hourly (backstop)
-const RECONNECT_MS = 5_000;
+// Reconnect with exponential backoff + full jitter instead of a flat 5s — if Kick
+// or the network is down, a fixed interval hammers it; backoff backs off, jitter
+// avoids a thundering herd. Reset to 0 on a successful open.
+const RECONNECT_BASE_MS = 2_000;
+const RECONNECT_CAP_MS = 60_000;
+let reconnectAttempts = 0;
+function reconnectDelayMs(): number {
+  const ceiling = Math.min(RECONNECT_CAP_MS, RECONNECT_BASE_MS * 2 ** reconnectAttempts);
+  return Math.round(ceiling / 2 + Math.random() * (ceiling / 2)); // jitter over the upper half
+}
 const PING_EVERY_MS = 60_000; // keepalive: Pusher's activity_timeout is 120s — ping well under it
 const CHAT_EVENT = "App\\Events\\ChatMessageEvent"; // Pusher event name = literal  App\Events\ChatMessageEvent
 
@@ -161,6 +170,7 @@ function connect(chatroomId: string): void {
 
   ws.addEventListener("open", () => {
     console.log(`[kick] ws open → subscribing ${channel}`);
+    reconnectAttempts = 0; // healthy connection — reset backoff
     ping = setInterval(() => ws.send(JSON.stringify({ event: "pusher:ping", data: {} })), PING_EVERY_MS);
   });
   ws.addEventListener("message", (ev: MessageEvent) => {
@@ -174,8 +184,10 @@ function connect(chatroomId: string): void {
   ws.addEventListener("error", () => console.error("[kick] ws error"));
   ws.addEventListener("close", () => {
     if (ping) clearInterval(ping);
-    console.warn(`[kick] ws closed — reconnecting in ${RECONNECT_MS / 1000}s`);
-    setTimeout(() => connect(chatroomId), RECONNECT_MS);
+    const delay = reconnectDelayMs();
+    reconnectAttempts++;
+    console.warn(`[kick] ws closed — reconnecting in ${Math.round(delay / 1000)}s (attempt ${reconnectAttempts})`);
+    setTimeout(() => connect(chatroomId), delay);
   });
 }
 
@@ -227,7 +239,15 @@ export async function startKick(): Promise<void> {
     return;
   }
 
-  const chatroomId = await resolveChatroomId();
+  // Retry the chatroom-id lookup a few times — it can hit a transient Cloudflare
+  // gate at boot, which previously killed Kick for the whole process lifetime.
+  // (No-op when KICK_CHATROOM_ID is set: resolveChatroomId returns it instantly.)
+  let chatroomId = await resolveChatroomId();
+  for (let attempt = 1; !chatroomId && attempt <= 3; attempt++) {
+    console.warn(`[kick] chatroom id lookup failed — retry ${attempt}/3 in 10s`);
+    await new Promise((r) => setTimeout(r, 10_000));
+    chatroomId = await resolveChatroomId();
+  }
   if (!chatroomId) {
     console.error("[kick] no chatroom id — set KICK_CHATROOM_ID in .env");
     return;

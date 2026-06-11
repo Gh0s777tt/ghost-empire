@@ -252,7 +252,15 @@ export async function startYouTube(): Promise<void> {
     console.log("[youtube] not configured (run `npm run auth:youtube`) — skipping");
     return;
   }
-  if (!(await ensureToken())) {
+  // Retry the first token fetch a few times — a transient Google hiccup at boot
+  // previously killed YouTube for the whole process lifetime.
+  let tokenOk = await ensureToken();
+  for (let attempt = 1; !tokenOk && attempt <= 3; attempt++) {
+    console.warn(`[youtube] token fetch failed — retry ${attempt}/3 in 15s`);
+    await new Promise((r) => setTimeout(r, 15_000));
+    tokenOk = await ensureToken();
+  }
+  if (!tokenOk) {
     console.error("[youtube] could not get an access token — check Google creds / refresh token");
     return;
   }
