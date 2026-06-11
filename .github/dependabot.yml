@@ -30,18 +30,7 @@ updates:
         patterns: ["*"]
         update-types: ["minor", "patch"]
 
-  # --- Discord bot ---
-  - package-ecosystem: npm
-    directory: /ghost-empire-bot
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
-    labels: ["dependencies", "discord-bot"]
-    groups:
-      minor-and-patch:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
+  # (Discord bot ghost-empire-bot/ was removed — replaced by E-Bot in its own repo.)
 
   # --- GitHub Actions workflows ---
   - package-ecosystem: github-actions

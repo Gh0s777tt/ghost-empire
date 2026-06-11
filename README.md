@@ -221,9 +221,9 @@ Wymagania: **Node 22+**, PostgreSQL (Supabase), konto Vercel + konta dev OAuth.
 <details>
 <summary><b>🤖 Bot Discord (E-Bot — osobne repo)</b></summary>
 
-Discordem zajmuje się teraz **E-Bot** (`Gh0s777tt/E-Bot`) — osobny projekt, który przejął ekonomię GT (nagrody za wiadomości + voice) i linkowanie kont. Katalog **`ghost-empire-bot/` jest zastąpiony (deprecated)** — nie uruchamiaj go (dwa boty Discord = podwójne naliczanie GT).
+Discordem zajmuje się teraz **E-Bot** (`Gh0s777tt/E-Bot`) — osobny projekt, który przejął ekonomię GT (nagrody za wiadomości + voice) i linkowanie kont. Stary katalog `ghost-empire-bot/` został **usunięty** (zastąpiony przez E-Bota; dwa boty Discord = podwójne naliczanie GT — historia pozostaje w gicie).
 
-Włączenie ekonomii w E-Bocie (opt-in): `GHOST_ECONOMY=1` + `GHOST_BOT_SECRET` (= `BOT_SECRET` portalu) w jego `.env`, privileged intents (Message Content + Server Members) w Discord Dev Portal, `npm run deploy`, restart. Szczegóły w `README.md` E-Bota oraz w [`ghost-empire-bot/README.md`](ghost-empire-bot/README.md) (notka o zastąpieniu).
+Włączenie ekonomii w E-Bocie (opt-in): `GHOST_ECONOMY=1` + `GHOST_BOT_SECRET` (= `BOT_SECRET` portalu) w jego `.env`, privileged intents (Message Content + Server Members) w Discord Dev Portal, `npm run deploy`, restart. Szczegóły w `README.md` E-Bota.
 </details>
 
 <details>
