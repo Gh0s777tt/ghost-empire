@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Performance
+
+- **i18n: memoizacja zmergowanego katalogu per locale (audyt #449)** — `deepMerge(en, localized)` (~2200 kluczy, fallback brakujących tłumaczeń do EN) liczył się na **każde żądanie** ZANIM cache `brandedMessages` mógł zadziałać (cache'uje tylko wynik podmiany brandingu, nie wejście). Teraz katalog jest memoizowany raz per locale (≤14 wpisów, statyczny JSON nie zmienia się w runtime); zachowana semantyka `brandKey` (locale brakujące/EN dzielą klucz cache brandingu „en"). Mniej pracy CPU na render każdej strony pod force-dynamic. Zachowanie 1:1. Zielone: `tsc`/**234 testy**/`build`.
+
 ### Changed
 
 - **Spójność: konsolidacja 11 tras alertów w 1 dynamiczną + kasacja martwego scaffoldu (audyt P2 #448)** — dług spójności z audytu architektury: **11 niemal identycznych tras** `/api/alerts/{goals,subathon,polls,predictions,recent-events,emoji-combo,rumble,wheel,widget,chat,viewers}` (każda ~21 linii różniących się jednym kluczem `OVERLAY_FEEDS.<x>`) → **jedna `/api/alerts/[feed]`** (`getOverlayFeed(feed)` + 404 dla nieznanego); URL-e OBS bez zmian (Next preferuje statyczne `queue`/`stream`, dynamiczna łapie resztę — smoke: stare ścieżki dalej 401 bez tokenu, nieznany feed 404). Usunięty **martwy `lib/tenant-scope.ts`** (117 linii scaffoldu `tenantScoped()` + test; produkcja poszła jawnym wzorcem `...(tid ? {tenantId} : {})`, scaffold „sugerował fałszywą warstwę ochrony" — audyt). *(Przy okazji: faq P2025→404 z audytu okazał się już naprawiony owned-guardem z #442.)* Testy 242→**234** (−8 = usunięty test scaffoldu, zero realnej regresji). Zielone: `tsc`/`build`/smoke.
