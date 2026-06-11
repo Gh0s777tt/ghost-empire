@@ -102,20 +102,25 @@ async function pollsFeed(_p: URLSearchParams, tid: string | null): Promise<unkno
   const p = await prisma.poll.findFirst({
     where: { status: "open", ...tidWhere(tid) },
     orderBy: { createdAt: "desc" },
-    include: { votes: { select: { optionIndex: true } } },
+    select: { id: true, question: true, status: true, accentColor: true, options: true },
   });
   if (!p) return { active: false };
-  const options = p.options.map((label, idx) => ({
-    label,
-    count: p.votes.filter((v) => v.optionIndex === idx).length,
-  }));
+  // Aggregate vote counts in the DB instead of loading every PollVote row each
+  // tick (a popular poll could pull thousands of rows just to count them).
+  const grouped = await prisma.pollVote.groupBy({
+    by: ["optionIndex"],
+    where: { pollId: p.id },
+    _count: { _all: true },
+  });
+  const counts = new Map(grouped.map((g) => [g.optionIndex, g._count._all]));
+  const options = p.options.map((label, idx) => ({ label, count: counts.get(idx) ?? 0 }));
   return {
     active: true,
     id: p.id,
     question: p.question,
     status: p.status,
     accentColor: p.accentColor,
-    total: p.votes.length,
+    total: options.reduce((s, o) => s + o.count, 0),
     options,
   };
 }
@@ -125,16 +130,20 @@ async function predictionsFeed(_p: URLSearchParams, tid: string | null): Promise
   const p = await prisma.prediction.findFirst({
     where: { status: { in: ["open", "locked"] }, ...tidWhere(tid) },
     orderBy: { opensAt: "desc" },
-    include: { entries: { select: { optionIndex: true, tokensWagered: true } } },
+    select: { id: true, question: true, status: true, accentColor: true, totalPot: true, options: true },
   });
   if (!p) return { active: false };
+  // Sum/count wagers per option in the DB instead of pulling every entry row.
+  const grouped = await prisma.predictionEntry.groupBy({
+    by: ["optionIndex"],
+    where: { predictionId: p.id },
+    _sum: { tokensWagered: true },
+    _count: { _all: true },
+  });
+  const byIdx = new Map(grouped.map((g) => [g.optionIndex, g]));
   const options = p.options.map((label, idx) => {
-    const entries = p.entries.filter((e) => e.optionIndex === idx);
-    return {
-      label,
-      total: entries.reduce((s, e) => s + e.tokensWagered, 0),
-      count: entries.length,
-    };
+    const g = byIdx.get(idx);
+    return { label, total: g?._sum.tokensWagered ?? 0, count: g?._count._all ?? 0 };
   });
   return {
     active: true,
@@ -321,18 +330,34 @@ async function viewersFeed(_p: URLSearchParams, tid: string | null): Promise<unk
   });
 }
 
+/**
+ * Wrap a producer so that all OBS connections to the SAME feed+tenant share ONE
+ * execution per tick instead of each running its own DB query loop. TTL =
+ * intervalMs (the feed's own cadence), so a single connection still sees fresh
+ * data every tick — only the redundant concurrent reads collapse. Keyed by
+ * params too (the widget feed varies by `id`). Shared via Upstash across
+ * serverless instances; in-process fallback without Redis.
+ */
+function shared(key: OverlayFeedKey, def: OverlayFeedDef): OverlayFeedDef {
+  return {
+    intervalMs: def.intervalMs,
+    producer: (params, tid) =>
+      cacheJson(`ovl:${key}:${tid ?? "default"}:${params.toString()}`, def.intervalMs, () => def.producer(params, tid)),
+  };
+}
+
 export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
-  goals: { producer: goalsFeed, intervalMs: 2000 },
-  subathon: { producer: subathonFeed, intervalMs: 3000 },
-  polls: { producer: pollsFeed, intervalMs: 4000 },
-  predictions: { producer: predictionsFeed, intervalMs: 4000 },
-  "recent-events": { producer: recentEventsFeed, intervalMs: 5000 },
-  "emoji-combo": { producer: emojiComboFeed, intervalMs: 1500 },
-  rumble: { producer: rumbleFeed, intervalMs: 15000 },
-  wheel: { producer: wheelFeed, intervalMs: 2000 },
-  widget: { producer: widgetFeed, intervalMs: 8000 },
-  chat: { producer: chatFeed, intervalMs: 2000 },
-  viewers: { producer: viewersFeed, intervalMs: 20000 },
+  goals: shared("goals", { producer: goalsFeed, intervalMs: 2000 }),
+  subathon: shared("subathon", { producer: subathonFeed, intervalMs: 3000 }),
+  polls: shared("polls", { producer: pollsFeed, intervalMs: 4000 }),
+  predictions: shared("predictions", { producer: predictionsFeed, intervalMs: 4000 }),
+  "recent-events": shared("recent-events", { producer: recentEventsFeed, intervalMs: 5000 }),
+  "emoji-combo": shared("emoji-combo", { producer: emojiComboFeed, intervalMs: 1500 }),
+  rumble: shared("rumble", { producer: rumbleFeed, intervalMs: 15000 }),
+  wheel: shared("wheel", { producer: wheelFeed, intervalMs: 2000 }),
+  widget: shared("widget", { producer: widgetFeed, intervalMs: 8000 }),
+  chat: shared("chat", { producer: chatFeed, intervalMs: 2000 }),
+  viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };
 
 /** Look up a feed definition by key (null for an unknown key). */

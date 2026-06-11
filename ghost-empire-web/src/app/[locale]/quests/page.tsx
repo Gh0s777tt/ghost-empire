@@ -27,21 +27,12 @@ export default async function QuestsPage() {
   const userId = session.user.id;
   const dateStr = today();
 
-  // Ensure UserTask records exist for today for every active DailyTask.
-  const activeTasks = await prisma.dailyTask.findMany({
-    where: { active: true },
-    orderBy: { code: "asc" },
-  });
-
-  for (const t of activeTasks) {
-    await prisma.userTask.upsert({
-      where: { userId_taskId_date: { userId, taskId: t.id, date: dateStr } },
-      create: { userId, taskId: t.id, date: dateStr },
-      update: {},
-    });
-  }
-
-  const [userTasks, user] = await Promise.all([
+  // Ensure a UserTask row exists for each active daily task (today). Was N
+  // sequential upserts on EVERY page load; now create only the missing rows in
+  // one createMany and refetch only when we actually created something (mirrors
+  // the home page). Common case (rows already exist) = zero extra writes.
+  const [activeTasks, userTasksInitial, user] = await Promise.all([
+    prisma.dailyTask.findMany({ where: { active: true }, select: { id: true } }),
     prisma.userTask.findMany({
       where: { userId, date: dateStr },
       include: { task: true },
@@ -52,6 +43,23 @@ export default async function QuestsPage() {
       select: { streak: true, tokens: true },
     }),
   ]);
+
+  const missingTaskIds = activeTasks
+    .filter((t) => !userTasksInitial.some((ut) => ut.taskId === t.id))
+    .map((t) => t.id);
+
+  let userTasks = userTasksInitial;
+  if (missingTaskIds.length > 0) {
+    await prisma.userTask.createMany({
+      data: missingTaskIds.map((taskId) => ({ userId, taskId, date: dateStr })),
+      skipDuplicates: true,
+    });
+    userTasks = await prisma.userTask.findMany({
+      where: { userId, date: dateStr },
+      include: { task: true },
+      orderBy: { task: { code: "asc" } },
+    });
+  }
 
   return (
     <div className="min-h-screen bg-black">
