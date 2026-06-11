@@ -118,7 +118,7 @@ export default async function WelcomePage() {
 
         <SocialLinksRow />
 
-        <Link href="/about" className="mt-8 text-xs font-mono uppercase tracking-widest text-zinc-500 hover:text-red-400 transition-colors">
+        <Link href="/about" className="mt-8 py-1.5 text-xs font-mono uppercase tracking-widest text-zinc-400 hover:text-red-400 transition-colors">
           {t("learnMore")}
         </Link>
       </main>

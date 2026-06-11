@@ -101,6 +101,13 @@ const nextConfig: NextConfig = {
       { source: "/(.*)", headers: securityHeaders },
       { source: "/api/(.*)", headers: apiHeaders },
       { source: "/overlay/(.*)", headers: overlayHeaders },
+      // Brand statics (logo, founder OG) ship from public/ with no hash in the
+      // name, so Vercel defaults them to revalidate-every-request. They change
+      // ~never — let browsers/edge keep them for a day (SWR for a week).
+      {
+        source: "/(brand/.*|og-founder\\.jpg)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
     ];
   },
 };

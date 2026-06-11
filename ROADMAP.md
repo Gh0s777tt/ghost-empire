@@ -32,7 +32,7 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 - **F6 — security/backup** (zrobione: backup JSON, sanityzacja URL, ✅ **szyfrowanie sekretów at-rest AES-256-GCM**, ✅ **nagłówki overlay `noindex`/`no-store`**, ✅ **cron czyszczący bazę**). Zostaje: auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
 - **Hardware (3C):** OBS WebSocket (panel integracji już przyjmuje adres+hasło), Philips Hue / Govee (efekty świetlne na donejty) — konta dev.
 - ✅ **Emotki 7TV/BTTV/FFZ + prawdziwe grafiki odznak** — zrobione (#149).
-- ~~**i18n PL/EN**~~ → ✅ **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID, AR=RTL); ~~E2E (Playwright)~~ → ✅ **aktywne (#412/#430: 23 testy przeciw prod + workflow CI)**; zostaje: testy integracyjne (Docker Postgres), Lighthouse CI.
+- ~~**i18n PL/EN**~~ → ✅ **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID, AR=RTL); ~~E2E (Playwright)~~ → ✅ **aktywne (#412/#430/#436: 25 testów przeciw prod + workflow CI)**; ~~testy integracyjne~~ → ✅ **istnieją od #159** (11 testów, Docker Postgres, job CI); ~~Lighthouse~~ → ✅ **audyt wykonany lokalnie + fixy (#439)** — wariant CI dopiero po odblokowaniu GH Actions (billing).
 
 > Decyzja: priorytet (AI vs security vs hardware vs emotki). Hardware (Hue/Govee) + AI wymagają kont/kluczy.
 

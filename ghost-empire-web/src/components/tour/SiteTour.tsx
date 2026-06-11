@@ -158,7 +158,9 @@ export default function TourProvider({ children }: { children: React.ReactNode }
           {/* Step card */}
           <div className="absolute w-80 max-w-[calc(100vw-32px)] rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl p-4" style={cardStyle}>
             <div className="flex items-start justify-between gap-3 mb-1.5">
-              <h3 className="font-bold text-white text-sm">{t(`steps.${step.key}Title`)}</h3>
+              {/* h2: the tour overlays pages whose only heading above is the h1
+                  hero — an h3 here breaks sequential heading order (a11y). */}
+              <h2 className="font-bold text-white text-sm">{t(`steps.${step.key}Title`)}</h2>
               <span className="text-[10px] font-mono text-zinc-500 tabular-nums shrink-0 mt-0.5">{t("progress", { step: idx + 1, total: steps.length })}</span>
             </div>
             <p className="text-xs leading-relaxed text-zinc-300 mb-3">{t(`steps.${step.key}Body`)}</p>
