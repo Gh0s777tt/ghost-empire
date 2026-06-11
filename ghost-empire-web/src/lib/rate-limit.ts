@@ -1,7 +1,11 @@
 // src/lib/rate-limit.ts
-// DB-backed sliding window rate limiter. Survives serverless cold starts and
-// is consistent across Vercel instances. Cheap (one upsert + count per request).
+// Fixed-window rate limiter. Prefers Redis (Upstash) — one atomic INCR+EXPIRE per
+// check, far cheaper than two Postgres round-trips through the small pooler, which
+// matters on the per-chat-message hot path. Falls back to the DB limiter when
+// Redis isn't configured OR errors (so behavior is never worse than the proven
+// DB path); both fail-open on their own errors (never block legit traffic).
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("rate-limit");
@@ -9,6 +13,29 @@ const log = createLogger("rate-limit");
 export type RateLimitResult =
   | { allowed: true; remaining: number; resetAt: Date }
   | { allowed: false; remaining: 0; resetAt: Date; retryAfterSeconds: number };
+
+// Atomic fixed window: INCR the counter; on the first hit set the TTL; return the
+// count + remaining TTL. One round-trip, no incr/expire race (a process death
+// between two separate ops could otherwise leave a counter with no expiry).
+const WINDOW_LUA = `
+local c = redis.call('INCR', KEYS[1])
+if c == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[1]) end
+return {c, redis.call('PTTL', KEYS[1])}
+`;
+
+async function rateLimitRedis(key: string, maxHits: number, windowMs: number): Promise<RateLimitResult> {
+  const res = await redis!.eval(WINDOW_LUA, [`rl:${key}`], [windowMs]);
+  // Guard the shape — a malformed result throws here and we degrade to the DB path
+  // (caller's try/catch), rather than computing on undefined and wrongly allowing.
+  if (!Array.isArray(res) || typeof res[0] !== "number") throw new Error("unexpected eval result");
+  const [count, ttlMs] = res as [number, number];
+  const remainingMs = ttlMs > 0 ? ttlMs : windowMs;
+  const resetAt = new Date(Date.now() + remainingMs);
+  if (count > maxHits) {
+    return { allowed: false, remaining: 0, resetAt, retryAfterSeconds: Math.max(1, Math.ceil(remainingMs / 1000)) };
+  }
+  return { allowed: true, remaining: Math.max(0, maxHits - count), resetAt };
+}
 
 /**
  * Check + increment a counter. Returns whether the request should be allowed.
@@ -18,6 +45,22 @@ export type RateLimitResult =
  * @param windowMs Window length in milliseconds.
  */
 export async function rateLimit(
+  key: string,
+  maxHits: number,
+  windowMs: number,
+): Promise<RateLimitResult> {
+  if (redis) {
+    try {
+      return await rateLimitRedis(key, maxHits, windowMs);
+    } catch (e) {
+      // Redis hiccup → degrade to the proven DB limiter (NOT straight to fail-open).
+      log.warn("redis rate-limit failed, falling back to DB", { error: (e as Error).message });
+    }
+  }
+  return rateLimitDb(key, maxHits, windowMs);
+}
+
+async function rateLimitDb(
   key: string,
   maxHits: number,
   windowMs: number,
