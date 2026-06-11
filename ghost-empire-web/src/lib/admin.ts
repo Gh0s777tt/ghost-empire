@@ -61,16 +61,25 @@ async function isWrongTenant(user: { tenantId: string | null; email: string | nu
   return user.tenantId !== tid;
 }
 
-/** Strict admin check — for endpoints that should NEVER be exposed to mods
- *  (e.g. role management — granting admin/mod roles to others). */
-export async function requireAdmin(): Promise<AuthResult> {
+type GatedUser = {
+  isAdmin: boolean;
+  isModerator: boolean;
+  modPermissions: string[];
+  isBanned: boolean;
+  tenantId: string | null;
+  email: string | null;
+};
+
+/** Shared front half of every gate: session → user → not-banned → right-tenant.
+ *  Each gate then applies its own role/permission check on the returned user. */
+async function loadGatedUser(): Promise<{ ok: true; userId: string; user: GatedUser } | { ok: false; status: number; error: string }> {
   const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, status: 401, error: "Musisz być zalogowany" };
   }
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { isAdmin: true, isBanned: true, tenantId: true, email: true },
+    select: { isAdmin: true, isModerator: true, modPermissions: true, isBanned: true, tenantId: true, email: true },
   });
   if (!user || user.isBanned) {
     return { ok: false, status: 403, error: "Brak uprawnień" };
@@ -78,88 +87,67 @@ export async function requireAdmin(): Promise<AuthResult> {
   if (await isWrongTenant(user)) {
     return { ok: false, status: 403, error: "Brak uprawnień w tym portalu" };
   }
-  if (!user.isAdmin) {
+  return { ok: true, userId: session.user.id, user };
+}
+
+function okResult(userId: string, user: GatedUser): Extract<AuthResult, { ok: true }> {
+  return { ok: true, userId, isAdmin: user.isAdmin, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
+}
+
+/** Strict admin check — for endpoints that should NEVER be exposed to mods
+ *  (e.g. role management — granting admin/mod roles to others). */
+export async function requireAdmin(): Promise<AuthResult> {
+  const g = await loadGatedUser();
+  if (!g.ok) return g;
+  if (!g.user.isAdmin) {
     return { ok: false, status: 403, error: "Brak uprawnień admina" };
   }
-  return { ok: true, userId: session.user.id, isAdmin: true, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
+  return okResult(g.userId, g.user);
 }
 
 /** Admin OR moderator (any/no permissions) on THIS tenant — for panel-wide
  *  features open to everyone who can open /admin (e.g. the AI assistant).
  *  Carries the same cross-tenant guard as the stricter gates. */
 export async function requireAdminOrModerator(): Promise<AuthResult> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { ok: false, status: 401, error: "Musisz być zalogowany" };
-  }
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { isAdmin: true, isModerator: true, isBanned: true, tenantId: true, email: true },
-  });
-  if (!user || user.isBanned || (!user.isAdmin && !user.isModerator)) {
+  const g = await loadGatedUser();
+  if (!g.ok) return g;
+  if (!g.user.isAdmin && !g.user.isModerator) {
     return { ok: false, status: 403, error: "Brak uprawnień" };
   }
-  if (await isWrongTenant(user)) {
-    return { ok: false, status: 403, error: "Brak uprawnień w tym portalu" };
-  }
-  return { ok: true, userId: session.user.id, isAdmin: user.isAdmin, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
+  return okResult(g.userId, g.user);
 }
 
 /** Permission check — passes for admins (implicit grant) and moderators
  *  whose `modPermissions` array contains the requested permission. */
 export async function requirePermission(permission: ModPermission): Promise<AuthResult> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { ok: false, status: 401, error: "Musisz być zalogowany" };
-  }
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { isAdmin: true, isModerator: true, modPermissions: true, isBanned: true, tenantId: true, email: true },
-  });
-  if (!user || user.isBanned) {
-    return { ok: false, status: 403, error: "Brak uprawnień" };
-  }
-  if (await isWrongTenant(user)) {
-    return { ok: false, status: 403, error: "Brak uprawnień w tym portalu" };
-  }
-  if (!hasPermission(user, permission)) {
+  const g = await loadGatedUser();
+  if (!g.ok) return g;
+  if (!hasPermission(g.user, permission)) {
     return {
       ok: false,
       status: 403,
-      error: user.isModerator
+      error: g.user.isModerator
         ? `Twoja rola moderatora nie ma uprawnienia "${permission}"`
         : "Brak uprawnień admina/moderatora",
     };
   }
-  return { ok: true, userId: session.user.id, isAdmin: user.isAdmin, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
+  return okResult(g.userId, g.user);
 }
 
 /** Like `requirePermission` but passes if the user has ANY of the given
  *  permissions (admins always pass). For sections that bundle actions guarded
  *  by different permissions — e.g. the events manager (edit + draw). */
 export async function requireAnyPermission(permissions: ModPermission[]): Promise<AuthResult> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { ok: false, status: 401, error: "Musisz być zalogowany" };
-  }
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { isAdmin: true, isModerator: true, modPermissions: true, isBanned: true, tenantId: true, email: true },
-  });
-  if (!user || user.isBanned) {
-    return { ok: false, status: 403, error: "Brak uprawnień" };
-  }
-  if (await isWrongTenant(user)) {
-    return { ok: false, status: 403, error: "Brak uprawnień w tym portalu" };
-  }
-  if (!permissions.some((p) => hasPermission(user, p))) {
+  const g = await loadGatedUser();
+  if (!g.ok) return g;
+  if (!permissions.some((p) => hasPermission(g.user, p))) {
     return {
       ok: false,
       status: 403,
-      error: user.isModerator
+      error: g.user.isModerator
         ? `Twoja rola moderatora nie ma żadnego z uprawnień: ${permissions.join(", ")}`
         : "Brak uprawnień admina/moderatora",
     };
   }
-  return { ok: true, userId: session.user.id, isAdmin: user.isAdmin, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
+  return okResult(g.userId, g.user);
 }
