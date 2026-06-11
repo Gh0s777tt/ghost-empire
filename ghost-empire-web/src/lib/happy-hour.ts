@@ -5,12 +5,18 @@
 // and is cached 60 s (shared via Redis when available).
 import { prisma } from "@/lib/prisma";
 import { cacheJson } from "@/lib/redis";
+import { currentTenantId } from "@/lib/tenant";
 
 export type HappyHourConfig = { enabled: boolean; startHour: number; endHour: number; multiplier: number };
 
-export async function getHappyHourConfig(): Promise<HappyHourConfig> {
-  return cacheJson("happy-hour:config", 60_000, async () => {
+export async function getHappyHourConfig(tenantId?: string | null): Promise<HappyHourConfig> {
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  // Per-tenant cache key + scoped BotConfig — without this, one tenant's happy
+  // hour would leak into every other portal (cache and config were global).
+  return cacheJson(`happy-hour:config:${tid ?? "default"}`, 60_000, async () => {
     const cfg = await prisma.botConfig.findFirst({
+      where: tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {},
+      orderBy: { tenantId: "desc" }, // prefer the tenant's own row over the legacy null one
       select: { happyHourEnabled: true, happyHourStart: true, happyHourEnd: true, happyHourMultiplier: true },
     });
     return {
@@ -37,7 +43,7 @@ export function isHappyHourActive(cfg: HappyHourConfig, now: Date = new Date()):
 }
 
 /** The multiplier to apply right now (1 outside the window / when disabled). */
-export async function happyHourBoost(): Promise<number> {
-  const cfg = await getHappyHourConfig();
+export async function happyHourBoost(tenantId?: string | null): Promise<number> {
+  const cfg = await getHappyHourConfig(tenantId);
   return isHappyHourActive(cfg) ? cfg.multiplier : 1;
 }

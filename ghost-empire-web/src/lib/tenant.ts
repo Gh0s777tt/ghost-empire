@@ -6,6 +6,7 @@
 // subdomain-based resolution into the proxy/middleware, callers get that single
 // tenant's brand (falling back to SITE before the row/table exists). Keeping the
 // seam here means Phase 2 only changes HOW the tenant is chosen, not the callers.
+import { cache } from "react";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/site";
@@ -49,8 +50,13 @@ export const FALLBACK_TENANT: TenantBrand = {
  * (see resolveTenantSlug). Falls back to the default tenant when there's no subdomain.
  * Looks the slug up in the DB; before the table exists, or outside a request scope,
  * returns the SITE-derived fallback.
+ *
+ * Wrapped in React `cache()` so the ~6 calls per page render (root layout
+ * metadata+viewport, [locale] layout, i18n request config, SiteFooter, the page
+ * itself) collapse to ONE `tenant.findUnique` per request. Per-request only —
+ * no cross-request TTL, so an owner's branding edit still shows instantly.
  */
-export async function getCurrentTenant(): Promise<TenantBrand> {
+export const getCurrentTenant = cache(async function getCurrentTenant(): Promise<TenantBrand> {
   let slug = DEFAULT_TENANT_SLUG;
   try {
     const h = await headers();
@@ -77,7 +83,7 @@ export async function getCurrentTenant(): Promise<TenantBrand> {
     // Tenant table not migrated yet (before `prisma db push`) — fall back gracefully.
   }
   return FALLBACK_TENANT;
-}
+});
 
 /**
  * Convenience: the active tenant's row id, or null before the tenant row exists
