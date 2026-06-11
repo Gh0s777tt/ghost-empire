@@ -25,6 +25,32 @@ function deepMerge(base: Messages, over: Messages): Messages {
   return out;
 }
 
+// The EN-merged catalog per locale never changes at runtime (static JSON imports),
+// yet deepMerge over ~2200 keys ran on EVERY request before brandedMessages could
+// cache the branding pass. Memoize it once per locale (≤14 entries). `brandKey`
+// mirrors the old behavior: missing/EN locales share the "en" branding-cache key.
+const catalogCache = new Map<string, { brandKey: string; messages: Messages }>();
+
+async function mergedCatalog(locale: string): Promise<{ brandKey: string; messages: Messages }> {
+  const cached = catalogCache.get(locale);
+  if (cached) return cached;
+  const en = ((await import(`../messages/en.json`)).default ?? {}) as Messages;
+  let result: { brandKey: string; messages: Messages };
+  if (locale === "en") {
+    result = { brandKey: "en", messages: en };
+  } else {
+    try {
+      const localized = ((await import(`../messages/${locale}.json`)).default ?? {}) as Messages;
+      result = { brandKey: locale, messages: deepMerge(en, localized) };
+    } catch {
+      // No catalog for this locale yet → serve EN (incremental rollout).
+      result = { brandKey: "en", messages: en };
+    }
+  }
+  catalogCache.set(locale, result);
+  return result;
+}
+
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
   const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
@@ -40,14 +66,6 @@ export default getRequestConfig(async ({ requestLocale }) => {
     owner: tenant.ownerHandle,
   };
 
-  const en = ((await import(`../messages/en.json`)).default ?? {}) as Messages;
-  if (locale === "en") return { locale, messages: brandedMessages("en", en, branding) };
-
-  try {
-    const localized = ((await import(`../messages/${locale}.json`)).default ?? {}) as Messages;
-    return { locale, messages: brandedMessages(locale, deepMerge(en, localized), branding) };
-  } catch {
-    // No catalog for this locale yet → serve EN (incremental rollout).
-    return { locale, messages: brandedMessages("en", en, branding) };
-  }
+  const { brandKey, messages } = await mergedCatalog(locale);
+  return { locale, messages: brandedMessages(brandKey, messages, branding) };
 });
