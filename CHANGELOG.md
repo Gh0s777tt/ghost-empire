@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Fixed
+
+- **Bot: automod Twitch (delete/timeout) przez Helix — koniec martwych komend IRC (audyt #451, ostatni HIGH)** — tmi.js wysyłał `/delete` i `/timeout` jako komendy IRC, które **Twitch usunął w lutym 2023** → cicho nie działały (błąd połykany przez `.catch`), realnie egzekwował tylko `warn`. Nowy moduł `twitchMod.ts` używa **Helix moderation API** (`DELETE /moderation/chat` + `POST /moderation/bans`): przy starcie resolwuje broadcaster_id + moderator_id i waliduje scope'y; trasy egzekucji wołają Helix, a przy braku scope'ów/błędzie **fallback do ostrzeżenia na czacie** (dokładnie jak dotąd — włączenie NIE może pogorszyć stanu). `auth-twitch.ts` prosi teraz o `moderator:manage:chat_messages`+`moderator:manage:banned_users`. **⚠️ AKTYWACJA (user): `npm run auth:twitch` (re-autoryzacja bota — nowe scope'y) → restart bota → weryfikacja na żywym streamie; konto bota musi być modem na kanale.** Bez re-auth: warn-only (bez regresji). Bot `tsc` czysty.
+
 ### Performance
 
 - **Sezon: cache w hot-path nagród (audyt #450)** — `getOrCreateCurrentSeason()` robił `updateMany` (WRITE „deaktywuj wygasłe") + `findUnique` na **każde** wywołanie — w tym ścieżkę nagród czatu (per wiadomość). Sezon jest globalny (jeden wiersz/`number` miesiąca) i zmienia się raz w miesiącu → cache in-process ~5 min (jedyna nieświeżość: kilka minut na przełomie miesiąca, kosmetyczna — XP ląduje na serwowanym id sezonu); `invalidateSeasonCache()` wpięte w admin `update_season`, by edycja widać było od razu. Zielone: `tsc`/**234 testy**/`build`.

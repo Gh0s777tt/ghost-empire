@@ -6,7 +6,10 @@ import http from "node:http";
 const clientId = process.env.TWITCH_CLIENT_ID;
 const clientSecret = process.env.TWITCH_CLIENT_SECRET;
 const redirectUri = "http://localhost:3000";
-const scopes = "chat:read chat:edit";
+// chat:* for reading/sending; moderator:manage:* enables Helix delete/timeout
+// (tmi.js's IRC mod commands were removed by Twitch in 2023). The bot account must
+// be a moderator on the channel for the moderation scopes to take effect.
+const scopes = "chat:read chat:edit moderator:manage:chat_messages moderator:manage:banned_users";
 
 if (!clientId || !clientSecret) {
   console.error("Set TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET in .env first.");
