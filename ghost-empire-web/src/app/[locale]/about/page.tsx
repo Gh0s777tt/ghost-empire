@@ -19,6 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 const CHANGELOG = [
   {
+    date: "2026-06-11",
+    title: "Wersja dla innych streamerów: komplet 🏷️",
+    items: [
+      "Przebudowa white-label dobiegła końca: każdy przyszły portal-klient ma już WSZYSTKO w swoich barwach — własne nakładki OBS (alerty, czat, cele, licznik widzów…) z osobnym tokenem, własnego bota czatu, a nawet podgląd linków w social mediach i ekran logowania z jego logo i kolorem. Dla Ghost Empire nic się nie zmienia — to wciąż wersja założycielska ze wszystkim odblokowanym.",
+    ],
+  },
+  {
     date: "2026-06-10",
     title: "Fundamenty wersji dla innych streamerów 🏗️",
     items: [

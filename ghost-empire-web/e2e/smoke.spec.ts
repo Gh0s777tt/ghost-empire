@@ -84,6 +84,19 @@ test.describe("public APIs smoke", () => {
     expect(body.db).toBe("ok");
   });
 
+  test("dynamic OG image renders as a PNG", async ({ request }) => {
+    const res = await request.get("/api/og");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("image/png");
+  });
+
+  test("pages carry a per-tenant og:image", async ({ page }) => {
+    // Founder host serves the hand-made jpg; a tenant subdomain serves /api/og.
+    await page.goto("/shop", { waitUntil: "domcontentloaded" });
+    const content = await page.locator('meta[property="og:image"]').first().getAttribute("content");
+    expect(content).toMatch(/og-founder\.jpg|\/api\/og/);
+  });
+
   test("jackpot pool responds with at least the seed", async ({ request }) => {
     const res = await request.get("/api/gt-games/jackpot");
     expect(res.ok()).toBeTruthy();
