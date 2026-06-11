@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Changed
+
+- **Hardening CI przed powrotem Actions (audyt #446)** — punkty „zgnicia" wskazane przez audyt narzędzi (GH Actions czekają na odblokowanie billingu konta — niech wrócą zdrowe): `e2e-smoke.yml` (dzienny smoke prod) podbity z `actions/checkout@v4`+`setup-node@v4` → **v6** (spójnie z `ci.yml`) i `playwright install --with-deps` → samo `chromium` (apt-get update ciągnął flaky repo Google Chrome — ubuntu-latest ma już biblioteki Chromium); `ci.yml` `npm install` → **`npm ci`** w 3 jobach (lockfile zsynchronizowany po #445 — `npm ci` łapie dryf package.json↔lock, którego `npm install` by nie pokazał); dodane `engines.node >=22` (dokumentuje wersję, adresuje rozjazd CI-22/lokalnie-26). Bez zmian w kodzie aplikacji. Lokalnie: `tsc`/**242 testy**/`build` zielone.
+
 ### Removed
 
 - **Cleanup z audytu — martwe zależności, skrypty i zastąpiony bot (#445)** — porządki wskazane przez audyt narzędzi: wycięte **nieużywane zależności** `@supabase/ssr`, `@supabase/supabase-js` (DB idzie przez Prisma+pg, zero importów) i `date-fns` (zero importów) → −11 paczek z lockfile; usunięty **martwy skrypt** `db:migrate` (repo używa `db push`, brak katalogu migracji — odpalenie byłoby szkodliwe) i jednorazówka `prisma/fix-google-name-leak.ts` (z maja); **skasowany katalog `ghost-empire-bot/`** (zastąpiony przez E-Bota w osobnym repo od #184; zero referencji kodu, historia w gicie) + wpis w `.github/dependabot.yml` (przestał obserwować trupa) i naprawiony martwy link w README. Build/typecheck/242 testy bez zmian. Zielone: `tsc`/**242 testy**/`build`.
