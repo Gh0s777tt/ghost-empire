@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **Typy: koniec `any` w HomeClient — 15 anotacji → kontrakty 1:1 z serwerem** **(#438)** — druga zaległość z audytu 2026-06-09 („HomeClient any (11)", od tamtej pory urosło do 15): propsy strony głównej (`userData`/`hotItems`/`activeEvents`/`topUsers`) i wszystkie pod-komponenty (GuestView/ProfileHero/StatBox/DailyTaskCard/MiniShopCard/EventMiniCard/AchievementBadgeSmall) dostały typy **odzwierciedlające dokładnie prisma-selecty** z `app/[locale]/page.tsx` (`HomeUser`/`HomeUserTask`/`HomeUserAchievement`/`HomeShopItem`/`HomeEvent`/`HomeTopUser` + komentarz „keep in sync"); `typeStyles` na `Record<string, { icon: LucideIcon; … }>`. Przy okazji: GuestView przestał dostawać nieużywane propsy, DailyTaskCard zbędny `userId`. Czysto typowe — zero zmian zachowania. Zielone: `tsc`/**242 testy**/`build`.
+
 - **Observability: koniec ad-hoc `console.*` na serwerze — komplet structured loggera** **(#437)** — domknięcie zaległości z audytu 2026-06-09 („console→logger incremental"): **48 wywołań w 27 plikach serwerowych** (trasy API + lib, w tym 13 w `lib/auth.ts` — callbacki Auth.js, zmieniane chirurgicznie tylko linie logów) przepisanych na `createLogger(scope)` z nazwanymi polami kontekstu zamiast sklejanych stringów — na prodzie JSON-lines filtrowalne w Vercel po `level`/`scope`. Debugowe dumpy tokenów Kick zeszły na `log.debug` (niewidoczne na prod-progu `info`). Celowo zostają: `lib/logger.ts` (sam logger) i 4 komponenty klienckie (konsola przeglądarki to właściwe miejsce; błędy klienta i tak płyną do `/api/telemetry/client-error` — teraz też przez logger). Kontrolny grep = zero `console.*` poza wyjątkami. Zielone: `tsc`/**242 testy**/`build`.
 
 ### Added
