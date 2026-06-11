@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Removed
+
+- **Cleanup z audytu — martwe zależności, skrypty i zastąpiony bot (#445)** — porządki wskazane przez audyt narzędzi: wycięte **nieużywane zależności** `@supabase/ssr`, `@supabase/supabase-js` (DB idzie przez Prisma+pg, zero importów) i `date-fns` (zero importów) → −11 paczek z lockfile; usunięty **martwy skrypt** `db:migrate` (repo używa `db push`, brak katalogu migracji — odpalenie byłoby szkodliwe) i jednorazówka `prisma/fix-google-name-leak.ts` (z maja); **skasowany katalog `ghost-empire-bot/`** (zastąpiony przez E-Bota w osobnym repo od #184; zero referencji kodu, historia w gicie) + wpis w `.github/dependabot.yml` (przestał obserwować trupa) i naprawiony martwy link w README. Build/typecheck/242 testy bez zmian. Zielone: `tsc`/**242 testy**/`build`.
+
 ### Documentation
 
 - **Docs-sync ~250 PR-ów w tyle — ENDPOINTS/ENV/ARCHITECTURE do stanu kodu (audyt #444)** — drugi [HIGH] z audytu (docs nietknięte od czasu sprzed całej migracji SaaS): **ENDPOINTS.md** „102 trasy" → **140** (zweryfikowane per plik) + dopisane brakujące: cała sekcja **kasyno `gt-games/*`** (blackjack/hilo/mines/play/jackpot/leaderboard…), **onboarding/billing** (`onboarding`+`/my`, `billing/checkout`, `webhooks/stripe`), admin **`tenants`+`[id]`/`backfill-tenant`/`assistant`/`alert-types`/`custom-alerts`/`chat-overlay`**, public **`health`/`og`/`telemetry/client-error`**, `daily-bonus`, `cron/weekly-rewards`, `internal/link-status`. **ENV.md** — nowy blok „SaaS multi-tenant + billing": `NEXT_PUBLIC_ROOT_DOMAIN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, wzorzec `STRIPE_PRICE_<PLAN>_<N>M` (12 sztuk), `NEXT_PUBLIC_SITE_URL`, `LOG_LEVEL`. **ARCHITECTURE.md** — fix „NextAuth v4"→v5, YouTube „mine=true"→`broadcastStatus=active` (po fixie #178), nowa sekcja „Multi-tenant SaaS". PLAN.md „Next 15"→16. Tylko docs (bez wpisu on-site).
