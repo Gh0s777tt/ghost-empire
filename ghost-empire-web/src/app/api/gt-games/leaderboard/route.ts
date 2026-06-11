@@ -2,23 +2,28 @@
 // Public: biggest single GT-game wins + top net winners (last 30 days).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { displayNick } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // Scope to THIS portal (GtGamePlay is user-owned → via user.tenantId), so the
+  // casino leaderboard never mixes players from different tenants.
+  const tid = await currentTenantId();
+  const scope = tid ? { user: { tenantId: tid } } : {};
 
   const [bigWins, topNet] = await Promise.all([
     prisma.gtGamePlay.findMany({
-      where: { payout: { gt: 0 }, createdAt: { gte: since } },
+      where: { payout: { gt: 0 }, createdAt: { gte: since }, ...scope },
       orderBy: { net: "desc" },
       take: 10,
       include: { user: { select: { username: true, displayName: true } } },
     }),
     prisma.gtGamePlay.groupBy({
       by: ["userId"],
-      where: { createdAt: { gte: since } },
+      where: { createdAt: { gte: since }, ...scope },
       _sum: { net: true },
       orderBy: { _sum: { net: "desc" } },
       take: 10,

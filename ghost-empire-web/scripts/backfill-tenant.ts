@@ -96,6 +96,14 @@ async function main() {
   console.log(`   chatFeedMessage: attached ${cfm.count} row(s)`);
   const cw = await prisma.customWidget.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   customWidget: attached ${cw.count} row(s)`);
+  const cc = await prisma.chatCommand.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   chatCommand: attached ${cc.count} row(s)`);
+  const ct = await prisma.chatTimer.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   chatTimer: attached ${ct.count} row(s)`);
+  const fq = await prisma.faqResponse.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   faqResponse: attached ${fq.count} row(s)`);
+  const sr = await prisma.songRequest.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   songRequest: attached ${sr.count} row(s)`);
 
   await prisma.$disconnect();
 }

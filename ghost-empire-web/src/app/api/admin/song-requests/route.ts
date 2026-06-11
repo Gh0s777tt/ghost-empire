@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 
 type Row = {
   id: string; query: string; title: string | null; requestedBy: string; platform: string;
@@ -21,13 +22,15 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const tid = await currentTenantId();
+  const tenantScope = tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {};
   const [active, recent] = await Promise.all([
     prisma.songRequest.findMany({
-      where: { status: { in: ["queued", "playing"] } },
+      where: { status: { in: ["queued", "playing"] }, ...tenantScope },
       orderBy: [{ status: "desc" }, { createdAt: "asc" }], // "playing" before "queued", then FIFO
     }),
     prisma.songRequest.findMany({
-      where: { status: { in: ["played", "skipped"] } },
+      where: { status: { in: ["played", "skipped"] }, ...tenantScope },
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
@@ -50,31 +53,42 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const tid = await currentTenantId();
+  const tenantScope = tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {};
+
   switch (body.action) {
     case "play": {
       if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+      const owned = await prisma.songRequest.findFirst({ where: { id: body.id, ...tenantScope } });
+      if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
       // mark any currently-playing as played, then set this one playing
-      await prisma.songRequest.updateMany({ where: { status: "playing" }, data: { status: "played", playedAt: new Date() } });
+      await prisma.songRequest.updateMany({ where: { status: "playing", ...tenantScope }, data: { status: "played", playedAt: new Date() } });
       const updated = await prisma.songRequest.update({ where: { id: body.id }, data: { status: "playing" } });
       return NextResponse.json({ ok: true, song: serialize(updated) });
     }
     case "played": {
       if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+      const owned = await prisma.songRequest.findFirst({ where: { id: body.id, ...tenantScope } });
+      if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
       const updated = await prisma.songRequest.update({ where: { id: body.id }, data: { status: "played", playedAt: new Date() } });
       return NextResponse.json({ ok: true, song: serialize(updated) });
     }
     case "skip": {
       if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+      const owned = await prisma.songRequest.findFirst({ where: { id: body.id, ...tenantScope } });
+      if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
       const updated = await prisma.songRequest.update({ where: { id: body.id }, data: { status: "skipped" } });
       return NextResponse.json({ ok: true, song: serialize(updated) });
     }
     case "delete": {
       if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+      const owned = await prisma.songRequest.findFirst({ where: { id: body.id, ...tenantScope } });
+      if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
       await prisma.songRequest.delete({ where: { id: body.id } });
       return NextResponse.json({ ok: true });
     }
     case "clear": {
-      const res = await prisma.songRequest.updateMany({ where: { status: "queued" }, data: { status: "skipped" } });
+      const res = await prisma.songRequest.updateMany({ where: { status: "queued", ...tenantScope }, data: { status: "skipped" } });
       return NextResponse.json({ ok: true, cleared: res.count });
     }
     default:

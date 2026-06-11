@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getWheelConfig } from "@/lib/wheel";
+import { currentTenantId } from "@/lib/tenant";
 import { displayNick } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +19,13 @@ export async function GET() {
     balance = u?.tokens ?? 0;
   }
 
+  // Scope the winners feed to THIS portal (WheelSpin is user-owned → via user.tenantId),
+  // so one tenant's wheel never shows another tenant's players.
+  const tid = await currentTenantId();
   const recent = await prisma.wheelSpin.findMany({
     orderBy: { createdAt: "desc" },
     take: 10,
-    where: { rewardTokens: { gt: 0 } }, // only show wins in the feed
+    where: { rewardTokens: { gt: 0 }, ...(tid ? { user: { tenantId: tid } } : {}) }, // only show wins in the feed
     include: { user: { select: { username: true, displayName: true } } },
   });
 

@@ -71,6 +71,11 @@ async function run(req: Request) {
   counts.streamAlert = (await prisma.streamAlert.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.chatFeedMessage = (await prisma.chatFeedMessage.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.customWidget = (await prisma.customWidget.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  // Bot collections (FAQ/commands/timers/song queue) — gain a tenant so each portal's bot reads its own.
+  counts.chatCommand = (await prisma.chatCommand.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.chatTimer = (await prisma.chatTimer.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.faqResponse = (await prisma.faqResponse.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.songRequest = (await prisma.songRequest.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
 
   await logAdminAction({
     adminId: gate.userId,
