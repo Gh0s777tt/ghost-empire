@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
 import type { AlertAnimation, AlertPosition, AlertTypeCfg } from "@/lib/alert-types";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("alerts");
 
 export type AlertType =
   | "shop_purchase"
@@ -81,7 +84,7 @@ export async function dispatchAlertSafe(input: AlertInput, tenantId?: string | n
   try {
     await dispatchAlert(input, tenantId);
   } catch (e) {
-    console.error("[alerts] dispatch failed:", e, "input:", input.type);
+    log.error("dispatch failed", e, { input: input.type });
   }
 }
 

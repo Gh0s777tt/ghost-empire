@@ -7,6 +7,9 @@
 // creates the current month's season and deactivates any expired ones.
 import { prisma } from "@/lib/prisma";
 import { tierFromXp } from "@/lib/economy";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("seasons");
 
 // XP awarded per event type — tuned so a casual viewer reaches a few tiers/month,
 // an active supporter most of the pass, and whales can finish.
@@ -128,7 +131,7 @@ export async function awardSeasonXp(userId: string, source: SeasonXpSource, mult
     const { awardAccountXp } = await import("@/lib/leveling");
     await awardAccountXp(userId, amount);
   } catch (e) {
-    console.error("[seasons] awardSeasonXp failed:", source, e);
+    log.error("awardSeasonXp failed", e, { source });
   }
 }
 
@@ -222,7 +225,7 @@ export async function claimSeasonReward(userId: string, rewardId: string): Promi
       return { ok: true, type: reward.type, label: reward.label } as const;
     });
   } catch (e) {
-    console.error("[seasons] claim failed:", e);
+    log.error("claim failed", e);
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
 }

@@ -11,6 +11,9 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { detectDuplicates, previewMerge, executeMerge } from "@/lib/user-merge";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("merge-users");
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -20,7 +23,7 @@ export async function GET() {
     const groups = await detectDuplicates();
     return NextResponse.json({ groups });
   } catch (e) {
-    console.error("[merge-users] detect failed:", e);
+    log.error("detect failed", e);
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "detect_failed" },
       { status: 500 },
@@ -110,7 +113,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json(result);
     } catch (e) {
-      console.error("[merge-users] execute failed:", e);
+      log.error("execute failed", e);
       return NextResponse.json(
         { error: e instanceof Error ? e.message : "execute_failed" },
         { status: 500 },

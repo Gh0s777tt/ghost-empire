@@ -13,6 +13,9 @@ import {
   KICK_EVENT_TYPES_TO_SUBSCRIBE,
 } from "@/lib/kick";
 import { getKickStreamerToken } from "@/lib/platform-tokens";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("kick-events");
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -29,7 +32,7 @@ export async function GET() {
     const appToken = await getAppAccessToken();
     remote = await listEventSubscriptions(appToken);
   } catch (e) {
-    console.error("[kick-events] list failed:", e);
+    log.error("list failed", e);
   }
 
   return NextResponse.json({

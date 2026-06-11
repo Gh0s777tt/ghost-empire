@@ -19,6 +19,9 @@ import { displayNick } from "@/lib/utils";
 import { LINK_COOKIE_NAME, verifyLinkToken, executeAccountLink } from "@/lib/account-linking";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("auth");
 
 // Permanent admins by email — these accounts are ALWAYS admin, regardless of DB
 // state (survives a database reset / wipe). The owner's email is hardcoded so the
@@ -97,7 +100,7 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
           body: body.toString(),
         });
         const text = await res.text();
-        console.log(`[kick] token status=${res.status} body=${text.slice(0, 500)}`);
+        log.debug("kick token status", { status: res.status, body: text.slice(0, 500) });
         if (!res.ok) {
           throw new Error(`Kick token exchange failed (${res.status}): ${text}`);
         }
@@ -116,7 +119,7 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
           headers: { Authorization: `Bearer ${tokens.access_token}` },
         });
         const text = await res.text();
-        console.log(`[kick] userinfo status=${res.status} body=${text.slice(0, 500)}`);
+        log.debug("kick userinfo status", { status: res.status, body: text.slice(0, 500) });
         let data: unknown;
         try { data = JSON.parse(text); } catch { data = {}; }
         const obj = data as { data?: unknown };
@@ -260,7 +263,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           linkSuccessRedirect = `/profile?linked=${account.provider}`;
         }
       } catch (e) {
-        console.error("[link] error during link intent processing:", e);
+        log.error("error during link intent processing", e);
         // Fall through to normal sign-in
       }
 
@@ -280,7 +283,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             });
             // Continue with login flow
           } else {
-            console.warn(`[auth] blocked login attempt by banned user ${dbUser.id} (${dbUser.username})`);
+            log.warn("blocked login attempt by banned user", { userId: dbUser.id, username: dbUser.username });
             return "/auth/error?error=AccessDenied";
           }
         }
@@ -323,10 +326,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 ytTitle = snip?.title || undefined;
                 ytHandle = snip?.customUrl || undefined; // "@handle" for channels that set one
               } else {
-                console.warn(`[youtube] channels.list ${yt.status} — handle not fetched (scope/API not ready?)`);
+                log.warn("youtube channels.list — handle not fetched (scope/API not ready?)", { status: yt.status });
               }
             } catch (e) {
-              console.error("[youtube] channel fetch failed:", e);
+              log.error("youtube channel fetch failed", e);
             }
           }
 
@@ -489,7 +492,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
       } catch (error) {
-        console.error("SignIn callback error:", error);
+        log.error("SignIn callback error", error);
         // Don't block login on non-critical errors
       }
 
@@ -561,7 +564,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Season XP welcome bump
         await awardSeasonXp(user.id, "welcome");
       } catch (e) {
-        console.error("Error granting welcome bonus:", e);
+        log.error("Error granting welcome bonus", e);
       }
     },
 
@@ -597,7 +600,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (isPermanentAdminEmail(user.email)) patch.isAdmin = true;
         if (isGoogle && display) patch.displayName = display;
         if (Object.keys(patch).length > 0) {
-          await prisma.user.update({ where: { id }, data: patch }).catch((e) => console.error("[linkAccount] patch failed:", e));
+          await prisma.user.update({ where: { id }, data: patch }).catch((e) => log.error("linkAccount patch failed", e));
         }
         // public @username (UNIQUE → its own collision-safe update so a clash can't lose the patch)
         if (handle) {
@@ -609,7 +612,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
       } catch (e) {
-        console.error("linkAccount setup error:", e);
+        log.error("linkAccount setup error", e);
       }
     },
   },
@@ -620,26 +623,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // v5 logger: error receives an Error object directly (v4 passed code+metadata).
     error(error) {
       const e = error as Error & { cause?: unknown };
-      console.error(
-        "[next-auth][error]",
-        JSON.stringify(
-          {
-            name: e?.name,
-            message: e?.message,
-            stack: e?.stack?.split("\n").slice(0, 5).join(" | "),
-            cause: e?.cause,
-          },
-          null,
-          2,
-        ),
-      );
+      log.error("next-auth error", undefined, {
+        name: e?.name,
+        message: e?.message,
+        stack: e?.stack?.split("\n").slice(0, 5).join(" | "),
+        cause: e?.cause,
+      });
     },
     warn(code) {
-      console.warn(`[next-auth][warn] ${code}`);
+      log.warn("next-auth warn", { code });
     },
     debug(message, metadata) {
       if (process.env.NODE_ENV === "development") {
-        console.log(`[next-auth][debug] ${message}`, metadata);
+        log.debug(`next-auth ${message}`, { metadata });
       }
     },
   },

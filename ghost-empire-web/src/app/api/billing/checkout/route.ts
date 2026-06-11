@@ -10,6 +10,9 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { getStripe, billingConfigured, priceIdFor, isBillingMonths } from "@/lib/billing";
 import { normalizePlan } from "@/lib/entitlements";
 import { SITE } from "@/lib/site";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("billing");
 
 export const dynamic = "force-dynamic";
 
@@ -84,7 +87,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, url: checkout.url });
   } catch (e) {
-    console.error("[billing] checkout failed:", e);
+    log.error("checkout failed", e);
     return NextResponse.json({ error: "Nie udało się rozpocząć płatności" }, { status: 502 });
   }
 }

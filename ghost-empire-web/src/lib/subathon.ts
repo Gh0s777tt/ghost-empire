@@ -4,6 +4,9 @@
 // YouTube). Fire-and-forget — never roll back the underlying event transaction.
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("subathon");
 
 /**
  * Extend the running subathon. Subs (incl. gifted — gifts already bump "subs")
@@ -33,6 +36,6 @@ export async function extendSubathon(opts: { subs?: number; pln?: number }, tena
       data: { endsAt: next, totalAddedSecs: { increment: add } },
     });
   } catch (e) {
-    console.error("[subathon] extend failed:", e);
+    log.error("extend failed", e);
   }
 }

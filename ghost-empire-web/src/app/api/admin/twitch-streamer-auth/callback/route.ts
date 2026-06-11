@@ -9,6 +9,9 @@ import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { verifyOAuthState } from "@/lib/oauth-state";
 import { tokenUpsertKeys } from "@/lib/platform-tokens";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("twitch-streamer");
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
@@ -58,7 +61,7 @@ export async function GET(req: Request) {
   });
   if (!tokenRes.ok) {
     const text = await tokenRes.text();
-    console.error("[twitch-streamer] token exchange failed:", tokenRes.status, text);
+    log.error("token exchange failed", undefined, { status: tokenRes.status, body: text });
     return NextResponse.redirect(new URL("/admin?twitch_error=token_exchange", BASE));
   }
   const tokenData = await tokenRes.json();

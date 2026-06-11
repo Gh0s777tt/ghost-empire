@@ -12,6 +12,9 @@ import {
   EVENT_TYPES_TO_SUBSCRIBE,
 } from "@/lib/twitch";
 import { getTwitchStreamerToken } from "@/lib/platform-tokens";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("twitch-eventsub");
 
 // GET — current Twitch subscriptions state + streamer connection info
 export async function GET() {
@@ -28,7 +31,7 @@ export async function GET() {
     const appToken = await getAppAccessToken();
     remote = await listEventSubscriptions(appToken);
   } catch (e) {
-    console.error("[twitch-eventsub] list failed:", e);
+    log.error("list failed", e);
   }
 
   return NextResponse.json({

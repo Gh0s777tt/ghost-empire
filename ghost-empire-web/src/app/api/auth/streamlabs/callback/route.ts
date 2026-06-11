@@ -9,6 +9,9 @@ import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { verifyOAuthState } from "@/lib/oauth-state";
 import { tokenUpsertKeys } from "@/lib/platform-tokens";
+import { createLogger, errContext } from "@/lib/logger";
+
+const log = createLogger("streamlabs");
 
 const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
@@ -47,7 +50,7 @@ export async function GET(req: Request) {
   try {
     token = await exchangeCode(code);
   } catch (e) {
-    console.error("[streamlabs] token exchange failed:", e);
+    log.error("token exchange failed", e);
     return NextResponse.redirect(new URL("/admin?streamlabs_error=token_exchange", BASE));
   }
 
@@ -63,7 +66,7 @@ export async function GET(req: Request) {
       streamlabsUsername = userInfo.twitch.display_name;
     }
   } catch (e) {
-    console.warn("[streamlabs] user info fetch failed:", e);
+    log.warn("user info fetch failed", errContext(e));
   }
 
   const expiresAt = token.expires_in
