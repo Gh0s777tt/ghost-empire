@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Changed
+
+- **Spójność: wspólny rdzeń 4 bramek auth w `lib/admin.ts` (audyt P2 #454)** — `requireAdmin`/`requireAdminOrModerator`/`requirePermission`/`requireAnyPermission` powielały identyczny przód (session → user → not-banned → wrong-tenant) i budowę ok-resultu. Wyciągnięte do `loadGatedUser()` + `okResult()`; każda bramka robi już tylko swój specyficzny check roli/uprawnienia. **Zero zmian zachowania** — te same komunikaty, statusy i kolejność checków (zweryfikowane 234 testami, w tym suite `permissions`). −~45 linii powtórki. Zielone: `tsc`/**234 testy**/`build`.
+
 ### Fixed
 
 - **Bot: automod Twitch (delete/timeout) przez Helix — koniec martwych komend IRC (audyt #451, ostatni HIGH)** — tmi.js wysyłał `/delete` i `/timeout` jako komendy IRC, które **Twitch usunął w lutym 2023** → cicho nie działały (błąd połykany przez `.catch`), realnie egzekwował tylko `warn`. Nowy moduł `twitchMod.ts` używa **Helix moderation API** (`DELETE /moderation/chat` + `POST /moderation/bans`): przy starcie resolwuje broadcaster_id + moderator_id i waliduje scope'y; trasy egzekucji wołają Helix, a przy braku scope'ów/błędzie **fallback do ostrzeżenia na czacie** (dokładnie jak dotąd — włączenie NIE może pogorszyć stanu). `auth-twitch.ts` prosi teraz o `moderator:manage:chat_messages`+`moderator:manage:banned_users`. **⚠️ AKTYWACJA (user): `npm run auth:twitch` (re-autoryzacja bota — nowe scope'y) → restart bota → weryfikacja na żywym streamie; konto bota musi być modem na kanale.** Bez re-auth: warn-only (bez regresji). Bot `tsc` czysty.
