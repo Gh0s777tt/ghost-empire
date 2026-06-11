@@ -23,11 +23,14 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 > **🆕 Świeżo dowiezione (2026-06-06, PR #173–#184):** ✦ **prestiż (Phantom Ascension)** #173 + perk GT · 🛒 zniżka w sklepie #174 · ⚔️ **pojedynki PvP `!duel`** #175–176 · 🔊 TTS na alertach #180 · 🏆 osiągnięcia (prestiż/pojedynki/kasyno) #179 · 🏦 **napad kooperacyjny `!heist`** #181 · 🎡 **ruletka `!roulette`** #182 · 🧭 grupowana nawigacja #183 · 💬 **Discord wydzielony do osobnego `E-Bot`** (`Gh0s777tt/E-Bot`), `ghost-empire-bot` zastąpiony #184. **Podział finalny:** `ghost-empire-chat` = streaming · **E-Bot** = Discord + społeczność.
 
+> **🆕 Świeżo dowiezione (2026-06-10/11, PR #381–#430):** 🎰 **kasyno = 10 gier** (dice/crash/plinko/mines/blackjack/hi-lo/zdrapki + 3D kości, jackpot progresywny, happy hours, daily bonus, nagrody tygodnia) · 🧭 **admin: tryby Prosty/Zaawansowany/Dev + opisy 32 sekcji + asystent AI** · 🧪 **E2E Playwright AKTYWNE** (23 testy przeciw prod + dzienny CI; GH Actions czeka na odblokowanie billingu konta GitHub) · 🏢 **SaaS multi-tenant white-label KOMPLET KODU (#416–#430)**: tokeny platform per-tenant + OAuth-state HMAC, webhook→tenant, tenant-aware admin, 5 markerów brandingu w i18n+loader, `--brand` CSS-vars, logo/metadata/manifest per tenant, plany basic⊂pro⊂elite z bramkami na wszystkich trasach, panel **Portale** (admin-of-admins), kreator **`/onboarding`** (trial 14 dni) + dashboard **„Mój portal"**, **Stripe dry-wired** (Checkout+webhook śpią na 503 — checklist „dzień Stripe" w README).
+
 **Pozostałe duże kierunki:**
+- **🏢 SaaS — odblokowania po stronie usera:** ① env Stripe (sekcja w README — 10 minut) → sprzedaż automatyczna; ② domena produktu + `NEXT_PUBLIC_ROOT_DOMAIN` + wildcard DNS → subdomeny per tenant + tenant-threading overlayów OBS + „kopiuj URL OBS" per portal; ③ decyzja o multi-tenant bocie czatu (osobne repo).
 - **F6 — security/backup** (zrobione: backup JSON, sanityzacja URL, ✅ **szyfrowanie sekretów at-rest AES-256-GCM**, ✅ **nagłówki overlay `noindex`/`no-store`**, ✅ **cron czyszczący bazę**). Zostaje: auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
 - **Hardware (3C):** OBS WebSocket (panel integracji już przyjmuje adres+hasło), Philips Hue / Govee (efekty świetlne na donejty) — konta dev.
 - ✅ **Emotki 7TV/BTTV/FFZ + prawdziwe grafiki odznak** — zrobione (#149).
-- ~~**i18n PL/EN**~~ → ✅ **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID, AR=RTL); testy integracyjne (Docker Postgres) + E2E (Playwright), Lighthouse CI.
+- ~~**i18n PL/EN**~~ → ✅ **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID, AR=RTL); ~~E2E (Playwright)~~ → ✅ **aktywne (#412/#430: 23 testy przeciw prod + workflow CI)**; zostaje: testy integracyjne (Docker Postgres), Lighthouse CI.
 
 > Decyzja: priorytet (AI vs security vs hardware vs emotki). Hardware (Hue/Govee) + AI wymagają kont/kluczy.
 
