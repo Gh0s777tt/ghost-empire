@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
 import { featureGateResponse } from "@/lib/entitlements";
+import { currentTenantId } from "@/lib/tenant";
 
 const MAX_QUERY = 200;
 const MAX_QUEUE = 200; // reject if the queue is already huge
@@ -50,13 +51,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid query" }, { status: 400 });
   }
 
-  const queued = await prisma.songRequest.count({ where: { status: "queued" } });
+  const tid = await currentTenantId();
+  const queued = await prisma.songRequest.count({
+    where: { status: "queued", ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
+  });
   if (queued >= MAX_QUEUE) {
     return NextResponse.json({ error: "Queue full" }, { status: 429 });
   }
 
   await prisma.songRequest.create({
     data: {
+      tenantId: tid,
       query,
       title: await fetchTitle(query),
       requestedBy: (body.requestedBy ?? "widz").slice(0, 80),

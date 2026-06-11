@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const TRIGGER_RE = /^![a-z0-9_]{1,49}$/; // "!word" — lowercased; 2-50 chars incl. the "!"
 const MAX_RESPONSE = 500;
@@ -46,7 +47,9 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const tid = await currentTenantId();
   const commands = await prisma.chatCommand.findMany({
+    where: { ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
     orderBy: [{ enabled: "desc" }, { trigger: "asc" }],
   });
   return NextResponse.json({ commands: commands.map(serialize) });
@@ -72,6 +75,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const tid = await currentTenantId();
+
   if (body.action === "create") {
     const trigger = normalizeTrigger(body.trigger);
     if (!trigger) {
@@ -80,12 +85,13 @@ export async function POST(req: Request) {
     if (typeof body.response !== "string" || !body.response.trim() || body.response.length > MAX_RESPONSE) {
       return NextResponse.json({ error: `Odpowiedź: 1-${MAX_RESPONSE} znaków` }, { status: 400 });
     }
-    if (await prisma.chatCommand.findUnique({ where: { trigger } })) {
+    if (await prisma.chatCommand.findFirst({ where: { trigger, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) } })) {
       return NextResponse.json({ error: `Komenda ${trigger} już istnieje` }, { status: 409 });
     }
 
     const created = await prisma.chatCommand.create({
       data: {
+        tenantId: tid,
         trigger,
         response: body.response.trim(),
         cooldownSeconds: clampCooldown(body.cooldownSeconds),
@@ -107,6 +113,8 @@ export async function POST(req: Request) {
 
   if (body.action === "update") {
     if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    const owned = await prisma.chatCommand.findFirst({ where: { id: body.id, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) } });
+    if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
     const patch: Record<string, unknown> = {};
 
     if (body.trigger !== undefined) {
@@ -114,7 +122,7 @@ export async function POST(req: Request) {
       if (!trigger) {
         return NextResponse.json({ error: 'Trigger: "!słowo" (małe litery / cyfry / _, 2-50 znaków)' }, { status: 400 });
       }
-      const clash = await prisma.chatCommand.findUnique({ where: { trigger } });
+      const clash = await prisma.chatCommand.findFirst({ where: { trigger, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) } });
       if (clash && clash.id !== body.id) {
         return NextResponse.json({ error: `Komenda ${trigger} już istnieje` }, { status: 409 });
       }
@@ -137,13 +145,15 @@ export async function POST(req: Request) {
 
   if (body.action === "delete") {
     if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    const deleted = await prisma.chatCommand.delete({ where: { id: body.id } });
+    const owned = await prisma.chatCommand.findFirst({ where: { id: body.id, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) } });
+    if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    await prisma.chatCommand.delete({ where: { id: body.id } });
     await logAdminAction({
       adminId: auth.userId,
       action: "set_user_role",
       targetType: "chat_command_delete",
       targetId: body.id,
-      details: { trigger: deleted.trigger },
+      details: { trigger: owned.trigger },
       req,
     });
     return NextResponse.json({ ok: true });

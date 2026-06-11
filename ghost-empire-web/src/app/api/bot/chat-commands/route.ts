@@ -8,13 +8,15 @@
 // activeFromMinute — without polling Twitch itself.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const tid = await currentTenantId();
   const [commands, openSession] = await Promise.all([
     prisma.chatCommand.findMany({
-      where: { enabled: true },
+      where: { enabled: true, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
       orderBy: { trigger: "asc" },
       select: { trigger: true, response: true, cooldownSeconds: true, requiresLive: true, activeFromMinute: true },
     }),

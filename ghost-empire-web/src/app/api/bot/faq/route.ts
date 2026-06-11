@@ -3,12 +3,14 @@
 // (mirrors /api/bot/chat-commands). The bot replies when a message matches a keyword.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const tid = await currentTenantId();
   const faqs = await prisma.faqResponse.findMany({
-    where: { enabled: true },
+    where: { enabled: true, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
     orderBy: { createdAt: "asc" },
     select: { keyword: true, matchType: true, response: true, cooldownSeconds: true },
   });

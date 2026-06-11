@@ -598,7 +598,8 @@ model BotConfig {
 
 model ChatCommand {
   id              String   @id @default(cuid())
-  trigger         String   @unique          // first word that triggers it, e.g. "!portal" (lowercased)
+  tenantId        String?                    // multi-tenant (Phase 3 bot models)
+  trigger         String                     // first word that triggers it, e.g. "!portal" (lowercased)
   response        String   @db.Text         // text the bot replies with
   cooldownSeconds Int      @default(15)      // per-command cooldown across all chatters
   enabled         Boolean  @default(true)    // disabled commands are not sent to the bot
@@ -609,6 +610,9 @@ model ChatCommand {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // trigger is unique PER TENANT (each portal has its own !commands namespace).
+  @@unique([tenantId, trigger])
+  @@index([tenantId])
   @@map("chat_commands")
 }
 
@@ -619,6 +623,7 @@ model ChatCommand {
 
 model ChatTimer {
   id              String   @id @default(cuid())
+  tenantId        String?                     // multi-tenant (Phase 3 bot models)
   message         String   @db.Text          // text broadcast on the interval
   intervalSeconds Int      @default(900)      // how often to post (min 60s, enforced by the API)
   enabled         Boolean  @default(true)
@@ -626,6 +631,7 @@ model ChatTimer {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@index([tenantId])
   @@map("chat_timers")
 }
 
@@ -636,6 +642,7 @@ model ChatTimer {
 
 model FaqResponse {
   id              String   @id @default(cuid())
+  tenantId        String?                          // multi-tenant (Phase 3 bot models)
   keyword         String                          // phrase/word to look for in a message
   matchType       String   @default("contains")   // "contains" (substring) | "word" (whole word)
   response        String   @db.Text
@@ -645,6 +652,7 @@ model FaqResponse {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@index([tenantId])
   @@map("faq_responses")
 }
 
@@ -670,6 +678,7 @@ model WelcomeConfig {
 
 model SongRequest {
   id          String    @id @default(cuid())
+  tenantId    String?                       // multi-tenant (Phase 3 bot models)
   query       String    @db.Text           // link or title as typed by the viewer
   title       String?                       // resolved via oEmbed (YouTube/Spotify), if any
   requestedBy String                        // chatter display name
@@ -679,6 +688,7 @@ model SongRequest {
   playedAt    DateTime?
 
   @@index([status, createdAt])
+  @@index([tenantId])
   @@map("song_requests")
 }
 

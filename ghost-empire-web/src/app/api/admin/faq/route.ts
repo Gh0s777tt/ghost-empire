@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const MATCH_TYPES = ["contains", "word"] as const;
 const MAX_KEYWORD = 100;
@@ -32,7 +33,9 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const tid = await currentTenantId();
   const faqs = await prisma.faqResponse.findMany({
+    where: { ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
     orderBy: [{ enabled: "desc" }, { createdAt: "asc" }],
   });
   return NextResponse.json({ faqs: faqs.map(serialize), matchTypes: MATCH_TYPES });
@@ -57,6 +60,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const tid = await currentTenantId();
+
   if (body.action === "create") {
     if (typeof body.keyword !== "string" || !body.keyword.trim() || body.keyword.length > MAX_KEYWORD) {
       return NextResponse.json({ error: `Słowo kluczowe: 1-${MAX_KEYWORD} znaków` }, { status: 400 });
@@ -68,6 +73,7 @@ export async function POST(req: Request) {
 
     const created = await prisma.faqResponse.create({
       data: {
+        tenantId: tid,
         keyword: body.keyword.trim(),
         matchType,
         response: body.response.trim(),
@@ -88,6 +94,8 @@ export async function POST(req: Request) {
 
   if (body.action === "update") {
     if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    const owned = await prisma.faqResponse.findFirst({ where: { id: body.id, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) } });
+    if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
     const patch: Record<string, unknown> = {};
     if (typeof body.keyword === "string") {
       if (!body.keyword.trim() || body.keyword.length > MAX_KEYWORD) {
@@ -111,13 +119,15 @@ export async function POST(req: Request) {
 
   if (body.action === "delete") {
     if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    const deleted = await prisma.faqResponse.delete({ where: { id: body.id } });
+    const owned = await prisma.faqResponse.findFirst({ where: { id: body.id, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) } });
+    if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    await prisma.faqResponse.delete({ where: { id: body.id } });
     await logAdminAction({
       adminId: auth.userId,
       action: "set_user_role",
       targetType: "faq_delete",
       targetId: body.id,
-      details: { keyword: deleted.keyword },
+      details: { keyword: owned.keyword },
       req,
     });
     return NextResponse.json({ ok: true });
