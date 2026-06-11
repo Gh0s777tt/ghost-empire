@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
-import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, Check, Clock, Zap, Gift, Trophy } from "lucide-react";
+import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, Check, Clock, Zap, Gift, Trophy, type LucideIcon } from "lucide-react";
 import { timeLeft, rankForLevel, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { EmptyState } from "@/components/EmptyState";
@@ -14,12 +14,65 @@ import { sfxPlay } from "@/lib/sfx";
 import { useTenantBranding } from "@/components/TenantBranding";
 import type { Session } from "next-auth";
 
+// Shapes mirror the prisma selects in app/[locale]/page.tsx (minimal fields the
+// home actually renders) — keep the two in sync when adding fields.
+type HomeUser = {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+  image: string | null;
+  tokens: number;
+  totalEarned: number;
+  totalSpent: number;
+  level: number;
+  xp: number;
+  messageCount: number;
+};
+type HomeUserTask = {
+  id: string;
+  progress: number;
+  claimed: boolean;
+  task: { id: string; code: string; text: string; target: number; reward: number };
+};
+type HomeUserAchievement = {
+  id: string;
+  achievement: { code: string; name: string; icon: string; rarity: string };
+};
+type HomeShopItem = {
+  id: string;
+  name: string;
+  price: number;
+  imageEmoji: string | null;
+  stock: number;
+  totalStock: number | null;
+};
+type HomeEvent = {
+  id: string;
+  type: string;
+  name: string;
+  multiplier: number | null;
+  endsAt: Date | string | null;
+};
+type HomeTopUser = {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+  image: string | null;
+  tokens: number;
+  level: number;
+};
+
 type Props = {
   session: Session | null;
-  userData: any;
-  hotItems: any[];
-  activeEvents: any[];
-  topUsers: any[];
+  userData: {
+    user: HomeUser | null;
+    achievements: HomeUserAchievement[];
+    tasks: HomeUserTask[];
+    connections?: unknown[]; // sent by the page, not rendered here
+  } | null;
+  hotItems: HomeShopItem[];
+  activeEvents: HomeEvent[];
+  topUsers: HomeTopUser[];
 };
 
 const STREAM_STATUS = {
@@ -37,7 +90,7 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
   const achievements = userData?.achievements ?? [];
 
   if (!session) {
-    return <GuestView topUsers={topUsers} hotItems={hotItems} activeEvents={activeEvents} />;
+    return <GuestView topUsers={topUsers} />;
   }
 
   return (
@@ -66,8 +119,8 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
             {tasks.length === 0 ? (
               <p className="text-sm text-zinc-500 text-center py-4">{t("loadingTasks")}</p>
             ) : (
-              tasks.map((ut: any) => (
-                <DailyTaskCard key={ut.id} userTask={ut} userId={user?.id} />
+              tasks.map((ut) => (
+                <DailyTaskCard key={ut.id} userTask={ut} />
               ))
             )}
           </div>
@@ -146,7 +199,7 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
             </button>
           </div>
           <div className="p-4 grid grid-cols-3 sm:grid-cols-6 gap-3">
-            {achievements.map((ua: any) => (
+            {achievements.map((ua) => (
               <AchievementBadgeSmall key={ua.id} achievement={ua.achievement} />
             ))}
           </div>
@@ -216,7 +269,7 @@ function DailyBonusCard() {
 }
 
 // ---- GUEST VIEW ----
-function GuestView({ topUsers }: any) {
+function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
   const { brandName, logoUrl } = useTenantBranding();
@@ -279,7 +332,7 @@ function GuestView({ topUsers }: any) {
       <div>
         <h2 className="font-display text-2xl text-white mb-4">{t("topPlayers")}</h2>
         <div className="space-y-2">
-          {topUsers.map((u: any, i: number) => (
+          {topUsers.map((u, i) => (
             <div key={u.id} className="flex items-center gap-4 p-4 border border-zinc-800 bg-zinc-950/60">
               <span className="font-display text-3xl text-zinc-600">#{i + 1}</span>
               <div className="w-10 h-10 border border-zinc-700 overflow-hidden bg-zinc-900 flex items-center justify-center text-lg">
@@ -302,7 +355,7 @@ function GuestView({ topUsers }: any) {
 }
 
 // ---- PROFILE HERO ----
-function ProfileHero({ user }: { user: any }) {
+function ProfileHero({ user }: { user: HomeUser }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
   const rank = rankForLevel(user.level);
@@ -382,7 +435,7 @@ function ProfileHero({ user }: { user: any }) {
   );
 }
 
-function StatBox({ icon, label, value, accent = false }: any) {
+function StatBox({ icon, label, value, accent = false }: { icon: string; label: string; value: string | number; accent?: boolean }) {
   return (
     <div className={`p-3 border ${accent ? "border-red-900/60" : "border-zinc-800"} bg-black/50 clip-corner`}>
       <div className="flex items-center justify-between mb-1">
@@ -397,7 +450,7 @@ function StatBox({ icon, label, value, accent = false }: any) {
 }
 
 // ---- DAILY TASK CARD ----
-function DailyTaskCard({ userTask }: { userTask: any; userId: string }) {
+function DailyTaskCard({ userTask }: { userTask: HomeUserTask }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
   const { task, progress, claimed } = userTask;
@@ -455,7 +508,7 @@ function DailyTaskCard({ userTask }: { userTask: any; userId: string }) {
 }
 
 // ---- MINI SHOP CARD ----
-function MiniShopCard({ item, userTokens, onClick }: any) {
+function MiniShopCard({ item, userTokens, onClick }: { item: HomeShopItem; userTokens: number; onClick: () => void }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
   const canAfford = userTokens >= item.price;
@@ -495,10 +548,10 @@ function MiniShopCard({ item, userTokens, onClick }: any) {
 }
 
 // ---- EVENT MINI CARD ----
-function EventMiniCard({ event }: { event: any }) {
+function EventMiniCard({ event }: { event: HomeEvent }) {
   const t = useTranslations("home");
   const locale = useLocale();
-  const typeStyles: Record<string, any> = {
+  const typeStyles: Record<string, { icon: LucideIcon; color: string; label: string }> = {
     happy_hour: { icon: Zap,    color: "#E50914", label: "HAPPY HOUR" },
     giveaway:   { icon: Gift,   color: "#FFD700", label: "GIVEAWAY" },
     raffle:     { icon: Trophy, color: "#FF9500", label: "RAFFLE" },
@@ -539,7 +592,7 @@ function EventMiniCard({ event }: { event: any }) {
 }
 
 // ---- ACHIEVEMENT BADGE (small) ----
-function AchievementBadgeSmall({ achievement }: { achievement: any }) {
+function AchievementBadgeSmall({ achievement }: { achievement: HomeUserAchievement["achievement"] }) {
   const rarityBg: Record<string, string> = {
     common:    "from-zinc-800 to-zinc-900 border-zinc-600",
     rare:      "from-blue-900 to-blue-950 border-blue-500",
