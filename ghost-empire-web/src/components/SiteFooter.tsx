@@ -21,7 +21,7 @@ export async function SiteFooter() {
             <div className="w-6 h-6 shrink-0 overflow-hidden rounded-sm ring-1 ring-red-600/40 bg-black">
               <img src={tenant.logoUrl ?? "/brand/skull.png"} alt="" className="w-full h-full object-cover" />
             </div>
-            <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-400">
               {tenant.name} © {SITE.year} · {t("community")}
             </div>
           </div>
@@ -32,20 +32,22 @@ export async function SiteFooter() {
           </div>
 
           {/* Right — legal links + the white-label funnel entry */}
-          <nav aria-label={t("legalNav")} className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-widest">
-            <Link href="/onboarding" className="text-red-400/80 hover:text-red-300 transition-colors">
+          {/* py-1.5 on each link = a ≥24px touch target (WCAG 2.5.8 / Lighthouse
+              target-size); zinc-400 (not 500) clears the 4.5:1 contrast ratio. */}
+          <nav aria-label={t("legalNav")} className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-0 text-[10px] font-mono uppercase tracking-widest">
+            <Link href="/onboarding" className="inline-block py-1.5 text-red-400/80 hover:text-red-300 transition-colors">
               🚀 {t("launchPortal")}
             </Link>
             <span className="text-zinc-800">·</span>
-            <Link href="/about" className="text-zinc-500 hover:text-red-400 transition-colors">
+            <Link href="/about" className="inline-block py-1.5 text-zinc-400 hover:text-red-400 transition-colors">
               {t("about")}
             </Link>
             <span className="text-zinc-800">·</span>
-            <Link href="/privacy" className="text-zinc-500 hover:text-red-400 transition-colors">
+            <Link href="/privacy" className="inline-block py-1.5 text-zinc-400 hover:text-red-400 transition-colors">
               {t("privacy")}
             </Link>
             <span className="text-zinc-800">·</span>
-            <Link href="/terms" className="text-zinc-500 hover:text-red-400 transition-colors">
+            <Link href="/terms" className="inline-block py-1.5 text-zinc-400 hover:text-red-400 transition-colors">
               {t("terms")}
             </Link>
           </nav>

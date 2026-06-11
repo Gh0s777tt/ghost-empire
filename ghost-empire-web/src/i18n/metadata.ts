@@ -11,13 +11,17 @@ const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
 
 export function localeAlternates(path: string, locale: string): Metadata["alternates"] {
   // PL (default) is unprefixed; every other locale lives under "/<locale><path>".
-  const urlFor = (loc: string) => (loc === routing.defaultLocale ? `${BASE}${path}` : `${BASE}/${loc}${path}`);
+  // For the home page (path "") the default-locale URL needs the trailing slash —
+  // browsers normalize the document URL to "<origin>/", and a canonical without
+  // the slash reads as a different location (Lighthouse `canonical` failure).
+  const urlFor = (loc: string) =>
+    loc === routing.defaultLocale ? `${BASE}${path || "/"}` : `${BASE}/${loc}${path}`;
   return {
     // Self-referencing canonical (each language version points to itself).
     canonical: urlFor(locale),
     languages: {
       ...Object.fromEntries(routing.locales.map((loc) => [loc, urlFor(loc)])),
-      "x-default": `${BASE}${path}`,
+      "x-default": `${BASE}${path || "/"}`,
     },
   };
 }
