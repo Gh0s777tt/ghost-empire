@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Fixed
+
+- **Webhook PayMedia: twarda idempotencja kredytowania donacji (P1 z audytu 2026-06-09)** **(#434)** — dotychczasowy strażnik `findFirst(reason contains payment_id)` był podatny na wyścig: dwa równoległe retry tej samej płatności oba przechodziły check i oba mintowały GT. Teraz **`Transaction.externalId String? @unique`** (db push na prod przed merge) + wpis `paymedia:<payment_id>` tworzony PIERWSZY w `$transaction` — równoległy duplikat przegrywa z **P2002 i cała transakcja (łącznie z `user.update`) się wycofuje**; odpowiedź `ignored: "already processed"` (PayMedia nie ponawia). Miękki pre-check po `reason` zostaje dla retry płatności sprzed tej kolumny. Wzorzec lustrzany do locka `twitchEvent.eventId` (#367). Zielone: `tsc`/**242 testy**/`build`.
+
 ### Added
 
 - **SaaS: BOT multi-tenant — flota „proces per portal" (`ENV_FILE=`)** **(#433)** — decyzja architektoniczna (krok 3 wybrany przez usera) + implementacja: bot `ghost-empire-chat` jest w pełni parametryzowany env-ami (PORTAL_URL/kanały/poświadczenia), więc **każdy portal-klient = osobny proces z własnym plikiem env** — `ENV_FILE=tenants/neo-zone.env npm start` (bez `ENV_FILE` = klasyczne `.env`, bot foundera bez zmian). `PORTAL_URL` instancji wskazuje **subdomenę tenanta** — portal rozpoznaje tenanta po Hoście (#234), więc nagrody/komendy/FAQ/timery/chat-feed/emoji-combo lądują w danych właściwego portalu (domknięte z #432). Izolacja per proces = cache'e modułów naturalnie per portal; **multipleksowanie wielu portali w jednym procesie świadomie odłożone** (zasadne przy dziesiątkach+ tenantów — wymaga przebudowy singletonowych modułów na instancje). Dodane: `tenants/example-tenant.env` (szablon instancji z komentarzami) + sekcja **„Multi-tenant (SaaS fleet)"** w README bota (uruchamianie, Docker `--env-file` + wolumen tokenów Kick per instancja). Bot `tsc` czysty.
