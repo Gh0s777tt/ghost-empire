@@ -60,7 +60,19 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `PSN_NPSSO` (O) | PlayStation npsso (biblioteka gier PSN). Z `ca.account.sony.com/api/v1/ssocookie`. **Wygasa ~60 dni.** Ustawione w Vercelu |
 | `CRON_SECRET` | Bearer chroniący crony Vercel: `/api/cron/streamlabs-poll` (polling donacji) i `/api/cron/prune` (czyszczenie starych rekordów) |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (O) | Upstash Redis (REST) — współdzielony cache między instancjami serverless (np. feed viewer-count). Bez nich cache spada na in-memory per-instancja. Z [upstash.com](https://upstash.com) → Redis → sekcja REST API |
+| `NEXT_PUBLIC_SITE_URL` (O) | Publiczny bazowy URL strony (linki absolutne / OG / share). Gdy brak — fallback do `NEXTAUTH_URL`. `NEXT_PUBLIC_` = widoczny w przeglądarce, **nie wkładaj tu sekretów** |
+| `LOG_LEVEL` (O) | Poziom structured loggera (`debug`/`info`/`warn`/`error`; `lib/logger.ts`). Domyślnie `info` na prod, `debug` na dev |
 | `NODE_ENV` | Ustawiane przez platformę (`production`/`development`) — nie ustawiasz ręcznie |
+
+### SaaS multi-tenant + billing (O — dopóki nie uruchamiasz white-label/płatności)
+> Cały moduł SaaS jest **dry-wired**: bez tych zmiennych portal działa jak pojedynczy tenant (founder = plan `elite` bezterminowo), subdomeny są no-opem, a checkout zwraca 503 (trial bez karty). Ustawienie ich „włącza" multi-tenant i Stripe **bez zmian w kodzie**.
+
+| Zmienna | Po co | Wymagana? |
+|---|---|---|
+| `NEXT_PUBLIC_ROOT_DOMAIN` | Domena bazowa dla subdomen tenantów (np. `myapp.com`) — z `<slug>.myapp.com` proxy wyłuskuje slug tenanta (`lib/tenant-host.ts`). Gdy brak — resolwer slugu jest no-opem (wszystko → tenant domyślny). `NEXT_PUBLIC_` = widoczne w kliencie | O — wymagana do subdomen per tenant |
+| `STRIPE_SECRET_KEY` | Klucz Stripe (`sk_live_…`/`sk_test_…`) — `billingConfigured()` i klient Stripe. Bez niego billing OFF (checkout → 503) | O — wymagana, by włączyć płatności |
+| `STRIPE_WEBHOOK_SECRET` | Sekret podpisu webhooka Stripe (`whsec_…`) dla `POST /api/webhooks/stripe` — weryfikacja zdarzeń subskrypcji (aktywacja/odnowienie/wygaśnięcie) | O — wymagana z włączonym billingiem |
+| `STRIPE_PRICE_<PLAN>_<MIESIĄCE>M` | 12 Stripe price-id wg wzorca `STRIPE_PRICE_{PRO\|ELITE\|BASIC}_{1\|3\|6\|12}M` (np. `STRIPE_PRICE_PRO_3M=price_123`). Mapuje plan+okres na cenę; nieustawiona kombinacja po prostu nie jest oferowana | O — ustaw te kombinacje, które sprzedajesz |
 
 ---
 

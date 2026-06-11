@@ -101,7 +101,7 @@ Moje propozycje (otwarte na Twoje):
 
 **Panel admina** (`/admin`): ~24 sekcje, leniwe ładowanie per sekcja, audit log (czytelny: nick → akcja → obiekt), reset bazy z potwierdzeniem.
 
-**Infra/jakość**: Next 15 + Prisma + Supabase + Vercel, CI (typecheck+lint+test), testy jednostkowe czystej logiki, branding GHOST77 (ikony/OG/avatary/ekrany), dokumentacja techniczna (`docs/`).
+**Infra/jakość**: Next 16 + Prisma + Supabase + Vercel, CI (typecheck+lint+test), testy jednostkowe czystej logiki, branding GHOST77 (ikony/OG/avatary/ekrany), dokumentacja techniczna (`docs/`).
 
 ---
 
