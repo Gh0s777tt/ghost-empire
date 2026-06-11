@@ -266,6 +266,11 @@ model Transaction {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Highest-write table (insert per chat message) — had ZERO indexes.
+  // [userId, createdAt]: profile history + daily-bonus lookback.
+  // [type, createdAt]: weekly-ranking groupBy + pending-orders + anomaly scan.
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
   @@map("transactions")
 }
 
@@ -502,6 +507,10 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // NotificationBell polls {userId} list + {userId, read:false} count every
+  // 30-120s per logged-in user — was a seq scan. Covers both + prune by date.
+  @@index([userId, createdAt])
+  @@index([userId, read])
   @@map("notifications")
 }
 
@@ -546,6 +555,9 @@ model AdminAction {
 
   @@index([adminId, createdAt])
   @@index([action, createdAt])
+  // Admin dashboard reads the global recent log (ORDER BY createdAt DESC) —
+  // the composite indexes above don't serve an unfiltered sort.
+  @@index([createdAt])
   @@map("admin_actions")
 }
 

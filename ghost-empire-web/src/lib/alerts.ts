@@ -95,17 +95,17 @@ export async function dispatchAlertSafe(input: AlertInput, tenantId?: string | n
  */
 export async function getSettings(tenantId?: string | null) {
   const tid = tenantId === undefined ? await currentTenantId() : tenantId;
-  const existing = tid
-    ? await prisma.streamAlertSettings.upsert({
-        where: { tenantId: tid },
-        create: { tenantId: tid },
-        update: {},
-      })
-    : await prisma.streamAlertSettings.upsert({
-        where: { id: "default" },
-        create: { id: "default" },
-        update: {},
-      });
+  // Read-FIRST: this runs every SSE tick (~1s per OBS source). The old
+  // unconditional upsert was a WRITE every tick — now we only write when the
+  // row is missing (first read) or the token still needs generating.
+  let existing = tid
+    ? await prisma.streamAlertSettings.findUnique({ where: { tenantId: tid } })
+    : await prisma.streamAlertSettings.findUnique({ where: { id: "default" } });
+  if (!existing) {
+    existing = tid
+      ? await prisma.streamAlertSettings.upsert({ where: { tenantId: tid }, create: { tenantId: tid }, update: {} })
+      : await prisma.streamAlertSettings.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
+  }
 
   // Auto-generate the overlay token on first read so the admin never has to
   // hand-write env vars. Stored in DB, rotatable via the admin UI.

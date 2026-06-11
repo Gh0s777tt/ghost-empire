@@ -121,7 +121,7 @@ async function pollsFeed(_p: URLSearchParams, tid: string | null): Promise<unkno
 }
 
 async function predictionsFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
-  await lockExpiredPredictions();
+  await lockExpiredPredictions(tid); // pass the request-scoped tenant — the tick runs outside request scope
   const p = await prisma.prediction.findFirst({
     where: { status: { in: ["open", "locked"] }, ...tidWhere(tid) },
     orderBy: { opensAt: "desc" },
@@ -245,6 +245,16 @@ async function widgetFeed(params: URLSearchParams, tid: string | null): Promise<
 
 const CHAT_LIMIT = 40;
 
+// Mirrors the ChatOverlayConfig schema defaults — used when no config row exists
+// yet, so the read-first producer never has to create one on a hot SSE tick.
+const CHAT_OVERLAY_DEFAULTS = {
+  fontSize: 15,
+  textColor: "#e4e4e7",
+  fontFamily: "Inter",
+  bgOpacity: 0.85,
+  showPlatformIcon: true,
+} as const;
+
 function chatSafeParse(s: string | null): unknown {
   if (!s) return null;
   try {
@@ -255,12 +265,16 @@ function chatSafeParse(s: string | null): unknown {
 }
 
 async function chatFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
-  const [rows, config] = await Promise.all([
+  // Read-FIRST: this producer runs every ~2s per OBS chat source. The old
+  // unconditional upsert was a WRITE every tick — fall back to defaults when the
+  // row doesn't exist yet (the admin save path creates it).
+  const [rows, configRow] = await Promise.all([
     prisma.chatFeedMessage.findMany({ where: tidWhere(tid), orderBy: { createdAt: "desc" }, take: CHAT_LIMIT }),
     tid
-      ? prisma.chatOverlayConfig.upsert({ where: { tenantId: tid }, create: { tenantId: tid }, update: {} })
-      : prisma.chatOverlayConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
+      ? prisma.chatOverlayConfig.findUnique({ where: { tenantId: tid } })
+      : prisma.chatOverlayConfig.findUnique({ where: { id: "default" } }),
   ]);
+  const config = configRow ?? CHAT_OVERLAY_DEFAULTS;
   return {
     config: {
       fontSize: config.fontSize,

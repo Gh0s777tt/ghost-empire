@@ -18,9 +18,22 @@ export const MAX_WAGER = 1_000_000;
  * "locked", so the public page / overlay status matches the wager-blocking that
  * placeWager already enforces. Idempotent, cheap (single conditional updateMany);
  * call it at the start of prediction read paths. Returns how many were locked.
+ *
+ * `tenantId`: pass the request-scoped tid from SSE producers (a tick runs OUTSIDE
+ * request scope, so currentTenantId() would mis-resolve there); omit elsewhere.
  */
-export async function lockExpiredPredictions(now: Date = new Date()): Promise<number> {
-  const tid = await currentTenantId();
+const lastLockSweep = new Map<string, number>();
+const LOCK_SWEEP_MS = 60_000;
+
+export async function lockExpiredPredictions(tenantId?: string | null, now: Date = new Date()): Promise<number> {
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  // Throttle: the overlay producer calls this every ~4s per OBS source. Locking
+  // is not time-critical (placeWager already rejects late wagers), so sweep at
+  // most once/min per tenant instead of writing on every tick.
+  const key = tid ?? "default";
+  const ms = now.getTime();
+  if (ms - (lastLockSweep.get(key) ?? 0) < LOCK_SWEEP_MS) return 0;
+  lastLockSweep.set(key, ms);
   const res = await prisma.prediction.updateMany({
     where: { status: "open", closesAt: { not: null, lt: now }, ...(tid ? { tenantId: tid } : {}) },
     data: { status: "locked" },
