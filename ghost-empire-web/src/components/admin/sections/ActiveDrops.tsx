@@ -3,6 +3,7 @@
 import { Gift, Copy, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { fmt, formatDate } from "@/lib/utils";
+import { useTenantBranding } from "@/components/TenantBranding";
 import { SectionCard } from "../shared";
 import type { Drop } from "../types";
 
@@ -16,6 +17,7 @@ export function ActiveDropsList({
 }) {
   const t = useTranslations("admin.activeDrops");
   const locale = useLocale();
+  const { tokenSymbol } = useTenantBranding();
   async function deactivate(id: string) {
     if (!confirm(t("confirmDeactivate"))) return;
     const res = await fetch(`/api/admin/drops?id=${id}`, { method: "DELETE" });
@@ -47,9 +49,9 @@ export function ActiveDropsList({
               </button>
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 space-y-0.5">
-              <div>Reward: <span className="text-white">{fmt(d.reward, locale)} GT</span></div>
+              <div>Reward: <span className="text-white">{fmt(d.reward, locale)} {tokenSymbol}</span></div>
               {d.bonusReward > 0 && (
-                <div>Bonus: <span className="text-orange-400">+{fmt(d.bonusReward, locale)} GT × {d.bonusSlots}</span></div>
+                <div>Bonus: <span className="text-orange-400">+{fmt(d.bonusReward, locale)} {tokenSymbol} × {d.bonusSlots}</span></div>
               )}
               <div>Claims: <span className="text-white">{d.claimsCount}</span></div>
               {d.expiresAt && (

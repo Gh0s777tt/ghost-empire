@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Award, Plus, Loader2, Pencil, Trash2, X, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type AchRow = {
   id: string; code: string; name: string; description: string; icon: string;
@@ -24,6 +25,7 @@ export function AchievementsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.achievements");
+  const { tokenSymbol } = useTenantBranding();
   const [list, setList] = useState<AchRow[]>([]);
   const [rarities, setRarities] = useState<string[]>([]);
   const [triggerTypes, setTriggerTypes] = useState<string[]>([]);
@@ -121,7 +123,7 @@ export function AchievementsManager({
                     {a.rewardNote && <span className="text-[9px] text-amber-300" title={a.rewardNote}>{t("rewardBadge")}</span>}
                   </div>
                   <div className="text-[10px] font-mono text-zinc-500 truncate">
-                    {a.code} · {a.triggerType}{a.triggerValue != null ? ` ≥ ${a.triggerValue}` : ""} · {a.tokenReward} GT · {t("earnedWord")} ×{a.earnedCount}
+                    {a.code} · {a.triggerType}{a.triggerValue != null ? ` ≥ ${a.triggerValue}` : ""} · {a.tokenReward} {tokenSymbol} · {t("earnedWord")} ×{a.earnedCount}
                   </div>
                 </div>
                 <button onClick={() => { setEditing(a); setCreating(false); }} disabled={busy} title={t("editTitle")} className="text-zinc-500 hover:text-white"><Pencil className="w-3.5 h-3.5" /></button>

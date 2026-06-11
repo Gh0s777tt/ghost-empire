@@ -17,15 +17,16 @@ import { GoalBar } from "@/components/GoalBar";
 import { PredictionOverlayCard } from "@/components/PredictionOverlayCard";
 import { PollOverlayCard } from "@/components/PollOverlayCard";
 import { LastEventCard } from "@/components/LastEventCard";
+import { useTenantBranding } from "@/components/TenantBranding";
 import type { ReactNode } from "react";
 
 type TFn = (key: string) => string;
 
 // Sample in-panel preview per widget (so you SEE how it looks without live data).
-function widgetPreview(id: string, t: TFn): ReactNode {
+function widgetPreview(id: string, t: TFn, tokenSymbol: string, brandColor: string): ReactNode {
   switch (id) {
     case "alerts":
-      return <AlertCard alert={{ title: t("prevAlertTitle"), message: t("prevAlertMsg"), icon: "💜", actorName: t("prevActor1"), amount: 5000, amountLabel: "GT" }} accent="#E50914" />;
+      return <AlertCard alert={{ title: t("prevAlertTitle"), message: t("prevAlertMsg"), icon: "💜", actorName: t("prevActor1"), amount: 5000, amountLabel: tokenSymbol }} accent={brandColor} />;
     case "chat":
       return (
         <div className="flex flex-col gap-1.5 w-full" style={{ maxWidth: 360 }}>
@@ -34,9 +35,9 @@ function widgetPreview(id: string, t: TFn): ReactNode {
         </div>
       );
     case "goals":
-      return <div style={{ width: 360 }}><GoalBar goal={{ id: "g", type: "subs", label: t("prevGoalLabel"), current: 34, target: 50, color: "#E50914", completedAt: null }} accent="#E50914" /></div>;
+      return <div style={{ width: 360 }}><GoalBar goal={{ id: "g", type: "subs", label: t("prevGoalLabel"), current: 34, target: 50, color: brandColor, completedAt: null }} accent={brandColor} /></div>;
     case "subathon":
-      return <SubathonCard remainingMs={2 * 3600 * 1000 + 34 * 60 * 1000} ended={false} accent="#E50914" label="Subathon" />;
+      return <SubathonCard remainingMs={2 * 3600 * 1000 + 34 * 60 * 1000} ended={false} accent={brandColor} label="Subathon" />;
     case "codes":
       return <CodeCard title={t("prevCodeTitle")} label="Cyberpunk 2077 (Steam)" code="ABCD-EFGH-IJKL" accent="#16a34a" />;
     case "predictions":
@@ -50,9 +51,9 @@ function widgetPreview(id: string, t: TFn): ReactNode {
     case "last-follower":
       return <LastEventCard label={t("prevLastFollowLabel")} name={t("prevNewViewer")} icon="⭐" accent="#3b82f6" />;
     case "viewers":
-      return <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(15,15,20,0.92)", border: "2px solid #E50914", borderRadius: 999, padding: "7px 14px", color: "#fff", fontWeight: 800 }}>👁 1 234</div>;
+      return <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(15,15,20,0.92)", border: `2px solid ${brandColor}`, borderRadius: 999, padding: "7px 14px", color: "#fff", fontWeight: 800 }}>👁 1 234</div>;
     case "emoji-combo":
-      return <div style={{ textAlign: "center", color: "#fff" }}><div style={{ fontSize: 64, lineHeight: 1 }}>🔥</div><div style={{ fontSize: 28, fontWeight: 900, textShadow: "0 0 12px #E50914" }}>×12 COMBO!</div></div>;
+      return <div style={{ textAlign: "center", color: "#fff" }}><div style={{ fontSize: 64, lineHeight: 1 }}>🔥</div><div style={{ fontSize: 28, fontWeight: 900, textShadow: `0 0 12px ${brandColor}` }}>×12 COMBO!</div></div>;
     default:
       return null;
   }
@@ -103,6 +104,7 @@ export function WidgetsLibrary({
   pending: boolean;
 }) {
   const t = useTranslations("admin.widgets");
+  const { tokenSymbol, brandColor } = useTenantBranding();
   const WIDGETS: Widget[] = WIDGET_META.map((m) => ({ ...m, name: t(`widget.${m.id}.name`), desc: t(`widget.${m.id}.desc`) }));
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
@@ -172,7 +174,7 @@ export function WidgetsLibrary({
                       className="border border-zinc-800 rounded-sm p-5 flex items-center justify-center overflow-hidden"
                       style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px", minHeight: 96 }}
                     >
-                      {widgetPreview(w.id, t)}
+                      {widgetPreview(w.id, t, tokenSymbol, brandColor)}
                     </div>
                   </div>
                   <div className="flex gap-1.5">
@@ -215,6 +217,7 @@ function CustomWidgetGenerator({
   origin: string;
 }) {
   const t = useTranslations("admin.widgets");
+  const { brandColor } = useTenantBranding();
   const POSITIONS: Array<[string, string]> = POSITION_CODES.map((c) => [c, t(`position.${c}`)]);
   const [list, setList] = useState<CustomWidget[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,7 +228,7 @@ function CustomWidgetGenerator({
   // Form
   const [name, setName] = useState("");
   const [text, setText] = useState("");
-  const [accentColor, setAccentColor] = useState("#E50914");
+  const [accentColor, setAccentColor] = useState(brandColor);
   const [textColor, setTextColor] = useState("#ffffff");
   const [fontSizePx, setFontSizePx] = useState(28);
   const [fontFamily, setFontFamily] = useState("Inter");
@@ -246,7 +249,7 @@ function CustomWidgetGenerator({
 
   function resetForm() {
     setEditingId(null); setName(""); setText("");
-    setAccentColor("#E50914"); setTextColor("#ffffff");
+    setAccentColor(brandColor); setTextColor("#ffffff");
     setFontSizePx(28); setFontFamily("Inter"); setPosition("top-left"); setShowCard(true);
     setBgGradient(false); setBgColor1("#7928ca"); setBgColor2("#ff0080"); setBgAngle(135);
   }

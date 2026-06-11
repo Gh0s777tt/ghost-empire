@@ -14,6 +14,7 @@ import {
   type AlertAnimation,
   type AlertPosition,
 } from "@/lib/alert-types";
+import { useTenantBranding } from "@/components/TenantBranding";
 import type { StreamAlertsData } from "../types";
 
 type AlertTypeRow = {
@@ -177,6 +178,7 @@ export function StreamAlertsManager({
 }) {
   const t = useTranslations("admin.streamAlerts");
   const nf = useLocale();
+  const { tokenSymbol } = useTenantBranding();
   const ALERT_TYPE_LABEL: Record<string, string> = {
     shop_purchase: t("alertType.shop_purchase"), event_win: t("alertType.event_win"), drop_claim_bonus: t("alertType.drop_claim_bonus"),
     twitch_sub: t("alertType.twitch_sub"), twitch_gift_sub: t("alertType.twitch_gift_sub"), twitch_cheer: t("alertType.twitch_cheer"),
@@ -195,7 +197,7 @@ export function StreamAlertsManager({
   const [urlCopied, setUrlCopied] = useState(false);
 
   const previewAlerts = [
-    { title: t("prevAlert1Title"), message: t("prevAlert1Msg"), icon: "💜", actorName: t("prevAlert1Actor"), amount: 5000, amountLabel: "GT" },
+    { title: t("prevAlert1Title"), message: t("prevAlert1Msg"), icon: "💜", actorName: t("prevAlert1Actor"), amount: 5000, amountLabel: tokenSymbol },
     { title: t("prevAlert2Title"), message: t("prevAlert2Msg"), icon: "💰", actorName: t("prevAlert2Actor"), amount: 20, amountLabel: "PLN" },
   ];
 
