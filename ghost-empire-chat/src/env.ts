@@ -1,4 +1,14 @@
-import "dotenv/config";
+// Multi-tenant SaaS: one bot PROCESS per portal. Every value here is already
+// per-instance (PORTAL_URL, channels, bot creds), so running a fleet means
+// launching N processes, each with its own env file:
+//   ENV_FILE=tenants/neo-zone.env npm start
+// (no ENV_FILE → classic ./.env — the founder portal's bot is unaffected).
+// Per-process isolation keeps modules' in-memory caches (commands/FAQ/timers/
+// moderation) naturally scoped to their portal; revisit multiplexing only if
+// the fleet outgrows a process-per-tenant model (~dozens of tenants).
+import { config as dotenv } from "dotenv";
+
+dotenv(process.env.ENV_FILE ? { path: process.env.ENV_FILE } : {});
 
 function req(name: string): string {
   const v = process.env[name];
