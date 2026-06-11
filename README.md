@@ -93,6 +93,22 @@ flowchart LR
     YT -. polling .-> WEB
 ```
 
+## 🏢 Multi-tenant SaaS (white-label) — 2026-06
+
+Portal został przekształcony w **produkt dla innych streamerów** (model Botrix/Kickbot): jeden wiersz w tabeli `Tenant` definiuje **całą tożsamość portalu klienta** — nazwę marki, handle streamera, nazwę i symbol tokenów, kolor przewodni, logo, plan. Ghost Empire pozostaje **tenantem-founderem** (plan `elite`, bez wygaśnięcia — nic się tu nie gatuje).
+
+| Warstwa | Co robi | Gdzie |
+|---|---|---|
+| **Tenancy** | tokeny platform (Twitch/Kick/YT/Streamlabs) per-tenant, OAuth `state` z podpisanym HMAC tenantem, webhooki mapują broadcaster→tenant, `requireAdmin` odrzuca admina cudzego tenanta | `lib/platform-tokens.ts`, `lib/oauth-state.ts`, `lib/admin.ts` |
+| **Branding** | katalogi i18n (14 języków) niosą markery `%gt%/%tokenName%/%brandName%/%brandShort%/%owner%` podmieniane w loaderze; kolor jako CSS-vars `--brand/--brand-rgb` na `<body>`; logo/metadata/manifest per tenant | `lib/i18n-branding.ts`, `i18n/request.ts`, `globals.css`, `components/TenantBranding.tsx` |
+| **Plany** | drabinka `basic ⊂ pro ⊂ elite` (pro: kasyno/koło/predykcje/overlaye/subathon/song-queue; elite: +AI/webhooki/custom branding); wygasły plan degraduje do basic; bramki `featureGateResponse()` na wszystkich trasach pro/elite; awaria DB = fail-open | `lib/entitlements.ts` |
+| **Sprzedaż** | stopka „🚀 Załóż własny portal" → kreator `/onboarding` (3 kroki, **trial 14 dni bez karty**) → dashboard „Mój portal" (status, edycja brandingu, aktywacja subskrypcji); panel **Portale** w `/admin` dla właściciela platformy (lista/zakładanie/edycja planów = ręczna sprzedaż przed Stripe) | `app/[locale]/onboarding`, `api/onboarding*`, `admin/sections/Tenants.tsx` |
+| **Billing** | **Stripe dry-wired**: `POST /api/billing/checkout` + webhook `POST /api/webhooks/stripe` (podpis, idempotentne handlery, `current_period_end`→`planExpiresAt` z 24 h gracji) — śpi na 503 do czasu env | `lib/billing.ts`, `api/billing/*`, `api/webhooks/stripe` |
+
+**„Dzień Stripe" (jedyne, czego brakuje do sprzedaży automatycznej):** w Vercel env ustaw `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` i 12× `STRIPE_PRICE_<BASIC|PRO|ELITE>_<1|3|6|12>M`; w dashboardzie Stripe webhook na `/api/webhooks/stripe` (eventy: `checkout.session.completed`, `customer.subscription.updated/deleted`). Redeploy — UI aktywacji pojawia się sam.
+
+**Świadomie odłożone:** subdomeny per tenant (wymagają domeny produktu + `NEXT_PUBLIC_ROOT_DOMAIN` + wildcard DNS; razem z nimi pójdzie tenant-threading overlayów OBS) oraz multi-tenant bota czatu (osobne repo — decyzja architektoniczna).
+
 ## 💰 Ekonomia Ghost Tokens
 
 ```mermaid
@@ -265,8 +281,8 @@ flowchart LR
     P1[Phase 1<br/>Core ✅] --> P2[Phase 2<br/>Multi-platforma ✅] --> P3AB[Phase 3A+3B<br/>Chat bot + engagement ✅] --> P3C[Phase 3C<br/>Alerty per-typ ✅ · hardware 🟡] --> P3D[Phase 3D<br/>AI 🟡 · analityka ✅]
 ```
 
-- ✅ **Zrobione:** Phase 1 + 2 + 3A + 3B + rdzeń 3C/3D (alerty per-typ, predictions, battle pass, subathon, heatmapy, ankiety) + cały **nowoczesny stack** (Next 16 / React 19 / Prisma 7 / Tailwind 4 / zod 4 / vitest 4).
-- 🟡 **Zostało (creds-gated):** OBS WebSocket, Hue/Govee, AI moderator, social OAuth (IG/TikTok/X/FB), Sentry. Szczegóły: [ROADMAP.md](ROADMAP.md) + [PHASE3.md](PHASE3.md).
+- ✅ **Zrobione:** Phase 1 + 2 + 3A + 3B + rdzeń 3C/3D (alerty per-typ, predictions, battle pass, subathon, heatmapy, ankiety) + cały **nowoczesny stack** (Next 16 / React 19 / Prisma 7 / Tailwind 4 / zod 4 / vitest 4) + **SaaS multi-tenant white-label (#416–#430): tenancy, branding, plany, kreator `/onboarding`, panel Portale, Stripe dry-wired** + kasyno 10 gier + e2e Playwright (23 testy + CI).
+- 🟡 **Zostało (creds-gated):** **Stripe env („dzień Stripe" — sekcja wyżej)**, domena produktu → subdomeny per tenant, multi-tenant bota; OBS WebSocket, Hue/Govee, AI moderator, social OAuth (IG/TikTok/X/FB), Sentry. Szczegóły: [ROADMAP.md](ROADMAP.md) + [PHASE3.md](PHASE3.md).
 
 ---
 
