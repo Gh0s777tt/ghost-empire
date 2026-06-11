@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **102** trasy
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **140** tras
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -52,6 +52,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT (auto-zamykanie po `closesAt`) |
 | `…/api/wheel` · `…/api/wheel/spin` | GET/POST | Koło Fortuny — stan + zakręcenie (wydaje GT, rate-limit 20/min) |
 | `…/api/games` | GET | Publiczna biblioteka gier (widoczne, wg czasu gry) |
+| `…/api/daily-bonus` | GET/POST | Dzienny bonus GT (stan + odbiór, streak) |
 | `…/api/events/join` · `…/api/events/raffle-tickets` | POST | Dołączenie do eventu / kupno losów raffle |
 | `…/api/drops/claim` | POST | Odbiór drop-code z czatu |
 | `…/api/seasons/claim` | POST | Odbiór nagrody Battle Pass |
@@ -60,6 +61,26 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/profile/social-links` | GET/POST | Linki społecznościowe profilu |
 | `…/api/profile/discord-link-code` | POST | Kod do powiązania konta Discord |
 | `…/api/profile/connections/unlink` · `…/link/[provider]` | POST | Odłączanie / łączenie platform |
+
+## Kasyno GT (`gt-games`) — session, bramka planu `casino`
+> Mini-gry GT na stronie (`/kasyno`). Akcje gry: **session** + `featureGate("casino")` (403 gdy plan tenanta < pro). Odczyty puli/rankingu — **public**.
+
+| Trasa | Metoda | Po co |
+|---|---|---|
+| `…/api/gt-games/play` | POST | Gry jednorzutowe (`slots`/`coinflip`/`roulette`) — atomowy zakład, zwraca wynik |
+| `…/api/gt-games/blackjack/start` · `hit` · `stand` · `double` | POST | Blackjack — rozdanie + ruchy (stan partii server-side) |
+| `…/api/gt-games/hilo/start` · `guess` · `cashout` | POST | Hi-Lo — start, zgadywanie wyżej/niżej, wypłata mnożnika |
+| `…/api/gt-games/mines/start` · `reveal` · `cashout` | POST | Mines — start, odkrywanie pól, wypłata |
+| `…/api/gt-games/history` | GET | Historia rozgrań usera |
+| `…/api/gt-games/jackpot` | GET | **public** — stan progresywnego jackpota (seed + Redis) |
+| `…/api/gt-games/leaderboard` | GET | **public** — największe wygrane + top netto (30 dni, scope per tenant) |
+
+## Onboarding / Billing (SaaS) — session
+| Trasa | Metoda | Po co |
+|---|---|---|
+| `…/api/onboarding` | POST | Provisioning portalu tenanta przy zakładaniu konta (slug/nazwa/branding) |
+| `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta |
+| `…/api/billing/checkout` | GET/POST | Plan + ceny (GET) / utworzenie Stripe Checkout dla planu (POST). Gdy Stripe nieskonfigurowany → 503 (trial bez karty) |
 
 ## Admin
 | Trasa | Auth | Po co |
@@ -92,11 +113,24 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/deliver-order` | perm:deliver_orders | Realizacja zamówień sklepu |
 | `…/api/admin/analytics` | admin | Heatmapa aktywności czatu |
 | `…/api/admin/alerts` | admin | Ustawienia Stream Alerts + test |
+| `…/api/admin/alert-types` | admin | Typy alertów (włącz/wyłącz + progi per rodzaj) |
+| `…/api/admin/custom-alerts` | admin | CRUD własnych alertów (ręczne wyzwalanie na overlayu) |
+| `…/api/admin/chat-overlay` | admin | Config overlaya czatu (rozmiar/kolor/font/krycie/ikona platformy) |
+| `…/api/admin/assistant` | admin/perm + plan `ai` | AI-asystent panelu (pytania o konfigurację) — wymaga planu elite |
 | `…/api/admin/overlay-token` | admin | Token overlayów (do podglądów) |
 | `…/api/admin/section-data` | admin/perm | Lazy-dane sekcji panelu (`?s=<sekcja>`) |
 | `…/api/admin/twitch-streamer-auth` (+callback) · `twitch-eventsub` | admin | Autoryzacja streamera Twitch + subskrypcje EventSub |
 | `…/api/admin/kick-streamer-auth` (+callback) · `kick-events` | admin | Autoryzacja streamera Kick + eventy |
 | `…/api/admin/youtube-streamer-auth` (+callback) | admin | Autoryzacja konta YouTube |
+
+### SaaS — właściciel platformy (`requirePlatformOwner`)
+> „Admin-of-admins" — tylko właściciel platformy (nie admin pojedynczego tenanta). Tworzenie i zarządzanie portalami najemców.
+
+| Trasa | Metoda | Po co |
+|---|---|---|
+| `…/api/admin/tenants` | GET/POST | Lista + provisioning tenantów (slug/nazwa/owner/plan) |
+| `…/api/admin/tenants/[id]` | PATCH | Edycja tenanta (branding, plan, wygaśnięcie) |
+| `…/api/admin/backfill-tenant` | admin GET/POST | Backfill `tenantId` na istniejących rekordach (migracja na multi-tenant) |
 
 ## Bot (botSecret) — bot czatu pobiera konfigurację
 | Trasa | Po co |
@@ -120,7 +154,9 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/internal/chat-feed` | Push wiadomości do overlaya czatu |
 | `…/api/internal/song-request` | Dodanie utworu do kolejki `!sr` |
 | `…/api/internal/link-discord` | Powiązanie konta Discord kodem |
+| `…/api/internal/link-status` | GET — czy dany Discord ID jest powiązany z kontem (E-Bot) |
 | `…/api/internal/mod-violation` | Log naruszenia automod (po egzekucji) — statystyki + eskalacja |
+| `…/api/internal/emoji-combo` | POST — bot zgłasza wykryty emoji-combo |
 
 ## Źródła OBS (overlayToken, odczyt)
 > **Transport realtime (#189/#190):** każdy overlay łączy się najpierw przez **SSE** (push), a przy dowolnym problemie spada na **polling** (fallback) — payload identyczny, bo overlay i fallback dzielą te same producery (`lib/overlay-feeds`; alerty: `lib/alert-feed`). Klient: hook `lib/use-overlay-stream`.
@@ -140,10 +176,19 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/webhooks/twitch-eventsub` | EventSub Twitch (HMAC podpis) — suby/gifty/bity |
 | `…/api/webhooks/kick-events` | Webhooki Kick — suby/gifty |
 | `…/api/webhooks/paymedia` | Webhook płatności PayMedia (sekret) |
+| `…/api/webhooks/stripe` | Webhook Stripe (podpis `STRIPE_WEBHOOK_SECRET`) — aktywacja/odnowienie/wygaśnięcie planu tenanta |
 | `…/api/yt/poll-live-chat` | Polling YouTube Live Chat (super chaty / membery) |
 | `…/api/cron/streamlabs-poll` | Cron (Vercel) — polling donacji Streamlabs (`CRON_SECRET`) |
 | `…/api/cron/prune` | Cron (Vercel, 04:00) — czyszczenie starych rekordów transientowych (`CRON_SECRET`) |
+| `…/api/cron/weekly-rewards` | Cron (Vercel) — tygodniowe nagrody GT (`CRON_SECRET`) |
+
+## Public / serwisowe (bez auth)
+| Trasa | Metoda | Po co |
+|---|---|---|
+| `…/api/health` | GET | Health-check (200 OK / 503 gdy baza nieosiągalna) |
+| `…/api/og` | GET | Dynamiczny OG-image (per tenant: branding/nazwa) |
+| `…/api/telemetry/client-error` | POST | Sink błędów klienta (Sentry-lite, rate-limit per IP, nic nie zapisuje w DB) |
 
 ---
 
-> Helpery auth: `requireAdmin()`, `requirePermission(p)` (`@/lib/admin`), `verifyBotSecret()` (`@/lib/utils`), `isValidOverlayToken()` (`@/lib/alerts`). Uprawnienia moderatora: patrz [PERMISSIONS.md](../PERMISSIONS.md).
+> Helpery auth: `requireAdmin()`, `requirePermission(p)`, `requirePlatformOwner()` (`@/lib/admin`), `verifyBotSecret()` (`@/lib/utils`), `isValidOverlayToken()` (`@/lib/alerts`). Bramki planu (SaaS): `requireTenantFeature(f)` / `featureGateResponse(f)` (`@/lib/entitlements`) — 403 gdy plan tenanta nie obejmuje funkcji. Uprawnienia moderatora: patrz [PERMISSIONS.md](../PERMISSIONS.md).

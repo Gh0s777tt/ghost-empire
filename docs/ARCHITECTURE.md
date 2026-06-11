@@ -43,7 +43,7 @@ Czysta matematyka ekonomii (payouty predykcji, tier battle passa, konwersja walu
 
 ## 3. Tożsamość i konta
 
-- **NextAuth v4** (strategia *database*) — login przez Twitch / Discord / Google(→YouTube) / Kick.
+- **Auth.js v5** (next-auth 5, strategia *database*) — login przez Twitch / Discord / Google(→YouTube) / Kick.
 - Jeden `User` może mieć wiele `Connection` (po jednej na platformę). Łączenie kont: signed-cookie „link intent" w callbacku `signIn` (`lib/account-linking.ts`).
 - **Role:** `isAdmin` / `isModerator` (+ `modPermissions[]`) / `isDonator`. Admin po: fladze w DB, `ADMIN_DISCORD_ID`, lub **stałym mailu** (`isPermanentAdminEmail` w `auth.ts` — przeżywa reset bazy). Uprawnienia moda: [PERMISSIONS.md](../PERMISSIONS.md).
 - Prywatność: login Google nie wycieka imienia (fallback do local-part maila).
@@ -84,7 +84,7 @@ Jeden duży klient (`components/admin/AdminClient.tsx`) z nawigacją sekcji. Dan
 
 - **Twitch** — tmi.js (IRC), odpowiedzi przez OAuth bota.
 - **Kick** — odczyt przez publiczny **Pusher WebSocket**, odpowiedzi przez oficjalne API (OAuth 2.1 + PKCE, refresh rotowany).
-- **YouTube** — auto-wykrycie live (`liveBroadcasts.list mine=true`) → polling `liveChat/messages`.
+- **YouTube** — auto-wykrycie live (`liveBroadcasts.list?broadcastStatus=active` — **bez** `mine=true`: te filtry się wykluczają i `mine` daje 400 `incompatibleParameters`; `broadcastStatus=active` już zawęża do kanału zalogowanego konta) → polling `liveChat/messages`.
 - Konfiguracja (komendy / timery / FAQ / powitania / nagrody / **moderacja**) pobierana z portalu (`/api/bot/*`, cache ~2 min) — bez restartu przy zmianach z panelu.
 - Każda wiadomość: `markActivity` → **automod** (`moderation.ts` → delete/timeout/warn, pomija sub/VIP/mod) → `@bot`/`!imagine` → gry GT (`!slots`/`!coinflip`) / pojedynki PvP (`!duel`/`!accept`) / napad (`!heist`) → `!sr` → komenda/FAQ → powitanie → GT (`/api/internal/chat-award`) → feed do overlaya czatu (+ emotki/odznaki) → `emojiCombo.ts` (detekcja kombosów).
 - **Auto-pin zakładów** (`betAnnounce.ts`): bot przypomina o otwartym zakładzie co 5 min na czacie (Twitch/Kick brak API pin → emulacja). Detektory automoda są **lustrem** `web/src/lib/moderation.ts`.
@@ -92,7 +92,20 @@ Jeden duży klient (`components/admin/AdminClient.tsx`) z nawigacją sekcji. Dan
 
 ---
 
-## 7. Jakość i deploy
+## 7. Multi-tenant SaaS (white-label)
+
+Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależnych „portali" (tenantów), każdy pod własną subdomeną i brandingiem. Founder GHOST77 to po prostu tenant domyślny (plan `elite` bezterminowo), więc istniejący portal działa bez zmian.
+
+- **Host-routing:** edge-proxy (`middleware`) czyta `Host`, wyłuskuje slug z subdomeny (`<slug>.ROOT_DOMAIN`) przez `resolveTenantSlug` (`lib/tenant-host.ts` — czysta funkcja, bez Prisma, bezpieczna na edge) i przekazuje go nagłówkiem `x-tenant-slug`. **Rozwiązanie tenanta jest WYŁĄCZNIE z `Host`** — nagłówek jest forge'owalny (trasy `/api/*` omijają proxy), więc serwer mu nie ufa do resolucji; proxy go nadto strippuje i ustawia od nowa (defense-in-depth). Apex / `www` / nieznany host / brak `NEXT_PUBLIC_ROOT_DOMAIN` → tenant domyślny.
+- **Izolacja danych:** modele user-owned mają `tenantId`; zapytania scope'owane przez `currentTenantId()` (`lib/tenant.ts`), tak że ranking, kasyno, ekonomia itd. nigdy nie mieszają danych między tenantami. Migracja istniejących rekordów: `/api/admin/backfill-tenant`.
+- **Plany i bramki:** trzy plany (drabina Botrix-style) — **basic** (rdzeń społeczności: ekonomia/sklep/ranking/eventy/questy) → **pro** (+ kasyno, koło, predykcje, overlaye, subathon, kolejka utworów) → **elite** (+ AI-asystent/persona bota, webhooki wychodzące, custom branding). Wygasły plan płatny **degraduje się do basic** (społeczność działa dalej, premium pauzuje). Bramka request-time: `requireTenantFeature(f)` / `featureGateResponse(f)` (`lib/entitlements.ts`) → 403; przy awarii DB **fail-open** (billing nigdy nie kładzie portalu).
+- **Branding per tenant:** nazwa/skrót/kolor/logo/nazwa+symbol tokenu/owner-handle z modelu `Tenant`; kolor marki idzie do CSS-var `--brand-rgb` (`hexToRgbTriplet`), OG-image generowany per tenant (`/api/og`).
+- **Onboarding + billing (dry-wired):** zakładanie portalu przez `/api/onboarding` (+ `/my` do edycji), płatności przez Stripe (`lib/billing.ts`) — checkout `/api/billing/checkout`, webhook `/api/webhooks/stripe`. Provisioning/zarządzanie tenantami = **właściciel platformy** (`requirePlatformOwner`, `/api/admin/tenants`). Bez sekretów Stripe (`STRIPE_*`) i `NEXT_PUBLIC_ROOT_DOMAIN` całość jest no-opem (trial bez karty, jeden tenant) — aktywacja **bez zmian w kodzie**.
+- **Overlaye + bot per tenant:** token overlaya i instancje bota są per tenant, więc każdy portal ma własne źródła OBS i własnego bota czatu.
+
+---
+
+## 8. Jakość i deploy
 
 - **CI** (GitHub Actions): job `quality` = `tsc --noEmit` + `eslint` + `vitest run` + `npm audit` (nieblokujący); job `integration · postgres` = `vitest run` przeciw **realnemu Postgresowi** (service container) na ścieżkach money-critical. Testy: czysta logika w `src/lib/__tests__` (111 unit) + integracyjne w `tests/integration` (11, real DB).
 - **Workflow zmian (żelazna zasada):** branch → edycja → typecheck/lint/test (+ `db push` przy zmianie schematu) → PR → squash-merge. **Dokumentacja (CHANGELOG · README · ROADMAP · PLAN · PHASE · docs/* · on-site `/about`) jest aktualizowana w TYM SAMYM PR co zmiana** — nigdy nie zostaje w tyle.
@@ -101,6 +114,6 @@ Jeden duży klient (`components/admin/AdminClient.tsx`) z nawigacją sekcji. Dan
 
 ---
 
-## 8. Dokąd dalej
+## 9. Dokąd dalej
 
 Plany i pomysły: [ROADMAP.md](../ROADMAP.md). Co zrobione: [CHANGELOG.md](../CHANGELOG.md). Zmienne: [ENV.md](ENV.md). API: [ENDPOINTS.md](ENDPOINTS.md). Uprawnienia: [PERMISSIONS.md](../PERMISSIONS.md). Fazy: [PHASE2.md](../PHASE2.md) / [PHASE3.md](../PHASE3.md).
