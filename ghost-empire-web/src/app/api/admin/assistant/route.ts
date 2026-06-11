@@ -3,8 +3,7 @@
 // (admins + moderators). Uses the shared aiChat (provider/key from Integrations);
 // when AI isn't configured the client gets a 503 it can explain.
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { requireAdminOrModerator } from "@/lib/admin";
 import { aiChat, type ChatMessage } from "@/lib/ai";
 import { getIntegrationConfig } from "@/lib/integrations";
 import { buildAdminAssistantPrompt } from "@/lib/admin-assistant";
@@ -17,24 +16,17 @@ const MAX_MESSAGES = 12; // client sends a trimmed conversation window
 const MAX_CONTENT = 1500;
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
-  }
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { isAdmin: true, isModerator: true, isBanned: true },
-  });
-  if (!user || user.isBanned || (!user.isAdmin && !user.isModerator)) {
-    return NextResponse.json({ error: "Brak uprawnień" }, { status: 403 });
-  }
+  // Admin/mod on THIS tenant only (cross-tenant guard inside) — otherwise a
+  // tenant-A mod could spend tenant-B's AI plan on B's subdomain.
+  const gate = await requireAdminOrModerator();
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
   // Plan gate (Phase 6): the AI assistant is an elite feature for paying tenants.
   const gated = await featureGateResponse("ai");
   if (gated) return gated;
 
   // AI calls cost real money — keep a per-user lid on it.
-  const rl = await rateLimit(`ai-assistant:${session.user.id}`, 15, 5 * 60_000);
+  const rl = await rateLimit(`ai-assistant:${gate.userId}`, 15, 5 * 60_000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Za dużo pytań na raz — odczekaj chwilę" },

@@ -1,7 +1,7 @@
 // src/app/api/admin/grant-tokens/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/admin";
+import { requirePermission, findManagedUser } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { checkGrantAnomaly } from "@/lib/economy-anomaly";
 
@@ -26,11 +26,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Amount musi być w zakresie ±1,000,000" }, { status: 400 });
   }
 
-  // Accept account ID (cuid), username, or Discord ID — single OR query so the
-  // grant resolves in one DB round-trip instead of up to three (faster feedback).
-  const user = await prisma.user.findFirst({
-    where: { OR: [{ id: target }, { username: target }, { discordId: target }] },
-  });
+  // Accept account ID (cuid), username, or Discord ID — scoped to the host
+  // tenant (a tenant admin must not move another portal's balances).
+  const user = await findManagedUser(target, auth);
 
   if (!user) {
     return NextResponse.json(

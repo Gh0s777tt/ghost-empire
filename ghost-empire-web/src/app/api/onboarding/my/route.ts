@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { effectivePlan } from "@/lib/entitlements";
+import { safeMediaUrl } from "@/lib/url-safe";
 import { logAdminAction } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
@@ -70,6 +71,9 @@ export async function PATCH(req: Request) {
   str("tokenName", 40);
   str("tokenSymbol", 8);
   str("logoUrl", 300, { allowEmptyNull: true });
+  // Owner is semi-trusted, but logoUrl renders site-wide as <img src> — only
+  // accept absolute http(s) (drop javascript:/data:/tracking schemes).
+  if (typeof data.logoUrl === "string") data.logoUrl = safeMediaUrl(data.logoUrl);
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }

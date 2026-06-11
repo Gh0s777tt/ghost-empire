@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
 import { detectDuplicates, previewMerge, executeMerge } from "@/lib/user-merge";
 import { createLogger } from "@/lib/logger";
@@ -48,6 +49,22 @@ export async function POST(req: Request) {
   }
   if (primary === secondary) {
     return NextResponse.json({ error: "primary === secondary" }, { status: 400 });
+  }
+
+  // Tenant isolation: both accounts must belong to the host tenant — a tenant
+  // admin must not merge (and thereby delete) another portal's users. The
+  // platform owner merges across tenants (admin-of-admins).
+  if (!auth.isPlatformOwner) {
+    const tid = await currentTenantId();
+    if (tid) {
+      const both = await prisma.user.findMany({
+        where: { id: { in: [primary, secondary] } },
+        select: { id: true, tenantId: true },
+      });
+      if (both.length < 2 || both.some((u) => u.tenantId && u.tenantId !== tid)) {
+        return NextResponse.json({ error: "Użytkownik nie należy do tego portalu" }, { status: 404 });
+      }
+    }
   }
 
   if (action === "preview") {

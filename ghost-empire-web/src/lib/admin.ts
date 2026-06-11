@@ -6,7 +6,7 @@ import type { ModPermission } from "@/lib/permissions";
 import { hasPermission } from "@/lib/permissions";
 
 type AuthResult =
-  | { ok: true; userId: string; isAdmin: boolean }
+  | { ok: true; userId: string; isAdmin: boolean; tenantId: string | null; isPlatformOwner: boolean }
   | { ok: false; status: number; error: string };
 
 /**
@@ -26,7 +26,23 @@ export async function requirePlatformOwner(): Promise<AuthResult> {
   if (!user || user.isBanned || !user.isAdmin || !isPermanentAdminEmail(user.email)) {
     return { ok: false, status: 403, error: "Tylko właściciel platformy" };
   }
-  return { ok: true, userId: session.user.id, isAdmin: true };
+  return { ok: true, userId: session.user.id, isAdmin: true, tenantId: null, isPlatformOwner: true };
+}
+
+/**
+ * Resolve a target user (account id / username / Discord id) for an admin
+ * MANAGEMENT action (roles, tokens, bans, deliveries), SCOPED to the host
+ * tenant — so a tenant-A admin can never touch a tenant-B user (cross-tenant
+ * privilege escalation). The platform owner resolves globally (admin-of-admins).
+ * Returns null when the target doesn't exist within the caller's scope.
+ */
+export async function findManagedUser(target: string, gate: { isPlatformOwner: boolean }) {
+  const or = [{ id: target }, { username: target }, { discordId: target }];
+  if (gate.isPlatformOwner) return prisma.user.findFirst({ where: { OR: or } });
+  const tid = await currentTenantId();
+  // No host tenant (single-tenant / legacy) → no isolation boundary to enforce.
+  const where = tid ? { AND: [{ OR: or }, { tenantId: tid }] } : { OR: or };
+  return prisma.user.findFirst({ where });
 }
 
 /**
@@ -65,7 +81,28 @@ export async function requireAdmin(): Promise<AuthResult> {
   if (!user.isAdmin) {
     return { ok: false, status: 403, error: "Brak uprawnień admina" };
   }
-  return { ok: true, userId: session.user.id, isAdmin: true };
+  return { ok: true, userId: session.user.id, isAdmin: true, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
+}
+
+/** Admin OR moderator (any/no permissions) on THIS tenant — for panel-wide
+ *  features open to everyone who can open /admin (e.g. the AI assistant).
+ *  Carries the same cross-tenant guard as the stricter gates. */
+export async function requireAdminOrModerator(): Promise<AuthResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, status: 401, error: "Musisz być zalogowany" };
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isAdmin: true, isModerator: true, isBanned: true, tenantId: true, email: true },
+  });
+  if (!user || user.isBanned || (!user.isAdmin && !user.isModerator)) {
+    return { ok: false, status: 403, error: "Brak uprawnień" };
+  }
+  if (await isWrongTenant(user)) {
+    return { ok: false, status: 403, error: "Brak uprawnień w tym portalu" };
+  }
+  return { ok: true, userId: session.user.id, isAdmin: user.isAdmin, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
 }
 
 /** Permission check — passes for admins (implicit grant) and moderators
@@ -94,7 +131,7 @@ export async function requirePermission(permission: ModPermission): Promise<Auth
         : "Brak uprawnień admina/moderatora",
     };
   }
-  return { ok: true, userId: session.user.id, isAdmin: user.isAdmin };
+  return { ok: true, userId: session.user.id, isAdmin: user.isAdmin, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
 }
 
 /** Like `requirePermission` but passes if the user has ANY of the given
@@ -124,5 +161,5 @@ export async function requireAnyPermission(permissions: ModPermission[]): Promis
         : "Brak uprawnień admina/moderatora",
     };
   }
-  return { ok: true, userId: session.user.id, isAdmin: user.isAdmin };
+  return { ok: true, userId: session.user.id, isAdmin: user.isAdmin, tenantId: user.tenantId, isPlatformOwner: isPermanentAdminEmail(user.email) };
 }

@@ -3,7 +3,7 @@
 // signIn callback blocks them). Permanent or with duration.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/admin";
+import { requirePermission, findManagedUser } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 export async function POST(req: Request) {
@@ -29,10 +29,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "action: ban | unban" }, { status: 400 });
   }
 
-  const isDigits = /^\d+$/.test(target);
-  const user = isDigits
-    ? await prisma.user.findUnique({ where: { discordId: target } })
-    : await prisma.user.findUnique({ where: { username: target } });
+  // Scoped to the host tenant — a tenant admin must not ban another portal's user.
+  const user = await findManagedUser(target, auth);
 
   if (!user) {
     return NextResponse.json({ error: `User "${target}" nie znaleziony` }, { status: 404 });

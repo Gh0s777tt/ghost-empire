@@ -2,7 +2,7 @@
 // Grant/revoke isModerator, isDonator (with optional totalDonated bump), isAdmin
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin, findManagedUser } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 export async function POST(req: Request) {
@@ -32,11 +32,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Role: admin | moderator | donator" }, { status: 400 });
   }
 
-  // Accept account ID (cuid), username, or Discord ID — single OR query so the
-  // grant resolves in one DB round-trip instead of up to three (faster feedback).
-  const user = await prisma.user.findFirst({
-    where: { OR: [{ id: target }, { username: target }, { discordId: target }] },
-  });
+  // Accept account ID (cuid), username, or Discord ID — scoped to the host
+  // tenant (a tenant admin must not grant roles to another portal's user).
+  const user = await findManagedUser(target, auth);
 
   if (!user) {
     return NextResponse.json(
