@@ -2,13 +2,16 @@
 import { redirect } from "next/navigation";
 import { auth, isPermanentAdminEmail } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { AdminClient } from "@/components/admin/AdminClient";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Admin", description: "Panel administracyjny Ghost Empire" };
+export async function generateMetadata() {
+  const t = await getCurrentTenant();
+  return { title: "Admin", description: `Panel administracyjny ${t.name}` };
+}
 
 export default async function AdminPage() {
   const session = await auth();
@@ -81,7 +84,7 @@ export default async function AdminPage() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-0 right-1/3 w-[600px] h-[600px] rounded-full blur-[150px] opacity-15"
-          style={{ background: "radial-gradient(circle, #E50914 0%, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, var(--brand) 0%, transparent 70%)" }}
         />
       </div>
 

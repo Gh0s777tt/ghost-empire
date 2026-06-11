@@ -820,7 +820,7 @@ export default async function AboutPage() {
   const t = await getTranslations("about");
 
   const features = [
-    { icon: ShoppingBag, color: "#E50914", href: "/shop", title: t("featShopTitle"), desc: t("featShopDesc") },
+    { icon: ShoppingBag, color: "var(--brand)", href: "/shop", title: t("featShopTitle"), desc: t("featShopDesc") },
     { icon: Trophy, color: "#FFD700", href: "/ranking", title: t("featRankTitle"), desc: t("featRankDesc") },
     { icon: Calendar, color: "#10b981", href: "/events", title: t("featEventsTitle"), desc: t("featEventsDesc") },
     { icon: Dice5, color: "#8b5cf6", href: "/predictions", title: t("featPredTitle"), desc: t("featPredDesc") },
@@ -851,11 +851,11 @@ export default async function AboutPage() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-0 left-1/4 w-[700px] h-[700px] rounded-full blur-[160px] opacity-15"
-          style={{ background: "radial-gradient(circle, #E50914 0%, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, var(--brand) 0%, transparent 70%)" }}
         />
         <div
           className="absolute bottom-1/4 right-0 w-[500px] h-[500px] rounded-full blur-[130px] opacity-10"
-          style={{ background: "radial-gradient(circle, #8B0000 0%, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand), black 55%) 0%, transparent 70%)" }}
         />
       </div>
 
@@ -987,7 +987,7 @@ export default async function AboutPage() {
               >
                 <div
                   className="font-display text-4xl shrink-0 leading-none"
-                  style={{ color: "#E50914", textShadow: "2px 0 0 rgba(139,0,0,0.5)" }}
+                  style={{ color: "var(--brand)", textShadow: "2px 0 0 rgba(139,0,0,0.5)" }}
                 >
                   {s.n}
                 </div>

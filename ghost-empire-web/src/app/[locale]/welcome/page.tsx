@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
+import { getCurrentTenant } from "@/lib/tenant";
 import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio } from "lucide-react";
 import { YoutubeIcon } from "@/components/BrandIcons";
 import { SocialLinksRow } from "@/components/SocialLinks";
@@ -21,9 +22,10 @@ export default async function WelcomePage() {
   const session = await auth();
   const isAuthed = !!session?.user?.id;
   const t = await getTranslations("welcome");
+  const tenant = await getCurrentTenant();
 
   const highlights = [
-    { icon: Coins, color: "#E50914", title: t("hlTokens"), desc: t("hlTokensDesc") },
+    { icon: Coins, color: "var(--brand)", title: t("hlTokens"), desc: t("hlTokensDesc") },
     { icon: Gift, color: "#10b981", title: t("hlRewards"), desc: t("hlRewardsDesc") },
     { icon: Trophy, color: "#FFD700", title: t("hlCompete"), desc: t("hlCompeteDesc") },
     { icon: MessageSquare, color: "#8b5cf6", title: t("hlBot"), desc: t("hlBotDesc") },
@@ -34,22 +36,25 @@ export default async function WelcomePage() {
       {/* Atmosphere */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-1/4 w-[700px] h-[700px] rounded-full blur-[160px] opacity-20"
-          style={{ background: "radial-gradient(circle, #E50914 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, var(--brand) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-0 w-[600px] h-[600px] rounded-full blur-[150px] opacity-10"
-          style={{ background: "radial-gradient(circle, #8B0000 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand), black 55%) 0%, transparent 70%)" }} />
       </div>
 
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 py-16 max-w-4xl mx-auto">
         {/* Logo */}
-        <div className="w-24 h-24 sm:w-28 sm:h-28 mb-6 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_60px_rgba(229,9,20,0.35)]">
-          <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
+        <div
+          className="w-24 h-24 sm:w-28 sm:h-28 mb-6 overflow-hidden rounded-2xl"
+          style={{ border: "2px solid rgba(var(--brand-rgb), 0.4)", boxShadow: "0 0 60px rgba(var(--brand-rgb), 0.35)" }}
+        >
+          <img src={tenant.logoUrl ?? "/brand/skull.png"} alt={tenant.name} className="w-full h-full object-cover" />
         </div>
 
         <h1
           className="font-display text-5xl sm:text-7xl text-white tracking-wider mb-4"
-          style={{ textShadow: "3px 0 0 rgba(229,9,20,0.7), -3px 0 0 rgba(139,0,0,0.5)" }}
+          style={{ textShadow: "3px 0 0 rgba(var(--brand-rgb), 0.7), -3px 0 0 color-mix(in srgb, var(--brand), black 60%)" }}
         >
-          GH0ST EMPIRE
+          {tenant.name}
         </h1>
         <p className="text-zinc-300 text-base sm:text-xl max-w-2xl mb-2">
           {t("sub1pre")} <span className="text-red-400 font-semibold">Twitch · Kick · YouTube · Discord</span>.
