@@ -59,6 +59,21 @@ docker run -d --restart unless-stopped --env-file .env \
 - ⚠️ **YouTube:** ekran zgody OAuth w trybie „Testing" → token wygasa po 7 dniach (ustaw „In production" w Google Cloud Console).
 - **Auth (`npm run auth:*`) robisz raz, lokalnie** (wymagają przeglądarki) — potem przenosisz wygenerowane tokeny do env hosta.
 
+## Multi-tenant (SaaS fleet) — proces per portal
+
+Bot jest w pełni parametryzowany env-ami, więc **każdy portal-klient = osobny proces bota** z własnym plikiem env:
+
+```bash
+cp tenants/example-tenant.env tenants/neo-zone.env   # uzupełnij
+ENV_FILE=tenants/neo-zone.env npm start              # instancja klienta
+npm start                                            # bez ENV_FILE = klasyczne .env (founder)
+```
+
+- `PORTAL_URL` instancji wskazuje **subdomenę tenanta** (`https://neo-zone.twoja-domena.com`) — portal rozpoznaje tenanta po Hoście, więc wszystkie nagrody/komendy/FAQ/timery lądują w danych właściwego portalu. Ten sam `BOT_SECRET` co w deploymencie portalu.
+- Każda instancja ma własny kanał Twitch/Kick/YT i własne (lub współdzielone konto bota) poświadczenia.
+- Izolacja per proces = cache'e modułów (komendy/FAQ/timery/moderacja) naturalnie per portal. Docker: `--env-file tenants/neo-zone.env` + osobny wolumen tokenów Kick per instancja.
+- Multipleksowanie wielu portali w jednym procesie ma sens dopiero przy dużej flocie (dziesiątki+) — wymaga przebudowy modułów na instancje; świadomie odłożone.
+
 ## Security
 
 - `.env` holds live secrets and is **gitignored** (root `**/.env`). Never commit it.
