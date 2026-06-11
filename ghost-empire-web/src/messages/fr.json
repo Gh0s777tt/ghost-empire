@@ -964,6 +964,15 @@
     "s9p": "Nous publions les modifications sur cette page. Les modifications importantes sont annoncées sur Discord. Utiliser le Portail après l'entrée en vigueur des modifications signifie les accepter."
   },
   "onboarding": {
+    "myTitle": "MON PORTAIL",
+    "mySubtitle": "Statut et réglages de votre portail. Les changements de branding s'appliquent immédiatement.",
+    "myBranding": "Branding",
+    "myLogo": "URL du logo",
+    "mySave": "Enregistrer",
+    "mySaved": "Enregistré ✓",
+    "mySubscription": "Abonnement",
+    "myUntil": "actif jusqu'au {date}",
+    "myExpired": "plan expiré — le portail tourne en Basic",
     "bSuccessTitle": "Paiement reçu !",
     "bSuccessBody": "Votre abonnement s'active en une minute — le plan et l'échéance se règlent automatiquement.",
     "bCancelled": "Paiement annulé",

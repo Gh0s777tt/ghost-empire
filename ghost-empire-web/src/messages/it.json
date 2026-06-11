@@ -964,6 +964,15 @@
     "s9p": "Pubblichiamo le modifiche su questa pagina. Le modifiche importanti vengono annunciate su Discord. Usare il Portale dopo l'entrata in vigore delle modifiche significa accettarle."
   },
   "onboarding": {
+    "myTitle": "IL MIO PORTALE",
+    "mySubtitle": "Stato e impostazioni del tuo portale. Le modifiche al branding si applicano subito.",
+    "myBranding": "Branding",
+    "myLogo": "URL del logo",
+    "mySave": "Salva modifiche",
+    "mySaved": "Salvato ✓",
+    "mySubscription": "Abbonamento",
+    "myUntil": "attivo fino al {date}",
+    "myExpired": "piano scaduto — il portale gira su Basic",
     "bSuccessTitle": "Pagamento ricevuto!",
     "bSuccessBody": "L'abbonamento si attiva entro un minuto — piano e scadenza si impostano da soli.",
     "bCancelled": "Pagamento annullato",

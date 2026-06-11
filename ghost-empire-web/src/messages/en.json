@@ -50,6 +50,15 @@
     }
   },
   "onboarding": {
+    "myTitle": "MY PORTAL",
+    "mySubtitle": "Your portal's status and settings. Branding changes apply immediately.",
+    "myBranding": "Branding",
+    "myLogo": "Logo URL",
+    "mySave": "Save changes",
+    "mySaved": "Saved ✓",
+    "mySubscription": "Subscription",
+    "myUntil": "active until {date}",
+    "myExpired": "plan expired — the portal runs on Basic",
     "bSuccessTitle": "Payment received!",
     "bSuccessBody": "Your subscription activates within a minute — the plan and expiry are set automatically.",
     "bCancelled": "Payment cancelled",

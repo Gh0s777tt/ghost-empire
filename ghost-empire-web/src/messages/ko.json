@@ -964,6 +964,15 @@
     "s9p": "변경 사항을 이 페이지에 게시합니다. 주요 변경은 Discord에 공지됩니다. 변경 발효 후 포털을 이용하는 것은 변경에 동의함을 의미합니다."
   },
   "onboarding": {
+    "myTitle": "내 포털",
+    "mySubtitle": "포털의 상태와 설정. 브랜딩 변경은 즉시 적용됩니다.",
+    "myBranding": "브랜딩",
+    "myLogo": "로고 URL",
+    "mySave": "변경 사항 저장",
+    "mySaved": "저장됨 ✓",
+    "mySubscription": "구독",
+    "myUntil": "{date}까지 활성",
+    "myExpired": "플랜 만료 — 포털은 Basic으로 동작 중",
     "bSuccessTitle": "결제가 완료되었습니다!",
     "bSuccessBody": "구독은 1분 안에 활성화됩니다 — 플랜과 만료일은 자동으로 설정됩니다.",
     "bCancelled": "결제가 취소되었습니다",

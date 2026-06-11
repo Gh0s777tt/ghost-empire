@@ -993,6 +993,15 @@
     "s9p": "Kami memublikasikan perubahan di halaman ini. Perubahan besar diumumkan di Discord. Menggunakan Portal setelah perubahan berlaku berarti menyetujuinya."
   },
   "onboarding": {
+    "myTitle": "PORTAL SAYA",
+    "mySubtitle": "Status dan pengaturan portal Anda. Perubahan branding berlaku langsung.",
+    "myBranding": "Branding",
+    "myLogo": "URL logo",
+    "mySave": "Simpan perubahan",
+    "mySaved": "Tersimpan ✓",
+    "mySubscription": "Langganan",
+    "myUntil": "aktif hingga {date}",
+    "myExpired": "paket kedaluwarsa — portal berjalan di Basic",
     "bSuccessTitle": "Pembayaran diterima!",
     "bSuccessBody": "Langganan Anda aktif dalam satu menit — paket dan masa berlaku diatur otomatis.",
     "bCancelled": "Pembayaran dibatalkan",
