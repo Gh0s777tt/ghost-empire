@@ -63,6 +63,14 @@ async function run(req: Request) {
   counts.kickStreamerToken = (await prisma.kickStreamerToken.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.youTubeStreamerToken = (await prisma.youTubeStreamerToken.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.streamlabsConnection = (await prisma.streamlabsConnection.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  // Phase 4 overlay pass: legacy singletons (id "default" rows gain a tenant)
+  counts.streamAlertSettings = (await prisma.streamAlertSettings.updateMany({ where: { id: "default", tenantId: null }, data: { tenantId } })).count;
+  counts.hypeTrainState = (await prisma.hypeTrainState.updateMany({ where: { id: "default", tenantId: null }, data: { tenantId } })).count;
+  counts.emojiComboState = (await prisma.emojiComboState.updateMany({ where: { id: "default", tenantId: null }, data: { tenantId } })).count;
+  // Phase 4 overlay pass: collections
+  counts.streamAlert = (await prisma.streamAlert.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.chatFeedMessage = (await prisma.chatFeedMessage.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.customWidget = (await prisma.customWidget.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
 
   await logAdminAction({
     adminId: gate.userId,

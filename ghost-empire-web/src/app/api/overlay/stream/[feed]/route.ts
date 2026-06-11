@@ -9,6 +9,7 @@
 import { isValidOverlayToken } from "@/lib/alerts";
 import { getOverlayFeed } from "@/lib/overlay-feeds";
 import { sseFrame, sseStreamResponse } from "@/lib/sse";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs"; // Prisma (pg driver adapter) needs Node, not Edge.
@@ -19,9 +20,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ feed: string }>
   const def = getOverlayFeed(feed);
   if (!def) return new Response("Unknown feed", { status: 404 });
 
+  // Tenant is resolved ONCE here (request Host — the OBS URL points at the
+  // tenant's subdomain) and threaded into every tick: the SSE loop runs in a
+  // setTimeout outside the request scope, where headers() is unreliable.
+  const tenantId = await currentTenantId();
+
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
-  if (!(await isValidOverlayToken(token))) {
+  if (!(await isValidOverlayToken(token, tenantId))) {
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -33,7 +39,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ feed: string }>
     signal: req.signal,
     tickMs: def.intervalMs,
     onTick: async (send) => {
-      const payload = await def.producer(params);
+      const payload = await def.producer(params, tenantId);
       send(sseFrame("data", payload));
     },
   });

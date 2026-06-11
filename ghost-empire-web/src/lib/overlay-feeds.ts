@@ -30,22 +30,35 @@ export type OverlayFeedKey =
   | "viewers";
 
 export type OverlayFeedDef = {
-  /** Computes the current feed payload. `params` carries the request query (e.g. widget `id`). */
-  producer: (params: URLSearchParams) => Promise<unknown>;
+  /**
+   * Computes the current feed payload. `params` carries the request query
+   * (e.g. widget `id`); `tenantId` is resolved ONCE by the route handler from
+   * the request Host and threaded through — producers must NOT call
+   * currentTenantId() themselves (the SSE tick runs outside a request scope).
+   * null = legacy single-tenant data.
+   */
+  producer: (params: URLSearchParams, tenantId: string | null) => Promise<unknown>;
   /** SSE tick + polling-fallback cadence (ms) — matched to how fast the feed changes. */
   intervalMs: number;
 };
 
+/** Collection filter: tenant rows + legacy NULL rows (pre-backfill safety). */
+function tidWhere(tenantId: string | null) {
+  return tenantId ? { OR: [{ tenantId }, { tenantId: null }] } : {};
+}
+
 // --- producers (logic mirrors the original /api/alerts/<x> routes verbatim) ---
 
-async function goalsFeed(): Promise<unknown> {
+async function goalsFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
   const [goals, hype, settings] = await Promise.all([
     prisma.streamGoal.findMany({
-      where: { active: true },
+      where: { active: true, ...tidWhere(tid) },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     }),
-    prisma.hypeTrainState.findUnique({ where: { id: "default" } }),
-    getSettings(),
+    tid
+      ? prisma.hypeTrainState.findUnique({ where: { tenantId: tid } })
+      : prisma.hypeTrainState.findUnique({ where: { id: "default" } }),
+    getSettings(tid),
   ]);
   return {
     accentColor: settings.accentColor,
@@ -71,8 +84,11 @@ async function goalsFeed(): Promise<unknown> {
   };
 }
 
-async function subathonFeed(): Promise<unknown> {
-  const s = await prisma.subathon.findUnique({ where: { id: "default" } });
+async function subathonFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const s = tid
+    ? (await prisma.subathon.findUnique({ where: { tenantId: tid } }))
+      ?? (await prisma.subathon.findUnique({ where: { id: "default" } }))
+    : await prisma.subathon.findUnique({ where: { id: "default" } });
   return {
     active: s?.active ?? false,
     endsAt: s?.endsAt?.toISOString() ?? null,
@@ -82,9 +98,9 @@ async function subathonFeed(): Promise<unknown> {
   };
 }
 
-async function pollsFeed(): Promise<unknown> {
+async function pollsFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
   const p = await prisma.poll.findFirst({
-    where: { status: "open" },
+    where: { status: "open", ...tidWhere(tid) },
     orderBy: { createdAt: "desc" },
     include: { votes: { select: { optionIndex: true } } },
   });
@@ -104,10 +120,10 @@ async function pollsFeed(): Promise<unknown> {
   };
 }
 
-async function predictionsFeed(): Promise<unknown> {
+async function predictionsFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
   await lockExpiredPredictions();
   const p = await prisma.prediction.findFirst({
-    where: { status: { in: ["open", "locked"] } },
+    where: { status: { in: ["open", "locked"] }, ...tidWhere(tid) },
     orderBy: { opensAt: "desc" },
     include: { entries: { select: { optionIndex: true, tokensWagered: true } } },
   });
@@ -137,9 +153,9 @@ function safeName(name: string | null): string {
   return name.includes(" ") ? name.split(" ")[0] : name;
 }
 
-async function lastOf(types: string[]) {
+async function lastOf(types: string[], tid: string | null) {
   const a = await prisma.streamAlert.findFirst({
-    where: { type: { in: types } },
+    where: { type: { in: types }, ...tidWhere(tid) },
     orderBy: { createdAt: "desc" },
     select: { actorName: true, amount: true, amountLabel: true, createdAt: true },
   });
@@ -152,19 +168,21 @@ async function lastOf(types: string[]) {
   };
 }
 
-async function recentEventsFeed(): Promise<unknown> {
+async function recentEventsFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
   const [sub, donation, follow] = await Promise.all([
-    lastOf(["twitch_sub", "twitch_gift_sub"]),
-    lastOf(["donation"]),
-    lastOf(["twitch_follow"]),
+    lastOf(["twitch_sub", "twitch_gift_sub"], tid),
+    lastOf(["donation"], tid),
+    lastOf(["twitch_follow"], tid),
   ]);
   return { sub, donation, follow };
 }
 
 const COMBO_FRESH_MS = 5000;
 
-async function emojiComboFeed(): Promise<unknown> {
-  const s = await prisma.emojiComboState.findUnique({ where: { id: "default" } });
+async function emojiComboFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const s = tid
+    ? await prisma.emojiComboState.findUnique({ where: { tenantId: tid } })
+    : await prisma.emojiComboState.findUnique({ where: { id: "default" } });
   if (!s || !s.emoji || Date.now() - s.updatedAt.getTime() >= COMBO_FRESH_MS) {
     return { active: false };
   }
@@ -175,10 +193,11 @@ async function rumbleFeed(): Promise<unknown> {
   return getRumbleStatus();
 }
 
-async function wheelFeed(): Promise<unknown> {
+async function wheelFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
   const [cfg, latest] = await Promise.all([
-    getWheelConfig(),
+    getWheelConfig(tid),
     prisma.wheelSpin.findFirst({
+      where: tid ? { user: { tenantId: tid } } : {},
       orderBy: { createdAt: "desc" },
       include: { user: { select: { username: true, displayName: true, image: true } } },
     }),
@@ -202,11 +221,12 @@ async function wheelFeed(): Promise<unknown> {
   };
 }
 
-async function widgetFeed(params: URLSearchParams): Promise<unknown> {
+async function widgetFeed(params: URLSearchParams, tid: string | null): Promise<unknown> {
   const id = params.get("id");
   if (!id) return { exists: false };
   const w = await prisma.customWidget.findUnique({ where: { id } });
-  if (!w) return { exists: false };
+  // Cross-tenant guard: another tenant's widget id renders nothing here.
+  if (!w || (tid && w.tenantId && w.tenantId !== tid)) return { exists: false };
   return {
     exists: true,
     text: w.text,
@@ -234,10 +254,12 @@ function chatSafeParse(s: string | null): unknown {
   }
 }
 
-async function chatFeed(): Promise<unknown> {
+async function chatFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
   const [rows, config] = await Promise.all([
-    prisma.chatFeedMessage.findMany({ orderBy: { createdAt: "desc" }, take: CHAT_LIMIT }),
-    prisma.chatOverlayConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
+    prisma.chatFeedMessage.findMany({ where: tidWhere(tid), orderBy: { createdAt: "desc" }, take: CHAT_LIMIT }),
+    tid
+      ? prisma.chatOverlayConfig.upsert({ where: { tenantId: tid }, create: { tenantId: tid }, update: {} })
+      : prisma.chatOverlayConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} }),
   ]);
   return {
     config: {
@@ -263,13 +285,11 @@ async function chatFeed(): Promise<unknown> {
 
 const VIEWERS_CACHE_MS = 12_000;
 
-async function viewersFeed(): Promise<unknown> {
+async function viewersFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
   // Shared Redis cache (Upstash) so many overlay connections across serverless
   // instances don't each hammer Helix — falls back to in-process cache without Redis.
-  return cacheJson<Record<string, unknown>>("viewers:default", VIEWERS_CACHE_MS, async () => {
-    // null = legacy row on purpose: this cache key isn't tenant-keyed yet and the
-    // producer runs in the SSE tick (no request ctx) — overlay-feeds tenant pass.
-    const streamer = await getTwitchStreamerToken(null);
+  return cacheJson<Record<string, unknown>>(`viewers:${tid ?? "default"}`, VIEWERS_CACHE_MS, async () => {
+    const streamer = await getTwitchStreamerToken(tid);
     if (!streamer?.broadcasterId) return { live: false, configured: false };
     try {
       const appToken = await getAppAccessToken();

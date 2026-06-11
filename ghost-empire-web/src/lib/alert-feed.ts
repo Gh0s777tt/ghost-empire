@@ -120,16 +120,19 @@ function shapeSettings(s: Awaited<ReturnType<typeof getSettings>>): FeedSettings
 /**
  * Fetch alerts created after `since`, mark freshly-delivered ones as shown, and
  * return them alongside the current overlay settings. The single source of truth
- * for both the polled queue endpoint and the SSE stream loop.
+ * for both the polled queue endpoint and the SSE stream loop. `tenantId` is
+ * resolved ONCE by the route handler (request Host) and threaded through —
+ * never resolved here, because the SSE tick runs outside the request scope.
+ * Tenant rows + legacy NULL rows are both served (pre-backfill safety).
  */
-export async function fetchAlertFeed(since: Date): Promise<AlertFeed> {
+export async function fetchAlertFeed(since: Date, tenantId: string | null): Promise<AlertFeed> {
   const [rows, settings, typeConfigs] = await Promise.all([
     prisma.streamAlert.findMany({
-      where: { createdAt: { gt: since } },
+      where: { createdAt: { gt: since }, ...(tenantId ? { OR: [{ tenantId }, { tenantId: null }] } : {}) },
       orderBy: { createdAt: "asc" },
       take: MAX_TAKE,
     }),
-    getSettings(),
+    getSettings(tenantId),
     getAlertTypeConfigs(),
   ]);
 
@@ -138,7 +141,7 @@ export async function fetchAlertFeed(since: Date): Promise<AlertFeed> {
   if (unshownIds.length > 0) {
     await prisma.streamAlert
       .updateMany({
-        where: { id: { in: unshownIds }, shownAt: null },
+        where: { id: { in: unshownIds }, shownAt: null, ...(tenantId ? { OR: [{ tenantId }, { tenantId: null }] } : {}) },
         data: { shownAt: new Date() },
       })
       .catch(() => {});

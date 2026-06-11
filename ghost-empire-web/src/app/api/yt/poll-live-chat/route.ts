@@ -305,7 +305,7 @@ async function handleSuperChat(input: {
     actorName: input.authorName ?? "Anonim",
     amount: Math.round(amountFloat * 100) / 100,
     amountLabel: input.currency,
-  });
+  }, input.tenantId);
 
   // Bump donations_pln goal (currency conversion same as Streamlabs handler)
   const plnAmount = ["PLN", "ZL"].includes(input.currency.toUpperCase())
@@ -398,7 +398,7 @@ async function handleMemberEvent(input: {
     message: "wsparł kanał członkostwem",
     icon: "📺",
     actorName: input.authorName ?? "Anonim",
-  });
+  }, input.tenantId);
 
   await incrementGoals("yt_members", 1, input.tenantId);
 

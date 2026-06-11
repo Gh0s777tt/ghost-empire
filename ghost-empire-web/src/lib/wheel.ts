@@ -52,8 +52,10 @@ export function parseSegments(raw: unknown): WheelSegment[] {
 export type WheelConfigView = { enabled: boolean; costPerSpin: number; segments: WheelSegment[] };
 
 /** Per-tenant wheel config row (get-or-create); legacy id:"default" when no tenant. */
-export async function getWheelConfigRow() {
-  const tid = await currentTenantId();
+export async function getWheelConfigRow(tenantId?: string | null) {
+  // undefined → resolve from the request Host; explicit value → use it (the
+  // overlay SSE tick runs outside a request scope and threads the tenant in).
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
   if (tid) {
     const existing = await prisma.wheelConfig.findFirst({ where: { tenantId: tid } });
     return existing ?? (await prisma.wheelConfig.create({ data: { tenantId: tid } }));
@@ -61,8 +63,8 @@ export async function getWheelConfigRow() {
   return prisma.wheelConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
 }
 
-export async function getWheelConfig(): Promise<WheelConfigView> {
-  const c = await getWheelConfigRow();
+export async function getWheelConfig(tenantId?: string | null): Promise<WheelConfigView> {
+  const c = await getWheelConfigRow(tenantId);
   return {
     enabled: c.enabled,
     costPerSpin: c.costPerSpin,

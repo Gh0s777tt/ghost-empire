@@ -3,6 +3,7 @@
 // Keeps only a short rolling buffer (prunes old rows opportunistically).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { verifyBotSecret } from "@/lib/utils";
 
 const MAX_MESSAGE = 500;
@@ -14,6 +15,10 @@ export async function POST(req: Request) {
   if (!verifyBotSecret(req.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Multi-tenant bot calls the tenant's subdomain, so Host-resolve is correct;
+  // null = legacy single-tenant bot.
+  const tid = await currentTenantId();
 
   let body: { platform?: string; username?: string; message?: string; emotes?: unknown; badges?: unknown };
   try {
@@ -33,6 +38,7 @@ export async function POST(req: Request) {
 
   await prisma.chatFeedMessage.create({
     data: {
+      ...(tid ? { tenantId: tid } : {}),
       platform: body.platform!,
       username: (body.username ?? "widz").slice(0, MAX_USERNAME),
       message: message.slice(0, MAX_MESSAGE),

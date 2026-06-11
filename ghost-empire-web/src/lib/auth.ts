@@ -556,7 +556,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           actorImage: user.image ?? undefined,
           amount: 500,
           amountLabel: "GT",
-        });
+        }, tenantId);
 
         // Season XP welcome bump
         await awardSeasonXp(user.id, "welcome");
