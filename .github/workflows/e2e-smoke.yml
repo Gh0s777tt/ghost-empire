@@ -14,12 +14,15 @@ jobs:
       run:
         working-directory: ghost-empire-web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       - run: npm ci --ignore-scripts
-      - run: npx playwright install --with-deps chromium
+      # Browser binary only (no --with-deps): ubuntu-latest ships Chromium's shared
+      # libs, and apt-get update pulls the occasionally-flaky Google Chrome repo
+      # (matches the ci.yml e2e job — keep both consistent).
+      - run: npx playwright install chromium
       - run: npx playwright test
         env:
           E2E_BASE_URL: https://ghost-empire-web.vercel.app
