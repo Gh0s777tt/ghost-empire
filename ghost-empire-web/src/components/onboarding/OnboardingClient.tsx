@@ -4,9 +4,16 @@
 // name (still editable); everything is changeable later in the admin panel,
 // so the wizard stays deliberately short.
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import { Rocket, ChevronLeft, ChevronRight, Check, Loader2, PartyPopper, CreditCard } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
+import { Rocket, ChevronLeft, ChevronRight, Check, Loader2, PartyPopper, CreditCard, Building2 } from "lucide-react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
+import { formatDate } from "@/lib/utils";
+
+type MyTenant = {
+  slug: string; name: string; shortName: string | null; ownerHandle: string | null;
+  tokenName: string; tokenSymbol: string; brandColor: string; logoUrl: string | null;
+  plan: string; effectivePlan: string; planExpiresAt: string | null; users: number;
+};
 
 const PLANS = ["basic", "pro", "elite"] as const;
 type Plan = (typeof PLANS)[number];
@@ -33,10 +40,16 @@ export function OnboardingClient() {
   const [billingReady, setBillingReady] = useState(false);
   const [billingReturn, setBillingReturn] = useState<"success" | "cancelled" | null>(null);
   const [months, setMonths] = useState<1 | 3 | 6 | 12>(3);
+  // Existing-owner mode: when the caller already has a portal, the page is a
+  // self-service dashboard (status + branding edit) instead of the wizard.
+  const [myPortal, setMyPortal] = useState<MyTenant | null | undefined>(undefined);
   useEffect(() => {
     apiGet<{ configured: boolean }>("/api/billing/checkout")
       .then((d) => setBillingReady(d.configured))
       .catch(() => setBillingReady(false));
+    apiGet<{ tenant: MyTenant | null }>("/api/onboarding/my")
+      .then((d) => setMyPortal(d.tenant))
+      .catch(() => setMyPortal(null));
     const q = new URLSearchParams(window.location.search).get("billing");
     if (q === "success" || q === "cancelled") setBillingReturn(q);
   }, []);
@@ -93,6 +106,24 @@ export function OnboardingClient() {
           <p className="text-zinc-300 text-sm max-w-md mx-auto">{t("bSuccessBody")}</p>
         )}
       </div>
+    );
+  }
+
+  if (myPortal === undefined && !billingReturn) {
+    return (
+      <div className="flex items-center justify-center gap-2 text-zinc-500 text-sm py-16">
+        <Loader2 className="w-4 h-4 animate-spin" /> …
+      </div>
+    );
+  }
+
+  if (myPortal && !billingReturn && !done) {
+    return (
+      <MyPortalView
+        portal={myPortal}
+        billingReady={billingReady}
+        onRefresh={() => apiGet<{ tenant: MyTenant | null }>("/api/onboarding/my").then((d) => setMyPortal(d.tenant)).catch(() => {})}
+      />
     );
   }
 
@@ -260,6 +291,153 @@ export function OnboardingClient() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Self-service dashboard for an existing portal owner: status + branding edit
+ *  + (when billing is live) subscription activation. */
+function MyPortalView({ portal, billingReady, onRefresh }: {
+  portal: MyTenant;
+  billingReady: boolean;
+  onRefresh: () => void;
+}) {
+  const t = useTranslations("onboarding");
+  const locale = useLocale();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [f, setF] = useState({
+    name: portal.name,
+    shortName: portal.shortName ?? "",
+    ownerHandle: portal.ownerHandle ?? "",
+    tokenName: portal.tokenName,
+    tokenSymbol: portal.tokenSymbol,
+    brandColor: portal.brandColor,
+    logoUrl: portal.logoUrl ?? "",
+  });
+  const set = (k: keyof typeof f) => (v: string) => { setSaved(false); setF((p) => ({ ...p, [k]: v })); };
+
+  const [subPlan, setSubPlan] = useState<"pro" | "elite">(portal.plan === "elite" ? "elite" : "pro");
+  const [months, setMonths] = useState<1 | 3 | 6 | 12>(3);
+
+  async function save() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await apiPost("/api/onboarding/my", f, { method: "PATCH" });
+      setSaved(true);
+      onRefresh();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t("error"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function activate() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiPost<{ ok: true; url: string }>("/api/billing/checkout", { plan: subPlan, months });
+      window.location.href = res.url;
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t("error"));
+      setBusy(false);
+    }
+  }
+
+  const degraded = portal.effectivePlan !== portal.plan;
+  const input = "w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-hidden focus:border-red-600 placeholder:text-zinc-700";
+  const label = "text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1";
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h1 className="font-display text-4xl text-white tracking-wider flex items-center justify-center gap-3">
+          <Building2 className="w-8 h-8 text-red-500" /> {t("myTitle")}
+        </h1>
+        <p className="text-zinc-400 text-sm">{t("mySubtitle")}</p>
+      </div>
+
+      {/* status */}
+      <div className="border border-zinc-800 bg-zinc-950/70 p-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+        <span className="inline-flex items-center gap-2">
+          <span className="inline-block w-3.5 h-3.5 rounded-sm" style={{ background: portal.brandColor }} />
+          <span className="font-bold text-white">{portal.name}</span>
+          <span className="font-mono text-zinc-500 text-xs">/{portal.slug}</span>
+        </span>
+        <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 border border-zinc-700 text-zinc-300">{portal.plan}</span>
+        {portal.planExpiresAt && (
+          <span className={`text-xs font-mono ${degraded ? "text-red-400" : "text-zinc-500"}`}>
+            {degraded ? t("myExpired") : t("myUntil", { date: formatDate(new Date(portal.planExpiresAt), locale) })}
+          </span>
+        )}
+        <span className="text-xs font-mono text-zinc-500 ms-auto">👤 {portal.users} · {portal.tokenName} ({portal.tokenSymbol})</span>
+      </div>
+
+      {/* branding edit */}
+      <div className="border border-zinc-800 bg-zinc-950/70 p-6 space-y-4">
+        <h2 className="font-display text-lg text-white tracking-wider">{t("myBranding").toUpperCase()}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div><label className={label}>{t("name")}</label><input className={input} value={f.name} onChange={(e) => set("name")(e.target.value)} maxLength={60} /></div>
+          <div><label className={label}>{t("handle")}</label><input className={input} value={f.ownerHandle} onChange={(e) => set("ownerHandle")(e.target.value)} maxLength={40} /></div>
+          <div><label className={label}>{t("tokenName")}</label><input className={input} value={f.tokenName} onChange={(e) => set("tokenName")(e.target.value)} maxLength={40} /></div>
+          <div><label className={label}>{t("tokenSymbol")}</label><input className={`${input} font-mono`} value={f.tokenSymbol} onChange={(e) => set("tokenSymbol")(e.target.value)} maxLength={8} /></div>
+          <div>
+            <label className={label}>{t("color")}</label>
+            <div className="flex items-center gap-2">
+              <input type="color" value={f.brandColor} onChange={(e) => set("brandColor")(e.target.value)} className="h-9 w-12 bg-transparent border border-zinc-800 cursor-pointer" aria-label={t("color")} />
+              <span className="font-mono text-xs text-zinc-300">{f.brandColor}</span>
+            </div>
+          </div>
+          <div><label className={label}>{t("myLogo")}</label><input className={input} value={f.logoUrl} onChange={(e) => set("logoUrl")(e.target.value)} placeholder="https://…/logo.png" maxLength={300} /></div>
+        </div>
+        {error && <p className="text-sm text-red-400">⚠️ {error}</p>}
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={busy}
+          className="px-5 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-40 text-white text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2 transition-colors"
+        >
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          {saved ? t("mySaved") : t("mySave")}
+        </button>
+      </div>
+
+      {/* subscription */}
+      {billingReady && (
+        <div className="border border-zinc-800 bg-zinc-950/70 p-6 space-y-3">
+          <h2 className="font-display text-lg text-white tracking-wider">{t("mySubscription").toUpperCase()}</h2>
+          <p className="text-zinc-500 text-xs">{t("bActivateHint")}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {(["pro", "elite"] as const).map((p) => (
+              <button key={p} type="button" onClick={() => setSubPlan(p)}
+                className={`px-3 py-1.5 border text-xs font-mono uppercase tracking-widest transition-colors ${subPlan === p ? "border-red-600 bg-red-950/40 text-white" : "border-zinc-800 text-zinc-500 hover:text-white"}`}>
+                {p}
+              </button>
+            ))}
+            <span className="text-zinc-700">·</span>
+            {([1, 3, 6, 12] as const).map((m) => (
+              <button key={m} type="button" onClick={() => setMonths(m)}
+                className={`px-3 py-1.5 border text-xs font-mono uppercase tracking-widest transition-colors ${months === m ? "border-red-600 bg-red-950/40 text-white" : "border-zinc-800 text-zinc-500 hover:text-white"}`}>
+                {t("bMonths", { n: m })}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => void activate()}
+            disabled={busy}
+            className="px-5 py-2.5 bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2 transition-colors"
+          >
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+            {t("bActivate")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

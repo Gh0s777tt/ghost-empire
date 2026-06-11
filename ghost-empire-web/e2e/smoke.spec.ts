@@ -47,6 +47,17 @@ test.describe("public pages smoke", () => {
     await expect(page.getByText(/HOW DOES IT WORK\?/i).first()).toBeVisible();
   });
 
+  test("onboarding wizard requires sign-in (guest → signin redirect)", async ({ page }) => {
+    await page.goto("/onboarding");
+    await expect(page).toHaveURL(/auth\/signin/);
+    expect(page.url()).toContain("callbackUrl");
+  });
+
+  test("english onboarding route resolves", async ({ page }) => {
+    const res = await page.goto("/en/onboarding", { waitUntil: "domcontentloaded" });
+    expect(res!.status()).toBeLessThan(400);
+  });
+
   test("no Content-Security-Policy violations on key pages", async ({ page }) => {
     // Genuine CSP violations name the policy / a disallowed source. (We don't match
     // the generic "Refused to execute" — locally that also fires for the Vercel

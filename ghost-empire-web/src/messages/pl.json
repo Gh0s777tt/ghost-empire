@@ -50,6 +50,15 @@
     }
   },
   "onboarding": {
+    "myTitle": "MÓJ PORTAL",
+    "mySubtitle": "Status i ustawienia Twojego portalu. Zmiany brandingu działają od razu.",
+    "myBranding": "Branding",
+    "myLogo": "Logo URL",
+    "mySave": "Zapisz zmiany",
+    "mySaved": "Zapisano ✓",
+    "mySubscription": "Subskrypcja",
+    "myUntil": "aktywny do {date}",
+    "myExpired": "plan wygasł — portal działa w trybie Basic",
     "bSuccessTitle": "Płatność przyjęta!",
     "bSuccessBody": "Subskrypcja aktywuje się w ciągu minuty — plan i data ważności ustawią się automatycznie.",
     "bCancelled": "Płatność anulowana",
