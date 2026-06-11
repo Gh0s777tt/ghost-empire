@@ -72,6 +72,15 @@ export async function GET() {
         />
       </div>
     ),
-    { width: 1200, height: 630 },
+    {
+      width: 1200,
+      height: 630,
+      // Public, unauthenticated endpoint hit by social crawlers — let the edge
+      // serve it instead of re-rendering per request. Branding changes rarely;
+      // a rebrand shows up in link previews within the hour.
+      headers: {
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    },
   );
 }
