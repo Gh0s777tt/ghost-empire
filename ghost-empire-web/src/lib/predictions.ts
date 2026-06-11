@@ -160,6 +160,15 @@ export async function resolvePrediction(opts: {
         return { ok: false, status: 400, error: "Niepoprawny indeks opcji" } as const;
       }
 
+      // Atomically CLAIM the prediction here (not via the unguarded update at the
+      // end): updateMany row-locks, so a second concurrent resolve/cancel sees
+      // count 0 and bails — no double payout. Also stamps the final result fields.
+      const claim = await tx.prediction.updateMany({
+        where: { id: predictionId, status: { notIn: ["resolved", "cancelled"] }, ...(tid ? { tenantId: tid } : {}) },
+        data: { status: "resolved", resolvedOptionIndex: winningOptionIndex, resolvedAt: new Date() },
+      });
+      if (claim.count === 0) return { ok: false, status: 409, error: "Już rozstrzygnięty" } as const;
+
       const winners = prediction.entries.filter((e) => e.optionIndex === winningOptionIndex);
       const losers = prediction.entries.filter((e) => e.optionIndex !== winningOptionIndex);
       const totalPot = prediction.totalPot;
@@ -196,14 +205,7 @@ export async function resolvePrediction(opts: {
             },
           });
         }
-        await tx.prediction.update({
-          where: { id: predictionId },
-          data: {
-            status: "resolved",
-            resolvedOptionIndex: winningOptionIndex,
-            resolvedAt: new Date(),
-          },
-        });
+        // Status already set by the atomic claim above.
         return {
           ok: true,
           winnersCount: 0,
@@ -264,15 +266,7 @@ export async function resolvePrediction(opts: {
         });
       }
 
-      await tx.prediction.update({
-        where: { id: predictionId },
-        data: {
-          status: "resolved",
-          resolvedOptionIndex: winningOptionIndex,
-          resolvedAt: new Date(),
-        },
-      });
-
+      // Status already set by the atomic claim above.
       return {
         ok: true,
         winnersCount: winners.length,
@@ -310,6 +304,14 @@ export async function cancelPrediction(predictionId: string): Promise<{ ok: true
         return { ok: false, status: 409, error: "Już zamknięty" } as const;
       }
 
+      // Atomically CLAIM (→cancelled) before refunding — row lock stops a
+      // concurrent resolve/cancel from double-refunding the same wagers.
+      const claim = await tx.prediction.updateMany({
+        where: { id: predictionId, status: { notIn: ["resolved", "cancelled"] }, ...(tid ? { tenantId: tid } : {}) },
+        data: { status: "cancelled", resolvedAt: new Date() },
+      });
+      if (claim.count === 0) return { ok: false, status: 409, error: "Już zamknięty" } as const;
+
       for (const e of prediction.entries) {
         await tx.user.update({
           where: { id: e.userId },
@@ -336,11 +338,7 @@ export async function cancelPrediction(predictionId: string): Promise<{ ok: true
         });
       }
 
-      await tx.prediction.update({
-        where: { id: predictionId },
-        data: { status: "cancelled", resolvedAt: new Date() },
-      });
-
+      // Status already set by the atomic claim above.
       return { ok: true, refunded: prediction.entries.length } as const;
     });
   } catch (e) {

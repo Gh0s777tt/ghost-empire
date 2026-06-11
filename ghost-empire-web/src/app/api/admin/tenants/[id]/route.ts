@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePlatformOwner } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { normalizePlan } from "@/lib/entitlements";
+import { safeMediaUrl } from "@/lib/url-safe";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,8 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   str("tokenName", 40);
   str("tokenSymbol", 8);
   str("logoUrl", 300, { allowEmptyNull: true });
+  // logoUrl renders site-wide as <img src> — only absolute http(s) passes.
+  if (typeof data.logoUrl === "string") data.logoUrl = safeMediaUrl(data.logoUrl);
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }

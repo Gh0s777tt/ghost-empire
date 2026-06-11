@@ -98,8 +98,16 @@ export async function acceptDuel(opts: {
     if (!duel) return { ok: false, message: `@${accepterName} brak wyzwania do przyjęcia.` };
 
     const result = await prisma.$transaction(async (tx) => {
-      // Re-guard inside the tx: still pending + not expired (race with another accepter / expiry).
-      const fresh = await tx.duel.findFirst({ where: { id: duel.id, status: "pending", expiresAt: { gt: now } } });
+      // Atomically CLAIM the duel (pending→resolving). updateMany takes a row
+      // lock, so a second concurrent !accept (or the expiry sweep) blocks, then
+      // re-evaluates the WHERE against committed data and gets count 0 — closing
+      // the double-resolve TOCTOU a plain findFirst re-read can't (READ COMMITTED).
+      const claim = await tx.duel.updateMany({
+        where: { id: duel.id, status: "pending", expiresAt: { gt: now } },
+        data: { status: "resolving" },
+      });
+      if (claim.count === 0) throw new DuelError("stale");
+      const fresh = await tx.duel.findUnique({ where: { id: duel.id } });
       if (!fresh) throw new DuelError("stale");
 
       // Charge both stakes — a throw here rolls back any partial charge.

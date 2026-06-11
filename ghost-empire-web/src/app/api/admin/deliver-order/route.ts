@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
+import { currentTenantId } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
 
 export async function POST(req: Request) {
@@ -24,9 +25,17 @@ export async function POST(req: Request) {
 
   const tx = await prisma.transaction.findUnique({
     where: { id: transactionId },
-    include: { shopItem: true },
+    include: { shopItem: true, user: { select: { tenantId: true } } },
   });
   if (!tx) return NextResponse.json({ error: "Transakcja nie istnieje" }, { status: 404 });
+  // Tenant isolation: a tenant admin must not deliver/refund another portal's
+  // order. The platform owner manages across tenants (admin-of-admins).
+  if (!auth.isPlatformOwner) {
+    const tid = await currentTenantId();
+    if (tid && tx.user.tenantId && tx.user.tenantId !== tid) {
+      return NextResponse.json({ error: "Transakcja nie istnieje" }, { status: 404 });
+    }
+  }
   if (tx.type !== "spend") {
     return NextResponse.json({ error: "Tylko zakupy można oznaczyć" }, { status: 400 });
   }
