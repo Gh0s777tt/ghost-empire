@@ -145,7 +145,7 @@ async function handleSubscription(
     message: eventType === "channel.subscription.new" ? "zasubował kanał na Kicku" : "przedłużył sub na Kicku",
     icon: "💚",
     actorName: displayName ?? username ?? "Anonim",
-  });
+  }, tenantId);
 
   await incrementGoals("subs", 1, tenantId);
   void extendSubathon({ subs: 1 }, tenantId);
@@ -216,7 +216,7 @@ async function handleGiftSubs(payload: Record<string, unknown>, tenantId: string
     actorName: isAnonymous ? "Anonymous Gifter" : (gifterName ?? gifterLogin ?? "Anon"),
     amount: total,
     amountLabel: "sub" + (total === 1 ? "" : "y"),
-  });
+  }, tenantId);
 
   await incrementGoals("gift_subs", total, tenantId);
   await incrementGoals("subs", total, tenantId);
@@ -274,7 +274,7 @@ async function handleFollow(payload: Record<string, unknown>, tenantId: string |
     message: "zaobserwował kanał",
     icon: "💚",
     actorName: displayName ?? username ?? "Anonim",
-  });
+  }, tenantId);
 
   if (!username) return { userId: null, tokens: null };
 

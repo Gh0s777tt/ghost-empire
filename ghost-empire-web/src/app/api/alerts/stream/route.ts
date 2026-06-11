@@ -8,6 +8,7 @@
 import { isValidOverlayToken } from "@/lib/alerts";
 import { fetchAlertFeed } from "@/lib/alert-feed";
 import { sseFrame, sseStreamResponse } from "@/lib/sse";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs"; // Prisma (pg driver adapter) needs Node, not Edge.
@@ -15,7 +16,11 @@ export const maxDuration = 60; // Vercel Pro ceiling; the stream self-closes at 
 
 export async function GET(req: Request) {
   const token = new URL(req.url).searchParams.get("token");
-  if (!(await isValidOverlayToken(token))) {
+  // Tenant is resolved ONCE here (request Host — the OBS URL points at the
+  // tenant's subdomain) and captured by the tick closure: the SSE loop runs in
+  // a setTimeout outside the request scope, where headers() is unreliable.
+  const tenantId = await currentTenantId();
+  if (!(await isValidOverlayToken(token, tenantId))) {
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -27,7 +32,7 @@ export async function GET(req: Request) {
   return sseStreamResponse({
     signal: req.signal,
     onTick: async (send) => {
-      const feed = await fetchAlertFeed(cursor);
+      const feed = await fetchAlertFeed(cursor, tenantId);
       cursor = new Date(feed.now);
       // Settings every tick is cheap JSON; the client setState no-ops when values
       // are unchanged, so this keeps look-config live without churn.

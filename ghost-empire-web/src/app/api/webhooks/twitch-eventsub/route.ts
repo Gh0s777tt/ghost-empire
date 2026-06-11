@@ -158,17 +158,17 @@ export async function POST(req: Request) {
       matchedUserId = result.userId;
       tokensGranted = result.tokens;
     } else if (eventType === "channel.hype_train.begin") {
-      await handleHypeTrainBegin(event);
+      await handleHypeTrainBegin(event, tenantId);
     } else if (eventType === "channel.hype_train.progress") {
-      await handleHypeTrainProgress(event);
+      await handleHypeTrainProgress(event, tenantId);
     } else if (eventType === "channel.hype_train.end") {
-      await handleHypeTrainEnd(event);
+      await handleHypeTrainEnd(event, tenantId);
     } else if (eventType === "stream.online") {
       await handleStreamOnline(event);
     } else if (eventType === "stream.offline") {
       await handleStreamOffline();
     } else if (eventType === "channel.follow") {
-      await handleFollow(event);
+      await handleFollow(event, tenantId);
     } else {
       log.info("unhandled event type", { eventType });
     }
@@ -207,10 +207,11 @@ export async function POST(req: Request) {
 // New follower → store a `twitch_follow` StreamAlert directly (bypassing the
 // enabled-type filter in dispatchAlert) so the "last follower" widget always has
 // data. Not shown as an overlay popup unless `twitch_follow` is enabled.
-async function handleFollow(event: Record<string, unknown>): Promise<void> {
+async function handleFollow(event: Record<string, unknown>, tenantId: string | null): Promise<void> {
   const userName = (event.user_name as string) || (event.user_login as string) || "Anonim";
   await prisma.streamAlert.create({
     data: {
+      ...(tenantId ? { tenantId } : {}),
       type: "twitch_follow",
       title: "⭐ Nowy follow!",
       message: "zaobserwował kanał",
@@ -242,7 +243,7 @@ async function handleSubscribe(event: Record<string, unknown>, tenantId: string 
     message: "zasubował kanał",
     icon: "💜",
     actorName: userName ?? userLogin,
-  });
+  }, tenantId);
 
   // Bump any active "subs" stream goals
   await incrementGoals("subs", 1, tenantId);
@@ -316,7 +317,7 @@ async function handleGiftSub(event: Record<string, unknown>, tenantId: string | 
     actorName: isAnonymous ? "Anonymous Gifter" : (gifterName ?? gifterLogin ?? "Anon"),
     amount: total,
     amountLabel: "sub" + (total === 1 ? "" : "y"),
-  });
+  }, tenantId);
 
   // Bump goals — both gift_subs (count) and subs (because each gift = a sub for someone)
   await incrementGoals("gift_subs", total, tenantId);
@@ -385,7 +386,7 @@ async function handleCheer(event: Record<string, unknown>, tenantId: string | nu
       actorName: isAnonymous ? "Anonymous Cheerer" : (userName ?? userLogin ?? "Anon"),
       amount: bits,
       amountLabel: "bits",
-    });
+    }, tenantId);
     await incrementGoals("cheers_bits", bits, tenantId);
   }
 
@@ -442,7 +443,7 @@ async function handleCheer(event: Record<string, unknown>, tenantId: string | nu
 // Hype Train handlers
 // =====================================================
 
-async function handleHypeTrainBegin(event: Record<string, unknown>): Promise<void> {
+async function handleHypeTrainBegin(event: Record<string, unknown>, tenantId: string | null): Promise<void> {
   const total = (event.total as number) ?? 0;
   const progress = (event.progress as number) ?? 0;
   const goal = (event.goal as number) ?? 0;
@@ -454,7 +455,7 @@ async function handleHypeTrainBegin(event: Record<string, unknown>): Promise<voi
     goal: goal || progress + 100,  // fallback if API doesn't return goal
     total,
     expiresAt: expiresAt ?? new Date(Date.now() + 5 * 60_000),
-  });
+  }, tenantId);
 
   await dispatchAlertSafe({
     type: "twitch_cheer",  // reuse cheer alert visual
@@ -463,10 +464,10 @@ async function handleHypeTrainBegin(event: Record<string, unknown>): Promise<voi
     icon: "🚂",
     amount: level,
     amountLabel: "level",
-  });
+  }, tenantId);
 }
 
-async function handleHypeTrainProgress(event: Record<string, unknown>): Promise<void> {
+async function handleHypeTrainProgress(event: Record<string, unknown>, tenantId: string | null): Promise<void> {
   const total = (event.total as number) ?? 0;
   const progress = (event.progress as number) ?? 0;
   const goal = (event.goal as number) ?? 0;
@@ -483,14 +484,14 @@ async function handleHypeTrainProgress(event: Record<string, unknown>): Promise<
     total,
     topContributor,
     expiresAt: expiresAt ?? new Date(Date.now() + 5 * 60_000),
-  });
+  }, tenantId);
 }
 
-async function handleHypeTrainEnd(event: Record<string, unknown>): Promise<void> {
+async function handleHypeTrainEnd(event: Record<string, unknown>, tenantId: string | null): Promise<void> {
   const level = (event.level as number) ?? 1;
   const total = (event.total as number) ?? 0;
 
-  await setHypeTrainEnded();
+  await setHypeTrainEnded(tenantId);
 
   await dispatchAlertSafe({
     type: "twitch_cheer",
@@ -499,7 +500,7 @@ async function handleHypeTrainEnd(event: Record<string, unknown>): Promise<void>
     icon: "🏁",
     amount: total,
     amountLabel: "pkt",
-  });
+  }, tenantId);
 }
 
 // =====================================================

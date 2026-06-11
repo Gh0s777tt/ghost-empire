@@ -6,13 +6,15 @@
 import { NextResponse } from "next/server";
 import { isValidOverlayToken } from "@/lib/alerts";
 import { fetchAlertFeed } from "@/lib/alert-feed";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
-  if (!(await isValidOverlayToken(token))) {
+  const tenantId = await currentTenantId();
+  if (!(await isValidOverlayToken(token, tenantId))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -29,5 +31,5 @@ export async function GET(req: Request) {
     since = new Date(Date.now() - 10_000);
   }
 
-  return NextResponse.json(await fetchAlertFeed(since));
+  return NextResponse.json(await fetchAlertFeed(since, tenantId));
 }

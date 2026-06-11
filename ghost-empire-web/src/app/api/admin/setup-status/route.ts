@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getIntegrationConfig } from "@/lib/integrations";
+import { getSettings as getAlertSettings } from "@/lib/alerts";
 import { getTwitchStreamerToken, getKickStreamerToken, getYouTubeStreamerToken } from "@/lib/platform-tokens";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export async function GET() {
     prisma.twitchEventSubscription.count(),
     getKickStreamerToken(),
     getYouTubeStreamerToken(),
-    prisma.streamAlertSettings.findFirst(),
+    getAlertSettings(), // tenant-aware (Host-resolved); legacy "default" row in single-tenant mode
   ]);
 
   const items = [

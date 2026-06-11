@@ -82,6 +82,20 @@ async function main() {
   console.log(`   youTubeStreamerToken: attached ${yst.count} row(s)`);
   const slc = await prisma.streamlabsConnection.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   streamlabsConnection: attached ${slc.count} row(s)`);
+  // Phase 4 overlay pass: legacy singletons (id "default" rows gain a tenant)
+  const sas = await prisma.streamAlertSettings.updateMany({ where: { id: "default", tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   streamAlertSettings: attached ${sas.count} row(s)`);
+  const hts = await prisma.hypeTrainState.updateMany({ where: { id: "default", tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   hypeTrainState: attached ${hts.count} row(s)`);
+  const ecs = await prisma.emojiComboState.updateMany({ where: { id: "default", tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   emojiComboState: attached ${ecs.count} row(s)`);
+  // Phase 4 overlay pass: collections
+  const sa = await prisma.streamAlert.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   streamAlert: attached ${sa.count} row(s)`);
+  const cfm = await prisma.chatFeedMessage.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   chatFeedMessage: attached ${cfm.count} row(s)`);
+  const cw = await prisma.customWidget.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   customWidget: attached ${cw.count} row(s)`);
 
   await prisma.$disconnect();
 }

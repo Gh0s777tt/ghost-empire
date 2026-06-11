@@ -3,6 +3,7 @@
 // Storage is a DB queue; the overlay polls /api/alerts/queue.
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
 import type { AlertAnimation, AlertPosition, AlertTypeCfg } from "@/lib/alert-types";
 
@@ -40,12 +41,16 @@ export type AlertInput = {
  * Respects per-type enable flag from StreamAlertSettings — disabled types
  * are silently dropped so callers don't need to know.
  */
-export async function dispatchAlert(input: AlertInput): Promise<{ id: string } | null> {
-  const settings = await getSettings();
+export async function dispatchAlert(input: AlertInput, tenantId?: string | null): Promise<{ id: string } | null> {
+  // Tenant of the alert: webhook/poller callers pass the tenant they mapped
+  // from the event (#417); omitted → resolve from the request Host.
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  const settings = await getSettings(tid);
   if (!settings.enabledTypes.includes(input.type)) return null;
 
   const created = await prisma.streamAlert.create({
     data: {
+      ...(tid ? { tenantId: tid } : {}),
       type: input.type,
       title: input.title,
       message: input.message,
@@ -72,27 +77,38 @@ export async function dispatchAlert(input: AlertInput): Promise<{ id: string } |
 }
 
 /** Same as dispatchAlert but never throws — for use inside transactions. */
-export async function dispatchAlertSafe(input: AlertInput): Promise<void> {
+export async function dispatchAlertSafe(input: AlertInput, tenantId?: string | null): Promise<void> {
   try {
-    await dispatchAlert(input);
+    await dispatchAlert(input, tenantId);
   } catch (e) {
     console.error("[alerts] dispatch failed:", e, "input:", input.type);
   }
 }
 
-/** Settings singleton — lazy-created on first read; lazy-generates overlayToken too. */
-export async function getSettings() {
-  const existing = await prisma.streamAlertSettings.upsert({
-    where: { id: "default" },
-    create: { id: "default" },
-    update: {},
-  });
+/**
+ * Alert settings — one row per tenant (Phase 4 overlay pass), lazy-created on
+ * first read; lazy-generates overlayToken too. `tenantId`: undefined → resolve
+ * from the request Host, string → that tenant, null → legacy "default" row.
+ */
+export async function getSettings(tenantId?: string | null) {
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  const existing = tid
+    ? await prisma.streamAlertSettings.upsert({
+        where: { tenantId: tid },
+        create: { tenantId: tid },
+        update: {},
+      })
+    : await prisma.streamAlertSettings.upsert({
+        where: { id: "default" },
+        create: { id: "default" },
+        update: {},
+      });
 
   // Auto-generate the overlay token on first read so the admin never has to
   // hand-write env vars. Stored in DB, rotatable via the admin UI.
   if (!existing.overlayToken) {
     return prisma.streamAlertSettings.update({
-      where: { id: "default" },
+      where: { id: existing.id },
       data: { overlayToken: randomBytes(32).toString("hex") },
     });
   }
@@ -100,24 +116,29 @@ export async function getSettings() {
 }
 
 /** Regenerate the overlay token — invalidates the previous OBS browser source URL. */
-export async function regenerateOverlayToken() {
-  return prisma.streamAlertSettings.upsert({
-    where: { id: "default" },
-    create: { id: "default", overlayToken: randomBytes(32).toString("hex") },
-    update: { overlayToken: randomBytes(32).toString("hex") },
+export async function regenerateOverlayToken(tenantId?: string | null) {
+  const settings = await getSettings(tenantId); // ensures the row exists
+  return prisma.streamAlertSettings.update({
+    where: { id: settings.id },
+    data: { overlayToken: randomBytes(32).toString("hex") },
   });
 }
 
-/** Validates the overlay token from query/header. Reads DB first, falls back to env var (legacy). */
-export async function isValidOverlayToken(token: string | null | undefined): Promise<boolean> {
+/**
+ * Validates the overlay token from query/header against the CURRENT tenant's
+ * settings (Host-resolved by default), falling back to the legacy row and the
+ * env var — so existing OBS URLs keep working through the rollout.
+ */
+export async function isValidOverlayToken(token: string | null | undefined, tenantId?: string | null): Promise<boolean> {
   if (!token || typeof token !== "string") return false;
 
-  const settings = await prisma.streamAlertSettings.findUnique({
-    where: { id: "default" },
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  const rows = await prisma.streamAlertSettings.findMany({
+    where: { OR: [{ id: "default" }, ...(tid ? [{ tenantId: tid }] : [])] },
     select: { overlayToken: true },
   });
   const candidates: string[] = [];
-  if (settings?.overlayToken) candidates.push(settings.overlayToken);
+  for (const r of rows) if (r.overlayToken) candidates.push(r.overlayToken);
   const envToken = process.env.OVERLAY_TOKEN;
   if (envToken && envToken !== "REPLACE_WITH_HEX_32_BYTES") candidates.push(envToken);
 

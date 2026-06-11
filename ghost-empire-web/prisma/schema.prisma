@@ -672,6 +672,7 @@ model SongRequest {
 
 model ChatFeedMessage {
   id        String   @id @default(cuid())
+  tenantId  String?  // multi-tenant (Phase 4 overlay pass); null = legacy
   platform  String   // "twitch" | "kick" | "youtube"
   username  String
   message   String   @db.Text
@@ -680,6 +681,7 @@ model ChatFeedMessage {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+  @@index([tenantId, createdAt])
   @@map("chat_feed_messages")
 }
 
@@ -1123,6 +1125,7 @@ model DropClaim {
 
 model StreamAlert {
   id          String   @id @default(cuid())
+  tenantId    String?  // multi-tenant (Phase 4 overlay pass); null = legacy
   type        String   // "shop_purchase" | "event_win" | "drop_claim_bonus" | "twitch_sub" | "twitch_gift_sub" | "twitch_cheer" | "donation" | "welcome" | "level_up" | "test"
 
   title       String
@@ -1143,6 +1146,7 @@ model StreamAlert {
   shownAt     DateTime?  // set when overlay first picks it up
 
   @@index([createdAt])
+  @@index([tenantId, createdAt])
   @@map("stream_alerts")
 }
 
@@ -1341,7 +1345,8 @@ model StreamGoal {
 // =====================================================
 
 model HypeTrainState {
-  id              String    @id @default("default")
+  id              String    @id @default(cuid())   // legacy singleton rows keep id "default"
+  tenantId        String?   @unique                // one hype-train state per tenant (null = legacy)
   active          Boolean   @default(false)
   level           Int       @default(0)
   goal            Int       @default(0)    // points needed to reach next level
@@ -1401,7 +1406,8 @@ model YouTubeEvent {
 }
 
 model StreamAlertSettings {
-  id              String   @id @default("default")
+  id              String   @id @default(cuid())     // legacy singleton rows keep id "default"
+  tenantId        String?  @unique                  // one settings row per tenant (null = legacy)
   enabledTypes    String[] @default(["shop_purchase","event_win","drop_claim_bonus","twitch_sub","twitch_gift_sub","twitch_cheer","donation","welcome","level_up","test"])
   durationMs      Int      @default(6000)
   accentColor     String   @default("#E50914")
@@ -1548,6 +1554,7 @@ model CustomAlert {
 // =====================================================
 model CustomWidget {
   id          String   @id @default(cuid())
+  tenantId    String?  // multi-tenant (Phase 4 overlay pass); null = legacy
   name        String                              // admin-facing label
   text        String   @db.Text                   // displayed text (emoji/Unicode ok)
   accentColor String   @default("#E50914")        // card border / accent
@@ -1563,6 +1570,7 @@ model CustomWidget {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([tenantId])
   @@map("custom_widgets")
 }
 
@@ -1571,7 +1579,8 @@ model CustomWidget {
 // it here; the /overlay/emoji-combo OBS source reads it (active only if fresh).
 // =====================================================
 model EmojiComboState {
-  id        String   @id @default("default")
+  id        String   @id @default(cuid())   // legacy singleton rows keep id "default"
+  tenantId  String?  @unique                // one combo state per tenant (null = legacy)
   emoji     String   @default("")
   count     Int      @default(0)
   updatedAt DateTime @updatedAt

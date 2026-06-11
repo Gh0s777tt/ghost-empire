@@ -59,31 +59,29 @@ export async function setHypeTrainStart(opts: {
   goal: number;
   total: number;
   expiresAt: Date;
-}): Promise<void> {
-  await prisma.hypeTrainState
-    .upsert({
-      where: { id: "default" },
-      create: {
-        id: "default",
-        active: true,
-        level: opts.level,
-        goal: opts.goal,
-        total: opts.total,
-        startedAt: new Date(),
-        expiresAt: opts.expiresAt,
-        endedAt: null,
-      },
-      update: {
-        active: true,
-        level: opts.level,
-        goal: opts.goal,
-        total: opts.total,
-        startedAt: new Date(),
-        expiresAt: opts.expiresAt,
-        endedAt: null,
-      },
-    })
-    .catch((e) => console.error("[hype-train] start failed:", e));
+}, tenantId?: string | null): Promise<void> {
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  const data = {
+    active: true,
+    level: opts.level,
+    goal: opts.goal,
+    total: opts.total,
+    startedAt: new Date(),
+    expiresAt: opts.expiresAt,
+    endedAt: null,
+  };
+  await (tid
+    ? prisma.hypeTrainState.upsert({
+        where: { tenantId: tid },
+        create: { tenantId: tid, ...data },
+        update: data,
+      })
+    : prisma.hypeTrainState.upsert({
+        where: { id: "default" },
+        create: { id: "default", ...data },
+        update: data,
+      })
+  ).catch((e) => console.error("[hype-train] start failed:", e));
 }
 
 export async function setHypeTrainProgress(opts: {
@@ -92,27 +90,35 @@ export async function setHypeTrainProgress(opts: {
   total: number;
   topContributor: string | null;
   expiresAt: Date;
-}): Promise<void> {
-  await prisma.hypeTrainState
-    .update({
-      where: { id: "default" },
-      data: {
-        active: true,
-        level: opts.level,
-        goal: opts.goal,
-        total: opts.total,
-        topContributor: opts.topContributor,
-        expiresAt: opts.expiresAt,
-      },
-    })
-    .catch(() => {});
+}, tenantId?: string | null): Promise<void> {
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  const data = {
+    active: true,
+    level: opts.level,
+    goal: opts.goal,
+    total: opts.total,
+    topContributor: opts.topContributor,
+    expiresAt: opts.expiresAt,
+  };
+  await (tid
+    ? prisma.hypeTrainState.upsert({
+        where: { tenantId: tid },
+        create: { tenantId: tid, ...data },
+        update: data,
+      })
+    : prisma.hypeTrainState.update({ where: { id: "default" }, data })
+  ).catch(() => {});
 }
 
-export async function setHypeTrainEnded(): Promise<void> {
-  await prisma.hypeTrainState
-    .update({
-      where: { id: "default" },
-      data: { active: false, endedAt: new Date() },
-    })
-    .catch(() => {});
+export async function setHypeTrainEnded(tenantId?: string | null): Promise<void> {
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  const data = { active: false, endedAt: new Date() };
+  await (tid
+    ? prisma.hypeTrainState.upsert({
+        where: { tenantId: tid },
+        create: { tenantId: tid, ...data },
+        update: data,
+      })
+    : prisma.hypeTrainState.update({ where: { id: "default" }, data })
+  ).catch(() => {});
 }

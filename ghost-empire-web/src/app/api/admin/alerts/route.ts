@@ -123,19 +123,12 @@ export async function POST(req: Request) {
       textColor = body.textColor;
     }
 
-    const updated = await prisma.streamAlertSettings.upsert({
-      where: { id: "default" },
-      create: {
-        id: "default",
-        ...(enabledTypes ? { enabledTypes } : {}),
-        ...(durationMs !== undefined ? { durationMs } : {}),
-        ...(accentColor ? { accentColor } : {}),
-        ...(soundEnabled !== undefined ? { soundEnabled } : {}),
-        ...(sizeScale !== undefined ? { sizeScale } : {}),
-        ...(textScale !== undefined ? { textScale } : {}),
-        ...(textColor ? { textColor } : {}),
-      },
-      update: {
+    // getSettings() resolves (and lazy-creates) the CURRENT tenant's settings row
+    // (legacy "default" row in single-tenant mode) — update by its real id.
+    const settings = await getSettings();
+    const updated = await prisma.streamAlertSettings.update({
+      where: { id: settings.id },
+      data: {
         ...(enabledTypes ? { enabledTypes } : {}),
         ...(durationMs !== undefined ? { durationMs } : {}),
         ...(accentColor ? { accentColor } : {}),

@@ -250,7 +250,7 @@ export async function pollAndProcessDonations(): Promise<{
         actorImage: matchedUser?.image ?? undefined,
         amount: Math.round(amountFloat * 100) / 100,
         amountLabel: d.currency,
-      });
+      }, conn.tenantId);
 
       // Achievements — donation count + cumulative PLN
       await checkAndGrantAchievements({ userId: match.userId, triggerType: "donations_count" });
@@ -284,7 +284,7 @@ export async function pollAndProcessDonations(): Promise<{
         actorName: d.name,
         amount: Math.round(amountFloat * 100) / 100,
         amountLabel: d.currency,
-      });
+      }, conn.tenantId);
 
       unmatched++;
     }

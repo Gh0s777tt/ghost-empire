@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 
 const POSITIONS = ["top-left", "top-center", "top-right", "center", "bottom-left", "bottom-center", "bottom-right"];
 
@@ -14,7 +15,11 @@ const clampInt = (v: unknown, min: number, max: number, fb: number) =>
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const widgets = await prisma.customWidget.findMany({ orderBy: { createdAt: "desc" } });
+  const tid = await currentTenantId();
+  const widgets = await prisma.customWidget.findMany({
+    where: { ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
+    orderBy: { createdAt: "desc" },
+  });
   return NextResponse.json({ widgets });
 }
 
@@ -26,6 +31,11 @@ export async function POST(req: Request) {
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+
+  // Tenant guard: list/update/delete only see the current tenant's widgets
+  // (legacy NULL-tenant rows included until backfill).
+  const tid = await currentTenantId();
+  const tenantWhere = tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {};
 
   if (body.action === "create" || body.action === "update") {
     const data = {
@@ -44,16 +54,24 @@ export async function POST(req: Request) {
     };
     if (body.action === "update") {
       if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
-      const widget = await prisma.customWidget.update({ where: { id: String(body.id) }, data });
+      const { count } = await prisma.customWidget.updateMany({
+        where: { id: String(body.id), ...tenantWhere },
+        data,
+      });
+      if (count === 0) return NextResponse.json({ error: "Nie znaleziono widgetu" }, { status: 404 });
+      const widget = await prisma.customWidget.findUnique({ where: { id: String(body.id) } });
       return NextResponse.json({ ok: true, widget });
     }
-    const widget = await prisma.customWidget.create({ data });
+    const widget = await prisma.customWidget.create({ data: { ...(tid ? { tenantId: tid } : {}), ...data } });
     return NextResponse.json({ ok: true, widget });
   }
 
   if (body.action === "delete") {
     if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
-    await prisma.customWidget.delete({ where: { id: String(body.id) } }).catch(() => {});
+    const { count } = await prisma.customWidget.deleteMany({
+      where: { id: String(body.id), ...tenantWhere },
+    });
+    if (count === 0) return NextResponse.json({ error: "Nie znaleziono widgetu" }, { status: 404 });
     return NextResponse.json({ ok: true });
   }
 
