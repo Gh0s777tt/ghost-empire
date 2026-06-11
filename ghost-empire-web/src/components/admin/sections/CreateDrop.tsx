@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Gift, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 export function CreateDropCard({
   onToast, onSuccess, pending,
@@ -13,6 +14,7 @@ export function CreateDropCard({
   pending: boolean;
 }) {
   const t = useTranslations("admin.createDrop");
+  const { tokenSymbol } = useTenantBranding();
   const [code, setCode] = useState("");
   const [reward, setReward] = useState("500");
   const [bonusReward, setBonusReward] = useState("1000");
@@ -57,8 +59,8 @@ export function CreateDropCard({
           placeholder={t("phCode")}
         />
         <div className="grid grid-cols-2 gap-2">
-          <FieldInput label="Reward GT" value={reward} onChange={setReward} type="number" />
-          <FieldInput label="Bonus GT" value={bonusReward} onChange={setBonusReward} type="number" />
+          <FieldInput label={`Reward ${tokenSymbol}`} value={reward} onChange={setReward} type="number" />
+          <FieldInput label={`Bonus ${tokenSymbol}`} value={bonusReward} onChange={setBonusReward} type="number" />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <FieldInput label="Bonus slots" value={bonusSlots} onChange={setBonusSlots} type="number" />

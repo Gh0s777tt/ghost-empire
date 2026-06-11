@@ -7,6 +7,7 @@ import { fmt, cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { PredictionOverlayCard } from "@/components/PredictionOverlayCard";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type PredictionRow = {
   id: string;
@@ -34,6 +35,7 @@ export function PredictionsManager({
   const t = useTranslations("admin.predictions");
   const locale = useLocale();
   const nf = locale;
+  const { tokenSymbol } = useTenantBranding();
   const [loading, setLoading] = useState(true);
   const [predictions, setPredictions] = useState<PredictionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -211,7 +213,7 @@ export function PredictionsManager({
                         {isResolved && <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-700 bg-zinc-900/60 text-zinc-300">RESOLVED</span>}
                         {isCancelled && <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-800 text-zinc-500">CANCELLED</span>}
                         <span className="text-[10px] font-mono text-zinc-500">
-                          {p.entriesCount} {p.entriesCount === 1 ? "wager" : "wagers"} · {t("potWord")} {fmt(p.totalPot, locale)} GT
+                          {p.entriesCount} {p.entriesCount === 1 ? "wager" : "wagers"} · {t("potWord")} {fmt(p.totalPot, locale)} {tokenSymbol}
                         </span>
                         {p.closesAt && isOpen && (
                           <span className="text-[10px] font-mono text-orange-400">
@@ -237,7 +239,7 @@ export function PredictionsManager({
                           <span className="font-mono text-[10px] text-zinc-500 shrink-0">#{idx + 1}</span>
                           <span className="text-white flex-1 truncate">{label}</span>
                           <span className="font-mono text-[10px] text-zinc-400 tabular-nums shrink-0">
-                            {fmt(b?.total ?? 0, locale)} GT · {b?.count ?? 0} · {pct.toFixed(0)}%
+                            {fmt(b?.total ?? 0, locale)} {tokenSymbol} · {b?.count ?? 0} · {pct.toFixed(0)}%
                           </span>
                           {(isOpen || isLocked) && (
                             <button

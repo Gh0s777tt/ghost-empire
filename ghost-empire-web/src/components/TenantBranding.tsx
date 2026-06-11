@@ -14,6 +14,8 @@ export type TenantBrandingValue = {
   owner: string;
   /** Tenant logo url; null = default skull mark. */
   logoUrl: string | null;
+  /** Tenant accent color (hex) — same value the layout feeds into --brand. */
+  brandColor: string;
 };
 
 const TenantBrandingContext = createContext<TenantBrandingValue>({
@@ -23,6 +25,7 @@ const TenantBrandingContext = createContext<TenantBrandingValue>({
   brandShort: "Ghost Empire",
   owner: "Gh0s77tt",
   logoUrl: null,
+  brandColor: "#E50914",
 });
 
 export function TenantBrandingProvider({

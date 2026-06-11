@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShieldCheck, Loader2, Zap, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
+import { useTenantBranding } from "@/components/TenantBranding";
 import { SectionCard } from "../shared";
 import type { TwitchEventSubData } from "../types";
 
@@ -17,6 +18,7 @@ export function TwitchEventSubManager({
 }) {
   const t = useTranslations("admin.twitchEventSub");
   const nf = useLocale();
+  const { tokenSymbol } = useTenantBranding();
   const EVENT_TYPE_LABEL = t.raw("eventType") as Record<string, string>;
   const [busy, setBusy] = useState(false);
 
@@ -155,7 +157,7 @@ export function TwitchEventSubManager({
                       {EVENT_TYPE_LABEL[e.type] ?? e.type}
                     </span>
                     {e.tokensGranted ? (
-                      <span className="text-green-400">+{e.tokensGranted.toLocaleString(nf)} GT</span>
+                      <span className="text-green-400">+{e.tokensGranted.toLocaleString(nf)} {tokenSymbol}</span>
                     ) : (
                       <span className="text-zinc-600">(unmatched)</span>
                     )}

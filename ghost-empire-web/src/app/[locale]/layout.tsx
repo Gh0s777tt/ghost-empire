@@ -49,6 +49,7 @@ export default async function LocaleLayout({
     brandShort: tenant.shortName,
     owner: tenant.ownerHandle,
     logoUrl: tenant.logoUrl,
+    brandColor: tenant.brandColor,
   };
   // Tenant accent → CSS variables; globals.css derives every red/glow from these.
   const brandStyle = {

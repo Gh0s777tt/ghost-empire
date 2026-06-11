@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Radio, Loader2, Zap, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type KickData = {
   streamerConnected: boolean;
@@ -35,6 +36,7 @@ export function KickEventsManager({
 }) {
   const t = useTranslations("admin.kickEvents");
   const nf = useLocale();
+  const { tokenSymbol } = useTenantBranding();
   const KICK_EVENT_LABEL = t.raw("eventLabel") as Record<string, string>;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<KickData | null>(null);
@@ -194,7 +196,7 @@ export function KickEventsManager({
                       {KICK_EVENT_LABEL[e.type] ?? e.type}
                     </span>
                     {e.tokensGranted ? (
-                      <span className="text-green-400">+{e.tokensGranted.toLocaleString(nf)} GT</span>
+                      <span className="text-green-400">+{e.tokensGranted.toLocaleString(nf)} {tokenSymbol}</span>
                     ) : (
                       <span className="text-zinc-600">(unmatched / no reward)</span>
                     )}
