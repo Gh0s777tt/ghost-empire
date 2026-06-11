@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Performance
 
+- **Sezon: cache w hot-path nagród (audyt #450)** — `getOrCreateCurrentSeason()` robił `updateMany` (WRITE „deaktywuj wygasłe") + `findUnique` na **każde** wywołanie — w tym ścieżkę nagród czatu (per wiadomość). Sezon jest globalny (jeden wiersz/`number` miesiąca) i zmienia się raz w miesiącu → cache in-process ~5 min (jedyna nieświeżość: kilka minut na przełomie miesiąca, kosmetyczna — XP ląduje na serwowanym id sezonu); `invalidateSeasonCache()` wpięte w admin `update_season`, by edycja widać było od razu. Zielone: `tsc`/**234 testy**/`build`.
+
 - **i18n: memoizacja zmergowanego katalogu per locale (audyt #449)** — `deepMerge(en, localized)` (~2200 kluczy, fallback brakujących tłumaczeń do EN) liczył się na **każde żądanie** ZANIM cache `brandedMessages` mógł zadziałać (cache'uje tylko wynik podmiany brandingu, nie wejście). Teraz katalog jest memoizowany raz per locale (≤14 wpisów, statyczny JSON nie zmienia się w runtime); zachowana semantyka `brandKey` (locale brakujące/EN dzielą klucz cache brandingu „en"). Mniej pracy CPU na render każdej strony pod force-dynamic. Zachowanie 1:1. Zielone: `tsc`/**234 testy**/`build`.
 
 ### Changed

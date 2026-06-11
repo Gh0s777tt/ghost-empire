@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
-import { getOrCreateCurrentSeason } from "@/lib/seasons";
+import { getOrCreateCurrentSeason, invalidateSeasonCache } from "@/lib/seasons";
 
 const REWARD_TYPES = ["tokens", "badge", "title", "color", "shop_unlock", "item", "code"];
 
@@ -79,6 +79,7 @@ export async function POST(req: Request) {
     if (typeof body.name === "string" && body.name.trim()) patch.name = body.name.trim().slice(0, 120);
     if (typeof body.description === "string") patch.description = body.description.slice(0, 1000);
     const updated = await prisma.season.update({ where: { id: body.seasonId }, data: patch });
+    invalidateSeasonCache(); // reflect the edit immediately, don't wait out the TTL
     return NextResponse.json({ ok: true, season: { id: updated.id, name: updated.name } });
   }
 

@@ -40,11 +40,36 @@ function monthBounds(now = new Date()): { start: Date; end: Date; number: number
   return { start, end, number, label };
 }
 
+// Seasons are global (one row per month `number`) and change once a month, yet
+// this ran an updateMany WRITE + findUnique on EVERY call — including the chat
+// award hot path (per message). Cache the resolved season briefly in-process;
+// the only staleness is a few minutes at the month rollover (cosmetic — the XP
+// just lands on the season whose id we serve). TTL well under a month.
+let seasonCache: { number: number; at: number; season: Awaited<ReturnType<typeof loadCurrentSeason>> } | null = null;
+const SEASON_CACHE_MS = 5 * 60_000;
+
 /**
  * Returns the current active season, creating it lazily on first call of the month.
- * Also deactivates any season whose endsAt has passed.
+ * Also deactivates any season whose endsAt has passed. Cached ~5 min in-process.
  */
 export async function getOrCreateCurrentSeason() {
+  const { number } = monthBounds();
+  const now = Date.now();
+  if (seasonCache && seasonCache.number === number && now - seasonCache.at < SEASON_CACHE_MS) {
+    return seasonCache.season;
+  }
+  const season = await loadCurrentSeason();
+  seasonCache = { number, at: now, season };
+  return season;
+}
+
+/** Drop the in-process season cache — call after an admin edits the current season
+ *  so the change shows immediately instead of after the TTL. */
+export function invalidateSeasonCache(): void {
+  seasonCache = null;
+}
+
+async function loadCurrentSeason() {
   const { start, end, number, label } = monthBounds();
 
   // Deactivate expired seasons (best-effort)
