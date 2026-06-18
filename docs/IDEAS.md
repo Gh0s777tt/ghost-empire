@@ -32,11 +32,8 @@ Widmowy kompan; widzowie karmią go GT (**realny spust!**), ewoluuje przez 6 eta
 - **UI:** kafelek na `/profile` + sekcja `/admin` (etapy/koszty) + overlay `/overlay/companion?token=`.
 - **Wysiłek:** M. **⚠️ db push.** Idle-mechaniki są ekstremalnie lepkie → silny hak retencyjny, biały obszar na rynku streamerskim.
 
-### 🛡️ Klany / drużyny — 🤖
-Widzowie tworzą grupy: wspólna pula GT, ranking klanowy, eventy klan-vs-klan.
-- **Modele:** `Clan { id, tenantId, name, tag, ownerUserId, treasury }` + `ClanMember { clanId, userId, role }`.
-- **Logika:** wkłady do skarbca (spend GT), ranking sumą XP/aktywności członków, sezonowe wojny (re-use `Season`).
-- **Wysiłek:** M–L. **⚠️ db push.** Pogłębia graf społeczny = retencja.
+### 🛡️ Klany / drużyny — ✅ MVP DOWIEZIONY
+Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking klanów. **MVP na produkcji:** model `Clan` + `User.clanId/clanRole` (jeden klan/usera), `lib/clans.ts` (walidacja tag/nazwa/wpłata, +4 testy), strona `/clans` (załóż/dołącz/wpłać/opuść + ranking skarbców), atomowe spendy (wzorzec sklepu), link w nawigacji (grupa SPOŁECZNOŚĆ), i18n PL/EN. **⚠️ wymaga `db push`.** **Follow-up:** wojny klan-vs-klan (re-use `Season`), perki ze skarbca, sekcja admina.
 
 ### 🧩 Wizualny builder overlayów (no-code canvas) — 🤖🎨
 Upgrade generatora widgetów (`CustomWidget`) do edytora drag-drop „Figma dla overlayów": warstwy, pozycja, fonty/gradienty (masz F1/F5), bindowanie danych (last sub/donator/viewers).

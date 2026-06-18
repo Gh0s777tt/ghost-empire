@@ -128,6 +128,9 @@ model User {
   duelsWon        Duel[]      @relation("DuelWinner")
   heistEntries    HeistEntry[]
   companion       Companion?
+  clanId          String?
+  clanRole        String?     // "owner" | "member" within `clan`
+  clan            Clan?       @relation("ClanMembers", fields: [clanId], references: [id])
 
   // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
   // turn full-table scan+sort into index range scans on free-tier Postgres.
@@ -136,6 +139,7 @@ model User {
   @@index([level, xp])
   @@index([streak])
   @@index([tenantId])
+  @@index([clanId])
   @@map("users")
 }
 
@@ -156,6 +160,26 @@ model Companion {
 
   @@index([tenantId])
   @@map("companions")
+}
+
+// A clan/team: viewers band together and pool GT into a shared treasury (a real
+// economy SINK), then climb the clan leaderboard. One clan per user (User.clanId);
+// `ownerUserId` is the founder (plain id used for permission checks, not a relation).
+model Clan {
+  id          String   @id @default(cuid())
+  tenantId    String?
+  name        String
+  tag         String
+  ownerUserId String
+  treasury    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  members     User[]   @relation("ClanMembers")
+
+  @@unique([tenantId, tag])
+  @@index([tenantId])
+  @@index([treasury])
+  @@map("clans")
 }
 
 model Account {
