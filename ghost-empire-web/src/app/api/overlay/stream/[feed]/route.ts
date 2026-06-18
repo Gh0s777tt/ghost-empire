@@ -10,6 +10,7 @@ import { isValidOverlayToken } from "@/lib/alerts";
 import { getOverlayFeed } from "@/lib/overlay-feeds";
 import { sseFrame, sseStreamResponse } from "@/lib/sse";
 import { currentTenantId } from "@/lib/tenant";
+import { featureGateResponse } from "@/lib/entitlements";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs"; // Prisma (pg driver adapter) needs Node, not Edge.
@@ -30,6 +31,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ feed: string }>
   if (!(await isValidOverlayToken(token, tenantId))) {
     return new Response("Unauthorized", { status: 401 });
   }
+
+  // Overlays are a pro feature — gate the data feed so a basic/downgraded tenant's
+  // OBS sources go dark (the token alone doesn't encode entitlement).
+  const gated = await featureGateResponse("overlays");
+  if (gated) return gated;
 
   // Snapshot the query (e.g. widget `id`) for the producer; URLSearchParams is
   // bound to the request, so capture it before the request is consumed.

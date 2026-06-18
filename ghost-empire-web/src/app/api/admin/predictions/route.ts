@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { resolvePrediction, cancelPrediction, lockExpiredPredictions, MAX_OPTIONS } from "@/lib/predictions";
 import { currentTenantId } from "@/lib/tenant";
+import { featureGateResponse } from "@/lib/entitlements";
 
 export async function GET() {
   const auth = await requirePermission("create_events"); // reuse — same trust level as event creators
@@ -78,6 +79,8 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "create") {
+    const gated = await featureGateResponse("predictions");
+    if (gated) return gated;
     const question = (body.question ?? "").trim();
     if (!question || question.length < 5 || question.length > 500) {
       return NextResponse.json({ error: "Pytanie 5-500 znaków" }, { status: 400 });

@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { isValidOverlayToken } from "@/lib/alerts";
 import { getOverlayFeed } from "@/lib/overlay-feeds";
 import { currentTenantId } from "@/lib/tenant";
+import { featureGateResponse } from "@/lib/entitlements";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ feed: string }>
   if (!(await isValidOverlayToken(token, tenantId))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // Overlays are a pro feature — gate the polled fallback too, else the SSE gate
+  // (/api/overlay/stream/[feed]) is trivially bypassed by falling back to polling.
+  const gated = await featureGateResponse("overlays");
+  if (gated) return gated;
   // The custom-widget feed needs an explicit id (preserves the old per-route 400).
   if (feed === "widget" && !url.searchParams.get("id")) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
