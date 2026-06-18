@@ -3,7 +3,8 @@
 // check, far cheaper than two Postgres round-trips through the small pooler, which
 // matters on the per-chat-message hot path. Falls back to the DB limiter when
 // Redis isn't configured OR errors (so behavior is never worse than the proven
-// DB path); both fail-open on their own errors (never block legit traffic).
+// DB path). Both fail OPEN by default (a DB-backed op fails anyway, so the bypass
+// opens nothing); a CPU-heavy non-DB caller can pass failClosed to block instead.
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
@@ -48,6 +49,7 @@ export async function rateLimit(
   key: string,
   maxHits: number,
   windowMs: number,
+  opts?: { failClosed?: boolean },
 ): Promise<RateLimitResult> {
   if (redis) {
     try {
@@ -57,13 +59,14 @@ export async function rateLimit(
       log.warn("redis rate-limit failed, falling back to DB", { error: (e as Error).message });
     }
   }
-  return rateLimitDb(key, maxHits, windowMs);
+  return rateLimitDb(key, maxHits, windowMs, opts?.failClosed ?? false);
 }
 
 async function rateLimitDb(
   key: string,
   maxHits: number,
   windowMs: number,
+  failClosed = false,
 ): Promise<RateLimitResult> {
   const now = new Date();
   const windowStart = new Date(now.getTime() - windowMs);
@@ -127,8 +130,14 @@ async function rateLimitDb(
       resetAt: bucket.expiresAt,
     };
   } catch (e) {
-    // On DB error — fail-open (don't block legitimate traffic).
-    log.error("DB error, allowing request", e);
+    // DB-backed endpoints fail OPEN (the underlying write fails anyway, so bypassing
+    // the limit opens nothing); CPU-heavy non-DB callers (e.g. the OG render) pass
+    // failClosed so an outage can't turn the limiter into an amplifier.
+    log.error(`DB error, ${failClosed ? "blocking" : "allowing"} request`, e);
+    if (failClosed) {
+      const retryAfterSeconds = Math.max(1, Math.ceil(windowMs / 1000));
+      return { allowed: false, remaining: 0, resetAt: new Date(now.getTime() + windowMs), retryAfterSeconds };
+    }
     return { allowed: true, remaining: maxHits, resetAt: new Date(now.getTime() + windowMs) };
   }
 }

@@ -200,5 +200,9 @@ export function verifyEventSubSignature(
 // === Time-based replay protection (Twitch sends timestamp on each message) ===
 export function isMessageFresh(timestamp: string, maxAgeMinutes = 10): boolean {
   const messageTime = new Date(timestamp).getTime();
-  return Math.abs(Date.now() - messageTime) < maxAgeMinutes * 60_000;
+  if (Number.isNaN(messageTime)) return false;
+  // age > 0 = past, < 0 = future. Reject replays (too old) AND spoofed far-future
+  // timestamps; tolerate ~2 min of clock skew on the future side.
+  const age = Date.now() - messageTime;
+  return age < maxAgeMinutes * 60_000 && age > -2 * 60_000;
 }

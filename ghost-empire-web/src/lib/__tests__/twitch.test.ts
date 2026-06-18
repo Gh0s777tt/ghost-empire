@@ -63,4 +63,11 @@ describe("isMessageFresh", () => {
     expect(isMessageFresh(fiveMinAgo, 10)).toBe(true);
     expect(isMessageFresh(fiveMinAgo, 2)).toBe(false);
   });
+
+  it("rejects a far-future timestamp but tolerates small clock skew", () => {
+    // A spoofed future timestamp used to pass (Math.abs); now it must be rejected.
+    expect(isMessageFresh(new Date(Date.now() + 20 * 60_000).toISOString())).toBe(false);
+    // ...while a minute of legit clock skew on the future side is still accepted.
+    expect(isMessageFresh(new Date(Date.now() + 60_000).toISOString())).toBe(true);
+  });
 });
