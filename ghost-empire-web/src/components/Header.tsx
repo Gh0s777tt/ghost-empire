@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
-// Locale-aware Link + usePathname (next-intl): links auto-carry the active locale
-// (add /en when needed); usePathname returns the path WITHOUT the locale prefix.
-import { Link, usePathname } from "@/i18n/navigation";
+// Locale-aware usePathname (next-intl): returns the path WITHOUT the locale prefix.
+// Links use TransitionLink — a drop-in for next-intl's <Link> that adds a View
+// Transition crossfade between pages (locale routing preserved; degrades gracefully).
+import { usePathname } from "@/i18n/navigation";
+import { TransitionLink as Link } from "@/components/TransitionLink";
 import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, HelpCircle, type LucideIcon } from "lucide-react";
 import { displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
