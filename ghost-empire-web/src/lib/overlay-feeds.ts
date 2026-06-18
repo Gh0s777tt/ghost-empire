@@ -12,6 +12,7 @@ import { getRumbleStatus } from "@/lib/rumble";
 import { getWheelConfig } from "@/lib/wheel";
 import { lockExpiredPredictions } from "@/lib/predictions";
 import { displayNick } from "@/lib/utils";
+import { companionStage } from "@/lib/companion";
 import { cacheJson } from "@/lib/redis";
 import { getAppAccessToken, helixGet } from "@/lib/twitch";
 import { getTwitchStreamerToken } from "@/lib/platform-tokens";
@@ -27,7 +28,8 @@ export type OverlayFeedKey =
   | "wheel"
   | "widget"
   | "chat"
-  | "viewers";
+  | "viewers"
+  | "companion";
 
 export type OverlayFeedDef = {
   /**
@@ -332,6 +334,18 @@ async function viewersFeed(_p: URLSearchParams, tid: string | null): Promise<unk
   });
 }
 
+// Champion Companion: the top pet by xp in the tenant — shown on stream to drive
+// the feeding sink (feed yours to claim the spotlight).
+async function companionFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const c = await prisma.companion.findFirst({
+    where: { ...tidWhere(tid), xp: { gt: 0 } },
+    orderBy: { xp: "desc" },
+    select: { name: true, xp: true, user: { select: { displayName: true, username: true } } },
+  });
+  if (!c) return { exists: false };
+  return { exists: true, name: c.name, xp: c.xp, owner: displayNick(c.user.displayName, c.user.username), emoji: companionStage(c.xp).emoji };
+}
+
 /**
  * Wrap a producer so that all OBS connections to the SAME feed+tenant share ONE
  * execution per tick instead of each running its own DB query loop. TTL =
@@ -359,6 +373,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   wheel: shared("wheel", { producer: wheelFeed, intervalMs: 2000 }),
   widget: shared("widget", { producer: widgetFeed, intervalMs: 8000 }),
   chat: shared("chat", { producer: chatFeed, intervalMs: 2000 }),
+  companion: shared("companion", { producer: companionFeed, intervalMs: 8000 }),
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };
 

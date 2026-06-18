@@ -801,6 +801,10 @@
         "rumble": {
           "name": "Rumble status",
           "desc": "LIVE + widzowie na Rumble, lub liczba obserwujących/subów. Wymaga RUMBLE_API_URL."
+        },
+        "companion": {
+          "name": "Champion Companion",
+          "desc": "Pokazuje na streamie najmocniej nakarmionego pupila społeczności — nakarm swojego, by przejąć światło reflektorów."
         }
       },
       "prevAlertTitle": "Nowy sub!",
