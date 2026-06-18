@@ -14,6 +14,7 @@ import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { CLAN_CREATE_COST, normalizeClanTag, isValidClanTag, isValidClanName, isValidContribution } from "@/lib/clans";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 const log = createLogger("clans");
 
@@ -112,6 +113,7 @@ async function createClan(userId: string, tid: string | null, body: { name?: str
     await tx.transaction.create({ data: { userId, type: "spend", amount: -CLAN_CREATE_COST, reason: "clan_create", status: "completed" } });
   });
 
+  await checkAndGrantAchievements({ userId, triggerType: "clans_joined", hintValue: 1 });
   return NextResponse.json(await loadMyClan(userId));
 }
 
@@ -125,6 +127,7 @@ async function joinClan(userId: string, tid: string | null, body: { tag?: string
     if (!clan) throw new ClanError("Klan nie istnieje", 404);
     await tx.user.update({ where: { id: userId }, data: { clanId: clan.id, clanRole: "member" } });
   });
+  await checkAndGrantAchievements({ userId, triggerType: "clans_joined", hintValue: 1 });
   return NextResponse.json(await loadMyClan(userId));
 }
 
@@ -159,5 +162,6 @@ async function contribute(userId: string, body: { amount?: number }): Promise<Ne
     const fresh = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
     return { treasury: clan.treasury, balance: fresh?.tokens ?? 0 };
   });
+  await checkAndGrantAchievements({ userId, triggerType: "clan_contributed", hintValue: amount });
   return NextResponse.json({ ok: true, treasury: result.treasury, newBalance: result.balance });
 }

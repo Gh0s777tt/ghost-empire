@@ -23,6 +23,11 @@ const NEW_ACHIEVEMENTS = [
   { code: "duel_win_50",  name: "Gladiator",        icon: "🗡️", rarity: "epic",      description: "Wygraj 50 pojedynków",                  triggerType: "duels_won",    triggerValue: 50,  tokenReward: 20000 },
   { code: "casino_first", name: "Pierwszy Zakład",  icon: "🎰", rarity: "common",    description: "Zagraj pierwszy raz w kasynie GT",      triggerType: "casino_plays", triggerValue: 1,   tokenReward: 200 },
   { code: "casino_100",   name: "Hazardzista",      icon: "🎲", rarity: "rare",      description: "Zagraj 100 razy w kasynie GT",          triggerType: "casino_plays", triggerValue: 100, tokenReward: 5000 },
+  { code: "companion_spark",   name: "Iskra Życia",   icon: "✨", rarity: "common",    description: "Nakarm widmowego kompana po raz pierwszy",        triggerType: "companion_xp",     triggerValue: 1,     tokenReward: 200 },
+  { code: "companion_ghost",   name: "Pełne Widmo",   icon: "👻", rarity: "rare",      description: "Wyhoduj kompana do etapu Duch (2000 XP)",         triggerType: "companion_xp",     triggerValue: 2000,  tokenReward: 3000 },
+  { code: "companion_phantom", name: "Władca Widm",   icon: "👑", rarity: "legendary", description: "Wyhoduj kompana do etapu Władca Widm (40000 XP)", triggerType: "companion_xp",     triggerValue: 40000, tokenReward: 30000 },
+  { code: "clan_member",       name: "Drużynowy",     icon: "🛡️", rarity: "common",    description: "Dołącz lub załóż klan",                           triggerType: "clans_joined",     triggerValue: 1,     tokenReward: 500 },
+  { code: "clan_patron",       name: "Mecenas Klanu", icon: "💰", rarity: "epic",      description: "Wpłać 10 000 GT do skarbca klanu jednorazowo",    triggerType: "clan_contributed", triggerValue: 10000, tokenReward: 5000 },
 ];
 
 async function main() {
@@ -42,7 +47,7 @@ async function main() {
       create: { ...a, tenantId: tenant.id },
     });
   }
-  console.log(`✅ upserted ${NEW_ACHIEVEMENTS.length} achievements (prestiż / pojedynki / kasyno)`);
+  console.log(`✅ upserted ${NEW_ACHIEVEMENTS.length} achievements (prestiż / pojedynki / kasyno / companion / klany)`);
   await prisma.$disconnect();
 }
 
