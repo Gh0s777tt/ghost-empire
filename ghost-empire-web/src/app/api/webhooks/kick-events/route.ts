@@ -47,17 +47,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Stale message" }, { status: 403 });
   }
 
-  // Idempotency
-  const existing = await prisma.kickEvent.findUnique({ where: { eventId: messageId } });
-  if (existing) {
-    return NextResponse.json({ ok: true, duplicate: true });
-  }
-
   let payload: Record<string, unknown>;
   try {
     payload = JSON.parse(body);
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Idempotency LOCK — insert the dedup row BEFORE running any grant handler. The unique
+  // on `eventId` makes a concurrent or retried delivery of the same message lose with
+  // P2002, so two parallel deliveries can never both reach the token grants below. (The
+  // audit fields userId/tokensGranted are backfilled with an UPDATE once we know them —
+  // mirror of /api/webhooks/twitch-eventsub.)
+  try {
+    await prisma.kickEvent.create({
+      data: {
+        eventId: messageId,
+        type: eventType,
+        payload: JSON.stringify(payload).slice(0, 5000),
+      },
+    });
+  } catch (e) {
+    if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") {
+      return NextResponse.json({ ok: true, duplicate: true });
+    }
+    throw e;
   }
 
   // Update lastSeenAt on subscription (best-effort)
@@ -101,15 +115,12 @@ export async function POST(req: Request) {
     log.error("handler error", e, { eventType });
   }
 
-  await prisma.kickEvent.create({
-    data: {
-      eventId: messageId,
-      type: eventType,
-      payload: JSON.stringify(payload).slice(0, 5000),
-      userId: matchedUserId,
-      tokensGranted,
-    },
-  });
+  // Backfill the audit fields on the dedup row now that the handlers have resolved them.
+  if (matchedUserId != null || tokensGranted != null) {
+    await prisma.kickEvent
+      .update({ where: { eventId: messageId }, data: { userId: matchedUserId, tokensGranted } })
+      .catch(() => {});
+  }
 
   if (matchedUserId) {
     if (eventType === "channel.subscription.new" || eventType === "channel.subscription.renewal") {

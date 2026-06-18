@@ -1,7 +1,7 @@
 // src/app/api/admin/donations/route.ts
 // Admin reconciliation — manually match unmatched donations to users.
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin, findManagedUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 
@@ -39,10 +39,9 @@ export async function PATCH(req: Request) {
   const target = body.userTarget?.trim();
   if (!target) return NextResponse.json({ error: "Brak userTarget" }, { status: 400 });
 
-  const isDigits = /^\d+$/.test(target);
-  const user = isDigits
-    ? await prisma.user.findUnique({ where: { discordId: target } })
-    : await prisma.user.findUnique({ where: { username: target } });
+  // Scope the target to the caller's tenant — a tenant admin must not mint GT into
+  // another portal's economy by assigning a donation to its user (#440 sweep).
+  const user = await findManagedUser(target, auth);
 
   if (!user) return NextResponse.json({ error: `User "${target}" nie znaleziony` }, { status: 404 });
 

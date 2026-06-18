@@ -4,7 +4,7 @@
 // POST -> action: create | update | delete | award.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin, findManagedUser } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { grantManualAchievement } from "@/lib/achievements";
 import { currentTenantId } from "@/lib/tenant";
@@ -123,10 +123,7 @@ export async function POST(req: Request) {
       const target = String(body.target ?? "").trim();
       const code = String(body.code ?? "").trim();
       if (!target || !code) return NextResponse.json({ error: "target + code wymagane" }, { status: 400 });
-      const user = await prisma.user.findFirst({
-        where: { OR: [{ id: target }, { username: target }, { discordId: target }] },
-        select: { id: true, username: true },
-      });
+      const user = await findManagedUser(target, auth);
       if (!user) return NextResponse.json({ error: `User "${target}" nie znaleziony` }, { status: 404 });
       const ok = await grantManualAchievement(user.id, code);
       if (!ok) return NextResponse.json({ error: "Nie przyznano (user już ma to osiągnięcie albo zły kod)" }, { status: 409 });
