@@ -43,3 +43,13 @@ export function apiPost<T>(url: string, payload?: unknown, init?: RequestInit): 
     ...init,
   });
 }
+
+/** PATCH with a JSON payload, returning parsed JSON. */
+export function apiPatch<T>(url: string, payload?: unknown, init?: RequestInit): Promise<T> {
+  return request<T>(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    ...(payload !== undefined ? { body: JSON.stringify(payload) } : {}),
+    ...init,
+  });
+}
