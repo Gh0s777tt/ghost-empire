@@ -61,6 +61,7 @@ export async function POST(req: Request) {
       bgAngle: clampInt(body.bgAngle, 0, 360, 135),
       posXPct: pctOrNull(body.posXPct),
       posYPct: pctOrNull(body.posYPct),
+      scalePct: typeof body.scalePct === "number" && Number.isFinite(body.scalePct) ? Math.min(300, Math.max(25, Math.floor(body.scalePct))) : null,
     };
     if (body.action === "update") {
       if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });

@@ -254,6 +254,7 @@ async function widgetFeed(params: URLSearchParams, tid: string | null): Promise<
     bgAngle: w.bgAngle,
     posXPct: w.posXPct,
     posYPct: w.posYPct,
+    scalePct: w.scalePct,
   };
 }
 
