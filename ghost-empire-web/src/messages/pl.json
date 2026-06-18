@@ -1679,6 +1679,8 @@
     "statMessages": "Wiadomości",
     "statVoice": "Voice",
     "statDuels": "Pojedynki",
+    "statCompanion": "Kompan",
+    "statClan": "Klan",
     "duelWr": "{n}% WR",
     "pendingTitle": "Zamówienia w realizacji",
     "pendingSubtitle": "{count, plural, one {# zakup czeka} few {# zakupy czekają} many {# zakupów czeka} other {# zakupów czeka}} na dostawę",

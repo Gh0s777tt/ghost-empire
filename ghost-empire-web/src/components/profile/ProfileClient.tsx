@@ -99,6 +99,8 @@ type Props = {
     providerAccountId: string;
   }>;
   duelStats: { wins: number; losses: number };
+  companion: { xp: number; emoji: string } | null;
+  clan: { tag: string; name: string; treasury: number } | null;
 };
 
 const RARITY_STYLE: Record<string, { border: string; bg: string; text: string; label: string }> = {
@@ -126,7 +128,7 @@ const SOCIAL_META: Record<string, { label: string; icon: ComponentType<{ classNa
 };
 
 export function ProfileClient({
-  user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelStats,
+  user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelStats, companion, clan,
 }: Props) {
   const t = useTranslations("profile");
   const locale = useLocale();
@@ -310,6 +312,12 @@ export function ProfileClient({
             suffix={t("duelWr", { n: duelWinrate })}
             emoji="⚔️"
           />
+        )}
+        {companion && (
+          <StatTile label={t("statCompanion")} value={fmt(companion.xp)} suffix="XP" emoji={companion.emoji} />
+        )}
+        {clan && (
+          <StatTile label={t("statClan")} value={`[${clan.tag}]`} suffix={clan.name} emoji="🛡️" />
         )}
       </div>
 

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { ProfileClient } from "@/components/profile/ProfileClient";
+import { companionStage } from "@/lib/companion";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function ProfilePage() {
   const userId = session.user.id;
   const tid = await currentTenantId();
 
-  const [user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelWins, duelLosses] =
+  const [user, connections, earnedAchievements, allAchievements, socialLinks, transactions, linkedAccounts, duelWins, duelLosses, companion, clanWrap] =
     await Promise.all([
       prisma.user.findUniqueOrThrow({
         where: { id: userId },
@@ -86,6 +87,8 @@ export default async function ProfilePage() {
           OR: [{ challengerId: userId }, { opponentId: userId }],
         },
       }),
+      prisma.companion.findUnique({ where: { userId }, select: { xp: true } }),
+      prisma.user.findUnique({ where: { id: userId }, select: { clan: { select: { tag: true, name: true, treasury: true } } } }),
     ]);
 
   return (
@@ -128,6 +131,8 @@ export default async function ProfilePage() {
           }))}
           linkedAccounts={linkedAccounts}
           duelStats={{ wins: duelWins, losses: duelLosses }}
+          companion={companion ? { xp: companion.xp, emoji: companionStage(companion.xp).emoji } : null}
+          clan={clanWrap?.clan ?? null}
         />
       </main>
     </div>
