@@ -34,6 +34,9 @@ export type AchievementTriggerType =
   | "prestige"               // prestige stars (Phantom Ascension)
   | "duels_won"              // # of PvP duels won
   | "casino_plays"           // # of GT casino games played (slots/coinflip)
+  | "companion_xp"           // Ghost Companion lifetime fed GT (= xp); stage milestones
+  | "clans_joined"           // joined/founded a clan (1)
+  | "clan_contributed"       // GT poured into a clan treasury in one contribution
   // Existing in seed file:
   | "level"
   | "streak"
@@ -257,6 +260,8 @@ async function computeCurrentValue(userId: string, triggerType: AchievementTrigg
 
     case "manual":
       return 0; // Manual triggers are granted explicitly via grantManual()
+    default:
+      return 0; // companion/clan triggers always pass an explicit hintValue
   }
 }
 

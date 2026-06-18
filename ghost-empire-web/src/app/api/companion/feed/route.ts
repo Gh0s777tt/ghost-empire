@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { isValidFeed } from "@/lib/companion";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("companion-feed");
@@ -57,6 +58,9 @@ export async function POST(req: Request) {
       const fresh = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
       return { companion, balance: fresh?.tokens ?? 0 };
     });
+
+    // Stage-milestone achievements (companion_xp). Fire-and-forget after commit.
+    await checkAndGrantAchievements({ userId, triggerType: "companion_xp", hintValue: result.companion.xp });
 
     return NextResponse.json({
       name: result.companion.name,
