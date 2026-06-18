@@ -18,6 +18,8 @@ type Feed =
       fontSizePx: number;
       fontFamily: string;
       position: string;
+      posXPct: number | null;
+      posYPct: number | null;
       showCard: boolean;
       bgGradient: boolean;
       bgColor1: string;
@@ -25,8 +27,14 @@ type Feed =
       bgAngle: number;
     };
 
-function positionStyle(position: string): CSSProperties {
+function positionStyle(f: { position: string; posXPct: number | null; posYPct: number | null }): CSSProperties {
   const s: CSSProperties = { position: "fixed", zIndex: 999999, pointerEvents: "none" };
+  // Free drag position (set in the widget builder) takes precedence over the 9-slot `position`.
+  if (f.posXPct != null && f.posYPct != null) {
+    s.left = `${f.posXPct}%`; s.top = `${f.posYPct}%`; s.transform = "translate(-50%, -50%)";
+    return s;
+  }
+  const position = f.position;
   if (position === "center") {
     s.top = "50%"; s.left = "50%"; s.transform = "translate(-50%, -50%)";
     return s;
@@ -58,7 +66,7 @@ export function CustomWidgetOverlayClient() {
   if (!feed || !feed.exists) return null;
 
   return (
-    <div style={positionStyle(feed.position)}>
+    <div style={positionStyle(feed)}>
       <CustomWidgetCard
         text={feed.text}
         accentColor={feed.accentColor}

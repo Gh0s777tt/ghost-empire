@@ -12,6 +12,8 @@ const POSITIONS = ["top-left", "top-center", "top-right", "center", "bottom-left
 const hex = (v: unknown, fb: string) => (typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb);
 const clampInt = (v: unknown, min: number, max: number, fb: number) =>
   typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.floor(v))) : fb;
+const pctOrNull = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) ? Math.min(100, Math.max(0, Math.floor(v))) : null;
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -57,6 +59,8 @@ export async function POST(req: Request) {
       bgColor1: hex(body.bgColor1, "#7928ca"),
       bgColor2: hex(body.bgColor2, "#ff0080"),
       bgAngle: clampInt(body.bgAngle, 0, 360, 135),
+      posXPct: pctOrNull(body.posXPct),
+      posYPct: pctOrNull(body.posYPct),
     };
     if (body.action === "update") {
       if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });

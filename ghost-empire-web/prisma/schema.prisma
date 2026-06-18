@@ -1638,6 +1638,8 @@ model CustomWidget {
   bgColor1    String   @default("#7928ca")        // gradient stop 1 (hex)
   bgColor2    String   @default("#ff0080")        // gradient stop 2 (hex)
   bgAngle     Int      @default(135)              // gradient angle in degrees (0-360)
+  posXPct     Int?                                // free drag position (0-100% of screen); null = use `position` slot
+  posYPct     Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

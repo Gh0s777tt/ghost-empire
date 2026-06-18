@@ -249,6 +249,8 @@ async function widgetFeed(params: URLSearchParams, tid: string | null): Promise<
     bgColor1: w.bgColor1,
     bgColor2: w.bgColor2,
     bgAngle: w.bgAngle,
+    posXPct: w.posXPct,
+    posYPct: w.posYPct,
   };
 }
 

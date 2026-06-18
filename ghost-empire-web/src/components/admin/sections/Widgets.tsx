@@ -2,7 +2,7 @@
 // src/components/admin/sections/Widgets.tsx — lazily-loaded "all overlays in one
 // place" hub. Lists every token-gated OBS overlay with its ready-to-paste Browser
 // Source URL + copy button. The token is shared across all overlays.
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { LayoutGrid, Copy, Check, ExternalLink, Plus, Trash2, Pencil, X, Loader2, Wand2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
@@ -19,7 +19,7 @@ import { PredictionOverlayCard } from "@/components/PredictionOverlayCard";
 import { PollOverlayCard } from "@/components/PollOverlayCard";
 import { LastEventCard } from "@/components/LastEventCard";
 import { useTenantBranding } from "@/components/TenantBranding";
-import type { ReactNode } from "react";
+import type { ReactNode, PointerEvent as ReactPointerEvent } from "react";
 
 type TFn = (key: string) => string;
 
@@ -73,6 +73,7 @@ type CustomWidget = {
   id: string; name: string; text: string; accentColor: string; textColor: string;
   fontSizePx: number; fontFamily: string; position: string; showCard: boolean;
   bgGradient: boolean; bgColor1: string; bgColor2: string; bgAngle: number;
+  posXPct: number | null; posYPct: number | null;
 };
 
 type Widget = { id: string; name: string; path: string; desc: string; size: string; query?: string };
@@ -238,6 +239,8 @@ function CustomWidgetGenerator({
   const [bgColor1, setBgColor1] = useState("#7928ca");
   const [bgColor2, setBgColor2] = useState("#ff0080");
   const [bgAngle, setBgAngle] = useState(135);
+  const [posX, setPosX] = useState<number | null>(null);
+  const [posY, setPosY] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -252,6 +255,7 @@ function CustomWidgetGenerator({
     setAccentColor(brandColor); setTextColor("#ffffff");
     setFontSizePx(28); setFontFamily("Inter"); setPosition("top-left"); setShowCard(true);
     setBgGradient(false); setBgColor1("#7928ca"); setBgColor2("#ff0080"); setBgAngle(135);
+    setPosX(null); setPosY(null);
   }
 
   function startEdit(w: CustomWidget) {
@@ -259,6 +263,7 @@ function CustomWidgetGenerator({
     setAccentColor(w.accentColor); setTextColor(w.textColor);
     setFontSizePx(w.fontSizePx); setFontFamily(w.fontFamily); setPosition(w.position); setShowCard(w.showCard);
     setBgGradient(w.bgGradient); setBgColor1(w.bgColor1); setBgColor2(w.bgColor2); setBgAngle(w.bgAngle);
+    setPosX(w.posXPct); setPosY(w.posYPct);
   }
 
   async function save() {
@@ -269,7 +274,7 @@ function CustomWidgetGenerator({
         action: editingId ? "update" : "create",
         id: editingId ?? undefined,
         name, text, accentColor, textColor, fontSizePx, fontFamily, position, showCard,
-        bgGradient, bgColor1, bgColor2, bgAngle,
+        bgGradient, bgColor1, bgColor2, bgAngle, posXPct: posX, posYPct: posY,
       });
       onToast("ok", editingId ? t("saved") : t("created"));
       resetForm();
@@ -380,14 +385,14 @@ function CustomWidgetGenerator({
           </div>
         </div>
 
-        {/* Live preview */}
-        <div>
-          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("previewLabel")}</label>
-          <div className="border border-zinc-800 rounded-sm p-6 min-h-[120px] flex items-center justify-center"
-            style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}>
-            <CustomWidgetCard text={text || t("previewTextPh")} accentColor={accentColor} textColor={textColor} fontSizePx={fontSizePx} fontFamily={fontFamily} showCard={showCard} bgGradient={bgGradient} bgColor1={bgColor1} bgColor2={bgColor2} bgAngle={bgAngle} />
-          </div>
-        </div>
+        {/* Live preview + drag-to-position canvas (16:9 screen) */}
+        <PositionCanvas
+          x={posX} y={posY}
+          onChange={(px, py) => { setPosX(px); setPosY(py); }}
+          onClear={() => { setPosX(null); setPosY(null); }}
+          t={t}
+          child={<CustomWidgetCard text={text || t("previewTextPh")} accentColor={accentColor} textColor={textColor} fontSizePx={fontSizePx} fontFamily={fontFamily} showCard={showCard} bgGradient={bgGradient} bgColor1={bgColor1} bgColor2={bgColor2} bgAngle={bgAngle} />}
+        />
       </div>
 
       {/* List */}
@@ -420,6 +425,51 @@ function CustomWidgetGenerator({
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// 16:9 "screen" canvas: click/drag to set a free overlay position (0–100%); a reset
+// clears it back to the 9-slot `position`. The rendered child is the live widget card.
+function PositionCanvas({
+  x, y, onChange, onClear, t, child,
+}: {
+  x: number | null; y: number | null;
+  onChange: (x: number, y: number) => void;
+  onClear: () => void;
+  t: TFn;
+  child: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const free = x != null && y != null;
+  function setFrom(e: ReactPointerEvent<HTMLDivElement>) {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const px = Math.round(Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100)));
+    const py = Math.round(Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100)));
+    onChange(px, py);
+  }
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("builderLabel")}</label>
+        {free && <button type="button" onClick={onClear} className="text-[10px] text-zinc-400 hover:text-white">↺ {t("builderReset")}</button>}
+      </div>
+      <div
+        ref={ref}
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging(true); setFrom(e); }}
+        onPointerMove={(e) => { if (dragging) setFrom(e); }}
+        onPointerUp={() => setDragging(false)}
+        className="relative aspect-video w-full border border-zinc-800 rounded-sm cursor-crosshair overflow-hidden touch-none select-none"
+        style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}
+      >
+        <div style={{ position: "absolute", left: free ? `${x}%` : "50%", top: free ? `${y}%` : "50%", transform: "translate(-50%, -50%) scale(0.55)", pointerEvents: "none", opacity: free ? 1 : 0.8 }}>
+          {child}
+        </div>
+      </div>
+      <p className="text-[10px] text-zinc-600 mt-1">{free ? t("builderHintFree") : t("builderHintSlot")}</p>
     </div>
   );
 }

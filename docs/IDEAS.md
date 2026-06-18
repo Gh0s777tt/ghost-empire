@@ -35,10 +35,10 @@ Widmowy kompan; widzowie karmią go GT (**realny spust!**), ewoluuje przez 6 eta
 ### 🛡️ Klany / drużyny — ✅ MVP DOWIEZIONY
 Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking klanów. **MVP na produkcji:** model `Clan` + `User.clanId/clanRole` (jeden klan/usera), `lib/clans.ts` (walidacja tag/nazwa/wpłata, +4 testy), strona `/clans` (załóż/dołącz/wpłać/opuść + ranking skarbców), atomowe spendy (wzorzec sklepu), link w nawigacji (grupa SPOŁECZNOŚĆ), i18n PL/EN. **⚠️ wymaga `db push`.** **Follow-up:** wojny klan-vs-klan (re-use `Season`), perki ze skarbca, sekcja admina.
 
-### 🧩 Wizualny builder overlayów (no-code canvas) — 🤖🎨
-Upgrade generatora widgetów (`CustomWidget`) do edytora drag-drop „Figma dla overlayów": warstwy, pozycja, fonty/gradienty (masz F1/F5), bindowanie danych (last sub/donator/viewers).
-- **Podejście:** canvas (React + DnD), zapis layoutu JSON w rozszerzonym `CustomWidget`, render w `/overlay/widget`.
-- **Wysiłek:** L. Killer-tool, który sam sprzedaje plan pro (synergia z bramką `overlays`).
+### 🧩 Wizualny builder overlayów (no-code canvas) — 🟡 MVP DOWIEZIONY (faza 1)
+**Faza 1 na produkcji:** wolne pozycjonowanie drag-and-drop dla custom-widgetów — canvas 16:9 w `/admin#widgets` (klik/przeciągnij ustawia `posXPct/posYPct`), render w `/overlay/widget` z fallbackiem `null` → 9 slotów (**zero regresji** dla istniejących widgetów). **⚠️ wymaga `db push`.**
+- **Follow-up (faza 2):** wiele elementów na jednym canvasie (sceny), skalowanie/rotacja, bindowanie danych live (last sub/donator/viewers).
+- Killer-tool, synergia z bramką `overlays`.
 
 ### 💹 Dashboard zdrowia ekonomii — ✅ DOWIEZIONY
 `/admin#economy`: GT w obiegu + 30-dniowy bilans wytworzone/spalone + top źródła/spusty + status (inflacja/zdrowa/kurczy się). `lib/economy-health.ts` (czysty + testy) + `api/admin/economy-health`. Chroni wartość GT przy mnogości kranów.
