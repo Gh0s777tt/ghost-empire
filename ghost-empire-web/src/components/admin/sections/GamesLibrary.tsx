@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Gamepad2, Loader2, RefreshCw, Check, Eye, EyeOff } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type Data = {
   steamId: string | null;
@@ -30,20 +31,21 @@ export function GamesLibraryManager({
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/admin/games");
-    if (r.ok) {
-      const d: Data = await r.json();
+    try {
+      const d = await apiGet<Data>("/api/admin/games");
       setData(d);
       setSteamInput(d.steamId ?? "");
-    }
+    } catch { /* keep current */ }
   }, []);
   useEffect(() => { void load(); }, [load]);
 
   async function call(payload: Record<string, unknown>): Promise<unknown | null> {
-    const r = await fetch("/api/admin/games", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    const d = await r.json();
-    if (!r.ok) { onToast("err", d.error ?? t("err")); return null; }
-    return d;
+    try {
+      return await apiPost<unknown>("/api/admin/games", payload);
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
+      return null;
+    }
   }
 
   async function saveSteamId() {

@@ -7,6 +7,7 @@ import { Radio, Loader2, TrendingUp } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet } from "@/lib/api-client";
 
 type StreamSessionRow = { id: string; startedAt: string; endedAt: string | null; durationSeconds: number | null };
 
@@ -37,10 +38,9 @@ function StreamSessionsCard() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/admin/analytics");
-        const d = await res.json();
-        if (!cancelled && res.ok) setStreams(d.streams ?? null);
-      } finally {
+        const d = await apiGet<{ streams?: { live: { startedAt: string } | null; totalSeconds: number; count: number; recent: StreamSessionRow[] } | null }>("/api/admin/analytics");
+        if (!cancelled) setStreams(d.streams ?? null);
+      } catch { /* leave empty */ } finally {
         if (!cancelled) setLoading(false);
       }
     })();
@@ -127,14 +127,13 @@ function ChatHeatmap() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/admin/analytics");
-        const d = await res.json();
-        if (!cancelled && res.ok) {
+        const d = await apiGet<{ grid?: number[][]; peak?: number; total?: number }>("/api/admin/analytics");
+        if (!cancelled) {
           setGrid(d.grid ?? []);
           setPeak(d.peak ?? 0);
           setTotal(d.total ?? 0);
         }
-      } finally {
+      } catch { /* leave empty */ } finally {
         if (!cancelled) setLoading(false);
       }
     })();

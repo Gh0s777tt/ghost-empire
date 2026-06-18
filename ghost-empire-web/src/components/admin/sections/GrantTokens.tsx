@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Coins, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 export function GrantTokensCard({
   onToast, onSuccess, pending,
@@ -21,19 +22,15 @@ export function GrantTokensCard({
   async function submit() {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/grant-tokens", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target, amount: parseInt(amount), reason }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-      } else {
-        onToast("ok", t("granted", { delta: `${data.amount > 0 ? "+" : ""}${data.amount}`, user: data.user.username ?? data.user.id, balance: data.newBalance }));
-        setAmount(""); setReason("");
-        onSuccess();
-      }
+      const data = await apiPost<{ amount: number; user: { username: string | null; id: string }; newBalance: number }>(
+        "/api/admin/grant-tokens",
+        { target, amount: parseInt(amount), reason },
+      );
+      onToast("ok", t("granted", { delta: `${data.amount > 0 ? "+" : ""}${data.amount}`, user: data.user.username ?? data.user.id, balance: data.newBalance }));
+      setAmount(""); setReason("");
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(false);
     }

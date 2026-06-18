@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { rankForLevel, cn, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 type Sort = "tokens" | "totalEarned" | "weekly" | "level" | "streak";
 
@@ -470,24 +471,17 @@ function AdminUserActions({
     }
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/grant-tokens", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          target: user.username ?? user.id,
-          amount: amt,
-          reason: reason || "admin_quick_action",
-        }),
+      const data = await apiPost<{ newBalance: number }>("/api/admin/grant-tokens", {
+        target: user.username ?? user.id,
+        amount: amt,
+        reason: reason || "admin_quick_action",
       });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast("err", data.error ?? t("err"));
-      } else {
-        const delta = `${amt > 0 ? "+" : ""}${fmt(amt)}`;
-        showToast("ok", t("admGranted", { delta, user: user.username ?? "user", balance: fmt(data.newBalance) }));
-        setAmount("");
-        startTransition(() => router.refresh());
-      }
+      const delta = `${amt > 0 ? "+" : ""}${fmt(amt)}`;
+      showToast("ok", t("admGranted", { delta, user: user.username ?? "user", balance: fmt(data.newBalance) }));
+      setAmount("");
+      startTransition(() => router.refresh());
+    } catch (err) {
+      showToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally { setBusy(false); }
   }
 
@@ -496,54 +490,35 @@ function AdminUserActions({
     if (!confirm(durationDays > 0 ? t("admBanConfirmTemp", { days: durationDays }) : t("admBanConfirmPerm"))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/ban-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target: user.username ?? user.id, action: "ban", durationDays, reason }),
-      });
-      const data = await res.json();
-      if (!res.ok) showToast("err", data.error ?? t("err"));
-      else {
-        showToast("ok", durationDays > 0
-          ? t("admBannedTemp", { user: user.username ?? "User", days: durationDays })
-          : t("admBannedPerm", { user: user.username ?? "User" }));
-        startTransition(() => router.refresh());
-      }
+      await apiPost("/api/admin/ban-user", { target: user.username ?? user.id, action: "ban", durationDays, reason });
+      showToast("ok", durationDays > 0
+        ? t("admBannedTemp", { user: user.username ?? "User", days: durationDays })
+        : t("admBannedPerm", { user: user.username ?? "User" }));
+      startTransition(() => router.refresh());
+    } catch (err) {
+      showToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally { setBusy(false); }
   }
 
   async function unbanUser() {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/ban-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target: user.username ?? user.id, action: "unban" }),
-      });
-      const data = await res.json();
-      if (!res.ok) showToast("err", data.error ?? t("err"));
-      else {
-        showToast("ok", t("admUnbanned", { user: user.username ?? "User" }));
-        startTransition(() => router.refresh());
-      }
+      await apiPost("/api/admin/ban-user", { target: user.username ?? user.id, action: "unban" });
+      showToast("ok", t("admUnbanned", { user: user.username ?? "User" }));
+      startTransition(() => router.refresh());
+    } catch (err) {
+      showToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally { setBusy(false); }
   }
 
   async function setRole(role: "admin" | "moderator" | "donator", enable: boolean) {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/user-roles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target: user.username ?? user.id, role, enable }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast("err", data.error ?? t("err"));
-      } else {
-        showToast("ok", enable ? t("admRoleGranted", { role }) : t("admRoleRevoked", { role }));
-        startTransition(() => router.refresh());
-      }
+      await apiPost("/api/admin/user-roles", { target: user.username ?? user.id, role, enable });
+      showToast("ok", enable ? t("admRoleGranted", { role }) : t("admRoleRevoked", { role }));
+      startTransition(() => router.refresh());
+    } catch (err) {
+      showToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally { setBusy(false); }
   }
 

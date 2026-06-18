@@ -6,6 +6,7 @@ import { Award, Plus, Loader2, Pencil, Trash2, X, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type AchRow = {
   id: string; code: string; name: string; description: string; icon: string;
@@ -38,13 +39,10 @@ export function AchievementsManager({
 
   async function load() {
     try {
-      const r = await fetch("/api/admin/achievements");
-      if (r.ok) {
-        const d = await r.json();
-        setList(d.achievements ?? []);
-        setRarities(d.rarities ?? []);
-        setTriggerTypes(d.triggerTypes ?? []);
-      }
+      const d = await apiGet<{ achievements?: AchRow[]; rarities?: string[]; triggerTypes?: string[] }>("/api/admin/achievements");
+      setList(d.achievements ?? []);
+      setRarities(d.rarities ?? []);
+      setTriggerTypes(d.triggerTypes ?? []);
     } catch { /* keep current */ } finally {
       setLoading(false);
     }
@@ -54,16 +52,14 @@ export function AchievementsManager({
   async function call(payload: Record<string, unknown>, okMsg?: string) {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/achievements", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) { onToast("err", data.error ?? t("err")); return false; }
+      await apiPost("/api/admin/achievements", payload);
       if (okMsg) onToast("ok", okMsg);
       return true;
-    } catch { onToast("err", t("netErr")); return false; }
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("netErr"));
+      return false;
+    }
     finally { setBusy(false); }
   }
 
@@ -183,14 +179,10 @@ function AchievementEditor({
       const payload: Record<string, unknown> = isNew
         ? { action: "create", code, ...fields }
         : { action: "update", id: achievement!.id, ...fields };
-      const res = await fetch("/api/admin/achievements", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) { onToast("err", data.error ?? t("err")); }
-      else { onToast("ok", isNew ? t("created") : t("saved")); onSaved(); }
+      await apiPost("/api/admin/achievements", payload);
+      onToast("ok", isNew ? t("created") : t("saved")); onSaved();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setBusy(false); }
   }
 

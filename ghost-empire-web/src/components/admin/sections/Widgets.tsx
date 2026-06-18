@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { LayoutGrid, Copy, Check, ExternalLink, Plus, Trash2, Pencil, X, Loader2, Wand2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { CustomWidgetCard } from "@/components/CustomWidgetCard";
 import { EmojiPicker } from "@/components/EmojiPicker";
 import { WIDGET_FONTS } from "@/lib/widget-fonts";
@@ -117,10 +118,9 @@ export function WidgetsLibrary({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/overlay-token")
-      .then((r) => (r.ok ? r.json() : null))
+    apiGet<{ token?: string | null }>("/api/admin/overlay-token")
       .then((d) => { if (!cancelled) setToken(d?.token ?? null); })
-      .catch(() => {});
+      .catch(() => { if (!cancelled) setToken(null); });
     return () => { cancelled = true; };
   }, []);
 
@@ -241,9 +241,9 @@ function CustomWidgetGenerator({
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch("/api/admin/widgets");
-      if (r.ok) { const d = await r.json(); setList(d.widgets ?? []); }
-    } finally { setLoading(false); }
+      const d = await apiGet<{ widgets?: CustomWidget[] }>("/api/admin/widgets");
+      setList(d.widgets ?? []);
+    } catch { /* keep current */ } finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
 
@@ -265,32 +265,28 @@ function CustomWidgetGenerator({
     if (!text.trim()) { onToast("err", t("textRequired")); return; }
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/widgets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: editingId ? "update" : "create",
-          id: editingId ?? undefined,
-          name, text, accentColor, textColor, fontSizePx, fontFamily, position, showCard,
-          bgGradient, bgColor1, bgColor2, bgAngle,
-        }),
+      await apiPost("/api/admin/widgets", {
+        action: editingId ? "update" : "create",
+        id: editingId ?? undefined,
+        name, text, accentColor, textColor, fontSizePx, fontFamily, position, showCard,
+        bgGradient, bgColor1, bgColor2, bgAngle,
       });
-      const d = await res.json();
-      if (!res.ok) { onToast("err", d.error ?? t("err")); return; }
       onToast("ok", editingId ? t("saved") : t("created"));
       resetForm();
       await load();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setBusy(false); }
   }
 
   async function remove(id: string) {
     if (!window.confirm(t("deleteConfirm"))) return;
-    const res = await fetch("/api/admin/widgets", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", id }),
-    });
-    if (res.ok) { onToast("ok", t("deleted")); if (editingId === id) resetForm(); await load(); }
-    else onToast("err", t("err"));
+    try {
+      await apiPost("/api/admin/widgets", { action: "delete", id });
+      onToast("ok", t("deleted")); if (editingId === id) resetForm(); await load();
+    } catch {
+      onToast("err", t("err"));
+    }
   }
 
   function widgetUrl(id: string) { return token ? `${origin}/overlay/widget?token=${token}&id=${id}` : null; }

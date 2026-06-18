@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Gift, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
 
 export function CreateDropCard({
@@ -25,25 +26,18 @@ export function CreateDropCard({
   async function submit() {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/drops", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: code || undefined,
-          reward: parseInt(reward),
-          bonusReward: parseInt(bonusReward),
-          bonusSlots: parseInt(bonusSlots),
-          expiresInMinutes: parseInt(expiresInMinutes),
-        }),
+      const data = await apiPost<{ drop: { code: string } }>("/api/admin/drops", {
+        code: code || undefined,
+        reward: parseInt(reward),
+        bonusReward: parseInt(bonusReward),
+        bonusSlots: parseInt(bonusSlots),
+        expiresInMinutes: parseInt(expiresInMinutes),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-      } else {
-        onToast("ok", t("created", { code: data.drop.code }));
-        setCode("");
-        onSuccess();
-      }
+      onToast("ok", t("created", { code: data.drop.code }));
+      setCode("");
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(false);
     }

@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation";
 import { Ticket, Lock, Check, Loader2, Clock, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 type Reward = {
   id: string;
@@ -53,18 +54,11 @@ export function SeasonsClient({
   async function claim(rewardId: string) {
     setBusy(rewardId);
     try {
-      const res = await fetch("/api/seasons/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rewardId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast("err", data.error ?? t("err"));
-      } else {
-        showToast("ok", data.tokens ? t("claimedTokens", { tokens: fmt(data.tokens), label: data.label }) : t("claimedItem", { label: data.label }));
-        startTransition(() => router.refresh());
-      }
+      const data = await apiPost<{ tokens?: number; label: string }>("/api/seasons/claim", { rewardId });
+      showToast("ok", data.tokens ? t("claimedTokens", { tokens: fmt(data.tokens), label: data.label }) : t("claimedItem", { label: data.label }));
+      startTransition(() => router.refresh());
+    } catch (err) {
+      showToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally {
       setBusy(null);
     }

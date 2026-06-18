@@ -5,6 +5,7 @@ import { Target, Loader2, Eye, EyeOff, RefreshCw, Trash2, Plus } from "lucide-re
 import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { GoalBar } from "@/components/GoalBar";
 
@@ -67,15 +68,12 @@ export function StreamGoalsManager({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/stream-goals");
-      const data = await res.json();
-      if (res.ok) {
-        setGoals(data.goals ?? []);
-        setHypeTrain(data.hypeTrain ?? null);
-        setValidTypes(data.validTypes ?? []);
-        setValidResetModes(data.validResetModes ?? []);
-      }
-    } finally {
+      const data = await apiGet<{ goals?: StreamGoalData[]; hypeTrain?: HypeTrainData | null; validTypes?: string[]; validResetModes?: string[] }>("/api/admin/stream-goals");
+      setGoals(data.goals ?? []);
+      setHypeTrain(data.hypeTrain ?? null);
+      setValidTypes(data.validTypes ?? []);
+      setValidResetModes(data.validResetModes ?? []);
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -83,17 +81,13 @@ export function StreamGoalsManager({
   useEffect(() => { void load(); }, [load]);
 
   async function call(action: string, payload: Record<string, unknown>) {
-    const res = await fetch("/api/admin/stream-goals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, ...payload }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      onToast("err", data.error ?? t("err"));
+    try {
+      await apiPost("/api/admin/stream-goals", { action, ...payload });
+      return true;
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
       return false;
     }
-    return true;
   }
 
   async function createGoal() {

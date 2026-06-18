@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Plug, Loader2, Check, KeyRound, ChevronDown, CheckCircle2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 const AI_PROVIDERS: Array<[string, string]> = [
   ["anthropic", "Anthropic (Claude)"],
@@ -108,11 +109,10 @@ export function IntegrationsManager({
   const [obsPass, setObsPass] = useState<string | null>("");
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/admin/integrations");
-    if (r.ok) {
-      const d: Meta = await r.json();
+    try {
+      const d = await apiGet<Meta>("/api/admin/integrations");
       setMeta(d); setAiProvider(d.aiProvider); setAiModel(d.aiModel); setObsUrl(d.obsWebsocketUrl);
-    }
+    } catch { /* keep current */ }
   }, []);
   useEffect(() => { void load(); }, [load]);
 
@@ -125,15 +125,13 @@ export function IntegrationsManager({
       const fields: Array<[string, string | null]> = [["aiApiKey", aiKey], ["sentryDsn", sentry], ["obsWebsocketPassword", obsPass]];
       for (const [k, v] of fields) if (touched(v)) body[k] = v;
 
-      const res = await fetch("/api/admin/integrations", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-      });
-      const d = await res.json();
-      if (!res.ok) { onToast("err", d.error ?? t("err")); return; }
+      await apiPost("/api/admin/integrations", body);
       onToast("ok", t("saved"));
       setAiKey(""); setSentry(""); setObsPass(""); // clear inputs; reload shows masked state
       await load();
       onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setSaving(false); }
   }
 

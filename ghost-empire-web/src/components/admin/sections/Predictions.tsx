@@ -5,6 +5,7 @@ import { Dice5, Loader2, Trash2, X, Plus, Megaphone, MegaphoneOff } from "lucide
 import { useTranslations, useLocale } from "next-intl";
 import { fmt, cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { PredictionOverlayCard } from "@/components/PredictionOverlayCard";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -50,10 +51,9 @@ export function PredictionsManager({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/predictions");
-      const data = await res.json();
-      if (res.ok) setPredictions(data.predictions ?? []);
-    } finally {
+      const data = await apiGet<{ predictions?: PredictionRow[] }>("/api/admin/predictions");
+      setPredictions(data.predictions ?? []);
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -61,14 +61,13 @@ export function PredictionsManager({
   useEffect(() => { void load(); }, [load]);
 
   async function call(action: string, payload: Record<string, unknown>): Promise<boolean> {
-    const res = await fetch("/api/admin/predictions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, ...payload }),
-    });
-    const data = await res.json();
-    if (!res.ok) { onToast("err", data.error ?? t("err")); return false; }
-    return true;
+    try {
+      await apiPost("/api/admin/predictions", { action, ...payload });
+      return true;
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
+      return false;
+    }
   }
 
   async function createPrediction() {
@@ -110,22 +109,22 @@ export function PredictionsManager({
   async function resolve(p: PredictionRow, winningOptionIndex: number) {
     if (!confirm(t("resolveConfirm", { opt: p.options[winningOptionIndex], pot: String(p.totalPot) }))) return;
     setBusy(p.id);
-    const res = await fetch("/api/admin/predictions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "resolve", id: p.id, winningOptionIndex }),
-    });
-    const data = await res.json();
-    if (!res.ok) onToast("err", data.error ?? t("err"));
-    else {
+    try {
+      const data = await apiPost<{ refunded?: boolean; losersCount?: number; winnersCount?: number; potDistributed?: number }>(
+        "/api/admin/predictions",
+        { action: "resolve", id: p.id, winningOptionIndex },
+      );
       onToast("ok", data.refunded
-        ? t("refundedMsg", { count: data.losersCount })
-        : t("paidOut", { winners: data.winnersCount, pot: String(data.potDistributed) }),
+        ? t("refundedMsg", { count: data.losersCount ?? 0 })
+        : t("paidOut", { winners: data.winnersCount ?? 0, pot: String(data.potDistributed ?? 0) }),
       );
       await load();
       onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
+    } finally {
+      setBusy(null);
     }
-    setBusy(null);
   }
 
   async function cancel(p: PredictionRow) {

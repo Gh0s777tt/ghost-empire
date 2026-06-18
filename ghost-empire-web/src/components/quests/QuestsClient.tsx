@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 type UserTask = {
   id: string;
@@ -94,16 +95,7 @@ export function QuestsClient({
   async function claim(taskId: string) {
     setBusyId(taskId);
     try {
-      const res = await fetch("/api/tasks/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast("err", data.error ?? t("err"));
-        return;
-      }
+      const data = await apiPost<{ reward: number; newBalance: number }>("/api/tasks/claim", { taskId });
       // Optimistic update
       setTasks((prev) =>
         prev.map((t) =>
@@ -116,6 +108,8 @@ export function QuestsClient({
       showToast("ok", t("claimedToast", { reward: fmt(data.reward), balance: fmt(data.newBalance) }));
       await refreshSession();
       startTransition(() => router.refresh());
+    } catch (err) {
+      showToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally {
       setBusyId(null);
     }

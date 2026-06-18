@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, SendHorizonal, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 type Msg = { role: "user" | "assistant"; content: string };
 const STORE = "ge-admin-assistant";
@@ -52,23 +53,24 @@ export function AdminAssistant({
     setMsgs(next);
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/assistant", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: next.slice(-MAX_WINDOW), locale }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { reply?: string; error?: string };
-      if (res.status === 503 && data.error === "ai-not-configured") {
-        setNotConfigured(true);
-      } else if (res.status === 502 && data.error === "ai-provider-error") {
-        setMsgs((m) => [...m, { role: "assistant", content: `⚠️ ${t("aiProviderError")}` }]);
-      } else if (!res.ok || !data.reply) {
+      const data = await apiPost<{ reply?: string; error?: string }>(
+        "/api/admin/assistant",
+        { messages: next.slice(-MAX_WINDOW), locale },
+      );
+      if (!data.reply) {
         setMsgs((m) => [...m, { role: "assistant", content: `⚠️ ${data.error ?? t("aiError")}` }]);
       } else {
         setMsgs((m) => [...m, { role: "assistant", content: data.reply! }]);
       }
-    } catch {
-      setMsgs((m) => [...m, { role: "assistant", content: `⚠️ ${t("aiError")}` }]);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 503 && err.message === "ai-not-configured") {
+        setNotConfigured(true);
+      } else if (err instanceof ApiError && err.status === 502 && err.message === "ai-provider-error") {
+        setMsgs((m) => [...m, { role: "assistant", content: `⚠️ ${t("aiProviderError")}` }]);
+      } else {
+        const serverMsg = err instanceof ApiError && err.status !== 0 ? err.message : null;
+        setMsgs((m) => [...m, { role: "assistant", content: `⚠️ ${serverMsg ?? t("aiError")}` }]);
+      }
     } finally {
       setBusy(false);
     }

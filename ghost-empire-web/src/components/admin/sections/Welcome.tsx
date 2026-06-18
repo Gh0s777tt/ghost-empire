@@ -5,6 +5,7 @@ import { UserPlus, Loader2, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 export function WelcomeManager({
   onToast, onSuccess, pending,
@@ -23,14 +24,13 @@ export function WelcomeManager({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/welcome");
-      const data = await res.json();
-      if (res.ok && data.config) {
+      const data = await apiGet<{ config?: { enabled?: boolean; template?: string; bonusTokens?: number } }>("/api/admin/welcome");
+      if (data.config) {
         setEnabled(!!data.config.enabled);
         setTemplate(data.config.template ?? "");
         setBonus(String(data.config.bonusTokens ?? 0));
       }
-    } finally {
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -40,18 +40,12 @@ export function WelcomeManager({
   async function save(next: { enabled?: boolean; template?: string; bonusTokens?: number }) {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/welcome", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(next),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        onToast("ok", t("saved"));
-        onSuccess();
-        return true;
-      }
-      onToast("err", data.error ?? t("err"));
+      await apiPost("/api/admin/welcome", next);
+      onToast("ok", t("saved"));
+      onSuccess();
+      return true;
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
       return false;
     } finally {
       setBusy(false);

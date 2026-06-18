@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Bell, Plus, Loader2, Check, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { AlertCard } from "@/components/AlertCard";
 
 type CustomAlertRow = { id: string; label: string; title: string; message: string; icon: string | null; accent: string | null; amount: number | null; amountLabel: string | null };
@@ -33,8 +34,8 @@ export function CustomAlertsCard({
 
   async function load() {
     try {
-      const r = await fetch("/api/admin/custom-alerts");
-      if (r.ok) { const d = await r.json(); setList(d.customAlerts ?? []); }
+      const d = await apiGet<{ customAlerts?: CustomAlertRow[] }>("/api/admin/custom-alerts");
+      setList(d.customAlerts ?? []);
     } catch { /* keep */ } finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
@@ -52,12 +53,14 @@ export function CustomAlertsCard({
   async function call(payload: Record<string, unknown>, okMsg?: string) {
     setBusy(typeof payload.id === "string" ? payload.id : "new");
     try {
-      const res = await fetch("/api/admin/custom-alerts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      const d = await res.json();
-      if (!res.ok) { onToast("err", d.error ?? t("err")); return false; }
+      await apiPost("/api/admin/custom-alerts", payload);
       if (okMsg) onToast("ok", okMsg);
       return true;
-    } catch { onToast("err", t("netErr")); return false; } finally { setBusy(null); }
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("netErr"));
+      return false;
+    } finally { setBusy(null); }
   }
 
   async function save() {

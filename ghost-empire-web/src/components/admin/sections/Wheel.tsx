@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Disc3, Loader2, Check, Plus, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { WheelGraphic } from "@/components/WheelGraphic";
 
@@ -36,14 +37,13 @@ export function WheelManager({
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/admin/wheel");
-    if (r.ok) {
-      const d: Data = await r.json();
+    try {
+      const d = await apiGet<Data>("/api/admin/wheel");
       setData(d);
       setEnabled(d.enabled);
       setCost(d.costPerSpin);
       setSegments(d.segments);
-    }
+    } catch { /* keep current */ }
   }, []);
   useEffect(() => { void load(); }, [load]);
 
@@ -61,16 +61,12 @@ export function WheelManager({
     if (segments.length < 2) { onToast("err", t("errMinSegments")); return; }
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/wheel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled, costPerSpin: cost, segments }),
-      });
-      const d = await res.json();
-      if (!res.ok) { onToast("err", d.error ?? t("err")); return; }
+      await apiPost("/api/admin/wheel", { enabled, costPerSpin: cost, segments });
       onToast("ok", t("saved"));
       await load();
       onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setSaving(false); }
   }
 

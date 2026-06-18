@@ -5,6 +5,7 @@ import { Ticket, Loader2, RefreshCw, Trash2, Plus } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { fmt } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type AdminSeason = {
   id: string;
@@ -45,13 +46,10 @@ export function SeasonsManager({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/seasons");
-      const data = await res.json();
-      if (res.ok) {
-        setSeasons(data.seasons ?? []);
-        setRewardTypes(data.rewardTypes ?? []);
-      }
-    } finally {
+      const data = await apiGet<{ seasons?: AdminSeason[]; rewardTypes?: string[] }>("/api/admin/seasons");
+      setSeasons(data.seasons ?? []);
+      setRewardTypes(data.rewardTypes ?? []);
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -59,14 +57,13 @@ export function SeasonsManager({
   useEffect(() => { void load(); }, [load]);
 
   async function call(payload: Record<string, unknown>): Promise<boolean> {
-    const res = await fetch("/api/admin/seasons", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!res.ok) { onToast("err", data.error ?? t("err")); return false; }
-    return true;
+    try {
+      await apiPost("/api/admin/seasons", payload);
+      return true;
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
+      return false;
+    }
   }
 
   async function ensureCurrent() {

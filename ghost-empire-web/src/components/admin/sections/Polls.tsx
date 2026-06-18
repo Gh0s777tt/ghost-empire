@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { BarChart3, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { PollOverlayCard } from "@/components/PollOverlayCard";
 
@@ -26,8 +27,8 @@ export function PollsManager({
 
   async function load() {
     try {
-      const r = await fetch("/api/admin/polls");
-      if (r.ok) { const d = await r.json(); setList(d.polls ?? []); }
+      const d = await apiGet<{ polls?: PollRow[] }>("/api/admin/polls");
+      setList(d.polls ?? []);
     } catch { /* keep */ } finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
@@ -35,16 +36,14 @@ export function PollsManager({
   async function call(payload: Record<string, unknown>, okMsg?: string) {
     setBusy(typeof payload.id === "string" ? payload.id : "create");
     try {
-      const res = await fetch("/api/admin/polls", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) { onToast("err", data.error ?? t("err")); return false; }
+      await apiPost("/api/admin/polls", payload);
       if (okMsg) onToast("ok", okMsg);
       return true;
-    } catch { onToast("err", t("netErr")); return false; }
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("netErr"));
+      return false;
+    }
     finally { setBusy(null); }
   }
 

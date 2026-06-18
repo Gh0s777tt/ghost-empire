@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { BarChart3, RefreshCw } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { apiGet } from "@/lib/api-client";
 
 type Stats = {
   byType: Array<{ violation: string; count: number }>;
@@ -27,9 +28,8 @@ export function ModViolationStats() {
   async function load() {
     setLoading(true);
     try {
-      const r = await fetch("/api/admin/mod-violations");
-      if (r.ok) setStats(await r.json());
-    } finally {
+      setStats(await apiGet<Stats>("/api/admin/mod-violations"));
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MessageSquare, Loader2, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { ChatMessageRow, DEFAULT_CHAT_CFG, CHAT_FONTS, type ChatOverlayCfg, type ChatMsg } from "@/components/ChatMessageRow";
 
@@ -21,8 +22,7 @@ export function ChatOverlayCard({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/chat-overlay")
-      .then((r) => (r.ok ? r.json() : null))
+    apiGet<{ config?: ChatOverlayCfg }>("/api/admin/chat-overlay")
       .then((d) => { if (!cancelled) { if (d?.config) setCfg(d.config); setLoaded(true); } })
       .catch(() => { if (!cancelled) setLoaded(true); });
     return () => { cancelled = true; };
@@ -35,16 +35,11 @@ export function ChatOverlayCard({
   async function save() {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/chat-overlay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cfg),
-      });
-      const d = await res.json();
-      if (!res.ok) onToast("err", d.error ?? t("err"));
-      else onToast("ok", t("saved"));
-    } catch {
-      onToast("err", t("netErr"));
+      await apiPost("/api/admin/chat-overlay", cfg);
+      onToast("ok", t("saved"));
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("netErr"));
     } finally {
       setBusy(false);
     }

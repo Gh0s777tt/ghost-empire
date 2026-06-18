@@ -6,6 +6,7 @@ import { Calendar, Loader2, Zap, Plus, Dice5, Eye, EyeOff, Pencil, X, Check } fr
 import { useTranslations } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 import type { EventRow } from "../types";
 
 type HolidayTemplate = {
@@ -74,16 +75,11 @@ export function HolidayEventsCard({
   async function launch(tpl: HolidayTemplate) {
     setBusy(tpl.key);
     try {
-      const res = await fetch("/api/admin/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...tpl.payload, startsInMinutes: 0 }),
-      });
-      const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? t("err"));
-      else { onToast("ok", t("launched", { label: tpl.label })); onSuccess(); }
-    } catch {
-      onToast("err", t("netErr"));
+      await apiPost("/api/admin/events", { ...tpl.payload, startsInMinutes: 0 });
+      onToast("ok", t("launched", { label: tpl.label })); onSuccess();
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("netErr"));
     } finally {
       setBusy(null);
     }
@@ -162,19 +158,12 @@ export function CreateEventCard({
           body.maxTicketsPerUser = parseInt(maxTicketsPerUser);
         }
       }
-      const res = await fetch("/api/admin/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-      } else {
-        onToast("ok", t("created", { name: data.event.name }));
-        setName(""); setDescription(""); setPrize(""); setRequirement("");
-        onSuccess();
-      }
+      const data = await apiPost<{ event: { name: string } }>("/api/admin/events", body);
+      onToast("ok", t("created", { name: data.event.name }));
+      setName(""); setDescription(""); setPrize(""); setRequirement("");
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(false);
     }
@@ -289,23 +278,17 @@ export function EventsManager({
     if (!confirm(t("drawConfirm", { name }))) return;
     setDrawingId(id);
     try {
-      const res = await fetch("/api/admin/events/draw", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: id }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("drawErr"));
-      } else {
-        const names = data.winners
-          .map((w: { username: string | null; displayName: string | null }) =>
-            w.displayName ?? w.username ?? t("anon"),
-          )
-          .join(", ");
-        onToast("ok", t("drawn", { count: data.actualWinners, names }));
-        onSuccess();
-      }
+      const data = await apiPost<{
+        winners: Array<{ username: string | null; displayName: string | null }>;
+        actualWinners: number;
+      }>("/api/admin/events/draw", { eventId: id });
+      const names = data.winners
+        .map((w) => w.displayName ?? w.username ?? t("anon"))
+        .join(", ");
+      onToast("ok", t("drawn", { count: data.actualWinners, names }));
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("drawErr")) : t("drawErr"));
     } finally {
       setDrawingId(null);
     }

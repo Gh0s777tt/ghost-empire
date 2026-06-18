@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { SectionCard, FieldInput } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 function ModPermissionsPicker({
   selected,
@@ -133,21 +134,14 @@ export function UserRolesCard({
       if (role === "moderator" && enable) {
         body.modPermissions = Array.from(modPermissions);
       }
-      const res = await fetch("/api/admin/user-roles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-      } else {
-        const user = data.user.username ?? data.user.id;
-        onToast("ok", enable ? t("roleGranted", { role, user }) : t("roleRevoked", { role, user }));
-        setTarget("");
-        setAddDonation("");
-        onSuccess();
-      }
+      const data = await apiPost<{ user: { username: string | null; id: string } }>("/api/admin/user-roles", body);
+      const user = data.user.username ?? data.user.id;
+      onToast("ok", enable ? t("roleGranted", { role, user }) : t("roleRevoked", { role, user }));
+      setTarget("");
+      setAddDonation("");
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(false);
     }
@@ -287,20 +281,13 @@ export function ConnectionRolesCard({
         body.subTier = subTier;
         if (subMonths) body.subMonths = parseInt(subMonths);
       }
-      const res = await fetch("/api/admin/connection-roles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-      } else {
-        onToast("ok", t("statusUpdated", { platform, target }));
-        setTarget("");
-        setSubMonths("");
-        onSuccess();
-      }
+      await apiPost("/api/admin/connection-roles", body);
+      onToast("ok", t("statusUpdated", { platform, target }));
+      setTarget("");
+      setSubMonths("");
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(false);
     }

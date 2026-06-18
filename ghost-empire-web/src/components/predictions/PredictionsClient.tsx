@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 type ActivePrediction = {
   id: string;
@@ -184,20 +185,16 @@ function ActivePredictionCard({
 
     setBusy(true);
     try {
-      const res = await fetch(`/api/predictions/${prediction.id}/wager`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ optionIndex: pickedOption, tokensWagered: wager }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-      } else {
-        emitBalance(data.newBalance);
-        onToast("ok", t("wagered", { wager, balance: data.newBalance }));
-        setWagerInput("");
-        onSuccess();
-      }
+      const data = await apiPost<{ newBalance: number }>(
+        `/api/predictions/${prediction.id}/wager`,
+        { optionIndex: pickedOption, tokensWagered: wager },
+      );
+      emitBalance(data.newBalance);
+      onToast("ok", t("wagered", { wager, balance: data.newBalance }));
+      setWagerInput("");
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally {
       setBusy(false);
     }

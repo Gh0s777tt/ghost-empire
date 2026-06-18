@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { formatDate } from "@/lib/utils";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { SectionCard } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 import type { PendingOrder } from "../types";
 
 export function PendingOrdersList({
@@ -26,17 +27,11 @@ export function PendingOrdersList({
     setBusyId(id);
     try {
       const note = action === "refund" ? prompt(t("notePrompt")) ?? undefined : undefined;
-      const res = await fetch("/api/admin/deliver-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionId: id, action, note }),
-      });
-      const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? t("err"));
-      else {
-        onToast("ok", action === "deliver" ? t("delivered") : t("refunded", { amount: data.refunded }));
-        onSuccess();
-      }
+      const data = await apiPost<{ refunded?: number }>("/api/admin/deliver-order", { transactionId: id, action, note });
+      onToast("ok", action === "deliver" ? t("delivered") : t("refunded", { amount: data.refunded ?? 0 }));
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setBusyId(null); }
   }
 

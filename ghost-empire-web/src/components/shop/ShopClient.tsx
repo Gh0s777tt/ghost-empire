@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { shopDiscountFraction, discountedPrice } from "@/lib/economy";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { apiPost, ApiError } from "@/lib/api-client";
 import type { ShopItem } from "@prisma/client";
 
 type UserContext = {
@@ -102,17 +103,7 @@ export function ShopClient({
   async function buy(item: ShopItem) {
     setBusyItem(item.id);
     try {
-      const res = await fetch("/api/shop/buy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId: item.id }),
-      });
-      const data: BuyResponse = await res.json();
-      if (!res.ok || "error" in data) {
-        const err = "error" in data ? data.error : t("errBuy");
-        setToast({ kind: "err", msg: err });
-        return;
-      }
+      const data = await apiPost<Extract<BuyResponse, { ok: true }>>("/api/shop/buy", { itemId: item.id });
       emitBalance(data.newBalance);
       setToast({
         kind: "ok",
@@ -122,6 +113,8 @@ export function ShopClient({
       });
       await refreshSession();
       startTransition(() => router.refresh());
+    } catch (err) {
+      setToast({ kind: "err", msg: err instanceof ApiError ? err.message : t("errBuy") });
     } finally {
       setBusyItem(null);
       setConfirmItem(null);

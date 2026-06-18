@@ -5,6 +5,7 @@ import { GitMerge, AlertTriangle, Loader2, History, Eye } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type MergeUser = {
   id: string;
@@ -66,16 +67,15 @@ export function MergeUsersSection({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/merge-users");
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? t("loadError"));
+      const data = await apiGet<{ groups?: MergeGroup[] }>("/api/admin/merge-users");
+      setGroups(data.groups ?? []);
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) {
+        setError(err.message || t("loadError"));
         setGroups([]);
       } else {
-        setGroups(data.groups ?? []);
+        setError(t("netErr"));
       }
-    } catch {
-      setError(t("netErr"));
     } finally {
       setLoading(false);
     }
@@ -161,14 +161,10 @@ function DuplicateGroupCard({
     setPreviewing(true);
     setPreview(null);
     try {
-      const res = await fetch("/api/admin/merge-users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "preview", primary: primaryId, secondary: secondaryId }),
-      });
-      const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? "Preview failed");
-      else setPreview(data);
+      const data = await apiPost<MergePreview>("/api/admin/merge-users", { action: "preview", primary: primaryId, secondary: secondaryId });
+      setPreview(data);
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || "Preview failed") : "Preview failed");
     } finally {
       setPreviewing(false);
     }
@@ -181,25 +177,18 @@ function DuplicateGroupCard({
     }
     setExecuting(true);
     try {
-      const res = await fetch("/api/admin/merge-users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "execute",
-          primary: primaryId,
-          secondary: secondaryId,
-          confirm: confirmText.trim(),
-        }),
+      const data = await apiPost<{ summary: { tokens: number; transactions: number } }>("/api/admin/merge-users", {
+        action: "execute",
+        primary: primaryId,
+        secondary: secondaryId,
+        confirm: confirmText.trim(),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? "Merge failed");
-      } else {
-        onToast("ok", t("merged", { tokens: String(data.summary.tokens), txn: String(data.summary.transactions) }));
-        setPreview(null);
-        setConfirmText("");
-        onSuccess();
-      }
+      onToast("ok", t("merged", { tokens: String(data.summary.tokens), txn: String(data.summary.transactions) }));
+      setPreview(null);
+      setConfirmText("");
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || "Merge failed") : "Merge failed");
     } finally {
       setExecuting(false);
     }

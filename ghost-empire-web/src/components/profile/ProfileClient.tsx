@@ -16,6 +16,7 @@ import { formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle }
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscountFraction } from "@/lib/economy";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 type Achievement = {
   id: string;
@@ -521,21 +522,22 @@ function SocialLinksEditor({
     if (!draft.trim()) return;
     setBusy(platform);
     try {
-      const res = await fetch("/api/profile/social-links", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ platform, handle: draft }),
-      });
-      const data = await res.json();
-      if (res.ok && data.link) {
+      const data = await apiPost<{ link?: { id: string; platform: string; handle: string; url: string } }>(
+        "/api/profile/social-links",
+        { platform, handle: draft },
+      );
+      if (data.link) {
+        const link = data.link;
         setLinks((prev) => {
           const others = prev.filter((l) => l.platform !== platform);
-          return [...others, data.link].sort((a, b) => a.platform.localeCompare(b.platform));
+          return [...others, link].sort((a, b) => a.platform.localeCompare(b.platform));
         });
         setOpen(null);
         setDraft("");
         startTransition(() => router.refresh());
       }
+    } catch {
+      // non-ok / connectivity → leave the form open, no state change
     } finally {
       setBusy(null);
     }
@@ -643,16 +645,11 @@ function DiscordLinkCard() {
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch("/api/profile/discord-link-code", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) {
-        setErr(data.error ?? t("discordErrGeneric"));
-      } else {
-        setCode(data.code);
-        setExpiresAt(data.expiresAt);
-      }
-    } catch {
-      setErr(t("discordErrConn"));
+      const data = await apiPost<{ code: string; expiresAt: string }>("/api/profile/discord-link-code");
+      setCode(data.code);
+      setExpiresAt(data.expiresAt);
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : t("discordErrConn"));
     } finally {
       setBusy(false);
     }
@@ -849,18 +846,11 @@ function AccountsAndLinks({
     if (!confirm(t("unlinkConfirm", { label: meta?.label ?? providerId }))) return;
     setBusy(providerId);
     try {
-      const res = await fetch("/api/profile/connections/unlink", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: providerId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setFlash({ kind: "err", msg: data.error ?? t("unlinkFailGeneric") });
-      } else {
-        setFlash({ kind: "ok", msg: t("unlinkedFlash", { label: meta?.label ?? providerId }) });
-        router.refresh();
-      }
+      await apiPost("/api/profile/connections/unlink", { provider: providerId });
+      setFlash({ kind: "ok", msg: t("unlinkedFlash", { label: meta?.label ?? providerId }) });
+      router.refresh();
+    } catch (err) {
+      setFlash({ kind: "err", msg: err instanceof ApiError ? err.message : t("unlinkFailGeneric") });
     } finally {
       setBusy(null);
     }

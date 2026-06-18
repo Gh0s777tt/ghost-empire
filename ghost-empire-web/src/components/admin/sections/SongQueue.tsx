@@ -5,6 +5,7 @@ import { Music, Loader2, Play, Check, SkipForward, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type SongRow = {
   id: string;
@@ -31,13 +32,10 @@ export function SongQueueManager({
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/song-requests");
-      const data = await res.json();
-      if (res.ok) {
-        setQueue(data.queue ?? []);
-        setRecent(data.recent ?? []);
-      }
-    } finally {
+      const data = await apiGet<{ queue?: SongRow[]; recent?: SongRow[] }>("/api/admin/song-requests");
+      setQueue(data.queue ?? []);
+      setRecent(data.recent ?? []);
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -50,17 +48,13 @@ export function SongQueueManager({
   }, [load]);
 
   async function call(action: string, id?: string) {
-    const res = await fetch("/api/admin/song-requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, id }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      onToast("err", data.error ?? t("err"));
+    try {
+      await apiPost("/api/admin/song-requests", { action, id });
+      return true;
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
       return false;
     }
-    return true;
   }
 
   async function act(action: string, id: string) {

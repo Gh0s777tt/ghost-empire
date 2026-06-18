@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Hourglass, Loader2, Play } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { SubathonCard } from "@/components/SubathonCard";
 
@@ -51,16 +52,15 @@ export function SubathonManager({
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/subathon");
-      const d = await res.json();
-      if (res.ok && d.subathon) {
+      const d = await apiGet<{ subathon?: SubathonData }>("/api/admin/subathon");
+      if (d.subathon) {
         setData(d.subathon);
         setPerSub(String(d.subathon.secondsPerSub));
         setPerPln(String(d.subathon.secondsPerPln));
         if (d.subathon.accentColor) setAccent(d.subathon.accentColor);
         if (typeof d.subathon.label === "string") setLabel(d.subathon.label);
       }
-    } finally {
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -75,19 +75,12 @@ export function SubathonManager({
   async function call(action: string, payload: Record<string, unknown>, okMsg: string) {
     setBusy(action);
     try {
-      const res = await fetch("/api/admin/subathon", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, ...payload }),
-      });
-      const d = await res.json();
-      if (!res.ok) {
-        onToast("err", d.error ?? t("err"));
-        return;
-      }
+      const d = await apiPost<{ subathon?: SubathonData }>("/api/admin/subathon", { action, ...payload });
       if (d.subathon) setData(d.subathon);
       onToast("ok", okMsg);
       onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(null);
     }
