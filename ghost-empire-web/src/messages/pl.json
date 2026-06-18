@@ -805,6 +805,10 @@
         "companion": {
           "name": "Champion Companion",
           "desc": "Pokazuje na streamie najmocniej nakarmionego pupila społeczności — nakarm swojego, by przejąć światło reflektorów."
+        },
+        "clan": {
+          "name": "Champion Clan",
+          "desc": "Pokazuje na streamie najbogatszy klan (skarbiec) — wpłacaj GT, by przejąć światło reflektorów."
         }
       },
       "prevAlertTitle": "Nowy sub!",

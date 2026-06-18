@@ -29,7 +29,8 @@ export type OverlayFeedKey =
   | "widget"
   | "chat"
   | "viewers"
-  | "companion";
+  | "companion"
+  | "clan";
 
 export type OverlayFeedDef = {
   /**
@@ -346,6 +347,18 @@ async function companionFeed(_p: URLSearchParams, tid: string | null): Promise<u
   return { exists: true, name: c.name, xp: c.xp, owner: displayNick(c.user.displayName, c.user.username), emoji: companionStage(c.xp).emoji };
 }
 
+// Champion Clan: the richest clan by treasury in the tenant — shown on stream to
+// drive contributions (pour GT in to put your clan in the spotlight).
+async function clanFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const c = await prisma.clan.findFirst({
+    where: { ...tidWhere(tid), treasury: { gt: 0 } },
+    orderBy: { treasury: "desc" },
+    select: { name: true, tag: true, treasury: true, _count: { select: { members: true } } },
+  });
+  if (!c) return { exists: false };
+  return { exists: true, name: c.name, tag: c.tag, treasury: c.treasury, members: c._count.members };
+}
+
 /**
  * Wrap a producer so that all OBS connections to the SAME feed+tenant share ONE
  * execution per tick instead of each running its own DB query loop. TTL =
@@ -374,6 +387,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   widget: shared("widget", { producer: widgetFeed, intervalMs: 8000 }),
   chat: shared("chat", { producer: chatFeed, intervalMs: 2000 }),
   companion: shared("companion", { producer: companionFeed, intervalMs: 8000 }),
+  clan: shared("clan", { producer: clanFeed, intervalMs: 10000 }),
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };
 
