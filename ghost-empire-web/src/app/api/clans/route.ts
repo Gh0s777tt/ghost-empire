@@ -15,6 +15,7 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { CLAN_CREATE_COST, normalizeClanTag, isValidClanTag, isValidClanName, isValidContribution } from "@/lib/clans";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { isWarLive } from "@/lib/clan-wars";
 
 const log = createLogger("clans");
 
@@ -44,7 +45,7 @@ export async function GET() {
   if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
   const tid = await currentTenantId();
 
-  const [mine, top] = await Promise.all([
+  const [mine, top, war] = await Promise.all([
     loadMyClan(session.user.id),
     prisma.clan.findMany({
       where: tid ? { tenantId: tid } : {},
@@ -52,13 +53,30 @@ export async function GET() {
       take: 20,
       select: { id: true, name: true, tag: true, treasury: true, _count: { select: { members: true } } },
     }),
+    prisma.clanWar.findFirst({ where: { status: "active", ...(tid ? { tenantId: tid } : {}) }, orderBy: { startsAt: "desc" } }),
   ]);
+
+  // War standings (top clans by warPoints) — only while a war is actually live.
+  const warLive = war != null && isWarLive({ status: war.status, endsAt: war.endsAt }, Date.now());
+  const warStandings = warLive
+    ? await prisma.clan.findMany({
+        where: { ...(tid ? { tenantId: tid } : {}), warPoints: { gt: 0 } },
+        orderBy: { warPoints: "desc" }, take: 10,
+        select: { id: true, name: true, tag: true, warPoints: true },
+      })
+    : [];
 
   return NextResponse.json({
     myClan: mine.myClan,
     balance: mine.balance,
     createCost: CLAN_CREATE_COST,
     leaderboard: top.map((c) => ({ id: c.id, name: c.name, tag: c.tag, treasury: c.treasury, members: c._count.members })),
+    war: warLive && war ? {
+      name: war.name,
+      endsAt: war.endsAt.toISOString(),
+      prizePool: war.prizePool,
+      standings: warStandings.map((c) => ({ id: c.id, tag: c.tag, name: c.name, points: c.warPoints })),
+    } : null,
   });
 }
 
@@ -79,7 +97,7 @@ export async function POST(req: Request) {
       case "create": return await createClan(userId, tid, body);
       case "join": return await joinClan(userId, tid, body);
       case "leave": return await leaveClan(userId);
-      case "contribute": return await contribute(userId, body);
+      case "contribute": return await contribute(userId, tid, body);
       default: return jsonError("action: create | join | leave | contribute", 400);
     }
   } catch (e) {
@@ -146,7 +164,7 @@ async function leaveClan(userId: string): Promise<NextResponse> {
   return NextResponse.json({ ok: true });
 }
 
-async function contribute(userId: string, body: { amount?: number }): Promise<NextResponse> {
+async function contribute(userId: string, tid: string | null, body: { amount?: number }): Promise<NextResponse> {
   const amount = Math.floor(Number(body.amount));
   if (!isValidContribution(amount)) throw new ClanError("Nieprawidłowa ilość GT", 400);
   const result = await prisma.$transaction(async (tx) => {
@@ -157,7 +175,14 @@ async function contribute(userId: string, body: { amount?: number }): Promise<Ne
       data: { tokens: { decrement: amount }, totalSpent: { increment: amount } },
     });
     if (dec.count === 0) throw new ClanError("Za mało Ghost Tokens", 402);
-    const clan = await tx.clan.update({ where: { id: me.clanId }, data: { treasury: { increment: amount } }, select: { treasury: true } });
+    // Clan-war scoring: a LIVE war also earns the clan war points for this contribution.
+    const war = await tx.clanWar.findFirst({ where: { status: "active", ...(tid ? { tenantId: tid } : {}) }, select: { status: true, endsAt: true } });
+    const warLive = war != null && isWarLive(war, Date.now());
+    const clan = await tx.clan.update({
+      where: { id: me.clanId },
+      data: { treasury: { increment: amount }, ...(warLive ? { warPoints: { increment: amount } } : {}) },
+      select: { treasury: true },
+    });
     await tx.transaction.create({ data: { userId, type: "spend", amount: -amount, reason: "clan_contribute", status: "completed" } });
     const fresh = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
     return { treasury: clan.treasury, balance: fresh?.tokens ?? 0 };

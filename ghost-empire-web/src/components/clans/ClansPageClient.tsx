@@ -3,7 +3,7 @@
 // Clans/teams — found or join a clan, pour GT into the shared treasury (a sink),
 // and climb the treasury leaderboard. Data + actions via /api/clans.
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, Crown, Users, LogOut, Plus, Coins } from "lucide-react";
+import { Loader2, Crown, Users, LogOut, Plus, Coins, Swords } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
@@ -14,7 +14,18 @@ import { TAG_MAX, NAME_MAX, normalizeClanTag } from "@/lib/clans";
 type Member = { id: string; username: string | null; displayName: string | null; image: string | null; level: number; clanRole: string | null };
 type MyClan = { id: string; name: string; tag: string; treasury: number; ownerUserId: string; members: Member[] };
 type LeaderRow = { id: string; name: string; tag: string; treasury: number; members: number };
-type ClansData = { myClan: MyClan | null; balance: number; createCost: number; leaderboard: LeaderRow[] };
+type WarStanding = { id: string; tag: string; name: string; points: number };
+type ClanWar = { name: string; endsAt: string; prizePool: number; standings: WarStanding[] };
+type ClansData = { myClan: MyClan | null; balance: number; createCost: number; leaderboard: LeaderRow[]; war: ClanWar | null };
+
+/** "ends in 2d 3h" style label from an ISO endsAt; localized via the clans namespace. */
+function warEndsLabel(endsAt: string, t: (k: string, v?: Record<string, number>) => string): string {
+  const ms = new Date(endsAt).getTime() - Date.now();
+  if (ms <= 0) return t("warEnding");
+  const h = Math.floor(ms / 3_600_000);
+  const d = Math.floor(h / 24);
+  return d > 0 ? t("warEndsD", { d, h: h % 24 }) : t("warEndsH", { h });
+}
 
 export function ClansPageClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const t = useTranslations("clans");
@@ -99,6 +110,33 @@ export function ClansPageClient({ isAuthenticated }: { isAuthenticated: boolean 
         <div className="text-sm text-zinc-500 text-center py-8 border border-zinc-900 bg-black/20 rounded-xl">{t("errGeneric")}</div>
       ) : (
         <div className="space-y-6">
+          {data.war && (
+            <div className="border border-amber-700/60 bg-gradient-to-b from-amber-950/30 to-black/40 rounded-xl p-5">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <h2 className="text-lg font-bold text-amber-200 flex items-center gap-2"><Swords className="w-5 h-5" /> {data.war.name}</h2>
+                <span className="text-xs font-mono text-amber-300/80 shrink-0">{warEndsLabel(data.war.endsAt, t)}</span>
+              </div>
+              <p className="text-xs text-zinc-400 mb-3">{t("warIntro")} · <span className="text-amber-300 font-mono">{data.war.prizePool.toLocaleString(nf)} {sym}</span></p>
+              {data.war.standings.length === 0 ? (
+                <p className="text-xs text-zinc-600">{t("warNoPoints")}</p>
+              ) : (
+                <div className="space-y-1">
+                  {data.war.standings.map((c, i) => {
+                    const mine = data.myClan?.id === c.id;
+                    return (
+                      <div key={c.id} className={`flex items-center gap-2 px-2 py-1.5 rounded border text-xs ${mine ? "border-amber-500 bg-amber-500/10" : "border-zinc-900 bg-black/20"}`}>
+                        {i === 0 ? <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" /> : <span className="w-3.5 text-center font-mono text-zinc-500 shrink-0">{i + 1}</span>}
+                        <span className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono font-bold shrink-0" style={{ color: "var(--brand)" }}>{c.tag}</span>
+                        <span className="text-zinc-200 truncate flex-1">{c.name}{mine && <span className="text-[10px] text-amber-400/80"> · {t("you")}</span>}</span>
+                        <span className="font-mono tabular-nums text-amber-300 shrink-0">{c.points.toLocaleString(nf)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="text-[11px] text-zinc-600 mt-3">{t("warHint")}</p>
+            </div>
+          )}
           {data.myClan ? (
             <div className="border border-zinc-800 bg-black/40 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">

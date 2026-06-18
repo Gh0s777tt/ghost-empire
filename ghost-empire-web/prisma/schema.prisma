@@ -172,6 +172,7 @@ model Clan {
   tag         String
   ownerUserId String
   treasury    Int      @default(0)
+  warPoints   Int      @default(0)              // GT contributed during the ACTIVE clan war; reset when a new war starts
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   members     User[]   @relation("ClanMembers")
@@ -179,7 +180,28 @@ model Clan {
   @@unique([tenantId, tag])
   @@index([tenantId])
   @@index([treasury])
+  @@index([warPoints])
   @@map("clans")
+}
+
+// A time-boxed clan war: clans earn `warPoints` (= GT members contribute during the
+// window); the admin starts/ends it and the top clan wins the prize pool into its
+// treasury. One active war per tenant at a time.
+model ClanWar {
+  id           String    @id @default(cuid())
+  tenantId     String?
+  name         String
+  startsAt     DateTime  @default(now())
+  endsAt       DateTime
+  status       String    @default("active")    // "active" | "ended"
+  prizePool    Int       @default(0)            // GT awarded to the winner's treasury on resolve
+  winnerClanId String?
+  winnerTag    String?
+  winnerPoints Int?
+  createdAt    DateTime  @default(now())
+
+  @@index([tenantId, status])
+  @@map("clan_wars")
 }
 
 model Account {
