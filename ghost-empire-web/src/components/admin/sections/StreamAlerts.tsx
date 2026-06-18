@@ -6,6 +6,7 @@ import { Zap, Eye, EyeOff, Copy, Loader2, Check } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { AlertCard } from "@/components/AlertCard";
 import {
   ALERT_TYPE_LIST,
@@ -52,8 +53,7 @@ function AlertTypeList({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/alert-types")
-      .then((r) => (r.ok ? r.json() : null))
+    apiGet<{ types?: AlertTypeRow[] }>("/api/admin/alert-types")
       .then((d) => { if (!cancelled) { if (d?.types) setRows(d.types); setLoaded(true); } })
       .catch(() => { if (!cancelled) setLoaded(true); });
     return () => { cancelled = true; };
@@ -66,22 +66,17 @@ function AlertTypeList({
   async function save(row: AlertTypeRow) {
     setSavingType(row.type);
     try {
-      const res = await fetch("/api/admin/alert-types", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: row.type,
-          animation: row.animation,
-          position: row.position,
-          soundUrl: row.soundUrl,
-          minAmount: row.minAmount,
-        }),
+      await apiPost("/api/admin/alert-types", {
+        type: row.type,
+        animation: row.animation,
+        position: row.position,
+        soundUrl: row.soundUrl,
+        minAmount: row.minAmount,
       });
-      const d = await res.json();
-      if (!res.ok) onToast("err", d.error ?? t("err"));
-      else { onToast("ok", t("savedType", { label: typeLabel(row.type, row.label) })); patch(row.type, "configured", true); }
-    } catch {
-      onToast("err", t("netErr"));
+      onToast("ok", t("savedType", { label: typeLabel(row.type, row.label) })); patch(row.type, "configured", true);
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("netErr"));
     } finally {
       setSavingType(null);
     }
@@ -219,27 +214,20 @@ export function StreamAlertsManager({
   async function saveSettings() {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/alerts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "settings",
-          enabledTypes,
-          durationMs,
-          accentColor,
-          soundEnabled,
-          sizeScale,
-          textScale,
-          textColor,
-        }),
+      await apiPost("/api/admin/alerts", {
+        action: "settings",
+        enabledTypes,
+        durationMs,
+        accentColor,
+        soundEnabled,
+        sizeScale,
+        textScale,
+        textColor,
       });
-      const result = await res.json();
-      if (!res.ok) {
-        onToast("err", result.error ?? t("err"));
-      } else {
-        onToast("ok", t("saved"));
-        onSuccess();
-      }
+      onToast("ok", t("saved"));
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(false);
     }
@@ -248,14 +236,10 @@ export function StreamAlertsManager({
   async function sendTest() {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/alerts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "test" }),
-      });
-      const result = await res.json();
-      if (!res.ok) onToast("err", result.error ?? t("err"));
-      else onToast("ok", t("testSent"));
+      await apiPost("/api/admin/alerts", { action: "test" });
+      onToast("ok", t("testSent"));
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(false);
     }
@@ -317,14 +301,10 @@ export function StreamAlertsManager({
                     if (!confirm(t("regenConfirm"))) return;
                     setBusy(true);
                     try {
-                      const res = await fetch("/api/admin/alerts", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ action: "regenerate_token" }),
-                      });
-                      const result = await res.json();
-                      if (!res.ok) onToast("err", result.error ?? t("err"));
-                      else { onToast("ok", t("tokenRegenerated")); onSuccess(); }
+                      await apiPost("/api/admin/alerts", { action: "regenerate_token" });
+                      onToast("ok", t("tokenRegenerated")); onSuccess();
+                    } catch (err) {
+                      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
                     } finally { setBusy(false); }
                   }}
                   disabled={busy || pending}

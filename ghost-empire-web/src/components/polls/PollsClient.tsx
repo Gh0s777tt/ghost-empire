@@ -8,6 +8,7 @@ import { BarChart3, Check, Loader2, X } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 type Poll = {
   id: string;
@@ -36,17 +37,14 @@ export function PollsClient({
   async function vote(pollId: string, optionIndex: number) {
     setBusy(pollId);
     try {
-      const res = await fetch("/api/polls/vote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pollId, optionIndex }),
-      });
-      const d = await res.json();
-      if (!res.ok) { setToast({ kind: "err", msg: d.error ?? t("err") }); return; }
+      const d = await apiPost<{ counts: number[]; total: number; yourVote: number | null }>(
+        "/api/polls/vote",
+        { pollId, optionIndex },
+      );
       setPolls((ps) => ps.map((p) => (p.id === pollId ? { ...p, counts: d.counts, total: d.total, yourVote: d.yourVote } : p)));
       setToast({ kind: "ok", msg: t("voteSaved") });
-    } catch {
-      setToast({ kind: "err", msg: t("errNet") });
+    } catch (err) {
+      setToast({ kind: "err", msg: err instanceof ApiError ? err.message : t("errNet") });
     } finally {
       setBusy(null);
       setTimeout(() => setToast(null), 3000);

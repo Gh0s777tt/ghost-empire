@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, Check, X, Trophy, Gift, Package, Sparkles, AlertCircle } from "lucide-react";
 import { timeAgo, cn } from "@/lib/utils";
 import { useTranslations, useLocale } from "next-intl";
+import { apiGet, apiPost } from "@/lib/api-client";
 
 type Notification = {
   id: string;
@@ -40,9 +41,7 @@ export function NotificationBell() {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const res = await fetch("/api/notifications");
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = await apiGet<{ items: Notification[]; unreadCount: number }>("/api/notifications");
       setItems(data.items);
       setUnread(data.unreadCount);
     } catch {
@@ -76,15 +75,11 @@ export function NotificationBell() {
   async function markAllRead() {
     setLoading(true);
     try {
-      const res = await fetch("/api/notifications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ all: true }),
-      });
-      if (res.ok) {
-        setItems((prev) => prev.map((n) => ({ ...n, read: true })));
-        setUnread(0);
-      }
+      await apiPost("/api/notifications", { all: true });
+      setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnread(0);
+    } catch {
+      // non-ok / connectivity → leave state as-is
     } finally {
       setLoading(false);
     }

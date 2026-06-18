@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import { AlertTriangle, Trash2, Loader2, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 export function DatabaseResetCard({
   onToast,
@@ -25,22 +26,13 @@ export function DatabaseResetCard({
     if (!window.confirm(t("lastWarning"))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/reset-database", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: confirm.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-        setBusy(false);
-        return;
-      }
+      const data = await apiPost<{ deletedUsers: number }>("/api/admin/reset-database", { confirm: confirm.trim() });
       onToast("ok", t("resetDone", { count: data.deletedUsers }));
       // The acting admin's account is gone too — sign out and back to landing.
       setTimeout(() => signOut({ callbackUrl: "/welcome" }), 1800);
-    } catch {
-      onToast("err", t("netErr"));
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("netErr"));
       setBusy(false);
     }
   }

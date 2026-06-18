@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link as LinkIcon, Loader2, Zap } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 import type { StreamlabsConnectionData, UnmatchedDonation } from "../types";
 
 export function StreamlabsManager({
@@ -24,22 +25,16 @@ export function StreamlabsManager({
     if (act === "disconnect" && !confirm(t("disconnectConfirm"))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/streamlabs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: act }),
-      });
-      const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? t("err"));
-      else {
-        if (act === "sync") {
-          onToast(
-            "ok",
-            `Sync: fetched ${data.fetched ?? 0}, matched ${data.matched ?? 0}, unmatched ${data.unmatched ?? 0}`,
-          );
-        } else onToast("ok", t("disconnected"));
-        onSuccess();
-      }
+      const data = await apiPost<{ fetched?: number; matched?: number; unmatched?: number }>("/api/admin/streamlabs", { action: act });
+      if (act === "sync") {
+        onToast(
+          "ok",
+          `Sync: fetched ${data.fetched ?? 0}, matched ${data.matched ?? 0}, unmatched ${data.unmatched ?? 0}`,
+        );
+      } else onToast("ok", t("disconnected"));
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setBusy(false); }
   }
 

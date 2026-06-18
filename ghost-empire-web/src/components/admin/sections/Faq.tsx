@@ -5,6 +5,7 @@ import { HelpCircle, Loader2, Eye, EyeOff, Pencil, Trash2, Check, Plus } from "l
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type FaqRow = {
   id: string;
@@ -36,10 +37,9 @@ export function FaqManager({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/faq");
-      const data = await res.json();
-      if (res.ok) setFaqs(data.faqs ?? []);
-    } finally {
+      const data = await apiGet<{ faqs?: FaqRow[] }>("/api/admin/faq");
+      setFaqs(data.faqs ?? []);
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -47,17 +47,13 @@ export function FaqManager({
   useEffect(() => { void load(); }, [load]);
 
   async function call(action: string, payload: Record<string, unknown>) {
-    const res = await fetch("/api/admin/faq", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, ...payload }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      onToast("err", data.error ?? t("err"));
+    try {
+      await apiPost("/api/admin/faq", { action, ...payload });
+      return true;
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
       return false;
     }
-    return true;
   }
 
   function resetForm() {

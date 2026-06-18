@@ -5,6 +5,7 @@ import { Gift, Loader2, Check, Copy, Plus, Eye, EyeOff, Trash2 } from "lucide-re
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard, FieldInput } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { CodeCard } from "@/components/CodeCard";
 import type { CodeRow, CodeConfig } from "../types";
 
@@ -34,25 +35,20 @@ export function CodeDropsCard({
 
   async function reload() {
     try {
-      const r = await fetch("/api/admin/section-data?s=codes");
-      if (r.ok) { const d = await r.json(); setList(d.codes ?? []); }
+      const d = await apiGet<{ codes?: CodeRow[] }>("/api/admin/section-data?s=codes");
+      setList(d.codes ?? []);
     } catch { /* keep current list */ }
   }
 
   async function call(payload: Record<string, unknown>, okMsg?: string) {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/codes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) { onToast("err", data.error ?? t("err")); return false; }
+      await apiPost("/api/admin/codes", payload);
       if (okMsg) onToast("ok", okMsg);
       return true;
-    } catch {
-      onToast("err", t("errNet"));
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("errNet"));
       return false;
     } finally {
       setBusy(false);

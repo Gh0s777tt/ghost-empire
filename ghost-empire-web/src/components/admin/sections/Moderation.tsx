@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ShieldCheck, Loader2, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { ModViolationStats } from "./ModViolationStats";
 
 type ModConfig = {
@@ -90,15 +91,12 @@ export function ModerationManager({
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch("/api/admin/moderation");
-      if (r.ok) {
-        const d = await r.json();
-        setCfg(d.config);
-        setWordsText((d.config.profanityWords ?? []).join("\n"));
-        setRegexText((d.config.profanityRegex ?? []).join("\n"));
-        setLinkWlText((d.config.linkWhitelist ?? []).join("\n"));
-      }
-    } finally { setLoading(false); }
+      const d = await apiGet<{ config: ModConfig }>("/api/admin/moderation");
+      setCfg(d.config);
+      setWordsText((d.config.profanityWords ?? []).join("\n"));
+      setRegexText((d.config.profanityRegex ?? []).join("\n"));
+      setLinkWlText((d.config.linkWhitelist ?? []).join("\n"));
+    } catch { /* keep current */ } finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
 
@@ -111,19 +109,15 @@ export function ModerationManager({
       const words = wordsText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
       const profanityRegex = regexText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
       const linkWhitelist = linkWlText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
-      const res = await fetch("/api/admin/moderation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...cfg, profanityWords: words, profanityRegex, linkWhitelist }),
-      });
-      const d = await res.json();
-      if (!res.ok) { onToast("err", d.error ?? t("err")); return; }
+      const d = await apiPost<{ config: ModConfig }>("/api/admin/moderation", { ...cfg, profanityWords: words, profanityRegex, linkWhitelist });
       setCfg(d.config);
       setWordsText((d.config.profanityWords ?? []).join("\n"));
       setRegexText((d.config.profanityRegex ?? []).join("\n"));
       setLinkWlText((d.config.linkWhitelist ?? []).join("\n"));
       onToast("ok", t("saved"));
       onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setSaving(false); }
   }
 

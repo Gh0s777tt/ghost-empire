@@ -5,6 +5,7 @@ import { CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard, FieldInput } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 import type { ScheduleSlot } from "../types";
 
 export function ScheduleManager({
@@ -29,25 +30,19 @@ export function ScheduleManager({
   async function addSlot() {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/schedule", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dayOfWeek: parseInt(dayOfWeek),
-          startHour: parseInt(startHour),
-          startMinute: parseInt(startMinute),
-          durationMinutes: parseInt(durationMinutes),
-          title: title || undefined,
-          platform: platform || undefined,
-        }),
+      await apiPost("/api/admin/schedule", {
+        dayOfWeek: parseInt(dayOfWeek),
+        startHour: parseInt(startHour),
+        startMinute: parseInt(startMinute),
+        durationMinutes: parseInt(durationMinutes),
+        title: title || undefined,
+        platform: platform || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) onToast("err", data.error ?? t("err"));
-      else {
-        onToast("ok", t("slotAdded"));
-        setTitle("");
-        onSuccess();
-      }
+      onToast("ok", t("slotAdded"));
+      setTitle("");
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setBusy(false); }
   }
 

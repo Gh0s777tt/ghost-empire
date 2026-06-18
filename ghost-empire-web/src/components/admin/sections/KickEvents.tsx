@@ -5,6 +5,7 @@ import { Radio, Loader2, Zap, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type KickData = {
   streamerConnected: boolean;
@@ -45,10 +46,9 @@ export function KickEventsManager({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/kick-events");
-      const json = await res.json();
-      if (res.ok) setData(json);
-    } finally {
+      const json = await apiGet<KickData>("/api/admin/kick-events");
+      setData(json);
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -59,19 +59,17 @@ export function KickEventsManager({
     if (!confirm(t("setupConfirm"))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/kick-events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "setup" }),
-      });
-      const result = await res.json();
+      const result = await apiPost<{ error?: string; results?: Array<{ ok: boolean }>; message?: string }>(
+        "/api/admin/kick-events",
+        { action: "setup" },
+      );
       // Always log the full response so we can see exactly what Kick said
       console.log("[kick setup] response:", result);
-      if (!res.ok || result.error) {
-        // Error case (incl. HTTP 200 but Kick rejected / created nothing)
+      if (result.error) {
+        // Error case (HTTP 200 but Kick rejected / created nothing)
         onToast("err", result.error ?? t("setupErr"));
       } else if (Array.isArray(result.results) && result.results.length > 0) {
-        const ok = result.results.filter((r: { ok: boolean }) => r.ok).length;
+        const ok = result.results.filter((r) => r.ok).length;
         const fail = result.results.length - ok;
         onToast(fail > 0 ? "err" : "ok", `Setup: ok=${ok}, fail=${fail}`);
       } else {
@@ -79,6 +77,17 @@ export function KickEventsManager({
       }
       await load();
       onSuccess();
+    } catch (err) {
+      // HTTP-error response (non-2xx) — mirror the legacy `!res.ok` branch, which
+      // still refreshed the list afterwards.
+      if (err instanceof ApiError && err.status !== 0) {
+        console.log("[kick setup] response:", err.body);
+        onToast("err", err.message || t("setupErr"));
+        await load();
+        onSuccess();
+      } else {
+        onToast("err", t("setupErr"));
+      }
     } finally {
       setBusy(false);
     }
@@ -88,13 +97,10 @@ export function KickEventsManager({
     if (!confirm(t("deleteConfirm", { type }))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/kick-events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id }),
-      });
-      if (res.ok) { onToast("ok", t("deleted")); await load(); }
-      else { const r = await res.json(); onToast("err", r.error ?? t("err")); }
+      await apiPost("/api/admin/kick-events", { action: "delete", id });
+      onToast("ok", t("deleted")); await load();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally {
       setBusy(false);
     }

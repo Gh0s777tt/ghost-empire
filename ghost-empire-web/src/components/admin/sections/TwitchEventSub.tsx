@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { SectionCard } from "../shared";
+import { apiPost, ApiError } from "@/lib/api-client";
 import type { TwitchEventSubData } from "../types";
 
 export function TwitchEventSubManager({
@@ -26,20 +27,13 @@ export function TwitchEventSubManager({
     if (!confirm(t("setupConfirm"))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/twitch-eventsub", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "setup" }),
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        onToast("err", result.error ?? t("err"));
-      } else {
-        const ok = (result.results as Array<{ ok: boolean }>).filter((r) => r.ok).length;
-        const fail = (result.results as Array<{ ok: boolean }>).filter((r) => !r.ok).length;
-        onToast("ok", `Setup: ok=${ok}, fail=${fail}`);
-        onSuccess();
-      }
+      const result = await apiPost<{ results: Array<{ ok: boolean }> }>("/api/admin/twitch-eventsub", { action: "setup" });
+      const ok = result.results.filter((r) => r.ok).length;
+      const fail = result.results.filter((r) => !r.ok).length;
+      onToast("ok", `Setup: ok=${ok}, fail=${fail}`);
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
     } finally { setBusy(false); }
   }
 
@@ -47,13 +41,10 @@ export function TwitchEventSubManager({
     if (!confirm(t("deleteConfirm", { type }))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/twitch-eventsub", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id }),
-      });
-      if (res.ok) { onToast("ok", t("deleted")); onSuccess(); }
-      else onToast("err", t("err"));
+      await apiPost("/api/admin/twitch-eventsub", { action: "delete", id });
+      onToast("ok", t("deleted")); onSuccess();
+    } catch {
+      onToast("err", t("err"));
     } finally { setBusy(false); }
   }
 

@@ -5,6 +5,7 @@ import { Clock, Loader2, Eye, EyeOff, Pencil, Trash2, Check, Plus } from "lucide
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type ChatTimerRow = {
   id: string;
@@ -32,10 +33,9 @@ export function ChatTimersManager({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/chat-timers");
-      const data = await res.json();
-      if (res.ok) setTimers(data.timers ?? []);
-    } finally {
+      const data = await apiGet<{ timers?: ChatTimerRow[] }>("/api/admin/chat-timers");
+      setTimers(data.timers ?? []);
+    } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
@@ -43,17 +43,13 @@ export function ChatTimersManager({
   useEffect(() => { void load(); }, [load]);
 
   async function call(action: string, payload: Record<string, unknown>) {
-    const res = await fetch("/api/admin/chat-timers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, ...payload }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      onToast("err", data.error ?? t("err"));
+    try {
+      await apiPost("/api/admin/chat-timers", { action, ...payload });
+      return true;
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
       return false;
     }
-    return true;
   }
 
   function resetForm() {

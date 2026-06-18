@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Webhook, Loader2, Plus, Trash2, Send, Power } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type Hook = {
   id: string; label: string; url: string; events: string[];
@@ -34,18 +35,20 @@ export function WebhooksOutManager({
   const EVENT_LABEL = t.raw("eventLabel") as Record<string, string>;
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/admin/webhooks-out");
-    if (r.ok) { const d = await r.json(); setHooks(d.webhooks); setEvents(d.events); }
+    try {
+      const d = await apiGet<{ webhooks: Hook[]; events: string[] }>("/api/admin/webhooks-out");
+      setHooks(d.webhooks); setEvents(d.events);
+    } catch { /* keep current */ }
   }, []);
   useEffect(() => { void load(); }, [load]);
 
   async function call(payload: Record<string, unknown>): Promise<unknown | null> {
-    const r = await fetch("/api/admin/webhooks-out", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
-    });
-    const d = await r.json();
-    if (!r.ok) { onToast("err", d.error ?? t("err")); return null; }
-    return d;
+    try {
+      return await apiPost<unknown>("/api/admin/webhooks-out", payload);
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? (err.message || t("err")) : t("err"));
+      return null;
+    }
   }
 
   async function create() {

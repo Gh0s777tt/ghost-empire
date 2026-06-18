@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { cn, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { apiPost, ApiError } from "@/lib/api-client";
 
 type Winner = {
   id: string;
@@ -86,18 +87,11 @@ export function EventsClient({
   async function joinEvent(eventId: string) {
     setBusyId(eventId);
     try {
-      const res = await fetch("/api/events/join", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast("err", data.error ?? t("err"));
-      } else {
-        showToast("ok", t("joined"));
-        startTransition(() => router.refresh());
-      }
+      await apiPost("/api/events/join", { eventId });
+      showToast("ok", t("joined"));
+      startTransition(() => router.refresh());
+    } catch (err) {
+      showToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally {
       setBusyId(null);
     }
@@ -106,22 +100,18 @@ export function EventsClient({
   async function buyTickets(eventId: string, count: number) {
     setBusyId(eventId);
     try {
-      const res = await fetch("/api/events/raffle-tickets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, count }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast("err", data.error ?? t("err"));
-      } else {
-        showToast(
-          "ok",
-          t("boughtTickets", { count: data.bought, first: data.firstTicket, last: data.lastTicket }),
-        );
-        await refreshSession();
-        startTransition(() => router.refresh());
-      }
+      const data = await apiPost<{ bought: number; firstTicket: number; lastTicket: number }>(
+        "/api/events/raffle-tickets",
+        { eventId, count },
+      );
+      showToast(
+        "ok",
+        t("boughtTickets", { count: data.bought, first: data.firstTicket, last: data.lastTicket }),
+      );
+      await refreshSession();
+      startTransition(() => router.refresh());
+    } catch (err) {
+      showToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally {
       setBusyId(null);
     }

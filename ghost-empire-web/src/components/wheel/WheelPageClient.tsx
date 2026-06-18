@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import { emitBalance } from "@/lib/balance-bus";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
+import { apiGet } from "@/lib/api-client";
 import { Link } from "@/i18n/navigation";
 import { WheelGraphic, rotationForIndex, type WheelSeg } from "@/components/WheelGraphic";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -46,8 +47,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/wheel", { cache: "no-store" });
-      if (res.ok) setState(await res.json());
+      setState(await apiGet<WheelState>("/api/wheel"));
     } catch {
       /* ignore */
     }
