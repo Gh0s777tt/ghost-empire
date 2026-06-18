@@ -57,6 +57,13 @@ export async function generateMetadata(): Promise<Metadata> {
       index: true,
       follow: true,
     },
+    // PWA: iOS standalone (Add to Home Screen). The apple-touch-icon is served
+    // automatically from app/apple-icon.png; the web manifest covers Android.
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: t.shortName,
+    },
   };
 }
 

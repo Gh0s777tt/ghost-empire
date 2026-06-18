@@ -33,6 +33,10 @@ function buildCsp(nonce: string): string {
 
 export function proxy(request: NextRequest) {
   const isOverlay = request.nextUrl.pathname.startsWith("/overlay");
+  // The PWA offline fallback is a top-level route (app/offline), not under [locale].
+  // Like overlays it must skip next-intl rewriting (which would send "/offline" to
+  // "/pl/offline" and 404), while still receiving the CSP nonce.
+  const isOffline = request.nextUrl.pathname === "/offline";
 
   // Multi-tenant (SaaS): derive the tenant slug from the request subdomain and
   // forward it so server code can resolve it to a tenant. No DB call here — the
@@ -53,7 +57,7 @@ export function proxy(request: NextRequest) {
     request.headers.get("purpose") === "prefetch";
 
   if (isPrefetch) {
-    if (isOverlay) return NextResponse.next();
+    if (isOverlay || isOffline) return NextResponse.next();
     // Strip any client-sent tenant header; only a host-derived slug is trusted.
     const h = new Headers(request.headers);
     h.delete(TENANT_HEADER);
@@ -73,8 +77,8 @@ export function proxy(request: NextRequest) {
   if (tenantSlug) requestHeaders.set(TENANT_HEADER, tenantSlug);
 
   let response: NextResponse;
-  if (isOverlay) {
-    // OBS overlays: CSP only, no locale prefixing.
+  if (isOverlay || isOffline) {
+    // OBS overlays + PWA offline page: CSP only, no locale prefixing.
     response = NextResponse.next({ request: { headers: requestHeaders } });
   } else {
     // Localized routes: next-intl handles locale, carrying the nonce'd request headers.
@@ -90,6 +94,6 @@ export const config = {
     // All document routes except API, Next internals and static assets. Prefetch
     // requests are NOT excluded here — they must run through next-intl for locale
     // rewriting (see the isPrefetch branch above); they just skip the CSP nonce.
-    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|map)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|map)$).*)",
   ],
 };
