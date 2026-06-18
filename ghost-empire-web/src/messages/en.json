@@ -805,6 +805,10 @@
         "companion": {
           "name": "Champion Companion",
           "desc": "Shows the community's most-fed pet on stream — feed yours to claim the spotlight."
+        },
+        "clan": {
+          "name": "Champion Clan",
+          "desc": "Shows the richest clan by treasury on stream — pour GT in to put yours in the spotlight."
         }
       },
       "prevAlertTitle": "New sub!",

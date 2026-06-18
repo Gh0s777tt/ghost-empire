@@ -57,6 +57,8 @@ function widgetPreview(id: string, t: TFn, tokenSymbol: string, brandColor: stri
       return <div style={{ textAlign: "center", color: "#fff" }}><div style={{ fontSize: 64, lineHeight: 1 }}>🔥</div><div style={{ fontSize: 28, fontWeight: 900, textShadow: `0 0 12px ${brandColor}` }}>×12 COMBO!</div></div>;
     case "companion":
       return <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(15,15,20,0.92)", borderRadius: 14, padding: "8px 14px", border: `2px solid ${brandColor}`, color: "#fff" }}><span style={{ fontSize: 34 }}>👻</span><div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, color: brandColor }}>👑 CHAMPION COMPANION</div><div style={{ fontSize: 15, fontWeight: 800 }}>Widmo</div><div style={{ fontSize: 11, opacity: 0.75 }}>{t("prevActor1")} · 12 500 XP</div></div></div>;
+    case "clan":
+      return <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(15,15,20,0.92)", borderRadius: 14, padding: "8px 14px", border: `2px solid ${brandColor}`, color: "#fff" }}><span style={{ fontSize: 30 }}>🛡️</span><div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, color: brandColor }}>👑 CHAMPION CLAN</div><div style={{ fontSize: 15, fontWeight: 800 }}>[GH0ST] Widma</div><div style={{ fontSize: 11, opacity: 0.75 }}>1 250 000 GT · 👥 24</div></div></div>;
     default:
       return null;
   }
@@ -99,6 +101,7 @@ const WIDGET_META: WidgetMeta[] = [
   { id: "wheel",        path: "/overlay/wheel",       size: "400×440" },
   { id: "rumble",       path: "/overlay/rumble",      size: "360×120" },
   { id: "companion",    path: "/overlay/companion",   size: "360×140" },
+  { id: "clan",         path: "/overlay/clan",        size: "360×140" },
 ];
 
 export function WidgetsLibrary({
