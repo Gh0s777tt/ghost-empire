@@ -851,6 +851,7 @@
       "cancel": "Cancel",
       "previewLabel": "Preview",
       "builderLabel": "Screen — drag to position",
+      "scaleLabel": "Size {pct}%",
       "builderReset": "use slots",
       "builderHintFree": "Free position active — the slot dropdown is ignored on the overlay.",
       "builderHintSlot": "Click or drag on the screen to set a free position, or use the slot dropdown.",

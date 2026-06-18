@@ -20,6 +20,7 @@ type Feed =
       position: string;
       posXPct: number | null;
       posYPct: number | null;
+      scalePct: number | null;
       showCard: boolean;
       bgGradient: boolean;
       bgColor1: string;
@@ -27,23 +28,30 @@ type Feed =
       bgAngle: number;
     };
 
-function positionStyle(f: { position: string; posXPct: number | null; posYPct: number | null }): CSSProperties {
+function positionStyle(f: { position: string; posXPct: number | null; posYPct: number | null; scalePct: number | null }): CSSProperties {
   const s: CSSProperties = { position: "fixed", zIndex: 999999, pointerEvents: "none" };
+  const scale = f.scalePct != null ? f.scalePct / 100 : 1;
+  const sc = scale !== 1 ? ` scale(${scale})` : "";
   // Free drag position (set in the widget builder) takes precedence over the 9-slot `position`.
   if (f.posXPct != null && f.posYPct != null) {
-    s.left = `${f.posXPct}%`; s.top = `${f.posYPct}%`; s.transform = "translate(-50%, -50%)";
+    s.left = `${f.posXPct}%`; s.top = `${f.posYPct}%`; s.transform = `translate(-50%, -50%)${sc}`;
     return s;
   }
   const position = f.position;
   if (position === "center") {
-    s.top = "50%"; s.left = "50%"; s.transform = "translate(-50%, -50%)";
+    s.top = "50%"; s.left = "50%"; s.transform = `translate(-50%, -50%)${sc}`;
     return s;
   }
   const [v, h] = position.split("-");
   if (v === "top") s.top = PAD; else s.bottom = PAD;
   if (h === "left") s.left = PAD;
   else if (h === "right") s.right = PAD;
-  else { s.left = "50%"; s.transform = "translateX(-50%)"; }
+  else { s.left = "50%"; s.transform = `translateX(-50%)${sc}`; }
+  // Corner anchors (no transform yet): scale from the anchored corner so it stays pinned.
+  if (s.transform === undefined && sc) {
+    s.transform = `scale(${scale})`;
+    s.transformOrigin = `${v === "top" ? "top" : "bottom"} ${h === "left" ? "left" : "right"}`;
+  }
   return s;
 }
 

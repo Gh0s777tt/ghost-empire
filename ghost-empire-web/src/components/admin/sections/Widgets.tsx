@@ -77,7 +77,7 @@ type CustomWidget = {
   id: string; name: string; text: string; accentColor: string; textColor: string;
   fontSizePx: number; fontFamily: string; position: string; showCard: boolean;
   bgGradient: boolean; bgColor1: string; bgColor2: string; bgAngle: number;
-  posXPct: number | null; posYPct: number | null;
+  posXPct: number | null; posYPct: number | null; scalePct: number | null;
 };
 
 type Widget = { id: string; name: string; path: string; desc: string; size: string; query?: string };
@@ -247,6 +247,7 @@ function CustomWidgetGenerator({
   const [bgAngle, setBgAngle] = useState(135);
   const [posX, setPosX] = useState<number | null>(null);
   const [posY, setPosY] = useState<number | null>(null);
+  const [scale, setScale] = useState(100);
 
   const load = useCallback(async () => {
     try {
@@ -261,7 +262,7 @@ function CustomWidgetGenerator({
     setAccentColor(brandColor); setTextColor("#ffffff");
     setFontSizePx(28); setFontFamily("Inter"); setPosition("top-left"); setShowCard(true);
     setBgGradient(false); setBgColor1("#7928ca"); setBgColor2("#ff0080"); setBgAngle(135);
-    setPosX(null); setPosY(null);
+    setPosX(null); setPosY(null); setScale(100);
   }
 
   function startEdit(w: CustomWidget) {
@@ -269,7 +270,7 @@ function CustomWidgetGenerator({
     setAccentColor(w.accentColor); setTextColor(w.textColor);
     setFontSizePx(w.fontSizePx); setFontFamily(w.fontFamily); setPosition(w.position); setShowCard(w.showCard);
     setBgGradient(w.bgGradient); setBgColor1(w.bgColor1); setBgColor2(w.bgColor2); setBgAngle(w.bgAngle);
-    setPosX(w.posXPct); setPosY(w.posYPct);
+    setPosX(w.posXPct); setPosY(w.posYPct); setScale(w.scalePct ?? 100);
   }
 
   async function save() {
@@ -280,7 +281,7 @@ function CustomWidgetGenerator({
         action: editingId ? "update" : "create",
         id: editingId ?? undefined,
         name, text, accentColor, textColor, fontSizePx, fontFamily, position, showCard,
-        bgGradient, bgColor1, bgColor2, bgAngle, posXPct: posX, posYPct: posY,
+        bgGradient, bgColor1, bgColor2, bgAngle, posXPct: posX, posYPct: posY, scalePct: scale === 100 ? null : scale,
       });
       onToast("ok", editingId ? t("saved") : t("created"));
       resetForm();
@@ -393,12 +394,15 @@ function CustomWidgetGenerator({
 
         {/* Live preview + drag-to-position canvas (16:9 screen) */}
         <PositionCanvas
-          x={posX} y={posY}
+          x={posX} y={posY} scale={scale}
           onChange={(px, py) => { setPosX(px); setPosY(py); }}
           onClear={() => { setPosX(null); setPosY(null); }}
           t={t}
           child={<CustomWidgetCard text={text || t("previewTextPh")} accentColor={accentColor} textColor={textColor} fontSizePx={fontSizePx} fontFamily={fontFamily} showCard={showCard} bgGradient={bgGradient} bgColor1={bgColor1} bgColor2={bgColor2} bgAngle={bgAngle} />}
         />
+        <label className="block text-[11px] text-zinc-400 mt-2">{t("scaleLabel", { pct: scale })}
+          <input type="range" min={25} max={300} step={5} value={scale} onChange={(e) => setScale(parseInt(e.target.value, 10))} className="w-full" />
+        </label>
       </div>
 
       {/* List */}
@@ -438,9 +442,10 @@ function CustomWidgetGenerator({
 // 16:9 "screen" canvas: click/drag to set a free overlay position (0–100%); a reset
 // clears it back to the 9-slot `position`. The rendered child is the live widget card.
 function PositionCanvas({
-  x, y, onChange, onClear, t, child,
+  x, y, scale, onChange, onClear, t, child,
 }: {
   x: number | null; y: number | null;
+  scale: number;
   onChange: (x: number, y: number) => void;
   onClear: () => void;
   t: TFn;
@@ -471,7 +476,7 @@ function PositionCanvas({
         className="relative aspect-video w-full border border-zinc-800 rounded-sm cursor-crosshair overflow-hidden touch-none select-none"
         style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}
       >
-        <div style={{ position: "absolute", left: free ? `${x}%` : "50%", top: free ? `${y}%` : "50%", transform: "translate(-50%, -50%) scale(0.55)", pointerEvents: "none", opacity: free ? 1 : 0.8 }}>
+        <div style={{ position: "absolute", left: free ? `${x}%` : "50%", top: free ? `${y}%` : "50%", transform: `translate(-50%, -50%) scale(${0.55 * (scale / 100)})`, pointerEvents: "none", opacity: free ? 1 : 0.8 }}>
           {child}
         </div>
       </div>

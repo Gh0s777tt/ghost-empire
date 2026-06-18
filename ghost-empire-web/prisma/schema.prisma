@@ -1640,6 +1640,7 @@ model CustomWidget {
   bgAngle     Int      @default(135)              // gradient angle in degrees (0-360)
   posXPct     Int?                                // free drag position (0-100% of screen); null = use `position` slot
   posYPct     Int?
+  scalePct    Int?                                // free resize (25-300% of natural size); null = 100%
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
