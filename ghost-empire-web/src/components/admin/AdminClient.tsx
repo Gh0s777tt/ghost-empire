@@ -29,6 +29,7 @@ function SectionLoading() {
 }
 const AnalyticsSection = dynamic(() => import("./sections/Analytics").then((m) => m.AnalyticsSection), { ssr: false, loading: SectionLoading });
 const EconomyHealthSection = dynamic(() => import("./sections/EconomyHealth").then((m) => m.EconomyHealthSection), { ssr: false, loading: SectionLoading });
+const CommunitySection = dynamic(() => import("./sections/Community").then((m) => m.CommunitySection), { ssr: false, loading: SectionLoading });
 const AuditLogSection = dynamic(() => import("./sections/AuditLog").then((m) => m.AuditLogSection), { ssr: false, loading: SectionLoading });
 const PollsManager = dynamic(() => import("./sections/Polls").then((m) => m.PollsManager), { ssr: false, loading: SectionLoading });
 const ModerationManager = dynamic(() => import("./sections/Moderation").then((m) => m.ModerationManager), { ssr: false, loading: SectionLoading });
@@ -127,7 +128,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "audit" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "audit" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -143,6 +144,7 @@ export function AdminClient({
     { id: "dashboard", label: t("secDashboard"),   icon: LayoutDashboard, group: "main",       level: 1, permission: () => true },
     { id: "analytics", label: t("secAnalytics"),    icon: TrendingUp,     group: "main",       level: 2, permission: () => isAdmin },
     { id: "economy",   label: t("secEconomy"),      icon: Coins,          group: "main",       level: 2, permission: () => isAdmin },
+    { id: "community", label: t("secCommunity"),    icon: Users,          group: "main",       level: 2, permission: () => isAdmin },
     { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
     { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
     { id: "tenants",   label: t("secTenants"),      icon: Building2,       group: "main",       level: 3, permission: () => isPlatformOwner },
@@ -505,6 +507,7 @@ export function AdminClient({
 
           {activeSection === "analytics" && isAdmin && <AnalyticsSection />}
           {activeSection === "economy" && isAdmin && <EconomyHealthSection />}
+          {activeSection === "community" && isAdmin && <CommunitySection />}
 
           {activeSection === "audit" && can("view_audit") && (
             <LazySection<{ auditLog: AuditEntry[] }> s="audit">
