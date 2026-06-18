@@ -127,6 +127,7 @@ model User {
   duelsOpposed    Duel[]      @relation("DuelOpponent")
   duelsWon        Duel[]      @relation("DuelWinner")
   heistEntries    HeistEntry[]
+  companion       Companion?
 
   // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
   // turn full-table scan+sort into index range scans on free-tier Postgres.
@@ -136,6 +137,25 @@ model User {
   @@index([streak])
   @@index([tenantId])
   @@map("users")
+}
+
+// A per-user "Ghost Companion" — an idle pet that grows with fed GT and evolves
+// through stages. Feeding BURNS GT out of circulation (a real economy sink, the
+// counterpart to all the GT faucets). xp = lifetime GT fed; stage derived in
+// lib/companion.ts. One per user (@unique), cascades on account delete.
+model Companion {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String    @default("Widmo")
+  xp        Int       @default(0)
+  lastFedAt DateTime?
+  tenantId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@map("companions")
 }
 
 model Account {

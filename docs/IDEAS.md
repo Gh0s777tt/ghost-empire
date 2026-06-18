@@ -25,8 +25,8 @@ Wykrywa szczyt zaangażowania (sentyment/tempo czatu, hype train, gwałtowny wzr
 - **Klucze:** AI provider (masz adapter), Twitch scope `clips:edit`, OAuth TikTok/YT upload.
 - **Wysiłek:** L (3–5 PR-ów: detekcja → klip → AI-tytuł → publikacja → panel).
 
-### 🐾 Ghost Companion — pet idle-game — 🤖
-Widmowy kompan rosnący z czasu oglądania; widzowie karmią go GT (spust!), ewoluuje przez etapy, żyje na profilu i opcjonalnym overlayu.
+### 🐾 Ghost Companion — pet idle-game — ✅ MVP DOWIEZIONY
+Widmowy kompan; widzowie karmią go GT (**realny spust!**), ewoluuje przez 6 etapów. **MVP na produkcji:** model `Companion`, `lib/companion.ts` (6 etapów + progres, +5 testów), strona `/companion` (karmienie + zmiana imienia), atomowy spend (wzorzec sklepu), link w nawigacji (grupa GRY), i18n PL/EN. **⚠️ wymaga `db push`.** **Follow-up:** overlay `/overlay/companion`, kafelek na `/profile`, decay/streak, sekcja admina (etapy/koszty).
 - **Modele:** `Companion { id, userId @unique, name, stage, xp, lastFedAt, evolution }`.
 - **Logika (czysta, testowalna):** `companionStage(xp)`, `feedCost(stage)`, decay/bonus za streak; karmienie = atomowy spend GT (wzorzec jak sklep) → realny **spust GT** (synergia z dashboardem ekonomii).
 - **UI:** kafelek na `/profile` + sekcja `/admin` (etapy/koszty) + overlay `/overlay/companion?token=`.
