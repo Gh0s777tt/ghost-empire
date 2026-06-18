@@ -12,6 +12,7 @@ import { getCurrentTenant } from "@/lib/tenant";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import TourProvider from "@/components/tour/SiteTour";
 import { ClientErrorReporter } from "@/components/ClientErrorReporter";
+import { RegisterServiceWorker } from "@/components/pwa/RegisterServiceWorker";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -94,6 +95,8 @@ export default async function LocaleLayout({
         <SpeedInsights />
         {/* Uncaught client errors → Vercel logs (Sentry-lite, no deps). */}
         <ClientErrorReporter />
+        {/* PWA: register the offline/installable service worker (prod only). */}
+        <RegisterServiceWorker />
       </body>
     </html>
   );
