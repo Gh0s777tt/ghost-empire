@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { effectivePlan } from "@/lib/entitlements";
+import { effectivePlan, planHasFeature } from "@/lib/entitlements";
 import { safeMediaUrl } from "@/lib/url-safe";
 import { logAdminAction } from "@/lib/audit";
 
@@ -48,9 +48,16 @@ export async function PATCH(req: Request) {
   }
   const mine = await prisma.tenant.findFirst({
     where: { ownerUserId: session.user.id },
-    select: { id: true, slug: true },
+    select: { id: true, slug: true, plan: true, planExpiresAt: true },
   });
   if (!mine) return NextResponse.json({ error: "Nie masz jeszcze portalu" }, { status: 404 });
+
+  // Custom white-label branding (name/token naming/logo/colour) is an ELITE feature.
+  // Gate on the OWNER's tenant plan — NOT featureGateResponse(), which checks the Host
+  // tenant (the owner may edit from the main domain, not their subdomain).
+  if (!planHasFeature(effectivePlan(mine.plan, mine.planExpiresAt), "custom_branding")) {
+    return NextResponse.json({ error: "Personalizacja brandingu jest dostępna w planie Elite" }, { status: 403 });
+  }
 
   let body: Record<string, unknown>;
   try { body = (await req.json()) as Record<string, unknown>; } catch {

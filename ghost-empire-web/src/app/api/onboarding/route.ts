@@ -57,6 +57,10 @@ export async function POST(req: Request) {
 
   const me = await prisma.user.findUnique({ where: { id: session.user.id }, select: { email: true } });
 
+  // The no-card 14-day trial grants at most Pro — Elite must go through billing,
+  // otherwise a streamer could self-issue a free Elite trial (basic→basic, pro/elite→pro).
+  const trialPlan = normalizePlan(body.plan) === "basic" ? "basic" : "pro";
+
   const tenant = await prisma.tenant.create({
     data: {
       slug,
@@ -70,7 +74,7 @@ export async function POST(req: Request) {
       ...(typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())
         ? { brandColor: body.brandColor.trim() }
         : {}),
-      plan: normalizePlan(body.plan),
+      plan: trialPlan,
       planExpiresAt: new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000),
     },
   });

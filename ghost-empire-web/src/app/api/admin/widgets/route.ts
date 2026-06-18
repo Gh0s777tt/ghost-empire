@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
+import { featureGateResponse } from "@/lib/entitlements";
 
 const POSITIONS = ["top-left", "top-center", "top-right", "center", "bottom-left", "bottom-center", "bottom-right"];
 
@@ -26,6 +27,11 @@ export async function GET() {
 export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  // Custom widgets are part of the pro "overlays" feature — block create/update/delete
+  // for a tenant whose plan doesn't include it (GET stays open so the panel still lists).
+  const gated = await featureGateResponse("overlays");
+  if (gated) return gated;
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch {

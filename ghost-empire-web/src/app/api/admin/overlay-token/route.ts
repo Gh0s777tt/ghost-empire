@@ -5,12 +5,15 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { getSettings } from "@/lib/alerts";
+import { featureGateResponse } from "@/lib/entitlements";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const gated = await featureGateResponse("overlays");
+  if (gated) return gated;
   const settings = await getSettings();
   return NextResponse.json({ token: settings.overlayToken });
 }
