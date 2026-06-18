@@ -3,7 +3,7 @@
 // Will be auto-synced from platforms in Phase 2 via EventSub/webhooks
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/admin";
+import { requirePermission, findManagedUser } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 const VALID_PLATFORMS = ["twitch", "kick", "discord", "youtube"];
@@ -34,11 +34,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Platform: ${VALID_PLATFORMS.join("|")}` }, { status: 400 });
   }
 
-  // Accept account ID (cuid), username, or Discord ID — single OR query so the
-  // update resolves in one DB round-trip instead of up to three (faster feedback).
-  const user = await prisma.user.findFirst({
-    where: { OR: [{ id: target }, { username: target }, { discordId: target }] },
-  });
+  // Accept account ID (cuid), username, or Discord ID — scoped to the caller's tenant
+  // so a moderator of portal A can't flag sub/mod/VIP on a portal-B user (#440 sweep).
+  const user = await findManagedUser(target, auth);
 
   if (!user) {
     return NextResponse.json({ error: `User "${target}" nie znaleziony` }, { status: 404 });
