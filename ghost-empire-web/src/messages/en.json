@@ -1554,6 +1554,19 @@
       "sinksTitle": "Top GT sinks",
       "windowNote": "Last {days} days · {count} transactions"
     },
+    "secCommunity": "Community",
+    "community": {
+      "title": "Community",
+      "intro": "Your social features at a glance — top Ghost Companions (by fed GT) and top clans (by treasury). Both sink GT, balancing the faucets.",
+      "loading": "Loading…",
+      "empty": "No community data yet.",
+      "companions": "Companions",
+      "totalFed": "Total fed",
+      "clans": "Clans",
+      "totalTreasury": "Clan treasuries",
+      "topCompanions": "Top companions",
+      "topClans": "Top clans"
+    },
     "secIntegrations": "Integrations",
     "secWebhooks": "Webhooks",
     "secUsers": "Users",

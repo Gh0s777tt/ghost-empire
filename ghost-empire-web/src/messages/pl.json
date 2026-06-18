@@ -1554,6 +1554,19 @@
       "sinksTitle": "Top spusty GT",
       "windowNote": "Ostatnie {days} dni · {count} transakcji"
     },
+    "secCommunity": "Społeczność",
+    "community": {
+      "title": "Społeczność",
+      "intro": "Funkcje społecznościowe na skróty — top Ghost Companiony (wg nakarmionych GT) i top klany (wg skarbca). Oba spalają GT, równoważąc krany.",
+      "loading": "Wczytywanie…",
+      "empty": "Brak danych o społeczności.",
+      "companions": "Companiony",
+      "totalFed": "Nakarmiono",
+      "clans": "Klany",
+      "totalTreasury": "Skarbce klanów",
+      "topCompanions": "Top companiony",
+      "topClans": "Top klany"
+    },
     "secIntegrations": "Integracje",
     "secWebhooks": "Webhooki",
     "secUsers": "Użytkownicy",
