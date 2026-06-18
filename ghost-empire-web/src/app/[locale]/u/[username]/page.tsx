@@ -15,6 +15,7 @@ import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons
 import { Link } from "@/i18n/navigation";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP } from "@/lib/economy";
+import { companionStage } from "@/lib/companion";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +102,8 @@ export default async function PublicProfilePage({
       isBanned: true,
       bannedUntil: true,
       createdAt: true,
+      companion: { select: { xp: true } },
+      clan: { select: { tag: true, name: true } },
       // PRIVATE — NOT exposed: tokens (balance), totalSpent, email, modNote, banReason
     },
   });
@@ -299,6 +302,12 @@ export default async function PublicProfilePage({
             <StatTile label={t("statStreak")} value={`${user.streak} ${t("streakUnit", { count: user.streak })}`} emoji="🔥" />
             <StatTile label={t("statMessages")} value={fmt(user.messageCount, locale)} emoji="💬" />
             <StatTile label={t("statVoice")} value={`${fmt(user.voiceMinutes, locale)} min`} emoji="🎤" />
+            {user.companion && user.companion.xp > 0 && (
+              <StatTile label={t("statCompanion")} value={`${fmt(user.companion.xp, locale)} XP`} emoji={companionStage(user.companion.xp).emoji} />
+            )}
+            {user.clan && (
+              <StatTile label={t("statClan")} value={`[${user.clan.tag}]`} emoji="🛡️" />
+            )}
           </div>
 
           {/* Ranking positions */}

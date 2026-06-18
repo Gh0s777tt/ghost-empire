@@ -2530,6 +2530,8 @@
     "xpTotal": "Łącznie {xp} XP / {max} XP do max LVL",
     "ownPanel": "→ Twój panel",
     "statLifetime": "Lifetime %gt%",
+    "statCompanion": "Kompan",
+    "statClan": "Klan",
     "statStreak": "Streak",
     "statMessages": "Wiadomości",
     "statVoice": "Voice",
