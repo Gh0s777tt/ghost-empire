@@ -1679,6 +1679,8 @@
     "statMessages": "Messages",
     "statVoice": "Voice",
     "statDuels": "Duels",
+    "statCompanion": "Companion",
+    "statClan": "Clan",
     "duelWr": "{n}% WR",
     "pendingTitle": "Orders in progress",
     "pendingSubtitle": "{count, plural, one {# purchase} other {# purchases}} awaiting delivery",
