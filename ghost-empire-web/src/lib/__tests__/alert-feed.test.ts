@@ -68,6 +68,14 @@ describe("shapeAlerts", () => {
     expect(out.accent).toBeNull();
   });
 
+  it("lifts a per-alert soundUrl out of meta and prefers it over the type config", () => {
+    const cfg: Record<string, AlertTypeCfg> = {
+      donation: { ...DEFAULT_ALERT_TYPE_CFG, soundUrl: "https://x/type.mp3" },
+    };
+    const [out] = shapeAlerts([row({ meta: JSON.stringify({ soundUrl: "https://x/redeem.mp3" }) })], cfg);
+    expect(out.soundUrl).toBe("https://x/redeem.mp3"); // meta override wins
+  });
+
   it("preserves order and maps multiple rows", () => {
     const out = shapeAlerts([row({ id: "a" }), row({ id: "b" }), row({ id: "c" })], {});
     expect(out.map((o) => o.id)).toEqual(["a", "b", "c"]);

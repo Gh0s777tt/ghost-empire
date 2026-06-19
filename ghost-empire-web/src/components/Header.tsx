@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 // Transition crossfade between pages (locale routing preserved; degrades gracefully).
 import { usePathname } from "@/i18n/navigation";
 import { TransitionLink as Link } from "@/components/TransitionLink";
-import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, HelpCircle, Rocket, Film, type LucideIcon } from "lucide-react";
+import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, HelpCircle, Rocket, Film, Volume2, type LucideIcon } from "lucide-react";
 import { displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -22,7 +22,7 @@ import { useTenantBranding } from "@/components/TenantBranding";
 // Grouped navigation. Labels are i18n keys (namespace "nav") resolved at render.
 type NavKey =
   | "home" | "shop" | "ranking" | "games" | "casino" | "wheel"
-  | "library" | "community" | "events" | "polls" | "achievements" | "schedule" | "companion" | "clans" | "clips";
+  | "library" | "community" | "events" | "polls" | "achievements" | "schedule" | "companion" | "clans" | "clips" | "sounds";
 type NavLeaf = { href: string; tk: NavKey; icon: LucideIcon };
 type NavGroup = { tk: NavKey; icon: LucideIcon; children: NavLeaf[] };
 type NavEntry = NavLeaf | NavGroup;
@@ -38,6 +38,7 @@ const NAV: NavEntry[] = [
       { href: "/kasyno", tk: "casino",  icon: Dice5 },
       { href: "/wheel",  tk: "wheel",   icon: Disc3 },
       { href: "/companion", tk: "companion", icon: Ghost },
+      { href: "/sounds", tk: "sounds", icon: Volume2 },
       { href: "/games",  tk: "library", icon: Gamepad2 },
     ],
   },

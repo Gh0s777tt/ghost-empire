@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
@@ -31,6 +31,7 @@ const AnalyticsSection = dynamic(() => import("./sections/Analytics").then((m) =
 const EconomyHealthSection = dynamic(() => import("./sections/EconomyHealth").then((m) => m.EconomyHealthSection), { ssr: false, loading: SectionLoading });
 const CommunitySection = dynamic(() => import("./sections/Community").then((m) => m.CommunitySection), { ssr: false, loading: SectionLoading });
 const ClanWarsManager = dynamic(() => import("./sections/ClanWars").then((m) => m.ClanWarsManager), { ssr: false, loading: SectionLoading });
+const SoundRewardsManager = dynamic(() => import("./sections/SoundRewards").then((m) => m.SoundRewardsManager), { ssr: false, loading: SectionLoading });
 const TwoFactorManager = dynamic(() => import("./sections/TwoFactor").then((m) => m.TwoFactorManager), { ssr: false, loading: SectionLoading });
 const AuditLogSection = dynamic(() => import("./sections/AuditLog").then((m) => m.AuditLogSection), { ssr: false, loading: SectionLoading });
 const PollsManager = dynamic(() => import("./sections/Polls").then((m) => m.PollsManager), { ssr: false, loading: SectionLoading });
@@ -130,7 +131,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -171,6 +172,7 @@ export function AdminClient({
 
     { id: "widgets",   label: t("secWidgets"), icon: LayoutGrid,    group: "overlays",   level: 2, permission: () => isAdmin },
     { id: "alerts",    label: t("secAlerts"), icon: Bell,          group: "overlays",   level: 1, permission: () => isAdmin },
+    { id: "soundrewards", label: t("secSoundrewards"), icon: Volume2, group: "overlays",   level: 2, permission: () => isAdmin },
     { id: "goals",     label: t("secGoals"), icon: Target,         group: "overlays",   level: 1, permission: () => isAdmin },
     { id: "subathon",  label: t("secSubathon"),      icon: Hourglass,     group: "overlays",   level: 2, permission: () => isAdmin },
 
@@ -513,6 +515,7 @@ export function AdminClient({
           {activeSection === "economy" && isAdmin && <EconomyHealthSection />}
           {activeSection === "community" && isAdmin && <CommunitySection />}
           {activeSection === "clanwars" && isAdmin && <ClanWarsManager onToast={showToast} />}
+          {activeSection === "soundrewards" && isAdmin && <SoundRewardsManager onToast={showToast} />}
           {activeSection === "twofactor" && isAdmin && <TwoFactorManager onToast={showToast} />}
 
           {activeSection === "audit" && can("view_audit") && (

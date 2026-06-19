@@ -1550,6 +1550,24 @@ model StreamAlertSettings {
   @@map("stream_alert_settings")
 }
 
+// GT sound redemptions: a streamer-defined catalog of sounds viewers can buy with
+// GT to play on stream. A redemption spends GT and dispatches a "sound_redeem"
+// alert carrying the soundUrl in its meta (the overlay plays it).
+model SoundReward {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  name      String
+  emoji     String?
+  cost      Int
+  soundUrl  String   // URL to the sound file (same as per-type alert sounds)
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, active])
+  @@map("sound_rewards")
+}
+
 // =====================================================
 // ALERT TYPE CONFIG — per-alert-type overrides for the OBS overlay.
 // A type with NO row falls back to the overlay defaults (slide / bottom-right /
