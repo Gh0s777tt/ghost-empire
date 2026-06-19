@@ -1873,6 +1873,7 @@
     "schedule": "Stream schedule",
     "profile": "Profile",
     "myProfile": "My profile",
+    "portals": "My portals",
     "launchPortal": "Launch your own portal",
     "login": "Sign in",
     "logout": "Sign out",
@@ -1917,6 +1918,24 @@
         "a": "Yes — open the account menu or the About page and pick \"Launch your own portal\" to start your own white-label community."
       }
     }
+  },
+  "portals": {
+    "title": "My portals",
+    "subtitle": "Switch between your favorite streamers' portals from one place.",
+    "loading": "Loading…",
+    "thisPortal": "This portal",
+    "followed": "Portals you follow",
+    "follow": "Follow",
+    "following": "Following",
+    "switch": "Switch",
+    "switchUnavailable": "Available once portals are live",
+    "emptyFollows": "You don't follow any other portals yet.",
+    "emptyFollowsHint": "Visit a streamer's portal and tap Follow — it'll show up here so you can switch anytime.",
+    "loginPrompt": "Sign in to follow streamer portals and switch between them.",
+    "login": "Sign in",
+    "notReady": "The hub isn't ready yet — try again shortly.",
+    "rateLimited": "Too fast — give it a moment.",
+    "errGeneric": "Something went wrong — try again."
   },
   "common": {
     "howItWorks": "How does it work?",

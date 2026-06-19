@@ -18,33 +18,57 @@ datasource db {
 // required once every row is attributed.
 
 model Tenant {
-  id          String   @id @default(cuid())
-  slug        String   @unique           // subdomain + URL key, e.g. "ghost-empire"
-  name        String                     // brand display name, e.g. "GH0ST EMPIRE"
-  shortName   String?                    // manifest short_name / compact UI
-  brandColor  String   @default("#E50914")
-  logoUrl     String?
-  domain      String?                    // optional custom domain
+  id                   String    @id @default(cuid())
+  slug                 String    @unique // subdomain + URL key, e.g. "ghost-empire"
+  name                 String // brand display name, e.g. "GH0ST EMPIRE"
+  shortName            String? // manifest short_name / compact UI
+  brandColor           String    @default("#E50914")
+  logoUrl              String?
+  domain               String? // optional custom domain
   // White-label currency naming (Phase 5): i18n catalogs carry %tokenName%/%gt%
   // markers that the message loader replaces with these per-tenant values.
-  tokenName   String   @default("Ghost Tokens")  // full currency name, e.g. "Neo Coins"
-  tokenSymbol String   @default("GT")            // short unit shown next to amounts
-  ownerHandle String?                            // streamer's public handle (%owner% in i18n), e.g. "Gh0s77tt"
+  tokenName            String    @default("Ghost Tokens") // full currency name, e.g. "Neo Coins"
+  tokenSymbol          String    @default("GT") // short unit shown next to amounts
+  ownerHandle          String? // streamer's public handle (%owner% in i18n), e.g. "Gh0s77tt"
   // Phase 6 — billing/entitlements. The founder tenant defaults to "elite" so the
   // existing portal never gates itself; paying tenants get their plan at checkout.
-  plan             String    @default("elite")   // "basic" | "pro" | "elite"
-  planExpiresAt    DateTime?                     // null = never (founder); past date = expired → basic features
-  stripeCustomerId     String? @unique
-  stripeSubscriptionId String? @unique
-  ownerUserId String?                    // streamer-admin who owns this tenant (plain ref — no relation, to avoid a second User<->Tenant edge)
-  ownerEmail  String?                    // owner's login email — first sign-in on the tenant's subdomain with this email gets isAdmin (Phase 6 onboarding)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  plan                 String    @default("elite") // "basic" | "pro" | "elite"
+  planExpiresAt        DateTime? // null = never (founder); past date = expired → basic features
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  ownerUserId          String? // streamer-admin who owns this tenant (plain ref — no relation, to avoid a second User<->Tenant edge)
+  ownerEmail           String? // owner's login email — first sign-in on the tenant's subdomain with this email gets isAdmin (Phase 6 onboarding)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   // Phase 3 will scope the remaining models; User is the anchor relation.
-  users       User[]
+  users     User[]
+  // Viewers who follow this portal (cross-portal "switch streamers" hub, #508).
+  followers PortalFollow[]
 
   @@map("tenants")
+}
+
+// =====================================================
+// STREAMER HUB (#508) — cross-portal follow + switch
+// =====================================================
+// A viewer "follows" a streamer's portal so it shows in their hub and they can
+// jump between favorite portals from anywhere. Additive + non-breaking: built on
+// the existing shared identity (one User per person), so it touches NO auth/account
+// code. A row simply records "this user follows this tenant's portal".
+model PortalFollow {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+  @@index([userId])
+  @@index([tenantId])
+  @@map("portal_follows")
 }
 
 // =====================================================
@@ -59,30 +83,30 @@ model User {
   image         String?
 
   // Identity
-  username      String?   @unique
-  displayName   String?
-  bio           String?
+  username    String? @unique
+  displayName String?
+  bio         String?
 
   // Economy
-  tokens        Int       @default(0)
-  totalEarned   Int       @default(0)
-  totalSpent    Int       @default(0)
+  tokens      Int @default(0)
+  totalEarned Int @default(0)
+  totalSpent  Int @default(0)
 
   // Referrals — own shareable code + who invited this user (set once on claim)
-  referralCode  String?   @unique
-  referredById  String?
+  referralCode String? @unique
+  referredById String?
 
   // Progression
-  level         Int       @default(1)
-  xp            Int       @default(0)
-  prestige      Int       @default(0)    // Phantom Ascension: +1 per PRESTIGE_XP of lifetime XP past the level cap (never resets)
-  streak        Int       @default(0)
-  lastStreakDate String?   // "YYYY-MM-DD"
-  lastDaily     DateTime?
+  level          Int       @default(1)
+  xp             Int       @default(0)
+  prestige       Int       @default(0) // Phantom Ascension: +1 per PRESTIGE_XP of lifetime XP past the level cap (never resets)
+  streak         Int       @default(0)
+  lastStreakDate String? // "YYYY-MM-DD"
+  lastDaily      DateTime?
 
   // Stats
-  messageCount  Int       @default(0)
-  voiceMinutes  Int       @default(0)
+  messageCount Int @default(0)
+  voiceMinutes Int @default(0)
 
   // Security — opt-in TOTP step-up for sensitive admin actions.
   // totpSecret is encrypted at rest (lib/crypto); totpEnabledAt set once confirmed.
@@ -90,57 +114,58 @@ model User {
   totpEnabledAt DateTime?
 
   // Discord link
-  discordId     String?   @unique
+  discordId       String? @unique
   discordUsername String?
 
   // Admin & roles
-  isAdmin        Boolean   @default(false)
-  isModerator    Boolean   @default(false)
-  isDonator      Boolean   @default(false)
-  totalDonated   Int       @default(0)    // suma donejtów (w jednostkach umownych, np. groszach)
-  modNote        String?                   // notatka admina
-  modPermissions String[]  @default([])    // ["create_events","grant_tokens","ban_users","manage_shop","draw_events","mark_subs"]
+  isAdmin        Boolean  @default(false)
+  isModerator    Boolean  @default(false)
+  isDonator      Boolean  @default(false)
+  totalDonated   Int      @default(0) // suma donejtów (w jednostkach umownych, np. groszach)
+  modNote        String? // notatka admina
+  modPermissions String[] @default([]) // ["create_events","grant_tokens","ban_users","manage_shop","draw_events","mark_subs"]
 
   // Site-level ban/mute (independent of platform bans)
-  isBanned       Boolean   @default(false)
-  bannedUntil    DateTime?                 // null = permanent
-  banReason      String?
+  isBanned    Boolean   @default(false)
+  bannedUntil DateTime? // null = permanent
+  banReason   String?
 
   // Tenancy (multi-tenant SaaS). Phase 1: nullable + backfilled to the default
   // tenant; a later phase makes it required once every row is scoped.
-  tenantId      String?
-  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
 
   // Timestamps
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // NextAuth relations
-  accounts      Account[]
-  sessions      Session[]
+  accounts Account[]
+  sessions Session[]
 
   // App relations
-  connections     Connection[]
-  transactions    Transaction[]
+  connections      Connection[]
+  transactions     Transaction[]
   userAchievements UserAchievement[]
-  userTasks       UserTask[]
-  socialLinks     SocialLink[]
-  eventEntries    EventEntry[]
-  raffleTickets   RaffleTicket[]
-  notifications   Notification[]
-  donations       Donation[]
-  pollVotes       PollVote[]
-  clipVotes       ClipVote[]
-  wheelSpins      WheelSpin[]
-  gtGamePlays     GtGamePlay[]
-  duelsChallenged Duel[]      @relation("DuelChallenger")
-  duelsOpposed    Duel[]      @relation("DuelOpponent")
-  duelsWon        Duel[]      @relation("DuelWinner")
-  heistEntries    HeistEntry[]
-  companion       Companion?
-  clanId          String?
-  clanRole        String?     // "owner" | "member" within `clan`
-  clan            Clan?       @relation("ClanMembers", fields: [clanId], references: [id])
+  userTasks        UserTask[]
+  socialLinks      SocialLink[]
+  eventEntries     EventEntry[]
+  raffleTickets    RaffleTicket[]
+  notifications    Notification[]
+  donations        Donation[]
+  pollVotes        PollVote[]
+  clipVotes        ClipVote[]
+  portalFollows    PortalFollow[]
+  wheelSpins       WheelSpin[]
+  gtGamePlays      GtGamePlay[]
+  duelsChallenged  Duel[]            @relation("DuelChallenger")
+  duelsOpposed     Duel[]            @relation("DuelOpponent")
+  duelsWon         Duel[]            @relation("DuelWinner")
+  heistEntries     HeistEntry[]
+  companion        Companion?
+  clanId           String?
+  clanRole         String? // "owner" | "member" within `clan`
+  clan             Clan?             @relation("ClanMembers", fields: [clanId], references: [id])
 
   // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
   // turn full-table scan+sort into index range scans on free-tier Postgres.
@@ -161,13 +186,13 @@ model ClipVote {
   id        String   @id @default(cuid())
   tenantId  String?
   userId    String
-  clipId    String   // Twitch clip id
-  week      String   // ISO week key, e.g. "2026-W25"
+  clipId    String // Twitch clip id
+  week      String // ISO week key, e.g. "2026-W25"
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, week])     // one vote per user per week
+  @@unique([userId, week]) // one vote per user per week
   @@index([tenantId, week])
   @@index([clipId])
   @@map("clip_votes")
@@ -202,7 +227,7 @@ model Clan {
   tag         String
   ownerUserId String
   treasury    Int      @default(0)
-  warPoints   Int      @default(0)              // GT contributed during the ACTIVE clan war; reset when a new war starts
+  warPoints   Int      @default(0) // GT contributed during the ACTIVE clan war; reset when a new war starts
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   members     User[]   @relation("ClanMembers")
@@ -218,17 +243,17 @@ model Clan {
 // window); the admin starts/ends it and the top clan wins the prize pool into its
 // treasury. One active war per tenant at a time.
 model ClanWar {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   tenantId     String?
   name         String
-  startsAt     DateTime  @default(now())
+  startsAt     DateTime @default(now())
   endsAt       DateTime
-  status       String    @default("active")    // "active" | "ended"
-  prizePool    Int       @default(0)            // GT awarded to the winner's treasury on resolve
+  status       String   @default("active") // "active" | "ended"
+  prizePool    Int      @default(0) // GT awarded to the winner's treasury on resolve
   winnerClanId String?
   winnerTag    String?
   winnerPoints Int?
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime @default(now())
 
   @@index([tenantId, status])
   @@map("clan_wars")
@@ -279,47 +304,47 @@ model VerificationToken {
 // =====================================================
 
 model Connection {
-  id           String   @id @default(cuid())
-  userId       String
-  platform     String   // "twitch" | "kick" | "youtube" | "discord"
-  platformId   String   // user's ID on that platform
-  username     String
-  displayName  String?
-  avatar       String?
+  id          String  @id @default(cuid())
+  userId      String
+  platform    String // "twitch" | "kick" | "youtube" | "discord"
+  platformId  String // user's ID on that platform
+  username    String
+  displayName String?
+  avatar      String?
 
   // OAuth tokens (encrypted in production)
-  accessToken  String?  @db.Text
-  refreshToken String?  @db.Text
+  accessToken  String?   @db.Text
+  refreshToken String?   @db.Text
   tokenExpiry  DateTime?
 
   // Sub status
-  isSubscriber Boolean  @default(false)
-  subTier      String?  // "T1" | "T2" | "T3" | "Prime"
-  subMonths    Int      @default(0)
+  isSubscriber Boolean   @default(false)
+  subTier      String? // "T1" | "T2" | "T3" | "Prime"
+  subMonths    Int       @default(0)
   subStartDate DateTime?
 
   // Platform role (Twitch mod, Discord admin, Kick mod, etc.)
-  isModerator  Boolean  @default(false)  // mod na DANEJ platformie
-  isVip        Boolean  @default(false)  // VIP na Twitch / equivalent
-  isOG         Boolean  @default(false)  // Kick OG (original supporter)
+  isModerator Boolean @default(false) // mod na DANEJ platformie
+  isVip       Boolean @default(false) // VIP na Twitch / equivalent
+  isOG        Boolean @default(false) // Kick OG (original supporter)
 
   // Platform-side ban/mute (set by streamer/mods on tej platformie)
-  isBanned     Boolean  @default(false)
-  isMuted      Boolean  @default(false)
-  banReason    String?
+  isBanned  Boolean @default(false)
+  isMuted   Boolean @default(false)
+  banReason String?
 
   // Platform metrics
-  bits         Int?                       // Twitch lifetime bits cheered
-  kickPoints   Int?                       // Kick channel points
-  subCount     Int?                       // sub count of THIS user's channel (if streamer themselves)
+  bits       Int? // Twitch lifetime bits cheered
+  kickPoints Int? // Kick channel points
+  subCount   Int? // sub count of THIS user's channel (if streamer themselves)
 
   // Cached stats (updated via webhook/cron)
-  followers    Int?
-  following    Int?
-  viewCount    Int?
+  followers Int?
+  following Int?
+  viewCount Int?
 
-  connectedAt  DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  connectedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -340,10 +365,10 @@ model Transaction {
   userId String
 
   type   String // "earn" | "spend" | "admin_grant" | "admin_deduct" | "refund"
-  amount Int    // positive = earn, negative = spend
+  amount Int // positive = earn, negative = spend
 
   reason     String
-  multiplier Float   @default(1.0)
+  multiplier Float  @default(1.0)
 
   // External payment id (e.g. "paymedia:<payment_id>") — unique, so a concurrent
   // webhook retry loses with P2002 instead of double-crediting. NULL for
@@ -355,7 +380,7 @@ model Transaction {
   shopItem   ShopItem? @relation(fields: [shopItemId], references: [id])
 
   // Delivery status (for physical/digital items)
-  status String @default("completed") // "pending" | "completed" | "delivered" | "refunded"
+  status String  @default("completed") // "pending" | "completed" | "delivered" | "refunded"
   note   String?
 
   createdAt DateTime @default(now())
@@ -379,29 +404,29 @@ model ShopItem {
   tenantId    String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
   name        String
   description String  @db.Text
-  category    String  // "games" | "skins" | "subs" | "cosmetic" | "experience"
+  category    String // "games" | "skins" | "subs" | "cosmetic" | "experience"
   price       Int
 
-  imageUrl    String?
-  imageEmoji  String? @default("🎁")
+  imageUrl   String?
+  imageEmoji String? @default("🎁")
 
-  stock       Int     @default(-1)   // -1 = unlimited
-  totalStock  Int     @default(-1)
+  stock      Int @default(-1) // -1 = unlimited
+  totalStock Int @default(-1)
 
-  hot         Boolean @default(false)
-  active      Boolean @default(true)
-  featured    Boolean @default(false)
+  hot      Boolean @default(false)
+  active   Boolean @default(true)
+  featured Boolean @default(false)
 
   // Requirements
-  requiresSubTier  String?  // "T1" | "T2" | "T3" | "DUAL"
-  requiresMinLevel Int?
-  requiresMinMonths Int?
-  requiresAchievement String?  // Achievement.code that must be earned to unlock this item
+  requiresSubTier     String? // "T1" | "T2" | "T3" | "DUAL"
+  requiresMinLevel    Int?
+  requiresMinMonths   Int?
+  requiresAchievement String? // Achievement.code that must be earned to unlock this item
 
-  sortOrder   Int     @default(0)
+  sortOrder Int @default(0)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   transactions Transaction[]
 
@@ -416,16 +441,16 @@ model ShopItem {
 model Event {
   id          String  @id @default(cuid())
   tenantId    String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
-  type        String  // "giveaway" | "raffle" | "contest" | "happy_hour"
+  type        String // "giveaway" | "raffle" | "contest" | "happy_hour"
   name        String
   description String? @db.Text
 
-  active      Boolean  @default(true)
-  startsAt    DateTime?
-  endsAt      DateTime?
+  active   Boolean   @default(true)
+  startsAt DateTime?
+  endsAt   DateTime?
 
   // Happy Hour fields
-  multiplier  Float?
+  multiplier Float?
 
   // Giveaway / Contest / Raffle fields
   prize         String?
@@ -434,18 +459,18 @@ model Event {
   requirement   String?
 
   // Raffle specific
-  ticketPrice   Int?
+  ticketPrice       Int?
   maxTicketsPerUser Int?
 
   // Auto-draw
-  autoDrawAt    DateTime?
-  drawnAt       DateTime?
+  autoDrawAt DateTime?
+  drawnAt    DateTime?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById String?
 
-  entries     EventEntry[]
+  entries       EventEntry[]
   raffleTickets RaffleTicket[]
 
   @@index([tenantId])
@@ -453,11 +478,11 @@ model Event {
 }
 
 model EventEntry {
-  id       String  @id @default(cuid())
-  eventId  String
-  userId   String
+  id      String @id @default(cuid())
+  eventId String
+  userId  String
 
-  isWinner Boolean @default(false)
+  isWinner  Boolean   @default(false)
   claimedAt DateTime?
 
   joinedAt DateTime @default(now())
@@ -470,9 +495,9 @@ model EventEntry {
 }
 
 model RaffleTicket {
-  id      String @id @default(cuid())
-  eventId String
-  userId  String
+  id           String @id @default(cuid())
+  eventId      String
+  userId       String
   ticketNumber Int
 
   boughtAt DateTime @default(now())
@@ -488,7 +513,7 @@ model RaffleTicket {
 // =====================================================
 
 model Achievement {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   tenantId    String? // multi-tenant (Phase 3) — collection
   code        String // unique PER TENANT (see @@unique below) — was globally @unique
   name        String
@@ -498,12 +523,12 @@ model Achievement {
   hidden      Boolean @default(false)
 
   // Trigger conditions (checked by engine)
-  triggerType  String?  // "level" | "tokens_earned" | "streak" | "messages" | "manual"
+  triggerType  String? // "level" | "tokens_earned" | "streak" | "messages" | "manual"
   triggerValue Int?
 
-  xpReward     Int @default(0)
-  tokenReward  Int @default(0)
-  rewardNote   String?  // optional non-token reward shown when earned (game key / item / role / etc.)
+  xpReward    Int     @default(0)
+  tokenReward Int     @default(0)
+  rewardNote  String? // optional non-token reward shown when earned (game key / item / role / etc.)
 
   createdAt DateTime @default(now())
 
@@ -515,7 +540,7 @@ model Achievement {
 }
 
 model UserAchievement {
-  id            String @id @default(cuid())
+  id            String   @id @default(cuid())
   userId        String
   achievementId String
   earnedAt      DateTime @default(now())
@@ -532,10 +557,10 @@ model UserAchievement {
 // =====================================================
 
 model DailyTask {
-  id      String @id @default(cuid())
-  code    String @unique
-  text    String
-  textEn  String?
+  id     String  @id @default(cuid())
+  code   String  @unique
+  text   String
+  textEn String?
 
   target      Int
   reward      Int
@@ -550,14 +575,14 @@ model DailyTask {
 }
 
 model UserTask {
-  id       String @id @default(cuid())
-  userId   String
-  taskId   String
-  date     String // "YYYY-MM-DD" — resets daily
+  id     String @id @default(cuid())
+  userId String
+  taskId String
+  date   String // "YYYY-MM-DD" — resets daily
 
-  progress Int     @default(0)
-  done     Boolean @default(false)
-  claimed  Boolean @default(false)
+  progress  Int       @default(0)
+  done      Boolean   @default(false)
+  claimed   Boolean   @default(false)
   claimedAt DateTime?
 
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -615,19 +640,19 @@ model Notification {
 // =====================================================
 
 model StreamDrop {
-  id        String   @id @default(cuid())
-  tenantId  String? // multi-tenant (Phase 3) — collection
-  code      String   // unique PER TENANT (see @@unique below) — was globally @unique
-  reward    Int
-  bonusReward Int    @default(0)
-  bonusSlots  Int    @default(10)  // first N users get bonus
+  id          String  @id @default(cuid())
+  tenantId    String? // multi-tenant (Phase 3) — collection
+  code        String // unique PER TENANT (see @@unique below) — was globally @unique
+  reward      Int
+  bonusReward Int     @default(0)
+  bonusSlots  Int     @default(10) // first N users get bonus
 
-  active    Boolean  @default(true)
-  expiresAt DateTime?
-  createdAt DateTime @default(now())
+  active      Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
   createdById String?
 
-  claims    DropClaim[]
+  claims DropClaim[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -639,15 +664,15 @@ model StreamDrop {
 // =====================================================
 
 model AdminAction {
-  id          String   @id @default(cuid())
-  adminId     String   // user.id who did the action
-  adminName   String?  // snapshot of admin username at time of action
-  action      String   // "grant_tokens" | "create_drop" | "create_event" | "draw_event" | "deliver_order" | "refund_order" | "set_user_role" | "set_connection_role" | "deactivate_drop" | "deactivate_event"
-  targetType  String?  // "user" | "drop" | "event" | "transaction" | "connection"
-  targetId    String?  // affected entity id
-  details     String?  @db.Text // JSON-stringified payload for inspection
-  ipAddress   String?  // request IP (rough client identification)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  adminId    String // user.id who did the action
+  adminName  String? // snapshot of admin username at time of action
+  action     String // "grant_tokens" | "create_drop" | "create_event" | "draw_event" | "deliver_order" | "refund_order" | "set_user_role" | "set_connection_role" | "deactivate_drop" | "deactivate_event"
+  targetType String? // "user" | "drop" | "event" | "transaction" | "connection"
+  targetId   String? // affected entity id
+  details    String?  @db.Text // JSON-stringified payload for inspection
+  ipAddress  String? // request IP (rough client identification)
+  createdAt  DateTime @default(now())
 
   @@index([adminId, createdAt])
   @@index([action, createdAt])
@@ -667,22 +692,22 @@ model AdminAction {
 // =====================================================
 
 model BotConfig {
-  id                      String   @id @default(cuid()) // was singleton "default"; now one row per tenant
-  tenantId                String?  @unique // multi-tenant (Phase 3)
-  messageReward           Int      @default(5)
-  messageCooldownSeconds  Int      @default(60)
-  voiceRewardPerMinute    Int      @default(10)
-  voiceTickSeconds        Int      @default(60)
-  afkGivesReward          Boolean  @default(false)
-  mutedGivesReward        Boolean  @default(true)
-  enabled                 Boolean  @default(true)
+  id                     String   @id @default(cuid()) // was singleton "default"; now one row per tenant
+  tenantId               String?  @unique // multi-tenant (Phase 3)
+  messageReward          Int      @default(5)
+  messageCooldownSeconds Int      @default(60)
+  voiceRewardPerMinute   Int      @default(10)
+  voiceTickSeconds       Int      @default(60)
+  afkGivesReward         Boolean  @default(false)
+  mutedGivesReward       Boolean  @default(true)
+  enabled                Boolean  @default(true)
   // Happy hours: GT-earn multiplier applied PORTAL-SIDE (chat-award / award routes)
   // inside the [start, end) window in Europe/Warsaw — the bot needs no changes.
-  happyHourEnabled        Boolean  @default(false)
-  happyHourStart          Int      @default(19) // hour 0-23, Europe/Warsaw
-  happyHourEnd            Int      @default(22) // exclusive; start>end = overnight window
-  happyHourMultiplier     Float    @default(2)
-  updatedAt               DateTime @updatedAt
+  happyHourEnabled       Boolean  @default(false)
+  happyHourStart         Int      @default(19) // hour 0-23, Europe/Warsaw
+  happyHourEnd           Int      @default(22) // exclusive; start>end = overnight window
+  happyHourMultiplier    Float    @default(2)
+  updatedAt              DateTime @updatedAt
 
   @@map("bot_config")
 }
@@ -693,18 +718,18 @@ model BotConfig {
 // =====================================================
 
 model ChatCommand {
-  id              String   @id @default(cuid())
-  tenantId        String?                    // multi-tenant (Phase 3 bot models)
-  trigger         String                     // first word that triggers it, e.g. "!portal" (lowercased)
-  response        String   @db.Text         // text the bot replies with
-  cooldownSeconds Int      @default(15)      // per-command cooldown across all chatters
-  enabled         Boolean  @default(true)    // disabled commands are not sent to the bot
+  id               String   @id @default(cuid())
+  tenantId         String? // multi-tenant (Phase 3 bot models)
+  trigger          String // first word that triggers it, e.g. "!portal" (lowercased)
+  response         String   @db.Text // text the bot replies with
+  cooldownSeconds  Int      @default(15) // per-command cooldown across all chatters
+  enabled          Boolean  @default(true) // disabled commands are not sent to the bot
   // Conditional gating (evaluated bot-side from portal live status — Twitch StreamSession)
-  requiresLive    Boolean  @default(false)   // only fires while the stream is live
-  activeFromMinute Int     @default(0)        // only after the stream has been live N minutes (0 = always; implies live)
-  createdById     String?                    // admin user id who created it
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  requiresLive     Boolean  @default(false) // only fires while the stream is live
+  activeFromMinute Int      @default(0) // only after the stream has been live N minutes (0 = always; implies live)
+  createdById      String? // admin user id who created it
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   // trigger is unique PER TENANT (each portal has its own !commands namespace).
   @@unique([tenantId, trigger])
@@ -719,9 +744,9 @@ model ChatCommand {
 
 model ChatTimer {
   id              String   @id @default(cuid())
-  tenantId        String?                     // multi-tenant (Phase 3 bot models)
-  message         String   @db.Text          // text broadcast on the interval
-  intervalSeconds Int      @default(900)      // how often to post (min 60s, enforced by the API)
+  tenantId        String? // multi-tenant (Phase 3 bot models)
+  message         String   @db.Text // text broadcast on the interval
+  intervalSeconds Int      @default(900) // how often to post (min 60s, enforced by the API)
   enabled         Boolean  @default(true)
   createdById     String?
   createdAt       DateTime @default(now())
@@ -738,9 +763,9 @@ model ChatTimer {
 
 model FaqResponse {
   id              String   @id @default(cuid())
-  tenantId        String?                          // multi-tenant (Phase 3 bot models)
-  keyword         String                          // phrase/word to look for in a message
-  matchType       String   @default("contains")   // "contains" (substring) | "word" (whole word)
+  tenantId        String? // multi-tenant (Phase 3 bot models)
+  keyword         String // phrase/word to look for in a message
+  matchType       String   @default("contains") // "contains" (substring) | "word" (whole word)
   response        String   @db.Text
   cooldownSeconds Int      @default(30)
   enabled         Boolean  @default(true)
@@ -758,11 +783,11 @@ model FaqResponse {
 // =====================================================
 
 model WelcomeConfig {
-  id        String   @id @default(cuid()) // was singleton "default"; now one row per tenant
-  tenantId  String?  @unique // multi-tenant (Phase 3)
-  enabled   Boolean  @default(false)
-  template    String   @default("Witaj {user}! Miło Cię widzieć 👋") @db.Text  // {user} = chatter name
-  bonusTokens Int      @default(0)   // GT przyznawane raz/widz/sesję przy pierwszej wiadomości (0 = off)
+  id          String   @id @default(cuid()) // was singleton "default"; now one row per tenant
+  tenantId    String?  @unique // multi-tenant (Phase 3)
+  enabled     Boolean  @default(false)
+  template    String   @default("Witaj {user}! Miło Cię widzieć 👋") @db.Text // {user} = chatter name
+  bonusTokens Int      @default(0) // GT przyznawane raz/widz/sesję przy pierwszej wiadomości (0 = off)
   updatedAt   DateTime @updatedAt
 
   @@map("welcome_config")
@@ -774,12 +799,12 @@ model WelcomeConfig {
 
 model SongRequest {
   id          String    @id @default(cuid())
-  tenantId    String?                       // multi-tenant (Phase 3 bot models)
-  query       String    @db.Text           // link or title as typed by the viewer
-  title       String?                       // resolved via oEmbed (YouTube/Spotify), if any
-  requestedBy String                        // chatter display name
-  platform    String                        // "twitch" | "kick" | "youtube"
-  status      String    @default("queued")  // "queued" | "playing" | "played" | "skipped"
+  tenantId    String? // multi-tenant (Phase 3 bot models)
+  query       String    @db.Text // link or title as typed by the viewer
+  title       String? // resolved via oEmbed (YouTube/Spotify), if any
+  requestedBy String // chatter display name
+  platform    String // "twitch" | "kick" | "youtube"
+  status      String    @default("queued") // "queued" | "playing" | "played" | "skipped"
   createdAt   DateTime  @default(now())
   playedAt    DateTime?
 
@@ -795,12 +820,12 @@ model SongRequest {
 
 model ChatFeedMessage {
   id        String   @id @default(cuid())
-  tenantId  String?  // multi-tenant (Phase 4 overlay pass); null = legacy
-  platform  String   // "twitch" | "kick" | "youtube"
+  tenantId  String? // multi-tenant (Phase 4 overlay pass); null = legacy
+  platform  String // "twitch" | "kick" | "youtube"
   username  String
   message   String   @db.Text
   emotes    String?  @db.Text // JSON: Twitch emote map { emoteId: ["start-end", …] } (code-point indices)
-  badges    String?  // JSON: Twitch badge map { broadcaster:"1", moderator:"1", subscriber:"12", vip:"1", … }
+  badges    String? // JSON: Twitch badge map { broadcaster:"1", moderator:"1", subscriber:"12", vip:"1", … }
   createdAt DateTime @default(now())
 
   @@index([createdAt])
@@ -818,11 +843,11 @@ model Subathon {
   tenantId       String?   @unique // multi-tenant (Phase 3)
   active         Boolean   @default(false)
   startedAt      DateTime?
-  endsAt         DateTime?                  // current countdown target
-  secondsPerSub  Int       @default(300)    // +time per sub (incl. gifted)
-  secondsPerPln  Int       @default(60)     // +time per 1 PLN donated
-  maxEndsAt      DateTime?                  // optional hard cap (null = uncapped)
-  totalAddedSecs Int       @default(0)      // stat: total seconds added by events
+  endsAt         DateTime? // current countdown target
+  secondsPerSub  Int       @default(300) // +time per sub (incl. gifted)
+  secondsPerPln  Int       @default(60) // +time per 1 PLN donated
+  maxEndsAt      DateTime? // optional hard cap (null = uncapped)
+  totalAddedSecs Int       @default(0) // stat: total seconds added by events
   accentColor    String    @default("#E50914") // overlay card accent (hex)
   label          String    @default("Subathon") // overlay card heading text
   updatedAt      DateTime  @updatedAt
@@ -837,19 +862,19 @@ model Subathon {
 // =====================================================
 
 model ModerationConfig {
-  id      String  @id @default(cuid()) // was singleton "default"; now one row per tenant
+  id       String  @id @default(cuid()) // was singleton "default"; now one row per tenant
   tenantId String? @unique // multi-tenant (Phase 3)
-  enabled Boolean @default(false) // master switch
+  enabled  Boolean @default(false) // master switch
 
   profanityEnabled     Boolean  @default(false)
   profanityWords       String[] @default([])
-  profanityRegex       String[] @default([])  // power-user regex patterns (profanity action)
+  profanityRegex       String[] @default([]) // power-user regex patterns (profanity action)
   profanityAction      String   @default("delete") // delete | timeout | warn
   profanityTimeoutSecs Int      @default(60)
 
   // Link / URL filter — blocks links unless their domain is whitelisted.
   linkEnabled     Boolean  @default(false)
-  linkWhitelist   String[] @default([])  // allowed domain substrings (e.g. "twitch.tv")
+  linkWhitelist   String[] @default([]) // allowed domain substrings (e.g. "twitch.tv")
   linkAllowSubs   Boolean  @default(true) // subs/VIP/mods may post links even if rule on
   linkAction      String   @default("delete")
   linkTimeoutSecs Int      @default(60)
@@ -889,11 +914,11 @@ model ModerationConfig {
 // the moderation stats + top-offenders view, and records the escalation level.
 model ModViolationLog {
   id         String   @id @default(cuid())
-  platform   String   // "twitch" | "kick" | "youtube"
-  username   String   // lowercased login/handle of the offender
-  violation  String   // "profanity" | "caps" | "length" | "repeat" | "zalgo"
-  action     String   // enforced action AFTER escalation: "delete" | "timeout" | "warn"
-  priorCount Int      @default(0)  // offenses already in the window before this one
+  platform   String // "twitch" | "kick" | "youtube"
+  username   String // lowercased login/handle of the offender
+  violation  String // "profanity" | "caps" | "length" | "repeat" | "zalgo"
+  action     String // enforced action AFTER escalation: "delete" | "timeout" | "warn"
+  priorCount Int      @default(0) // offenses already in the window before this one
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
@@ -908,11 +933,11 @@ model OutgoingWebhook {
   id          String    @id @default(cuid())
   label       String
   url         String    @db.Text
-  events      String[]  @default([])    // AlertType values, or ["*"] for every event
-  secret      String?                   // optional HMAC signing secret (encrypted at rest)
+  events      String[]  @default([]) // AlertType values, or ["*"] for every event
+  secret      String? // optional HMAC signing secret (encrypted at rest)
   enabled     Boolean   @default(true)
-  failCount   Int       @default(0)     // consecutive failures; auto-disables at threshold
-  lastStatus  Int?                       // last HTTP status (0 = network error)
+  failCount   Int       @default(0) // consecutive failures; auto-disables at threshold
+  lastStatus  Int? // last HTTP status (0 = network error)
   lastFiredAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -926,9 +951,9 @@ model OutgoingWebhook {
 // =====================================================
 
 model ChatActivityBucket {
-  dayOfWeek Int    // 0=Sun .. 6=Sat (Europe/Warsaw)
-  hour      Int    // 0-23
-  count     Int    @default(0)
+  dayOfWeek Int // 0=Sun .. 6=Sat (Europe/Warsaw)
+  hour      Int // 0-23
+  count     Int @default(0)
 
   @@id([dayOfWeek, hour])
   @@map("chat_activity_buckets")
@@ -940,10 +965,10 @@ model ChatActivityBucket {
 model StreamSession {
   id              String    @id @default(cuid())
   platform        String    @default("twitch")
-  twitchStreamId  String?   @unique               // event.id from stream.online (idempotency)
+  twitchStreamId  String?   @unique // event.id from stream.online (idempotency)
   startedAt       DateTime
-  endedAt         DateTime?                        // null = currently live
-  durationSeconds Int?                             // set when the stream goes offline
+  endedAt         DateTime? // null = currently live
+  durationSeconds Int? // set when the stream goes offline
   createdAt       DateTime  @default(now())
 
   @@index([startedAt])
@@ -958,8 +983,8 @@ model WheelConfig {
   id          String   @id @default(cuid()) // was singleton "default"; now one row per tenant
   tenantId    String?  @unique // multi-tenant (Phase 3)
   enabled     Boolean  @default(false)
-  costPerSpin Int      @default(100)             // GT charged per spin
-  segments    Json?                              // [{ label, weight, rewardTokens, color }]
+  costPerSpin Int      @default(100) // GT charged per spin
+  segments    Json? // [{ label, weight, rewardTokens, color }]
   updatedAt   DateTime @updatedAt
 
   @@map("wheel_config")
@@ -969,9 +994,9 @@ model WheelSpin {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  segmentLabel String                            // label of the segment landed on
-  rewardTokens Int                               // GT won (0 = no reward)
-  cost         Int                               // GT spent to spin
+  segmentLabel String // label of the segment landed on
+  rewardTokens Int // GT won (0 = no reward)
+  cost         Int // GT spent to spin
   createdAt    DateTime @default(now())
 
   @@index([createdAt])
@@ -987,11 +1012,11 @@ model GtGamePlay {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game      String                              // "slots" | "coinflip"
+  game      String // "slots" | "coinflip"
   bet       Int
-  payout    Int                                 // GT returned (0 = lost)
-  net       Int                                 // payout - bet
-  detail    String?                             // e.g. slot symbols "🍒🍒🍒"
+  payout    Int // GT returned (0 = lost)
+  net       Int // payout - bet
+  detail    String? // e.g. slot symbols "🍒🍒🍒"
   createdAt DateTime @default(now())
 
   @@index([createdAt])
@@ -1004,22 +1029,22 @@ model GtGamePlay {
 // the pot (minus a small rake = GT sink). Created by !duel, resolved by !accept. Both
 // stakes are charged atomically at accept time (a throw rolls the whole transfer back).
 model Duel {
-  id            String   @id @default(cuid())
-  platform      String                           // chat platform the duel lives on (twitch/kick/youtube)
-  challengerId  String
-  challengerName String                          // chat handle, stored so the result can @-mention correctly
-  opponentId    String?                           // null = open challenge (first !accept takes it)
-  opponentName  String?                           // chat handle of the targeted opponent (null for open)
-  bet          Int
-  status       String    @default("pending")     // pending | resolved | cancelled | expired
-  winnerId     String?
-  createdAt    DateTime  @default(now())
-  expiresAt    DateTime                          // unaccepted duels expire (default 2 min)
-  resolvedAt   DateTime?
+  id             String    @id @default(cuid())
+  platform       String // chat platform the duel lives on (twitch/kick/youtube)
+  challengerId   String
+  challengerName String // chat handle, stored so the result can @-mention correctly
+  opponentId     String? // null = open challenge (first !accept takes it)
+  opponentName   String? // chat handle of the targeted opponent (null for open)
+  bet            Int
+  status         String    @default("pending") // pending | resolved | cancelled | expired
+  winnerId       String?
+  createdAt      DateTime  @default(now())
+  expiresAt      DateTime // unaccepted duels expire (default 2 min)
+  resolvedAt     DateTime?
 
-  challenger   User      @relation("DuelChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
-  opponent     User?     @relation("DuelOpponent",   fields: [opponentId],   references: [id], onDelete: Cascade)
-  winner       User?     @relation("DuelWinner",     fields: [winnerId],     references: [id], onDelete: SetNull)
+  challenger User  @relation("DuelChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
+  opponent   User? @relation("DuelOpponent", fields: [opponentId], references: [id], onDelete: Cascade)
+  winner     User? @relation("DuelWinner", fields: [winnerId], references: [id], onDelete: SetNull)
 
   @@index([platform, status])
   @@index([challengerId])
@@ -1033,13 +1058,13 @@ model Duel {
 // the winners (atomic). Result math lives in lib/economy.ts; orchestration in lib/heist.ts.
 model Heist {
   id          String       @id @default(cuid())
-  platform    String                                  // chat platform the heist lives on
-  status      String       @default("open")           // open | resolved | cancelled
-  startedById String                                  // user who opened the heist
+  platform    String // chat platform the heist lives on
+  status      String       @default("open") // open | resolved | cancelled
+  startedById String // user who opened the heist
   startedAt   DateTime     @default(now())
-  resolvesAt  DateTime                                // join window closes / resolution time
+  resolvesAt  DateTime // join window closes / resolution time
   resolvedAt  DateTime?
-  success     Boolean?                                // null until resolved
+  success     Boolean? // null until resolved
   entries     HeistEntry[]
 
   @@index([platform, status])
@@ -1054,10 +1079,10 @@ model HeistEntry {
   heist   Heist  @relation(fields: [heistId], references: [id], onDelete: Cascade)
   userId  String
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name    String                                      // chat handle (for the result message)
-  bet     Int                                         // escrowed at join
+  name    String // chat handle (for the result message)
+  bet     Int // escrowed at join
 
-  @@unique([heistId, userId])                         // one entry per user per heist
+  @@unique([heistId, userId]) // one entry per user per heist
   @@index([userId])
   @@map("heist_entries")
 }
@@ -1069,7 +1094,7 @@ model HeistEntry {
 model GameLibraryConfig {
   id            String    @id @default(cuid()) // was singleton "default"; now one row per tenant
   tenantId      String?   @unique // multi-tenant (Phase 3)
-  steamId       String?                            // SteamID64 (resolve vanity in admin)
+  steamId       String? // SteamID64 (resolve vanity in admin)
   steamSyncedAt DateTime?
   updatedAt     DateTime  @updatedAt
 
@@ -1078,13 +1103,13 @@ model GameLibraryConfig {
 
 model Game {
   id           String    @id @default(cuid())
-  source       String                              // "steam" | "gog" | "psn" | "xbox"
-  externalId   String                              // platform id (Steam appid, …)
+  source       String // "steam" | "gog" | "psn" | "xbox"
+  externalId   String // platform id (Steam appid, …)
   name         String
   imageUrl     String?
-  playtimeMin  Int       @default(0)               // total minutes played
+  playtimeMin  Int       @default(0) // total minutes played
   lastPlayedAt DateTime?
-  hidden       Boolean   @default(false)           // admin can hide a game from /games
+  hidden       Boolean   @default(false) // admin can hide a game from /games
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -1098,17 +1123,17 @@ model Game {
 // =====================================================
 
 model StreamScheduleSlot {
-  id          String   @id @default(cuid())
-  tenantId    String?  // multi-tenant (Phase 3) — collection: many rows per tenant (NOT unique)
-  dayOfWeek   Int      // 0=niedziela, 1=poniedziałek, ..., 6=sobota
-  startHour   Int      // 0-23
-  startMinute Int      @default(0)
-  durationMinutes Int  @default(180)  // domyślnie 3h
-  title       String?  // np. "Just chatting", "GTA RP"
-  platform    String?  // "twitch" | "kick" — gdzie streamuje tego dnia (opcjonalne)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  tenantId        String? // multi-tenant (Phase 3) — collection: many rows per tenant (NOT unique)
+  dayOfWeek       Int // 0=niedziela, 1=poniedziałek, ..., 6=sobota
+  startHour       Int // 0-23
+  startMinute     Int      @default(0)
+  durationMinutes Int      @default(180) // domyślnie 3h
+  title           String? // np. "Just chatting", "GTA RP"
+  platform        String? // "twitch" | "kick" — gdzie streamuje tego dnia (opcjonalne)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([dayOfWeek, active])
   @@index([tenantId])
@@ -1120,41 +1145,41 @@ model StreamScheduleSlot {
 // =====================================================
 
 model TwitchStreamerToken {
-  id              String    @id @default(cuid())      // legacy singleton rows keep id "default"
-  tenantId        String?   @unique                   // one streamer token per tenant (null = legacy)
-  broadcasterId   String                              // Twitch user_id of the streamer (Gh0s77tt)
-  broadcasterLogin String                             // Twitch username for display
-  accessToken     String    @db.Text
-  refreshToken    String?   @db.Text
-  tokenExpiresAt  DateTime?
-  scope           String                              // space-separated scopes granted
-  connectedAt     DateTime  @default(now())
-  connectedById   String?                             // admin user id who authorized
+  id               String    @id @default(cuid()) // legacy singleton rows keep id "default"
+  tenantId         String?   @unique // one streamer token per tenant (null = legacy)
+  broadcasterId    String // Twitch user_id of the streamer (Gh0s77tt)
+  broadcasterLogin String // Twitch username for display
+  accessToken      String    @db.Text
+  refreshToken     String?   @db.Text
+  tokenExpiresAt   DateTime?
+  scope            String // space-separated scopes granted
+  connectedAt      DateTime  @default(now())
+  connectedById    String? // admin user id who authorized
 
   @@index([broadcasterId]) // webhook events carry broadcaster_user_id → tenant lookup
   @@map("twitch_streamer_token")
 }
 
 model TwitchEventSubscription {
-  id              String    @id                       // Twitch's subscription_id
-  type            String                              // "channel.subscribe" | "channel.subscription.gift" | "channel.cheer"
-  status          String                              // "enabled" | "webhook_callback_verification_pending" | ...
-  broadcasterId   String
-  createdAt       DateTime  @default(now())
-  lastSeenAt      DateTime?                           // last time we received an event of this type
+  id            String    @id // Twitch's subscription_id
+  type          String // "channel.subscribe" | "channel.subscription.gift" | "channel.cheer"
+  status        String // "enabled" | "webhook_callback_verification_pending" | ...
+  broadcasterId String
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime? // last time we received an event of this type
 
   @@index([type])
   @@map("twitch_event_subscriptions")
 }
 
 model TwitchEvent {
-  id              String    @id @default(cuid())
-  eventId         String    @unique                   // Twitch message_id (for idempotency)
-  type            String                              // event type
-  payload         String    @db.Text                  // JSON of full event
-  userId          String?                             // matched Ghost Empire user
-  tokensGranted   Int?
-  receivedAt      DateTime  @default(now())
+  id            String   @id @default(cuid())
+  eventId       String   @unique // Twitch message_id (for idempotency)
+  type          String // event type
+  payload       String   @db.Text // JSON of full event
+  userId        String? // matched Ghost Empire user
+  tokensGranted Int?
+  receivedAt    DateTime @default(now())
 
   @@index([type, receivedAt])
   @@map("twitch_events")
@@ -1165,39 +1190,39 @@ model TwitchEvent {
 // =====================================================
 
 model StreamlabsConnection {
-  id                  String    @id @default(cuid())    // legacy singleton rows keep id "default"
-  tenantId            String?   @unique                 // one connection per tenant (null = legacy)
-  accessToken         String    @db.Text
-  refreshToken        String?   @db.Text
-  tokenExpiresAt      DateTime?
-  scope               String?
-  streamlabsUserId    String?
-  streamlabsUsername  String?
-  lastPolledAt        DateTime?
-  lastSeenDonationId  String?   // donation_id of most recent processed
-  connectedAt         DateTime  @default(now())
-  connectedById       String?   // user.id who initiated OAuth
+  id                 String    @id @default(cuid()) // legacy singleton rows keep id "default"
+  tenantId           String?   @unique // one connection per tenant (null = legacy)
+  accessToken        String    @db.Text
+  refreshToken       String?   @db.Text
+  tokenExpiresAt     DateTime?
+  scope              String?
+  streamlabsUserId   String?
+  streamlabsUsername String?
+  lastPolledAt       DateTime?
+  lastSeenDonationId String? // donation_id of most recent processed
+  connectedAt        DateTime  @default(now())
+  connectedById      String? // user.id who initiated OAuth
 
   @@map("streamlabs_connection")
 }
 
 model Donation {
-  id              String    @id @default(cuid())
-  externalId      String    @unique             // donation_id from provider
-  source          String    @default("streamlabs")
-  donorName       String
-  message         String?   @db.Text
-  amountGrosze    Int                            // amount * 100 (PLN cents)
-  currency        String    @default("PLN")
-  donatedAt       DateTime
+  id           String   @id @default(cuid())
+  externalId   String   @unique // donation_id from provider
+  source       String   @default("streamlabs")
+  donorName    String
+  message      String?  @db.Text
+  amountGrosze Int // amount * 100 (PLN cents)
+  currency     String   @default("PLN")
+  donatedAt    DateTime
 
-  userId          String?                        // matched Ghost Empire user
-  matchedAt       DateTime?
-  matchType       String?                        // "auto_name" | "auto_mention" | "manual"
-  tokensGranted   Int?                           // GT credited to user
+  userId        String? // matched Ghost Empire user
+  matchedAt     DateTime?
+  matchType     String? // "auto_name" | "auto_mention" | "manual"
+  tokensGranted Int? // GT credited to user
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -1219,20 +1244,20 @@ model DiscordLinkCode {
 }
 
 model RateLimitBucket {
-  key        String   @id        // e.g. "award:127.0.0.1" or "claim:userId"
-  count      Int      @default(0)
+  key         String   @id // e.g. "award:127.0.0.1" or "claim:userId"
+  count       Int      @default(0)
   windowStart DateTime
-  expiresAt  DateTime
+  expiresAt   DateTime
 
   @@index([expiresAt])
   @@map("rate_limit_buckets")
 }
 
 model DropClaim {
-  id       String @id @default(cuid())
-  dropId   String
-  userId   String
-  reward   Int    // actual reward received (bonus or regular)
+  id        String   @id @default(cuid())
+  dropId    String
+  userId    String
+  reward    Int // actual reward received (bonus or regular)
   claimedAt DateTime @default(now())
 
   drop StreamDrop @relation(fields: [dropId], references: [id])
@@ -1247,26 +1272,26 @@ model DropClaim {
 // =====================================================
 
 model StreamAlert {
-  id          String   @id @default(cuid())
-  tenantId    String?  // multi-tenant (Phase 4 overlay pass); null = legacy
-  type        String   // "shop_purchase" | "event_win" | "drop_claim_bonus" | "twitch_sub" | "twitch_gift_sub" | "twitch_cheer" | "donation" | "welcome" | "level_up" | "test"
+  id       String  @id @default(cuid())
+  tenantId String? // multi-tenant (Phase 4 overlay pass); null = legacy
+  type     String // "shop_purchase" | "event_win" | "drop_claim_bonus" | "twitch_sub" | "twitch_gift_sub" | "twitch_cheer" | "donation" | "welcome" | "level_up" | "test"
 
-  title       String
-  message     String
-  icon        String?  // emoji shown in overlay
+  title   String
+  message String
+  icon    String? // emoji shown in overlay
 
   // Actor (who triggered — for displaying avatar/username on the alert)
-  actorName   String?
-  actorImage  String?
+  actorName  String?
+  actorImage String?
 
   // Numeric display (e.g. token amount, bits count, donation kwota)
   amount      Int?
-  amountLabel String?  // "GT" | "bits" | "PLN"
+  amountLabel String? // "GT" | "bits" | "PLN"
 
-  meta        String?  @db.Text  // optional JSON for type-specific extras
+  meta String? @db.Text // optional JSON for type-specific extras
 
-  createdAt   DateTime @default(now())
-  shownAt     DateTime?  // set when overlay first picks it up
+  createdAt DateTime  @default(now())
+  shownAt   DateTime? // set when overlay first picks it up
 
   @@index([createdAt])
   @@index([tenantId, createdAt])
@@ -1283,14 +1308,14 @@ model StreamAlert {
 
 model Season {
   id          String   @id @default(cuid())
-  number      Int      @unique                  // sequential: 1, 2, 3, ...
-  name        String                              // "Sezon 1: Pierwsza Krew" or "Maj 2026"
+  number      Int      @unique // sequential: 1, 2, 3, ...
+  name        String // "Sezon 1: Pierwsza Krew" or "Maj 2026"
   description String?  @db.Text
   startsAt    DateTime
   endsAt      DateTime
   totalTiers  Int      @default(30)
   xpPerTier   Int      @default(5000)
-  active      Boolean  @default(true)            // false after rollover; only one active at a time
+  active      Boolean  @default(true) // false after rollover; only one active at a time
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1302,17 +1327,17 @@ model Season {
 }
 
 model SeasonReward {
-  id          String   @id @default(cuid())
-  seasonId    String
-  tier        Int                                 // 1..totalTiers
-  premium     Boolean  @default(false)            // false = free track, true = premium pass only
-  type        String                              // "tokens" | "badge" | "title" | "color" | "shop_unlock"
-  label       String                              // display name
-  value       String                              // payload: for tokens => "1000", for badge => achievement code, etc.
-  icon        String?
+  id       String  @id @default(cuid())
+  seasonId String
+  tier     Int // 1..totalTiers
+  premium  Boolean @default(false) // false = free track, true = premium pass only
+  type     String // "tokens" | "badge" | "title" | "color" | "shop_unlock"
+  label    String // display name
+  value    String // payload: for tokens => "1000", for badge => achievement code, etc.
+  icon     String?
 
-  season  Season                  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  claims  UserSeasonRewardClaim[]
+  season Season                  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  claims UserSeasonRewardClaim[]
 
   @@unique([seasonId, tier, premium])
   @@index([seasonId, tier])
@@ -1324,8 +1349,8 @@ model UserSeasonProgress {
   userId          String
   seasonId        String
   xp              Int       @default(0)
-  tier            Int       @default(0)           // computed from xp / season.xpPerTier
-  premium         Boolean   @default(false)       // true after buying premium pass
+  tier            Int       @default(0) // computed from xp / season.xpPerTier
+  premium         Boolean   @default(false) // true after buying premium pass
   premiumBoughtAt DateTime?
   updatedAt       DateTime  @updatedAt
 
@@ -1354,40 +1379,40 @@ model UserSeasonRewardClaim {
 // =====================================================
 
 model KickStreamerToken {
-  id                String    @id @default(cuid())      // legacy singleton rows keep id "default"
-  tenantId          String?   @unique                   // one streamer token per tenant (null = legacy)
-  broadcasterId     String                              // Kick user_id (numeric, stored as string)
-  broadcasterLogin  String                              // Kick username/slug for display
-  accessToken       String    @db.Text
-  refreshToken      String?   @db.Text
-  tokenExpiresAt    DateTime?
-  scope             String                              // space-separated scopes granted
-  connectedAt       DateTime  @default(now())
-  connectedById     String?                             // admin user id who authorized
+  id               String    @id @default(cuid()) // legacy singleton rows keep id "default"
+  tenantId         String?   @unique // one streamer token per tenant (null = legacy)
+  broadcasterId    String // Kick user_id (numeric, stored as string)
+  broadcasterLogin String // Kick username/slug for display
+  accessToken      String    @db.Text
+  refreshToken     String?   @db.Text
+  tokenExpiresAt   DateTime?
+  scope            String // space-separated scopes granted
+  connectedAt      DateTime  @default(now())
+  connectedById    String? // admin user id who authorized
 
   @@index([broadcasterId]) // webhook events carry broadcaster id → tenant lookup
   @@map("kick_streamer_token")
 }
 
 model KickEventSubscription {
-  id              String    @id                       // Kick's subscription id
-  type            String                              // "chat.message.sent" | "channel.subscription.new" | "channel.subscription.gifts" | ...
-  broadcasterId   String
-  createdAt       DateTime  @default(now())
-  lastSeenAt      DateTime?
+  id            String    @id // Kick's subscription id
+  type          String // "chat.message.sent" | "channel.subscription.new" | "channel.subscription.gifts" | ...
+  broadcasterId String
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime?
 
   @@index([type])
   @@map("kick_event_subscriptions")
 }
 
 model KickEvent {
-  id              String    @id @default(cuid())
-  eventId         String    @unique                   // Kick message_id for idempotency
-  type            String
-  payload         String    @db.Text                  // JSON of full event
-  userId          String?                             // matched Ghost Empire user
-  tokensGranted   Int?
-  receivedAt      DateTime  @default(now())
+  id            String   @id @default(cuid())
+  eventId       String   @unique // Kick message_id for idempotency
+  type          String
+  payload       String   @db.Text // JSON of full event
+  userId        String? // matched Ghost Empire user
+  tokensGranted Int?
+  receivedAt    DateTime @default(now())
 
   @@index([type, receivedAt])
   @@map("kick_events")
@@ -1401,16 +1426,16 @@ model Prediction {
   id                  String    @id @default(cuid())
   tenantId            String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
   question            String    @db.Text
-  options             String[]                              // labels for each option, order matches optionIndex
-  status              String    @default("open")            // "open" | "locked" | "resolved" | "cancelled"
-  resolvedOptionIndex Int?                                  // null until resolved
-  totalPot            Int       @default(0)                 // sum of all wagers across all options
+  options             String[] // labels for each option, order matches optionIndex
+  status              String    @default("open") // "open" | "locked" | "resolved" | "cancelled"
+  resolvedOptionIndex Int? // null until resolved
+  totalPot            Int       @default(0) // sum of all wagers across all options
   opensAt             DateTime  @default(now())
-  closesAt            DateTime?                              // wagers blocked after this (and status auto-flips to "locked")
+  closesAt            DateTime? // wagers blocked after this (and status auto-flips to "locked")
   resolvedAt          DateTime?
-  announceToChat      Boolean   @default(true)              // bot re-announces this bet in chat while open
-  accentColor         String    @default("#a855f7")          // card accent (hex) on /predictions + overlay
-  createdById         String?                                // admin user id
+  announceToChat      Boolean   @default(true) // bot re-announces this bet in chat while open
+  accentColor         String    @default("#a855f7") // card accent (hex) on /predictions + overlay
+  createdById         String? // admin user id
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -1422,17 +1447,17 @@ model Prediction {
 }
 
 model PredictionEntry {
-  id             String   @id @default(cuid())
-  predictionId   String
-  userId         String
-  optionIndex    Int                                        // which option they bet on
-  tokensWagered  Int                                        // positive — deducted from User.tokens at wager time
-  payout         Int      @default(0)                       // set on resolve; 0 if losing option
-  wageredAt      DateTime @default(now())
+  id            String   @id @default(cuid())
+  predictionId  String
+  userId        String
+  optionIndex   Int // which option they bet on
+  tokensWagered Int // positive — deducted from User.tokens at wager time
+  payout        Int      @default(0) // set on resolve; 0 if losing option
+  wageredAt     DateTime @default(now())
 
   prediction Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
 
-  @@unique([predictionId, userId])                          // one wager per user per prediction
+  @@unique([predictionId, userId]) // one wager per user per prediction
   @@index([userId])
   @@map("prediction_entries")
 }
@@ -1445,17 +1470,17 @@ model PredictionEntry {
 model StreamGoal {
   id          String    @id @default(cuid())
   tenantId    String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
-  type        String    // "subs" | "follows" | "donations_pln" | "cheers_bits" | "gift_subs" | "yt_members"
-  label       String    // admin custom text shown on overlay e.g. "500 subów = nowy setup!"
+  type        String // "subs" | "follows" | "donations_pln" | "cheers_bits" | "gift_subs" | "yt_members"
+  label       String // admin custom text shown on overlay e.g. "500 subów = nowy setup!"
   current     Int       @default(0)
   target      Int
   active      Boolean   @default(true)
-  resetMode   String    @default("manual")   // "manual" | "per_stream" | "daily" | "weekly" | "monthly"
+  resetMode   String    @default("manual") // "manual" | "per_stream" | "daily" | "weekly" | "monthly"
   lastResetAt DateTime?
-  color       String?                          // overlay accent override; falls back to StreamAlertSettings.accentColor
-  textColor   String?                          // label/secondary text color (null → default zinc)
-  bgColor     String?                          // card background (null → default translucent dark)
-  fontFamily  String?                          // font value from lib/widget-fonts (null → Inter)
+  color       String? // overlay accent override; falls back to StreamAlertSettings.accentColor
+  textColor   String? // label/secondary text color (null → default zinc)
+  bgColor     String? // card background (null → default translucent dark)
+  fontFamily  String? // font value from lib/widget-fonts (null → Inter)
   sortOrder   Int       @default(0)
   completedAt DateTime?
   createdAt   DateTime  @default(now())
@@ -1471,17 +1496,17 @@ model StreamGoal {
 // =====================================================
 
 model HypeTrainState {
-  id              String    @id @default(cuid())   // legacy singleton rows keep id "default"
-  tenantId        String?   @unique                // one hype-train state per tenant (null = legacy)
-  active          Boolean   @default(false)
-  level           Int       @default(0)
-  goal            Int       @default(0)    // points needed to reach next level
-  total           Int       @default(0)    // points already accumulated this train
-  topContributor  String?                   // user_name of top contributor
-  startedAt       DateTime?
-  expiresAt       DateTime?                 // when this train auto-ends if no further contributions
-  endedAt         DateTime?
-  updatedAt       DateTime  @updatedAt
+  id             String    @id @default(cuid()) // legacy singleton rows keep id "default"
+  tenantId       String?   @unique // one hype-train state per tenant (null = legacy)
+  active         Boolean   @default(false)
+  level          Int       @default(0)
+  goal           Int       @default(0) // points needed to reach next level
+  total          Int       @default(0) // points already accumulated this train
+  topContributor String? // user_name of top contributor
+  startedAt      DateTime?
+  expiresAt      DateTime? // when this train auto-ends if no further contributions
+  endedAt        DateTime?
+  updatedAt      DateTime  @updatedAt
 
   @@map("hype_train_state")
 }
@@ -1492,39 +1517,39 @@ model HypeTrainState {
 // =====================================================
 
 model YouTubeStreamerToken {
-  id              String    @id @default(cuid())      // legacy singleton rows keep id "default"
-  tenantId        String?   @unique                   // one streamer token per tenant (null = legacy)
-  channelId       String                              // YouTube channel id (e.g. UCxxx)
-  channelTitle    String?
-  accessToken     String    @db.Text
-  refreshToken    String    @db.Text                  // YouTube access tokens expire after 1h — refresh always required
-  tokenExpiresAt  DateTime
-  scope           String                              // space-separated; should include youtube.readonly
-  connectedAt     DateTime  @default(now())
-  connectedById   String?                             // admin user id who authorized
+  id             String   @id @default(cuid()) // legacy singleton rows keep id "default"
+  tenantId       String?  @unique // one streamer token per tenant (null = legacy)
+  channelId      String // YouTube channel id (e.g. UCxxx)
+  channelTitle   String?
+  accessToken    String   @db.Text
+  refreshToken   String   @db.Text // YouTube access tokens expire after 1h — refresh always required
+  tokenExpiresAt DateTime
+  scope          String // space-separated; should include youtube.readonly
+  connectedAt    DateTime @default(now())
+  connectedById  String? // admin user id who authorized
 
   // Polling state — admin / external cron updates these
-  lastPolledAt    DateTime?
-  currentLiveVideoId    String?                       // most recently detected live broadcast videoId
-  currentLiveChatId     String?                       // its liveChatId
-  lastChatPageToken     String?                       // nextPageToken for liveChatMessages — incremental polling
+  lastPolledAt       DateTime?
+  currentLiveVideoId String? // most recently detected live broadcast videoId
+  currentLiveChatId  String? // its liveChatId
+  lastChatPageToken  String? // nextPageToken for liveChatMessages — incremental polling
 
   @@map("youtube_streamer_token")
 }
 
 model YouTubeEvent {
-  id            String    @id @default(cuid())
-  messageId     String    @unique                    // YouTube liveChat messageId — idempotency key
-  videoId       String                                // which broadcast it came from
-  type          String                                // "superChat" | "superSticker" | "newSponsor" | "memberMilestone" | "textMessage"
+  id              String   @id @default(cuid())
+  messageId       String   @unique // YouTube liveChat messageId — idempotency key
+  videoId         String // which broadcast it came from
+  type            String // "superChat" | "superSticker" | "newSponsor" | "memberMilestone" | "textMessage"
   authorChannelId String?
-  authorName    String?
-  message       String?   @db.Text
-  amountMicros  BigInt?                              // for super chats: amount in micros (e.g. 1990000 = $1.99)
-  currency      String?
-  userId        String?                              // matched Ghost Empire user
-  tokensGranted Int?
-  receivedAt    DateTime  @default(now())
+  authorName      String?
+  message         String?  @db.Text
+  amountMicros    BigInt? // for super chats: amount in micros (e.g. 1990000 = $1.99)
+  currency        String?
+  userId          String? // matched Ghost Empire user
+  tokensGranted   Int?
+  receivedAt      DateTime @default(now())
 
   @@index([type, receivedAt])
   @@index([videoId])
@@ -1532,20 +1557,20 @@ model YouTubeEvent {
 }
 
 model StreamAlertSettings {
-  id              String   @id @default(cuid())     // legacy singleton rows keep id "default"
-  tenantId        String?  @unique                  // one settings row per tenant (null = legacy)
-  enabledTypes    String[] @default(["shop_purchase","event_win","drop_claim_bonus","twitch_sub","twitch_gift_sub","twitch_cheer","donation","welcome","level_up","test"])
-  durationMs      Int      @default(6000)
-  accentColor     String   @default("#E50914")
-  soundEnabled    Boolean  @default(true)
-  sizeScale       Float    @default(1)         // overall alert size multiplier (0.5–2)
-  textScale       Float    @default(1)         // text size multiplier (0.5–2)
-  textColor       String   @default("#d4d4d8") // message body text color
-  hypeColor       String?  // Hype Train accent (null → accentColor)
-  hypeBgColor     String?  // Hype Train banner background (null → default dark)
-  hypeFontFamily  String?  // Hype Train font value from lib/widget-fonts (null → Inter)
-  overlayToken    String?  // auto-generated on first admin view; rotate via UI to invalidate OBS browser source URLs
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid()) // legacy singleton rows keep id "default"
+  tenantId       String?  @unique // one settings row per tenant (null = legacy)
+  enabledTypes   String[] @default(["shop_purchase", "event_win", "drop_claim_bonus", "twitch_sub", "twitch_gift_sub", "twitch_cheer", "donation", "welcome", "level_up", "test"])
+  durationMs     Int      @default(6000)
+  accentColor    String   @default("#E50914")
+  soundEnabled   Boolean  @default(true)
+  sizeScale      Float    @default(1) // overall alert size multiplier (0.5–2)
+  textScale      Float    @default(1) // text size multiplier (0.5–2)
+  textColor      String   @default("#d4d4d8") // message body text color
+  hypeColor      String? // Hype Train accent (null → accentColor)
+  hypeBgColor    String? // Hype Train banner background (null → default dark)
+  hypeFontFamily String? // Hype Train font value from lib/widget-fonts (null → Inter)
+  overlayToken   String? // auto-generated on first admin view; rotate via UI to invalidate OBS browser source URLs
+  updatedAt      DateTime @updatedAt
 
   @@map("stream_alert_settings")
 }
@@ -1559,7 +1584,7 @@ model SoundReward {
   name      String
   emoji     String?
   cost      Int
-  soundUrl  String   // URL to the sound file (same as per-type alert sounds)
+  soundUrl  String // URL to the sound file (same as per-type alert sounds)
   active    Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
@@ -1575,11 +1600,11 @@ model SoundReward {
 // =====================================================
 model AlertTypeConfig {
   id        String   @id @default(cuid())
-  type      String   @unique   // matches AlertType in lib/alerts.ts
-  animation String   @default("slide")        // slide | fade | scale | none
+  type      String   @unique // matches AlertType in lib/alerts.ts
+  animation String   @default("slide") // slide | fade | scale | none
   position  String   @default("bottom-right") // {top|center|bottom}-{left|center|right}
-  soundUrl  String?                           // custom sound URL; null = synthesized ding
-  minAmount Int?                              // only show alert if amount >= this (null = always)
+  soundUrl  String? // custom sound URL; null = synthesized ding
+  minAmount Int? // only show alert if amount >= this (null = always)
   updatedAt DateTime @updatedAt
 
   @@map("alert_type_config")
@@ -1593,11 +1618,11 @@ model AlertTypeConfig {
 model StreamCode {
   id          String    @id @default(cuid())
   tenantId    String? // multi-tenant (Phase 3) — collection (code is NOT unique — a pool)
-  code        String                          // the actual key/code shown on stream
-  label       String?                         // e.g. "Cyberpunk 2077 (Steam)"
-  active      Boolean   @default(true)         // inactive codes are skipped in rotation
-  shownCount  Int       @default(0)            // how many times it has been displayed
-  lastShownAt DateTime?                        // last time it rotated onto the overlay
+  code        String // the actual key/code shown on stream
+  label       String? // e.g. "Cyberpunk 2077 (Steam)"
+  active      Boolean   @default(true) // inactive codes are skipped in rotation
+  shownCount  Int       @default(0) // how many times it has been displayed
+  lastShownAt DateTime? // last time it rotated onto the overlay
   createdAt   DateTime  @default(now())
 
   @@index([active, shownCount])
@@ -1609,11 +1634,11 @@ model CodeDropConfig {
   id              String    @id @default(cuid()) // was singleton "default"; now one row per tenant
   tenantId        String?   @unique // multi-tenant (Phase 3)
   enabled         Boolean   @default(false)
-  intervalSeconds Int       @default(600)                     // rotate the displayed code every N seconds
-  title           String    @default("Darmowy kod!")          // heading shown above the code
+  intervalSeconds Int       @default(600) // rotate the displayed code every N seconds
+  title           String    @default("Darmowy kod!") // heading shown above the code
   accentColor     String    @default("#10b981")
-  currentCodeId   String?                                     // which code is on screen right now
-  currentShownAt  DateTime?                                   // when it was put on screen (drives rotation)
+  currentCodeId   String? // which code is on screen right now
+  currentShownAt  DateTime? // when it was put on screen (drives rotation)
   updatedAt       DateTime  @updatedAt
 
   @@map("code_drop_config")
@@ -1625,14 +1650,14 @@ model CodeDropConfig {
 // =====================================================
 
 model Poll {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   tenantId    String? // multi-tenant (Phase 3) — collection (many rows/tenant, NOT unique)
-  question    String   @db.Text
-  options     String[]                       // option labels (order = optionIndex)
-  status      String   @default("open")      // "open" | "closed"
-  accentColor String   @default("#3b82f6")   // card accent (hex) on /polls
+  question    String    @db.Text
+  options     String[] // option labels (order = optionIndex)
+  status      String    @default("open") // "open" | "closed"
+  accentColor String    @default("#3b82f6") // card accent (hex) on /polls
   createdById String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   closesAt    DateTime?
 
   votes PollVote[]
@@ -1665,11 +1690,11 @@ model PollVote {
 model ChatOverlayConfig {
   id               String   @id @default(cuid()) // was singleton "default"; now one row per tenant
   tenantId         String?  @unique // multi-tenant (Phase 3)
-  fontSize         Int      @default(15)          // message text size (px)
-  textColor        String   @default("#e4e4e7")   // message body color
-  fontFamily       String   @default("Inter")     // "Inter" | "JetBrains Mono" | "Anton" | "system"
-  bgOpacity        Float    @default(0.85)         // 0..1 — message bubble background darkness
-  showPlatformIcon Boolean  @default(true)         // 🟣🟢🔴 platform dot before the name
+  fontSize         Int      @default(15) // message text size (px)
+  textColor        String   @default("#e4e4e7") // message body color
+  fontFamily       String   @default("Inter") // "Inter" | "JetBrains Mono" | "Anton" | "system"
+  bgOpacity        Float    @default(0.85) // 0..1 — message bubble background darkness
+  showPlatformIcon Boolean  @default(true) // 🟣🟢🔴 platform dot before the name
   updatedAt        DateTime @updatedAt
 
   @@map("chat_overlay_config")
@@ -1682,13 +1707,13 @@ model ChatOverlayConfig {
 
 model CustomAlert {
   id          String   @id @default(cuid())
-  label       String                          // admin-facing name (list)
-  title       String                          // heading shown on the overlay
-  message     String                          // body shown on the overlay
+  label       String // admin-facing name (list)
+  title       String // heading shown on the overlay
+  message     String // body shown on the overlay
   icon        String?  @default("🔔")
-  accent      String?                          // optional per-alert accent color (else global)
-  amount      Int?                             // optional number badge
-  amountLabel String?                          // e.g. "GT" / "PLN"
+  accent      String? // optional per-alert accent color (else global)
+  amount      Int? // optional number badge
+  amountLabel String? // e.g. "GT" / "PLN"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1701,22 +1726,22 @@ model CustomAlert {
 // =====================================================
 model CustomWidget {
   id          String   @id @default(cuid())
-  tenantId    String?  // multi-tenant (Phase 4 overlay pass); null = legacy
-  name        String                              // admin-facing label
-  text        String   @db.Text                   // displayed text (emoji/Unicode ok)
-  accentColor String   @default("#E50914")        // card border / accent
+  tenantId    String? // multi-tenant (Phase 4 overlay pass); null = legacy
+  name        String // admin-facing label
+  text        String   @db.Text // displayed text (emoji/Unicode ok)
+  accentColor String   @default("#E50914") // card border / accent
   textColor   String   @default("#ffffff")
   fontSizePx  Int      @default(28)
-  fontFamily  String   @default("Inter")          // Inter | JetBrains Mono | Anton | system
-  position    String   @default("top-left")       // {top|center|bottom}-{left|center|right}
-  showCard    Boolean  @default(true)             // card background vs bare text
-  bgGradient  Boolean  @default(false)            // when showCard: gradient background instead of dark card
-  bgColor1    String   @default("#7928ca")        // gradient stop 1 (hex)
-  bgColor2    String   @default("#ff0080")        // gradient stop 2 (hex)
-  bgAngle     Int      @default(135)              // gradient angle in degrees (0-360)
-  posXPct     Int?                                // free drag position (0-100% of screen); null = use `position` slot
+  fontFamily  String   @default("Inter") // Inter | JetBrains Mono | Anton | system
+  position    String   @default("top-left") // {top|center|bottom}-{left|center|right}
+  showCard    Boolean  @default(true) // card background vs bare text
+  bgGradient  Boolean  @default(false) // when showCard: gradient background instead of dark card
+  bgColor1    String   @default("#7928ca") // gradient stop 1 (hex)
+  bgColor2    String   @default("#ff0080") // gradient stop 2 (hex)
+  bgAngle     Int      @default(135) // gradient angle in degrees (0-360)
+  posXPct     Int? // free drag position (0-100% of screen); null = use `position` slot
   posYPct     Int?
-  scalePct    Int?                                // free resize (25-300% of natural size); null = 100%
+  scalePct    Int? // free resize (25-300% of natural size); null = 100%
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1729,8 +1754,8 @@ model CustomWidget {
 // it here; the /overlay/emoji-combo OBS source reads it (active only if fresh).
 // =====================================================
 model EmojiComboState {
-  id        String   @id @default(cuid())   // legacy singleton rows keep id "default"
-  tenantId  String?  @unique                // one combo state per tenant (null = legacy)
+  id        String   @id @default(cuid()) // legacy singleton rows keep id "default"
+  tenantId  String?  @unique // one combo state per tenant (null = legacy)
   emoji     String   @default("")
   count     Int      @default(0)
   updatedAt DateTime @updatedAt
@@ -1747,8 +1772,8 @@ model EmojiComboState {
 model IntegrationConfig {
   id         String  @id @default(cuid()) // was @default("default") singleton; now one row per tenant
   aiProvider String  @default("anthropic") // anthropic | openai | grok | gemini | deepseek | bielik
-  aiApiKey   String?                        // key for the AI character + !imagine (F4)
-  aiModel    String?                        // optional model override
+  aiApiKey   String? // key for the AI character + !imagine (F4)
+  aiModel    String? // optional model override
 
   sentryDsn            String? // error monitoring DSN
   obsWebsocketUrl      String? // ws://host:port for OBS control

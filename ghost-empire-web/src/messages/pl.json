@@ -1873,6 +1873,7 @@
     "schedule": "Plan streamów",
     "profile": "Profil",
     "myProfile": "Mój profil",
+    "portals": "Moje portale",
     "launchPortal": "Załóż własny portal",
     "login": "Zaloguj się",
     "logout": "Wyloguj się",
@@ -1917,6 +1918,24 @@
         "a": "Tak — otwórz menu konta albo stronę O nas i wybierz „Załóż własny portal”, aby uruchomić własną społeczność white-label."
       }
     }
+  },
+  "portals": {
+    "title": "Moje portale",
+    "subtitle": "Przełączaj się między portalami ulubionych streamerów z jednego miejsca.",
+    "loading": "Ładowanie…",
+    "thisPortal": "Ten portal",
+    "followed": "Obserwowane portale",
+    "follow": "Obserwuj",
+    "following": "Obserwujesz",
+    "switch": "Przełącz",
+    "switchUnavailable": "Dostępne, gdy portale wystartują",
+    "emptyFollows": "Nie obserwujesz jeszcze żadnych innych portali.",
+    "emptyFollowsHint": "Wejdź na portal streamera i kliknij Obserwuj — pojawi się tutaj, żebyś mógł się przełączać w każdej chwili.",
+    "loginPrompt": "Zaloguj się, aby obserwować portale streamerów i przełączać się między nimi.",
+    "login": "Zaloguj się",
+    "notReady": "Hub nie jest jeszcze gotowy — spróbuj za chwilę.",
+    "rateLimited": "Za szybko — odczekaj chwilę.",
+    "errGeneric": "Coś poszło nie tak — spróbuj ponownie."
   },
   "common": {
     "howItWorks": "Jak to działa?",

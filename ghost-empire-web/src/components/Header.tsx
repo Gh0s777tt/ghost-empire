@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 // Transition crossfade between pages (locale routing preserved; degrades gracefully).
 import { usePathname } from "@/i18n/navigation";
 import { TransitionLink as Link } from "@/components/TransitionLink";
-import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, HelpCircle, Rocket, Film, Volume2, type LucideIcon } from "lucide-react";
+import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, HelpCircle, Rocket, Film, Volume2, Globe, type LucideIcon } from "lucide-react";
 import { displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -246,6 +246,14 @@ export function Header() {
                         >
                           <Users className="w-3.5 h-3.5" />
                           {t("myProfile")}
+                        </Link>
+                        <Link
+                          href="/portals"
+                          onClick={() => setMenuOpen(false)}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors border-t border-zinc-800"
+                        >
+                          <Globe className="w-3.5 h-3.5" />
+                          {t("portals")}
                         </Link>
                         <Link
                           href="/onboarding"
