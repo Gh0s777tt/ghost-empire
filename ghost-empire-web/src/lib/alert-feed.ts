@@ -75,13 +75,17 @@ export function shapeAlerts(
     const cfg = typeConfigs[a.type] ?? DEFAULT_ALERT_TYPE_CFG;
     // Amount threshold — hide alerts below the type's minAmount.
     if (cfg.minAmount != null && (a.amount ?? 0) < cfg.minAmount) return [];
-    // Per-alert accent override (custom alerts stash it in the meta JSON).
+    // Per-alert overrides stashed in the meta JSON: accent (custom alerts) and
+    // soundUrl (GT sound redemptions — a specific sound per alert, not per type).
     let accent: string | null = null;
+    let soundOverride: string | null = null;
     if (a.meta) {
       try {
-        accent = (JSON.parse(a.meta) as { accent?: string }).accent ?? null;
+        const m = JSON.parse(a.meta) as { accent?: string; soundUrl?: string };
+        accent = m.accent ?? null;
+        soundOverride = m.soundUrl ?? null;
       } catch {
-        /* malformed meta — no accent override */
+        /* malformed meta — no overrides */
       }
     }
     return [
@@ -98,7 +102,7 @@ export function shapeAlerts(
         accent,
         animation: cfg.animation,
         position: cfg.position,
-        soundUrl: cfg.soundUrl,
+        soundUrl: soundOverride ?? cfg.soundUrl,
         createdAt: a.createdAt.toISOString(),
       },
     ];
