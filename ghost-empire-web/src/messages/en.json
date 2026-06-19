@@ -809,6 +809,10 @@
         "clan": {
           "name": "Champion Clan",
           "desc": "Shows the richest clan by treasury on stream — pour GT in to put yours in the spotlight."
+        },
+        "clan-war": {
+          "name": "Live Clan War",
+          "desc": "Shows the live clan war on stream — top clans by war points, prize pool and a countdown. Hidden when no war is running."
         }
       },
       "prevAlertTitle": "New sub!",

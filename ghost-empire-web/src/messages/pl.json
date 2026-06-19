@@ -809,6 +809,10 @@
         "clan": {
           "name": "Champion Clan",
           "desc": "Pokazuje na streamie najbogatszy klan (skarbiec) — wpłacaj GT, by przejąć światło reflektorów."
+        },
+        "clan-war": {
+          "name": "Wojna klanów na żywo",
+          "desc": "Pokazuje na streamie trwającą wojnę klanów — czołowe klany wg punktów wojny, pulę nagród i odliczanie. Ukryte, gdy żadna wojna nie trwa."
         }
       },
       "prevAlertTitle": "Nowy sub!",

@@ -102,6 +102,7 @@ const WIDGET_META: WidgetMeta[] = [
   { id: "rumble",       path: "/overlay/rumble",      size: "360×120" },
   { id: "companion",    path: "/overlay/companion",   size: "360×140" },
   { id: "clan",         path: "/overlay/clan",        size: "360×140" },
+  { id: "clan-war",     path: "/overlay/clan-war",    size: "380×260" },
 ];
 
 export function WidgetsLibrary({
