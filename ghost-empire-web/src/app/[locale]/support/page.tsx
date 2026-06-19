@@ -38,7 +38,7 @@ export default async function SupportPage() {
   const tid = await currentTenantId();
   const tenant = await getCurrentTenant();
 
-  const [methods, goalRow] = await Promise.all([
+  const [methods, goalRow, supporterRows] = await Promise.all([
     prisma.paymentMethod
       .findMany({
         where: { active: true, ...(tid ? { tenantId: tid } : {}) },
@@ -47,10 +47,34 @@ export default async function SupportPage() {
       .catch(() => []), // table not migrated yet → empty page (graceful)
     (tid ? prisma.supportGoal.findUnique({ where: { tenantId: tid } }) : prisma.supportGoal.findFirst())
       .catch(() => null),
+    // Recent supporters wall (#529): the last real-money tips that came through
+    // (Streamlabs/SE/Kick donation webhooks → StreamAlert type "donation"). Social
+    // proof, per-tenant, indexed by [tenantId, createdAt]. Name only (first token,
+    // privacy) + amount — no donor message, so there's no moderation surface.
+    prisma.streamAlert
+      .findMany({
+        where: { type: "donation", ...(tid ? { tenantId: tid } : {}) },
+        orderBy: { createdAt: "desc" },
+        take: 8,
+        select: { actorName: true, amount: true, amountLabel: true },
+      })
+      .catch(() => []),
   ]);
   const goal = goalRow?.active && goalRow.target > 0
     ? { title: goalRow.title, target: goalRow.target, current: goalRow.current, currency: goalRow.currency }
     : null;
+
+  // First token only (privacy), capped; null name → client shows a localized "Anonymous".
+  const firstName = (n: string | null) => {
+    const s = (n ?? "").trim();
+    if (!s) return null;
+    return (s.includes(" ") ? s.split(" ")[0] : s).slice(0, 24);
+  };
+  const supporters = supporterRows.map((r) => ({
+    name: firstName(r.actorName),
+    amount: r.amount,
+    amountLabel: r.amountLabel,
+  }));
 
   // Absolute URL for the page QR (host from the proxy headers).
   const h = await headers();
@@ -100,6 +124,7 @@ export default async function SupportPage() {
           pageQr={pageQr}
           pageUrl={pageUrl}
           goal={goal}
+          supporters={supporters}
         />
       </main>
     </div>

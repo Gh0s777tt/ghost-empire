@@ -12,6 +12,7 @@ type Method = {
   network: string | null; note: string | null; icon: string | null; featured: boolean; qr: string | null;
 };
 type Goal = { title: string; target: number; current: number; currency: string };
+type Supporter = { name: string | null; amount: number | null; amountLabel: string | null };
 const KIND_EMOJI: Record<Method["kind"], string> = { link: "🔗", crypto: "🪙", bank: "🏦" };
 
 const SHARE_TARGETS: { key: string; label: string; href: (u: string, text: string) => string }[] = [
@@ -22,10 +23,11 @@ const SHARE_TARGETS: { key: string; label: string; href: (u: string, text: strin
 ];
 
 export function SupportClient({
-  owner, brandName, logoUrl, methods, pageQr, pageUrl, goal,
+  owner, brandName, logoUrl, methods, pageQr, pageUrl, goal, supporters = [],
 }: {
   owner: string; brandName: string; logoUrl: string | null;
   methods: Method[]; pageQr: string | null; pageUrl: string; goal: Goal | null;
+  supporters?: Supporter[];
 }) {
   const nf = useLocale();
   const t = useTranslations("support");
@@ -125,6 +127,28 @@ export function SupportClient({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Recent supporters — social proof from real tip webhooks (#529) */}
+      {supporters.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2 flex items-center gap-1.5">
+            <Heart className="w-3 h-3 text-red-500 fill-red-500" /> {t("recentTitle")}
+          </h2>
+          <div className="space-y-1.5">
+            {supporters.map((s, i) => (
+              <div key={i} className="flex items-center gap-2.5 border border-zinc-800/70 bg-black/20 rounded-lg px-3 py-2">
+                <span className="text-base shrink-0" aria-hidden>💜</span>
+                <span className="text-sm text-zinc-200 truncate flex-1">{s.name || t("anon")}</span>
+                {s.amount != null && (
+                  <span className="text-xs font-mono font-semibold text-red-300 shrink-0">
+                    {s.amount.toLocaleString(nf)}{s.amountLabel ? ` ${s.amountLabel}` : ""}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
