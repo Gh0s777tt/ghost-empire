@@ -1,15 +1,18 @@
 // src/app/api/admin/grant-tokens/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requirePermission, findManagedUser } from "@/lib/admin";
+import { requirePermission, findManagedUser, requireStepUp } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { checkGrantAnomaly } from "@/lib/economy-anomaly";
+
+// Grants/deductions at or above this size need a 2FA step-up (for admins who enabled it).
+const STEP_UP_GRANT_THRESHOLD = 10_000;
 
 export async function POST(req: Request) {
   const auth = await requirePermission("grant_tokens");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  let body: { target?: string; amount?: number; reason?: string };
+  let body: { target?: string; amount?: number; reason?: string; totpCode?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
@@ -24,6 +27,12 @@ export async function POST(req: Request) {
   }
   if (amount < -1_000_000 || amount > 1_000_000) {
     return NextResponse.json({ error: "Amount musi być w zakresie ±1,000,000" }, { status: 400 });
+  }
+
+  // Step-up: a large grant/deduction requires a fresh 2FA code (no-op unless the admin enabled 2FA).
+  if (Math.abs(amount) >= STEP_UP_GRANT_THRESHOLD) {
+    const step = await requireStepUp(auth.userId, body.totpCode);
+    if (!step.ok) return NextResponse.json({ error: step.error, stepUpRequired: true }, { status: step.status });
   }
 
   // Accept account ID (cuid), username, or Discord ID — scoped to the host

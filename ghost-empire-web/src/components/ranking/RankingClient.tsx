@@ -13,7 +13,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { rankForLevel, cn, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
-import { apiPost, ApiError } from "@/lib/api-client";
+import { apiPost, apiPostStepUp, ApiError } from "@/lib/api-client";
 
 type Sort = "tokens" | "totalEarned" | "weekly" | "level" | "streak";
 
@@ -471,7 +471,7 @@ function AdminUserActions({
     }
     setBusy(true);
     try {
-      const data = await apiPost<{ newBalance: number }>("/api/admin/grant-tokens", {
+      const data = await apiPostStepUp<{ newBalance: number }>("/api/admin/grant-tokens", {
         target: user.username ?? user.id,
         amount: amt,
         reason: reason || "admin_quick_action",
@@ -490,7 +490,7 @@ function AdminUserActions({
     if (!confirm(durationDays > 0 ? t("admBanConfirmTemp", { days: durationDays }) : t("admBanConfirmPerm"))) return;
     setBusy(true);
     try {
-      await apiPost("/api/admin/ban-user", { target: user.username ?? user.id, action: "ban", durationDays, reason });
+      await apiPostStepUp("/api/admin/ban-user", { target: user.username ?? user.id, action: "ban", durationDays, reason });
       showToast("ok", durationDays > 0
         ? t("admBannedTemp", { user: user.username ?? "User", days: durationDays })
         : t("admBannedPerm", { user: user.username ?? "User" }));
@@ -503,7 +503,7 @@ function AdminUserActions({
   async function unbanUser() {
     setBusy(true);
     try {
-      await apiPost("/api/admin/ban-user", { target: user.username ?? user.id, action: "unban" });
+      await apiPostStepUp("/api/admin/ban-user", { target: user.username ?? user.id, action: "unban" });
       showToast("ok", t("admUnbanned", { user: user.username ?? "User" }));
       startTransition(() => router.refresh());
     } catch (err) {

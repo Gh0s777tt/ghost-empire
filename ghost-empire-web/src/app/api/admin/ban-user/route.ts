@@ -3,7 +3,7 @@
 // signIn callback blocks them). Permanent or with duration.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requirePermission, findManagedUser } from "@/lib/admin";
+import { requirePermission, findManagedUser, requireStepUp } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 export async function POST(req: Request) {
@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     action?: "ban" | "unban";
     durationDays?: number;     // 0 / undefined = permanent
     reason?: string;
+    totpCode?: string;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -28,6 +29,10 @@ export async function POST(req: Request) {
   if (action !== "ban" && action !== "unban") {
     return NextResponse.json({ error: "action: ban | unban" }, { status: 400 });
   }
+
+  // Step-up: changing a user's ban state requires a fresh 2FA code (no-op unless 2FA enabled).
+  const step = await requireStepUp(auth.userId, body.totpCode);
+  if (!step.ok) return NextResponse.json({ error: step.error, stepUpRequired: true }, { status: step.status });
 
   // Scoped to the host tenant — a tenant admin must not ban another portal's user.
   const user = await findManagedUser(target, auth);
