@@ -2,6 +2,7 @@
 // Localized root layout — provides <html lang={locale}>, fonts, Providers, footer
 // and the next-intl client provider. PL is unprefixed ("/"), English under "/en".
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
@@ -61,9 +62,12 @@ export default async function LocaleLayout({
   // alignment and punctuation flow correctly. (Full bidi layout mirroring of
   // physical-property components is a follow-up; dir="rtl" fixes the text itself.)
   const dir = locale === "ar" ? "rtl" : "ltr";
+  // Theme preference from a cookie (set by the header toggle). Read server-side so
+  // the right theme is in the HTML on first paint — no flash, no inline script.
+  const theme = (await cookies()).get("theme")?.value === "light" ? "light" : "dark";
 
   return (
-    <html lang={locale} dir={dir} className="dark">
+    <html lang={locale} dir={dir} data-theme={theme} className="dark">
       <head>
         {/* Display fonts (Anton, Bebas Neue, Oswald…) used by widgets/overlays/chat —
             not in next/font's bundled set, so loaded by literal name via one <link>. */}

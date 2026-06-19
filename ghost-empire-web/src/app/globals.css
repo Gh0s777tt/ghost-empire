@@ -422,3 +422,60 @@
   .border-zinc-800,
   .border-zinc-900 { border-color: #71717a !important; } /* zinc-500 — perceivable */
 }
+
+/* =========================================================
+   LIGHT THEME (beta) — opt-in via [data-theme="light"] on <html>
+   The app is dark-first. This remaps the core dark utilities to a light palette
+   for users who prefer light. The DEFAULT (dark) is COMPLETELY untouched — every
+   rule below is scoped under [data-theme="light"], so it only applies when the
+   theme toggle is on. Known beta limits: a few inline-styled gradients / brand
+   glows stay dark. The higher specificity here also wins over the contrast block.
+   ========================================================= */
+[data-theme="light"] {
+  color-scheme: light;
+  background: #fafafa;
+}
+[data-theme="light"] body { background-color: #fafafa !important; color: #18181b; }
+
+/* Surfaces */
+[data-theme="light"] .bg-black     { background-color: #ffffff !important; }
+[data-theme="light"] .bg-zinc-950  { background-color: #ffffff !important; }
+[data-theme="light"] .bg-zinc-900  { background-color: #f4f4f5 !important; }
+[data-theme="light"] .bg-zinc-800  { background-color: #e4e4e7 !important; }
+[data-theme="light"] .bg-zinc-700  { background-color: #d4d4d8 !important; }
+[data-theme="light"] .bg-black\/80,
+[data-theme="light"] .bg-black\/60,
+[data-theme="light"] .bg-black\/50,
+[data-theme="light"] .bg-black\/40,
+[data-theme="light"] .bg-black\/30,
+[data-theme="light"] .bg-black\/20  { background-color: rgb(255 255 255 / 0.72) !important; }
+[data-theme="light"] .bg-zinc-950\/80,
+[data-theme="light"] .bg-zinc-950\/70,
+[data-theme="light"] .bg-zinc-950\/60,
+[data-theme="light"] .bg-zinc-950\/50  { background-color: rgb(255 255 255 / 0.82) !important; }
+[data-theme="light"] .bg-zinc-900\/40  { background-color: rgb(244 244 245 / 0.72) !important; }
+[data-theme="light"] .bg-white\/5      { background-color: rgb(0 0 0 / 0.05) !important; }
+
+/* Text — invert the zinc scale so light greys read as dark on a light surface */
+[data-theme="light"] .text-white    { color: #18181b !important; }
+[data-theme="light"] .text-zinc-200 { color: #27272a !important; }
+[data-theme="light"] .text-zinc-300 { color: #3f3f46 !important; }
+[data-theme="light"] .text-zinc-400 { color: #52525b !important; }
+[data-theme="light"] .text-zinc-500 { color: #71717a !important; }
+[data-theme="light"] .text-zinc-600 { color: #71717a !important; }
+[data-theme="light"] .text-zinc-700 { color: #a1a1aa !important; }
+
+/* Borders */
+[data-theme="light"] .border-zinc-900,
+[data-theme="light"] .border-zinc-800 { border-color: #e4e4e7 !important; }
+[data-theme="light"] .border-zinc-700 { border-color: #d4d4d8 !important; }
+[data-theme="light"] .border-zinc-600,
+[data-theme="light"] .border-zinc-500 { border-color: #a1a1aa !important; }
+
+/* Common hovers, so interactions don't flash dark */
+[data-theme="light"] .hover\:bg-zinc-900:hover { background-color: #f4f4f5 !important; }
+[data-theme="light"] .hover\:bg-zinc-800:hover { background-color: #e4e4e7 !important; }
+[data-theme="light"] .hover\:text-white:hover  { color: #18181b !important; }
+[data-theme="light"] .hover\:border-zinc-700:hover,
+[data-theme="light"] .hover\:border-zinc-600:hover,
+[data-theme="light"] .hover\:border-zinc-500:hover { border-color: #a1a1aa !important; }

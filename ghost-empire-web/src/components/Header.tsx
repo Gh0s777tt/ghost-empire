@@ -14,6 +14,7 @@ import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DailyBonusButton } from "@/components/DailyBonusButton";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTour } from "@/components/tour/SiteTour";
 import { BALANCE_EVENT } from "@/lib/balance-bus";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -140,6 +141,7 @@ export function Header() {
             >
               <HelpCircle className="w-4 h-4" />
             </button>
+            <ThemeToggle />
             <LocaleSwitcher />
             {session ? (
               <>
