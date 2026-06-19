@@ -398,6 +398,7 @@ function CustomWidgetGenerator({
         <PositionCanvas
           x={posX} y={posY} scale={scale}
           onChange={(px, py) => { setPosX(px); setPosY(py); }}
+          onResize={(s) => setScale(s)}
           onClear={() => { setPosX(null); setPosY(null); }}
           t={t}
           child={<CustomWidgetCard text={text || t("previewTextPh")} accentColor={accentColor} textColor={textColor} fontSizePx={fontSizePx} fontFamily={fontFamily} showCard={showCard} bgGradient={bgGradient} bgColor1={bgColor1} bgColor2={bgColor2} bgAngle={bgAngle} />}
@@ -444,17 +445,19 @@ function CustomWidgetGenerator({
 // 16:9 "screen" canvas: click/drag to set a free overlay position (0–100%); a reset
 // clears it back to the 9-slot `position`. The rendered child is the live widget card.
 function PositionCanvas({
-  x, y, scale, onChange, onClear, t, child,
+  x, y, scale, onChange, onResize, onClear, t, child,
 }: {
   x: number | null; y: number | null;
   scale: number;
   onChange: (x: number, y: number) => void;
+  onResize: (scale: number) => void;
   onClear: () => void;
   t: TFn;
   child: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
+  const resizeRef = useRef<{ startX: number; startScale: number } | null>(null);
   const free = x != null && y != null;
   function setFrom(e: ReactPointerEvent<HTMLDivElement>) {
     const el = ref.current;
@@ -464,6 +467,19 @@ function PositionCanvas({
     const py = Math.round(Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100)));
     onChange(px, py);
   }
+  // Drag the corner handle to resize (stops propagation so it doesn't move position).
+  function onHandleDown(e: ReactPointerEvent<HTMLDivElement>) {
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    resizeRef.current = { startX: e.clientX, startScale: scale };
+  }
+  function onHandleMove(e: ReactPointerEvent<HTMLDivElement>) {
+    if (!resizeRef.current) return;
+    e.stopPropagation();
+    const dx = e.clientX - resizeRef.current.startX;
+    onResize(Math.min(300, Math.max(25, Math.round(resizeRef.current.startScale + dx / 2))));
+  }
+  function onHandleUp(e: ReactPointerEvent<HTMLDivElement>) { e.stopPropagation(); resizeRef.current = null; }
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
@@ -478,8 +494,17 @@ function PositionCanvas({
         className="relative aspect-video w-full border border-zinc-800 rounded-sm cursor-crosshair overflow-hidden touch-none select-none"
         style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}
       >
-        <div style={{ position: "absolute", left: free ? `${x}%` : "50%", top: free ? `${y}%` : "50%", transform: `translate(-50%, -50%) scale(${0.55 * (scale / 100)})`, pointerEvents: "none", opacity: free ? 1 : 0.8 }}>
-          {child}
+        <div style={{ position: "absolute", left: free ? `${x}%` : "50%", top: free ? `${y}%` : "50%", transform: `translate(-50%, -50%) scale(${0.55 * (scale / 100)})`, opacity: free ? 1 : 0.8 }}>
+          <div style={{ position: "relative", pointerEvents: "none" }}>
+            {child}
+            {free && (
+              <div
+                onPointerDown={onHandleDown} onPointerMove={onHandleMove} onPointerUp={onHandleUp}
+                title={t("builderResize")}
+                style={{ position: "absolute", right: 0, bottom: 0, width: 13, height: 13, borderRadius: 3, background: "#fff", border: "2px solid #e11d48", cursor: "nwse-resize", pointerEvents: "auto", transform: `translate(50%, 50%) scale(${Math.min(4, 100 / (0.55 * scale))})`, touchAction: "none" }}
+              />
+            )}
+          </div>
         </div>
       </div>
       <p className="text-[10px] text-zinc-600 mt-1">{free ? t("builderHintFree") : t("builderHintSlot")}</p>
