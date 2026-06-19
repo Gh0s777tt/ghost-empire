@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import {
   Trophy, Award, Link as LinkIcon, Globe, MessageCircle, Mic2, Flame,
-  ShieldCheck, Heart, Crown, Ban, Star, Music2,
+  ShieldCheck, Heart, Crown, Ban, Star, Music2, Users,
 } from "lucide-react";
 import type { ComponentType, CSSProperties } from "react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
@@ -102,15 +102,16 @@ export default async function PublicProfilePage({
       isBanned: true,
       bannedUntil: true,
       createdAt: true,
+      clanRole: true,
       companion: { select: { xp: true } },
-      clan: { select: { tag: true, name: true } },
+      clan: { select: { id: true, tag: true, name: true } },
       // PRIVATE — NOT exposed: tokens (balance), totalSpent, email, modNote, banReason
     },
   });
 
   if (!user) notFound();
 
-  const [connections, earnedAchievements, socialLinks, rankPositions] = await Promise.all([
+  const [connections, earnedAchievements, socialLinks, rankPositions, clanWarWins] = await Promise.all([
     prisma.connection.findMany({
       where: { userId: user.id },
       select: {
@@ -150,6 +151,8 @@ export default async function PublicProfilePage({
       }),
       prisma.user.count({ where: { streak: { gt: user.streak } } }),
     ]),
+    // Clan war trophies — how many wars this user's clan has won (0 if clanless).
+    user.clan ? prisma.clanWar.count({ where: { winnerClanId: user.clan.id, status: "ended" } }) : Promise.resolve(0),
   ]);
 
   const [aheadByEarned, aheadByLevel, aheadByStreak] = rankPositions;
@@ -305,9 +308,6 @@ export default async function PublicProfilePage({
             {user.companion && user.companion.xp > 0 && (
               <StatTile label={t("statCompanion")} value={`${fmt(user.companion.xp, locale)} XP`} emoji={companionStage(user.companion.xp).emoji} />
             )}
-            {user.clan && (
-              <StatTile label={t("statClan")} value={`[${user.clan.tag}]`} emoji="🛡️" />
-            )}
           </div>
 
           {/* Ranking positions */}
@@ -328,6 +328,39 @@ export default async function PublicProfilePage({
               <RankPosition label={t("statStreak")} position={aheadByStreak + 1} hrefSort="streak" />
             </div>
           </div>
+
+          {/* Clan — tag, name, role and the clan's war trophies */}
+          {user.clan && (
+            <div
+              className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4"
+              style={{
+                clipPath:
+                  "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-red-500" />
+                <h2 className="font-display text-base text-white tracking-wider">{t("clanTitle")}</h2>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="px-2 py-0.5 rounded bg-white/5 text-sm font-mono font-bold" style={{ color: "var(--brand)" }}>[{user.clan.tag}]</span>
+                <span className="text-white font-bold truncate">{user.clan.name}</span>
+                {user.clanRole === "owner" && (
+                  <span className="text-[10px] font-bold tracking-widest uppercase border border-amber-600/60 bg-amber-950/30 text-amber-300 px-1.5 py-0.5 inline-flex items-center gap-1">
+                    <Crown className="w-2.5 h-2.5" /> {t("clanOwner")}
+                  </span>
+                )}
+                {clanWarWins > 0 && (
+                  <span className="inline-flex items-center gap-1.5 text-sm text-amber-300" title={t("clanWarWinsTitle")}>
+                    <Trophy className="w-4 h-4" /> {t("clanWarWins", { count: clanWarWins })}
+                  </span>
+                )}
+                <Link href="/clans" className="ms-auto text-[10px] font-mono uppercase tracking-widest text-zinc-500 hover:text-red-400">
+                  {t("clanView")}
+                </Link>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Connections */}
