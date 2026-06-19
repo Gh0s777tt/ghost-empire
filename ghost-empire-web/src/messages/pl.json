@@ -946,8 +946,14 @@
       "typeLabel": "Typ",
       "labelFieldLabel": "Label (widoczny na overlay)",
       "labelPh": "np. 500 subów = nowy setup!",
-      "colorLabel": "Kolor (opcjonalny)",
+      "colorLabel": "Kolor paska (opcjonalny)",
       "colorPh": "#hex (puste = domyślny)",
+      "textColorLabel": "Kolor tekstu",
+      "bgColorLabel": "Tło",
+      "fontLabel": "Czcionka",
+      "fontDefault": "Domyślna (Inter)",
+      "autoPh": "#hex (puste = auto)",
+      "livePreview": "Podgląd na żywo",
       "addGoalBtn": "Dodaj cel"
     },
     "subathon": {

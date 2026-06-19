@@ -946,8 +946,14 @@
       "typeLabel": "Type",
       "labelFieldLabel": "Label (shown on overlay)",
       "labelPh": "e.g. 500 subs = new setup!",
-      "colorLabel": "Color (optional)",
+      "colorLabel": "Bar color (optional)",
       "colorPh": "#hex (empty = default)",
+      "textColorLabel": "Text color",
+      "bgColorLabel": "Background",
+      "fontLabel": "Font",
+      "fontDefault": "Default (Inter)",
+      "autoPh": "#hex (empty = auto)",
+      "livePreview": "Live preview",
       "addGoalBtn": "Add goal"
     },
     "subathon": {
