@@ -38,7 +38,7 @@ export default async function SupportPage() {
   const tid = await currentTenantId();
   const tenant = await getCurrentTenant();
 
-  const [methods, goalRow, supporterRows] = await Promise.all([
+  const [methods, goalRow, supporterRows, topRows] = await Promise.all([
     prisma.paymentMethod
       .findMany({
         where: { active: true, ...(tid ? { tenantId: tid } : {}) },
@@ -59,6 +59,17 @@ export default async function SupportPage() {
         select: { actorName: true, amount: true, amountLabel: true },
       })
       .catch(() => []),
+    // All-time top supporters (#530): donations summed per donor name (best-effort —
+    // donors aren't accounts). Same per-tenant "donation" source, aggregated in the DB.
+    prisma.streamAlert
+      .groupBy({
+        by: ["actorName"],
+        where: { type: "donation", amount: { not: null }, actorName: { not: null }, ...(tid ? { tenantId: tid } : {}) },
+        _sum: { amount: true },
+        orderBy: { _sum: { amount: "desc" } },
+        take: 5,
+      })
+      .catch(() => [] as { actorName: string | null; _sum: { amount: number | null } }[]),
   ]);
   const goal = goalRow?.active && goalRow.target > 0
     ? { title: goalRow.title, target: goalRow.target, current: goalRow.current, currency: goalRow.currency }
@@ -75,6 +86,11 @@ export default async function SupportPage() {
     amount: r.amount,
     amountLabel: r.amountLabel,
   }));
+  // Donations are one currency per portal in practice — take a representative label.
+  const tipCurrency = supporterRows.find((r) => r.amountLabel)?.amountLabel ?? null;
+  const topSupporters = topRows
+    .map((r) => ({ name: firstName(r.actorName), total: r._sum.amount ?? 0 }))
+    .filter((s): s is { name: string; total: number } => !!s.name && s.total > 0);
 
   // Absolute URL for the page QR (host from the proxy headers).
   const h = await headers();
@@ -125,6 +141,8 @@ export default async function SupportPage() {
           pageUrl={pageUrl}
           goal={goal}
           supporters={supporters}
+          topSupporters={topSupporters}
+          tipCurrency={tipCurrency}
         />
       </main>
     </div>

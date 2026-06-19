@@ -3,7 +3,7 @@
 // Public support/tip page UI (#514): payment links, crypto (one-tap copy + QR),
 // bank/IBAN (masked → reveal-on-click + copy + SEPA QR), plus a shareable page-QR.
 import { useState } from "react";
-import { Heart, Copy, Check, Eye, QrCode, ExternalLink, Download, Star, Link2, Share2 } from "lucide-react";
+import { Heart, Copy, Check, Eye, QrCode, ExternalLink, Download, Star, Link2, Share2, Trophy } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { maskIban, formatIban } from "@/lib/payment-methods";
 
@@ -13,7 +13,9 @@ type Method = {
 };
 type Goal = { title: string; target: number; current: number; currency: string };
 type Supporter = { name: string | null; amount: number | null; amountLabel: string | null };
+type TopSupporter = { name: string; total: number };
 const KIND_EMOJI: Record<Method["kind"], string> = { link: "🔗", crypto: "🪙", bank: "🏦" };
+const RANK_MEDAL = ["🏆", "🥈", "🥉"];
 
 const SHARE_TARGETS: { key: string; label: string; href: (u: string, text: string) => string }[] = [
   { key: "telegram", label: "Telegram", href: (u, t) => `https://t.me/share/url?url=${encodeURIComponent(u)}&text=${encodeURIComponent(t)}` },
@@ -23,11 +25,11 @@ const SHARE_TARGETS: { key: string; label: string; href: (u: string, text: strin
 ];
 
 export function SupportClient({
-  owner, brandName, logoUrl, methods, pageQr, pageUrl, goal, supporters = [],
+  owner, brandName, logoUrl, methods, pageQr, pageUrl, goal, supporters = [], topSupporters = [], tipCurrency = null,
 }: {
   owner: string; brandName: string; logoUrl: string | null;
   methods: Method[]; pageQr: string | null; pageUrl: string; goal: Goal | null;
-  supporters?: Supporter[];
+  supporters?: Supporter[]; topSupporters?: TopSupporter[]; tipCurrency?: string | null;
 }) {
   const nf = useLocale();
   const t = useTranslations("support");
@@ -127,6 +129,26 @@ export function SupportClient({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Top supporters — all-time leaderboard from tip webhooks (#530) */}
+      {topSupporters.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2 flex items-center gap-1.5">
+            <Trophy className="w-3 h-3 text-amber-400" /> {t("topTitle")}
+          </h2>
+          <div className="space-y-1.5">
+            {topSupporters.map((s, i) => (
+              <div key={i} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 border ${i === 0 ? "border-amber-600/50 bg-amber-950/10" : "border-zinc-800/70 bg-black/20"}`}>
+                <span className="text-base shrink-0 w-5 text-center font-mono">{RANK_MEDAL[i] ?? i + 1}</span>
+                <span className="text-sm text-zinc-100 truncate flex-1 font-medium">{s.name}</span>
+                <span className="text-xs font-mono font-semibold text-amber-300 shrink-0">
+                  {s.total.toLocaleString(nf)}{tipCurrency ? ` ${tipCurrency}` : ""}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
