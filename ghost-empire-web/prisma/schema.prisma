@@ -1615,6 +1615,32 @@ model SoundReward {
 }
 
 // =====================================================
+// PAYMENT METHODS (#514) — the streamer's real-money "support/tip" methods shown
+// on the public /support page (donatr.ee-style). Per-tenant + additive. Three kinds:
+//   "link"   — value = an https URL (PayPal, Ko-fi, Patreon, Boosty, …)
+//   "crypto" — value = a wallet address; `network` = BTC/ETH/USDT/SOL/… (one-tap copy + QR)
+//   "bank"   — value = IBAN; `network` = account holder name (masked, reveal-on-click, SEPA-QR)
+// =====================================================
+model PaymentMethod {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  kind      String // "link" | "crypto" | "bank"
+  label     String // display name, e.g. "PayPal", "Bitcoin", "Bank (PLN)"
+  value     String   @db.Text // URL | wallet address | IBAN
+  network   String? // crypto symbol/network (BTC/ETH/USDT…) OR bank account-holder name
+  note      String? // optional sub-label shown under the method
+  icon      String? // optional emoji
+  featured  Boolean  @default(false) // highlighted as the recommended method
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, active])
+  @@map("payment_methods")
+}
+
+// =====================================================
 // ALERT TYPE CONFIG — per-alert-type overrides for the OBS overlay.
 // A type with NO row falls back to the overlay defaults (slide / bottom-right /
 // synthesized ding / no threshold) — so unconfigured types look exactly as before.

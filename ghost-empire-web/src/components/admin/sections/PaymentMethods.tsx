@@ -1,0 +1,135 @@
+"use client";
+// src/components/admin/sections/PaymentMethods.tsx
+// Manage the real-money support methods shown on the public /support page (#514):
+// payment links, crypto wallets, bank/IBAN. Per-tenant. Data via
+// /api/admin/payment-methods.
+import { useState, useEffect, useCallback } from "react";
+import { Wallet, Loader2, Trash2, Plus, Eye, EyeOff, Star, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { SectionCard } from "../shared";
+import { apiGet, apiPost, ApiError } from "@/lib/api-client";
+
+type Kind = "link" | "crypto" | "bank";
+type Method = {
+  id: string; kind: Kind; label: string; value: string; network: string | null;
+  note: string | null; icon: string | null; featured: boolean; active: boolean; sortOrder: number;
+};
+
+const KIND_ICON: Record<Kind, string> = { link: "🔗", crypto: "🪙", bank: "🏦" };
+
+export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void }) {
+  const t = useTranslations("admin.paymentMethods");
+  const [loading, setLoading] = useState(true);
+  const [methods, setMethods] = useState<Method[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  // create form
+  const [kind, setKind] = useState<Kind>("link");
+  const [label, setLabel] = useState("");
+  const [value, setValue] = useState("");
+  const [network, setNetwork] = useState("");
+  const [note, setNote] = useState("");
+  const [featured, setFeatured] = useState(false);
+
+  const load = useCallback(async () => {
+    try { setMethods((await apiGet<{ methods: Method[] }>("/api/admin/payment-methods")).methods); }
+    catch { /* keep */ } finally { setLoading(false); }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  async function call(action: string, payload: Record<string, unknown>): Promise<boolean> {
+    try { await apiPost("/api/admin/payment-methods", { action, ...payload }); return true; }
+    catch (e) { onToast("err", e instanceof ApiError ? e.message : t("err")); return false; }
+  }
+
+  async function create() {
+    setBusy("create");
+    if (await call("create", { kind, label: label.trim(), value: value.trim(), network: network.trim(), note: note.trim(), featured })) {
+      onToast("ok", t("created"));
+      setLabel(""); setValue(""); setNetwork(""); setNote(""); setFeatured(false);
+      await load();
+    }
+    setBusy(null);
+  }
+  async function patch(m: Method, data: Record<string, unknown>) {
+    setBusy(m.id);
+    if (await call("update", { id: m.id, kind: m.kind, label: m.label, value: m.value, network: m.network, note: m.note, featured: m.featured, active: m.active, ...data })) await load();
+    setBusy(null);
+  }
+  async function remove(m: Method) {
+    if (!confirm(t("deleteConfirm", { name: m.label }))) return;
+    setBusy(m.id); if (await call("delete", { id: m.id })) { onToast("ok", t("deleted")); await load(); } setBusy(null);
+  }
+  async function move(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= methods.length) return;
+    const next = [...methods];
+    [next[i], next[j]] = [next[j], next[i]];
+    setMethods(next);
+    await call("reorder", { ids: next.map((m) => m.id) });
+  }
+
+  const valuePh = kind === "link" ? t("phLink") : kind === "crypto" ? t("phCrypto") : t("phBank");
+  const networkPh = kind === "crypto" ? t("phNetwork") : kind === "bank" ? t("phHolder") : "";
+
+  return (
+    <SectionCard title={t("title")} icon={Wallet}>
+      <p className="text-zinc-500 text-xs mb-3">{t("intro")} <a href="/support" target="_blank" rel="noreferrer" className="text-red-400 hover:text-red-300 inline-flex items-center gap-0.5">/support <ExternalLink className="w-3 h-3" /></a></p>
+
+      {loading ? (
+        <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
+      ) : (
+        <div className="space-y-2 mb-4">
+          {methods.length === 0 ? (
+            <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">{t("empty")}</div>
+          ) : methods.map((m, i) => (
+            <div key={m.id} className={`flex items-center gap-2 border p-2.5 ${m.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-black/20 opacity-60"}`}>
+              <div className="flex flex-col shrink-0">
+                <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowUp className="w-3 h-3" /></button>
+                <button onClick={() => void move(i, 1)} disabled={i === methods.length - 1} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowDown className="w-3 h-3" /></button>
+              </div>
+              <span className="text-lg shrink-0">{m.icon || KIND_ICON[m.kind]}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-white truncate flex items-center gap-1.5">
+                  {m.label}
+                  {m.network && <span className="text-[10px] font-mono text-zinc-500">{m.network}</span>}
+                  {m.featured && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
+                </div>
+                <div className="text-[10px] text-zinc-600 font-mono truncate">{m.value}</div>
+              </div>
+              <button onClick={() => void patch(m, { featured: !m.featured })} disabled={busy === m.id} title={t("featuredTitle")} className={`shrink-0 border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center ${m.featured ? "text-amber-400" : "text-zinc-600 hover:text-white"}`}><Star className="w-3 h-3" /></button>
+              <button onClick={() => void patch(m, { active: !m.active })} disabled={busy === m.id} title={m.active ? t("disable") : t("enable")} className="shrink-0 text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center">{m.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}</button>
+              <button onClick={() => void remove(m)} disabled={busy === m.id} title={t("deleteTitle")} className="shrink-0 text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"><Trash2 className="w-3 h-3" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="border border-zinc-800 bg-black/30 p-3 space-y-2">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("addTitle")}</div>
+        <div className="flex gap-1.5">
+          {(["link", "crypto", "bank"] as Kind[]).map((k) => (
+            <button key={k} onClick={() => setKind(k)} className={`flex-1 px-2 py-1.5 text-[11px] font-bold tracking-wide border transition-colors ${kind === k ? "border-red-600 bg-red-950/40 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"}`}>
+              {KIND_ICON[k]} {t(`kind_${k}`)}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <input value={label} maxLength={60} placeholder={t("phLabel")} onChange={(e) => setLabel(e.target.value)} className="border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600" />
+          {kind !== "link" && (
+            <input value={network} maxLength={60} placeholder={networkPh} onChange={(e) => setNetwork(e.target.value)} className="border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600" />
+          )}
+        </div>
+        <input value={value} placeholder={valuePh} onChange={(e) => setValue(e.target.value)} className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600" />
+        <input value={note} maxLength={200} placeholder={t("phNote")} onChange={(e) => setNote(e.target.value)} className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600" />
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
+            <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="accent-amber-500" /> {t("featuredLabel")}
+          </label>
+          <button onClick={() => void create()} disabled={busy === "create" || !label.trim() || !value.trim()} className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 inline-flex items-center gap-1.5">
+            {busy === "create" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} {t("addBtn")}
+          </button>
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
