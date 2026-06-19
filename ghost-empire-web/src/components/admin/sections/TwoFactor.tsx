@@ -14,7 +14,7 @@ export function TwoFactorManager({ onToast }: { onToast: (k: "ok" | "err", m: st
   const t = useTranslations("admin.twoFactor");
   const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
-  const [setup, setSetup] = useState<{ secret: string; otpauthUri: string } | null>(null);
+  const [setup, setSetup] = useState<{ secret: string; otpauthUri: string; qrDataUrl: string } | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -27,7 +27,7 @@ export function TwoFactorManager({ onToast }: { onToast: (k: "ok" | "err", m: st
 
   async function startSetup() {
     setBusy(true);
-    try { setSetup(await apiPost<{ secret: string; otpauthUri: string }>("/api/admin/2fa", { action: "setup" })); }
+    try { setSetup(await apiPost<{ secret: string; otpauthUri: string; qrDataUrl: string }>("/api/admin/2fa", { action: "setup" })); }
     catch (e) { onToast("err", e instanceof ApiError ? e.message : t("err")); }
     finally { setBusy(false); }
   }
@@ -85,6 +85,12 @@ export function TwoFactorManager({ onToast }: { onToast: (k: "ok" | "err", m: st
         <div className="space-y-3">
           <div className="text-sm text-zinc-300">{t("setupTitle")}</div>
           <p className="text-[11px] text-zinc-500">{t("setupHint")}</p>
+          {setup.qrDataUrl && (
+            <div className="flex flex-col items-center gap-1.5">
+              <img src={setup.qrDataUrl} alt={t("qrAlt")} width={200} height={200} className="rounded-lg border border-zinc-800 bg-white p-2" />
+              <span className="text-[10px] text-zinc-500">{t("qrHint")}</span>
+            </div>
+          )}
           <div className="border border-zinc-800 bg-black/40 rounded-lg p-3">
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{t("secretLabel")}</div>
             <div className="flex items-center gap-2">

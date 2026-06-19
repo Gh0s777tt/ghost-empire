@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { encryptSecret, decryptSecret } from "@/lib/crypto";
 import { generateTotpSecret, otpauthUri, formatSecret, verifyTotp } from "@/lib/totp";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import QRCode from "qrcode";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +50,10 @@ export async function POST(req: Request) {
     // Persist pending (encrypted) so the enable step can verify against it.
     await prisma.user.update({ where: { id: userId }, data: { totpSecret: encryptSecret(secret), totpEnabledAt: null } });
     const account = me.username || me.email || "admin";
-    return NextResponse.json({ secret: formatSecret(secret), otpauthUri: otpauthUri(secret, account, ISSUER) });
+    const uri = otpauthUri(secret, account, ISSUER);
+    // Scannable QR (PNG data-url) so the admin can point a phone camera instead of typing the secret.
+    const qrDataUrl = await QRCode.toDataURL(uri, { margin: 1, width: 220 });
+    return NextResponse.json({ secret: formatSecret(secret), otpauthUri: uri, qrDataUrl });
   }
 
   if (body.action === "enable") {
