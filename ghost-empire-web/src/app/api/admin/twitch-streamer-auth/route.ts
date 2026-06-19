@@ -1,6 +1,7 @@
 // src/app/api/admin/twitch-streamer-auth/route.ts
 // Special Twitch OAuth flow for the STREAMER (Gh0s77tt) — grants extra scopes
-// needed for EventSub: channel:read:subscriptions + bits:read.
+// needed for EventSub (channel:read:subscriptions + bits:read) and the AI Clip
+// Director's auto-clip creation (clips:edit, #517).
 //
 // Result: TwitchStreamerToken row saved with the streamer's user access token,
 // which is then used to create EventSub subscriptions for their channel.
@@ -10,7 +11,7 @@ import { requireAdmin } from "@/lib/admin";
 import { signOAuthState } from "@/lib/oauth-state";
 import { currentTenantId } from "@/lib/tenant";
 
-const STREAMER_SCOPES = "channel:read:subscriptions bits:read channel:read:hype_train moderator:read:followers";
+const STREAMER_SCOPES = "channel:read:subscriptions bits:read channel:read:hype_train moderator:read:followers clips:edit";
 
 export async function GET() {
   const auth = await requireAdmin();
