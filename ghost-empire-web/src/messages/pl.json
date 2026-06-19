@@ -1575,6 +1575,11 @@
       "burnRatio": "spalanie/wytwarzanie {pct}%",
       "sourcesTitle": "Top źródła GT",
       "sinksTitle": "Top spusty GT",
+      "trendTitle": "Zdobyte vs wydane — ostatnie {days} dni",
+      "earned": "Zdobyte",
+      "spent": "Wydane",
+      "topEarners": "Top zarabiający",
+      "topSpenders": "Top wydający",
       "windowNote": "Ostatnie {days} dni · {count} transakcji"
     },
     "secCommunity": "Społeczność",

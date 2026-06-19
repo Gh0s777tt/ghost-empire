@@ -1575,6 +1575,11 @@
       "burnRatio": "burn/mint {pct}%",
       "sourcesTitle": "Top GT sources",
       "sinksTitle": "Top GT sinks",
+      "trendTitle": "Earned vs spent — last {days} days",
+      "earned": "Earned",
+      "spent": "Spent",
+      "topEarners": "Top earners",
+      "topSpenders": "Top spenders",
       "windowNote": "Last {days} days · {count} transactions"
     },
     "secCommunity": "Community",

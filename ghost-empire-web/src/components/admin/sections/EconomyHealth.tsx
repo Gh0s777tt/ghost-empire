@@ -13,6 +13,8 @@ import { apiGet } from "@/lib/api-client";
 
 type Health = { burnRatio: number; status: "inflating" | "healthy" | "contracting" };
 type ReasonRow = { reason: string; total: number; count: number };
+type DayRow = { date: string; earned: number; spent: number };
+type UserRow = { name: string; image: string | null; amount: number };
 type EconomyData = {
   windowDays: number;
   circulating: number;
@@ -23,6 +25,10 @@ type EconomyData = {
   health: Health;
   sources: ReasonRow[];
   sinks: ReasonRow[];
+  trendDays: number;
+  daily: DayRow[];
+  topEarners: UserRow[];
+  topSpenders: UserRow[];
 };
 
 const STATUS_STYLE: Record<Health["status"], string> = {
@@ -67,6 +73,50 @@ function FlowList({
               <div className="h-1.5 rounded-sm bg-white/5 overflow-hidden">
                 <div className={cn("h-full rounded-sm", bar)} style={{ width: `${Math.max(2, (r.total / max) * 100).toFixed(1)}%` }} />
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Daily earned (red) vs spent (emerald) over the trend window — two mini-bars per day.
+function TrendChart({ daily, sym, label, earnedLabel, spentLabel }: { daily: DayRow[]; sym: string; label: string; earnedLabel: string; spentLabel: string }) {
+  const nf = useLocale();
+  const max = daily.reduce((m, d) => Math.max(m, d.earned, d.spent), 0) || 1;
+  return (
+    <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{label}</div>
+      <div className="flex items-end gap-1 h-28">
+        {daily.map((d) => (
+          <div key={d.date} className="flex-1 flex items-end justify-center gap-0.5 h-full" title={`${d.date} · +${d.earned.toLocaleString(nf)} / −${d.spent.toLocaleString(nf)} ${sym}`}>
+            <div className="w-1/2 bg-red-500/55 rounded-t-sm min-h-px" style={{ height: `${(d.earned / max) * 100}%` }} />
+            <div className="w-1/2 bg-emerald-500/45 rounded-t-sm min-h-px" style={{ height: `${(d.spent / max) * 100}%` }} />
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-zinc-500">
+        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-500/55" /> {earnedLabel}</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500/45" /> {spentLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function TopUsers({ rows, label, sym }: { rows: UserRow[]; label: string; sym: string }) {
+  const nf = useLocale();
+  return (
+    <div className="border border-zinc-800 bg-black/30 p-3">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{label}</div>
+      {rows.length === 0 ? <div className="text-xs text-zinc-600 py-1">—</div> : (
+        <div className="space-y-1.5">
+          {rows.map((r, i) => (
+            <div key={i} className="flex items-center gap-2 text-xs">
+              <span className="text-zinc-600 font-mono w-3 shrink-0">{i + 1}</span>
+              {r.image ? <img src={r.image} alt="" className="w-4 h-4 rounded-full shrink-0" /> : <span className="w-4 h-4 rounded-full bg-zinc-800 shrink-0" />}
+              <span className="text-zinc-300 truncate flex-1">{r.name}</span>
+              <span className="font-mono tabular-nums text-zinc-400 shrink-0">{r.amount.toLocaleString(nf)} {sym}</span>
             </div>
           ))}
         </div>
@@ -135,9 +185,18 @@ export function EconomyHealthSection() {
             <span className="block text-zinc-500 mt-0.5">{t(`hint_${data.health.status}`)}</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {data.daily && data.daily.length > 0 && (
+            <TrendChart daily={data.daily} sym={sym} label={t("trendTitle", { days: data.trendDays })} earnedLabel={t("earned")} spentLabel={t("spent")} />
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
             <FlowList rows={data.sources} tone="source" label={t("sourcesTitle")} icon={<ArrowUpRight className="w-3 h-3" />} />
             <FlowList rows={data.sinks} tone="sink" label={t("sinksTitle")} icon={<ArrowDownRight className="w-3 h-3" />} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <TopUsers rows={data.topEarners ?? []} label={t("topEarners")} sym={sym} />
+            <TopUsers rows={data.topSpenders ?? []} label={t("topSpenders")} sym={sym} />
           </div>
 
           <p className="text-[10px] text-zinc-600 mt-2">{t("windowNote", { days: data.windowDays, count: data.txCount.toLocaleString(nf) })}</p>
