@@ -5,10 +5,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hasRedis } from "@/lib/redis";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { extractIp } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  // Per-IP cap (generous) so this DB-pinging check can't be flooded into pooler churn.
+  const ip = extractIp(req) ?? "unknown";
+  const rl = await rateLimit(`health:ip:${ip}`, 120, 60_000);
+  if (!rl.allowed) return new NextResponse(null, { status: 429, headers: rateLimitHeaders(rl) });
+
   let db: "ok" | "error" = "ok";
   try {
     await prisma.$queryRaw`SELECT 1`;
