@@ -31,6 +31,8 @@ export default async function Image({
         isAdmin: true,
         isModerator: true,
         isDonator: true,
+        prestige: true,
+        clan: { select: { tag: true } },
       },
     });
   } catch {
@@ -237,6 +239,34 @@ export default async function Image({
                   DONATOR
                 </div>
               )}
+              {user.prestige > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "6px 14px",
+                    background: "rgba(245,158,11,0.18)",
+                    border: "1px solid #f59e0b",
+                    color: "#fde68a",
+                    fontSize: 18,
+                    fontWeight: 900,
+                    letterSpacing: "0.15em",
+                  }}
+                >
+                  {/* CSS-drawn 4-point star (avoids the unreliable ✦ glyph in Satori). */}
+                  <div
+                    style={{
+                      width: 18,
+                      height: 18,
+                      background: "#fbbf24",
+                      clipPath: "polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%)",
+                      display: "flex",
+                    }}
+                  />
+                  PRESTIGE {user.prestige}
+                </div>
+              )}
             </div>
 
             <div
@@ -250,6 +280,10 @@ export default async function Image({
               }}
             >
               <div style={{ display: "flex" }}>@{user.username}</div>
+              {user.clan && <div style={{ display: "flex", color: "#52525b" }}>·</div>}
+              {user.clan && (
+                <div style={{ display: "flex", color: rank.color, fontWeight: 700 }}>[{user.clan.tag}]</div>
+              )}
               <div style={{ display: "flex", color: "#52525b" }}>·</div>
               <div style={{ display: "flex", color: rank.color, letterSpacing: "0.15em" }}>
                 LVL {user.level} {rank.name}
