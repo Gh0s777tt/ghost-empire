@@ -28,3 +28,10 @@ export function clampPrize(prize: number): number {
   if (!Number.isFinite(prize)) return 0;
   return Math.min(WAR_MAX_PRIZE, Math.max(0, Math.floor(prize)));
 }
+
+/** How many whole days a war ran (rounded), floored at 1 — for the Hall of Fame. */
+export function warDurationDays(startsAt: string | Date, endsAt: string | Date): number {
+  const ms = new Date(endsAt).getTime() - new Date(startsAt).getTime();
+  if (!Number.isFinite(ms)) return 1;
+  return Math.max(1, Math.round(ms / 86_400_000));
+}

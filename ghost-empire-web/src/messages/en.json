@@ -2263,7 +2263,10 @@
     "warHint": "Your contributions count toward both the treasury and your clan's war points.",
     "warEnding": "ending…",
     "warEndsD": "ends in {d}d {h}h",
-    "warEndsH": "ends in {h}h"
+    "warEndsH": "ends in {h}h",
+    "hofTitle": "War Hall of Fame",
+    "hofDuration": "{d}d war",
+    "hofPoints": "{n} pts"
   },
   "wheel": {
     "help": "Wheel of Fortune: spin for %tokenName% and win one of the rewards set by the streamer. The spin cost is shown by the button; the server draws the result.",

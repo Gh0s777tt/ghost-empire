@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isWarLive, warTimeRemaining, clampWarDays, clampPrize, WAR_MIN_DAYS, WAR_MAX_DAYS, WAR_MAX_PRIZE } from "@/lib/clan-wars";
+import { isWarLive, warTimeRemaining, clampWarDays, clampPrize, warDurationDays, WAR_MIN_DAYS, WAR_MAX_DAYS, WAR_MAX_PRIZE } from "@/lib/clan-wars";
 
 const NOW = 1_000_000_000_000;
 
@@ -34,5 +34,16 @@ describe("clampPrize", () => {
     expect(clampPrize(-10)).toBe(0);
     expect(clampPrize(WAR_MAX_PRIZE + 1)).toBe(WAR_MAX_PRIZE);
     expect(clampPrize(12.7)).toBe(12);
+  });
+});
+
+describe("warDurationDays", () => {
+  const day = 86_400_000;
+  it("rounds the span to whole days, floored at 1", () => {
+    const start = new Date(NOW);
+    expect(warDurationDays(start, new Date(NOW + 7 * day))).toBe(7);
+    expect(warDurationDays(start, new Date(NOW + day))).toBe(1);
+    expect(warDurationDays(start, new Date(NOW + 12 * 3_600_000))).toBe(1); // 12h → min 1
+    expect(warDurationDays(start, new Date(NOW + 2.5 * day))).toBe(3); // rounds up at .5
   });
 });
