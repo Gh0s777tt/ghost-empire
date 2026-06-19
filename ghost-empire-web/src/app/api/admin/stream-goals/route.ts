@@ -5,9 +5,12 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
+import { WIDGET_FONTS } from "@/lib/widget-fonts";
 
 const VALID_TYPES = ["subs", "gift_subs", "follows", "donations_pln", "cheers_bits", "yt_members"] as const;
 const VALID_RESET_MODES = ["manual", "per_stream", "daily", "weekly", "monthly"] as const;
+const VALID_FONTS = new Set(WIDGET_FONTS.map((f) => f.value));
+const isHex = (s: unknown): s is string => typeof s === "string" && /^#[0-9a-fA-F]{6}$/.test(s);
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -55,6 +58,9 @@ export async function POST(req: Request) {
     active?: boolean;
     resetMode?: string;
     color?: string;
+    textColor?: string | null;
+    bgColor?: string | null;
+    fontFamily?: string | null;
     sortOrder?: number;
   };
   try {
@@ -76,7 +82,7 @@ export async function POST(req: Request) {
     const resetMode = body.resetMode && (VALID_RESET_MODES as readonly string[]).includes(body.resetMode)
       ? body.resetMode
       : "manual";
-    const color = body.color && /^#[0-9a-fA-F]{6}$/.test(body.color) ? body.color : null;
+    const color = isHex(body.color) ? body.color : null;
 
     const tid = await currentTenantId();
     const created = await prisma.streamGoal.create({
@@ -87,6 +93,9 @@ export async function POST(req: Request) {
         target: Math.floor(body.target),
         resetMode,
         color,
+        textColor: isHex(body.textColor) ? body.textColor : null,
+        bgColor: isHex(body.bgColor) ? body.bgColor : null,
+        fontFamily: body.fontFamily && VALID_FONTS.has(body.fontFamily) ? body.fontFamily : null,
         sortOrder: body.sortOrder ?? 0,
       },
     });
@@ -110,7 +119,13 @@ export async function POST(req: Request) {
     if (typeof body.active === "boolean") patch.active = body.active;
     if (body.resetMode && (VALID_RESET_MODES as readonly string[]).includes(body.resetMode)) patch.resetMode = body.resetMode;
     if (body.color === null) patch.color = null;
-    else if (body.color && /^#[0-9a-fA-F]{6}$/.test(body.color)) patch.color = body.color;
+    else if (isHex(body.color)) patch.color = body.color;
+    if (body.textColor === null) patch.textColor = null;
+    else if (isHex(body.textColor)) patch.textColor = body.textColor;
+    if (body.bgColor === null) patch.bgColor = null;
+    else if (isHex(body.bgColor)) patch.bgColor = body.bgColor;
+    if (body.fontFamily === null) patch.fontFamily = null;
+    else if (body.fontFamily && VALID_FONTS.has(body.fontFamily)) patch.fontFamily = body.fontFamily;
     if (typeof body.sortOrder === "number") patch.sortOrder = body.sortOrder;
 
     const tid = await currentTenantId();

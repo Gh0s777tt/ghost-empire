@@ -1428,6 +1428,9 @@ model StreamGoal {
   resetMode   String    @default("manual")   // "manual" | "per_stream" | "daily" | "weekly" | "monthly"
   lastResetAt DateTime?
   color       String?                          // overlay accent override; falls back to StreamAlertSettings.accentColor
+  textColor   String?                          // label/secondary text color (null → default zinc)
+  bgColor     String?                          // card background (null → default translucent dark)
+  fontFamily  String?                          // font value from lib/widget-fonts (null → Inter)
   sortOrder   Int       @default(0)
   completedAt DateTime?
   createdAt   DateTime  @default(now())

@@ -1,6 +1,7 @@
 // src/components/GoalBar.tsx
 // Shared presentational pieces for the Stream Goals overlay — used by the OBS
 // overlay (/overlay/goals) and the live preview in /admin#goals. Pure styling.
+import { fontStack } from "@/lib/widget-fonts";
 
 export type OverlayGoal = {
   id: string;
@@ -9,6 +10,9 @@ export type OverlayGoal = {
   current: number;
   target: number;
   color: string | null;
+  textColor?: string | null;
+  bgColor?: string | null;
+  fontFamily?: string | null;
   completedAt: string | null;
 };
 
@@ -40,20 +44,23 @@ export const GOAL_TYPE_ICON: Record<string, string> = {
 
 export function GoalBar({ goal, accent }: { goal: OverlayGoal; accent: string }) {
   const color = goal.color ?? accent;
+  const textColor = goal.textColor ?? "#a1a1aa"; // secondary/label text
+  const bg = goal.bgColor ?? "rgba(15, 15, 20, 0.92)";
+  const font = fontStack(goal.fontFamily);
   const pct = Math.min(100, (goal.current / Math.max(1, goal.target)) * 100);
   const completed = goal.completedAt != null;
 
   return (
     <div
       style={{
-        background: "rgba(15, 15, 20, 0.92)",
+        background: bg,
         backdropFilter: "blur(10px)",
         borderRadius: 10,
         padding: "10px 14px",
         borderLeft: `4px solid ${color}`,
         boxShadow: `0 10px 28px rgba(0,0,0,0.55), 0 0 14px ${color}33`,
         color: "#fff",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: font,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -64,7 +71,7 @@ export function GoalBar({ goal, accent }: { goal: OverlayGoal; accent: string })
               {GOAL_TYPE_LABEL[goal.type] ?? goal.type}
               {completed && <span style={{ marginLeft: 6, color: "#34d399" }}>✓ COMPLETE</span>}
             </div>
-            <div style={{ fontSize: 11, color: "#a1a1aa", lineHeight: 1.2 }}>{goal.label}</div>
+            <div style={{ fontSize: 11, color: textColor, lineHeight: 1.2 }}>{goal.label}</div>
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
@@ -72,7 +79,7 @@ export function GoalBar({ goal, accent }: { goal: OverlayGoal; accent: string })
             {goal.current.toLocaleString("pl-PL")}
             <span style={{ color: "#71717a", fontWeight: 500, fontSize: 11 }}> / {goal.target.toLocaleString("pl-PL")}</span>
           </div>
-          <div style={{ fontSize: 10, color: "#a1a1aa", fontVariantNumeric: "tabular-nums" }}>{pct.toFixed(0)}%</div>
+          <div style={{ fontSize: 10, color: textColor, fontVariantNumeric: "tabular-nums" }}>{pct.toFixed(0)}%</div>
         </div>
       </div>
       <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>

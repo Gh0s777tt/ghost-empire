@@ -74,6 +74,9 @@ async function goalsFeed(_p: URLSearchParams, tid: string | null): Promise<unkno
       current: g.current,
       target: g.target,
       color: g.color,
+      textColor: g.textColor,
+      bgColor: g.bgColor,
+      fontFamily: g.fontFamily,
       completedAt: g.completedAt?.toISOString() ?? null,
     })),
     hypeTrain:

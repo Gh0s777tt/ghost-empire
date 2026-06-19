@@ -8,6 +8,7 @@ import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { GoalBar } from "@/components/GoalBar";
+import { WIDGET_FONTS } from "@/lib/widget-fonts";
 
 type StreamGoalData = {
   id: string;
@@ -18,6 +19,9 @@ type StreamGoalData = {
   active: boolean;
   resetMode: string;
   color: string | null;
+  textColor: string | null;
+  bgColor: string | null;
+  fontFamily: string | null;
   sortOrder: number;
   completedAt: string | null;
   createdAt: string;
@@ -63,6 +67,9 @@ export function StreamGoalsManager({
   const [newLabel, setNewLabel] = useState("");
   const [newTarget, setNewTarget] = useState("100");
   const [newColor, setNewColor] = useState("");
+  const [newTextColor, setNewTextColor] = useState("");
+  const [newBgColor, setNewBgColor] = useState("");
+  const [newFont, setNewFont] = useState("");
   const [newResetMode, setNewResetMode] = useState("manual");
 
   const load = useCallback(async () => {
@@ -102,10 +109,13 @@ export function StreamGoalsManager({
       label: newLabel.trim(),
       target,
       color: newColor || undefined,
+      textColor: newTextColor || undefined,
+      bgColor: newBgColor || undefined,
+      fontFamily: newFont || undefined,
       resetMode: newResetMode,
     });
     if (ok) {
-      setNewLabel(""); setNewTarget("100"); setNewColor("");
+      setNewLabel(""); setNewTarget("100"); setNewColor(""); setNewTextColor(""); setNewBgColor(""); setNewFont("");
       onToast("ok", t("created"));
       await load();
       onSuccess();
@@ -272,6 +282,25 @@ export function StreamGoalsManager({
         <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
           {t("addGoalTitle")}
         </div>
+        {/* Live preview — reflects the colors/font as you build the goal. */}
+        <div className="mb-3">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mb-1">{t("livePreview")}</div>
+          <GoalBar
+            goal={{
+              id: "new-preview",
+              type: newType,
+              label: newLabel || t("labelPh"),
+              current: Math.round((parseInt(newTarget, 10) || 100) * 0.6),
+              target: parseInt(newTarget, 10) || 100,
+              color: newColor || null,
+              textColor: newTextColor || null,
+              bgColor: newBgColor || null,
+              fontFamily: newFont || null,
+              completedAt: null,
+            }}
+            accent="#E50914"
+          />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
           <div>
             <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("typeLabel")}</label>
@@ -332,6 +361,27 @@ export function StreamGoalsManager({
                 className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600"
               />
             </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("textColorLabel")}</label>
+            <div className="flex items-center gap-1.5">
+              <input type="color" value={newTextColor || "#a1a1aa"} onChange={(e) => setNewTextColor(e.target.value)} className="w-9 h-7 border border-zinc-700 bg-black/40 cursor-pointer" />
+              <input value={newTextColor} onChange={(e) => setNewTextColor(e.target.value)} placeholder={t("autoPh")} className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600" />
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("bgColorLabel")}</label>
+            <div className="flex items-center gap-1.5">
+              <input type="color" value={newBgColor || "#0f0f14"} onChange={(e) => setNewBgColor(e.target.value)} className="w-9 h-7 border border-zinc-700 bg-black/40 cursor-pointer" />
+              <input value={newBgColor} onChange={(e) => setNewBgColor(e.target.value)} placeholder={t("autoPh")} className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600" />
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("fontLabel")}</label>
+            <select value={newFont} onChange={(e) => setNewFont(e.target.value)} className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600">
+              <option value="">{t("fontDefault")}</option>
+              {WIDGET_FONTS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+            </select>
           </div>
         </div>
         <button
