@@ -272,10 +272,18 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
+  // Per-tenant identity (Stage A, #510): which portal this provider link belongs to.
+  // Nullable + additive — backfilled from user.tenantId, then Stage C flips the unique
+  // below to [provider, providerAccountId, tenantId] so one identity links once PER
+  // tenant. NULL = legacy/pre-backfill (the tenant-aware adapter self-heals it).
+  tenantId          String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Stage A keeps the GLOBAL unique (behavior unchanged). Stage C replaces it with
+  // @@unique([provider, providerAccountId, tenantId]) — see docs/PER-TENANT-IDENTITY.md.
   @@unique([provider, providerAccountId])
+  @@index([tenantId])
   @@map("accounts")
 }
 
