@@ -1641,6 +1641,36 @@ model PaymentMethod {
 }
 
 // =====================================================
+// AI CLIP DIRECTOR (#517) — detect a chat hype spike → auto-create a Twitch clip.
+// Per-tenant + additive. Dormant until enabled AND the streamer's Twitch token has
+// the `clips:edit` scope (otherwise clip creation no-ops gracefully).
+// =====================================================
+model ClipDirectorConfig {
+  id          String   @id @default(cuid())
+  tenantId    String?  @unique
+  enabled     Boolean  @default(false)
+  threshold   Int      @default(10) // chat messages within the window to count as a hype spike
+  windowSec   Int      @default(8)
+  cooldownSec Int      @default(120) // minimum seconds between auto-clips
+  updatedAt   DateTime @updatedAt
+
+  @@map("clip_director_config")
+}
+
+model AutoClip {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  clipId    String // Twitch clip id
+  editUrl   String   @db.Text
+  title     String?
+  reason    String? // "hype" | "manual"
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@map("auto_clips")
+}
+
+// =====================================================
 // ALERT TYPE CONFIG — per-alert-type overrides for the OBS overlay.
 // A type with NO row falls back to the overlay defaults (slide / bottom-right /
 // synthesized ding / no threshold) — so unconfigured types look exactly as before.

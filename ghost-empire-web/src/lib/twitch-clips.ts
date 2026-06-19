@@ -3,8 +3,9 @@
 // not stored) + an ISO-week key so votes reset weekly. App token + broadcaster id,
 // same pattern as live-status. Empty list when no Twitch broadcaster is set up.
 import { cacheJson } from "@/lib/redis";
-import { getAppAccessToken, helixGet } from "@/lib/twitch";
+import { getAppAccessToken, helixGet, helixPost } from "@/lib/twitch";
 import { getTwitchStreamerToken } from "@/lib/platform-tokens";
+import { decryptSecret } from "@/lib/crypto";
 
 const CLIPS_CACHE_MS = 5 * 60_000;
 const CLIPS_WINDOW_DAYS = 7;
@@ -59,4 +60,29 @@ export function getRecentClips(tid: string | null): Promise<Clip[]> {
       return [];
     }
   });
+}
+
+/**
+ * Create a Twitch clip on the streamer's channel (AI Clip Director, #517). Needs the
+ * streamer's USER token WITH the `clips:edit` scope — returns null gracefully if the
+ * scope isn't granted, no token, the channel isn't live, or Helix rejects the call.
+ * Returns the clip id + edit URL (the clip itself takes a few seconds to finish).
+ */
+export async function createTwitchClip(tenantId: string | null): Promise<{ id: string; editUrl: string } | null> {
+  const s = await getTwitchStreamerToken(tenantId);
+  if (!s?.broadcasterId) return null;
+  if (!s.scope?.split(/\s+/).includes("clips:edit")) return null; // scope not granted → dormant
+  const token = decryptSecret(s.accessToken);
+  if (!token) return null;
+  try {
+    const res = await helixPost<{ data?: { id: string; edit_url: string }[] }>(
+      `/clips?broadcaster_id=${s.broadcasterId}`,
+      {},
+      token,
+    );
+    const c = res?.data?.[0];
+    return c ? { id: c.id, editUrl: c.edit_url } : null;
+  } catch {
+    return null; // 401 (missing scope) / 404 (offline) / rate-limited — never throw to the caller
+  }
 }

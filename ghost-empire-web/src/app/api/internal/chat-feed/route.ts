@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { verifyBotSecret } from "@/lib/utils";
+import { handleChatHype } from "@/lib/clip-director";
 
 const MAX_MESSAGE = 500;
 const MAX_USERNAME = 80;
@@ -46,6 +47,10 @@ export async function POST(req: Request) {
       badges,
     },
   });
+
+  // AI Clip Director (#517): best-effort hype check — fire-and-forget so it can never
+  // slow or break chat ingest. No-op unless the streamer enabled it.
+  void handleChatHype(tid).catch(() => {});
 
   // Opportunistic prune so the table stays tiny (≈5% of inserts do the cleanup).
   if (Math.random() < 0.05) {
