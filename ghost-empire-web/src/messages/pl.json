@@ -2865,6 +2865,9 @@
   },
   "userProfile": {
     "notFound": "Nie znaleziono",
+    "share": "Udostępnij",
+    "shareText": "Zobacz {name} na %brandShort%",
+    "copyLink": "Kopiuj link",
     "metaDesc": "Profil {name} w %brandShort%",
     "prestigeTooltip": "Prestiż {n} — Phantom Ascension",
     "since": "Od {date}",

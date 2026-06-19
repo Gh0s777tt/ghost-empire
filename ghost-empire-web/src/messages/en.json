@@ -2865,6 +2865,9 @@
   },
   "userProfile": {
     "notFound": "Not found",
+    "share": "Share",
+    "shareText": "Check out {name} on %brandShort%",
+    "copyLink": "Copy link",
     "metaDesc": "{name}'s profile on %brandShort%",
     "prestigeTooltip": "Prestige {n} — Phantom Ascension",
     "since": "Since {date}",

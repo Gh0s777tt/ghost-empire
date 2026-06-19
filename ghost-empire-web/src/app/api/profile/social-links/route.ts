@@ -9,7 +9,7 @@ import { safeMediaUrl } from "@/lib/url-safe";
 const ALLOWED_PLATFORMS = [
   "instagram", "twitter", "tiktok", "youtube", "website",
   "twitch", "kick", "rumble", "trovo", "github",
-  "steam", "psn", "xbox", "discord",
+  "steam", "psn", "xbox", "discord", "telegram",
 ] as const;
 type AllowedPlatform = (typeof ALLOWED_PLATFORMS)[number];
 
@@ -29,6 +29,7 @@ function buildUrl(platform: AllowedPlatform, handle: string): string {
     case "psn":       return `https://psnprofiles.com/${h}`;
     case "xbox":      return `https://www.xboxgamertag.com/search/${h}`;
     case "discord":   return h.startsWith("http") ? h : `https://discord.gg/${h}`;
+    case "telegram":  return h.startsWith("http") ? h : `https://t.me/${h}`;
     case "website":   return h.startsWith("http") ? h : `https://${h}`;
   }
 }

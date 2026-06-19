@@ -1,14 +1,16 @@
 // src/app/u/[username]/page.tsx
 // Public profile — visible to anyone (no auth required). Shows only public stats.
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { getTranslations, getLocale } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
+import { ProfileShareRow } from "@/components/profile/ProfileShareRow";
 import {
   Trophy, Award, Link as LinkIcon, Globe, MessageCircle, Mic2, Flame,
-  ShieldCheck, Heart, Crown, Ban, Star, Music2, Users,
+  ShieldCheck, Heart, Crown, Ban, Star, Music2, Users, Send,
 } from "lucide-react";
 import type { ComponentType, CSSProperties } from "react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
@@ -38,6 +40,7 @@ const SOCIAL_ICONS: Record<string, ComponentType<{ className?: string; style?: C
   twitter:   TwitterIcon,
   tiktok:    Music2,
   youtube:   YoutubeIcon,
+  telegram:  Send,
   website:   Globe,
 };
 
@@ -46,6 +49,7 @@ const SOCIAL_COLORS: Record<string, string> = {
   twitter:   "#000",
   tiktok:    "#FE2C55",
   youtube:   "#FF0000",
+  telegram:  "#26A5E4",
   website:   "#10b981",
 };
 
@@ -79,6 +83,12 @@ export default async function PublicProfilePage({
   const locale = await getLocale();
   const session = await auth();
   const isOwnProfile = session?.user?.username === username;
+
+  // Absolute profile URL for the share buttons (host from the proxy headers).
+  const h = await headers();
+  const host = h.get("host") ?? "";
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const profileUrl = host ? `${proto}://${host}/u/${username}` : "";
 
   const user = await prisma.user.findUnique({
     where: { username },
@@ -258,6 +268,12 @@ export default async function PublicProfilePage({
                 </div>
                 {user.bio && (
                   <p className="text-zinc-400 text-sm mb-4 italic">"{user.bio}"</p>
+                )}
+
+                {profileUrl && (
+                  <div className="mb-4">
+                    <ProfileShareRow url={profileUrl} name={displayNick(user.displayName, user.username)} />
+                  </div>
                 )}
 
                 <div className="space-y-1.5">

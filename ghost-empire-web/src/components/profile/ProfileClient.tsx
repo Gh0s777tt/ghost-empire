@@ -9,7 +9,7 @@ import {
   Trophy, Award, Link as LinkIcon, History, Loader2, Plus, X, Check,
   Globe, Music2, Flame, MessageCircle, Mic2,
   Copy, ShieldCheck, Heart, Star, Crown, Ban, LogOut,
-  Gamepad2, Radio, MessageSquare, Code2, ChevronDown,
+  Gamepad2, Radio, MessageSquare, Code2, ChevronDown, Send,
 } from "lucide-react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
@@ -125,6 +125,7 @@ const SOCIAL_META: Record<string, { label: string; icon: ComponentType<{ classNa
   psn:       { label: "PlayStation", icon: Gamepad2, color: "#0070d1", placeholder: "phPsn" },
   xbox:      { label: "Xbox",      icon: Gamepad2,  color: "#107C10", placeholder: "phGamertag" },
   discord:   { label: "Discord", icon: MessageSquare, color: "#5865F2", placeholder: "phDiscord" },
+  telegram:  { label: "Telegram", icon: Send,        color: "#26A5E4", placeholder: "phHandle" },
   website:   { label: "Website",   icon: Globe,     color: "#10b981", placeholder: "phDomain" },
 };
 
