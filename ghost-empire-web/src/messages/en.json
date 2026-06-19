@@ -2186,6 +2186,7 @@
     "soundOn": "Sound on — click to mute",
     "soundOff": "Sound off — click to unmute",
     "help": "The %gt% Casino runs on %tokenName% — the portal virtual currency (not real money). Set your stake and pick a game: the server draws the result, the animation just shows it. Winnings land on your balance instantly.",
+    "helpPickGame": "Pick a game below to see how it works.",
     "helpSlots": "3 reels: three matching symbols win that symbol multiplier — from 10× for cherries up to 800× for the seven.",
     "helpCoinflip": "Coin flip: the ghost doubles your stake (2×), the skull takes it.",
     "helpRoulette": "American roulette (0 and 00): red/black pays 2×, an exact number 36×.",

@@ -57,6 +57,14 @@ type BjState = {
 type Game = "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko" | "scratch";
 type Phase = "spin" | "land";
 
+// Per-game emoji + key helpers for the contextual "how it works" box (shown for the
+// game you're actually in, instead of one long list of every game at once).
+const GAME_EMOJI: Record<string, string> = {
+  slots: "🎰", coinflip: "🪙", roulette: "🎡", dice: "🎲", blackjack: "🃏",
+  hilo: "↕️", crash: "🚀", plinko: "⚪", mines: "💣", scratch: "🎫",
+};
+const capGame = (g: string) => g.charAt(0).toUpperCase() + g.slice(1);
+
 // Plinko board mirrors lib/gt-games.ts (replicated so the client never imports the server lib).
 const PLINKO_MULTS_UI = [13, 4, 1.8, 1.3, 1.05, 0.9, 0.5, 0.9, 1.05, 1.3, 1.8, 4, 13];
 const PLINKO_ROWS_UI = 12;
@@ -1248,19 +1256,16 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
       </div>
 
       <HowItWorks>
-        <p className="mb-2">{t("help")}</p>
-        <ul className="space-y-1.5">
-          <li><b className="text-white">🎰 {t("gameSlots")}:</b> {t("helpSlots")}</li>
-          <li><b className="text-white">🪙 {t("gameCoinflip")}:</b> {t("helpCoinflip")}</li>
-          <li><b className="text-white">🎡 {t("gameRoulette")}:</b> {t("helpRoulette")}</li>
-          <li><b className="text-white">🎲 {t("gameDice")}:</b> {t("helpDice")}</li>
-          <li><b className="text-white">🃏 {t("gameBlackjack")}:</b> {t("helpBlackjack")}</li>
-          <li><b className="text-white">↕️ {t("gameHilo")}:</b> {t("helpHilo")}</li>
-          <li><b className="text-white">🎫 {t("gameScratch")}:</b> {t("helpScratch")}</li>
-          <li><b className="text-white">🚀 {t("gameCrash")}:</b> {t("helpCrash")}</li>
-          <li><b className="text-white">⚪ {t("gamePlinko")}:</b> {t("helpPlinko")}</li>
-          <li><b className="text-white">💣 {t("gameMines")}:</b> {t("helpMines")}</li>
-        </ul>
+        {selected === null ? (
+          /* Lobby: just the one-line intro — per-game rules appear once you pick a game. */
+          <p>{t("help")} <span className="text-zinc-500">{t("helpPickGame")}</span></p>
+        ) : (
+          /* In a game: only THIS game's rules. */
+          <p>
+            <b className="text-white">{GAME_EMOJI[selected] ?? "🎰"} {t(`game${capGame(selected)}`)}:</b>{" "}
+            {t(`help${capGame(selected)}`)}
+          </p>
+        )}
       </HowItWorks>
 
       {!isAuthenticated ? (

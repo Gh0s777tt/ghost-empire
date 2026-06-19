@@ -2186,6 +2186,7 @@
     "soundOn": "Dźwięki włączone — kliknij, aby wyciszyć",
     "soundOff": "Dźwięki wyłączone — kliknij, aby włączyć",
     "help": "Kasyno %gt% to gry za %tokenName% — wirtualną walutę portalu (to nie są prawdziwe pieniądze). Ustaw stawkę i wybierz grę: wynik losuje serwer, a animacja tylko go pokazuje. Wygrana od razu wpada na Twoje saldo.",
+    "helpPickGame": "Wybierz grę poniżej, aby zobaczyć jak działa.",
     "helpSlots": "3 bębny: trzy takie same symbole wygrywają mnożnik symbolu — od 10× za wiśnie do 800× za siódemkę.",
     "helpCoinflip": "Rzut monetą: duch podwaja stawkę (2×), czaszka ją zabiera.",
     "helpRoulette": "Ruletka amerykańska (0 i 00): czerwone/czarne płaci 2×, trafiona liczba 36×.",
