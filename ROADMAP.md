@@ -79,7 +79,7 @@ Dużo już zrobione (cache, indeksy, lazy admin, `staleTimes`, równoległe zapy
 |---|---|---|
 | **React Compiler** | ⛔ | Świadomie odroczony — auto-memoizacja. Reguły lintu (`react-hooks` v7) są już w configu po migracji Next 16 (**wyłączone** — flagują nasze wzorce). Wrócić, gdy będzie warto (po testach) |
 | **`next/image` po wyjściu z Hobby** | 🟡 | Dziś natywne lazy `<img>` (oszczędność quoty optymalizatora). Po Pro warto przemierzyć na `next/image` (AVIF/WebP, auto-srcset) |
-| **Audyt rozmiaru bundla** | 🟡 | ✅ `@next/bundle-analyzer` wpięty (`npm run analyze` → treemapy `.next/analyze`). Zostaje sam code-split `AdminClient.tsx` (~7k linii) — `/admin` to route on-demand (niski priorytet), rozbicie wymaga wyniesienia inline'owego `SectionCard`+typów do współdzielonego modułu |
+| ~~**Audyt rozmiaru bundla / code-split panelu**~~ ✅ | — | ✅ `@next/bundle-analyzer` (`npm run analyze` → treemapy `.next/analyze`) **oraz** `AdminClient.tsx` **już rozbity**: dziś **~870 linii** orkiestracji + **46 sekcji lazy** przez `next/dynamic` (każda osobny chunk; `SectionCard`+typy wyniesione). Stałe „~7k linii" było sprzed code-splitu (#148/#183/#437+). Zostaje już tylko ewentualny on-demand split shell-komponentów (DashboardSection/AdminNav) — 🧊 marginalny zysk |
 | **Streaming / Suspense granice** | 🧊 | Progresywny render ciężkich list zamiast pełnego SSR-blokowania |
 | **Redis/Upstash dla rate-limit + cache** | 🧊 | Dziś DB-backed (fail-open). Przy skali wynieść do Redisa (mniejszy narzut na Postgres) |
 | **Tuning połączeń DB** | 🟡 | `connection_limit`/`pool_timeout` w Vercel env (patrz CHANGELOG — wymaga ręcznej zmiany przez usera) |
