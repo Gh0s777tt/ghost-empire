@@ -18,6 +18,7 @@ export const HELP_PAGES: ReadonlyArray<{ path: string; what: string }> = [
   { path: "/events", what: "events — current giveaways, predictions and community events" },
   { path: "/schedule", what: "schedule — when the streamer goes live" },
   { path: "/profile", what: "profile — your balance, transaction history, referral code, 2FA" },
+  { path: "/support", what: "support the streamer with real money — payment links, crypto, bank, QR codes" },
 ];
 
 /**

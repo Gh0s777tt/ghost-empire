@@ -35,6 +35,10 @@ export async function SiteFooter() {
           {/* py-1.5 on each link = a ≥24px touch target (WCAG 2.5.8 / Lighthouse
               target-size); zinc-400 (not 500) clears the 4.5:1 contrast ratio. */}
           <nav aria-label={t("legalNav")} className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-0 text-[10px] font-mono uppercase tracking-widest">
+            <Link href="/support" className="inline-block py-1.5 text-zinc-400 hover:text-red-400 transition-colors">
+              ♥ {t("support")}
+            </Link>
+            <span className="text-zinc-800">·</span>
             <Link href="/onboarding" className="inline-block py-1.5 text-red-400/80 hover:text-red-300 transition-colors">
               🚀 {t("launchPortal")}
             </Link>

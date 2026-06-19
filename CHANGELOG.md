@@ -21,6 +21,7 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **Make `/support` discoverable** **(#520)** — added a "♥ Support" link in the site footer (every page) and taught the help assistant about `/support`, so viewers can actually find the new tip page from inside the portal (not only via a shared link). No schema change.
 - **Streamer Twitch connect now requests `clips:edit`** **(#518)** — adds the scope to the broadcaster connect flow (`/api/admin/twitch-streamer-auth`) so the AI Clip Director (#517) can actually create clips after the streamer reconnects Twitch. Streamer-only re-consent; viewers' login OAuth is separate and unaffected.
 - **docs-sync + a guard so docs never drift again** **(#513)** — back-filled the CHANGELOG for #507–#512 and the ROADMAP "świeżo dowiezione" note, corrected `docs/PER-TENANT-IDENTITY.md` status from "planned" to "shipped". Added a drift guard: `npm run docs:check` (`scripts/check-docs-sync.mjs`) fails if the latest shipped PR# isn't referenced in the CHANGELOG, wired into CI and the local gate ritual; plus a root `CLAUDE.md` instructing every future change to update the docs. `[skip-changelog]` opts a chore commit out.
 - **docs: per-tenant identity design & migration runbook** **(#509)** — [docs/PER-TENANT-IDENTITY.md], the staged blueprint (3 unique flips, tenant-aware adapter, session-cookie analysis, rollback) that made #510/#511 safe.
