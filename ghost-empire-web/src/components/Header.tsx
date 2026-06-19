@@ -12,6 +12,7 @@ import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut
 import { displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { NotificationBell } from "@/components/NotificationBell";
+import { DailyBonusButton } from "@/components/DailyBonusButton";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { useTour } from "@/components/tour/SiteTour";
 import { BALANCE_EVENT } from "@/lib/balance-bus";
@@ -161,6 +162,9 @@ export function Header() {
                   <Gift className="w-3 h-3" />
                   {t("drop")}
                 </Link>
+
+                {/* Daily bonus — claim from any page (hidden on the homepage, where the card lives) */}
+                <DailyBonusButton />
 
                 {/* Notifications */}
                 <span data-tour="bell" className="inline-flex"><NotificationBell /></span>

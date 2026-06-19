@@ -10,6 +10,7 @@ import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { EmptyState } from "@/components/EmptyState";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
+import { emitDailyClaimed, DAILY_CLAIMED_EVENT } from "@/lib/daily-bus";
 import { sfxPlay } from "@/lib/sfx";
 import { useTenantBranding } from "@/components/TenantBranding";
 import type { Session } from "next-auth";
@@ -225,12 +226,21 @@ function DailyBonusCard() {
   }, []);
   useEffect(() => { void load(); }, [load]);
 
+  // Sync with the header indicator: if the bonus is claimed there, reflect it here.
+  useEffect(() => {
+    const onClaimed = (e: Event) =>
+      setSt((s) => (s ? { ...s, claimedToday: true, streak: (e as CustomEvent<number>).detail } : s));
+    window.addEventListener(DAILY_CLAIMED_EVENT, onClaimed);
+    return () => window.removeEventListener(DAILY_CLAIMED_EVENT, onClaimed);
+  }, []);
+
   async function claim() {
     if (busy || !st || st.claimedToday) return;
     setBusy(true);
     try {
       const d = await apiPost<{ ok: true; reward: number; streak: number; newBalance: number }>("/api/daily-bonus");
       emitBalance(d.newBalance);
+      emitDailyClaimed(d.streak);
       sfxPlay("win");
       setJustClaimed(d.reward);
       setSt({ claimedToday: true, streak: d.streak, nextReward: Math.min(50 + 25 * d.streak, 200) });
