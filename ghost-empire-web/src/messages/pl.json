@@ -1744,6 +1744,8 @@
     "historyTitle": "Historia transakcji",
     "historySubtitle": "Ostatnie {count}",
     "historyEmpty": "Brak transakcji.",
+    "historyShowAll": "Pokaż wszystkie ({count})",
+    "historyShowLess": "Pokaż mniej",
     "socialIntro": "Publiczne linki na Twoim profilu. Kliknij platformę, by rozwinąć i edytować.",
     "socialNone": "brak",
     "save": "Zapisz",

@@ -134,6 +134,8 @@ export function ProfileClient({
   const locale = useLocale();
   const fmt = useLocaleFmt();
   const { tokenSymbol } = useTenantBranding();
+  const [showAllTx, setShowAllTx] = useState(false);
+  const TX_PREVIEW = 5; // collapse the history to the most recent few by default
   const rank = rankForLevel(user.level);
   const duelTotal = duelStats.wins + duelStats.losses;
   const duelWinrate = duelTotal > 0 ? Math.round((duelStats.wins / duelTotal) * 100) : 0;
@@ -403,7 +405,7 @@ export function ProfileClient({
           <p className="text-zinc-500 text-sm">{t("historyEmpty")}</p>
         ) : (
           <div className="divide-y divide-zinc-900">
-            {transactions.map((tx) => {
+            {(showAllTx ? transactions : transactions.slice(0, TX_PREVIEW)).map((tx) => {
               const isEarn = tx.amount > 0;
               return (
                 <div key={tx.id} className="flex items-center gap-3 py-2.5">
@@ -433,6 +435,14 @@ export function ProfileClient({
               );
             })}
           </div>
+        )}
+        {transactions.length > TX_PREVIEW && (
+          <button
+            onClick={() => setShowAllTx((v) => !v)}
+            className="mt-3 w-full text-center text-[11px] font-mono uppercase tracking-widest text-zinc-500 hover:text-white transition-colors py-1.5"
+          >
+            {showAllTx ? t("historyShowLess") : t("historyShowAll", { count: transactions.length })}
+          </button>
         )}
       </SectionCard>
     </div>

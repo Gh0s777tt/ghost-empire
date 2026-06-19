@@ -1744,6 +1744,8 @@
     "historyTitle": "Transaction history",
     "historySubtitle": "Last {count}",
     "historyEmpty": "No transactions yet.",
+    "historyShowAll": "Show all ({count})",
+    "historyShowLess": "Show less",
     "socialIntro": "Public links on your profile. Click a platform to expand and edit.",
     "socialNone": "none",
     "save": "Save",
