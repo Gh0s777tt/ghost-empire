@@ -130,6 +130,7 @@ model User {
   notifications   Notification[]
   donations       Donation[]
   pollVotes       PollVote[]
+  clipVotes       ClipVote[]
   wheelSpins      WheelSpin[]
   gtGamePlays     GtGamePlay[]
   duelsChallenged Duel[]      @relation("DuelChallenger")
@@ -151,6 +152,25 @@ model User {
   @@index([clanId])
   @@index([referredById])
   @@map("users")
+}
+
+// Clip of the Week — community votes on the streamer's recent Twitch clips.
+// One vote per user per ISO week (you pick your single favourite); changing it
+// updates the row. Clips themselves come live from Helix (not stored).
+model ClipVote {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  userId    String
+  clipId    String   // Twitch clip id
+  week      String   // ISO week key, e.g. "2026-W25"
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, week])     // one vote per user per week
+  @@index([tenantId, week])
+  @@index([clipId])
+  @@map("clip_votes")
 }
 
 // A per-user "Ghost Companion" — an idle pet that grows with fed GT and evolves
