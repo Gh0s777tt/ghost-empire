@@ -376,3 +376,30 @@
     opacity: 1 !important;
   }
 }
+
+/* =========================================================
+   VIEW TRANSITIONS — a quick crossfade between pages
+   TransitionLink wraps soft navigations in document.startViewTransition;
+   @view-transition extends the effect to cross-document (hard) navigations.
+   The JS guard already skips transitions under reduced-motion — the rules
+   below tune the duration and add a second guard (the only one that covers
+   the cross-document path, where there is no JS).
+   ========================================================= */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
