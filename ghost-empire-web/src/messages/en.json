@@ -1881,6 +1881,43 @@
     "account": "Account menu",
     "mainNav": "Main navigation"
   },
+  "assistant": {
+    "open": "Help",
+    "title": "Help assistant",
+    "close": "Close",
+    "intro": "Need a hand? Jump to a page or ask a question.",
+    "quickLinks": "Quick links",
+    "faqTitle": "FAQ",
+    "placeholder": "Ask a question…",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "loginToAsk": "Sign in to ask the AI assistant",
+    "aiUnavailable": "The AI assistant isn't available right now — the quick links and FAQ above have you covered.",
+    "rateLimited": "Too many questions at once — give it a moment.",
+    "error": "Something went wrong — try again.",
+    "faq": {
+      "earn": {
+        "q": "How do I earn %tokenName%?",
+        "a": "Watch and chat while the stream is live, claim your daily bonus on the home page, and finish daily quests. The exact amounts depend on the streamer's settings."
+      },
+      "link": {
+        "q": "How do I link my account?",
+        "a": "Open your profile and connect Twitch, Kick, YouTube or Discord. Connections are read-only — the portal never touches anyone's money."
+      },
+      "clans": {
+        "q": "What are clans?",
+        "a": "Teams you join or found on the Clans page. Contribute %tokenName% to your clan vault and compete in clan wars for prize pools."
+      },
+      "casino": {
+        "q": "How does the casino work?",
+        "a": "Bet %tokenName% on mini-games like slots, blackjack and roulette. Only bet what you can spare — it's just for fun."
+      },
+      "portal": {
+        "q": "Can I launch my own portal?",
+        "a": "Yes — open the account menu or the About page and pick \"Launch your own portal\" to start your own white-label community."
+      }
+    }
+  },
   "common": {
     "howItWorks": "How does it work?",
     "loading": "Loading…",

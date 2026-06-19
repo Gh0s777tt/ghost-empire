@@ -12,6 +12,7 @@ import { TenantBrandingProvider } from "@/components/TenantBranding";
 import { getCurrentTenant } from "@/lib/tenant";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import TourProvider from "@/components/tour/SiteTour";
+import { HelpAssistant } from "@/components/HelpAssistant";
 import { ClientErrorReporter } from "@/components/ClientErrorReporter";
 import { RegisterServiceWorker } from "@/components/pwa/RegisterServiceWorker";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
@@ -90,6 +91,9 @@ export default async function LocaleLayout({
                 {children}
               </div>
               <SiteFooter />
+              {/* Portal-wide help: static quick-links + FAQ for everyone, AI chat
+                  for logged-in viewers (degrades gracefully without an AI plan). */}
+              <HelpAssistant />
             </TourProvider>
           </Providers>
           </TenantBrandingProvider>

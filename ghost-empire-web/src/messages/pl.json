@@ -1881,6 +1881,43 @@
     "account": "Menu konta",
     "mainNav": "Główna nawigacja"
   },
+  "assistant": {
+    "open": "Pomoc",
+    "title": "Asystent pomocy",
+    "close": "Zamknij",
+    "intro": "Potrzebujesz pomocy? Przejdź do strony albo zadaj pytanie.",
+    "quickLinks": "Szybkie linki",
+    "faqTitle": "Częste pytania",
+    "placeholder": "Zadaj pytanie…",
+    "send": "Wyślij",
+    "thinking": "Myślę…",
+    "loginToAsk": "Zaloguj się, aby zapytać asystenta AI",
+    "aiUnavailable": "Asystent AI jest teraz niedostępny — skorzystaj z szybkich linków i FAQ powyżej.",
+    "rateLimited": "Za dużo pytań naraz — odczekaj chwilę.",
+    "error": "Coś poszło nie tak — spróbuj ponownie.",
+    "faq": {
+      "earn": {
+        "q": "Jak zdobywać %tokenName%?",
+        "a": "Oglądaj i pisz na czacie, gdy trwa stream, odbieraj codzienny bonus na stronie głównej i wykonuj dzienne questy. Dokładne kwoty zależą od ustawień streamera."
+      },
+      "link": {
+        "q": "Jak połączyć konto?",
+        "a": "Wejdź w swój profil i połącz Twitcha, Kicka, YouTube lub Discorda. Połączenia są tylko do odczytu — portal nigdy nie dotyka niczyich pieniędzy."
+      },
+      "clans": {
+        "q": "Czym są klany?",
+        "a": "Drużyny, do których dołączasz lub które zakładasz na stronie Klany. Wpłacaj %tokenName% do skarbca klanu i walcz w wojnach klanów o pule nagród."
+      },
+      "casino": {
+        "q": "Jak działa kasyno?",
+        "a": "Obstawiaj %tokenName% w mini-grach: sloty, blackjack, ruletka. Graj tylko tym, co możesz stracić — to ma być zabawa."
+      },
+      "portal": {
+        "q": "Czy mogę założyć własny portal?",
+        "a": "Tak — otwórz menu konta albo stronę O nas i wybierz „Załóż własny portal”, aby uruchomić własną społeczność white-label."
+      }
+    }
+  },
   "common": {
     "howItWorks": "Jak to działa?",
     "loading": "Ładowanie…",
