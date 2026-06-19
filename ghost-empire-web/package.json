@@ -22,6 +22,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:achievements": "tsx scripts/seed-achievements.ts",
     "db:seed:tasks": "tsx scripts/seed-daily-tasks.ts",
+    "stripe:check": "tsx scripts/check-stripe.ts",
     "db:backfill:tenant": "tsx scripts/backfill-tenant.ts",
     "postinstall": "prisma generate"
   },
