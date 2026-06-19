@@ -479,3 +479,48 @@
 [data-theme="light"] .hover\:border-zinc-700:hover,
 [data-theme="light"] .hover\:border-zinc-600:hover,
 [data-theme="light"] .hover\:border-zinc-500:hover { border-color: #a1a1aa !important; }
+
+/* ============================================================
+   EXTRA DARK THEMES (#521) — surface/background variants that stay dark, so they
+   never touch the per-tenant accent (--brand) or text legibility. Each only re-tints
+   the black/zinc surface utilities, like the light theme but without inverting text.
+   Adding a new theme = one block here + one entry in lib/themes.ts.
+   ============================================================ */
+
+/* MIDNIGHT — deep navy surfaces. */
+[data-theme="midnight"] body { background-color: #070b16 !important; }
+[data-theme="midnight"] .bg-black     { background-color: #070b16 !important; }
+[data-theme="midnight"] .bg-zinc-950  { background-color: #0a1020 !important; }
+[data-theme="midnight"] .bg-zinc-900  { background-color: #111a2e !important; }
+[data-theme="midnight"] .bg-zinc-800  { background-color: #1b2740 !important; }
+[data-theme="midnight"] .bg-black\/80,
+[data-theme="midnight"] .bg-black\/70,
+[data-theme="midnight"] .bg-black\/60,
+[data-theme="midnight"] .bg-black\/50,
+[data-theme="midnight"] .bg-black\/40,
+[data-theme="midnight"] .bg-black\/30,
+[data-theme="midnight"] .bg-black\/20 { background-color: rgba(10, 16, 32, 0.7) !important; }
+[data-theme="midnight"] .bg-zinc-950\/95,
+[data-theme="midnight"] .bg-zinc-950\/90,
+[data-theme="midnight"] .bg-zinc-950\/60 { background-color: rgba(10, 16, 32, 0.92) !important; }
+[data-theme="midnight"] .border-zinc-900 { border-color: #16233c !important; }
+[data-theme="midnight"] .border-zinc-800 { border-color: #1f2c47 !important; }
+
+/* SLATE — soft neutral graphite, gentler than pure black. */
+[data-theme="slate"] body { background-color: #16161a !important; }
+[data-theme="slate"] .bg-black     { background-color: #16161a !important; }
+[data-theme="slate"] .bg-zinc-950  { background-color: #1a1a1f !important; }
+[data-theme="slate"] .bg-zinc-900  { background-color: #232329 !important; }
+[data-theme="slate"] .bg-zinc-800  { background-color: #2e2e36 !important; }
+[data-theme="slate"] .bg-black\/80,
+[data-theme="slate"] .bg-black\/70,
+[data-theme="slate"] .bg-black\/60,
+[data-theme="slate"] .bg-black\/50,
+[data-theme="slate"] .bg-black\/40,
+[data-theme="slate"] .bg-black\/30,
+[data-theme="slate"] .bg-black\/20 { background-color: rgba(26, 26, 31, 0.7) !important; }
+[data-theme="slate"] .bg-zinc-950\/95,
+[data-theme="slate"] .bg-zinc-950\/90,
+[data-theme="slate"] .bg-zinc-950\/60 { background-color: rgba(26, 26, 31, 0.92) !important; }
+[data-theme="slate"] .border-zinc-900 { border-color: #27272d !important; }
+[data-theme="slate"] .border-zinc-800 { border-color: #34343d !important; }

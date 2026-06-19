@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { TenantBrandingProvider } from "@/components/TenantBranding";
 import { getCurrentTenant } from "@/lib/tenant";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
+import { normalizeTheme } from "@/lib/themes";
 import TourProvider from "@/components/tour/SiteTour";
 import { HelpAssistant } from "@/components/HelpAssistant";
 import { ClientErrorReporter } from "@/components/ClientErrorReporter";
@@ -63,9 +64,9 @@ export default async function LocaleLayout({
   // alignment and punctuation flow correctly. (Full bidi layout mirroring of
   // physical-property components is a follow-up; dir="rtl" fixes the text itself.)
   const dir = locale === "ar" ? "rtl" : "ltr";
-  // Theme preference from a cookie (set by the header toggle). Read server-side so
+  // Theme preference from a cookie (set by the header picker). Read server-side so
   // the right theme is in the HTML on first paint — no flash, no inline script.
-  const theme = (await cookies()).get("theme")?.value === "light" ? "light" : "dark";
+  const theme = normalizeTheme((await cookies()).get("theme")?.value);
 
   return (
     <html lang={locale} dir={dir} data-theme={theme} className="dark">
