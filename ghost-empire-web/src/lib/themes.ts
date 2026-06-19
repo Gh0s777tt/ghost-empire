@@ -4,7 +4,7 @@
 // so a streamer's brand colour survives every theme. Source of truth for the layout
 // (cookie → data-theme) and the picker. Adding a theme = one entry here + one CSS block.
 
-export const THEMES = ["dark", "light", "midnight", "slate"] as const;
+export const THEMES = ["dark", "light", "midnight", "slate", "forest", "plum"] as const;
 export type Theme = (typeof THEMES)[number];
 export const DEFAULT_THEME: Theme = "dark";
 

@@ -9,7 +9,7 @@ import { Palette, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { THEMES, normalizeTheme, type Theme } from "@/lib/themes";
 
-const SWATCH: Record<Theme, string> = { dark: "#0a0a0a", light: "#fafafa", midnight: "#0a1020", slate: "#1c1c22" };
+const SWATCH: Record<Theme, string> = { dark: "#0a0a0a", light: "#fafafa", midnight: "#0a1020", slate: "#1c1c22", forest: "#14361f", plum: "#2a1633" };
 
 export function ThemeToggle() {
   const t = useTranslations("nav");

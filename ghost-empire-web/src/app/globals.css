@@ -524,3 +524,41 @@
 [data-theme="slate"] .bg-zinc-950\/60 { background-color: rgba(26, 26, 31, 0.92) !important; }
 [data-theme="slate"] .border-zinc-900 { border-color: #27272d !important; }
 [data-theme="slate"] .border-zinc-800 { border-color: #34343d !important; }
+
+/* FOREST — deep evergreen surfaces. */
+[data-theme="forest"] body { background-color: #08120c !important; }
+[data-theme="forest"] .bg-black     { background-color: #08120c !important; }
+[data-theme="forest"] .bg-zinc-950  { background-color: #0b160f !important; }
+[data-theme="forest"] .bg-zinc-900  { background-color: #122019 !important; }
+[data-theme="forest"] .bg-zinc-800  { background-color: #1b2e24 !important; }
+[data-theme="forest"] .bg-black\/80,
+[data-theme="forest"] .bg-black\/70,
+[data-theme="forest"] .bg-black\/60,
+[data-theme="forest"] .bg-black\/50,
+[data-theme="forest"] .bg-black\/40,
+[data-theme="forest"] .bg-black\/30,
+[data-theme="forest"] .bg-black\/20 { background-color: rgba(11, 22, 15, 0.7) !important; }
+[data-theme="forest"] .bg-zinc-950\/95,
+[data-theme="forest"] .bg-zinc-950\/90,
+[data-theme="forest"] .bg-zinc-950\/60 { background-color: rgba(11, 22, 15, 0.92) !important; }
+[data-theme="forest"] .border-zinc-900 { border-color: #17281d !important; }
+[data-theme="forest"] .border-zinc-800 { border-color: #1f3528 !important; }
+
+/* PLUM — deep wine/purple surfaces. */
+[data-theme="plum"] body { background-color: #120a16 !important; }
+[data-theme="plum"] .bg-black     { background-color: #120a16 !important; }
+[data-theme="plum"] .bg-zinc-950  { background-color: #160b1b !important; }
+[data-theme="plum"] .bg-zinc-900  { background-color: #1f1227 !important; }
+[data-theme="plum"] .bg-zinc-800  { background-color: #2c1b36 !important; }
+[data-theme="plum"] .bg-black\/80,
+[data-theme="plum"] .bg-black\/70,
+[data-theme="plum"] .bg-black\/60,
+[data-theme="plum"] .bg-black\/50,
+[data-theme="plum"] .bg-black\/40,
+[data-theme="plum"] .bg-black\/30,
+[data-theme="plum"] .bg-black\/20 { background-color: rgba(22, 11, 27, 0.7) !important; }
+[data-theme="plum"] .bg-zinc-950\/95,
+[data-theme="plum"] .bg-zinc-950\/90,
+[data-theme="plum"] .bg-zinc-950\/60 { background-color: rgba(22, 11, 27, 0.92) !important; }
+[data-theme="plum"] .border-zinc-900 { border-color: #251530 !important; }
+[data-theme="plum"] .border-zinc-800 { border-color: #34203f !important; }
