@@ -27,6 +27,8 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 > **🆕 Świeżo dowiezione (2026-06-11, PR #431–#436):** 🏢 **SaaS domknięty również w warstwie streamingu i wizualnej**: 📡 **overlaye OBS multi-tenant** (#432 — 12 feedów przewleczonych tenantem, token OBS per portal, 6 modeli) · 🤖 **bot czatu multi-tenant** (#433 — flota „proces per portal" przez `ENV_FILE`, szablon + README) · 🖼️ **branding pass 5d** (#435 — social preview OG per tenant z dynamicznym `/api/og`, hero home/welcome/signin z marki tenanta, 24 glow-tła na `var(--brand)`) · 🔒 **idempotencja webhooka PayMedia** (#434 — `Transaction.externalId @unique`, koniec ryzyka podwójnego kredytowania) · 📄 docs-sync README/ROADMAP #431 + cache `/api/og` i testy e2e OG #436.
 
+> **🆕 Świeżo dowiezione (2026-06-19, PR #477–#488):** ⚔️ **wojny klanów — komplet** (#477 rdzeń: start/koniec/punkty/pula + #480 Hall of Fame + #481 powiadomienia zwycięzców + #482 overlay OBS live) · 📲 **PWA** instalowalna + bricking-proof service worker (#478) · ✨ **View Transitions** crossfade nawigacji (#479, przez `document.startViewTransition` — React `unstable_ViewTransition` niedostępny w 19.2) · 🎁 **daily-bonus odbierany z każdej strony** (#483, wskaźnik w nagłówku) · 🎯 **questy zaangażowania** klan/companion/koło/ankieta (#485, zaseedowane `db:seed:tasks`) · 🛡️ **karta klanu z trofeami wojen na profilu** + OG profilu z prestiżem/tagiem (#484/#488) · 🔒 **rate-limit per-IP na publicznych GET-ach** (#486 → §4) · ♿ **`prefers-contrast: more`** (#487 → §5).
+
 **Pozostałe duże kierunki:**
 - **🏢 SaaS — odblokowania po stronie usera (kod 100% gotowy, zero programowania):** ① env Stripe (sekcja w README — 10 minut) → sprzedaż automatyczna; ② domena produktu + `NEXT_PUBLIC_ROOT_DOMAIN` + wildcard DNS w Vercel → subdomeny per tenant ożywają (overlaye i bot już przewleczone #432/#433; „kopiuj URL OBS" działa z natury — admin klienta siedzi na swojej subdomenie); ③ odpalenie instancji bota per klient wg README `ghost-empire-chat` (`ENV_FILE=tenants/<slug>.env`); ④ opcjonalnie `ownerUserId` dla GE, by właściciel widział dashboard „Mój portal".
 - **F6 — security/backup** (zrobione: backup JSON, sanityzacja URL, ✅ **szyfrowanie sekretów at-rest AES-256-GCM**, ✅ **nagłówki overlay `noindex`/`no-store`**, ✅ **cron czyszczący bazę**). Zostaje: auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
@@ -64,7 +66,7 @@ Dziś diagnostyka = logi Vercela. Pod produkcję z realnym ruchem to za mało.
 | ~~**Sentry** (error tracking)~~ ✅ | — | **Zrobione (#162)** — `@sentry/nextjs` server + edge przez `instrumentation.ts` + `onRequestError` (bez `withSentryConfig` = zero zmian w `next build`). **No-op bez `SENTRY_DSN`** → ustaw env w Vercel, by aktywować. *(Client SDK + source-maps = opcjonalny kolejny krok.)* |
 | ~~**Vercel Analytics + Speed Insights**~~ ✅ | — | **Zrobione (#155)** — `@vercel/analytics` + `@vercel/speed-insights` w root layout (real-user Core Web Vitals, cookieless, no-op poza Vercel) |
 | ~~**Structured logging**~~ ✅ | — | **Zrobione** — `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty w 3 webhooki (twitch-eventsub / kick-events / paymedia) + crony (`prune` #151, `streamlabs-poll` #160). *(Hot-path `award` świadomie bez logu na wywołanie — byłby szum; błędy łapie boundary.)* |
-| **Uptime / health-check** | 🟡 | Endpoint `/api/health` + zewnętrzny monitor (cron-job.org / UptimeRobot) na live + bazę |
+| **Uptime / health-check** | 🟡 | ✅ Endpoint `/api/health` istnieje (status DB+Redis, 200/503) + per-IP rate-limit (#486). Zostaje: podpięcie zewnętrznego monitora (cron-job.org / UptimeRobot) — akcja usera |
 | ~~**Alerty na anomalie ekonomii**~~ ✅ | — | **Zrobione (#161)** — `lib/economy-anomaly.ts`: pojedynczy grant ≥100k GT lub ≥500k GT/godz. → powiadomienie wszystkich adminów (link do audit logu) + `log.warn`. Fire-and-forget w `/api/admin/grant-tokens` |
 
 ---
@@ -94,7 +96,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 | **2FA / step-up dla akcji admina** | 🟡 | Wrażliwe akcje (grant dużych kwot, merge, ban) za dodatkowym potwierdzeniem |
 | ~~**Audyt zależności**~~ ✅ | — | **Zrobione (#156)** — `npm audit --omit=dev --audit-level=high` w CI (nieblokujący) + Dependabot (patrz §1) |
 | ~~**Rotacja sekretów + skan**~~ ✅ | — | **Zrobione** — skan: **GitGuardian** (na PR) + **runbook rotacji** w [docs/ENV.md §5](docs/ENV.md) (`BOT_SECRET`/`NEXTAUTH_SECRET`/`ENCRYPTION_KEY`/OAuth/EventSub/tokeny botów/webhooki) |
-| **Rate-limit per-IP na publicznych stronach** | 🧊 | Dziś per-user na ekonomii; dorzucić warstwę edge/IP na publicznych GET-ach |
+| ~~**Rate-limit per-IP na publicznych API GET-ach**~~ ✅ | — | **Zrobione (#486)** — `extractIp`+`rateLimit` (Redis+fallback DB) na `/api/games`/`gt-games/jackpot`/`health`. Zostaje opcjonalnie warstwa edge/IP na publicznych *stronach* (RSC) — 🧊 |
 
 ---
 
@@ -102,7 +104,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 
 | Propozycja | Pri | Notatki |
 |---|---|---|
-| **Audyt a11y** (axe / Lighthouse) | 🟡 | ✅ focus-visible, nawigacja klawiaturą, `aria-label` na navach, `aria-current`, **`role="dialog"`+`aria-modal` na modalach edytorów** (A4 + a11y passes). Zostaje: kontrast (czerwień na czerni), reszta modali/dropdownów |
+| **Audyt a11y** (axe / Lighthouse) | 🟡 | ✅ focus-visible, nawigacja klawiaturą, `aria-label` na navach, `aria-current`, **`role="dialog"`+`aria-modal` na modalach edytorów** (A4 + a11y passes), ✅ **`prefers-contrast: more`** (#487 — rozjaśnia szarości/czerwień do ≥AA przy opt-in OS). Zostaje: pełny sweep domyślnej palety (brand-red w stylach inline), reszta modali/dropdownów |
 | ~~**Skip-to-content + landmarki**~~ ✅ | — | **Zrobione** — skip-link „Przejdź do treści" (A4) + `<main>` per-strona + opisane nawigacje/stopka |
 | **i18n (14 lokalizacji)** | ✅ **done** | ✅ **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID) = po 1963 klucze = 100% (#194 scaffold → #253–#359 pełne tłumaczenia), **AR = RTL**. Przyszłe i18n = tylko klucze nowych funkcji |
 | ~~**Empty/error states**~~ ✅ | — | **Zrobione** — `EmptyState` (Ankiety / Eventy / Questy / Ranking / Osiągnięcia / Predykcje) + `ErrorState` z retry (LazySection admina). Pozostałe listy — opcjonalnie iteracyjnie |
