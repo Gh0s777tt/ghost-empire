@@ -24,6 +24,7 @@
     "db:seed:tasks": "tsx scripts/seed-daily-tasks.ts",
     "stripe:check": "tsx scripts/check-stripe.ts",
     "db:backfill:tenant": "tsx scripts/backfill-tenant.ts",
+    "docs:check": "node scripts/check-docs-sync.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

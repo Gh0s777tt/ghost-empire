@@ -107,7 +107,9 @@ Portal został przekształcony w **produkt dla innych streamerów** (model Botri
 
 **„Dzień Stripe" (jedyne, czego brakuje do sprzedaży automatycznej):** w Vercel env ustaw `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` i 12× `STRIPE_PRICE_<BASIC|PRO|ELITE>_<1|3|6|12>M`; w dashboardzie Stripe webhook na `/api/webhooks/stripe` (eventy: `checkout.session.completed`, `customer.subscription.updated/deleted`). Redeploy — UI aktywacji pojawia się sam.
 
-**Świadomie odłożone:** subdomeny per tenant (wymagają domeny produktu + `NEXT_PUBLIC_ROOT_DOMAIN` + wildcard DNS; razem z nimi pójdzie tenant-threading overlayów OBS) oraz multi-tenant bota czatu (osobne repo — decyzja architektoniczna).
+**🆕 Per-tenant tożsamość + treść (#508–#512, 2026-06-19, wdrożone na prod):** ten sam człowiek = **osobny `User` i saldo GT per portal** (odwrócone globalne unique na `Account`/`User.email`, tenant-aware adapter NextAuth — #510/#511, logowanie zweryfikowane na żywo; runbook [docs/PER-TENANT-IDENTITY.md](docs/PER-TENANT-IDENTITY.md)). **Cała konfigurowalna treść jest per-portal**: sklep, osiągnięcia, questy, battle pass, custom alerty, konfig typów alertów, webhooki (#512). Plus hub **„Moje portale"** follow/switch (#508) i asystent pomocy na każdej stronie (#507).
+
+**Świadomie odłożone (jedyne, czego brakuje):** **infra subdomen** — domena produktu + `NEXT_PUBLIC_ROOT_DOMAIN` + wildcard DNS/cert + per-subdomena OAuth redirecty; dopiero wtedy efekt „osobno per portal" staje się widoczny (kod i dane są już gotowe). Multi-tenant bota czatu — osobne repo (decyzja architektoniczna).
 
 ## 💰 Ekonomia Ghost Tokens
 
@@ -281,8 +283,8 @@ flowchart LR
     P1[Phase 1<br/>Core ✅] --> P2[Phase 2<br/>Multi-platforma ✅] --> P3AB[Phase 3A+3B<br/>Chat bot + engagement ✅] --> P3C[Phase 3C<br/>Alerty per-typ ✅ · hardware 🟡] --> P3D[Phase 3D<br/>AI 🟡 · analityka ✅]
 ```
 
-- ✅ **Zrobione:** Phase 1 + 2 + 3A + 3B + rdzeń 3C/3D (alerty per-typ, predictions, battle pass, subathon, heatmapy, ankiety) + cały **nowoczesny stack** (Next 16 / React 19 / Prisma 7 / Tailwind 4 / zod 4 / vitest 4) + **SaaS multi-tenant white-label (#416–#430): tenancy, branding, plany, kreator `/onboarding`, panel Portale, Stripe dry-wired** + kasyno 10 gier + e2e Playwright (23 testy + CI).
-- 🟡 **Zostało (creds-gated):** **Stripe env („dzień Stripe" — sekcja wyżej)**, domena produktu → subdomeny per tenant, multi-tenant bota; OBS WebSocket, Hue/Govee, AI moderator, social OAuth (IG/TikTok/X/FB), Sentry. Szczegóły: [ROADMAP.md](ROADMAP.md) + [PHASE3.md](PHASE3.md).
+- ✅ **Zrobione:** Phase 1 + 2 + 3A + 3B + rdzeń 3C/3D (alerty per-typ, predictions, battle pass, subathon, heatmapy, ankiety) + cały **nowoczesny stack** (Next 16 / React 19 / Prisma 7 / Tailwind 4 / zod 4 / vitest 4) + **SaaS multi-tenant white-label (#416–#430): tenancy, branding, plany, kreator `/onboarding`, panel Portale, Stripe dry-wired** + **per-tenant tożsamość + cała konfigurowalna treść per-portal (#508–#512, na prodzie)** + kasyno 10 gier + e2e Playwright (23 testy + CI).
+- 🟡 **Zostało (creds-gated):** **Stripe env („dzień Stripe" — sekcja wyżej)**, **infra subdomen** (domena + `NEXT_PUBLIC_ROOT_DOMAIN` + wildcard DNS/cert + OAuth redirecty — kod per-tenant już gotowy #510–#512), multi-tenant bota; OBS WebSocket, Hue/Govee, AI moderator, social OAuth (IG/TikTok/X/FB), Sentry. Szczegóły: [ROADMAP.md](ROADMAP.md) + [PHASE3.md](PHASE3.md).
 
 ---
 

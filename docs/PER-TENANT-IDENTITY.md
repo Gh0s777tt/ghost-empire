@@ -1,10 +1,19 @@
 # Per-tenant viewer identity — design & migration runbook
 
-**Status:** planned (not yet implemented). Foundation hub shipped in #508 on the
-*shared* identity; this document is the blueprint for the deeper change the owner
-green-lit: **one human = one `User` per portal** (separate balance/level per portal),
-which is what enables truly independent portals + the richest version of the
-streamer-switch hub (#7).
+**Status: ✅ SHIPPED (2026-06-19).** Stage A (#510, additive `Account.tenantId` +
+pre-positioned adapter) and Stage C (#511, the 2 unique flips + wired
+`tenantAwarePrismaAdapter()`) are live on prod; the DB was migrated (column added →
+backfilled → composites applied) and **login was verified live**. Per-portal
+customizable content followed in #512 (quests, battle pass, custom alerts,
+alert-type config, webhooks). The streamer-switch hub (#508, `/portals`) sits on top.
+**Remaining = owner infra only** (not code): subdomains aren't activated until
+`NEXT_PUBLIC_ROOT_DOMAIN` + wildcard DNS/cert + per-subdomain OAuth redirect URIs
+exist — until then there's one portal, so the separate-per-portal effect is dormant
+but in place. The sections below are the runbook that was followed (kept for the
+subdomain-launch validation in §6).
+
+Goal recap: **one human = one `User` per portal** (separate balance/level per portal),
+enabling truly independent portals + the richest version of the streamer-switch hub (#7).
 
 > ⚠️ **This is the highest-risk change in the codebase.** It rewrites the
 > uniqueness invariants that authentication depends on. A subtle mistake can lock
