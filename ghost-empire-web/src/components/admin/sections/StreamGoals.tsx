@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
-import { GoalBar } from "@/components/GoalBar";
+import { GoalBar, HypeTrainBanner } from "@/components/GoalBar";
 import { WIDGET_FONTS } from "@/lib/widget-fonts";
 
 type StreamGoalData = {
@@ -71,19 +71,38 @@ export function StreamGoalsManager({
   const [newBgColor, setNewBgColor] = useState("");
   const [newFont, setNewFont] = useState("");
   const [newResetMode, setNewResetMode] = useState("manual");
+  // Hype Train styling (stored on settings, applies to the live banner)
+  const [hypeColor, setHypeColor] = useState("");
+  const [hypeBgColor, setHypeBgColor] = useState("");
+  const [hypeFont, setHypeFont] = useState("");
+  const [hypeBusy, setHypeBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiGet<{ goals?: StreamGoalData[]; hypeTrain?: HypeTrainData | null; validTypes?: string[]; validResetModes?: string[] }>("/api/admin/stream-goals");
+      const data = await apiGet<{ goals?: StreamGoalData[]; hypeTrain?: HypeTrainData | null; validTypes?: string[]; validResetModes?: string[]; hypeStyle?: { color: string | null; bgColor: string | null; fontFamily: string | null } }>("/api/admin/stream-goals");
       setGoals(data.goals ?? []);
       setHypeTrain(data.hypeTrain ?? null);
       setValidTypes(data.validTypes ?? []);
       setValidResetModes(data.validResetModes ?? []);
+      setHypeColor(data.hypeStyle?.color ?? "");
+      setHypeBgColor(data.hypeStyle?.bgColor ?? "");
+      setHypeFont(data.hypeStyle?.fontFamily ?? "");
     } catch { /* keep current */ } finally {
       setLoading(false);
     }
   }, []);
+
+  async function saveHype() {
+    setHypeBusy(true);
+    const ok = await call("updateHype", {
+      hypeColor: hypeColor || null,
+      hypeBgColor: hypeBgColor || null,
+      hypeFontFamily: hypeFont || null,
+    });
+    if (ok) { onToast("ok", t("hypeStyleSaved")); await load(); }
+    setHypeBusy(false);
+  }
 
   useEffect(() => { void load(); }, [load]);
 
@@ -184,6 +203,43 @@ export function StreamGoalsManager({
             {!hypeTrain && <> {t.rich("hypeSetupNote", { code: (c) => <code>{c}</code> })}</>}
           </div>
         )}
+
+        {/* Hype Train style — color/bg/font for the live banner, with preview */}
+        <div className="mt-3 pt-3 border-t border-zinc-800">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 mb-1.5">{t("hypeStyleTitle")}</div>
+          <div className="mb-2">
+            <HypeTrainBanner
+              train={{ level: 3, goal: 1000, total: 640, topContributor: "viewer123", expiresAt: null, color: hypeColor || null, bgColor: hypeBgColor || null, fontFamily: hypeFont || null }}
+              accent="#E50914"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("colorLabel")}</label>
+              <div className="flex items-center gap-1.5">
+                <input type="color" value={hypeColor || "#E50914"} onChange={(e) => setHypeColor(e.target.value)} className="w-9 h-7 border border-zinc-700 bg-black/40 cursor-pointer" />
+                <input value={hypeColor} onChange={(e) => setHypeColor(e.target.value)} placeholder={t("autoPh")} className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("bgColorLabel")}</label>
+              <div className="flex items-center gap-1.5">
+                <input type="color" value={hypeBgColor || "#140a1e"} onChange={(e) => setHypeBgColor(e.target.value)} className="w-9 h-7 border border-zinc-700 bg-black/40 cursor-pointer" />
+                <input value={hypeBgColor} onChange={(e) => setHypeBgColor(e.target.value)} placeholder={t("autoPh")} className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("fontLabel")}</label>
+              <select value={hypeFont} onChange={(e) => setHypeFont(e.target.value)} className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600">
+                <option value="">{t("fontDefault")}</option>
+                {WIDGET_FONTS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <button onClick={saveHype} disabled={hypeBusy || pending} className="mt-2 px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5">
+            {hypeBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : null} {t("hypeStyleSave")}
+          </button>
+        </div>
       </div>
 
       {/* Goals list */}
