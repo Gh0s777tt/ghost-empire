@@ -29,12 +29,27 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
   const [network, setNetwork] = useState("");
   const [note, setNote] = useState("");
   const [featured, setFeatured] = useState(false);
+  // fundraising goal
+  const [gTitle, setGTitle] = useState("");
+  const [gTarget, setGTarget] = useState("");
+  const [gCurrent, setGCurrent] = useState("0");
+  const [gCurrency, setGCurrency] = useState("PLN");
+  const [gActive, setGActive] = useState(false);
 
   const load = useCallback(async () => {
-    try { setMethods((await apiGet<{ methods: Method[] }>("/api/admin/payment-methods")).methods); }
-    catch { /* keep */ } finally { setLoading(false); }
+    try {
+      const d = await apiGet<{ methods: Method[]; goal: { title: string; target: number; current: number; currency: string; active: boolean } | null }>("/api/admin/payment-methods");
+      setMethods(d.methods);
+      if (d.goal) { setGTitle(d.goal.title); setGTarget(String(d.goal.target)); setGCurrent(String(d.goal.current)); setGCurrency(d.goal.currency); setGActive(d.goal.active); }
+    } catch { /* keep */ } finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
+
+  async function saveGoal() {
+    setBusy("goal");
+    if (await call("save-goal", { title: gTitle.trim(), target: +gTarget || 0, current: +gCurrent || 0, currency: gCurrency.trim(), active: gActive })) onToast("ok", t("goalSaved"));
+    setBusy(null);
+  }
 
   async function call(action: string, payload: Record<string, unknown>): Promise<boolean> {
     try { await apiPost("/api/admin/payment-methods", { action, ...payload }); return true; }
@@ -74,6 +89,24 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
   return (
     <SectionCard title={t("title")} icon={Wallet}>
       <p className="text-zinc-500 text-xs mb-3">{t("intro")} <a href="/support" target="_blank" rel="noreferrer" className="text-red-400 hover:text-red-300 inline-flex items-center gap-0.5">/support <ExternalLink className="w-3 h-3" /></a></p>
+
+      {/* Fundraising goal */}
+      <div className="border border-zinc-800 bg-black/30 p-3 mb-4">
+        <label className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2 cursor-pointer">
+          <input type="checkbox" checked={gActive} onChange={(e) => setGActive(e.target.checked)} className="accent-red-600" /> {t("goalTitle")}
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+          <input value={gTitle} maxLength={80} placeholder={t("goalNamePh")} onChange={(e) => setGTitle(e.target.value)} className="sm:col-span-2 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600" />
+          <input value={gCurrent} inputMode="numeric" placeholder={t("goalCurrentPh")} onChange={(e) => setGCurrent(e.target.value.replace(/[^0-9]/g, ""))} className="border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono tabular-nums outline-hidden focus:border-red-600" />
+          <div className="flex gap-2">
+            <input value={gTarget} inputMode="numeric" placeholder={t("goalTargetPh")} onChange={(e) => setGTarget(e.target.value.replace(/[^0-9]/g, ""))} className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono tabular-nums outline-hidden focus:border-red-600" />
+            <input value={gCurrency} maxLength={8} onChange={(e) => setGCurrency(e.target.value.toUpperCase())} className="w-16 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white text-center uppercase outline-hidden focus:border-red-600" />
+          </div>
+        </div>
+        <button onClick={() => void saveGoal()} disabled={busy === "goal"} className="px-3 py-1.5 border border-zinc-700 text-zinc-200 hover:border-red-600 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 inline-flex items-center gap-1.5">
+          {busy === "goal" ? <Loader2 className="w-3 h-3 animate-spin" /> : null} {t("goalSave")}
+        </button>
+      </div>
 
       {loading ? (
         <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>

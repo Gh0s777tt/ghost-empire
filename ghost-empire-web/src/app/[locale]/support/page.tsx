@@ -38,12 +38,19 @@ export default async function SupportPage() {
   const tid = await currentTenantId();
   const tenant = await getCurrentTenant();
 
-  const methods = await prisma.paymentMethod
-    .findMany({
-      where: { active: true, ...(tid ? { tenantId: tid } : {}) },
-      orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
-    })
-    .catch(() => []); // table not migrated yet → empty page (graceful)
+  const [methods, goalRow] = await Promise.all([
+    prisma.paymentMethod
+      .findMany({
+        where: { active: true, ...(tid ? { tenantId: tid } : {}) },
+        orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+      })
+      .catch(() => []), // table not migrated yet → empty page (graceful)
+    (tid ? prisma.supportGoal.findUnique({ where: { tenantId: tid } }) : prisma.supportGoal.findFirst())
+      .catch(() => null),
+  ]);
+  const goal = goalRow?.active && goalRow.target > 0
+    ? { title: goalRow.title, target: goalRow.target, current: goalRow.current, currency: goalRow.currency }
+    : null;
 
   // Absolute URL for the page QR (host from the proxy headers).
   const h = await headers();
@@ -92,6 +99,7 @@ export default async function SupportPage() {
           methods={shaped}
           pageQr={pageQr}
           pageUrl={pageUrl}
+          goal={goal}
         />
       </main>
     </div>

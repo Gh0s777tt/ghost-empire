@@ -24,11 +24,14 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const tid = await currentTenantId();
-  const methods = await prisma.paymentMethod.findMany({
-    where: tid ? { tenantId: tid } : {},
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-  });
-  return NextResponse.json({ methods });
+  const [methods, goal] = await Promise.all([
+    prisma.paymentMethod.findMany({
+      where: tid ? { tenantId: tid } : {},
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    }),
+    (tid ? prisma.supportGoal.findUnique({ where: { tenantId: tid } }) : prisma.supportGoal.findFirst()).catch(() => null),
+  ]);
+  return NextResponse.json({ methods, goal });
 }
 
 export async function POST(req: Request) {
@@ -39,6 +42,26 @@ export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 }); }
   const action = String(body.action ?? "");
+
+  if (action === "save-goal") {
+    const title = String(body.title ?? "").trim().slice(0, 80);
+    const target = Math.max(0, Math.floor(Number(body.target ?? 0)));
+    const current = Math.max(0, Math.floor(Number(body.current ?? 0)));
+    const currency = (String(body.currency ?? "PLN").trim().slice(0, 8) || "PLN").toUpperCase();
+    const active = !!body.active;
+    if (active && (!title || target < 1)) return NextResponse.json({ error: "Tytuł i cel (≥1) wymagane" }, { status: 400 });
+    const data = { title, target, current, currency, active };
+    await prisma.supportGoal.upsert({
+      where: { tenantId: tid ?? "__none__" },
+      create: { ...(tid ? { tenantId: tid } : {}), ...data },
+      update: data,
+    }).catch(async () => {
+      const first = await prisma.supportGoal.findFirst({ select: { id: true } });
+      if (first) await prisma.supportGoal.update({ where: { id: first.id }, data });
+      else await prisma.supportGoal.create({ data });
+    });
+    return NextResponse.json({ ok: true });
+  }
 
   // Shared field parsing/validation for create + update.
   function parseFields(): { ok: true; data: MethodData } | { ok: false; error: string } {

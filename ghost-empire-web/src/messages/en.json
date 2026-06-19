@@ -1707,6 +1707,12 @@
       "phNote": "Optional note shown under the method",
       "featuredLabel": "Feature this method (highlighted)",
       "featuredTitle": "Toggle featured",
+      "goalTitle": "Fundraising goal (shown on /support)",
+      "goalNamePh": "Goal title (e.g. New streaming PC)",
+      "goalCurrentPh": "Collected",
+      "goalTargetPh": "Target",
+      "goalSave": "Save goal",
+      "goalSaved": "Goal saved.",
       "addBtn": "Add",
       "created": "Method added.",
       "deleted": "Method deleted.",
@@ -2021,6 +2027,8 @@
     "qr": "QR code",
     "pageQrTitle": "QR code for this page (great for OBS / posters)",
     "copyLink": "Copy link",
+    "share": "Share",
+    "shareText": "Support {name} 💜",
     "disclaimer": "Payments go directly to the streamer via the method you choose — this page only shows the details."
   },
   "common": {

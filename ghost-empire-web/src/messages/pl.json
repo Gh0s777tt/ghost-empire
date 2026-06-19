@@ -1707,6 +1707,12 @@
       "phNote": "Opcjonalny opis pod metodą",
       "featuredLabel": "Wyróżnij tę metodę (podświetlona)",
       "featuredTitle": "Przełącz wyróżnienie",
+      "goalTitle": "Cel zbiórki (pokazywany na /support)",
+      "goalNamePh": "Tytuł celu (np. Nowy PC do streamowania)",
+      "goalCurrentPh": "Zebrano",
+      "goalTargetPh": "Cel",
+      "goalSave": "Zapisz cel",
+      "goalSaved": "Cel zapisany.",
       "addBtn": "Dodaj",
       "created": "Metoda dodana.",
       "deleted": "Metoda usunięta.",
@@ -2021,6 +2027,8 @@
     "qr": "Kod QR",
     "pageQrTitle": "Kod QR tej strony (idealny do OBS / plakatu)",
     "copyLink": "Kopiuj link",
+    "share": "Udostępnij",
+    "shareText": "Wesprzyj {name} 💜",
     "disclaimer": "Płatności trafiają bezpośrednio do streamera wybraną metodą — ta strona tylko pokazuje dane."
   },
   "common": {

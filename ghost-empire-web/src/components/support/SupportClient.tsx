@@ -3,22 +3,31 @@
 // Public support/tip page UI (#514): payment links, crypto (one-tap copy + QR),
 // bank/IBAN (masked → reveal-on-click + copy + SEPA QR), plus a shareable page-QR.
 import { useState } from "react";
-import { Heart, Copy, Check, Eye, QrCode, ExternalLink, Download, Star, Link2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Heart, Copy, Check, Eye, QrCode, ExternalLink, Download, Star, Link2, Share2 } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 import { maskIban, formatIban } from "@/lib/payment-methods";
 
 type Method = {
   id: string; kind: "link" | "crypto" | "bank"; label: string; value: string;
   network: string | null; note: string | null; icon: string | null; featured: boolean; qr: string | null;
 };
+type Goal = { title: string; target: number; current: number; currency: string };
 const KIND_EMOJI: Record<Method["kind"], string> = { link: "🔗", crypto: "🪙", bank: "🏦" };
 
+const SHARE_TARGETS: { key: string; label: string; href: (u: string, text: string) => string }[] = [
+  { key: "telegram", label: "Telegram", href: (u, t) => `https://t.me/share/url?url=${encodeURIComponent(u)}&text=${encodeURIComponent(t)}` },
+  { key: "x", label: "X", href: (u, t) => `https://twitter.com/intent/tweet?url=${encodeURIComponent(u)}&text=${encodeURIComponent(t)}` },
+  { key: "whatsapp", label: "WhatsApp", href: (u, t) => `https://wa.me/?text=${encodeURIComponent(`${t} ${u}`)}` },
+  { key: "reddit", label: "Reddit", href: (u, t) => `https://www.reddit.com/submit?url=${encodeURIComponent(u)}&title=${encodeURIComponent(t)}` },
+];
+
 export function SupportClient({
-  owner, brandName, logoUrl, methods, pageQr, pageUrl,
+  owner, brandName, logoUrl, methods, pageQr, pageUrl, goal,
 }: {
   owner: string; brandName: string; logoUrl: string | null;
-  methods: Method[]; pageQr: string | null; pageUrl: string;
+  methods: Method[]; pageQr: string | null; pageUrl: string; goal: Goal | null;
 }) {
+  const nf = useLocale();
   const t = useTranslations("support");
   const [copied, setCopied] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
@@ -42,6 +51,20 @@ export function SupportClient({
         <h1 className="text-2xl font-bold text-white">{t("title", { name: owner })}</h1>
         <p className="text-zinc-500 text-sm mt-1">{t("subtitle", { brand: brandName })}</p>
       </header>
+
+      {/* Fundraising goal */}
+      {goal && (
+        <div className="mb-6 border border-zinc-800 bg-black/30 rounded-xl p-4">
+          <div className="flex items-baseline justify-between mb-2 gap-2">
+            <span className="text-sm text-white font-semibold truncate">{goal.title}</span>
+            <span className="text-xs font-mono text-zinc-400 shrink-0">{goal.current.toLocaleString(nf)} / {goal.target.toLocaleString(nf)} {goal.currency}</span>
+          </div>
+          <div className="h-2.5 rounded-full bg-zinc-800 overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.round((goal.current / goal.target) * 100))}%`, background: "rgb(var(--brand-rgb))" }} />
+          </div>
+          <div className="text-right text-[10px] text-zinc-500 mt-1">{Math.min(100, Math.round((goal.current / goal.target) * 100))}%</div>
+        </div>
+      )}
 
       {methods.length === 0 ? (
         <div className="border border-zinc-900 bg-black/20 rounded-xl p-8 text-center">
@@ -122,6 +145,19 @@ export function SupportClient({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Quick share */}
+      {pageUrl && (
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          <span className="text-[10px] text-zinc-500 uppercase tracking-widest inline-flex items-center gap-1"><Share2 className="w-3 h-3" /> {t("share")}</span>
+          {SHARE_TARGETS.map((s) => (
+            <a key={s.key} href={s.href(pageUrl, t("shareText", { name: owner }))} target="_blank" rel="noreferrer" className="px-2.5 py-1 border border-zinc-800 text-zinc-300 hover:text-white hover:border-red-700 rounded-lg text-[11px]">{s.label}</a>
+          ))}
+          <button onClick={() => void copy("share", pageUrl)} className="px-2.5 py-1 border border-zinc-800 text-zinc-300 hover:text-white hover:border-red-700 rounded-lg text-[11px] inline-flex items-center gap-1">
+            {copied === "share" ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />} {t("copyLink")}
+          </button>
         </div>
       )}
 

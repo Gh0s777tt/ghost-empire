@@ -1671,6 +1671,24 @@ model AutoClip {
 }
 
 // =====================================================
+// SUPPORT GOAL (#519) — a manually-tracked real-money fundraising goal shown on the
+// public /support page (donatr.ee-style "cel zbiórki"). One per portal; the streamer
+// sets the title/target and bumps the collected amount by hand.
+// =====================================================
+model SupportGoal {
+  id        String   @id @default(cuid())
+  tenantId  String?  @unique
+  title     String // "New streaming PC", "Charity stream", …
+  target    Int // goal amount (whole currency units)
+  current   Int      @default(0) // collected so far (manually updated)
+  currency  String   @default("PLN")
+  active    Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@map("support_goals")
+}
+
+// =====================================================
 // ALERT TYPE CONFIG — per-alert-type overrides for the OBS overlay.
 // A type with NO row falls back to the overlay defaults (slide / bottom-right /
 // synthesized ding / no threshold) — so unconfigured types look exactly as before.
