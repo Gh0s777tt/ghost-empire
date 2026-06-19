@@ -1840,6 +1840,8 @@
     "companion": "Companion",
     "clans": "Clans",
     "clips": "Clip of the Week",
+    "themeLight": "Light mode",
+    "themeDark": "Dark mode",
     "wheel": "Wheel of Fortune",
     "library": "Game library",
     "community": "Community",
