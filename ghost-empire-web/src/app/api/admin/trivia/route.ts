@@ -35,6 +35,7 @@ export async function GET() {
     questions: questions.map((q) => ({
       id: q.id, question: q.question, options: q.options, correctIndex: q.correctIndex,
       reward: q.reward, category: q.category, active: q.active, answers: q._count.answers,
+      live: q.live, liveEndsAt: q.liveEndsAt?.toISOString() ?? null,
     })),
   });
 }
@@ -80,5 +81,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  return NextResponse.json({ error: "action: create | update | delete" }, { status: 400 });
+  // Put ONE question live on the OBS overlay with a countdown (exclusive per tenant).
+  if (action === "go-live") {
+    const id = String(body.id ?? "");
+    if (!id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
+    const durationSec = Math.min(600, Math.max(10, Math.floor(Number(body.durationSec ?? 60))));
+    const owned = await prisma.triviaQuestion.findFirst({ where: { id, ...(tid ? { tenantId: tid } : {}) }, select: { id: true } });
+    if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    await prisma.$transaction([
+      prisma.triviaQuestion.updateMany({ where: { ...(tid ? { tenantId: tid } : {}), live: true }, data: { live: false } }),
+      prisma.triviaQuestion.update({ where: { id }, data: { live: true, active: true, liveEndsAt: new Date(Date.now() + durationSec * 1000) } }),
+    ]);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "end-live") {
+    await prisma.triviaQuestion.updateMany({ where: { ...(tid ? { tenantId: tid } : {}), live: true }, data: { live: false } });
+    return NextResponse.json({ ok: true });
+  }
+
+  return NextResponse.json({ error: "action: create | update | delete | go-live | end-live" }, { status: 400 });
 }

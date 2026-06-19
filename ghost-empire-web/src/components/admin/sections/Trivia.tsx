@@ -3,12 +3,12 @@
 // Manage the trivia question bank (#523): question + 2–6 options + the correct one +
 // GT reward. Viewers answer at /trivia. Data via /api/admin/trivia.
 import { useState, useEffect, useCallback } from "react";
-import { Brain, Loader2, Trash2, Plus, Eye, EyeOff, Check, X } from "lucide-react";
+import { Brain, Loader2, Trash2, Plus, Eye, EyeOff, Check, X, Radio, Square } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
-type Question = { id: string; question: string; options: string[]; correctIndex: number; reward: number; category: string | null; active: boolean; answers: number };
+type Question = { id: string; question: string; options: string[]; correctIndex: number; reward: number; category: string | null; active: boolean; answers: number; live: boolean; liveEndsAt: string | null };
 
 export function TriviaManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void }) {
   const t = useTranslations("admin.trivia");
@@ -47,6 +47,8 @@ export function TriviaManager({ onToast }: { onToast: (k: "ok" | "err", m: strin
     if (!confirm(t("deleteConfirm"))) return;
     setBusy(q.id); if (await call("delete", { id: q.id })) { onToast("ok", t("deleted")); await load(); } setBusy(null);
   }
+  async function goLive(q: Question) { setBusy(q.id); if (await call("go-live", { id: q.id, durationSec: 60 })) { onToast("ok", t("wentLive")); await load(); } setBusy(null); }
+  async function endLive() { setBusy("end"); if (await call("end-live", {})) { onToast("ok", t("endedLive")); await load(); } setBusy(null); }
 
   const setOpt = (i: number, v: string) => setOptions((o) => o.map((x, j) => (j === i ? v : x)));
   const addOpt = () => setOptions((o) => (o.length < 6 ? [...o, ""] : o));
@@ -78,6 +80,11 @@ export function TriviaManager({ onToast }: { onToast: (k: "ok" | "err", m: strin
                   </div>
                   <div className="text-[10px] text-zinc-600 font-mono mt-0.5">{q.reward} GT · {t("answersCount", { n: q.answers })}{q.category ? ` · ${q.category}` : ""}</div>
                 </div>
+                {q.live ? (
+                  <button onClick={() => void endLive()} disabled={busy === "end"} title={t("endLive")} className="shrink-0 text-red-300 border border-red-800 bg-red-950/40 w-6 h-6 flex items-center justify-center animate-pulse"><Square className="w-3 h-3" /></button>
+                ) : (
+                  <button onClick={() => void goLive(q)} disabled={busy === q.id} title={t("goLive")} className="shrink-0 text-zinc-500 hover:text-emerald-300 border border-zinc-800 hover:border-emerald-700 w-6 h-6 flex items-center justify-center"><Radio className="w-3 h-3" /></button>
+                )}
                 <button onClick={() => toggle(q)} disabled={busy === q.id} title={q.active ? t("disable") : t("enable")} className="shrink-0 text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center">{q.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}</button>
                 <button onClick={() => remove(q)} disabled={busy === q.id} title={t("deleteTitle")} className="shrink-0 text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"><Trash2 className="w-3 h-3" /></button>
               </div>

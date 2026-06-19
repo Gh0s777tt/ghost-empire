@@ -1703,6 +1703,10 @@ model TriviaQuestion {
   category     String? // optional grouping/label
   active       Boolean  @default(true)
   sortOrder    Int      @default(0)
+  // Live round (#524): the streamer puts ONE question "live" on the OBS overlay with a
+  // countdown; the correct answer is revealed on the overlay once liveEndsAt passes.
+  live         Boolean   @default(false)
+  liveEndsAt   DateTime?
   createdAt    DateTime @default(now())
 
   answers TriviaAnswer[]

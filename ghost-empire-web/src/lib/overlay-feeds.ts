@@ -34,7 +34,8 @@ export type OverlayFeedKey =
   | "companion"
   | "clan"
   | "clan-war"
-  | "support-qr";
+  | "support-qr"
+  | "trivia";
 
 export type OverlayFeedDef = {
   /**
@@ -400,6 +401,25 @@ async function supportQrFeed(_p: URLSearchParams, tid: string | null): Promise<u
   return { items: items.filter((i) => i.qr) };
 }
 
+// Live trivia round (#524): the question the streamer put live, with answer counts
+// per option + a countdown. The correct answer is revealed only AFTER liveEndsAt.
+async function triviaFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const q = await prisma.triviaQuestion.findFirst({ where: { live: true, ...tidWhere(tid) }, orderBy: { createdAt: "desc" } });
+  if (!q) return { active: false };
+  const grouped = await prisma.triviaAnswer.groupBy({ by: ["optionIndex"], where: { questionId: q.id }, _count: { _all: true } });
+  const counts = new Map(grouped.map((g) => [g.optionIndex, g._count._all]));
+  const ended = q.liveEndsAt ? q.liveEndsAt.getTime() <= Date.now() : false;
+  return {
+    active: true,
+    question: q.question,
+    reward: q.reward,
+    options: q.options.map((label, i) => ({ label, count: counts.get(i) ?? 0 })),
+    total: q.options.reduce((s, _l, i) => s + (counts.get(i) ?? 0), 0),
+    endsAt: q.liveEndsAt?.toISOString() ?? null,
+    correctIndex: ended ? q.correctIndex : null, // only reveal after the timer
+  };
+}
+
 /**
  * Wrap a producer so that all OBS connections to the SAME feed+tenant share ONE
  * execution per tick instead of each running its own DB query loop. TTL =
@@ -431,6 +451,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   clan: shared("clan", { producer: clanFeed, intervalMs: 10000 }),
   "clan-war": shared("clan-war", { producer: clanWarFeed, intervalMs: 5000 }),
   "support-qr": shared("support-qr", { producer: supportQrFeed, intervalMs: 30000 }), // QRs are static — refresh slowly
+  trivia: shared("trivia", { producer: triviaFeed, intervalMs: 2000 }),
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };
 

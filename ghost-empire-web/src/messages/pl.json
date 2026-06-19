@@ -817,6 +817,10 @@
         "support-qr": {
           "name": "Karuzela QR wsparcia",
           "desc": "Rotuje skanowalny kod QR dla każdej Twojej metody wsparcia (z /admin#payments) — jeden na ekranie naraz, co ~10s. Wrzucasz jedno źródło na cały stream."
+        },
+        "trivia": {
+          "name": "Trivia na żywo",
+          "desc": "Pokazuje pytanie quizu, które puściłeś na żywo (z /admin#trivia) z paskami odpowiedzi i odliczaniem, odsłaniając poprawną odpowiedź po czasie. Ukryte, gdy żadna runda nie trwa."
         }
       },
       "prevAlertTitle": "Nowy sub!",
@@ -1607,6 +1611,10 @@
       "enable": "Włącz",
       "disable": "Wyłącz",
       "answersCount": "{n} odpowiedzi",
+      "goLive": "Na żywo (overlay OBS, 60s)",
+      "endLive": "Zakończ rundę live",
+      "wentLive": "Na żywo! Dodaj /overlay/trivia do OBS.",
+      "endedLive": "Runda live zakończona.",
       "err": "Coś poszło nie tak."
     },
     "clanWars": {

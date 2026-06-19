@@ -817,6 +817,10 @@
         "support-qr": {
           "name": "Support QR carousel",
           "desc": "Rotates a scannable QR for each of your support/tip methods (from /admin#payments) — one on screen at a time, every ~10s. Drop one source in for the whole stream."
+        },
+        "trivia": {
+          "name": "Live Trivia",
+          "desc": "Shows the trivia question you put live (from /admin#trivia) with answer bars + a countdown, revealing the correct answer when time's up. Hidden when no round is live."
         }
       },
       "prevAlertTitle": "New sub!",
@@ -1607,6 +1611,10 @@
       "enable": "Enable",
       "disable": "Disable",
       "answersCount": "{n} answers",
+      "goLive": "Go live (OBS overlay, 60s)",
+      "endLive": "End live round",
+      "wentLive": "Live! Add /overlay/trivia to OBS.",
+      "endedLive": "Live round ended.",
       "err": "Something went wrong."
     },
     "clanWars": {
