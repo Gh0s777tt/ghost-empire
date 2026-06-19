@@ -45,39 +45,43 @@ function monthBounds(now = new Date()): { start: Date; end: Date; number: number
 // award hot path (per message). Cache the resolved season briefly in-process;
 // the only staleness is a few minutes at the month rollover (cosmetic — the XP
 // just lands on the season whose id we serve). TTL well under a month.
-let seasonCache: { number: number; at: number; season: Awaited<ReturnType<typeof loadCurrentSeason>> } | null = null;
+// Per-tenant (#512): each portal runs its own monthly season, so cache by
+// (tenantId, number) — not just number.
+const seasonCache = new Map<string, { at: number; season: Awaited<ReturnType<typeof loadCurrentSeason>> }>();
 const SEASON_CACHE_MS = 5 * 60_000;
 
 /**
- * Returns the current active season, creating it lazily on first call of the month.
- * Also deactivates any season whose endsAt has passed. Cached ~5 min in-process.
+ * Returns the current active season FOR A TENANT, creating it lazily on first call
+ * of the month. Also deactivates any of that tenant's expired seasons. Cached ~5 min
+ * in-process per (tenant, month). `tenantId` null = single-tenant/legacy fallback.
  */
-export async function getOrCreateCurrentSeason() {
+export async function getOrCreateCurrentSeason(tenantId: string | null = null) {
   const { number } = monthBounds();
+  const key = `${tenantId ?? "*"}|${number}`;
   const now = Date.now();
-  if (seasonCache && seasonCache.number === number && now - seasonCache.at < SEASON_CACHE_MS) {
-    return seasonCache.season;
-  }
-  const season = await loadCurrentSeason();
-  seasonCache = { number, at: now, season };
+  const cached = seasonCache.get(key);
+  if (cached && now - cached.at < SEASON_CACHE_MS) return cached.season;
+  const season = await loadCurrentSeason(tenantId);
+  seasonCache.set(key, { at: now, season });
   return season;
 }
 
 /** Drop the in-process season cache — call after an admin edits the current season
  *  so the change shows immediately instead of after the TTL. */
 export function invalidateSeasonCache(): void {
-  seasonCache = null;
+  seasonCache.clear();
 }
 
-async function loadCurrentSeason() {
+async function loadCurrentSeason(tenantId: string | null) {
   const { start, end, number, label } = monthBounds();
+  const scope = tenantId ? { tenantId } : { tenantId: null };
 
-  // Deactivate expired seasons (best-effort)
+  // Deactivate this tenant's expired seasons (best-effort)
   await prisma.season
-    .updateMany({ where: { active: true, endsAt: { lte: new Date() } }, data: { active: false } })
+    .updateMany({ where: { active: true, endsAt: { lte: new Date() }, ...scope }, data: { active: false } })
     .catch(() => {});
 
-  const existing = await prisma.season.findUnique({ where: { number } });
+  const existing = await prisma.season.findFirst({ where: { number, ...scope } });
   if (existing) {
     if (!existing.active && existing.endsAt > new Date()) {
       // Reactivate if it's still within range (e.g. was wrongly deactivated)
@@ -86,22 +90,30 @@ async function loadCurrentSeason() {
     return existing;
   }
 
-  // Create the month's season with a default free-track reward set
-  const created = await prisma.season.create({
-    data: {
-      number,
-      name: `Sezon ${number}: ${label}`,
-      startsAt: start,
-      endsAt: end,
-      totalTiers: 30,
-      xpPerTier: 5000,
-      active: true,
-      rewards: {
-        create: defaultFreeRewards(),
+  // Create the month's season with a default free-track reward set. Guard the
+  // first-of-month race: a concurrent create hits the [tenantId, number] unique →
+  // fall back to re-reading the row the winner created.
+  try {
+    return await prisma.season.create({
+      data: {
+        ...(tenantId ? { tenantId } : {}),
+        number,
+        name: `Sezon ${number}: ${label}`,
+        startsAt: start,
+        endsAt: end,
+        totalTiers: 30,
+        xpPerTier: 5000,
+        active: true,
+        rewards: {
+          create: defaultFreeRewards(),
+        },
       },
-    },
-  });
-  return created;
+    });
+  } catch {
+    const row = await prisma.season.findFirst({ where: { number, ...scope } });
+    if (row) return row;
+    throw new Error("season create race: no row after unique conflict");
+  }
 }
 
 /** Default free-track rewards spread across 30 tiers — admin can edit/add later. */
@@ -133,7 +145,10 @@ export async function awardSeasonXp(userId: string, source: SeasonXpSource, mult
     const amount = Math.round(SEASON_XP[source] * multiplier);
     if (amount <= 0) return;
 
-    const season = await getOrCreateCurrentSeason();
+    // Per-tenant (#512): award into the user's portal season. Award context may have
+    // no tenant Host (bot/webhook), so derive from the user like achievements do.
+    const u = await prisma.user.findUnique({ where: { id: userId }, select: { tenantId: true } });
+    const season = await getOrCreateCurrentSeason(u?.tenantId ?? null);
 
     const progress = await prisma.userSeasonProgress.upsert({
       where: { userId_seasonId: { userId, seasonId: season.id } },

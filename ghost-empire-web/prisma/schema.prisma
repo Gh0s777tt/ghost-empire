@@ -570,10 +570,11 @@ model UserAchievement {
 // =====================================================
 
 model DailyTask {
-  id     String  @id @default(cuid())
-  code   String  @unique
-  text   String
-  textEn String?
+  id       String  @id @default(cuid())
+  tenantId String? // multi-tenant (#512) — each portal has its own quests
+  code     String // unique PER TENANT (see @@unique below) — was globally @unique
+  text     String
+  textEn   String?
 
   target      Int
   reward      Int
@@ -584,6 +585,8 @@ model DailyTask {
 
   userTasks UserTask[]
 
+  @@unique([tenantId, code])
+  @@index([tenantId])
   @@map("daily_tasks")
 }
 
@@ -944,6 +947,7 @@ model ModViolationLog {
 // body (encrypted at rest). failCount auto-disables a dead endpoint.
 model OutgoingWebhook {
   id          String    @id @default(cuid())
+  tenantId    String? // multi-tenant (#512) — each portal has its own webhooks
   label       String
   url         String    @db.Text
   events      String[]  @default([]) // AlertType values, or ["*"] for every event
@@ -955,6 +959,7 @@ model OutgoingWebhook {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  @@index([tenantId])
   @@map("outgoing_webhooks")
 }
 
@@ -1321,7 +1326,8 @@ model StreamAlert {
 
 model Season {
   id          String   @id @default(cuid())
-  number      Int      @unique // sequential: 1, 2, 3, ...
+  tenantId    String? // multi-tenant (#512) — each portal runs its own battle pass
+  number      Int // sequential per tenant: 1, 2, 3, ... (was globally @unique)
   name        String // "Sezon 1: Pierwsza Krew" or "Maj 2026"
   description String?  @db.Text
   startsAt    DateTime
@@ -1335,7 +1341,9 @@ model Season {
   rewards  SeasonReward[]
   progress UserSeasonProgress[]
 
+  @@unique([tenantId, number])
   @@index([active, endsAt])
+  @@index([tenantId])
   @@map("seasons")
 }
 
@@ -1613,13 +1621,16 @@ model SoundReward {
 // =====================================================
 model AlertTypeConfig {
   id        String   @id @default(cuid())
-  type      String   @unique // matches AlertType in lib/alerts.ts
+  tenantId  String? // multi-tenant (#512) — per-portal alert-type styling
+  type      String // matches AlertType in lib/alerts.ts — unique PER TENANT (was globally @unique)
   animation String   @default("slide") // slide | fade | scale | none
   position  String   @default("bottom-right") // {top|center|bottom}-{left|center|right}
   soundUrl  String? // custom sound URL; null = synthesized ding
   minAmount Int? // only show alert if amount >= this (null = always)
   updatedAt DateTime @updatedAt
 
+  @@unique([tenantId, type])
+  @@index([tenantId])
   @@map("alert_type_config")
 }
 
@@ -1720,6 +1731,7 @@ model ChatOverlayConfig {
 
 model CustomAlert {
   id          String   @id @default(cuid())
+  tenantId    String? // multi-tenant (#512) — each portal has its own custom alerts
   label       String // admin-facing name (list)
   title       String // heading shown on the overlay
   message     String // body shown on the overlay
@@ -1730,6 +1742,7 @@ model CustomAlert {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([tenantId])
   @@map("custom_alerts")
 }
 

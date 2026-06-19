@@ -3,6 +3,7 @@
 // custom sound / amount threshold). Applied live by /overlay via the queue.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { requireAdmin } from "@/lib/admin";
 import { safeMediaUrl } from "@/lib/url-safe";
 import {
@@ -18,7 +19,8 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const rows = await prisma.alertTypeConfig.findMany();
+  const tid = await currentTenantId();
+  const rows = await prisma.alertTypeConfig.findMany({ where: tid ? { tenantId: tid } : {} });
   const byType = new Map(rows.map((r) => [r.type, r]));
 
   const types = ALERT_TYPE_LIST.map(({ type, label }) => {
@@ -73,11 +75,13 @@ export async function POST(req: Request) {
   }
 
   const data = { animation, position, soundUrl, minAmount };
-  const saved = await prisma.alertTypeConfig.upsert({
-    where: { type },
-    create: { type, ...data },
-    update: data,
-  });
+  // Per-tenant (#512): upsert within this portal. Manual find-then-write avoids a
+  // compound-unique upsert with a possibly-null tenantId (single-tenant fallback).
+  const tid = await currentTenantId();
+  const existing = await prisma.alertTypeConfig.findFirst({ where: { type, ...(tid ? { tenantId: tid } : { tenantId: null }) } });
+  const saved = existing
+    ? await prisma.alertTypeConfig.update({ where: { id: existing.id }, data })
+    : await prisma.alertTypeConfig.create({ data: { ...(tid ? { tenantId: tid } : {}), type, ...data } });
 
   return NextResponse.json({
     ok: true,

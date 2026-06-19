@@ -104,6 +104,18 @@ async function main() {
   console.log(`   faqResponse: attached ${fq.count} row(s)`);
   const sr = await prisma.songRequest.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
   console.log(`   songRequest: attached ${sr.count} row(s)`);
+  // #512 customizable-content pass: quests / battle pass / custom alerts / alert-type
+  // config / outgoing webhooks become per-portal. Attach legacy rows to the founder.
+  const dt = await prisma.dailyTask.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   dailyTask: attached ${dt.count} row(s)`);
+  const se = await prisma.season.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   season: attached ${se.count} row(s)`);
+  const ca = await prisma.customAlert.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   customAlert: attached ${ca.count} row(s)`);
+  const atc = await prisma.alertTypeConfig.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   alertTypeConfig: attached ${atc.count} row(s)`);
+  const owh = await prisma.outgoingWebhook.updateMany({ where: { tenantId: null }, data: { tenantId: tenant.id } });
+  console.log(`   outgoingWebhook: attached ${owh.count} row(s)`);
 
   await prisma.$disconnect();
 }

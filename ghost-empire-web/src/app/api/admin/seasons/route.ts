@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
 import { getOrCreateCurrentSeason, invalidateSeasonCache } from "@/lib/seasons";
 
@@ -12,7 +13,9 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const tid = await currentTenantId();
   const seasons = await prisma.season.findMany({
+    where: tid ? { tenantId: tid } : {},
     orderBy: { number: "desc" },
     include: {
       rewards: { orderBy: [{ tier: "asc" }, { premium: "asc" }] },
@@ -68,8 +71,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const tid = await currentTenantId();
+
   if (body.action === "ensure_current") {
-    const season = await getOrCreateCurrentSeason();
+    const season = await getOrCreateCurrentSeason(tid);
     return NextResponse.json({ ok: true, seasonId: season.id, number: season.number, name: season.name });
   }
 
@@ -78,9 +83,12 @@ export async function POST(req: Request) {
     const patch: Record<string, unknown> = {};
     if (typeof body.name === "string" && body.name.trim()) patch.name = body.name.trim().slice(0, 120);
     if (typeof body.description === "string") patch.description = body.description.slice(0, 1000);
-    const updated = await prisma.season.update({ where: { id: body.seasonId }, data: patch });
+    // Tenant-guarded: can't edit another portal's season.
+    const r = await prisma.season.updateMany({ where: { id: body.seasonId, ...(tid ? { tenantId: tid } : {}) }, data: patch });
+    if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    const updated = await prisma.season.findUnique({ where: { id: body.seasonId } });
     invalidateSeasonCache(); // reflect the edit immediately, don't wait out the TTL
-    return NextResponse.json({ ok: true, season: { id: updated.id, name: updated.name } });
+    return NextResponse.json({ ok: true, season: { id: updated?.id, name: updated?.name } });
   }
 
   if (body.action === "add_reward") {
@@ -93,7 +101,7 @@ export async function POST(req: Request) {
     if (!body.label || !body.value) {
       return NextResponse.json({ error: "label + value wymagane" }, { status: 400 });
     }
-    const season = await prisma.season.findUnique({ where: { id: body.seasonId } });
+    const season = await prisma.season.findFirst({ where: { id: body.seasonId, ...(tid ? { tenantId: tid } : {}) } });
     if (!season) return NextResponse.json({ error: "Sezon nie istnieje" }, { status: 404 });
     if (body.tier < 1 || body.tier > season.totalTiers) {
       return NextResponse.json({ error: `Tier 1-${season.totalTiers}` }, { status: 400 });
@@ -129,7 +137,8 @@ export async function POST(req: Request) {
 
   if (body.action === "delete_reward") {
     if (!body.rewardId) return NextResponse.json({ error: "Brak rewardId" }, { status: 400 });
-    await prisma.seasonReward.delete({ where: { id: body.rewardId } });
+    // Tenant-guarded via the parent season — can't delete another portal's reward.
+    await prisma.seasonReward.deleteMany({ where: { id: body.rewardId, ...(tid ? { season: { tenantId: tid } } : {}) } });
     return NextResponse.json({ ok: true });
   }
 

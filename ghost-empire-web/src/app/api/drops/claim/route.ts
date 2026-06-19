@@ -80,9 +80,9 @@ export async function POST(req: Request) {
         },
       });
 
-      // Daily quest progress: drop_code
+      // Daily quest progress: drop_code (per-tenant — only this portal's quests)
       const dropTasks = await tx.dailyTask.findMany({
-        where: { triggerType: "drop_code", active: true },
+        where: { triggerType: "drop_code", active: true, ...(tid ? { tenantId: tid } : {}) },
       });
       for (const task of dropTasks) {
         await tx.userTask.upsert({

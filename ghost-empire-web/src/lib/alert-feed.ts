@@ -137,7 +137,7 @@ export async function fetchAlertFeed(since: Date, tenantId: string | null): Prom
       take: MAX_TAKE,
     }),
     getSettings(tenantId),
-    getAlertTypeConfigs(),
+    getAlertTypeConfigs(tenantId),
   ]);
 
   // Mark un-shown alerts as shown (best-effort, single bulk update).

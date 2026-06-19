@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { QuestsClient } from "@/components/quests/QuestsClient";
 import { today } from "@/lib/utils";
@@ -26,13 +27,14 @@ export default async function QuestsPage() {
 
   const userId = session.user.id;
   const dateStr = today();
+  const tid = await currentTenantId();
 
   // Ensure a UserTask row exists for each active daily task (today). Was N
   // sequential upserts on EVERY page load; now create only the missing rows in
   // one createMany and refetch only when we actually created something (mirrors
   // the home page). Common case (rows already exist) = zero extra writes.
   const [activeTasks, userTasksInitial, user] = await Promise.all([
-    prisma.dailyTask.findMany({ where: { active: true }, select: { id: true } }),
+    prisma.dailyTask.findMany({ where: { active: true, ...(tid ? { tenantId: tid } : {}) }, select: { id: true } }),
     prisma.userTask.findMany({
       where: { userId, date: dateStr },
       include: { task: true },

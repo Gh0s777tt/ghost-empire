@@ -32,8 +32,18 @@ async function main() {
   // Imported here (not at top) so loadEnvFile() above runs first — the pg adapter
   // reads DATABASE_URL at module-eval time.
   const { prisma } = await import("../src/lib/prisma");
+  // Multi-tenant (#512): quests belong to the default "ghost-empire" tenant.
+  const tenant = await prisma.tenant.findUnique({ where: { slug: "ghost-empire" }, select: { id: true } });
+  if (!tenant) {
+    console.error("❌ no 'ghost-empire' tenant — run `npm run db:seed` (or backfill-tenant) first");
+    process.exit(1);
+  }
   for (const t of DAILY_TASKS) {
-    await prisma.dailyTask.upsert({ where: { code: t.code }, update: t, create: t });
+    await prisma.dailyTask.upsert({
+      where: { tenantId_code: { tenantId: tenant.id, code: t.code } },
+      update: t,
+      create: { ...t, tenantId: tenant.id },
+    });
   }
   console.log(`✅ upserted ${DAILY_TASKS.length} daily tasks (incl. clan / companion / wheel / poll quests)`);
   await prisma.$disconnect();

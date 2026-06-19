@@ -185,9 +185,9 @@ async function main() {
 
   for (const t of tasks) {
     await prisma.dailyTask.upsert({
-      where: { code: t.code },
+      where: { tenantId_code: { tenantId: tenant.id, code: t.code } },
       update: t,
-      create: t,
+      create: { ...t, tenantId: tenant.id },
     });
   }
   console.log(`✅ ${tasks.length} daily tasks seeded`);

@@ -67,14 +67,14 @@ export async function dispatchAlert(input: AlertInput, tenantId?: string | null)
     select: { id: true },
   });
 
-  // Fan out to any external webhooks subscribed to this event (best-effort).
+  // Fan out to any external webhooks subscribed to this event (best-effort, per-tenant).
   fireOutgoingWebhooks(input.type, {
     title: input.title,
     message: input.message,
     actorName: input.actorName ?? null,
     amount: input.amount ?? null,
     amountLabel: input.amountLabel ?? null,
-  });
+  }, tid);
 
   return created;
 }
@@ -162,8 +162,11 @@ export async function isValidOverlayToken(token: string | null | undefined, tena
  * row appear — merge with DEFAULT_ALERT_TYPE_CFG (lib/alert-types) at the use
  * site so unconfigured types fall back to the default look.
  */
-export async function getAlertTypeConfigs(): Promise<Record<string, AlertTypeCfg>> {
-  const rows = await prisma.alertTypeConfig.findMany();
+export async function getAlertTypeConfigs(tenantId?: string | null): Promise<Record<string, AlertTypeCfg>> {
+  // Per-tenant (#512): each portal styles its own alert types. undefined → resolve
+  // from the request Host; an explicit value is threaded by the SSE feed (no request).
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  const rows = await prisma.alertTypeConfig.findMany({ where: tid ? { tenantId: tid } : {} });
   const map: Record<string, AlertTypeCfg> = {};
   for (const r of rows) {
     map[r.type] = {

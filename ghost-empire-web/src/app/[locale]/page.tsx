@@ -114,7 +114,7 @@ export default async function HomePage() {
       // Active daily-task IDs — fetched in parallel so ensuring the user's rows
       // doesn't need a separate sequential round-trip.
       prisma.dailyTask.findMany({
-        where: { active: true },
+        where: { active: true, ...(tid ? { tenantId: tid } : {}) },
         select: { id: true },
       }),
     ]);

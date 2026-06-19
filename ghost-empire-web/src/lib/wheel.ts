@@ -134,15 +134,16 @@ export async function spinWheel(userId: string): Promise<SpinResult> {
     };
   });
 
-  // Notify external webhooks on a winning spin (best-effort).
+  // Notify external webhooks on a winning spin (best-effort, this portal only).
   if (seg.rewardTokens > 0) {
+    const tid = await currentTenantId();
     fireOutgoingWebhooks("wheel_win", {
       title: "🎡 Wygrana w Kole Fortuny!",
       message: `${actorName} wygrał ${seg.rewardTokens} GT (${seg.label})`,
       actorName,
       amount: seg.rewardTokens,
       amountLabel: "GT",
-    });
+    }, tid);
   }
 
   return {

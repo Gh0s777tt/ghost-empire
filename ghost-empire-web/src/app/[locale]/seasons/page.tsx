@@ -1,6 +1,7 @@
 // src/app/seasons/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { SeasonsClient } from "@/components/seasons/SeasonsClient";
 import { getOrCreateCurrentSeason } from "@/lib/seasons";
@@ -21,7 +22,8 @@ export default async function SeasonsPage() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const season = await getOrCreateCurrentSeason();
+  const tid = await currentTenantId();
+  const season = await getOrCreateCurrentSeason(tid);
 
   const [rewards, progress, claims] = await Promise.all([
     prisma.seasonReward.findMany({

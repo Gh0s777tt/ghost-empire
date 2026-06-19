@@ -20,11 +20,12 @@ export const WEBHOOK_EVENTS = [
 
 export type WebhookPayload = Record<string, unknown>;
 
-/** Deliver `event` to every enabled webhook subscribed to it (or to "*"). */
-async function deliver(event: string, payload: WebhookPayload): Promise<void> {
+/** Deliver `event` to every enabled webhook subscribed to it (or to "*"). Per-tenant
+ *  (#512): only the portal where the event fired — `tenantId` null = unscoped (legacy). */
+async function deliver(event: string, payload: WebhookPayload, tenantId: string | null): Promise<void> {
   let hooks;
   try {
-    hooks = await prisma.outgoingWebhook.findMany({ where: { enabled: true } });
+    hooks = await prisma.outgoingWebhook.findMany({ where: { enabled: true, ...(tenantId ? { tenantId } : {}) } });
   } catch {
     return; // never let webhook plumbing break the caller
   }
@@ -74,9 +75,10 @@ async function deliver(event: string, payload: WebhookPayload): Promise<void> {
   );
 }
 
-/** Fire-and-forget dispatch — safe to call from any event path; never throws. */
-export function fireOutgoingWebhooks(event: string, payload: WebhookPayload): void {
-  void deliver(event, payload).catch((e) => log.error("dispatch failed", e, { event }));
+/** Fire-and-forget dispatch — safe to call from any event path; never throws.
+ *  Pass the event's `tenantId` so only that portal's webhooks fire. */
+export function fireOutgoingWebhooks(event: string, payload: WebhookPayload, tenantId: string | null = null): void {
+  void deliver(event, payload, tenantId).catch((e) => log.error("dispatch failed", e, { event }));
 }
 
 /** Await a single test delivery to one webhook (admin "test" button). */

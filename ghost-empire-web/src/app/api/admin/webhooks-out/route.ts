@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { WEBHOOK_EVENTS, testOutgoingWebhook } from "@/lib/webhooks-out";
@@ -24,7 +25,8 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const hooks = await prisma.outgoingWebhook.findMany({ orderBy: { createdAt: "asc" } });
+  const tid = await currentTenantId();
+  const hooks = await prisma.outgoingWebhook.findMany({ where: tid ? { tenantId: tid } : {}, orderBy: { createdAt: "asc" } });
   return NextResponse.json({
     events: WEBHOOK_EVENTS,
     webhooks: hooks.map((h) => ({
@@ -52,11 +54,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
   const action = String(body.action ?? "");
+  const tid = await currentTenantId();
 
   if (action === "create") {
     if (!isHttpUrl(body.url)) return NextResponse.json({ error: "Wymagany prawidłowy URL http(s)" }, { status: 400 });
     const created = await prisma.outgoingWebhook.create({
       data: {
+        ...(tid ? { tenantId: tid } : {}),
         label: String(body.label ?? "Webhook").trim().slice(0, 80) || "Webhook",
         url: body.url.slice(0, 2000),
         events: cleanEvents(body.events),
@@ -81,20 +85,25 @@ export async function POST(req: Request) {
     // Re-enabling or editing resets the failure counter so it gets a fresh chance.
     if (data.enabled === true || data.url) data.failCount = 0;
 
-    await prisma.outgoingWebhook.update({ where: { id: body.id }, data });
+    // Tenant-guarded — can't edit another portal's webhook.
+    const r = await prisma.outgoingWebhook.updateMany({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) }, data });
+    if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "outgoing_webhook", targetId: body.id, req });
     return NextResponse.json({ ok: true });
   }
 
   if (action === "delete") {
     if (typeof body.id !== "string") return NextResponse.json({ error: "Brak id" }, { status: 400 });
-    await prisma.outgoingWebhook.delete({ where: { id: body.id } }).catch(() => {});
+    await prisma.outgoingWebhook.deleteMany({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) } }).catch(() => {});
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "outgoing_webhook", targetId: body.id, req });
     return NextResponse.json({ ok: true });
   }
 
   if (action === "test") {
     if (typeof body.id !== "string") return NextResponse.json({ error: "Brak id" }, { status: 400 });
+    // Verify the webhook belongs to this portal before firing a test.
+    const owned = await prisma.outgoingWebhook.findFirst({ where: { id: body.id, ...(tid ? { tenantId: tid } : {}) }, select: { id: true } });
+    if (!owned) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
     const result = await testOutgoingWebhook(body.id);
     return NextResponse.json(result);
   }
