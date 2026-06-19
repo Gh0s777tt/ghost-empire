@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
 import { emitDailyClaimed, DAILY_CLAIMED_EVENT } from "@/lib/daily-bus";
+import { GettingStarted } from "./GettingStarted";
 import { sfxPlay } from "@/lib/sfx";
 import { useTenantBranding } from "@/components/TenantBranding";
 import type { Session } from "next-auth";
@@ -98,6 +99,9 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
 
       {/* Daily login bonus */}
       <DailyBonusCard />
+
+      {/* Getting started — self-hides once every step is done */}
+      <GettingStarted />
 
       {/* Two-column row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
