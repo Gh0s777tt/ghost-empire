@@ -15,8 +15,7 @@ import { displayNick } from "@/lib/utils";
 import { companionStage } from "@/lib/companion";
 import { isWarLive } from "@/lib/clan-wars";
 import { cacheJson } from "@/lib/redis";
-import { getAppAccessToken, helixGet } from "@/lib/twitch";
-import { getTwitchStreamerToken } from "@/lib/platform-tokens";
+import { getLiveStatus } from "@/lib/live-status";
 
 export type OverlayFeedKey =
   | "goals"
@@ -320,28 +319,10 @@ async function chatFeed(_p: URLSearchParams, tid: string | null): Promise<unknow
   };
 }
 
-const VIEWERS_CACHE_MS = 12_000;
-
 async function viewersFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
-  // Shared Redis cache (Upstash) so many overlay connections across serverless
-  // instances don't each hammer Helix — falls back to in-process cache without Redis.
-  return cacheJson<Record<string, unknown>>(`viewers:${tid ?? "default"}`, VIEWERS_CACHE_MS, async () => {
-    const streamer = await getTwitchStreamerToken(tid);
-    if (!streamer?.broadcasterId) return { live: false, configured: false };
-    try {
-      const appToken = await getAppAccessToken();
-      const data = await helixGet<{ data: Array<{ viewer_count: number; game_name: string | null }> }>(
-        `/streams?user_id=${streamer.broadcasterId}`,
-        appToken,
-      );
-      const s = data.data[0];
-      return s
-        ? { live: true, configured: true, viewers: s.viewer_count, game: s.game_name ?? null }
-        : { live: false, configured: true };
-    } catch {
-      return { live: false, configured: true, error: true };
-    }
-  });
+  // Twitch live status (viewers/game) — shared with the public "LIVE now" home
+  // banner via lib/live-status (one cached Helix call per tenant for both).
+  return getLiveStatus(tid);
 }
 
 // Champion Companion: the top pet by xp in the tenant — shown on stream to drive
