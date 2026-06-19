@@ -15,6 +15,7 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { CLAN_CREATE_COST, normalizeClanTag, isValidClanTag, isValidClanName, isValidContribution } from "@/lib/clans";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { updateDailyTaskProgress } from "@/lib/daily-tasks";
 import { isWarLive } from "@/lib/clan-wars";
 
 const log = createLogger("clans");
@@ -204,5 +205,6 @@ async function contribute(userId: string, tid: string | null, body: { amount?: n
     return { treasury: clan.treasury, balance: fresh?.tokens ?? 0 };
   });
   await checkAndGrantAchievements({ userId, triggerType: "clan_contributed", hintValue: amount });
+  await updateDailyTaskProgress(userId, "clan_contribute").catch(() => {}); // best-effort daily quest
   return NextResponse.json({ ok: true, treasury: result.treasury, newBalance: result.balance });
 }

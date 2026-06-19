@@ -149,6 +149,38 @@ async function main() {
       reward: 1000,
       triggerType: "drop_code",
     },
+    {
+      code: "daily_clan_contribute",
+      text: "Wesprzyj skarbiec swojego klanu",
+      textEn: "Contribute to your clan treasury",
+      target: 1,
+      reward: 300,
+      triggerType: "clan_contribute",
+    },
+    {
+      code: "daily_companion_feed",
+      text: "Nakarm swojego Ghost Companiona",
+      textEn: "Feed your Ghost Companion",
+      target: 1,
+      reward: 200,
+      triggerType: "companion_feed",
+    },
+    {
+      code: "daily_wheel_spin",
+      text: "Zakręć Kołem Fortuny 3 razy",
+      textEn: "Spin the Wheel of Fortune 3 times",
+      target: 3,
+      reward: 250,
+      triggerType: "wheel_spin",
+    },
+    {
+      code: "daily_poll_vote",
+      text: "Zagłosuj w ankiecie",
+      textEn: "Vote in a poll",
+      target: 1,
+      reward: 150,
+      triggerType: "poll_vote",
+    },
   ];
 
   for (const t of tasks) {

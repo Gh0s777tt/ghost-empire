@@ -10,6 +10,7 @@ import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { isValidFeed } from "@/lib/companion";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { updateDailyTaskProgress } from "@/lib/daily-tasks";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("companion-feed");
@@ -61,6 +62,7 @@ export async function POST(req: Request) {
 
     // Stage-milestone achievements (companion_xp). Fire-and-forget after commit.
     await checkAndGrantAchievements({ userId, triggerType: "companion_xp", hintValue: result.companion.xp });
+    await updateDailyTaskProgress(userId, "companion_feed").catch(() => {}); // best-effort daily quest
 
     return NextResponse.json({
       name: result.companion.name,

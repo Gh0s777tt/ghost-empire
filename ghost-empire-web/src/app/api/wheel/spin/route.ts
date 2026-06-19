@@ -7,6 +7,7 @@ import { jsonError } from "@/lib/api-i18n";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { spinWheel, WheelError } from "@/lib/wheel";
 import { featureGateResponse } from "@/lib/entitlements";
+import { updateDailyTaskProgress } from "@/lib/daily-tasks";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("wheel");
@@ -28,6 +29,7 @@ export async function POST() {
 
   try {
     const result = await spinWheel(userId);
+    await updateDailyTaskProgress(userId, "wheel_spin").catch(() => {}); // best-effort daily quest
     return NextResponse.json({
       ok: true,
       spinId: result.spinId,

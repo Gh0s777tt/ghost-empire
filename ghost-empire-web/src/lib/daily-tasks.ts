@@ -5,7 +5,17 @@
 import { prisma } from "@/lib/prisma";
 import { today } from "@/lib/utils";
 
-export type DailyTaskTrigger = "messages" | "voice_minutes";
+// Quest trigger catalog. "messages"/"voice_minutes" come from chat/voice activity;
+// the rest are fired (best-effort) by their respective on-site actions so daily
+// quests can reward the whole engagement loop. "drop_code" is handled inline in
+// drops/claim (inside its transaction) and isn't routed through here.
+export type DailyTaskTrigger =
+  | "messages"
+  | "voice_minutes"
+  | "clan_contribute"
+  | "companion_feed"
+  | "wheel_spin"
+  | "poll_vote";
 
 // The active-task catalog is effectively static at runtime (seeded; no route
 // mutates DailyTask), yet this findMany ran on EVERY awarded chat/Discord message.
