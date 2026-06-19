@@ -76,12 +76,6 @@ type Props = {
   topUsers: HomeTopUser[];
 };
 
-const STREAM_STATUS = {
-  isLive: false, // This would come from Twitch API (Phase 2)
-  game: "Counter-Strike 2",
-  title: "GRINDIN FACEIT — drop kody na chacie!",
-  viewers: 1247,
-};
 
 export function HomeClient({ session, userData, hotItems, activeEvents, topUsers }: Props) {
   const router = useRouter();
@@ -96,8 +90,8 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Live banner */}
-      {STREAM_STATUS.isLive && <LiveBanner />}
+      {/* Live banner — self-hides when the streamer is offline */}
+      <LiveBanner />
 
       {/* Profile hero */}
       {user && <ProfileHero user={user} />}
@@ -291,6 +285,8 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
   ];
   return (
     <div className="space-y-12 animate-fade-in">
+      {/* Live banner — self-hides when the streamer is offline (guests too) */}
+      <LiveBanner />
       {/* Hero */}
       <div className="text-center py-16">
         <div className="flex justify-center mb-8">
@@ -622,9 +618,25 @@ function AchievementBadgeSmall({ achievement }: { achievement: HomeUserAchieveme
 }
 
 // ---- LIVE BANNER ----
+type LiveData = { live: boolean; viewers?: number; game?: string | null; title?: string | null; watchUrl?: string | null };
+
+// Real-time "LIVE now" banner: polls /api/live-status (cached, Twitch Helix) and
+// renders nothing while the streamer is offline. Replaces the old static placeholder.
 function LiveBanner() {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
+  const [live, setLive] = useState<LiveData | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const fetchOnce = () => apiGet<LiveData>("/api/live-status").then((d) => { if (alive) setLive(d); }).catch(() => {});
+    void fetchOnce();
+    const id = setInterval(() => void fetchOnce(), 60_000); // appears when the stream starts, no refresh
+    return () => { alive = false; clearInterval(id); };
+  }, []);
+
+  if (!live?.live) return null;
+
   return (
     <div
       className="relative overflow-hidden border border-red-900/60 clip-corner"
@@ -652,15 +664,17 @@ function LiveBanner() {
             <span className="font-mono text-[10px] tracking-widest text-red-400 font-bold">
               {t("liveOnTwitch")}
             </span>
-            <span className="font-mono text-[10px] text-zinc-500">
-              {t("watching", { count: fmt(STREAM_STATUS.viewers) })}
-            </span>
+            {typeof live.viewers === "number" && (
+              <span className="font-mono text-[10px] text-zinc-500">
+                {t("watching", { count: fmt(live.viewers) })}
+              </span>
+            )}
           </div>
-          <h2 className="font-display text-xl text-white truncate">{STREAM_STATUS.title}</h2>
-          <p className="text-xs text-zinc-400">🎮 {STREAM_STATUS.game}</p>
+          <h2 className="font-display text-xl text-white truncate">{live.title || t("liveOnTwitch")}</h2>
+          {live.game && <p className="text-xs text-zinc-400">🎮 {live.game}</p>}
         </div>
         <a
-          href="https://twitch.tv/gh0s77tt"
+          href={live.watchUrl ?? "https://twitch.tv/gh0s77tt"}
           target="_blank"
           rel="noreferrer"
           className="hidden sm:flex shrink-0 items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider transition-colors clip-tag"
