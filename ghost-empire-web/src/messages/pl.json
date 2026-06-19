@@ -1839,6 +1839,7 @@
     "casino": "Kasyno",
     "companion": "Kompan",
     "clans": "Klany",
+    "clips": "Klip tygodnia",
     "wheel": "Koło Fortuny",
     "library": "Biblioteka gier",
     "community": "Społeczność",
@@ -2316,6 +2317,19 @@
     "hofTitle": "Galeria sław wojen",
     "hofDuration": "wojna {d}d",
     "hofPoints": "{n} pkt"
+  },
+  "clips": {
+    "title": "Klip tygodnia",
+    "subtitle": "Zagłosuj na najlepszy klip z ostatnich 7 dni — prowadzący zgarnia koronę. Jeden głos na tydzień.",
+    "loading": "Ładowanie klipów…",
+    "empty": "Brak klipów w tym tygodniu.",
+    "emptyHint": "Wytnij świetny moment na Twitchu — pojawi się tutaj do głosowania społeczności.",
+    "voteBtn": "Głosuj",
+    "voted": "Zagłosowano",
+    "leader": "Lider",
+    "by": "od {name}",
+    "loginToVote": "Zaloguj się, by zagłosować na ulubiony.",
+    "errGeneric": "Coś poszło nie tak."
   },
   "wheel": {
     "help": "Koło Fortuny: zakręć za %tokenName% i wygraj jedną z nagród ustawionych przez streamera. Koszt zakręcenia widać przy przycisku, wynik losuje serwer.",
