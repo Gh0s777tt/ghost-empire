@@ -5,7 +5,7 @@ import { GitMerge, AlertTriangle, Loader2, History, Eye } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
-import { apiGet, apiPost, ApiError } from "@/lib/api-client";
+import { apiGet, apiPost, apiPostStepUp, ApiError } from "@/lib/api-client";
 
 type MergeUser = {
   id: string;
@@ -177,7 +177,7 @@ function DuplicateGroupCard({
     }
     setExecuting(true);
     try {
-      const data = await apiPost<{ summary: { tokens: number; transactions: number } }>("/api/admin/merge-users", {
+      const data = await apiPostStepUp<{ summary: { tokens: number; transactions: number } }>("/api/admin/merge-users", {
         action: "execute",
         primary: primaryId,
         secondary: secondaryId,

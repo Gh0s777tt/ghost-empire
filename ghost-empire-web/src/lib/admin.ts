@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import type { ModPermission } from "@/lib/permissions";
 import { hasPermission } from "@/lib/permissions";
+import { decryptSecret } from "@/lib/crypto";
+import { verifyTotp } from "@/lib/totp";
 
 type AuthResult =
   | { ok: true; userId: string; isAdmin: boolean; tenantId: string | null; isPlatformOwner: boolean }
@@ -150,4 +152,25 @@ export async function requireAnyPermission(permissions: ModPermission[]): Promis
     };
   }
   return okResult(g.userId, g.user);
+}
+
+/**
+ * Step-up check for a sensitive admin action. A NO-OP when the acting admin has
+ * not enabled 2FA (it's opt-in) — only admins who turned it on are challenged.
+ * When enabled, a valid current TOTP code is required. Fails OPEN only if the
+ * stored secret can't be decrypted (e.g. encryption-key drift), so an admin who
+ * enabled 2FA is never permanently locked out of their own tools.
+ */
+export async function requireStepUp(
+  userId: string,
+  code: string | null | undefined,
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { totpSecret: true, totpEnabledAt: true } });
+  if (!u?.totpEnabledAt) return { ok: true }; // 2FA not enabled → no challenge
+  const secret = decryptSecret(u.totpSecret);
+  if (!secret) return { ok: true }; // unreadable secret → don't brick the admin
+  if (!verifyTotp(secret, String(code ?? ""), Date.now())) {
+    return { ok: false, status: 401, error: "Wymagany aktualny kod 2FA" };
+  }
+  return { ok: true };
 }

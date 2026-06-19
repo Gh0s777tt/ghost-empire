@@ -44,6 +44,29 @@ export function apiPost<T>(url: string, payload?: unknown, init?: RequestInit): 
   });
 }
 
+/**
+ * POST for sensitive admin actions that may require a 2FA step-up. If the server
+ * replies with `stepUpRequired`, prompt for a current TOTP code and retry once.
+ * When the admin hasn't enabled 2FA the server never asks, so this is identical to
+ * apiPost. A cancelled prompt re-throws the original 401. (Native prompt is in
+ * keeping with the admin panel's existing confirm() dialogs.)
+ */
+export async function apiPostStepUp<T>(url: string, payload?: Record<string, unknown>): Promise<T> {
+  try {
+    return await apiPost<T>(url, payload);
+  } catch (e) {
+    const needsStepUp =
+      e instanceof ApiError &&
+      e.body != null &&
+      typeof e.body === "object" &&
+      (e.body as { stepUpRequired?: unknown }).stepUpRequired === true;
+    if (!needsStepUp) throw e;
+    const code = typeof window !== "undefined" ? window.prompt("Kod 2FA (6 cyfr):")?.replace(/\s/g, "") : null;
+    if (!code) throw e; // cancelled → surface the original error
+    return await apiPost<T>(url, { ...(payload ?? {}), totpCode: code });
+  }
+}
+
 /** PATCH with a JSON payload, returning parsed JSON. */
 export function apiPatch<T>(url: string, payload?: unknown, init?: RequestInit): Promise<T> {
   return request<T>(url, {

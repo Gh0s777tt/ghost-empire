@@ -7,7 +7,7 @@
 //
 // `confirm` must equal the secondary user's username — a GitHub-style guard against accidents.
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin, requireStepUp } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  let body: { action?: string; primary?: string; secondary?: string; confirm?: string };
+  let body: { action?: string; primary?: string; secondary?: string; confirm?: string; totpCode?: string };
   try {
     body = await req.json();
   } catch {
@@ -80,6 +80,10 @@ export async function POST(req: Request) {
   }
 
   if (action === "execute") {
+    // Step-up: a destructive merge requires a fresh 2FA code (no-op unless 2FA enabled).
+    const step = await requireStepUp(auth.userId, body.totpCode);
+    if (!step.ok) return NextResponse.json({ error: step.error, stepUpRequired: true }, { status: step.status });
+
     // Confirm-by-typing-username guard
     const secondaryUser = await prisma.user.findUnique({
       where: { id: secondary },

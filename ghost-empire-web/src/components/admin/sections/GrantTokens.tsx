@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Coins, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
-import { apiPost, ApiError } from "@/lib/api-client";
+import { apiPostStepUp, ApiError } from "@/lib/api-client";
 
 export function GrantTokensCard({
   onToast, onSuccess, pending,
@@ -22,7 +22,7 @@ export function GrantTokensCard({
   async function submit() {
     setBusy(true);
     try {
-      const data = await apiPost<{ amount: number; user: { username: string | null; id: string }; newBalance: number }>(
+      const data = await apiPostStepUp<{ amount: number; user: { username: string | null; id: string }; newBalance: number }>(
         "/api/admin/grant-tokens",
         { target, amount: parseInt(amount), reason },
       );
