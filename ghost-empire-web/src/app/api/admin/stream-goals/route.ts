@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
 import { WIDGET_FONTS } from "@/lib/widget-fonts";
+import { getSettings } from "@/lib/alerts";
 
 const VALID_TYPES = ["subs", "gift_subs", "follows", "donations_pln", "cheers_bits", "yt_members"] as const;
 const VALID_RESET_MODES = ["manual", "per_stream", "daily", "weekly", "monthly"] as const;
@@ -17,12 +18,19 @@ export async function GET() {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const tid = await currentTenantId();
-  const [goals, hypeTrain] = await Promise.all([
+  const [goals, hypeTrain, settings] = await Promise.all([
     prisma.streamGoal.findMany({ where: tid ? { tenantId: tid } : {}, orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }] }),
     prisma.hypeTrainState.findUnique({ where: { id: "default" } }),
+    getSettings(tid),
   ]);
 
   return NextResponse.json({
+    hypeStyle: {
+      accentColor: settings.accentColor,
+      color: settings.hypeColor,
+      bgColor: settings.hypeBgColor,
+      fontFamily: settings.hypeFontFamily,
+    },
     goals: goals.map((g) => ({
       ...g,
       lastResetAt: g.lastResetAt?.toISOString() ?? null,
@@ -62,6 +70,9 @@ export async function POST(req: Request) {
     bgColor?: string | null;
     fontFamily?: string | null;
     sortOrder?: number;
+    hypeColor?: string | null;
+    hypeBgColor?: string | null;
+    hypeFontFamily?: string | null;
   };
   try {
     body = await req.json();
@@ -133,6 +144,18 @@ export async function POST(req: Request) {
     if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
     const updated = await prisma.streamGoal.findUnique({ where: { id: body.id } });
     return NextResponse.json({ ok: true, goal: updated });
+  }
+
+  if (body.action === "updateHype") {
+    const tid = await currentTenantId();
+    const data: Record<string, unknown> = {};
+    if (body.hypeColor === null) data.hypeColor = null; else if (isHex(body.hypeColor)) data.hypeColor = body.hypeColor;
+    if (body.hypeBgColor === null) data.hypeBgColor = null; else if (isHex(body.hypeBgColor)) data.hypeBgColor = body.hypeBgColor;
+    if (body.hypeFontFamily === null) data.hypeFontFamily = null;
+    else if (body.hypeFontFamily && VALID_FONTS.has(body.hypeFontFamily)) data.hypeFontFamily = body.hypeFontFamily;
+    if (tid) await prisma.streamAlertSettings.upsert({ where: { tenantId: tid }, create: { tenantId: tid, ...data }, update: data });
+    else await prisma.streamAlertSettings.upsert({ where: { id: "default" }, create: { id: "default", ...data }, update: data });
+    return NextResponse.json({ ok: true });
   }
 
   if (body.action === "reset") {

@@ -1516,6 +1516,9 @@ model StreamAlertSettings {
   sizeScale       Float    @default(1)         // overall alert size multiplier (0.5–2)
   textScale       Float    @default(1)         // text size multiplier (0.5–2)
   textColor       String   @default("#d4d4d8") // message body text color
+  hypeColor       String?  // Hype Train accent (null → accentColor)
+  hypeBgColor     String?  // Hype Train banner background (null → default dark)
+  hypeFontFamily  String?  // Hype Train font value from lib/widget-fonts (null → Inter)
   overlayToken    String?  // auto-generated on first admin view; rotate via UI to invalidate OBS browser source URLs
   updatedAt       DateTime @updatedAt
 

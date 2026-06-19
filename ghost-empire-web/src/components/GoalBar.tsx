@@ -22,6 +22,9 @@ export type OverlayHypeTrain = {
   total: number;
   topContributor: string | null;
   expiresAt: string | null;
+  color?: string | null;
+  bgColor?: string | null;
+  fontFamily?: string | null;
 };
 
 export const GOAL_TYPE_LABEL: Record<string, string> = {
@@ -100,26 +103,29 @@ export function GoalBar({ goal, accent }: { goal: OverlayGoal; accent: string })
 }
 
 export function HypeTrainBanner({ train, accent }: { train: OverlayHypeTrain; accent: string }) {
+  const color = train.color ?? accent;
+  const bg = train.bgColor ?? "rgba(20, 10, 30, 0.95)";
+  const font = fontStack(train.fontFamily);
   const pct = Math.min(100, (train.total / Math.max(1, train.goal)) * 100);
   return (
     <div
       style={{
-        background: "rgba(20, 10, 30, 0.95)",
+        background: bg,
         backdropFilter: "blur(10px)",
         borderRadius: 12,
         padding: "12px 18px",
-        border: `2px solid ${accent}`,
-        boxShadow: `0 12px 36px rgba(0,0,0,0.6), 0 0 20px ${accent}66`,
+        border: `2px solid ${color}`,
+        boxShadow: `0 12px 36px rgba(0,0,0,0.6), 0 0 20px ${color}66`,
         color: "#fff",
         display: "flex",
         alignItems: "center",
         gap: 14,
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: font,
       }}
     >
       <span style={{ fontSize: 28, animation: "pulse 1.4s ease-in-out infinite" }}>🚂</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: 0.5, color: accent }}>
+        <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: 0.5, color }}>
           HYPE TRAIN — LEVEL {train.level}
         </div>
         <div style={{ height: 6, marginTop: 4, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
@@ -127,9 +133,9 @@ export function HypeTrainBanner({ train, accent }: { train: OverlayHypeTrain; ac
             style={{
               width: `${pct}%`,
               height: "100%",
-              background: `linear-gradient(90deg, ${accent}, #fbbf24)`,
+              background: `linear-gradient(90deg, ${color}, #fbbf24)`,
               transition: "width 400ms ease-out",
-              boxShadow: `0 0 12px ${accent}`,
+              boxShadow: `0 0 12px ${color}`,
             }}
           />
         </div>

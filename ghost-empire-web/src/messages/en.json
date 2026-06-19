@@ -954,6 +954,9 @@
       "fontDefault": "Default (Inter)",
       "autoPh": "#hex (empty = auto)",
       "livePreview": "Live preview",
+      "hypeStyleTitle": "Hype Train style",
+      "hypeStyleSave": "Save hype style",
+      "hypeStyleSaved": "Hype Train style saved",
       "addGoalBtn": "Add goal"
     },
     "subathon": {

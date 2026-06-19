@@ -87,6 +87,9 @@ async function goalsFeed(_p: URLSearchParams, tid: string | null): Promise<unkno
             total: hype.total,
             topContributor: hype.topContributor,
             expiresAt: hype.expiresAt?.toISOString() ?? null,
+            color: settings.hypeColor,
+            bgColor: settings.hypeBgColor,
+            fontFamily: settings.hypeFontFamily,
           }
         : null,
   };
