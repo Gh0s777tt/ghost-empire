@@ -1830,6 +1830,7 @@ model IntegrationConfig {
   sentryDsn            String? // error monitoring DSN
   obsWebsocketUrl      String? // ws://host:port for OBS control
   obsWebsocketPassword String?
+  recapDiscordWebhook  String? // Discord webhook URL for AI stream recaps (#516)
 
   tenantId String? @unique // multi-tenant (Phase 3): one config row per tenant
 
