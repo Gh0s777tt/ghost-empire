@@ -822,6 +822,10 @@
           "name": "Pasek celu wsparcia",
           "desc": "Pasek postępu zbiórki dla Twojego celu wsparcia (z /admin#payments) — wypełnia się, gdy podbijasz zebraną kwotę, i zmienia na zielony po osiągnięciu celu. Widżet celu donejtów na Twój stream."
         },
+        "top-supporters": {
+          "name": "Tablica top wspierających",
+          "desc": "Tablica „credits” na stream z Twoimi największymi wspierającymi (z prawdziwych webhooków donejtów), z medalami. Podziękowanie na żywo; ukryte, dopóki nie masz wspierającego."
+        },
         "trivia": {
           "name": "Trivia na żywo",
           "desc": "Pokazuje pytanie quizu, które puściłeś na żywo (z /admin#trivia) z paskami odpowiedzi i odliczaniem, odsłaniając poprawną odpowiedź po czasie. Ukryte, gdy żadna runda nie trwa."

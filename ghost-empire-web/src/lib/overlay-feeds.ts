@@ -36,6 +36,7 @@ export type OverlayFeedKey =
   | "clan-war"
   | "support-qr"
   | "support-goal"
+  | "top-supporters"
   | "trivia";
 
 export type OverlayFeedDef = {
@@ -416,6 +417,29 @@ async function supportGoalFeed(_p: URLSearchParams, tid: string | null): Promise
   return { active: true, title: goal.title, target: goal.target, current: goal.current, currency: goal.currency, pct };
 }
 
+// Top supporters credits (#531): the all-time biggest tippers (per-tenant, summed
+// from "donation" StreamAlerts) as an on-stream leaderboard — the on-air companion
+// to the /support top-supporters card (#530). Best-effort by donor name (tippers
+// aren't accounts); first-name only via safeName for privacy.
+async function topSupportersFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const rows = await prisma.streamAlert
+    .groupBy({
+      by: ["actorName"],
+      where: { type: "donation", amount: { not: null }, actorName: { not: null }, ...tidWhere(tid) },
+      _sum: { amount: true },
+      orderBy: { _sum: { amount: "desc" } },
+      take: 5,
+    })
+    .catch(() => [] as { actorName: string | null; _sum: { amount: number | null } }[]);
+  const labelRow = await prisma.streamAlert
+    .findFirst({ where: { type: "donation", amountLabel: { not: null }, ...tidWhere(tid) }, select: { amountLabel: true }, orderBy: { createdAt: "desc" } })
+    .catch(() => null);
+  const items = rows
+    .map((r) => ({ name: safeName(r.actorName), total: r._sum.amount ?? 0 }))
+    .filter((s) => s.total > 0);
+  return { items, currency: labelRow?.amountLabel ?? null };
+}
+
 // Live trivia round (#524): the question the streamer put live, with answer counts
 // per option + a countdown. The correct answer is revealed only AFTER liveEndsAt.
 async function triviaFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
@@ -467,6 +491,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   "clan-war": shared("clan-war", { producer: clanWarFeed, intervalMs: 5000 }),
   "support-qr": shared("support-qr", { producer: supportQrFeed, intervalMs: 30000 }), // QRs are static — refresh slowly
   "support-goal": shared("support-goal", { producer: supportGoalFeed, intervalMs: 5000 }), // bumped manually — 5s feels live
+  "top-supporters": shared("top-supporters", { producer: topSupportersFeed, intervalMs: 30000 }), // leaderboard shifts slowly
   trivia: shared("trivia", { producer: triviaFeed, intervalMs: 2000 }),
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };

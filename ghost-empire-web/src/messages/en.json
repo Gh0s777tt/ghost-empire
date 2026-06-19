@@ -822,6 +822,10 @@
           "name": "Support goal bar",
           "desc": "A live fundraising progress bar for your support goal (from /admin#payments) — it fills as you bump the collected amount, and turns green when you hit the target. The donation-goal widget for your stream."
         },
+        "top-supporters": {
+          "name": "Top supporters board",
+          "desc": "An on-stream credits board of your all-time biggest tippers (from real donation webhooks), ranked with medals. A live thank-you leaderboard; hidden until you have a supporter."
+        },
         "trivia": {
           "name": "Live Trivia",
           "desc": "Shows the trivia question you put live (from /admin#trivia) with answer bars + a countdown, revealing the correct answer when time's up. Hidden when no round is live."
