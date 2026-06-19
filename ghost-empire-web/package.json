@@ -21,6 +21,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:achievements": "tsx scripts/seed-achievements.ts",
+    "db:seed:tasks": "tsx scripts/seed-daily-tasks.ts",
     "db:backfill:tenant": "tsx scripts/backfill-tenant.ts",
     "postinstall": "prisma generate"
   },

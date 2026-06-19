@@ -6,6 +6,7 @@ import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { updateDailyTaskProgress } from "@/lib/daily-tasks";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -43,6 +44,7 @@ export async function POST(req: Request) {
     create: { pollId, userId, optionIndex },
     update: { optionIndex },
   });
+  await updateDailyTaskProgress(userId, "poll_vote").catch(() => {}); // best-effort daily quest
 
   const votes = await prisma.pollVote.findMany({ where: { pollId }, select: { optionIndex: true } });
   const counts = poll.options.map((_, i) => votes.filter((v) => v.optionIndex === i).length);
