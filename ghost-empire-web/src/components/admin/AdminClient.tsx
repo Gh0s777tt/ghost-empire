@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
@@ -35,6 +35,7 @@ const SoundRewardsManager = dynamic(() => import("./sections/SoundRewards").then
 const PaymentMethodsManager = dynamic(() => import("./sections/PaymentMethods").then((m) => m.PaymentMethodsManager), { ssr: false, loading: SectionLoading });
 const RecapManager = dynamic(() => import("./sections/Recap").then((m) => m.RecapManager), { ssr: false, loading: SectionLoading });
 const ClipDirectorManager = dynamic(() => import("./sections/ClipDirector").then((m) => m.ClipDirectorManager), { ssr: false, loading: SectionLoading });
+const TriviaManager = dynamic(() => import("./sections/Trivia").then((m) => m.TriviaManager), { ssr: false, loading: SectionLoading });
 const TwoFactorManager = dynamic(() => import("./sections/TwoFactor").then((m) => m.TwoFactorManager), { ssr: false, loading: SectionLoading });
 const AuditLogSection = dynamic(() => import("./sections/AuditLog").then((m) => m.AuditLogSection), { ssr: false, loading: SectionLoading });
 const PollsManager = dynamic(() => import("./sections/Polls").then((m) => m.PollsManager), { ssr: false, loading: SectionLoading });
@@ -134,7 +135,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "recap" | "clipdirector" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -155,6 +156,7 @@ export function AdminClient({
     { id: "payments",  label: t("secPayments"),     icon: Wallet,         group: "main",       level: 2, permission: () => isAdmin },
     { id: "community", label: t("secCommunity"),    icon: Users,          group: "main",       level: 2, permission: () => isAdmin },
     { id: "clanwars",  label: t("secClanwars"),     icon: Swords,         group: "main",       level: 2, permission: () => isAdmin },
+    { id: "trivia",    label: t("secTrivia"),       icon: Brain,          group: "main",       level: 2, permission: () => isAdmin },
     { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
     { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
     { id: "tenants",   label: t("secTenants"),      icon: Building2,       group: "main",       level: 3, permission: () => isPlatformOwner },
@@ -525,6 +527,7 @@ export function AdminClient({
           {activeSection === "payments" && isAdmin && <PaymentMethodsManager onToast={showToast} />}
           {activeSection === "recap" && isAdmin && <RecapManager onToast={showToast} />}
           {activeSection === "clipdirector" && isAdmin && <ClipDirectorManager onToast={showToast} />}
+          {activeSection === "trivia" && isAdmin && <TriviaManager onToast={showToast} />}
           {activeSection === "twofactor" && isAdmin && <TwoFactorManager onToast={showToast} />}
 
           {activeSection === "audit" && can("view_audit") && (

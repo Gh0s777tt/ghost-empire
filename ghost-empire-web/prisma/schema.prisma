@@ -158,6 +158,7 @@ model User {
   pollVotes        PollVote[]
   clipVotes        ClipVote[]
   portalFollows    PortalFollow[]
+  triviaAnswers    TriviaAnswer[]
   wheelSpins       WheelSpin[]
   gtGamePlays      GtGamePlay[]
   duelsChallenged  Duel[]            @relation("DuelChallenger")
@@ -1686,6 +1687,44 @@ model SupportGoal {
   updatedAt DateTime @updatedAt
 
   @@map("support_goals")
+}
+
+// =====================================================
+// TRIVIA / QUIZ (#523) — a per-portal question bank; viewers answer for GT (one
+// attempt per question). Additive + per-tenant.
+// =====================================================
+model TriviaQuestion {
+  id           String   @id @default(cuid())
+  tenantId     String?
+  question     String   @db.Text
+  options      String[] // 2–6 answer options
+  correctIndex Int // index into options
+  reward       Int      @default(100) // GT for a correct answer
+  category     String? // optional grouping/label
+  active       Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  answers TriviaAnswer[]
+
+  @@index([tenantId, active])
+  @@map("trivia_questions")
+}
+
+model TriviaAnswer {
+  id          String   @id @default(cuid())
+  userId      String
+  questionId  String
+  optionIndex Int
+  correct     Boolean
+  createdAt   DateTime @default(now())
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question TriviaQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId]) // one attempt per question
+  @@index([questionId])
+  @@map("trivia_answers")
 }
 
 // =====================================================

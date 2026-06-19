@@ -1587,6 +1587,28 @@
       "topClans": "Top clans"
     },
     "secClanwars": "Clan wars",
+    "secTrivia": "Trivia / Quiz",
+    "trivia": {
+      "title": "Trivia / Quiz",
+      "intro": "A question bank viewers answer at /trivia for %gt% (one attempt per question).",
+      "loading": "Loading…",
+      "empty": "No questions yet — add your first below.",
+      "addTitle": "Add a question",
+      "questionPh": "Question",
+      "optionPh": "Option {n}",
+      "addOption": "Add option",
+      "markCorrect": "Mark as correct",
+      "categoryPh": "Category (optional)",
+      "addBtn": "Add question",
+      "created": "Question added.",
+      "deleted": "Question deleted.",
+      "deleteConfirm": "Delete this question?",
+      "deleteTitle": "Delete",
+      "enable": "Enable",
+      "disable": "Disable",
+      "answersCount": "{n} answers",
+      "err": "Something went wrong."
+    },
     "clanWars": {
       "title": "Clan wars",
       "intro": "Run a time-boxed war: clans earn war points equal to the GT members contribute during the window. The top clan wins the prize pool into its treasury.",
@@ -1939,6 +1961,7 @@
     "sounds": "Stream sounds",
     "clans": "Clans",
     "clips": "Clip of the Week",
+    "trivia": "Quiz",
     "themeLight": "Light mode",
     "themeDark": "Dark mode",
     "themePick": "Theme",
@@ -2036,6 +2059,18 @@
     "share": "Share",
     "shareText": "Support {name} 💜",
     "disclaimer": "Payments go directly to the streamer via the method you choose — this page only shows the details."
+  },
+  "trivia": {
+    "title": "Quiz",
+    "subtitle": "Answer correctly to earn %gt%. One attempt per question.",
+    "loading": "Loading…",
+    "empty": "No quiz questions right now — check back soon.",
+    "correct": "Correct! +{reward} {sym}",
+    "wrong": "Not quite — better luck on the next one!",
+    "answeredCorrect": "You got it",
+    "answeredWrong": "Answered",
+    "loginToPlay": "Sign in to play and earn.",
+    "err": "Something went wrong — try again."
   },
   "common": {
     "howItWorks": "How does it work?",

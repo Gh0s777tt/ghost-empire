@@ -15,6 +15,7 @@ export const HELP_PAGES: ReadonlyArray<{ path: string; what: string }> = [
   { path: "/clips", what: "clip of the week — watch the streamer's recent clips and vote" },
   { path: "/sounds", what: "stream sounds — spend GT to play a sound live on the stream" },
   { path: "/achievements", what: "achievements — badges you unlock by being active" },
+  { path: "/trivia", what: "quiz — answer trivia questions to earn GT" },
   { path: "/events", what: "events — current giveaways, predictions and community events" },
   { path: "/schedule", what: "schedule — when the streamer goes live" },
   { path: "/profile", what: "profile — your balance, transaction history, referral code, 2FA" },

@@ -1587,6 +1587,28 @@
       "topClans": "Top klany"
     },
     "secClanwars": "Wojny klanów",
+    "secTrivia": "Trivia / Quiz",
+    "trivia": {
+      "title": "Trivia / Quiz",
+      "intro": "Baza pytań, na które widzowie odpowiadają na /trivia za %gt% (jedna próba na pytanie).",
+      "loading": "Ładowanie…",
+      "empty": "Brak pytań — dodaj pierwsze poniżej.",
+      "addTitle": "Dodaj pytanie",
+      "questionPh": "Pytanie",
+      "optionPh": "Opcja {n}",
+      "addOption": "Dodaj opcję",
+      "markCorrect": "Oznacz jako poprawną",
+      "categoryPh": "Kategoria (opcjonalnie)",
+      "addBtn": "Dodaj pytanie",
+      "created": "Pytanie dodane.",
+      "deleted": "Pytanie usunięte.",
+      "deleteConfirm": "Usunąć to pytanie?",
+      "deleteTitle": "Usuń",
+      "enable": "Włącz",
+      "disable": "Wyłącz",
+      "answersCount": "{n} odpowiedzi",
+      "err": "Coś poszło nie tak."
+    },
     "clanWars": {
       "title": "Wojny klanów",
       "intro": "Uruchom wojnę na czas: klany zdobywają punkty wojny równe GT, które członkowie wpłacają w trakcie jej trwania. Najlepszy klan wygrywa pulę nagród do swojego skarbca.",
@@ -1939,6 +1961,7 @@
     "sounds": "Dźwięki na streamie",
     "clans": "Klany",
     "clips": "Klip tygodnia",
+    "trivia": "Quiz",
     "themeLight": "Tryb jasny",
     "themeDark": "Tryb ciemny",
     "themePick": "Motyw",
@@ -2036,6 +2059,18 @@
     "share": "Udostępnij",
     "shareText": "Wesprzyj {name} 💜",
     "disclaimer": "Płatności trafiają bezpośrednio do streamera wybraną metodą — ta strona tylko pokazuje dane."
+  },
+  "trivia": {
+    "title": "Quiz",
+    "subtitle": "Odpowiadaj poprawnie, by zdobyć %gt%. Jedna próba na pytanie.",
+    "loading": "Ładowanie…",
+    "empty": "Brak pytań quizu — zajrzyj później.",
+    "correct": "Dobrze! +{reward} {sym}",
+    "wrong": "Nie tym razem — powodzenia przy następnym!",
+    "answeredCorrect": "Trafione",
+    "answeredWrong": "Odpowiedziano",
+    "loginToPlay": "Zaloguj się, by grać i zarabiać.",
+    "err": "Coś poszło nie tak — spróbuj ponownie."
   },
   "common": {
     "howItWorks": "Jak to działa?",
