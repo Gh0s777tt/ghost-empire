@@ -35,6 +35,7 @@ export type OverlayFeedKey =
   | "clan"
   | "clan-war"
   | "support-qr"
+  | "support-goal"
   | "trivia";
 
 export type OverlayFeedDef = {
@@ -401,6 +402,20 @@ async function supportQrFeed(_p: URLSearchParams, tid: string | null): Promise<u
   return { items: items.filter((i) => i.qr) };
 }
 
+// Support fundraising goal (#519) as a live OBS progress bar (#528). The streamer
+// bumps `current` in /admin#payments and it animates on stream — the donatr.ee /
+// Streamlabs "donation goal" widget. Reads the same active SupportGoal the
+// /support page shows (per-tenant; SupportGoal.tenantId is unique).
+async function supportGoalFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const goal = await (tid
+    ? prisma.supportGoal.findUnique({ where: { tenantId: tid } })
+    : prisma.supportGoal.findFirst()
+  ).catch(() => null);
+  if (!goal?.active || goal.target <= 0) return { active: false };
+  const pct = Math.max(0, Math.min(100, Math.round((goal.current / goal.target) * 100)));
+  return { active: true, title: goal.title, target: goal.target, current: goal.current, currency: goal.currency, pct };
+}
+
 // Live trivia round (#524): the question the streamer put live, with answer counts
 // per option + a countdown. The correct answer is revealed only AFTER liveEndsAt.
 async function triviaFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
@@ -451,6 +466,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   clan: shared("clan", { producer: clanFeed, intervalMs: 10000 }),
   "clan-war": shared("clan-war", { producer: clanWarFeed, intervalMs: 5000 }),
   "support-qr": shared("support-qr", { producer: supportQrFeed, intervalMs: 30000 }), // QRs are static — refresh slowly
+  "support-goal": shared("support-goal", { producer: supportGoalFeed, intervalMs: 5000 }), // bumped manually — 5s feels live
   trivia: shared("trivia", { producer: triviaFeed, intervalMs: 2000 }),
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };

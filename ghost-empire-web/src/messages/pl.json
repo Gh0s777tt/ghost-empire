@@ -818,6 +818,10 @@
           "name": "Karuzela QR wsparcia",
           "desc": "Rotuje skanowalny kod QR dla każdej Twojej metody wsparcia (z /admin#payments) — jeden na ekranie naraz, co ~10s. Wrzucasz jedno źródło na cały stream."
         },
+        "support-goal": {
+          "name": "Pasek celu wsparcia",
+          "desc": "Pasek postępu zbiórki dla Twojego celu wsparcia (z /admin#payments) — wypełnia się, gdy podbijasz zebraną kwotę, i zmienia na zielony po osiągnięciu celu. Widżet celu donejtów na Twój stream."
+        },
         "trivia": {
           "name": "Trivia na żywo",
           "desc": "Pokazuje pytanie quizu, które puściłeś na żywo (z /admin#trivia) z paskami odpowiedzi i odliczaniem, odsłaniając poprawną odpowiedź po czasie. Ukryte, gdy żadna runda nie trwa."

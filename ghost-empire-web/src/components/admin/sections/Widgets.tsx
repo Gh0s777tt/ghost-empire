@@ -104,6 +104,7 @@ const WIDGET_META: WidgetMeta[] = [
   { id: "clan",         path: "/overlay/clan",        size: "360×140" },
   { id: "clan-war",     path: "/overlay/clan-war",    size: "380×260" },
   { id: "support-qr",   path: "/overlay/support-qr",  size: "300×360" },
+  { id: "support-goal", path: "/overlay/support-goal", size: "360×170" },
   { id: "trivia",       path: "/overlay/trivia",      size: "440×320" },
 ];
 

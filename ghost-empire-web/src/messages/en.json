@@ -818,6 +818,10 @@
           "name": "Support QR carousel",
           "desc": "Rotates a scannable QR for each of your support/tip methods (from /admin#payments) — one on screen at a time, every ~10s. Drop one source in for the whole stream."
         },
+        "support-goal": {
+          "name": "Support goal bar",
+          "desc": "A live fundraising progress bar for your support goal (from /admin#payments) — it fills as you bump the collected amount, and turns green when you hit the target. The donation-goal widget for your stream."
+        },
         "trivia": {
           "name": "Live Trivia",
           "desc": "Shows the trivia question you put live (from /admin#trivia) with answer bars + a countdown, revealing the correct answer when time's up. Hidden when no round is live."
