@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { getTranslations, getLocale } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
+import QRCode from "qrcode";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
@@ -53,6 +54,15 @@ const SOCIAL_COLORS: Record<string, string> = {
   website:   "#10b981",
 };
 
+// QR for the profile URL — generated server-side so the client ships no QR lib.
+async function toQr(data: string): Promise<string | null> {
+  try {
+    return await QRCode.toDataURL(data, { margin: 1, width: 320, color: { dark: "#0a0a0a", light: "#ffffff" } });
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -89,6 +99,7 @@ export default async function PublicProfilePage({
   const host = h.get("host") ?? "";
   const proto = h.get("x-forwarded-proto") ?? "https";
   const profileUrl = host ? `${proto}://${host}/u/${username}` : "";
+  const profileQr = profileUrl ? await toQr(profileUrl) : null;
 
   const user = await prisma.user.findUnique({
     where: { username },
@@ -272,7 +283,7 @@ export default async function PublicProfilePage({
 
                 {profileUrl && (
                   <div className="mb-4">
-                    <ProfileShareRow url={profileUrl} name={displayNick(user.displayName, user.username)} />
+                    <ProfileShareRow url={profileUrl} name={displayNick(user.displayName, user.username)} qr={profileQr} handle={user.username} />
                   </div>
                 )}
 
