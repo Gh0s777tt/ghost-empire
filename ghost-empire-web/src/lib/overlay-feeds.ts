@@ -13,6 +13,7 @@ import { getWheelConfig } from "@/lib/wheel";
 import { lockExpiredPredictions } from "@/lib/predictions";
 import { displayNick } from "@/lib/utils";
 import { companionStage } from "@/lib/companion";
+import { isWarLive } from "@/lib/clan-wars";
 import { cacheJson } from "@/lib/redis";
 import { getAppAccessToken, helixGet } from "@/lib/twitch";
 import { getTwitchStreamerToken } from "@/lib/platform-tokens";
@@ -30,7 +31,8 @@ export type OverlayFeedKey =
   | "chat"
   | "viewers"
   | "companion"
-  | "clan";
+  | "clan"
+  | "clan-war";
 
 export type OverlayFeedDef = {
   /**
@@ -360,6 +362,30 @@ async function clanFeed(_p: URLSearchParams, tid: string | null): Promise<unknow
   return { exists: true, name: c.name, tag: c.tag, treasury: c.treasury, members: c._count.members };
 }
 
+// Live Clan War: the active war's standings (top clans by warPoints) — shown on
+// stream so viewers see the race in real time and pour GT in for their clan.
+async function clanWarFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const war = await prisma.clanWar.findFirst({
+    where: { status: "active", ...(tid ? { tenantId: tid } : {}) },
+    orderBy: { startsAt: "desc" },
+    select: { name: true, status: true, endsAt: true, prizePool: true },
+  });
+  if (!war || !isWarLive(war, Date.now())) return { active: false };
+  const standings = await prisma.clan.findMany({
+    where: { ...tidWhere(tid), warPoints: { gt: 0 } },
+    orderBy: { warPoints: "desc" },
+    take: 5,
+    select: { tag: true, name: true, warPoints: true },
+  });
+  return {
+    active: true,
+    name: war.name,
+    endsAt: war.endsAt.toISOString(),
+    prizePool: war.prizePool,
+    standings: standings.map((c) => ({ tag: c.tag, name: c.name, points: c.warPoints })),
+  };
+}
+
 /**
  * Wrap a producer so that all OBS connections to the SAME feed+tenant share ONE
  * execution per tick instead of each running its own DB query loop. TTL =
@@ -389,6 +415,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   chat: shared("chat", { producer: chatFeed, intervalMs: 2000 }),
   companion: shared("companion", { producer: companionFeed, intervalMs: 8000 }),
   clan: shared("clan", { producer: clanFeed, intervalMs: 10000 }),
+  "clan-war": shared("clan-war", { producer: clanWarFeed, intervalMs: 5000 }),
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };
 
