@@ -80,6 +80,11 @@ model User {
   messageCount  Int       @default(0)
   voiceMinutes  Int       @default(0)
 
+  // Security — opt-in TOTP step-up for sensitive admin actions.
+  // totpSecret is encrypted at rest (lib/crypto); totpEnabledAt set once confirmed.
+  totpSecret    String?
+  totpEnabledAt DateTime?
+
   // Discord link
   discordId     String?   @unique
   discordUsername String?
