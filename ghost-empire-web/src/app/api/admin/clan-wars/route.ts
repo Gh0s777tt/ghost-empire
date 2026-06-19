@@ -88,6 +88,32 @@ export async function POST(req: Request) {
         await tx.clan.update({ where: { id: winner.id }, data: { treasury: { increment: war.prizePool } } });
       }
     });
+
+    // Trophy notification to every member of the winning clan. Best-effort and
+    // OUTSIDE the transaction: a notification failure must never undo the recorded
+    // result or the prize award above.
+    if (winner) {
+      try {
+        const members = await prisma.user.findMany({ where: { clanId: winner.id }, select: { id: true } });
+        if (members.length > 0) {
+          const pts = (winner.warPoints ?? 0).toLocaleString("pl-PL");
+          const message = war.prizePool > 0
+            ? `[${winner.tag}] zwycięża z ${pts} pkt — +${war.prizePool.toLocaleString("pl-PL")} GT do skarbca klanu!`
+            : `[${winner.tag}] zwycięża z ${pts} pkt!`;
+          await prisma.notification.createMany({
+            data: members.map((m) => ({
+              userId: m.id,
+              type: "event_win",
+              title: "🏆 Wygrana wojna klanów!",
+              message,
+              icon: "🏆",
+              link: "/clans",
+            })),
+          });
+        }
+      } catch { /* notifications are best-effort */ }
+    }
+
     return NextResponse.json({ ok: true, winnerTag: winner?.tag ?? null, prize: war.prizePool });
   }
 
