@@ -78,7 +78,9 @@ model PortalFollow {
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String?   @unique
+  // Per-tenant identity (Stage C, #511): email is unique PER PORTAL, not globally —
+  // the same person reuses one email across portals. See @@unique([email, tenantId]).
+  email         String?
   emailVerified DateTime?
   image         String?
 
@@ -176,6 +178,9 @@ model User {
   @@index([tenantId])
   @@index([clanId])
   @@index([referredById])
+  // Per-tenant identity (Stage C, #511): email unique within a portal, not globally.
+  // (username stays globally @unique — its sign-in collision handler covers dups.)
+  @@unique([email, tenantId])
   @@map("users")
 }
 
@@ -280,9 +285,9 @@ model Account {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Stage A keeps the GLOBAL unique (behavior unchanged). Stage C replaces it with
-  // @@unique([provider, providerAccountId, tenantId]) — see docs/PER-TENANT-IDENTITY.md.
-  @@unique([provider, providerAccountId])
+  // Stage C (#511): per-tenant — one provider identity links once PER portal. The
+  // tenant-aware adapter (lib/auth-adapter.ts) scopes lookups by tenantId.
+  @@unique([provider, providerAccountId, tenantId])
   @@index([tenantId])
   @@map("accounts")
 }

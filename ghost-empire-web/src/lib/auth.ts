@@ -4,14 +4,13 @@
 // AUTH_SECRET, falling back to NEXTAUTH_SECRET so the existing env (and the
 // crypto.ts encryption key derived from it) keep working unchanged.
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { tenantAwarePrismaAdapter } from "@/lib/auth-adapter";
 import TwitchProvider from "next-auth/providers/twitch";
 import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
 import { currentTenantId } from "@/lib/tenant";
-import type { Adapter } from "next-auth/adapters";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers";
 import { cookies } from "next/headers";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -143,7 +142,9 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma) as Adapter,
+  // Tenant-aware adapter (#511): same provider identity → a SEPARATE User per portal.
+  // Scopes account/email lookups by the current tenant; see lib/auth-adapter.ts.
+  adapter: tenantAwarePrismaAdapter(),
 
   // Read AUTH_SECRET (v5 default) or fall back to the legacy NEXTAUTH_SECRET so no
   // env change is needed — crypto.ts derives its encryption key from the same value.

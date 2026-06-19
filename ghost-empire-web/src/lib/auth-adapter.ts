@@ -5,11 +5,10 @@
 // Kick/YouTube/Google) yields a SEPARATE User per portal. Everything else (sessions,
 // getUserById, updates) delegates to the base adapter unchanged.
 //
-// ⚠️ NOT wired into auth.ts yet. It is correct only once the Account unique is the
-// per-tenant composite (Stage C). With the Stage-A global unique still in place,
-// creating a second per-tenant account for an existing provider id would violate it,
-// so wiring happens together with the unique flip — never before. This module is
-// pre-positioned + unit-tested so Stage C is a small, reviewed switch.
+// Wired into auth.ts as of Stage C (#511), together with the Account unique flip to
+// [provider, providerAccountId, tenantId] and User.email → @@unique([email, tenantId]).
+// username stays globally unique (its sign-in collision handler already covers cross-
+// portal dups), so no username lookups had to change.
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter, AdapterUser, AdapterAccount } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma";
@@ -64,6 +63,16 @@ export function tenantAwarePrismaAdapter(): Adapter {
       return (user as unknown as AdapterUser) ?? null;
     },
 
+    // READ: account existence check used by the linking flow — tenant-scope it for the
+    // same reason as getUserByAccount, so it never reports another portal's link.
+    async getAccount(providerAccountId, provider) {
+      const tid = await currentTenantId();
+      const account = await prisma.account.findFirst({
+        where: accountWhere(provider, providerAccountId, tid),
+      });
+      return (account as AdapterAccount | null) ?? null;
+    },
+
     // WRITE: delegate the insert to the base adapter (keeps its field handling), then
     // stamp the tenant before returning — so the row is tenant-scoped from creation,
     // before the createUser event or any follow-up read runs.
@@ -94,6 +103,16 @@ export function tenantAwarePrismaAdapter(): Adapter {
           .catch(() => {/* best-effort — the next login self-heals via getUserByAccount */});
       }
       return linked as AdapterAccount;
+    },
+
+    // WRITE: the base unlinkAccount deletes via the OLD `provider_providerAccountId`
+    // compound key, which no longer exists after the Stage-C composite flip. Override
+    // to delete the current tenant's matching link by id (tenant-scoped, no stale key).
+    async unlinkAccount({ provider, providerAccountId }) {
+      const tid = await currentTenantId();
+      await prisma.account.deleteMany({
+        where: { provider, providerAccountId, ...(tid ? { tenantId: tid } : {}) },
+      });
     },
   };
 }

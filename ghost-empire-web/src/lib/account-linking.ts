@@ -9,6 +9,7 @@
 // Signed with NEXTAUTH_SECRET; expires in 5 minutes; one-shot (cleared after read).
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("link");
@@ -118,8 +119,11 @@ export async function executeAccountLink(opts: {
   const target = await prisma.user.findUnique({ where: { id: targetUserId } });
   if (!target) return { kind: "conflict", reason: "target_missing" };
 
-  const accountRow = await prisma.account.findUnique({
-    where: { provider_providerAccountId: { provider, providerAccountId } },
+  // Per-tenant identity (#511): the provider id is no longer globally unique — scope
+  // to the current portal so we resolve the account just created in THIS tenant's flow.
+  const tid = await currentTenantId();
+  const accountRow = await prisma.account.findFirst({
+    where: { provider, providerAccountId, ...(tid ? { tenantId: tid } : {}) },
   });
   if (!accountRow) return { kind: "conflict", reason: "internal" };
 
