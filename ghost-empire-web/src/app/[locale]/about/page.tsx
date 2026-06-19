@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import {
   ShoppingBag, Trophy, Calendar, Award,
-  Zap, Sparkles, ArrowRight, Dice5, Ticket,
+  Zap, Sparkles, ArrowRight, Dice5, Ticket, Rocket,
 } from "lucide-react";
 import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
 import { ChangelogList } from "@/components/ChangelogList";
@@ -905,6 +905,17 @@ export default async function AboutPage() {
               {t("backToPortal")} <ArrowRight className="w-4 h-4" />
             </Link>
           )}
+
+          {/* Secondary, can't-miss CTA: start your own white-label portal */}
+          <div className="mt-5">
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-red-600 text-red-300 hover:bg-red-600 hover:text-white font-bold text-sm tracking-widest uppercase transition-all"
+            >
+              <Rocket className="w-4 h-4" /> {t("launchPortalCta")}
+            </Link>
+            <p className="text-zinc-600 text-xs mt-2">{t("launchPortalSub")}</p>
+          </div>
 
           {/* Compact social row under hero */}
           <div className="mt-8">
