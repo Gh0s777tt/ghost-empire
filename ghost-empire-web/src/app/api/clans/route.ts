@@ -45,7 +45,7 @@ export async function GET() {
   if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
   const tid = await currentTenantId();
 
-  const [mine, top, war] = await Promise.all([
+  const [mine, top, war, history] = await Promise.all([
     loadMyClan(session.user.id),
     prisma.clan.findMany({
       where: tid ? { tenantId: tid } : {},
@@ -54,6 +54,13 @@ export async function GET() {
       select: { id: true, name: true, tag: true, treasury: true, _count: { select: { members: true } } },
     }),
     prisma.clanWar.findFirst({ where: { status: "active", ...(tid ? { tenantId: tid } : {}) }, orderBy: { startsAt: "desc" } }),
+    // Hall of Fame: the most recent decided wars (those that crowned a winner).
+    prisma.clanWar.findMany({
+      where: { status: "ended", winnerTag: { not: null }, ...(tid ? { tenantId: tid } : {}) },
+      orderBy: { endsAt: "desc" },
+      take: 5,
+      select: { id: true, name: true, startsAt: true, endsAt: true, winnerTag: true, winnerPoints: true, prizePool: true },
+    }),
   ]);
 
   // War standings (top clans by warPoints) — only while a war is actually live.
@@ -77,6 +84,15 @@ export async function GET() {
       prizePool: war.prizePool,
       standings: warStandings.map((c) => ({ id: c.id, tag: c.tag, name: c.name, points: c.warPoints })),
     } : null,
+    warHistory: history.map((w) => ({
+      id: w.id,
+      name: w.name,
+      startsAt: w.startsAt.toISOString(),
+      endsAt: w.endsAt.toISOString(),
+      winnerTag: w.winnerTag,
+      winnerPoints: w.winnerPoints ?? 0,
+      prizePool: w.prizePool,
+    })),
   });
 }
 

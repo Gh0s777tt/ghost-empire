@@ -3,20 +3,22 @@
 // Clans/teams — found or join a clan, pour GT into the shared treasury (a sink),
 // and climb the treasury leaderboard. Data + actions via /api/clans.
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, Crown, Users, LogOut, Plus, Coins, Swords } from "lucide-react";
+import { Loader2, Crown, Users, LogOut, Plus, Coins, Swords, Trophy } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { TAG_MAX, NAME_MAX, normalizeClanTag } from "@/lib/clans";
+import { warDurationDays } from "@/lib/clan-wars";
 
 type Member = { id: string; username: string | null; displayName: string | null; image: string | null; level: number; clanRole: string | null };
 type MyClan = { id: string; name: string; tag: string; treasury: number; ownerUserId: string; members: Member[] };
 type LeaderRow = { id: string; name: string; tag: string; treasury: number; members: number };
 type WarStanding = { id: string; tag: string; name: string; points: number };
 type ClanWar = { name: string; endsAt: string; prizePool: number; standings: WarStanding[] };
-type ClansData = { myClan: MyClan | null; balance: number; createCost: number; leaderboard: LeaderRow[]; war: ClanWar | null };
+type WarHistoryRow = { id: string; name: string; startsAt: string; endsAt: string; winnerTag: string | null; winnerPoints: number; prizePool: number };
+type ClansData = { myClan: MyClan | null; balance: number; createCost: number; leaderboard: LeaderRow[]; war: ClanWar | null; warHistory: WarHistoryRow[] };
 
 /** "ends in 2d 3h" style label from an ISO endsAt; localized via the clans namespace. */
 function warEndsLabel(endsAt: string, t: (k: string, v?: Record<string, number>) => string): string {
@@ -230,6 +232,32 @@ export function ClansPageClient({ isAuthenticated }: { isAuthenticated: boolean 
               </div>
             )}
           </div>
+
+          {data.warHistory.length > 0 && (
+            <div>
+              <div className="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-2 inline-flex items-center gap-1.5">
+                <Trophy className="w-3.5 h-3.5 text-amber-400" /> {t("hofTitle")}
+              </div>
+              <div className="space-y-1">
+                {data.warHistory.map((w, i) => (
+                  <div key={w.id} className={`flex items-center gap-2.5 px-3 py-2 rounded border ${i === 0 ? "border-amber-700/60 bg-amber-950/15" : "border-zinc-900 bg-black/20"}`}>
+                    <Trophy className={`w-3.5 h-3.5 shrink-0 ${i === 0 ? "text-amber-400" : "text-zinc-600"}`} />
+                    <span className="px-1.5 py-0.5 rounded bg-white/5 text-[11px] font-mono font-bold shrink-0" style={{ color: "var(--brand)" }}>{w.winnerTag}</span>
+                    <span className="text-sm text-zinc-200 truncate flex-1 leading-tight">
+                      {w.name}
+                      <span className="block text-[10px] text-zinc-600 font-mono">
+                        {new Date(w.endsAt).toLocaleDateString(nf, { day: "numeric", month: "short", year: "numeric" })} · {t("hofDuration", { d: warDurationDays(w.startsAt, w.endsAt) })}
+                      </span>
+                    </span>
+                    <span className="text-right shrink-0">
+                      <span className="block text-[11px] font-mono text-amber-300 tabular-nums">{w.prizePool.toLocaleString(nf)} {sym}</span>
+                      <span className="block text-[10px] text-zinc-600 font-mono">{t("hofPoints", { n: w.winnerPoints.toLocaleString(nf) })}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

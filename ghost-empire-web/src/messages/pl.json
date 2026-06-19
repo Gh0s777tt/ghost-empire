@@ -2263,7 +2263,10 @@
     "warHint": "Twoje wpłaty liczą się zarówno do skarbca, jak i do punktów wojny klanu.",
     "warEnding": "kończy się…",
     "warEndsD": "koniec za {d}d {h}h",
-    "warEndsH": "koniec za {h}h"
+    "warEndsH": "koniec za {h}h",
+    "hofTitle": "Galeria sław wojen",
+    "hofDuration": "wojna {d}d",
+    "hofPoints": "{n} pkt"
   },
   "wheel": {
     "help": "Koło Fortuny: zakręć za %tokenName% i wygraj jedną z nagród ustawionych przez streamera. Koszt zakręcenia widać przy przycisku, wynik losuje serwer.",
