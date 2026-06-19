@@ -403,3 +403,22 @@
     animation: none !important;
   }
 }
+
+/* =========================================================
+   ACCESSIBILITY — respect the "increase contrast" preference
+   Mirrors the reduced-motion handling above. Users who enable high contrast
+   at the OS level get brighter muted text and visible borders, so the dim
+   greys and red-on-black (≈4.4:1 — a hair under WCAG AA for normal text)
+   clear AA. The whole app is dark-themed (text always sits on black/zinc-950),
+   so brightening is always the right direction. Additive ONLY — the default
+   rendering is completely unchanged.
+   ========================================================= */
+@media (prefers-contrast: more) {
+  .text-zinc-500 { color: #e4e4e7 !important; } /* zinc-200 — ~14:1 on black */
+  .text-zinc-600 { color: #d4d4d8 !important; } /* zinc-300 */
+  .text-zinc-700 { color: #a1a1aa !important; } /* zinc-400 — ~8:1 */
+  .text-red-600,
+  .text-red-700 { color: #f87171 !important; }  /* red-400 — ~6:1, clears AA */
+  .border-zinc-800,
+  .border-zinc-900 { border-color: #71717a !important; } /* zinc-500 — perceivable */
+}
