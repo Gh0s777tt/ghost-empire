@@ -813,6 +813,10 @@
         "clan-war": {
           "name": "Live Clan War",
           "desc": "Shows the live clan war on stream — top clans by war points, prize pool and a countdown. Hidden when no war is running."
+        },
+        "support-qr": {
+          "name": "Support QR carousel",
+          "desc": "Rotates a scannable QR for each of your support/tip methods (from /admin#payments) — one on screen at a time, every ~10s. Drop one source in for the whole stream."
         }
       },
       "prevAlertTitle": "New sub!",

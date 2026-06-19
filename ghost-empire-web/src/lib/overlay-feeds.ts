@@ -16,6 +16,8 @@ import { companionStage } from "@/lib/companion";
 import { isWarLive } from "@/lib/clan-wars";
 import { cacheJson } from "@/lib/redis";
 import { getLiveStatus } from "@/lib/live-status";
+import QRCode from "qrcode";
+import { cryptoUri, sepaQrPayload } from "@/lib/payment-methods";
 
 export type OverlayFeedKey =
   | "goals"
@@ -31,7 +33,8 @@ export type OverlayFeedKey =
   | "viewers"
   | "companion"
   | "clan"
-  | "clan-war";
+  | "clan-war"
+  | "support-qr";
 
 export type OverlayFeedDef = {
   /**
@@ -373,6 +376,30 @@ async function clanWarFeed(_p: URLSearchParams, tid: string | null): Promise<unk
   };
 }
 
+// Support-QR carousel: the tenant's active real-money methods (#514) as scannable
+// QR codes, one rotated on screen at a time (rotation is client-side). QRs are
+// generated server-side here and cached via shared() — they only change when the
+// streamer edits a method, so a long interval is fine.
+async function supportQrFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const methods = await prisma.paymentMethod
+    .findMany({ where: { active: true, ...tidWhere(tid) }, orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }] })
+    .catch(() => []);
+  const items = await Promise.all(
+    methods.map(async (m) => {
+      const data =
+        m.kind === "crypto" ? cryptoUri(m.network, m.value)
+        : m.kind === "bank" ? sepaQrPayload(m.network ?? "", m.value)
+        : m.value;
+      let qr: string | null = null;
+      try {
+        qr = await QRCode.toDataURL(data, { margin: 1, width: 420, color: { dark: "#0a0a0a", light: "#ffffff" } });
+      } catch { /* skip an un-encodable value */ }
+      return { kind: m.kind, label: m.label, network: m.network, icon: m.icon, qr };
+    }),
+  );
+  return { items: items.filter((i) => i.qr) };
+}
+
 /**
  * Wrap a producer so that all OBS connections to the SAME feed+tenant share ONE
  * execution per tick instead of each running its own DB query loop. TTL =
@@ -403,6 +430,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   companion: shared("companion", { producer: companionFeed, intervalMs: 8000 }),
   clan: shared("clan", { producer: clanFeed, intervalMs: 10000 }),
   "clan-war": shared("clan-war", { producer: clanWarFeed, intervalMs: 5000 }),
+  "support-qr": shared("support-qr", { producer: supportQrFeed, intervalMs: 30000 }), // QRs are static — refresh slowly
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };
 

@@ -103,6 +103,7 @@ const WIDGET_META: WidgetMeta[] = [
   { id: "companion",    path: "/overlay/companion",   size: "360×140" },
   { id: "clan",         path: "/overlay/clan",        size: "360×140" },
   { id: "clan-war",     path: "/overlay/clan-war",    size: "380×260" },
+  { id: "support-qr",   path: "/overlay/support-qr",  size: "300×360" },
 ];
 
 export function WidgetsLibrary({
