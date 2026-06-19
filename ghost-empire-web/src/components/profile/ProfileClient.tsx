@@ -17,6 +17,7 @@ import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscountFraction } from "@/lib/economy";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { apiPost, ApiError } from "@/lib/api-client";
+import { ReferralCard } from "./ReferralCard";
 
 type Achievement = {
   id: string;
@@ -394,6 +395,9 @@ export function ProfileClient({
           })}
         </div>
       </SectionCard>
+
+      {/* Invite a friend — referral loop */}
+      <ReferralCard />
 
       {/* Transaction history */}
       <SectionCard

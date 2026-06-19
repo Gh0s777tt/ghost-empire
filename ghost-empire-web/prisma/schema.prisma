@@ -68,6 +68,10 @@ model User {
   totalEarned   Int       @default(0)
   totalSpent    Int       @default(0)
 
+  // Referrals — own shareable code + who invited this user (set once on claim)
+  referralCode  String?   @unique
+  referredById  String?
+
   // Progression
   level         Int       @default(1)
   xp            Int       @default(0)
@@ -145,6 +149,7 @@ model User {
   @@index([streak])
   @@index([tenantId])
   @@index([clanId])
+  @@index([referredById])
   @@map("users")
 }
 
