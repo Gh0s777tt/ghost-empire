@@ -78,11 +78,36 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   return deliver(subs, payload);
 }
 
-/** Push to every subscriber of a tenant/portal (null = legacy/founder rows). No-op when dormant. */
+/**
+ * Push to every subscriber of ONE tenant/portal. `null` targets the legacy/founder
+ * rows (tenantId IS NULL) — NOT every tenant — so one portal's event never leaks to
+ * another's subscribers. No-op when dormant.
+ */
 export async function sendPushToTenant(tenantId: string | null, payload: PushPayload): Promise<{ sent: number; pruned: number }> {
   if (!ensureConfigured()) return { sent: 0, pruned: 0 };
   const subs = await prisma.pushSubscription
-    .findMany({ where: tenantId ? { tenantId } : {}, select: { endpoint: true, p256dh: true, auth: true } })
+    .findMany({ where: { tenantId }, select: { endpoint: true, p256dh: true, auth: true } })
     .catch(() => []);
   return deliver(subs, payload);
+}
+
+/**
+ * "Stream is live" push to a portal's subscribers (#534). Dormant-safe and never
+ * throws, so callers (the Twitch EventSub webhook) can await it without risk. The
+ * `stream-live` tag collapses repeat notifications. Text is an English default for
+ * now — a per-tenant custom message is a future enhancement.
+ */
+export async function notifyStreamLive(tenantId: string | null): Promise<{ sent: number; pruned: number }> {
+  if (!isPushConfigured()) return { sent: 0, pruned: 0 };
+  let name = "GH0ST EMPIRE";
+  if (tenantId) {
+    const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, ownerHandle: true } }).catch(() => null);
+    name = t?.ownerHandle || t?.name || name;
+  }
+  return sendPushToTenant(tenantId, {
+    title: `🔴 ${name} is live!`,
+    body: "Tap to watch the stream.",
+    url: "/",
+    tag: "stream-live",
+  });
 }

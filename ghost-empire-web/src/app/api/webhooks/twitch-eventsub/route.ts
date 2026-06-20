@@ -5,6 +5,7 @@
 //   - "notification" — actual event payload
 //   - "revocation" — Twitch tells us they removed a subscription
 import { NextResponse } from "next/server";
+import { notifyStreamLive } from "@/lib/web-push";
 import { prisma } from "@/lib/prisma";
 import { verifyEventSubSignature, isMessageFresh } from "@/lib/twitch";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -164,7 +165,7 @@ export async function POST(req: Request) {
     } else if (eventType === "channel.hype_train.end") {
       await handleHypeTrainEnd(event, tenantId);
     } else if (eventType === "stream.online") {
-      await handleStreamOnline(event);
+      await handleStreamOnline(event, tenantId);
     } else if (eventType === "stream.offline") {
       await handleStreamOffline();
     } else if (eventType === "channel.follow") {
@@ -516,7 +517,7 @@ async function closeOpenStreamSessions(endedAt: Date): Promise<void> {
   }
 }
 
-async function handleStreamOnline(event: Record<string, unknown>): Promise<void> {
+async function handleStreamOnline(event: Record<string, unknown>, tenantId: string | null): Promise<void> {
   const streamId = (event.id as string | undefined) ?? null;
   const startedAt = parseDate(event.started_at as string | undefined) ?? new Date();
   // Idempotent — Twitch may redeliver the same stream.online.
@@ -528,6 +529,10 @@ async function handleStreamOnline(event: Record<string, unknown>): Promise<void>
   await closeOpenStreamSessions(startedAt);
   await prisma.streamSession.create({ data: { platform: "twitch", twitchStreamId: streamId, startedAt } });
   log.info("stream online", { streamId, startedAt: startedAt.toISOString() });
+  // Fire the "LIVE now" web push exactly once per stream (we're past the idempotency
+  // guard). Best-effort + dormant-safe — never throws, never blocks beyond the small
+  // subscriber fan-out.
+  await notifyStreamLive(tenantId);
 }
 
 async function handleStreamOffline(): Promise<void> {
