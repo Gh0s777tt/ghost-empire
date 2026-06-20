@@ -17,6 +17,7 @@ import type { ComponentType, CSSProperties } from "react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { Link } from "@/i18n/navigation";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
+import { countryFlag } from "@/lib/countries";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP } from "@/lib/economy";
 import { companionStage } from "@/lib/companion";
 
@@ -109,6 +110,7 @@ export default async function PublicProfilePage({
       displayName: true,
       image: true,
       bio: true,
+      country: true,
       // Public stats only
       level: true,
       xp: true,
@@ -239,6 +241,9 @@ export default async function PublicProfilePage({
                   >
                     {displayNick(user.displayName, user.username)}
                   </h1>
+                  {countryFlag(user.country) && (
+                    <span className="text-2xl leading-none" title={user.country ?? ""} aria-label={user.country ?? ""}>{countryFlag(user.country)}</span>
+                  )}
                   {user.isAdmin && (
                     <span className="text-[10px] font-bold tracking-widest uppercase border border-red-500 bg-red-600/15 text-red-300 px-2 py-0.5 flex items-center gap-1">
                       <Crown className="w-2.5 h-2.5" /> ADMIN

@@ -1905,6 +1905,8 @@
     "usernameUnset": "unset",
     "prestigeTitle": "Prestiż {n} — Phantom Ascension",
     "joined": "Od {date}",
+    "countryLabel": "Kraj",
+    "countryNone": "🌍 Kraj",
     "xpToPrestige": "XP do prestiżu ✦{n}",
     "xpToLevel": "XP do LVL {n}",
     "xpTotalMax": "Łącznie {xp} XP · max LVL osiągnięty — XP buduje teraz prestiż ✦",

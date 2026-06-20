@@ -31,6 +31,7 @@ export default async function ProfilePage() {
           username: true,
           displayName: true,
           bio: true,
+          country: true,
           image: true,
           tokens: true,
           totalEarned: true,
