@@ -752,7 +752,7 @@
         },
         "chat": {
           "name": "Chat na ekranie",
-          "desc": "Wiadomości z czatu (Twitch / Kick / YouTube), kolor per platforma."
+          "desc": "Wiadomości z czatu (Twitch / Kick / YouTube), kolor per platforma. Wskazówka: dopisz ?translate=pl (albo en, de, …) do URL, by AI tłumaczyło obce wiadomości pod każdą linią (wymaga klucza AI w /admin#integrations)."
         },
         "goals": {
           "name": "Stream Goals",

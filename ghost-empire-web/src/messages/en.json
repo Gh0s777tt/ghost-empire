@@ -752,7 +752,7 @@
         },
         "chat": {
           "name": "Chat on screen",
-          "desc": "Chat messages (Twitch / Kick / YouTube), color per platform."
+          "desc": "Chat messages (Twitch / Kick / YouTube), color per platform. Tip: append ?translate=en (or pl, de, …) to the URL to AI-translate foreign messages under each line (needs an AI key in /admin#integrations)."
         },
         "goals": {
           "name": "Stream Goals",

@@ -179,6 +179,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/alerts/queue` | `/overlay` (alerty) — polling **fallback** |
 | `…/api/alerts/<feed>` | polling **fallback** pozostałych overlayów (`goals`/`chat`/`subathon`/`wheel`/`rumble`/`polls`/`predictions`/`recent-events`/`emoji-combo`/`widget`/`viewers`) — ten sam payload co SSE |
 | `…/api/chat/assets` | `/overlay/chat` (odznaki Twitch + emotki 7TV/BTTV/FFZ) |
+| `…/api/chat/translate` | POST — tłumaczenie AI wiadomości czatu (#547, overlay `?translate=`, rate-limit + cache, uśpione bez klucza AI) |
 | `…/api/codes/current` | `/overlay/codes` (rotacja kodów — bez SSE) |
 
 ## Webhooki / polling / cron (public + własny podpis)
