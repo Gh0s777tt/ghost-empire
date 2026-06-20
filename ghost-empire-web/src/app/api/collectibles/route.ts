@@ -10,8 +10,8 @@ import { PACK_PRICE } from "@/lib/collectibles";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await auth();
-  const tid = await currentTenantId();
+  // Independent reads — run them together instead of serially on the 3-connection pool. #audit-v2
+  const [session, tid] = await Promise.all([auth(), currentTenantId()]);
 
   const cards = await prisma.collectible
     .findMany({

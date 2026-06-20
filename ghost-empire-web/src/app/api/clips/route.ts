@@ -13,8 +13,8 @@ import { getRecentClips, isoWeekKey } from "@/lib/twitch-clips";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await auth();
-  const tid = await currentTenantId();
+  // Independent reads — run them together instead of serially on the 3-connection pool. #audit-v2
+  const [session, tid] = await Promise.all([auth(), currentTenantId()]);
   const week = isoWeekKey(new Date());
   const clips = await getRecentClips(tid);
 

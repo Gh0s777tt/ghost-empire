@@ -9,6 +9,9 @@ import { fmt, rankForLevel, displayNick } from "@/lib/utils";
 export const alt = "Ghost Empire — User Profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+// Profile OG cards tolerate staleness — cache 10 min so each social-scrape/crawl doesn't
+// re-run a Prisma read + Satori PNG render. #audit-v2 perf
+export const revalidate = 600;
 
 export default async function Image({
   params,
