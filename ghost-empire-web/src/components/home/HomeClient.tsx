@@ -463,17 +463,26 @@ function StatBox({ icon, label, value, accent = false }: { icon: string; label: 
 function DailyTaskCard({ userTask }: { userTask: HomeUserTask }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
+  const router = useRouter();
   const { task, progress, claimed } = userTask;
   const pct = Math.min((progress / task.target) * 100, 100);
   const ready = progress >= task.target && !claimed;
+  const [busy, setBusy] = useState(false);
 
+  // Check the response (a failed claim used to look identical to success) and do a soft
+  // router.refresh() instead of a full window reload; on failure re-enable for a retry. #audit-v2
   const handleClaim = async () => {
-    await fetch("/api/tasks/claim", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ taskId: task.id }),
-    });
-    window.location.reload();
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/tasks/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId: task.id }),
+      });
+      if (res.ok) { router.refresh(); return; }
+    } catch { /* fall through to re-enable */ }
+    setBusy(false);
   };
 
   return (
@@ -505,7 +514,8 @@ function DailyTaskCard({ userTask }: { userTask: HomeUserTask }) {
         ) : ready ? (
           <button
             onClick={handleClaim}
-            className="text-[10px] font-bold tracking-wider text-red-400 hover:text-red-300 px-2 py-0.5 border border-red-500/50 hover:border-red-500 transition-all"
+            disabled={busy}
+            className="text-[10px] font-bold tracking-wider text-red-400 hover:text-red-300 px-2 py-0.5 border border-red-500/50 hover:border-red-500 transition-all disabled:opacity-50"
           >
             {t("taskClaim")}
           </button>
