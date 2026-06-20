@@ -163,6 +163,7 @@ model User {
   triviaAnswers    TriviaAnswer[]
   pushSubscriptions PushSubscription[]
   passkeys         Passkey[]
+  collectibles     UserCollectible[]
   wheelSpins       WheelSpin[]
   gtGamePlays      GtGamePlay[]
   duelsChallenged  Duel[]            @relation("DuelChallenger")
@@ -1706,6 +1707,45 @@ model OverlayScene {
 
   @@index([tenantId])
   @@map("overlay_scenes")
+}
+
+// =====================================================
+// COLLECTIBLES (#551) — per-portal trading cards. Earned from GT "packs"; the
+// tradeable asset that the P2P marketplace (#552) sits on top of. Per-tenant catalog
+// + per-user ownership (qty). Additive.
+// =====================================================
+model Collectible {
+  id          String  @id @default(cuid())
+  tenantId    String?
+  name        String
+  description String? @db.Text
+  rarity      String  @default("common") // common | rare | epic | legendary
+  emoji       String? @default("🃏")
+  imageUrl    String? @db.Text
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+  createdAt   DateTime @default(now())
+
+  owners UserCollectible[]
+
+  @@index([tenantId, active])
+  @@map("collectibles")
+}
+
+model UserCollectible {
+  id            String   @id @default(cuid())
+  userId        String
+  collectibleId String
+  qty           Int      @default(1)
+  acquiredAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collectible Collectible @relation(fields: [collectibleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collectibleId])
+  @@index([userId])
+  @@index([collectibleId])
+  @@map("user_collectibles")
 }
 
 // =====================================================

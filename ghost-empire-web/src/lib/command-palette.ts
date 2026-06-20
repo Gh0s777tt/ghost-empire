@@ -15,6 +15,7 @@ export const COMMANDS: Command[] = [
   { id: "seasons", href: "/seasons", labelKey: "seasons", keywords: "season battle pass przepustka sezon" },
   { id: "clans", href: "/clans", labelKey: "clans", keywords: "clans guild klany gildia" },
   { id: "clips", href: "/clips", labelKey: "clips", keywords: "clips clip of the week klipy klip tygodnia" },
+  { id: "collectibles", href: "/collectibles", labelKey: "collectibles", keywords: "collectibles cards packs karty kolekcjonerskie paczki kolekcja" },
   { id: "trivia", href: "/trivia", labelKey: "trivia", keywords: "trivia quiz pytania" },
   { id: "wheel", href: "/wheel", labelKey: "wheel", keywords: "wheel fortune koło fortuny" },
   { id: "casino", href: "/kasyno", labelKey: "casino", keywords: "casino kasyno gry hazard slots dice" },
