@@ -107,13 +107,28 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 8. Jakość i deploy
 
-- **CI** (GitHub Actions): job `quality` = `tsc --noEmit` + `eslint` + `vitest run` + `npm audit` (nieblokujący); job `integration · postgres` = `vitest run` przeciw **realnemu Postgresowi** (service container) na ścieżkach money-critical. Testy: czysta logika w `src/lib/__tests__` (111 unit) + integracyjne w `tests/integration` (11, real DB).
+- **CI** (GitHub Actions): job `quality` = `tsc --noEmit` + `eslint` + `vitest run` + `npm audit` (nieblokujący); job `integration · postgres` = `vitest run` przeciw **realnemu Postgresowi** (service container) na ścieżkach money-critical. Testy: czysta logika w `src/lib/__tests__` (392 unit, 52 pliki) + integracyjne w `tests/integration` (11, real DB).
 - **Workflow zmian (żelazna zasada):** branch → edycja → typecheck/lint/test (+ `db push` przy zmianie schematu) → PR → squash-merge. **Dokumentacja (CHANGELOG · README · ROADMAP · PLAN · PHASE · docs/* · on-site `/about`) jest aktualizowana w TYM SAMYM PR co zmiana** — nigdy nie zostaje w tyle.
 - **Schemat:** Prisma `db push` (bez plików migracji) na Supabase; `prisma generate` regeneruje klienta.
 - Build (`next build`) po stronie Vercela (preview deploy na każdym pushu).
 
 ---
 
-## 9. Dokąd dalej
+## 9. Model danych — wybrane / najnowsze modele
+
+Schemat (`prisma/schema.prisma`) ma **~93 modele**; pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
+
+- **Karty + marketplace P2P:** `Collectible` / `UserCollectible` (katalog kart + kolekcja, paczki za GT, #551), `CardListing` (listingi P2P z escrow + 5% fee spalane, #552).
+- **Overlay + alerty:** `OverlayScene` (sceny wielowidżetowe → jedno źródło OBS, #550), `StreamAlertSettings` (ustawienia + auto-token overlaya, **per tenant 1:1**), `AlertTypeConfig` (styl/próg per typ alertu).
+- **Wsparcie / sponsorzy:** `PaymentMethod` (metody napiwków na `/support`, #514), `SupportGoal` (cel zbiórki, #519), `Sponsor` (partnerzy/loga, #538).
+- **Auth + powiadomienia:** `Passkey` (WebAuthn, #543/#544), `PushSubscription` (web push, #533), `TwitchEvent` (dedup/idempotencja EventSub po `eventId`).
+- **Zaangażowanie / społeczność:** `Companion` (Ghost Companion, xp), `Clan` + `ClanWar` (klany + wojny, #477), `ClipVote` (klip tygodnia, #502), `TriviaQuestion` / `TriviaAnswer` (#523), `SoundReward` (GT→dźwięki, #505), `DailyTask` / `UserTask` (questy), `StreamSession` (analityka „czas na streamie").
+- **SaaS:** `Tenant` (portal: branding/plan/owner-handle; founder = tenant domyślny).
+
+> Indeksy: hot-pathy tenant-scoped mają composite indexy (`[tenantId, …]`) dobrane pod realne zapytania (rankingi klanów/companionów, alerty wg typu, kolekcja); `Transaction.externalId @unique` służy idempotencji (donacje + daily-bonus). Zmiana schematu = additive `prisma db push` (bez plików migracji).
+
+---
+
+## 10. Dokąd dalej
 
 Plany i pomysły: [ROADMAP.md](../ROADMAP.md). Co zrobione: [CHANGELOG.md](../CHANGELOG.md). Zmienne: [ENV.md](ENV.md). API: [ENDPOINTS.md](ENDPOINTS.md). Uprawnienia: [PERMISSIONS.md](../PERMISSIONS.md). Fazy: [PHASE2.md](../PHASE2.md) / [PHASE3.md](../PHASE3.md).
