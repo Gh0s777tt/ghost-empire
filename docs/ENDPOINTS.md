@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **152** tras
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **154** tras
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -68,6 +68,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/profile/social-click` | POST | Licznik klików linku społ. (#542 — beacon z `/u/<nick>`, rate-limit per IP) |
 | `…/api/auth/passkey` | GET/DELETE | Lista / usunięcie passkeys użytkownika (#543) |
 | `…/api/auth/passkey/register/options` · `…/verify` | POST | Ceremonia rejestracji passkey (WebAuthn, #543) |
+| `…/api/auth/passkey/login/options` · `…/verify` | POST | Logowanie passkey (#544 — bez auth; verify tworzy sesję DB + cookie) |
 
 ## Kasyno GT (`gt-games`) — session, bramka planu `casino`
 > Mini-gry GT na stronie (`/kasyno`). Akcje gry: **session** + `featureGate("casino")` (403 gdy plan tenanta < pro). Odczyty puli/rankingu — **public**.

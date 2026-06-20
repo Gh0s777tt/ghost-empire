@@ -3,6 +3,7 @@
 import { signIn, getProviders } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { startAuthentication } from "@simplewebauthn/browser";
 import { Link } from "@/i18n/navigation";
 import { useTenantBranding } from "@/components/TenantBranding";
 
@@ -32,6 +33,8 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
+  const [pkSupported, setPkSupported] = useState(false);
+  const [pkBusy, setPkBusy] = useState(false);
 
   const errorMessages: Record<string, string> = {
     OAuthSignin: t("errOAuthSignin"),
@@ -41,6 +44,7 @@ export default function SignInPage() {
     OAuthAccountNotLinked: t("errOAuthAccountNotLinked"),
     AccessDenied: t("errAccessDenied"),
     Configuration: t("errConfiguration"),
+    PasskeyFailed: t("errPasskeyFailed"),
   };
   const providerDesc: Record<string, string> = {
     twitch: t("descTwitch"),
@@ -53,6 +57,7 @@ export default function SignInPage() {
   useEffect(() => {
     getProviders().then(setProviders);
     setOrigin(window.location.origin);
+    setPkSupported(typeof window !== "undefined" && !!window.PublicKeyCredential);
     // NextAuth redirects back with ?error=<code> when an OAuth attempt fails.
     const e = new URLSearchParams(window.location.search).get("error");
     if (e) setError(e);
@@ -61,6 +66,29 @@ export default function SignInPage() {
   const handleSignIn = async (providerId: string) => {
     setLoading(providerId);
     await signIn(providerId, { callbackUrl: "/" });
+  };
+
+  // Passwordless sign-in with a passkey (#544). Verifies via our own endpoints, which
+  // mint a session directly — OAuth above is untouched. A user-cancel is not an error.
+  const handlePasskey = async () => {
+    setPkBusy(true);
+    setError(null);
+    try {
+      const options = await fetch("/api/auth/passkey/login/options", { method: "POST" }).then((r) => r.json());
+      if (options.error) throw new Error(options.error);
+      const assertion = await startAuthentication(options);
+      const res = await fetch("/api/auth/passkey/login/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ response: assertion }),
+      }).then((r) => r.json());
+      if (!res.ok) throw new Error(res.error || "failed");
+      window.location.href = "/";
+    } catch (err) {
+      const name = (err as Error)?.name;
+      if (name !== "NotAllowedError" && name !== "AbortError") setError("PasskeyFailed");
+      setPkBusy(false);
+    }
   };
 
   return (
@@ -190,6 +218,26 @@ export default function SignInPage() {
                 );
               })}
           </div>
+
+          {/* Passwordless: sign in with a registered passkey (#544) */}
+          {pkSupported && (
+            <>
+              <div className="my-4 flex items-center gap-3 text-[10px] text-zinc-600 uppercase tracking-widest">
+                <span className="flex-1 h-px bg-zinc-800" /> {t("or")} <span className="flex-1 h-px bg-zinc-800" />
+              </div>
+              <button
+                onClick={handlePasskey}
+                disabled={pkBusy}
+                className="w-full p-4 border border-zinc-700 bg-black/30 text-start transition-all hover:border-zinc-500 disabled:opacity-50 disabled:cursor-wait flex items-center gap-4"
+              >
+                <span className="text-2xl">🔑</span>
+                <div className="flex-1">
+                  <div className="font-bold text-white font-mono">{pkBusy ? t("connecting") : t("passkey")}</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">{t("passkeyDesc")}</div>
+                </div>
+              </button>
+            </>
+          )}
 
           {/* Features list */}
           <div className="mt-8 pt-6 border-t border-zinc-800">
