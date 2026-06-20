@@ -226,6 +226,7 @@ model Companion {
   updatedAt DateTime  @updatedAt
 
   @@index([tenantId])
+  @@index([tenantId, xp]) // per-tenant companion leaderboard (ORDER BY xp DESC) #perf
   @@map("companions")
 }
 
@@ -248,6 +249,8 @@ model Clan {
   @@index([tenantId])
   @@index([treasury])
   @@index([warPoints])
+  @@index([tenantId, treasury]) // per-tenant clan ranking by treasury #perf
+  @@index([tenantId, warPoints]) // per-tenant clan-war ranking #perf
   @@map("clans")
 }
 
@@ -693,6 +696,7 @@ model StreamDrop {
   reward      Int
   bonusReward Int     @default(0)
   bonusSlots  Int     @default(10) // first N users get bonus
+  claimCount  Int     @default(0) // atomic ordinal — incremented in-tx per claim so exactly the first `bonusSlots` get the bonus (#audit-M4)
 
   active      Boolean   @default(true)
   expiresAt   DateTime?
@@ -1344,6 +1348,7 @@ model StreamAlert {
 
   @@index([createdAt])
   @@index([tenantId, createdAt])
+  @@index([tenantId, type, createdAt]) // recent/top supporters etc. (filter type, ORDER BY createdAt) #perf
   @@map("stream_alerts")
 }
 
@@ -1540,6 +1545,7 @@ model StreamGoal {
 
   @@index([type, active])
   @@index([tenantId])
+  @@index([tenantId, active]) // hot: active goals for a portal (incrementGoals, overlay feed) #perf
   @@map("stream_goals")
 }
 
@@ -1747,6 +1753,7 @@ model UserCollectible {
   @@unique([userId, collectibleId])
   @@index([userId])
   @@index([collectibleId])
+  @@index([userId, acquiredAt]) // owned cards newest-first (collection + /market picker) #perf
   @@map("user_collectibles")
 }
 

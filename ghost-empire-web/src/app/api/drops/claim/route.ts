@@ -48,18 +48,23 @@ export async function POST(req: Request) {
     return jsonError("Kod wygasł", 410);
   }
 
-  // Determine reward: first `bonusSlots` claimers get reward + bonusReward.
-  // Race window is acceptable for streaming use case (low concurrency, no money loss).
-  const existingClaims = await prisma.dropClaim.count({ where: { dropId: drop.id } });
-  const getsBonus = drop.bonusReward > 0 && existingClaims < drop.bonusSlots;
-  const totalReward = drop.reward + (getsBonus ? drop.bonusReward : 0);
-
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // Unique (dropId, userId) — throws P2002 if user already claimed
-      await tx.dropClaim.create({
-        data: { dropId: drop.id, userId, reward: totalReward },
+      // Reserve the claim FIRST — the unique (dropId, userId) throws P2002 on a repeat,
+      // rolling the whole tx back before we touch the counter. reward is backfilled below.
+      const claim = await tx.dropClaim.create({ data: { dropId: drop.id, userId, reward: 0 } });
+
+      // Atomic ordinal (#audit-M4): the row-locked increment serializes concurrent
+      // claimers, so exactly the first `bonusSlots` get an ordinal within range. The old
+      // out-of-tx count() let N racers all read 0 and all grab the bonus reward.
+      const { claimCount } = await tx.streamDrop.update({
+        where: { id: drop.id },
+        data: { claimCount: { increment: 1 } },
+        select: { claimCount: true },
       });
+      const getsBonus = drop.bonusReward > 0 && claimCount <= drop.bonusSlots;
+      const totalReward = drop.reward + (getsBonus ? drop.bonusReward : 0);
+      await tx.dropClaim.update({ where: { id: claim.id }, data: { reward: totalReward } });
 
       const updatedUser = await tx.user.update({
         where: { id: userId },
@@ -114,7 +119,7 @@ export async function POST(req: Request) {
         bonusReward: getsBonus ? drop.bonusReward : 0,
         totalReward,
         gotBonus: getsBonus,
-        bonusSlotsLeft: Math.max(0, drop.bonusSlots - existingClaims - 1),
+        bonusSlotsLeft: Math.max(0, drop.bonusSlots - claimCount),
         newBalance: updatedUser.tokens,
         _actor: {
           name: updatedUser.displayName || updatedUser.username || "Anon",
