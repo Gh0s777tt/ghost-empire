@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { currentTenantId } from "@/lib/tenant";
+import { notifyGoalReached } from "@/lib/web-push";
 import { logAdminAction } from "@/lib/audit";
 import { isPaymentKind, type PaymentKind } from "@/lib/payment-methods";
 
@@ -50,6 +51,11 @@ export async function POST(req: Request) {
     const currency = (String(body.currency ?? "PLN").trim().slice(0, 8) || "PLN").toUpperCase();
     const active = !!body.active;
     if (active && (!title || target < 1)) return NextResponse.json({ error: "Tytuł i cel (≥1) wymagane" }, { status: 400 });
+    // Previous collected amount, to detect crossing the target on this save (#535).
+    const prev = await (tid
+      ? prisma.supportGoal.findUnique({ where: { tenantId: tid }, select: { current: true } })
+      : prisma.supportGoal.findFirst({ select: { current: true } })
+    ).catch(() => null);
     const data = { title, target, current, currency, active };
     await prisma.supportGoal.upsert({
       where: { tenantId: tid ?? "__none__" },
@@ -60,6 +66,10 @@ export async function POST(req: Request) {
       if (first) await prisma.supportGoal.update({ where: { id: first.id }, data });
       else await prisma.supportGoal.create({ data });
     });
+    // Just hit the goal this save → "goal reached" web push to subscribers (#535).
+    if (active && target >= 1 && (prev?.current ?? 0) < target && current >= target) {
+      void notifyGoalReached(tid, title);
+    }
     return NextResponse.json({ ok: true });
   }
 

@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
+import { notifyDonation } from "@/lib/web-push";
 import type { AlertAnimation, AlertPosition, AlertTypeCfg } from "@/lib/alert-types";
 import { createLogger } from "@/lib/logger";
 
@@ -75,6 +76,13 @@ export async function dispatchAlert(input: AlertInput, tenantId?: string | null)
     amount: input.amount ?? null,
     amountLabel: input.amountLabel ?? null,
   }, tid);
+
+  // A real-money tip → "new tip" web push to this portal's subscribers (#535).
+  // Fire-and-forget like the webhooks above; dormant-safe + never throws. Already
+  // gated by the per-type enable check above, so disabling donation alerts mutes it.
+  if (input.type === "donation") {
+    void notifyDonation(tid, { name: input.actorName, amount: input.amount, amountLabel: input.amountLabel });
+  }
 
   return created;
 }

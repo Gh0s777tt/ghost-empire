@@ -111,3 +111,30 @@ export async function notifyStreamLive(tenantId: string | null): Promise<{ sent:
     tag: "stream-live",
   });
 }
+
+/**
+ * "New tip" push to a portal's subscribers (#535). The `donation` tag collapses
+ * rapid tips into one updating notification (anti-storm). Dormant-safe; never throws.
+ */
+export async function notifyDonation(tenantId: string | null, d: { name?: string | null; amount?: number | null; amountLabel?: string | null }): Promise<{ sent: number; pruned: number }> {
+  if (!isPushConfigured()) return { sent: 0, pruned: 0 };
+  const who = (d.name || "Someone").trim().slice(0, 40) || "Someone";
+  const amt = d.amount != null ? ` (${d.amount}${d.amountLabel ? " " + d.amountLabel : ""})` : "";
+  return sendPushToTenant(tenantId, {
+    title: "💜 New tip!",
+    body: `${who} just supported the stream${amt} — thank you!`,
+    url: "/support",
+    tag: "donation",
+  });
+}
+
+/** "Goal reached" push to a portal's subscribers (#535) — a rare milestone. Dormant-safe. */
+export async function notifyGoalReached(tenantId: string | null, goalTitle: string): Promise<{ sent: number; pruned: number }> {
+  if (!isPushConfigured()) return { sent: 0, pruned: 0 };
+  return sendPushToTenant(tenantId, {
+    title: "🎯 Goal reached!",
+    body: goalTitle ? `"${goalTitle.slice(0, 80)}" — thank you all! 💜` : "Thank you all! 💜",
+    url: "/support",
+    tag: "goal-reached",
+  });
+}
