@@ -5,7 +5,7 @@
 //
 // Mirrors /api/internal/award (Discord) but keyed on a streaming platform instead
 // of discordId. Bearer BOT_SECRET + layered rate limits (defense in depth).
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
@@ -122,28 +122,35 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  // Chat activity also feeds the battle-pass + daily quests (best-effort; own queries).
-  const { awardSeasonXp } = await import("@/lib/seasons");
-  await awardSeasonXp(connection.userId, "chat_message");
-  const { updateDailyTaskProgress } = await import("@/lib/daily-tasks");
-  await updateDailyTaskProgress(connection.userId, "messages");
+  // The bot only needs `awarded`/`newBalance`, so respond now and run the best-effort
+  // secondary effects (battle-pass XP, daily quests, activity heatmap) AFTER the response
+  // via after() — this is the hottest write path (one call per chat message across 3
+  // platforms) and the DB pool is only 3, so we don't make the bot wait on ~6 more serial
+  // round-trips. Kept as dynamic imports (avoids a static import cycle). #audit-v2 perf
+  const userId = connection.userId;
+  after(async () => {
+    try {
+      const { awardSeasonXp } = await import("@/lib/seasons");
+      await awardSeasonXp(userId, "chat_message");
+      const { updateDailyTaskProgress } = await import("@/lib/daily-tasks");
+      await updateDailyTaskProgress(userId, "messages");
 
-  // Activity heatmap bucket (Europe/Warsaw day-of-week + hour). Best-effort.
-  try {
-    const parts = new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Europe/Warsaw", weekday: "short", hour: "2-digit", hour12: false,
-    }).formatToParts(new Date());
-    const wd = parts.find((p) => p.type === "weekday")?.value ?? "Sun";
-    const dayOfWeek = ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 } as Record<string, number>)[wd] ?? 0;
-    const hour = (parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10) || 0) % 24;
-    await prisma.chatActivityBucket.upsert({
-      where: { dayOfWeek_hour: { dayOfWeek, hour } },
-      create: { dayOfWeek, hour, count: 1 },
-      update: { count: { increment: 1 } },
-    });
-  } catch {
-    /* best-effort analytics — never blocks the award */
-  }
+      // Activity heatmap bucket (Europe/Warsaw day-of-week + hour).
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Warsaw", weekday: "short", hour: "2-digit", hour12: false,
+      }).formatToParts(new Date());
+      const wd = parts.find((p) => p.type === "weekday")?.value ?? "Sun";
+      const dayOfWeek = ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 } as Record<string, number>)[wd] ?? 0;
+      const hour = (parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10) || 0) % 24;
+      await prisma.chatActivityBucket.upsert({
+        where: { dayOfWeek_hour: { dayOfWeek, hour } },
+        create: { dayOfWeek, hour, count: 1 },
+        update: { count: { increment: 1 } },
+      });
+    } catch {
+      /* best-effort secondary effects — never affect the award */
+    }
+  });
 
   return NextResponse.json(
     { ok: true, awarded: finalAmount, newBalance: updatedUser.tokens },
