@@ -2030,6 +2030,9 @@
     "clans": "Clans",
     "clips": "Clip of the Week",
     "trivia": "Quiz",
+    "support": "Support",
+    "seasons": "Battle Pass",
+    "quests": "Quests",
     "themeLight": "Light mode",
     "themeDark": "Dark mode",
     "themePick": "Theme",
@@ -2144,6 +2147,13 @@
     "denied": "Notifications are blocked in your browser settings.",
     "testTitle": "We're live! 🔴",
     "testBody": "This is a test notification — it works! 🎉"
+  },
+  "commandPalette": {
+    "placeholder": "Search pages…  (Ctrl/⌘ K)",
+    "empty": "Nothing found",
+    "navigate": "navigate",
+    "open": "open",
+    "close": "close"
   },
   "passkey": {
     "title": "Passkeys",

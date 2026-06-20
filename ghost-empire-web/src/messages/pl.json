@@ -2030,6 +2030,9 @@
     "clans": "Klany",
     "clips": "Klip tygodnia",
     "trivia": "Quiz",
+    "support": "Wsparcie",
+    "seasons": "Battle Pass",
+    "quests": "Questy",
     "themeLight": "Tryb jasny",
     "themeDark": "Tryb ciemny",
     "themePick": "Motyw",
@@ -2144,6 +2147,13 @@
     "denied": "Powiadomienia są zablokowane w ustawieniach przeglądarki.",
     "testTitle": "Jesteśmy na żywo! 🔴",
     "testBody": "To testowe powiadomienie — działa! 🎉"
+  },
+  "commandPalette": {
+    "placeholder": "Szukaj stron…  (Ctrl/⌘ K)",
+    "empty": "Nic nie znaleziono",
+    "navigate": "nawiguj",
+    "open": "otwórz",
+    "close": "zamknij"
   },
   "passkey": {
     "title": "Passkeys (klucze)",

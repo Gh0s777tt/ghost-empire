@@ -14,6 +14,7 @@ import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { normalizeTheme } from "@/lib/themes";
 import TourProvider from "@/components/tour/SiteTour";
 import { HelpAssistant } from "@/components/HelpAssistant";
+import { CommandPalette } from "@/components/CommandPalette";
 import { ClientErrorReporter } from "@/components/ClientErrorReporter";
 import { RegisterServiceWorker } from "@/components/pwa/RegisterServiceWorker";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
@@ -95,6 +96,8 @@ export default async function LocaleLayout({
               {/* Portal-wide help: static quick-links + FAQ for everyone, AI chat
                   for logged-in viewers (degrades gracefully without an AI plan). */}
               <HelpAssistant />
+              {/* Cmd/Ctrl+K quick-nav palette (#548) */}
+              <CommandPalette />
             </TourProvider>
           </Providers>
           </TenantBrandingProvider>
