@@ -33,6 +33,7 @@ export default async function ProfilePage() {
           displayName: true,
           bio: true,
           country: true,
+          profileAccent: true,
           image: true,
           tokens: true,
           totalEarned: true,

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { CountryPicker } from "@/components/profile/CountryPicker";
+import { AccentPicker } from "@/components/profile/AccentPicker";
 import { formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscountFraction } from "@/lib/economy";
@@ -40,6 +41,7 @@ type Props = {
     displayName: string | null;
     bio: string | null;
     country: string | null;
+    profileAccent: string | null;
     image: string | null;
     tokens: number;
     totalEarned: number;
@@ -258,6 +260,10 @@ export function ProfileClient({
               <span>{t("joined", { date: formatDate(user.createdAt, locale) })}</span>
               <span>·</span>
               <CountryPicker initialCountry={user.country} />
+            </div>
+
+            <div className="mb-3">
+              <AccentPicker initialAccent={user.profileAccent} />
             </div>
 
             {user.bio && (

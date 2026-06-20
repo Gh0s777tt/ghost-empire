@@ -1908,6 +1908,8 @@
     "joined": "Od {date}",
     "countryLabel": "Kraj",
     "countryNone": "🌍 Kraj",
+    "accentLabel": "Akcent",
+    "accentNone": "Domyślny (marka)",
     "xpToPrestige": "XP do prestiżu ✦{n}",
     "xpToLevel": "XP do LVL {n}",
     "xpTotalMax": "Łącznie {xp} XP · max LVL osiągnięty — XP buduje teraz prestiż ✦",

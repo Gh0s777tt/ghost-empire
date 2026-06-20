@@ -19,6 +19,7 @@ import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons
 import { Link } from "@/i18n/navigation";
 import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
 import { countryFlag } from "@/lib/countries";
+import { accentColor } from "@/lib/profile-accents";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP } from "@/lib/economy";
 import { companionStage } from "@/lib/companion";
 
@@ -112,6 +113,7 @@ export default async function PublicProfilePage({
       image: true,
       bio: true,
       country: true,
+      profileAccent: true,
       // Public stats only
       level: true,
       xp: true,
@@ -183,6 +185,8 @@ export default async function PublicProfilePage({
   const rankInfo = rankForLevel(user.level);
   const xpCurrent = user.xp % 500;
   const atMax = user.level >= MAX_LEVEL;
+  // Self-chosen profile accent (#546) — tints the avatar ring + name glow; null = rank color.
+  const accent = accentColor(user.profileAccent);
   const prestigeProgress = atMax ? Math.max(0, user.xp - LEVEL_CAP_XP) % PRESTIGE_XP : 0;
   const xpProgress = atMax
     ? Math.min(100, (prestigeProgress / PRESTIGE_XP) * 100)
@@ -216,14 +220,14 @@ export default async function PublicProfilePage({
                     src={user.image}
                     alt={displayNick(user.displayName, user.username)}
                     className="w-24 h-24 md:w-32 md:h-32 object-cover border-2"
-                    style={{ borderColor: rankInfo.color }}
+                    style={{ borderColor: accent ?? rankInfo.color }}
                   />
                 ) : (
                   <img
                     src="/brand/skull.png"
                     alt=""
                     className="w-24 h-24 md:w-32 md:h-32 object-cover border-2 bg-black"
-                    style={{ borderColor: rankInfo.color }}
+                    style={{ borderColor: accent ?? rankInfo.color }}
                   />
                 )}
                 <div
@@ -238,7 +242,7 @@ export default async function PublicProfilePage({
                 <div className="flex flex-wrap items-baseline gap-2 mb-1">
                   <h1
                     className="font-display text-3xl md:text-4xl text-white tracking-wider"
-                    style={{ textShadow: `2px 0 0 ${rankInfo.color}88, -2px 0 0 rgba(139,0,0,0.4)` }}
+                    style={{ textShadow: accent ? `2px 0 0 ${accent}, -2px 0 0 ${accent}66` : `2px 0 0 ${rankInfo.color}88, -2px 0 0 rgba(139,0,0,0.4)` }}
                   >
                     {displayNick(user.displayName, user.username)}
                   </h1>
