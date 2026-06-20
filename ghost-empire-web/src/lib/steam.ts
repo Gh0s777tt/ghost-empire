@@ -1,6 +1,8 @@
 // src/lib/steam.ts
 // Steam Web API — owned-games + vanity resolution for the game library. The key
 // lives in STEAM_API_KEY (Vercel env). All calls are server-side only.
+import { httpFetch } from "@/lib/http";
+
 const STEAM_API = "https://api.steampowered.com";
 
 function apiKey(): string {
@@ -19,7 +21,7 @@ export type SteamOwnedGame = {
 export async function resolveSteamVanity(vanity: string): Promise<string | null> {
   if (!apiKey() || !vanity) return null;
   try {
-    const r = await fetch(`${STEAM_API}/ISteamUser/ResolveVanityURL/v1/?key=${apiKey()}&vanityurl=${encodeURIComponent(vanity)}`);
+    const r = await httpFetch(`${STEAM_API}/ISteamUser/ResolveVanityURL/v1/?key=${apiKey()}&vanityurl=${encodeURIComponent(vanity)}`);
     if (!r.ok) return null;
     const d = await r.json();
     return d?.response?.success === 1 ? String(d.response.steamid) : null;
@@ -32,7 +34,7 @@ export async function resolveSteamVanity(vanity: string): Promise<string | null>
 export async function fetchSteamOwnedGames(steamId: string): Promise<SteamOwnedGame[]> {
   if (!apiKey()) throw new Error("STEAM_API_KEY nie ustawiony");
   const url = `${STEAM_API}/IPlayerService/GetOwnedGames/v1/?key=${apiKey()}&steamid=${encodeURIComponent(steamId)}&include_appinfo=1&include_played_free_games=1&format=json`;
-  const r = await fetch(url);
+  const r = await httpFetch(url);
   if (!r.ok) throw new Error(`Steam GetOwnedGames HTTP ${r.status}`);
   const d = await r.json();
   return Array.isArray(d?.response?.games) ? d.response.games : [];

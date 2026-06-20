@@ -10,6 +10,7 @@
 // Caller (cron / admin) is responsible for not polling when not live.
 import { prisma } from "@/lib/prisma";
 import { encryptSecret, decryptSecret } from "@/lib/crypto";
+import { httpFetch } from "@/lib/http";
 import { getYouTubeStreamerToken } from "@/lib/platform-tokens";
 
 const YT_API = "https://www.googleapis.com/youtube/v3";
@@ -51,7 +52,7 @@ async function refreshAccessToken(refreshToken: string): Promise<{ access_token:
     client_id: process.env.GOOGLE_CLIENT_ID ?? "",
     client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
   });
-  const res = await fetch(YT_OAUTH_TOKEN, {
+  const res = await httpFetch(YT_OAUTH_TOKEN, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
@@ -79,7 +80,7 @@ type LiveBroadcast = {
  * Uses liveBroadcasts.list (1 unit) — much cheaper than search.list (100 units).
  */
 export async function getActiveLiveBroadcast(token: string): Promise<LiveBroadcast | null> {
-  const res = await fetch(
+  const res = await httpFetch(
     `${YT_API}/liveBroadcasts?part=snippet,contentDetails&broadcastStatus=active&broadcastType=all&maxResults=1`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
@@ -129,7 +130,7 @@ export async function getLiveChatMessages(
   });
   if (pageToken) params.set("pageToken", pageToken);
 
-  const res = await fetch(`${YT_API}/liveChat/messages?${params.toString()}`, {
+  const res = await httpFetch(`${YT_API}/liveChat/messages?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (res.status === 404) {
@@ -170,7 +171,7 @@ export async function getLiveChatMessages(
 type ChannelInfo = { id: string; title: string };
 
 export async function getOwnChannel(token: string): Promise<ChannelInfo | null> {
-  const res = await fetch(`${YT_API}/channels?part=snippet&mine=true`, {
+  const res = await httpFetch(`${YT_API}/channels?part=snippet&mine=true`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) return null;
@@ -197,7 +198,7 @@ export async function exchangeCodeForToken(code: string, redirectUri: string): P
     client_id: process.env.GOOGLE_CLIENT_ID ?? "",
     client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
   });
-  const res = await fetch(YT_OAUTH_TOKEN, {
+  const res = await httpFetch(YT_OAUTH_TOKEN, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),

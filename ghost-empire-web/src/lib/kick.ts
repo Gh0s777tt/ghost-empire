@@ -10,6 +10,7 @@
 //   `${messageId}.${timestamp}.${body}`
 import { createPublicKey, createVerify, KeyObject } from "node:crypto";
 import { createLogger } from "@/lib/logger";
+import { httpFetch } from "@/lib/http";
 
 const log = createLogger("kick");
 
@@ -33,7 +34,7 @@ export async function getAppAccessToken(): Promise<string> {
     client_id: process.env.KICK_CLIENT_ID ?? "",
     client_secret: process.env.KICK_CLIENT_SECRET ?? "",
   });
-  const res = await fetch(KICK_OAUTH_TOKEN, {
+  const res = await httpFetch(KICK_OAUTH_TOKEN, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
@@ -68,7 +69,7 @@ export async function exchangeUserCode(code: string, redirectUri: string, codeVe
   });
   if (codeVerifier) body.set("code_verifier", codeVerifier);
 
-  const res = await fetch(KICK_OAUTH_TOKEN, {
+  const res = await httpFetch(KICK_OAUTH_TOKEN, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
@@ -91,7 +92,7 @@ export type KickUser = { userId: string; name: string };
  * id may come as `user_id` or `id` depending on API version — normalize both.
  */
 export async function getOwnUser(userAccessToken: string): Promise<KickUser | null> {
-  const res = await fetch(`${KICK_API}/users`, {
+  const res = await httpFetch(`${KICK_API}/users`, {
     headers: { Authorization: `Bearer ${userAccessToken}` },
   });
   if (!res.ok) {
@@ -127,7 +128,7 @@ export async function listEventSubscriptions(appToken: string): Promise<Array<{
   created_at: string;
   updated_at: string;
 }>> {
-  const res = await fetch(`${KICK_API}/events/subscriptions`, {
+  const res = await httpFetch(`${KICK_API}/events/subscriptions`, {
     headers: { Authorization: `Bearer ${appToken}` },
   });
   if (!res.ok) {
@@ -157,7 +158,7 @@ export async function createEventSubscriptions(
 ): Promise<CreateSubsResult> {
   // Kick expects the field name `events` (NOT `types`). Sending `types` makes Kick
   // silently ignore it and return 200 {"data":[],"message":"OK"} — subscribing to nothing.
-  const res = await fetch(`${KICK_API}/events/subscriptions`, {
+  const res = await httpFetch(`${KICK_API}/events/subscriptions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${userAccessToken}`,
@@ -177,7 +178,7 @@ export async function createEventSubscriptions(
 }
 
 export async function deleteEventSubscription(id: string, userAccessToken: string): Promise<void> {
-  const res = await fetch(`${KICK_API}/events/subscriptions?id=${encodeURIComponent(id)}`, {
+  const res = await httpFetch(`${KICK_API}/events/subscriptions?id=${encodeURIComponent(id)}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${userAccessToken}` },
   });
@@ -197,7 +198,7 @@ async function getPublicKey(): Promise<KeyObject> {
   if (cachedPublicKey && Date.now() - cachedPublicKey.fetchedAt < PUBLIC_KEY_TTL_MS) {
     return cachedPublicKey.key;
   }
-  const res = await fetch(`${KICK_API}/public-key`);
+  const res = await httpFetch(`${KICK_API}/public-key`);
   if (!res.ok) throw new Error(`Failed to fetch Kick public key: ${res.status}`);
   const data = await res.json();
   const pem = data?.data?.public_key;

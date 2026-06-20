@@ -1,6 +1,7 @@
 // src/lib/twitch.ts
 // Twitch Helix API + EventSub helpers.
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { httpFetch } from "@/lib/http";
 
 const HELIX = "https://api.twitch.tv/helix";
 
@@ -16,7 +17,7 @@ export async function getAppAccessToken(): Promise<string> {
     client_secret: process.env.TWITCH_CLIENT_SECRET ?? "",
     grant_type: "client_credentials",
   });
-  const res = await fetch("https://id.twitch.tv/oauth2/token", {
+  const res = await httpFetch("https://id.twitch.tv/oauth2/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
@@ -35,7 +36,7 @@ export async function helixGet<T = unknown>(
   path: string,
   token: string,
 ): Promise<T> {
-  const res = await fetch(`${HELIX}${path}`, {
+  const res = await httpFetch(`${HELIX}${path}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Client-Id": process.env.TWITCH_CLIENT_ID ?? "",
@@ -52,7 +53,7 @@ export async function helixPost<T = unknown>(
   body: unknown,
   token: string,
 ): Promise<T> {
-  const res = await fetch(`${HELIX}${path}`, {
+  const res = await httpFetch(`${HELIX}${path}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -68,7 +69,7 @@ export async function helixPost<T = unknown>(
 }
 
 export async function helixDelete(path: string, token: string): Promise<void> {
-  const res = await fetch(`${HELIX}${path}`, {
+  const res = await httpFetch(`${HELIX}${path}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,

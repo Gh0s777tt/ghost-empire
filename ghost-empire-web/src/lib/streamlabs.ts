@@ -6,6 +6,7 @@ import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
+import { httpFetch } from "@/lib/http";
 import { awardSeasonXp } from "@/lib/seasons";
 import { plnFromCurrency } from "@/lib/economy";
 import { getStreamlabsConnection } from "@/lib/platform-tokens";
@@ -47,7 +48,7 @@ export async function exchangeCode(code: string): Promise<TokenResponse> {
     redirect_uri: REDIRECT_URI,
     code,
   });
-  const res = await fetch(STREAMLABS_OAUTH_TOKEN, {
+  const res = await httpFetch(STREAMLABS_OAUTH_TOKEN, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
@@ -65,7 +66,7 @@ type StreamlabsUser = {
 };
 
 export async function fetchUserInfo(accessToken: string): Promise<StreamlabsUser> {
-  const res = await fetch(`${STREAMLABS_USER}?access_token=${accessToken}`);
+  const res = await httpFetch(`${STREAMLABS_USER}?access_token=${accessToken}`);
   if (!res.ok) {
     throw new Error(`Streamlabs user info fetch failed (${res.status})`);
   }
@@ -96,7 +97,7 @@ export async function fetchDonations(opts: {
   if (opts.afterDonationId) {
     params.set("after", opts.afterDonationId);
   }
-  const res = await fetch(`${STREAMLABS_DONATIONS}?${params.toString()}`);
+  const res = await httpFetch(`${STREAMLABS_DONATIONS}?${params.toString()}`);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Streamlabs donations fetch failed (${res.status}): ${text.slice(0, 200)}`);
