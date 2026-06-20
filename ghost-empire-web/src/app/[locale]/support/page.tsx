@@ -10,6 +10,7 @@ import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { cryptoUri, sepaQrPayload } from "@/lib/payment-methods";
 import { Header } from "@/components/Header";
 import { SupportClient } from "@/components/support/SupportClient";
+import { SponsorStrip } from "@/components/support/SponsorStrip";
 import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 
@@ -38,7 +39,7 @@ export default async function SupportPage() {
   const tid = await currentTenantId();
   const tenant = await getCurrentTenant();
 
-  const [methods, goalRow, supporterRows, topRows] = await Promise.all([
+  const [methods, goalRow, supporterRows, topRows, sponsors] = await Promise.all([
     prisma.paymentMethod
       .findMany({
         where: { active: true, ...(tid ? { tenantId: tid } : {}) },
@@ -70,6 +71,15 @@ export default async function SupportPage() {
         take: 5,
       })
       .catch(() => [] as { actorName: string | null; _sum: { amount: number | null } }[]),
+    // Sponsors / brand partners shown as a strip (#538). Per-tenant; graceful before
+    // the table exists.
+    prisma.sponsor
+      .findMany({
+        where: { active: true, ...(tid ? { tenantId: tid } : {}) },
+        orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+        select: { name: true, url: true, logoUrl: true, note: true, tier: true, featured: true },
+      })
+      .catch(() => [] as { name: string; url: string; logoUrl: string | null; note: string | null; tier: string | null; featured: boolean }[]),
   ]);
   const goal = goalRow?.active && goalRow.target > 0
     ? { title: goalRow.title, target: goalRow.target, current: goalRow.current, currency: goalRow.currency }
@@ -144,6 +154,7 @@ export default async function SupportPage() {
           topSupporters={topSupporters}
           tipCurrency={tipCurrency}
         />
+        <SponsorStrip sponsors={sponsors} />
       </main>
     </div>
   );

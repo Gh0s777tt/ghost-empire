@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
@@ -34,6 +34,7 @@ const ClanWarsManager = dynamic(() => import("./sections/ClanWars").then((m) => 
 const SoundRewardsManager = dynamic(() => import("./sections/SoundRewards").then((m) => m.SoundRewardsManager), { ssr: false, loading: SectionLoading });
 const PaymentMethodsManager = dynamic(() => import("./sections/PaymentMethods").then((m) => m.PaymentMethodsManager), { ssr: false, loading: SectionLoading });
 const PushBroadcastManager = dynamic(() => import("./sections/PushBroadcast").then((m) => m.PushBroadcastManager), { ssr: false, loading: SectionLoading });
+const SponsorsManager = dynamic(() => import("./sections/Sponsors").then((m) => m.SponsorsManager), { ssr: false, loading: SectionLoading });
 const RecapManager = dynamic(() => import("./sections/Recap").then((m) => m.RecapManager), { ssr: false, loading: SectionLoading });
 const ClipDirectorManager = dynamic(() => import("./sections/ClipDirector").then((m) => m.ClipDirectorManager), { ssr: false, loading: SectionLoading });
 const TriviaManager = dynamic(() => import("./sections/Trivia").then((m) => m.TriviaManager), { ssr: false, loading: SectionLoading });
@@ -136,7 +137,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -156,6 +157,7 @@ export function AdminClient({
     { id: "economy",   label: t("secEconomy"),      icon: Coins,          group: "main",       level: 2, permission: () => isAdmin },
     { id: "payments",  label: t("secPayments"),     icon: Wallet,         group: "main",       level: 2, permission: () => isAdmin },
     { id: "notifications", label: t("secNotifications"), icon: Megaphone,  group: "main",       level: 2, permission: () => isAdmin },
+    { id: "sponsors",  label: t("secSponsors"),     icon: Handshake,      group: "main",       level: 2, permission: () => isAdmin },
     { id: "community", label: t("secCommunity"),    icon: Users,          group: "main",       level: 2, permission: () => isAdmin },
     { id: "clanwars",  label: t("secClanwars"),     icon: Swords,         group: "main",       level: 2, permission: () => isAdmin },
     { id: "trivia",    label: t("secTrivia"),       icon: Brain,          group: "main",       level: 2, permission: () => isAdmin },
@@ -528,6 +530,7 @@ export function AdminClient({
           {activeSection === "soundrewards" && isAdmin && <SoundRewardsManager onToast={showToast} />}
           {activeSection === "payments" && isAdmin && <PaymentMethodsManager onToast={showToast} />}
           {activeSection === "notifications" && isAdmin && <PushBroadcastManager onToast={showToast} />}
+          {activeSection === "sponsors" && isAdmin && <SponsorsManager onToast={showToast} />}
           {activeSection === "recap" && isAdmin && <RecapManager onToast={showToast} />}
           {activeSection === "clipdirector" && isAdmin && <ClipDirectorManager onToast={showToast} />}
           {activeSection === "trivia" && isAdmin && <TriviaManager onToast={showToast} />}

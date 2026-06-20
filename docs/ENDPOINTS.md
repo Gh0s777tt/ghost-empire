@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **145** tras
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **146** tras
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -90,6 +90,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 |---|---|---|
 | `…/api/admin/grant-tokens` | perm:grant_tokens | +/- tokeny userowi |
 | `…/api/admin/push` | admin | GET licznik subskrybentów + status; POST broadcast web push do subskrybentów portalu (#537) |
+| `…/api/admin/sponsors` | admin | CRUD sponsorów/partnerów portalu (pasek na `/support`, #538) |
 | `…/api/admin/user-roles` | admin | Role: admin / moderator / donator |
 | `…/api/admin/connection-roles` | perm:mark_subs | Status sub/mod/VIP per platforma |
 | `…/api/admin/reset-database` | admin | **Reset bazy** (wipe userów, fraza potwierdzająca) |

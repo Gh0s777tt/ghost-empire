@@ -1643,6 +1643,28 @@ model PaymentMethod {
 }
 
 // =====================================================
+// SPONSORS (#538) — per-portal brand partners shown on /support + an OBS strip.
+// Additive + per-tenant. Public reads graceful-degrade before the table exists.
+// =====================================================
+model Sponsor {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  name      String // sponsor / partner name, e.g. "HyperX"
+  url       String   @db.Text // link to the sponsor
+  logoUrl   String?  @db.Text // optional logo image URL
+  note      String? // optional tagline, e.g. "Official gear partner"
+  tier      String? // optional label, e.g. "Gold", "Partner"
+  featured  Boolean  @default(false)
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, active])
+  @@map("sponsors")
+}
+
+// =====================================================
 // AI CLIP DIRECTOR (#517) — detect a chat hype spike → auto-create a Twitch clip.
 // Per-tenant + additive. Dormant until enabled AND the streamer's Twitch token has
 // the `clips:edit` scope (otherwise clip creation no-ops gracefully).
