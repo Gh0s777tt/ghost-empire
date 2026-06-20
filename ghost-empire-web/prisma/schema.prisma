@@ -161,6 +161,7 @@ model User {
   portalFollows    PortalFollow[]
   triviaAnswers    TriviaAnswer[]
   pushSubscriptions PushSubscription[]
+  passkeys         Passkey[]
   wheelSpins       WheelSpin[]
   gtGamePlays      GtGamePlay[]
   duelsChallenged  Duel[]            @relation("DuelChallenger")
@@ -304,6 +305,29 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+}
+
+// =====================================================
+// PASSKEYS / WebAuthn (#543) — passwordless credentials, ADDITIVE and isolated.
+// Registration (this stage) does NOT touch the OAuth login flow; login via passkey
+// (#544) creates a Session row directly (DB session strategy), never altering the
+// NextAuth config. credentialId/publicKey are base64url strings.
+// =====================================================
+model Passkey {
+  id           String    @id @default(cuid())
+  userId       String
+  credentialId String    @unique // base64url credential id
+  publicKey    String    @db.Text // base64url COSE public key
+  counter      Int       @default(0) // signature counter (clone-detection)
+  transports   String? // CSV: "usb,nfc,ble,internal,hybrid"
+  deviceName   String? // user-facing label, e.g. "iPhone", "YubiKey"
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("passkeys")
 }
 
 model VerificationToken {

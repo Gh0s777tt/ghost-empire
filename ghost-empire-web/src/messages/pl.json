@@ -2143,6 +2143,15 @@
     "testTitle": "Jesteśmy na żywo! 🔴",
     "testBody": "To testowe powiadomienie — działa! 🎉"
   },
+  "passkey": {
+    "title": "Passkeys (klucze)",
+    "desc": "Dodaj passkey (odcisk, twarz lub PIN urządzenia) do szybkiego logowania bez hasła.",
+    "add": "Dodaj passkey",
+    "remove": "Usuń",
+    "unnamed": "Passkey",
+    "errAdd": "Nie udało się dodać passkey. Spróbuj ponownie.",
+    "errVerify": "Nie udało się zweryfikować passkey."
+  },
   "trivia": {
     "title": "Quiz",
     "subtitle": "Odpowiadaj poprawnie, by zdobyć %gt%. Jedna próba na pytanie.",

@@ -2143,6 +2143,15 @@
     "testTitle": "We're live! 🔴",
     "testBody": "This is a test notification — it works! 🎉"
   },
+  "passkey": {
+    "title": "Passkeys",
+    "desc": "Add a passkey (fingerprint, face or device PIN) for fast, passwordless sign-in.",
+    "add": "Add passkey",
+    "remove": "Remove",
+    "unnamed": "Passkey",
+    "errAdd": "Couldn't add the passkey. Please try again.",
+    "errVerify": "The passkey couldn't be verified."
+  },
   "trivia": {
     "title": "Quiz",
     "subtitle": "Answer correctly to earn %gt%. One attempt per question.",

@@ -6,6 +6,7 @@ import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { ProfileClient } from "@/components/profile/ProfileClient";
 import { PushToggle } from "@/components/push/PushToggle";
+import { PasskeyManager } from "@/components/profile/PasskeyManager";
 import { companionStage } from "@/lib/companion";
 
 export const dynamic = "force-dynamic";
@@ -136,8 +137,9 @@ export default async function ProfilePage() {
           companion={companion ? { xp: companion.xp, emoji: companionStage(companion.xp).emoji } : null}
           clan={clanWrap?.clan ?? null}
         />
-        <div className="max-w-md mx-auto mt-6">
+        <div className="max-w-md mx-auto mt-6 space-y-4">
           <PushToggle />
+          <PasskeyManager />
         </div>
       </main>
     </div>
