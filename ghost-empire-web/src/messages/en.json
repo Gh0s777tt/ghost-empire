@@ -2028,6 +2028,7 @@
     "linkedFlash": "Linked with {label}",
     "linkFailGeneric": "Couldn't link the platform.",
     "unlinkConfirm": "Unlink {label} from your account?",
+    "removeLinkConfirm": "Remove the {platform} link?",
     "unlinkFailGeneric": "Couldn't unlink.",
     "unlinkedFlash": "Unlinked {label}",
     "provTwitch": "Subscriptions, bits, EventSub",

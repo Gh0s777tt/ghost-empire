@@ -2028,6 +2028,7 @@
     "linkedFlash": "Połączono z {label}",
     "linkFailGeneric": "Nie udało się połączyć platformy.",
     "unlinkConfirm": "Odłączyć {label} od konta?",
+    "removeLinkConfirm": "Usunąć link {platform}?",
     "unlinkFailGeneric": "Nie udało się odłączyć.",
     "unlinkedFlash": "Odłączono {label}",
     "provTwitch": "Subskrypcje, bity, EventSub",

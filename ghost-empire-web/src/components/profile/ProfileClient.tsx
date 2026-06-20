@@ -578,6 +578,9 @@ function SocialLinksEditor({
   }
 
   async function remove(platform: string) {
+    // Confirm before deleting — one mis-tap shouldn't silently remove a link (mirrors the
+    // OAuth unlink confirm below). #audit-v2
+    if (!confirm(t("removeLinkConfirm", { platform }))) return;
     setBusy(platform);
     try {
       const res = await fetch(`/api/profile/social-links?platform=${platform}`, { method: "DELETE" });
