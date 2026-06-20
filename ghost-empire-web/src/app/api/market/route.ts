@@ -38,8 +38,10 @@ export async function GET() {
   let balance = 0;
   if (session?.user?.id) {
     const [mineL, mineC, u] = await Promise.all([
-      prisma.cardListing.findMany({ where: { sellerId: session.user.id, status: "active" }, orderBy: { createdAt: "desc" }, select: { id: true, price: true, collectible: { select: cardSel } } }).catch(() => []),
-      prisma.userCollectible.findMany({ where: { userId: session.user.id, qty: { gte: 1 } }, orderBy: { acquiredAt: "desc" }, select: { qty: true, collectible: { select: cardSel } } }).catch(() => []),
+      prisma.cardListing.findMany({ where: { sellerId: session.user.id, status: "active" }, orderBy: { createdAt: "desc" }, take: MAX_ACTIVE_LISTINGS, select: { id: true, price: true, collectible: { select: cardSel } } }).catch(() => []),
+      // Cap the owned-card list — a collection can grow with the catalog; this is the
+      // trade picker, not the full collection page, so a generous bound is plenty. #perf
+      prisma.userCollectible.findMany({ where: { userId: session.user.id, qty: { gte: 1 } }, orderBy: { acquiredAt: "desc" }, take: 200, select: { qty: true, collectible: { select: cardSel } } }).catch(() => []),
       prisma.user.findUnique({ where: { id: session.user.id }, select: { tokens: true } }),
     ]);
     myListings = mineL.map((l) => ({ id: l.id, price: l.price, card: l.collectible }));
