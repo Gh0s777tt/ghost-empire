@@ -230,7 +230,7 @@ export async function blackjackDouble(userId: string, sessionId: string): Promis
     if (e instanceof Error && e.message === "INSUFFICIENT") return { ok: false, status: 402, error: "Za mało Ghost Tokens na podwojenie" };
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
-  void feedJackpot(s.bet); // the doubled portion feeds the pool too
+  void feedJackpot(s.bet).catch(() => {}); // the doubled portion feeds the pool too
 
   s.bet *= 2;
   s.doubled = true;

@@ -263,7 +263,7 @@ async function handleSubscribe(event: Record<string, unknown>, tenantId: string 
 
   // Bump any active "subs" stream goals
   await incrementGoals("subs", 1, tenantId);
-  void extendSubathon({ subs: 1 }, tenantId);
+  void extendSubathon({ subs: 1 }, tenantId).catch(() => {});
 
   // Find Ghost Empire user via Connection.username on Twitch
   const connection = await prisma.connection.findFirst({
@@ -338,7 +338,7 @@ async function handleGiftSub(event: Record<string, unknown>, tenantId: string | 
   // Bump goals — both gift_subs (count) and subs (because each gift = a sub for someone)
   await incrementGoals("gift_subs", total, tenantId);
   await incrementGoals("subs", total, tenantId);
-  void extendSubathon({ subs: total }, tenantId);
+  void extendSubathon({ subs: total }, tenantId).catch(() => {});
 
   if (isAnonymous || !gifterLogin) {
     log.info("anonymous gift sub — no reward");

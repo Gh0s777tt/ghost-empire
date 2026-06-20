@@ -159,7 +159,7 @@ async function handleSubscription(
   }, tenantId);
 
   await incrementGoals("subs", 1, tenantId);
-  void extendSubathon({ subs: 1 }, tenantId);
+  void extendSubathon({ subs: 1 }, tenantId).catch(() => {});
 
   if (!username) return { userId: null, tokens: null };
 
@@ -231,7 +231,7 @@ async function handleGiftSubs(payload: Record<string, unknown>, tenantId: string
 
   await incrementGoals("gift_subs", total, tenantId);
   await incrementGoals("subs", total, tenantId);
-  void extendSubathon({ subs: total }, tenantId);
+  void extendSubathon({ subs: total }, tenantId).catch(() => {});
 
   if (isAnonymous) return { userId: null, tokens: null };
 

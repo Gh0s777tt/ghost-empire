@@ -101,7 +101,7 @@ export async function POST(req: Request) {
 
   // Anti-abuse anomaly check (fire-and-forget — never blocks the response).
   if (isGrant) {
-    void checkGrantAnomaly({ adminId: auth.userId, amount, targetUsername: user.username });
+    void checkGrantAnomaly({ adminId: auth.userId, amount, targetUsername: user.username }).catch(() => {});
   }
 
   return NextResponse.json({

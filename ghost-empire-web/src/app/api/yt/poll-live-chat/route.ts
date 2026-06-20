@@ -315,7 +315,7 @@ async function handleSuperChat(input: {
     ? amountFloat
     : amountFloat * 4;
   await incrementGoals("donations_pln", Math.floor(plnAmount), input.tenantId);
-  void extendSubathon({ pln: Math.floor(plnAmount) }, input.tenantId);
+  void extendSubathon({ pln: Math.floor(plnAmount) }, input.tenantId).catch(() => {});
 
   // Achievements — both general donation and YT super chat specific
   if (matchedUserId) {

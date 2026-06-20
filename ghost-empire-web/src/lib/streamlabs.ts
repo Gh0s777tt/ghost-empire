@@ -293,7 +293,7 @@ export async function pollAndProcessDonations(): Promise<{
     // Currency conversion shared with YouTube super chats (see economy.ts).
     const plnAmount = plnFromCurrency(amountFloat, d.currency);
     await incrementGoals("donations_pln", Math.floor(plnAmount), conn.tenantId);
-    void extendSubathon({ pln: Math.floor(plnAmount) }, conn.tenantId);
+    void extendSubathon({ pln: Math.floor(plnAmount) }, conn.tenantId).catch(() => {});
   }
 
   // Update lastSeenDonationId to most recent (donations[0] is newest by default)

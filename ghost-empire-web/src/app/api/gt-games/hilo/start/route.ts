@@ -22,6 +22,6 @@ export async function POST(req: Request) {
   const bet = Math.floor(Number(body.bet ?? 0));
   const result = await hiloStart(session.user.id, bet);
   if (!result.ok) return jsonError(result.error, result.status);
-  void feedJackpot(bet); // 1% of every casino bet feeds the pool
+  void feedJackpot(bet).catch(() => {}); // 1% of every casino bet feeds the pool
   return NextResponse.json(result);
 }

@@ -22,6 +22,6 @@ export async function POST(req: Request) {
 
   const result = await minesStart(session.user.id, Math.floor(Number(body.bet ?? 0)), Math.floor(Number(body.bombs ?? 3)));
   if (!result.ok) return jsonError(result.error, result.status);
-  void feedJackpot(Math.floor(Number(body.bet ?? 0))); // 1% of every casino bet feeds the pool
+  void feedJackpot(Math.floor(Number(body.bet ?? 0))).catch(() => {}); // 1% of every casino bet feeds the pool
   return NextResponse.json(result);
 }
