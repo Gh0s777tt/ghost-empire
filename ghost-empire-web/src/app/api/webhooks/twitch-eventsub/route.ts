@@ -4,7 +4,7 @@
 //   - "webhook_callback_verification" — challenge to confirm endpoint ownership
 //   - "notification" — actual event payload
 //   - "revocation" — Twitch tells us they removed a subscription
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { notifyStreamLive } from "@/lib/web-push";
 import { prisma } from "@/lib/prisma";
 import { verifyEventSubSignature, isMessageFresh } from "@/lib/twitch";
@@ -126,79 +126,94 @@ export async function POST(req: Request) {
     throw e;
   }
 
-  // Update lastSeenAt on subscription
-  if (parsed.subscription?.id) {
-    await prisma.twitchEventSubscription.update({
-      where: { id: parsed.subscription.id },
-      data: { lastSeenAt: new Date() },
-    }).catch(() => {});
-  }
-
   // Tenant of the channel this event belongs to: the event's broadcaster id maps
   // to the streamer-token row (#416). Fallback = Host-resolved (single-tenant).
+  // Resolved BEFORE the ACK because `currentTenantId()` reads the request Host —
+  // the rest of the work below runs in the background where request scope is gone.
   const broadcasterId = String(event.broadcaster_user_id ?? "");
   const tenantId =
     (broadcasterId ? await tenantIdForTwitchBroadcaster(broadcasterId) : null)
     ?? (await currentTenantId());
+  const subscriptionId = parsed.subscription?.id ?? null;
 
-  // Run grant handlers; matchedUserId/tokensGranted are backfilled into the dedup row after.
-  let matchedUserId: string | null = null;
-  let tokensGranted: number | null = null;
+  // ACK-FIRST (#perf): the idempotency row is already committed (a retry now loses
+  // with P2002), and signature/freshness are verified — everything above gates the
+  // ACK. The grant handlers + achievement/XP fan-out are the slow part on a busy
+  // stream (hype-train progress storms, gift-sub bursts) and our DB pool is only 3,
+  // so we run them AFTER the response via `after()`. Twitch disables a subscription
+  // whose endpoint is consistently slow to 2xx, so returning fast is what keeps the
+  // integration alive; the background work still runs to completion (waitUntil).
+  after(async () => {
+    try {
+      // Update lastSeenAt on subscription
+      if (subscriptionId) {
+        await prisma.twitchEventSubscription
+          .update({ where: { id: subscriptionId }, data: { lastSeenAt: new Date() } })
+          .catch(() => {});
+      }
 
-  try {
-    if (eventType === "channel.subscribe") {
-      const result = await handleSubscribe(event, tenantId);
-      matchedUserId = result.userId;
-      tokensGranted = result.tokens;
-    } else if (eventType === "channel.subscription.gift") {
-      const result = await handleGiftSub(event, tenantId);
-      matchedUserId = result.userId;
-      tokensGranted = result.tokens;
-    } else if (eventType === "channel.cheer") {
-      const result = await handleCheer(event, tenantId);
-      matchedUserId = result.userId;
-      tokensGranted = result.tokens;
-    } else if (eventType === "channel.hype_train.begin") {
-      await handleHypeTrainBegin(event, tenantId);
-    } else if (eventType === "channel.hype_train.progress") {
-      await handleHypeTrainProgress(event, tenantId);
-    } else if (eventType === "channel.hype_train.end") {
-      await handleHypeTrainEnd(event, tenantId);
-    } else if (eventType === "stream.online") {
-      await handleStreamOnline(event, tenantId);
-    } else if (eventType === "stream.offline") {
-      await handleStreamOffline();
-    } else if (eventType === "channel.follow") {
-      await handleFollow(event, tenantId);
-    } else {
-      log.info("unhandled event type", { eventType });
+      // Run grant handlers; matchedUserId/tokensGranted are backfilled into the dedup row after.
+      let matchedUserId: string | null = null;
+      let tokensGranted: number | null = null;
+
+      try {
+        if (eventType === "channel.subscribe") {
+          const result = await handleSubscribe(event, tenantId);
+          matchedUserId = result.userId;
+          tokensGranted = result.tokens;
+        } else if (eventType === "channel.subscription.gift") {
+          const result = await handleGiftSub(event, tenantId);
+          matchedUserId = result.userId;
+          tokensGranted = result.tokens;
+        } else if (eventType === "channel.cheer") {
+          const result = await handleCheer(event, tenantId);
+          matchedUserId = result.userId;
+          tokensGranted = result.tokens;
+        } else if (eventType === "channel.hype_train.begin") {
+          await handleHypeTrainBegin(event, tenantId);
+        } else if (eventType === "channel.hype_train.progress") {
+          await handleHypeTrainProgress(event, tenantId);
+        } else if (eventType === "channel.hype_train.end") {
+          await handleHypeTrainEnd(event, tenantId);
+        } else if (eventType === "stream.online") {
+          await handleStreamOnline(event, tenantId);
+        } else if (eventType === "stream.offline") {
+          await handleStreamOffline();
+        } else if (eventType === "channel.follow") {
+          await handleFollow(event, tenantId);
+        } else {
+          log.info("unhandled event type", { eventType });
+        }
+      } catch (e) {
+        log.error("handler error", e, { eventType });
+      }
+
+      // Backfill audit fields now that the handlers have resolved the matched user + grant.
+      if (matchedUserId !== null || tokensGranted !== null) {
+        await prisma.twitchEvent
+          .update({ where: { eventId: messageId }, data: { userId: matchedUserId, tokensGranted } })
+          .catch(() => {});
+      }
+
+      // Fire achievement checks + season XP AFTER persisting the event so count queries see it
+      if (matchedUserId) {
+        if (eventType === "channel.subscribe") {
+          await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "twitch_sub_received" });
+          await awardSeasonXp(matchedUserId, "twitch_sub");
+        } else if (eventType === "channel.subscription.gift") {
+          await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "gift_subs_given" });
+          const giftTotal = (event.total as number) ?? 1;
+          await awardSeasonXp(matchedUserId, "gift_sub_each", giftTotal);
+        } else if (eventType === "channel.cheer") {
+          await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "bits_cheered" });
+          const cheerBits = (event.bits as number) ?? 0;
+          await awardSeasonXp(matchedUserId, "bit_each", cheerBits);
+        }
+      }
+    } catch (e) {
+      log.error("background processing error", e, { eventType });
     }
-  } catch (e) {
-    log.error("handler error", e, { eventType });
-  }
-
-  // Backfill audit fields now that the handlers have resolved the matched user + grant.
-  if (matchedUserId !== null || tokensGranted !== null) {
-    await prisma.twitchEvent
-      .update({ where: { eventId: messageId }, data: { userId: matchedUserId, tokensGranted } })
-      .catch(() => {});
-  }
-
-  // Fire achievement checks + season XP AFTER persisting the event so count queries see it
-  if (matchedUserId) {
-    if (eventType === "channel.subscribe") {
-      await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "twitch_sub_received" });
-      await awardSeasonXp(matchedUserId, "twitch_sub");
-    } else if (eventType === "channel.subscription.gift") {
-      await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "gift_subs_given" });
-      const giftTotal = (event.total as number) ?? 1;
-      await awardSeasonXp(matchedUserId, "gift_sub_each", giftTotal);
-    } else if (eventType === "channel.cheer") {
-      await checkAndGrantAchievements({ userId: matchedUserId, triggerType: "bits_cheered" });
-      const cheerBits = (event.bits as number) ?? 0;
-      await awardSeasonXp(matchedUserId, "bit_each", cheerBits);
-    }
-  }
+  });
 
   return NextResponse.json({ ok: true });
 }
