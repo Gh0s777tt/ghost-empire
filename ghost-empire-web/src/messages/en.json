@@ -1792,6 +1792,7 @@
       "phNote": "Optional note shown under the method",
       "featuredLabel": "Feature this method (highlighted)",
       "featuredTitle": "Toggle featured",
+      "clicksTitle": "Opens / copies on /support (directional)",
       "goalTitle": "Fundraising goal (shown on /support)",
       "goalNamePh": "Goal title (e.g. New streaming PC)",
       "goalCurrentPh": "Collected",

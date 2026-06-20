@@ -12,7 +12,7 @@ import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 type Kind = "link" | "crypto" | "bank";
 type Method = {
   id: string; kind: Kind; label: string; value: string; network: string | null;
-  note: string | null; icon: string | null; featured: boolean; active: boolean; sortOrder: number;
+  note: string | null; icon: string | null; featured: boolean; active: boolean; sortOrder: number; clicks: number;
 };
 
 const KIND_ICON: Record<Kind, string> = { link: "🔗", crypto: "🪙", bank: "🏦" };
@@ -126,6 +126,7 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
                   {m.label}
                   {m.network && <span className="text-[10px] font-mono text-zinc-500">{m.network}</span>}
                   {m.featured && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
+                  {m.clicks > 0 && <span className="text-[10px] font-mono text-zinc-500" title={t("clicksTitle")}>👆 {m.clicks}</span>}
                 </div>
                 <div className="text-[10px] text-zinc-600 font-mono truncate">{m.value}</div>
               </div>

@@ -42,6 +42,15 @@ export function SupportClient({
     try { await navigator.clipboard.writeText(text); setCopied(id); setTimeout(() => setCopied(null), 1600); }
     catch { /* clipboard blocked — the value is still visible to copy manually */ }
   }
+  // Directional click/copy analytics (#541). sendBeacon survives the tab navigating
+  // away on a link open; best-effort, never blocks the UI.
+  function trackClick(id: string) {
+    try {
+      const blob = new Blob([JSON.stringify({ id })], { type: "application/json" });
+      if (navigator.sendBeacon) navigator.sendBeacon("/api/support/click", blob);
+      else void fetch("/api/support/click", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id }), keepalive: true });
+    } catch { /* ignore */ }
+  }
   const toggle = (set: Set<string>, setFn: (s: Set<string>) => void, id: string) => {
     const next = new Set(set); next.has(id) ? next.delete(id) : next.add(id); setFn(next);
   };
@@ -94,7 +103,7 @@ export function SupportClient({
 
                     {/* Value row — varies by kind */}
                     {m.kind === "link" ? (
-                      <a href={m.value} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-medium">
+                      <a href={m.value} onClick={() => trackClick(m.id)} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-medium">
                         <Link2 className="w-3.5 h-3.5" /> {t("open")} <ExternalLink className="w-3 h-3" />
                       </a>
                     ) : (
@@ -110,7 +119,7 @@ export function SupportClient({
                       <button onClick={() => toggle(revealed, setRevealed, m.id)} title={t("reveal")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-8 h-8 flex items-center justify-center"><Eye className="w-3.5 h-3.5" /></button>
                     )}
                     {m.kind !== "link" && (
-                      <button onClick={() => void copy(m.id, m.value)} title={t("copy")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-8 h-8 flex items-center justify-center">
+                      <button onClick={() => { trackClick(m.id); void copy(m.id, m.value); }} title={t("copy")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-8 h-8 flex items-center justify-center">
                         {copied === m.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     )}

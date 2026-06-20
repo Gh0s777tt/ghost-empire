@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **147** tras
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **148** tras
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -192,6 +192,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | Trasa | Metoda | Po co |
 |---|---|---|
 | `…/api/health` | GET | Health-check (200 OK / 503 gdy baza nieosiągalna) |
+| `…/api/support/click` | POST | Licznik klików metody wsparcia (#541 — beacon z `/support`, rate-limit per IP) |
 | `…/api/og` | GET | Dynamiczny OG-image (per tenant: branding/nazwa) |
 | `…/api/telemetry/client-error` | POST | Sink błędów klienta (Sentry-lite, rate-limit per IP, nic nie zapisuje w DB) |
 
