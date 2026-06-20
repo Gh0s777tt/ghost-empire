@@ -826,6 +826,10 @@
           "name": "Top supporters board",
           "desc": "An on-stream credits board of your all-time biggest tippers (from real donation webhooks), ranked with medals. A live thank-you leaderboard; hidden until you have a supporter."
         },
+        "sponsors": {
+          "name": "Sponsors carousel",
+          "desc": "Rotates your sponsors/partners (from /admin#sponsors) one at a time — for contractual on-stream logo display. Drop one source in for the whole stream; hidden until you add a sponsor."
+        },
         "trivia": {
           "name": "Live Trivia",
           "desc": "Shows the trivia question you put live (from /admin#trivia) with answer bars + a countdown, revealing the correct answer when time's up. Hidden when no round is live."

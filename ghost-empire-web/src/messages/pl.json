@@ -826,6 +826,10 @@
           "name": "Tablica top wspierających",
           "desc": "Tablica „credits” na stream z Twoimi największymi wspierającymi (z prawdziwych webhooków donejtów), z medalami. Podziękowanie na żywo; ukryte, dopóki nie masz wspierającego."
         },
+        "sponsors": {
+          "name": "Karuzela sponsorów",
+          "desc": "Rotuje Twoich sponsorów/partnerów (z /admin#sponsors) po jednym naraz — do umownego pokazywania logo na streamie. Wrzucasz jedno źródło na cały stream; ukryte, dopóki nie dodasz sponsora."
+        },
         "trivia": {
           "name": "Trivia na żywo",
           "desc": "Pokazuje pytanie quizu, które puściłeś na żywo (z /admin#trivia) z paskami odpowiedzi i odliczaniem, odsłaniając poprawną odpowiedź po czasie. Ukryte, gdy żadna runda nie trwa."

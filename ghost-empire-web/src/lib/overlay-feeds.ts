@@ -37,6 +37,7 @@ export type OverlayFeedKey =
   | "support-qr"
   | "support-goal"
   | "top-supporters"
+  | "sponsors"
   | "trivia";
 
 export type OverlayFeedDef = {
@@ -440,6 +441,19 @@ async function topSupportersFeed(_p: URLSearchParams, tid: string | null): Promi
   return { items, currency: labelRow?.amountLabel ?? null };
 }
 
+// Sponsors carousel (#539): the portal's active sponsors/partners (#538), rotated
+// one at a time on stream (rotation is client-side). Changes rarely → refresh slowly.
+async function sponsorsFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const items = await prisma.sponsor
+    .findMany({
+      where: { active: true, ...tidWhere(tid) },
+      orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+      select: { name: true, logoUrl: true, tier: true },
+    })
+    .catch(() => []);
+  return { items };
+}
+
 // Live trivia round (#524): the question the streamer put live, with answer counts
 // per option + a countdown. The correct answer is revealed only AFTER liveEndsAt.
 async function triviaFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
@@ -492,6 +506,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   "support-qr": shared("support-qr", { producer: supportQrFeed, intervalMs: 30000 }), // QRs are static — refresh slowly
   "support-goal": shared("support-goal", { producer: supportGoalFeed, intervalMs: 5000 }), // bumped manually — 5s feels live
   "top-supporters": shared("top-supporters", { producer: topSupportersFeed, intervalMs: 30000 }), // leaderboard shifts slowly
+  sponsors: shared("sponsors", { producer: sponsorsFeed, intervalMs: 30000 }), // sponsor list changes rarely
   trivia: shared("trivia", { producer: triviaFeed, intervalMs: 2000 }),
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };

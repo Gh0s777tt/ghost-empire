@@ -106,6 +106,7 @@ const WIDGET_META: WidgetMeta[] = [
   { id: "support-qr",   path: "/overlay/support-qr",  size: "300×360" },
   { id: "support-goal", path: "/overlay/support-goal", size: "360×170" },
   { id: "top-supporters", path: "/overlay/top-supporters", size: "340×320" },
+  { id: "sponsors",     path: "/overlay/sponsors",    size: "300×180" },
   { id: "trivia",       path: "/overlay/trivia",      size: "440×320" },
 ];
 
