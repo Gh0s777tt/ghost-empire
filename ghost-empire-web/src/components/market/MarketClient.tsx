@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Store, Tag, X, ShoppingCart } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { EmptyState, ErrorState } from "@/components/EmptyState";
 import { RARITY_COLOR, normalizeRarity } from "@/lib/collectibles";
 import { sellerProceeds } from "@/lib/market";
 
@@ -22,6 +23,7 @@ function Face({ card }: { card: Card }) {
 
 export function MarketClient() {
   const t = useTranslations("market");
+  const tc = useTranslations("common");
   const nf = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const sym = tokenSymbol || "GT";
@@ -54,7 +56,7 @@ export function MarketClient() {
   }
 
   if (loading) return <div className="text-zinc-500 text-sm flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>;
-  if (!data) return <div className="text-zinc-500 text-sm">{t("err_error")}</div>;
+  if (!data) return <ErrorState title={tc("errorTitle")} message={t("err_error")} retryLabel={tc("retry")} onRetry={() => { setLoading(true); void load(); }} />;
 
   const tabs: { id: typeof tab; label: string }[] = [
     { id: "browse", label: t("tabBrowse") },
@@ -79,7 +81,7 @@ export function MarketClient() {
       {!data.loggedIn && <div className="mb-4 text-xs text-zinc-500">{t("signIn")}</div>}
 
       {tab === "browse" && (
-        data.items.length === 0 ? <Empty t={t} /> : (
+        data.items.length === 0 ? <EmptyState icon={<Store className="w-7 h-7" />} title={t("empty")} /> : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {data.items.map((l) => {
               const rc = RARITY_COLOR[normalizeRarity(l.card.rarity)];
@@ -107,8 +109,8 @@ export function MarketClient() {
       )}
 
       {tab === "sell" && (
-        !data.loggedIn ? <Empty t={t} /> : data.myCards.length === 0 ? (
-          <div className="text-xs text-zinc-500 text-center py-6 border border-zinc-900 bg-black/20 rounded-xl">{t("noCards")}</div>
+        !data.loggedIn ? <EmptyState icon={<Store className="w-7 h-7" />} title={t("empty")} /> : data.myCards.length === 0 ? (
+          <EmptyState icon={<Tag className="w-7 h-7" />} title={t("noCards")} />
         ) : (
           <div>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mb-4">
@@ -137,7 +139,7 @@ export function MarketClient() {
 
       {tab === "mine" && (
         !data.loggedIn || data.myListings.length === 0 ? (
-          <div className="text-xs text-zinc-500 text-center py-6 border border-zinc-900 bg-black/20 rounded-xl">{t("noListings")}</div>
+          <EmptyState icon={<Tag className="w-7 h-7" />} title={t("noListings")} />
         ) : (
           <div className="space-y-2">
             {data.myListings.map((l) => (
@@ -158,8 +160,4 @@ export function MarketClient() {
       )}
     </div>
   );
-}
-
-function Empty({ t }: { t: (k: string) => string }) {
-  return <div className="text-xs text-zinc-500 text-center py-8 border border-zinc-900 bg-black/20 rounded-xl">{t("empty")}</div>;
 }

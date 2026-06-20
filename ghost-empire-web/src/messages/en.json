@@ -2318,7 +2318,9 @@
     "save": "Save",
     "cancel": "Cancel",
     "empty": "No data",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "errorTitle": "Something went wrong",
+    "retry": "Try again"
   },
   "footer": {
     "support": "Support",

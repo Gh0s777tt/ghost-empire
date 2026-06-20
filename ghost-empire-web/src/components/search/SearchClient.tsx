@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Search, Loader2, Sparkles } from "lucide-react";
 import { apiPost } from "@/lib/api-client";
+import { EmptyState } from "@/components/EmptyState";
 
 type Result = { title: string; type: "page" | "achievement" | "shop"; href: string; score: number };
 
@@ -56,7 +57,7 @@ export function SearchClient() {
 
       {results && !dormant && (
         results.length === 0 ? (
-          <div className="text-xs text-zinc-500 text-center py-6">{t("empty")}</div>
+          <EmptyState icon={<Search className="w-7 h-7" />} title={t("empty")} />
         ) : (
           <div className="space-y-1.5">
             {results.map((r, i) => (

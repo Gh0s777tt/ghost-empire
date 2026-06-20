@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Heart, Copy, Check, Eye, QrCode, ExternalLink, Download, Star, Link2, Share2, Trophy } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { maskIban, formatIban } from "@/lib/payment-methods";
+import { EmptyState } from "@/components/EmptyState";
 
 type Method = {
   id: string; kind: "link" | "crypto" | "bank"; label: string; value: string;
@@ -80,10 +81,7 @@ export function SupportClient({
       )}
 
       {methods.length === 0 ? (
-        <div className="border border-zinc-900 bg-black/20 rounded-xl p-8 text-center">
-          <Heart className="w-10 h-10 mx-auto mb-3 text-zinc-700" />
-          <p className="text-zinc-400 text-sm">{t("empty")}</p>
-        </div>
+        <EmptyState icon={<Heart className="w-7 h-7" />} title={t("empty")} />
       ) : (
         <div className="space-y-2.5">
           {methods.map((m) => {

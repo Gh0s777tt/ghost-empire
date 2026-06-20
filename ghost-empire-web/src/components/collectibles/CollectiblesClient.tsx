@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Package, Sparkles } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { EmptyState, ErrorState } from "@/components/EmptyState";
 import { RARITY_COLOR, normalizeRarity } from "@/lib/collectibles";
 
 type Card = { id: string; name: string; description: string | null; rarity: string; emoji: string | null; imageUrl: string | null; qty: number };
@@ -15,6 +16,7 @@ type Reveal = { id: string; name: string; rarity: string; emoji: string | null; 
 
 export function CollectiblesClient() {
   const t = useTranslations("collectibles");
+  const tc = useTranslations("common");
   const nf = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const sym = tokenSymbol || "GT";
@@ -48,7 +50,7 @@ export function CollectiblesClient() {
   }
 
   if (loading) return <div className="text-zinc-500 text-sm flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>;
-  if (!data) return <div className="text-zinc-500 text-sm">{t("err_error")}</div>;
+  if (!data) return <ErrorState title={tc("errorTitle")} message={t("err_error")} retryLabel={tc("retry")} onRetry={() => { setLoading(true); void load(); }} />;
 
   const owned = data.cards.filter((c) => c.qty > 0).length;
   const canOpen = data.loggedIn && data.cards.length > 0 && data.balance >= data.packPrice;
@@ -61,7 +63,7 @@ export function CollectiblesClient() {
       </header>
 
       {data.cards.length === 0 ? (
-        <div className="border border-zinc-900 bg-black/20 rounded-xl p-8 text-center text-zinc-400 text-sm">{t("empty")}</div>
+        <EmptyState icon={<Package className="w-7 h-7" />} title={t("empty")} />
       ) : (
         <>
           {/* Pack opener */}

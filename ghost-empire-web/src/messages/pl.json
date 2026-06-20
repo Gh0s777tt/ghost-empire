@@ -2318,7 +2318,9 @@
     "save": "Zapisz",
     "cancel": "Anuluj",
     "empty": "Brak danych",
-    "skipToContent": "Przejdź do treści"
+    "skipToContent": "Przejdź do treści",
+    "errorTitle": "Coś poszło nie tak",
+    "retry": "Spróbuj ponownie"
   },
   "footer": {
     "support": "Wsparcie",
