@@ -1954,6 +1954,7 @@
     "refErr": "Something went wrong.",
     "socialIntro": "Public links on your profile. Click a platform to expand and edit.",
     "socialNone": "none",
+    "socialClicksTitle": "Link opens from your public profile (directional)",
     "save": "Save",
     "remove": "Remove",
     "discordTitle": "LINK DISCORD",

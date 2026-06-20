@@ -621,6 +621,7 @@ model SocialLink {
   platform String // "instagram" | "twitter" | "tiktok" | "youtube" | "website"
   handle   String
   url      String
+  clicks   Int    @default(0) // # of times opened from a public profile (#542, directional)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

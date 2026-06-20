@@ -85,6 +85,7 @@ type Props = {
     platform: string;
     handle: string;
     url: string;
+    clicks: number;
   }>;
   transactions: Array<{
     id: string;
@@ -533,7 +534,7 @@ type Tile = {
 function SocialLinksEditor({
   initialLinks,
 }: {
-  initialLinks: Array<{ id: string; platform: string; handle: string; url: string }>;
+  initialLinks: Array<{ id: string; platform: string; handle: string; url: string; clicks: number }>;
 }) {
   const t = useTranslations("profile");
   const router = useRouter();
@@ -554,7 +555,7 @@ function SocialLinksEditor({
         { platform, handle: draft },
       );
       if (data.link) {
-        const link = data.link;
+        const link = { ...data.link, clicks: 0 }; // real count reloads on router.refresh()
         setLinks((prev) => {
           const others = prev.filter((l) => l.platform !== platform);
           return [...others, link].sort((a, b) => a.platform.localeCompare(b.platform));
@@ -619,6 +620,9 @@ function SocialLinksEditor({
                 </span>
               ) : (
                 <span className="text-xs text-zinc-600 shrink-0">{t("socialNone")}</span>
+              )}
+              {existing && existing.clicks > 0 && (
+                <span className="text-[10px] font-mono text-zinc-500 shrink-0" title={t("socialClicksTitle")}>👆 {existing.clicks}</span>
               )}
               <ChevronDown className={cn("w-4 h-4 text-zinc-500 shrink-0 transition-transform", isOpen && "rotate-180")} />
             </button>
@@ -831,7 +835,7 @@ function AccountsAndLinks({
 }: {
   connections: ProfileConnection[];
   linkedAccounts: Array<{ provider: string; providerAccountId: string }>;
-  socialLinks: Array<{ id: string; platform: string; handle: string; url: string }>;
+  socialLinks: Array<{ id: string; platform: string; handle: string; url: string; clicks: number }>;
 }) {
   const t = useTranslations("profile");
   const router = useRouter();

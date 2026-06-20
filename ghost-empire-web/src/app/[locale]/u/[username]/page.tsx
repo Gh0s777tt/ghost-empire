@@ -9,6 +9,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { ProfileShareRow } from "@/components/profile/ProfileShareRow";
+import { TrackedLink } from "@/components/profile/TrackedLink";
 import {
   Trophy, Award, Link as LinkIcon, Globe, MessageCircle, Mic2, Flame,
   ShieldCheck, Heart, Crown, Ban, Star, Music2, Users, Send,
@@ -471,11 +472,10 @@ export default async function PublicProfilePage({
                   {socialLinks.map((l) => {
                     const Icon = SOCIAL_ICONS[l.platform] ?? Globe;
                     return (
-                      <a
+                      <TrackedLink
                         key={l.id}
                         href={l.url}
-                        target="_blank"
-                        rel="noreferrer"
+                        beaconId={l.id}
                         className="flex items-center gap-2 border border-zinc-800 bg-black/30 px-3 py-2 hover:border-zinc-700 hover:bg-zinc-900/50 transition-all"
                       >
                         <Icon className="w-4 h-4 shrink-0" style={{ color: SOCIAL_COLORS[l.platform] }} />
@@ -483,7 +483,7 @@ export default async function PublicProfilePage({
                           <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">{l.platform}</div>
                           <div className="text-xs text-white truncate">@{l.handle}</div>
                         </div>
-                      </a>
+                      </TrackedLink>
                     );
                   })}
                 </div>
