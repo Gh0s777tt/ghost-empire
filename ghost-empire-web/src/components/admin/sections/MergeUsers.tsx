@@ -208,33 +208,31 @@ function DuplicateGroupCard({
         {group.users.map((u) => {
           const isPrim = u.id === primaryId;
           const isSec = u.id === secondaryId;
+          // Click / Enter / Space cycles role: primary → secondary → unselected → primary.
+          const cycleRole = () => {
+            if (isPrim) {
+              const other = group.users.find((x) => x.id !== u.id);
+              if (other) { setPrimaryId(other.id); setSecondaryId(u.id); setPreview(null); }
+            } else if (isSec) {
+              setSecondaryId(""); setPreview(null);
+            } else {
+              setSecondaryId(u.id); setPreview(null);
+            }
+          };
           return (
             <div
               key={u.id}
+              role="button"
+              tabIndex={0}
+              aria-pressed={isPrim || isSec}
               className={cn(
                 "border p-3 cursor-pointer transition-colors",
                 isPrim ? "border-green-700 bg-green-950/20" :
                 isSec ? "border-orange-700 bg-orange-950/20" :
                 "border-zinc-800 bg-black/30 hover:border-zinc-600",
               )}
-              onClick={() => {
-                // Click cycles role: primary → secondary → unselected → primary
-                if (isPrim) {
-                  // Make this secondary, pick another as primary
-                  const other = group.users.find((x) => x.id !== u.id);
-                  if (other) {
-                    setPrimaryId(other.id);
-                    setSecondaryId(u.id);
-                    setPreview(null);
-                  }
-                } else if (isSec) {
-                  setSecondaryId("");
-                  setPreview(null);
-                } else {
-                  setSecondaryId(u.id);
-                  setPreview(null);
-                }
-              }}
+              onClick={cycleRole}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); cycleRole(); } }}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">

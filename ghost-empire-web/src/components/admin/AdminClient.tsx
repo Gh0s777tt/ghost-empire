@@ -558,6 +558,8 @@ export function AdminClient({
 
       {toast && (
         <div
+          role={toast.kind === "ok" ? "status" : "alert"}
+          aria-live={toast.kind === "ok" ? "polite" : "assertive"}
           className={cn(
             "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
             toast.kind === "ok"

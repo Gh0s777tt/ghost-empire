@@ -189,14 +189,8 @@ function NotificationItem({
 }) {
   const TypeIcon = TYPE_ICON[n.type] ?? AlertCircle;
   const locale = useLocale();
-  const content = (
-    <div
-      onClick={onClick}
-      className={cn(
-        "flex gap-3 px-3 py-2.5 border-b border-zinc-900 last:border-0 cursor-pointer transition-colors",
-        n.read ? "hover:bg-zinc-900/50" : "bg-red-950/10 hover:bg-red-950/20",
-      )}
-    >
+  const inner = (
+    <>
       <div className="shrink-0 pt-0.5">
         {n.icon ? (
           <span className="text-xl">{n.icon}</span>
@@ -214,11 +208,24 @@ function NotificationItem({
           {timeAgo(n.createdAt, locale)}
         </div>
       </div>
-    </div>
+    </>
   );
 
+  // Real interactive element (keyboard-accessible) instead of a clickable <div>. #audit-v2 a11y
+  const cls = cn(
+    "flex gap-3 px-3 py-2.5 border-b border-zinc-900 last:border-0 cursor-pointer transition-colors w-full text-left",
+    n.read ? "hover:bg-zinc-900/50" : "bg-red-950/10 hover:bg-red-950/20",
+  );
   if (n.link) {
-    return <Link href={n.link} className="block">{content}</Link>;
+    return (
+      <Link href={n.link} onClick={onClick} className={cn(cls, "block")}>
+        {inner}
+      </Link>
+    );
   }
-  return content;
+  return (
+    <button type="button" onClick={onClick} className={cls}>
+      {inner}
+    </button>
+  );
 }
