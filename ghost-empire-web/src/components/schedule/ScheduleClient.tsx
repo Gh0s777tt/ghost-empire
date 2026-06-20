@@ -3,8 +3,9 @@
 // Public schedule: highlighted upcoming stream + countdown + weekly grid
 import { useEffect, useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Calendar, Clock, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Clock, Sparkles, ChevronLeft, ChevronRight, CalendarPlus, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { googleCalendarUrl, buildIcs, icsDataUrl } from "@/lib/calendar-links";
 
 type Slot = {
   id: string;
@@ -115,6 +116,19 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
     for (const s of slots) map[s.dayOfWeek].push(s);
     return map;
   }, [slots]);
+
+  // "Add to calendar" links for the next stream (#536) — Google + a downloadable
+  // .ics, both weekly-recurring. Built from the same next-occurrence the countdown uses.
+  const calLinks = useMemo(() => {
+    if (!nextSlot || !nextStart) return null;
+    const ev = {
+      title: nextSlot.title ?? t("streamDay", { day: daysFull[nextSlot.dayOfWeek] }),
+      start: nextStart,
+      end: new Date(nextStart.getTime() + nextSlot.durationMinutes * 60_000),
+      details: nextSlot.platform ?? undefined,
+    };
+    return { gcal: googleCalendarUrl(ev), ics: icsDataUrl(buildIcs({ ...ev, uid: `${nextSlot.id}@ghost-empire` })) };
+  }, [nextSlot, nextStart, t, daysFull]);
 
   // Week / month view toggle + the displayed month (1st of month, midnight).
   const [view, setView] = useState<"week" | "month">("week");
@@ -227,6 +241,19 @@ export function ScheduleClient({ slots }: { slots: Slot[] }) {
               </div>
             </div>
           </div>
+          {calLinks && (
+            <div className="mt-4 pt-4 border-t border-zinc-800/70 flex flex-wrap items-center justify-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 inline-flex items-center gap-1">
+                <CalendarPlus className="w-3 h-3" /> {t("addToCalendar")}
+              </span>
+              <a href={calLinks.gcal} target="_blank" rel="noreferrer" className="px-2.5 py-1 border border-zinc-800 text-zinc-300 hover:text-white hover:border-red-700 rounded text-[11px]">
+                {t("googleCal")}
+              </a>
+              <a href={calLinks.ics} download="stream.ics" className="px-2.5 py-1 border border-zinc-800 text-zinc-300 hover:text-white hover:border-red-700 rounded text-[11px] inline-flex items-center gap-1">
+                <Download className="w-3 h-3" /> {t("icsCal")}
+              </a>
+            </div>
+          )}
         </div>
       ) : null}
 
