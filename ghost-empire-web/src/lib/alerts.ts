@@ -6,10 +6,22 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
 import { notifyDonation } from "@/lib/web-push";
+import { cacheJson, cacheDelete } from "@/lib/redis";
 import type { AlertAnimation, AlertPosition, AlertTypeCfg } from "@/lib/alert-types";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("alerts");
+
+// Hot-path cache TTLs. The overlay SSE feed polls ~1/s per OBS source and reads
+// settings + per-type configs + token; these change only on admin edits, so a few
+// seconds of cross-instance caching removes ~3 DB queries/poll (DB pool max:3).
+// #perf — overlay hot-path. Keys are per-tenant ("default" = legacy/null tenant).
+const SETTINGS_TTL_MS = 10_000;
+const TYPECFG_TTL_MS = 10_000;
+const OVERLAY_TOKEN_TTL_MS = 30_000;
+const settingsKey = (tid: string | null) => `alert-settings:${tid ?? "default"}`;
+const typeCfgKey = (tid: string | null) => `alert-type-cfg:${tid ?? "default"}`;
+const overlayTokensKey = (tid: string | null) => `overlay-tokens:${tid ?? "default"}`;
 
 export type AlertType =
   | "shop_purchase"
@@ -100,12 +112,25 @@ export async function dispatchAlertSafe(input: AlertInput, tenantId?: string | n
  * Alert settings — one row per tenant (Phase 4 overlay pass), lazy-created on
  * first read; lazy-generates overlayToken too. `tenantId`: undefined → resolve
  * from the request Host, string → that tenant, null → legacy "default" row.
+ *
+ * `opts.cached` (#perf): the overlay hot path (SSE feed, ~1/s per OBS source) opts
+ * into a short-TTL cross-instance cache; admin reads/writes omit it so they always
+ * see live state. Hot consumers (shapeSettings, overlay-feeds) read only primitive
+ * fields, so the Date `updatedAt` round-tripping as a string through Redis JSON is
+ * harmless.
  */
-export async function getSettings(tenantId?: string | null) {
+export async function getSettings(tenantId?: string | null, opts?: { cached?: boolean }) {
   const tid = tenantId === undefined ? await currentTenantId() : tenantId;
-  // Read-FIRST: this runs every SSE tick (~1s per OBS source). The old
-  // unconditional upsert was a WRITE every tick — now we only write when the
-  // row is missing (first read) or the token still needs generating.
+  if (opts?.cached) {
+    return cacheJson(settingsKey(tid), SETTINGS_TTL_MS, () => loadSettings(tid));
+  }
+  return loadSettings(tid);
+}
+
+/** Read-first + lazy-create of a tenant's settings row (and its overlay token). */
+async function loadSettings(tid: string | null) {
+  // Read-FIRST: the old unconditional upsert was a WRITE every tick — now we only
+  // write when the row is missing (first read) or the token still needs generating.
   let existing = tid
     ? await prisma.streamAlertSettings.findUnique({ where: { tenantId: tid } })
     : await prisma.streamAlertSettings.findUnique({ where: { id: "default" } });
@@ -128,11 +153,16 @@ export async function getSettings(tenantId?: string | null) {
 
 /** Regenerate the overlay token — invalidates the previous OBS browser source URL. */
 export async function regenerateOverlayToken(tenantId?: string | null) {
-  const settings = await getSettings(tenantId); // ensures the row exists
-  return prisma.streamAlertSettings.update({
+  const tid = tenantId === undefined ? await currentTenantId() : tenantId;
+  const settings = await loadSettings(tid); // ensures the row exists (uncached)
+  const updated = await prisma.streamAlertSettings.update({
     where: { id: settings.id },
     data: { overlayToken: randomBytes(32).toString("hex") },
   });
+  // Bust the hot-path caches so the NEW token validates immediately and the old one
+  // stops — don't wait out the TTL. #perf
+  await Promise.all([cacheDelete(overlayTokensKey(tid)), cacheDelete(settingsKey(tid))]);
+  return updated;
 }
 
 /**
@@ -148,12 +178,18 @@ export async function isValidOverlayToken(token: string | null | undefined, tena
   if (!token || typeof token !== "string") return false;
 
   const tid = tenantId === undefined ? await currentTenantId() : tenantId;
-  const rows = await prisma.streamAlertSettings.findMany({
-    where: tid ? { tenantId: tid } : { id: "default" },
-    select: { overlayToken: true },
+  // Cache the DB token read (#perf): this runs on EVERY overlay request / SSE
+  // connect, yet tokens change only on admin rotation — which busts this key via
+  // regenerateOverlayToken. The constant-time compare below stays uncached, so a
+  // caller can't poison the cache with attacker-supplied tokens.
+  const dbTokens = await cacheJson<string[]>(overlayTokensKey(tid), OVERLAY_TOKEN_TTL_MS, async () => {
+    const rows = await prisma.streamAlertSettings.findMany({
+      where: tid ? { tenantId: tid } : { id: "default" },
+      select: { overlayToken: true },
+    });
+    return rows.map((r) => r.overlayToken).filter((t): t is string => Boolean(t));
   });
-  const candidates: string[] = [];
-  for (const r of rows) if (r.overlayToken) candidates.push(r.overlayToken);
+  const candidates: string[] = [...dbTokens];
   // Env fallback is for the legacy/founder portal only — a customer tenant must
   // never validate against a single global env token.
   if (!tid) {
@@ -178,19 +214,27 @@ export async function isValidOverlayToken(token: string | null | undefined, tena
  * row appear — merge with DEFAULT_ALERT_TYPE_CFG (lib/alert-types) at the use
  * site so unconfigured types fall back to the default look.
  */
-export async function getAlertTypeConfigs(tenantId?: string | null): Promise<Record<string, AlertTypeCfg>> {
+export async function getAlertTypeConfigs(
+  tenantId?: string | null,
+  opts?: { cached?: boolean },
+): Promise<Record<string, AlertTypeCfg>> {
   // Per-tenant (#512): each portal styles its own alert types. undefined → resolve
   // from the request Host; an explicit value is threaded by the SSE feed (no request).
   const tid = tenantId === undefined ? await currentTenantId() : tenantId;
-  const rows = await prisma.alertTypeConfig.findMany({ where: tid ? { tenantId: tid } : {} });
-  const map: Record<string, AlertTypeCfg> = {};
-  for (const r of rows) {
-    map[r.type] = {
-      animation: r.animation as AlertAnimation,
-      position: r.position as AlertPosition,
-      soundUrl: r.soundUrl,
-      minAmount: r.minAmount,
-    };
-  }
-  return map;
+  const load = async () => {
+    const rows = await prisma.alertTypeConfig.findMany({ where: tid ? { tenantId: tid } : {} });
+    const map: Record<string, AlertTypeCfg> = {};
+    for (const r of rows) {
+      map[r.type] = {
+        animation: r.animation as AlertAnimation,
+        position: r.position as AlertPosition,
+        soundUrl: r.soundUrl,
+        minAmount: r.minAmount,
+      };
+    }
+    return map;
+  };
+  // Hot path opts into a short-TTL cross-instance cache (all values are primitives,
+  // so Redis JSON round-trips cleanly); admin edits omit it for immediacy. #perf
+  return opts?.cached ? cacheJson(typeCfgKey(tid), TYPECFG_TTL_MS, load) : load();
 }

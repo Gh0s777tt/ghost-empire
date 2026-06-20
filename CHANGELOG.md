@@ -72,6 +72,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
   - **Web push:** the "LIVE now" push is now **fire-and-forget** in the Twitch EventSub webhook (was `await`ed — a slow push endpoint could have stalled the webhook → Twitch retries / DB-pool exhaustion), and every `web-push` send now carries a **5s timeout** so a black-holed endpoint can't hang the function; defensive `.catch` on all fire-and-forget `notify*` call sites.
   No schema change. Zielone: `tsc`/**345 testów**/`eslint`/`build`.
 
+### Performance
+
+- **Overlay hot-path caching — ~3 fewer DB queries per poll** **(#557)** — the OBS overlay SSE feed runs ~1×/s **per browser source**, and each tick read alert settings + per-type configs + validated the overlay token = ~3–4 DB round-trips on a connection pool capped at **3**. Those three reads change only on admin edits, so they now go through the shared **`cacheJson`** (Upstash Redis, cross-instance; in-memory fallback when Redis is off) with short TTLs (settings/type-configs **10s**, token list **30s**). `isValidOverlayToken` caches the token *list* (the constant-time compare stays uncached, so a caller can't poison the cache); `getSettings`/`getAlertTypeConfigs` gained an opt-in `{ cached: true }` used **only** on the overlay hot path — admin reads/writes stay live. Token rotation **busts** the cache immediately (new `cacheDelete`) so a re-pasted OBS URL works at once. Per poll the feed drops from ~4 queries to ~1 (the live alert fetch). No schema change. Zielone: `tsc`/**392 testów**/`eslint`/`build`.
+
 ### Changed
 
 - **Make `/support` discoverable** **(#520)** — added a "♥ Support" link in the site footer (every page) and taught the help assistant about `/support`, so viewers can actually find the new tip page from inside the portal (not only via a shared link). No schema change.

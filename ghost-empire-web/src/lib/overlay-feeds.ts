@@ -69,7 +69,7 @@ async function goalsFeed(_p: URLSearchParams, tid: string | null): Promise<unkno
     tid
       ? prisma.hypeTrainState.findUnique({ where: { tenantId: tid } })
       : prisma.hypeTrainState.findUnique({ where: { id: "default" } }),
-    getSettings(tid),
+    getSettings(tid, { cached: true }),
   ]);
   return {
     accentColor: settings.accentColor,

@@ -49,3 +49,20 @@ export async function cacheJson<T>(key: string, ttlMs: number, producer: () => P
   }
   return val;
 }
+
+/**
+ * Invaliduje wpis cache (oba backendy). Wołaj po mutacji, gdy stała wartość
+ * musi natychmiast zniknąć z cache (np. rotacja tokenu overlay) — bez czekania
+ * na TTL. Best-effort: błąd Redisa jest połykany (cache i tak wygaśnie po TTL).
+ */
+export async function cacheDelete(key: string): Promise<void> {
+  if (redis) {
+    try {
+      await redis.del(key);
+    } catch {
+      /* del nieudany — wpis wygaśnie po TTL */
+    }
+  } else {
+    mem.delete(key);
+  }
+}
