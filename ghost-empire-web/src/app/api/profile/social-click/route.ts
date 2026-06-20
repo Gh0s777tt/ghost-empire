@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,12 @@ export async function POST(req: Request) {
   const id = String(body.id ?? "");
   if (!id) return NextResponse.json({ ok: false }, { status: 400 });
 
-  await prisma.socialLink.update({ where: { id }, data: { clicks: { increment: 1 } } }).catch(() => {});
+  // SECURITY: scope the increment to a link whose owner is in THIS portal, so a raw id
+  // can't bump (or cross-tenant forge) an arbitrary user's link analytics. Mirrors the
+  // support/click route. #audit-H2.
+  const tid = await currentTenantId();
+  await prisma.socialLink
+    .updateMany({ where: { id, ...(tid ? { user: { tenantId: tid } } : {}) }, data: { clicks: { increment: 1 } } })
+    .catch(() => {});
   return NextResponse.json({ ok: true });
 }

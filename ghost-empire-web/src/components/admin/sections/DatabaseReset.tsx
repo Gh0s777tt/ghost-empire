@@ -5,7 +5,7 @@ import { signOut } from "next-auth/react";
 import { AlertTriangle, Trash2, Loader2, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
-import { apiPost, ApiError } from "@/lib/api-client";
+import { apiPostStepUp, ApiError } from "@/lib/api-client";
 
 export function DatabaseResetCard({
   onToast,
@@ -26,7 +26,7 @@ export function DatabaseResetCard({
     if (!window.confirm(t("lastWarning"))) return;
     setBusy(true);
     try {
-      const data = await apiPost<{ deletedUsers: number }>("/api/admin/reset-database", { confirm: confirm.trim() });
+      const data = await apiPostStepUp<{ deletedUsers: number }>("/api/admin/reset-database", { confirm: confirm.trim() });
       onToast("ok", t("resetDone", { count: data.deletedUsers }));
       // The acting admin's account is gone too — sign out and back to landing.
       setTimeout(() => signOut({ callbackUrl: "/welcome" }), 1800);

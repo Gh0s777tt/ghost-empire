@@ -7,16 +7,19 @@
 // lib/auth.ts), which is why wiping every user — including the acting admin — is safe.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requirePlatformOwner, requireStepUp } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 const CONFIRM_PHRASE = "USUŃ WSZYSTKO";
 
 export async function POST(req: Request) {
-  const auth = await requireAdmin();
+  // SECURITY: the deletes below are global (empty `where`) — they span EVERY tenant.
+  // Gate to the platform owner, NOT a per-tenant admin (who must never be able to wipe
+  // other portals' data). #audit-C1.
+  const auth = await requirePlatformOwner();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  let body: { confirm?: string };
+  let body: { confirm?: string; totpCode?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
@@ -27,6 +30,12 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+
+  // Step-up: this wipes EVERY user across EVERY tenant — the single most destructive
+  // action in the app. Require a fresh 2FA code on top of the owner gate (no-op unless
+  // the owner enabled 2FA; the danger-zone UI retries via apiPostStepUp). #audit-C1.
+  const step = await requireStepUp(auth.userId, body.totpCode);
+  if (!step.ok) return NextResponse.json({ error: step.error, stepUpRequired: true }, { status: step.status });
 
   // Snapshot for the audit log BEFORE the wipe — the acting admin's own account is
   // deleted too, so capture the name now. AdminAction has no FK to User, so the

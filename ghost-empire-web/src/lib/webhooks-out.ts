@@ -6,6 +6,7 @@
 import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { decryptSecret } from "@/lib/crypto";
+import { isSafeWebhookUrl } from "@/lib/ssrf-guard";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("webhooks-out");
@@ -36,6 +37,11 @@ async function deliver(event: string, payload: WebhookPayload, tenantId: string 
 
   await Promise.all(
     matching.map(async (h) => {
+      // SSRF guard: never POST to a loopback/private/metadata destination (#audit-H3).
+      if (!(await isSafeWebhookUrl(h.url))) {
+        log.warn("blocked unsafe outgoing webhook url", { id: h.id });
+        return;
+      }
       const headers: Record<string, string> = {
         "content-type": "application/json",
         "user-agent": "GhostEmpire-Webhook/1",
@@ -85,6 +91,8 @@ export function fireOutgoingWebhooks(event: string, payload: WebhookPayload, ten
 export async function testOutgoingWebhook(id: string): Promise<{ ok: boolean; status: number; error?: string }> {
   const h = await prisma.outgoingWebhook.findUnique({ where: { id } });
   if (!h) return { ok: false, status: 0, error: "not_found" };
+  // SSRF guard (#audit-H3) — also surfaces the block to the admin via the test button.
+  if (!(await isSafeWebhookUrl(h.url))) return { ok: false, status: 0, error: "blocked_url" };
 
   const body = JSON.stringify({
     event: "test",

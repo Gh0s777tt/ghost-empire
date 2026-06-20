@@ -3,6 +3,7 @@
 // have something to roll/trade. Idempotent — upserts ONLY these rows by a stable id, so
 // re-running won't duplicate and won't touch any cards the streamer added by hand.
 //   npx tsx scripts/seed-collectibles.ts      (reads DATABASE_URL from .env.local / .env)
+export {}; // mark as a module so top-level `main` doesn't collide with sibling scripts (TS2393)
 
 // Load env BEFORE importing the prisma client — the pg adapter reads DATABASE_URL at
 // import time (src/lib/prisma.ts), so a dynamic import after loadEnvFile is required.

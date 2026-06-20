@@ -3,13 +3,16 @@
 // balances. Deliberately EXCLUDES secrets/PII (auth accounts, sessions, OAuth tokens,
 // emails) and high-volume ephemera (chat feed, alert queue, event logs, rate limits).
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { requirePlatformOwner } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const auth = await requireAdmin();
+  // SECURITY: the reads below are global (empty `where`) and include every user's GT
+  // balance + role flags across ALL tenants. Gate to the platform owner, not a
+  // per-tenant admin. (A per-portal backup would need tenant-scoped reads.) #audit-H1.
+  const auth = await requirePlatformOwner();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const [
