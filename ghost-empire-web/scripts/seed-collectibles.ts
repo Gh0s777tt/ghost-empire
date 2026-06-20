@@ -97,6 +97,30 @@ const CARDS: { id: string; name: string; emoji: string; rarity: string; descript
   { id: "ge-xmas-tree", name: "Choinka Imperium", emoji: "🎄", rarity: "rare", description: "Mroźne Imperium · Świeci na czerwono.", active: false },
   { id: "ge-xmas-santa", name: "Święty Duch", emoji: "🎅", rarity: "epic", description: "Mroźne Imperium · Rozdaje GT zamiast węgla.", active: false },
   { id: "ge-xmas-frost", name: "Władca Mrozu", emoji: "❄️", rarity: "legendary", description: "Mroźne Imperium · Zamraża cały czat.", active: false },
+
+  // ═══ SERIA: MISTYCZNE / ZODIAK (evergreen) ════════════════════════════════
+  { id: "ge-zo-crystal", name: "Kryształowa Kula", emoji: "🔮", rarity: "common", description: "Mistyczne · Pokazuje przyszłe donejty." },
+  { id: "ge-zo-comet", name: "Spadająca Gwiazda", emoji: "☄️", rarity: "common", description: "Mistyczne · Pomyśl życzenie." },
+  { id: "ge-zo-moon", name: "Księżycowy Wróż", emoji: "🌙", rarity: "rare", description: "Mistyczne · Wie kiedy będzie raid." },
+  { id: "ge-zo-planet", name: "Astrolog Imperium", emoji: "🪐", rarity: "rare", description: "Mistyczne · Czyta przyszłość z gwiazd." },
+  { id: "ge-zo-eye", name: "Oko Przeznaczenia", emoji: "🧿", rarity: "epic", description: "Mistyczne · Chroni przed banami." },
+  { id: "ge-zo-star", name: "Gwiazda Polarna", emoji: "🌟", rarity: "legendary", description: "Mistyczne · Prowadzi zagubione dusze do domu." },
+
+  // ═══ SERIA: RETRO ARCADE (evergreen) ══════════════════════════════════════
+  { id: "ge-rt-invader", name: "Pikselowy Najeźdźca", emoji: "👾", rarity: "common", description: "Retro Arcade · 8-bitowy klasyk." },
+  { id: "ge-rt-joystick", name: "Mistrz Joysticka", emoji: "🕹️", rarity: "common", description: "Retro Arcade · Blistry na kciukach." },
+  { id: "ge-rt-pad", name: "Combo Breaker", emoji: "🎮", rarity: "common", description: "Retro Arcade · Down, down-forward, punch." },
+  { id: "ge-rt-floppy", name: "Zapis na Dyskietce", emoji: "💾", rarity: "rare", description: "Retro Arcade · Nie wyłączaj konsoli!" },
+  { id: "ge-rt-score", name: "High Score", emoji: "🏆", rarity: "epic", description: "Retro Arcade · Trzy litery na zawsze." },
+  { id: "ge-rt-coin", name: "Insert Coin", emoji: "🪙", rarity: "legendary", description: "Retro Arcade · Continue? 9... 8... 7..." },
+
+  // ═══ SERIA: WALENTYNKI (sezonowa — wł. w lutym w /admin#collectibles) ══════
+  { id: "ge-vd-arrow", name: "Strzała Amora", emoji: "💘", rarity: "common", description: "Walentynki · Trafia prosto w serce.", active: false },
+  { id: "ge-vd-letter", name: "List Miłosny", emoji: "💌", rarity: "common", description: "Walentynki · Zapieczętowany pocałunkiem.", active: false },
+  { id: "ge-vd-rose", name: "Róża dla Streamera", emoji: "🌹", rarity: "rare", description: "Walentynki · Bez kolców, same donejty.", active: false },
+  { id: "ge-vd-choco", name: "Słodkie Donejty", emoji: "💝", rarity: "rare", description: "Walentynki · Czekoladki w formie GT.", active: false },
+  { id: "ge-vd-ghost", name: "Zakochany Duch", emoji: "💖", rarity: "epic", description: "Walentynki · Rumieni się na czacie.", active: false },
+  { id: "ge-vd-souls", name: "Bratnie Dusze", emoji: "💞", rarity: "legendary", description: "Walentynki · Dwa duchy, jedno serce.", active: false },
 ];
 
 async function main() {
