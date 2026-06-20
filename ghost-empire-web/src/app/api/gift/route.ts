@@ -9,7 +9,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
-import { clampGift, giftError } from "@/lib/gift";
+import { clampGift, giftError, GIFT_DAILY_LIMIT } from "@/lib/gift";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +45,12 @@ export async function POST(req: Request) {
 
   try {
     const res = await prisma.$transaction(async (tx) => {
+      // Lock the sender row so concurrent gifts from this sender serialize — then the
+      // rolling-24h cap re-check below sees committed gifts and can't be bypassed by a
+      // burst (the pre-check above is only a fast friendly path). #audit-v2
+      await tx.$queryRaw`SELECT id FROM "users" WHERE id = ${senderId} FOR UPDATE`;
+      const agg = await tx.transaction.aggregate({ _sum: { amount: true }, where: { userId: senderId, reason: "gift_sent", createdAt: { gte: since } } });
+      if (Math.abs(agg._sum.amount ?? 0) + amount > GIFT_DAILY_LIMIT) return { daily: true as const };
       const pay = await tx.user.updateMany({ where: { id: senderId, tokens: { gte: amount } }, data: { tokens: { decrement: amount } } });
       if (pay.count === 0) return { insufficient: true as const };
       await tx.user.update({ where: { id: recipient.id }, data: { tokens: { increment: amount } } });
@@ -53,6 +59,7 @@ export async function POST(req: Request) {
       const u = await tx.user.findUnique({ where: { id: senderId }, select: { tokens: true } });
       return { balance: u?.tokens ?? 0 };
     });
+    if ("daily" in res) return NextResponse.json({ ok: false, reason: "daily" });
     if ("insufficient" in res) return NextResponse.json({ ok: false, reason: "insufficient" });
 
     const senderName = session.user.username || "Someone";

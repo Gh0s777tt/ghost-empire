@@ -36,96 +36,94 @@ function prestigeUpReward(prestige: number): number {
 export async function awardAccountXp(userId: string, amount: number): Promise<void> {
   if (amount <= 0) return;
   try {
-    const before = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { xp: true, level: true, prestige: true, username: true, displayName: true, image: true },
-    });
-    if (!before) return;
-
-    const newXp = before.xp + amount;
-    const newLevel = levelFor(newXp);
-    const newPrestige = prestigeFromXp(newXp);
-    const leveledUp = newLevel > before.level;
-    const prestigedUp = newPrestige > before.prestige;
-
-    if (!leveledUp && !prestigedUp) {
-      await prisma.user.update({ where: { id: userId }, data: { xp: newXp } });
-      return;
-    }
-
-    // Sum the rewards for every level and prestige star crossed (handles big jumps).
-    let bonus = 0;
-    for (let l = before.level + 1; l <= newLevel; l++) bonus += levelUpReward(l);
-    for (let p = before.prestige + 1; p <= newPrestige; p++) bonus += prestigeUpReward(p);
-
-    const reason = prestigedUp ? `prestige_up:${newPrestige}` : `level_up:${newLevel}`;
-    const notif = prestigedUp
-      ? {
-          title: `✦ Prestiż ${newPrestige}!`,
-          message: `Wzniosłeś się na prestiż ${newPrestige} i zgarnąłeś ${bonus.toLocaleString("pl-PL")} GT.`,
-          icon: "✦",
-        }
-      : {
-          title: `⬆️ Level ${newLevel}!`,
-          message: `Awansowałeś na poziom ${newLevel} i dostałeś ${bonus.toLocaleString("pl-PL")} GT bonusu.`,
-          icon: "⭐",
-        };
-
-    await prisma.$transaction([
-      prisma.user.update({
+    // Lock the user row so concurrent XP awards serialize (read→compute→write) — the old
+    // read-then-SET of absolute xp clobbered concurrent awards on the hot chat-award path
+    // (ended at X+max(a,b), not X+a+b). The alert + achievements run AFTER commit. #audit-v2
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "users" WHERE id = ${userId} FOR UPDATE`;
+      const before = await tx.user.findUnique({
         where: { id: userId },
-        data: {
-          xp: newXp,
-          level: newLevel,
-          prestige: newPrestige,
-          tokens: { increment: bonus },
-          totalEarned: { increment: bonus },
-        },
-      }),
-      prisma.transaction.create({
-        data: { userId, type: "earn", amount: bonus, reason, status: "completed" },
-      }),
-      prisma.notification.create({
-        data: {
-          userId,
-          type: "system",
-          title: notif.title,
-          message: notif.message,
-          icon: notif.icon,
-          link: "/profile",
-        },
-      }),
-    ]);
+        select: { xp: true, level: true, prestige: true, username: true, displayName: true, image: true },
+      });
+      if (!before) return null;
 
-    const actorName = before.displayName || before.username || "Widz";
+      const newXp = before.xp + amount;
+      const newLevel = levelFor(newXp);
+      const newPrestige = prestigeFromXp(newXp);
+      const leveledUp = newLevel > before.level;
+      const prestigedUp = newPrestige > before.prestige;
+
+      if (!leveledUp && !prestigedUp) {
+        await tx.user.update({ where: { id: userId }, data: { xp: newXp } });
+        return null; // nothing to announce
+      }
+
+      // Sum the rewards for every level and prestige star crossed (handles big jumps).
+      let bonus = 0;
+      for (let l = before.level + 1; l <= newLevel; l++) bonus += levelUpReward(l);
+      for (let p = before.prestige + 1; p <= newPrestige; p++) bonus += prestigeUpReward(p);
+
+      const reason = prestigedUp ? `prestige_up:${newPrestige}` : `level_up:${newLevel}`;
+      const notif = prestigedUp
+        ? {
+            title: `✦ Prestiż ${newPrestige}!`,
+            message: `Wzniosłeś się na prestiż ${newPrestige} i zgarnąłeś ${bonus.toLocaleString("pl-PL")} GT.`,
+            icon: "✦",
+          }
+        : {
+            title: `⬆️ Level ${newLevel}!`,
+            message: `Awansowałeś na poziom ${newLevel} i dostałeś ${bonus.toLocaleString("pl-PL")} GT bonusu.`,
+            icon: "⭐",
+          };
+
+      await tx.user.update({
+        where: { id: userId },
+        data: { xp: newXp, level: newLevel, prestige: newPrestige, tokens: { increment: bonus }, totalEarned: { increment: bonus } },
+      });
+      await tx.transaction.create({ data: { userId, type: "earn", amount: bonus, reason, status: "completed" } });
+      await tx.notification.create({
+        data: { userId, type: "system", title: notif.title, message: notif.message, icon: notif.icon, link: "/profile" },
+      });
+
+      return {
+        prestigedUp,
+        newLevel,
+        newPrestige,
+        actorName: before.displayName || before.username || "Widz",
+        actorImage: before.image ?? undefined,
+      };
+    });
+
+    if (!result) return; // no level/prestige up (or user gone)
+
     await dispatchAlertSafe(
-      prestigedUp
+      result.prestigedUp
         ? {
             type: "level_up",
             title: "✦ Prestiż!",
-            message: `wzniósł się na prestiż ${newPrestige}`,
+            message: `wzniósł się na prestiż ${result.newPrestige}`,
             icon: "✦",
-            actorName,
-            actorImage: before.image ?? undefined,
-            amount: newPrestige,
+            actorName: result.actorName,
+            actorImage: result.actorImage,
+            amount: result.newPrestige,
             amountLabel: "✦",
           }
         : {
             type: "level_up",
             title: "⬆️ Level up!",
-            message: `osiągnął poziom ${newLevel}`,
+            message: `osiągnął poziom ${result.newLevel}`,
             icon: "⭐",
-            actorName,
-            actorImage: before.image ?? undefined,
-            amount: newLevel,
+            actorName: result.actorName,
+            actorImage: result.actorImage,
+            amount: result.newLevel,
             amountLabel: "LVL",
           },
     );
 
     // Prestige achievements (Phantom Ascension) — best-effort, after the prestige-up.
-    if (prestigedUp) {
+    if (result.prestigedUp) {
       const { checkAndGrantAchievements } = await import("@/lib/achievements");
-      await checkAndGrantAchievements({ userId, triggerType: "prestige", hintValue: newPrestige });
+      await checkAndGrantAchievements({ userId, triggerType: "prestige", hintValue: result.newPrestige });
     }
   } catch (e) {
     log.error("awardAccountXp failed", e, { userId });
