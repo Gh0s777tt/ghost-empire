@@ -1565,6 +1565,19 @@
     "secDashboard": "Dashboard",
     "secAnalytics": "Analityka",
     "secEconomy": "Zdrowie ekonomii",
+    "push": {
+      "title": "Powiadomienia",
+      "intro": "Wyślij powiadomienie web push do widzów, którzy włączyli je na Twoim portalu.",
+      "loading": "Ładowanie…",
+      "setupHint": "Web push nie jest jeszcze skonfigurowany. Ustaw klucze VAPID (npx web-push generate-vapid-keys → env Vercel VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY, zob. docs/ENV.md), a ten panel ożyje.",
+      "subscribers": "{n} subskrybentów",
+      "titlePh": "Tytuł (opcjonalnie)",
+      "bodyPh": "Wiadomość — np. Wyjątkowy stream dziś o 20:00!",
+      "send": "Wyślij do {n}",
+      "sent": "Wysłano na {n} urządzeń",
+      "notConfigured": "Push nie jest skonfigurowany.",
+      "sendError": "Nie udało się wysłać. Spróbuj ponownie."
+    },
     "economyHealth": {
       "title": "Zdrowie ekonomii GT",
       "intro": "Saldo w obiegu plus ostatnie 30 dni: GT wytworzone (krany) kontra spalone (spusty). Jeśli krany stale przeważają nad spustami, GT powoli się inflacjonują i tracą wartość.",
@@ -1693,6 +1706,7 @@
     "secAlerts": "Stream Alerts",
     "secSoundrewards": "Dźwięki na streamie",
     "secPayments": "Wsparcie / płatności",
+    "secNotifications": "Powiadomienia",
     "secRecap": "AI Podsumowanie streamu",
     "secClipDirector": "AI Reżyser klipów",
     "secGoals": "Stream Goals",

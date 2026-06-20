@@ -33,6 +33,7 @@ type AdminActionType =
   | "update_moderation"
   | "update_integrations"
   | "update_wheel"
+  | "push_broadcast"
   | "backfill_tenant";
 
 export async function logAdminAction(opts: {

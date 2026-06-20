@@ -1565,6 +1565,19 @@
     "secDashboard": "Dashboard",
     "secAnalytics": "Analytics",
     "secEconomy": "Economy health",
+    "push": {
+      "title": "Notifications",
+      "intro": "Broadcast a web push to viewers who enabled notifications on your portal.",
+      "loading": "Loading…",
+      "setupHint": "Web push isn't configured yet. Set the VAPID keys (npx web-push generate-vapid-keys → Vercel env VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY, see docs/ENV.md), then this panel goes live.",
+      "subscribers": "{n} subscriber(s)",
+      "titlePh": "Title (optional)",
+      "bodyPh": "Message — e.g. Special stream tonight at 8pm!",
+      "send": "Send to {n}",
+      "sent": "Sent to {n} device(s)",
+      "notConfigured": "Push isn't configured.",
+      "sendError": "Couldn't send. Try again."
+    },
     "economyHealth": {
       "title": "GT economy health",
       "intro": "Circulating supply plus the last 30 days of GT minted (faucets) vs burned (sinks). If faucets keep outpacing sinks, GT slowly inflate and lose value.",
@@ -1693,6 +1706,7 @@
     "secAlerts": "Stream Alerts",
     "secSoundrewards": "Stream sounds",
     "secPayments": "Support / payments",
+    "secNotifications": "Notifications",
     "secRecap": "AI Stream Recap",
     "secClipDirector": "AI Clip Director",
     "secGoals": "Stream Goals",
