@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import { Search, CornerDownLeft, User as UserIcon } from "lucide-react";
 import { COMMANDS, filterCommands } from "@/lib/command-palette";
 import { displayNick } from "@/lib/utils";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 type UserHit = { username: string; displayName: string | null; image: string | null; level: number };
 type Entry = { key: string; label: string; href: string; hint?: string; image?: string | null; isUser?: boolean };
@@ -23,6 +24,9 @@ export function CommandPalette() {
   const [sel, setSel] = useState(0);
   const [users, setUsers] = useState<UserHit[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Focus trap: on open focuses the input, traps Tab inside the dialog, Esc closes,
+  // and focus is RESTORED to the trigger element on close. Reused by GiftButton.
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, { onEscape: () => setOpen(false), initialFocus: inputRef });
 
   // Resolve each command's label once per locale + build its searchable string.
   const all = useMemo(
@@ -43,27 +47,24 @@ export function CommandPalette() {
     return [...pages, ...people];
   }, [pageHits, users]);
 
-  // Cmd/Ctrl+K toggles; Esc closes.
+  // Cmd/Ctrl+K toggles (global); Esc-to-close + focus are handled by useFocusTrap.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((v) => !v);
-      } else if (e.key === "Escape") {
-        setOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Reset the query/selection/results each time the palette opens.
   useEffect(() => {
     if (open) {
       setQuery("");
       setSel(0);
       setUsers([]);
-      const id = setTimeout(() => inputRef.current?.focus(), 30);
-      return () => clearTimeout(id);
     }
   }, [open]);
   useEffect(() => { setSel(0); }, [query]);
@@ -104,7 +105,7 @@ export function CommandPalette() {
       aria-label={t("placeholder")}
       onClick={() => setOpen(false)}
     >
-      <div className="w-full max-w-lg border border-zinc-800 bg-zinc-950 rounded-xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} className="w-full max-w-lg border border-zinc-800 bg-zinc-950 rounded-xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 px-3 border-b border-zinc-800">
           <Search className="w-4 h-4 text-zinc-500 shrink-0" />
           <input
@@ -113,10 +114,15 @@ export function CommandPalette() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onInputKey}
             placeholder={t("placeholder")}
+            role="combobox"
+            aria-expanded={entries.length > 0}
+            aria-controls="cmdk-listbox"
+            aria-autocomplete="list"
+            aria-activedescendant={entries[sel] ? `cmdk-opt-${sel}` : undefined}
             className="flex-1 bg-transparent py-3 text-sm text-white outline-none placeholder:text-zinc-600"
           />
         </div>
-        <div className="max-h-[50vh] overflow-y-auto py-1">
+        <div id="cmdk-listbox" role="listbox" aria-label={t("placeholder")} className="max-h-[50vh] overflow-y-auto py-1">
           {entries.length === 0 ? (
             <div className="px-4 py-6 text-center text-xs text-zinc-600">{t("empty")}</div>
           ) : (
@@ -124,6 +130,10 @@ export function CommandPalette() {
               <div key={r.key}>
                 {i === firstUserIdx && <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-widest text-zinc-600">{t("users")}</div>}
                 <button
+                  id={`cmdk-opt-${i}`}
+                  role="option"
+                  aria-selected={i === sel}
+                  tabIndex={-1}
                   onMouseEnter={() => setSel(i)}
                   onClick={() => go(r.href)}
                   className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors ${i === sel ? "bg-red-950/40 text-white" : "text-zinc-300 hover:bg-zinc-900"}`}

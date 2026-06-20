@@ -1956,6 +1956,7 @@
     "countryNone": "🌍 Country",
     "accentLabel": "Accent",
     "accentNone": "Default (brand)",
+    "accentSwatch": "Accent color: {name}",
     "xpToPrestige": "XP to prestige ✦{n}",
     "xpToLevel": "XP to LVL {n}",
     "xpTotalMax": "{xp} XP total · max level reached — XP now builds prestige ✦",

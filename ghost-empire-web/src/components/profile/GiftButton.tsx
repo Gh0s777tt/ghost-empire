@@ -2,10 +2,11 @@
 // src/components/profile/GiftButton.tsx
 // "Send GT" on a viewer's public profile (#553) — opens a tiny amount field and posts
 // to /api/gift. Shown only to logged-in viewers on someone else's profile.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Gift, Loader2, Check } from "lucide-react";
 import { apiPost } from "@/lib/api-client";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 export function GiftButton({ toUsername }: { toUsername: string }) {
   const t = useTranslations("gift");
@@ -14,6 +15,10 @@ export function GiftButton({ toUsername }: { toUsername: string }) {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Same focus util as the command palette: focus the amount field on open, trap Tab in
+  // the popover, Esc closes, and focus returns to the trigger button on close.
+  const popoverRef = useFocusTrap<HTMLDivElement>(open, { onEscape: () => setOpen(false), initialFocus: inputRef });
 
   async function send() {
     if (!(+amount > 0) || busy) return;
@@ -37,15 +42,17 @@ export function GiftButton({ toUsername }: { toUsername: string }) {
 
   return (
     <div className="inline-block">
-      <button onClick={() => setOpen((v) => !v)} className="px-2 py-0.5 border border-zinc-800 text-zinc-400 hover:text-white hover:border-emerald-700 rounded text-[11px] inline-flex items-center gap-1 transition-colors">
+      <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="px-2 py-0.5 border border-zinc-800 text-zinc-400 hover:text-white hover:border-emerald-700 rounded text-[11px] inline-flex items-center gap-1 transition-colors">
         <Gift className="w-3 h-3" /> {t("send")}
       </button>
       {open && (
-        <div className="mt-2 flex items-center gap-1.5">
+        <div ref={popoverRef} className="mt-2 flex items-center gap-1.5">
           <input
+            ref={inputRef}
             value={amount}
             inputMode="numeric"
             placeholder={t("amountPh")}
+            aria-label={t("amountPh")}
             onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
             onKeyDown={(e) => { if (e.key === "Enter") void send(); }}
             className="w-24 border border-zinc-700 bg-black/40 px-2 py-1 text-xs text-white font-mono outline-hidden focus:border-emerald-600 rounded"

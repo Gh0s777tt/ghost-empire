@@ -47,8 +47,8 @@ export function AccentPicker({ initialAccent }: { initialAccent: string | null }
           key={a.key}
           onClick={() => void change(a.key)}
           disabled={busy}
-          title={a.key}
-          aria-label={a.key}
+          title={t("accentSwatch", { name: a.key })}
+          aria-label={t("accentSwatch", { name: a.key })}
           className={`w-5 h-5 rounded-full border flex items-center justify-center transition-transform hover:scale-110 disabled:opacity-50 ${accent === a.key ? "border-white" : "border-transparent"}`}
           style={{ background: a.color }}
         >

@@ -1956,6 +1956,7 @@
     "countryNone": "🌍 Kraj",
     "accentLabel": "Akcent",
     "accentNone": "Domyślny (marka)",
+    "accentSwatch": "Kolor akcentu: {name}",
     "xpToPrestige": "XP do prestiżu ✦{n}",
     "xpToLevel": "XP do LVL {n}",
     "xpTotalMax": "Łącznie {xp} XP · max LVL osiągnięty — XP buduje teraz prestiż ✦",
