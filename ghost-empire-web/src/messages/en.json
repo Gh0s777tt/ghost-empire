@@ -2260,6 +2260,21 @@
     "err_bad": "Invalid request.",
     "err_error": "Something went wrong — try again."
   },
+  "gift": {
+    "send": "Send %gt%",
+    "amountPh": "Amount",
+    "confirm": "Send",
+    "sent": "Sent!",
+    "err_no-user": "Viewer not found.",
+    "err_self": "You can't gift yourself.",
+    "err_insufficient": "Not enough %gt%.",
+    "err_daily": "Daily gift limit reached.",
+    "err_amount": "Invalid amount.",
+    "err_rate-limited": "Slow down a moment.",
+    "err_unauthorized": "Sign in to send %gt%.",
+    "err_bad": "Invalid request.",
+    "err_error": "Something went wrong — try again."
+  },
   "passkey": {
     "title": "Passkeys",
     "desc": "Add a passkey (fingerprint, face or device PIN) for fast, passwordless sign-in.",

@@ -2260,6 +2260,21 @@
     "err_bad": "Nieprawidłowe żądanie.",
     "err_error": "Coś poszło nie tak — spróbuj ponownie."
   },
+  "gift": {
+    "send": "Wyślij %gt%",
+    "amountPh": "Ile",
+    "confirm": "Wyślij",
+    "sent": "Wysłano!",
+    "err_no-user": "Nie znaleziono widza.",
+    "err_self": "Nie wyślesz sobie.",
+    "err_insufficient": "Za mało %gt%.",
+    "err_daily": "Osiągnięto dzienny limit prezentów.",
+    "err_amount": "Nieprawidłowa kwota.",
+    "err_rate-limited": "Zwolnij chwilę.",
+    "err_unauthorized": "Zaloguj się, by wysłać %gt%.",
+    "err_bad": "Nieprawidłowe żądanie.",
+    "err_error": "Coś poszło nie tak — spróbuj ponownie."
+  },
   "passkey": {
     "title": "Passkeys (klucze)",
     "desc": "Dodaj passkey (odcisk, twarz lub PIN urządzenia) do szybkiego logowania bez hasła.",

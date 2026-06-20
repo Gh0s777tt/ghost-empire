@@ -9,6 +9,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { ProfileShareRow } from "@/components/profile/ProfileShareRow";
+import { GiftButton } from "@/components/profile/GiftButton";
 import { TrackedLink } from "@/components/profile/TrackedLink";
 import {
   Trophy, Award, Link as LinkIcon, Globe, MessageCircle, Mic2, Flame,
@@ -292,8 +293,9 @@ export default async function PublicProfilePage({
                 )}
 
                 {profileUrl && (
-                  <div className="mb-4">
+                  <div className="mb-4 flex items-center gap-2 flex-wrap">
                     <ProfileShareRow url={profileUrl} name={displayNick(user.displayName, user.username)} qr={profileQr} handle={user.username} />
+                    {session?.user && !isOwnProfile && user.username && <GiftButton toUsername={user.username} />}
                   </div>
                 )}
 
