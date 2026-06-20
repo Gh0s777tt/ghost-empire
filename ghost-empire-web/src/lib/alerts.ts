@@ -136,22 +136,30 @@ export async function regenerateOverlayToken(tenantId?: string | null) {
 }
 
 /**
- * Validates the overlay token from query/header against the CURRENT tenant's
- * settings (Host-resolved by default), falling back to the legacy row and the
- * env var — so existing OBS URLs keep working through the rollout.
+ * Validates the overlay token against the CURRENT tenant's settings (Host-resolved
+ * by default). STRICT per-tenant (#audit-M1): a real tenant validates ONLY against
+ * its own `overlayToken` — never the legacy "default" row, and never the global env
+ * `OVERLAY_TOKEN` — so one portal's OBS URL can't drive another portal's overlay.
+ * The default row + env fallback survive ONLY for the legacy/founder portal
+ * (`tid === null`), which is the platform owner's own portal, not a cross-tenant
+ * surface.
  */
 export async function isValidOverlayToken(token: string | null | undefined, tenantId?: string | null): Promise<boolean> {
   if (!token || typeof token !== "string") return false;
 
   const tid = tenantId === undefined ? await currentTenantId() : tenantId;
   const rows = await prisma.streamAlertSettings.findMany({
-    where: { OR: [{ id: "default" }, ...(tid ? [{ tenantId: tid }] : [])] },
+    where: tid ? { tenantId: tid } : { id: "default" },
     select: { overlayToken: true },
   });
   const candidates: string[] = [];
   for (const r of rows) if (r.overlayToken) candidates.push(r.overlayToken);
-  const envToken = process.env.OVERLAY_TOKEN;
-  if (envToken && envToken !== "REPLACE_WITH_HEX_32_BYTES") candidates.push(envToken);
+  // Env fallback is for the legacy/founder portal only — a customer tenant must
+  // never validate against a single global env token.
+  if (!tid) {
+    const envToken = process.env.OVERLAY_TOKEN;
+    if (envToken && envToken !== "REPLACE_WITH_HEX_32_BYTES") candidates.push(envToken);
+  }
 
   for (const expected of candidates) {
     if (token.length !== expected.length) continue;

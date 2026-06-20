@@ -54,16 +54,21 @@ export async function POST(req: Request) {
   // Tenant isolation: both accounts must belong to the host tenant — a tenant
   // admin must not merge (and thereby delete) another portal's users. The
   // platform owner merges across tenants (admin-of-admins).
+  //
+  // #audit-M2: STRICT equality, and ALWAYS enforced for non-owners. The old guard
+  // (a) only ran `if (tid)` — so a non-owner admin on the founder/null-tenant portal
+  // skipped the check entirely — and (b) used `u.tenantId && u.tenantId !== tid`,
+  // which let a null-tenant (legacy/global) user slip through. Now both users must
+  // match the acting admin's tenant exactly (null===null included), so a customer
+  // admin can never reach a null-tenant or other-portal user.
   if (!auth.isPlatformOwner) {
     const tid = await currentTenantId();
-    if (tid) {
-      const both = await prisma.user.findMany({
-        where: { id: { in: [primary, secondary] } },
-        select: { id: true, tenantId: true },
-      });
-      if (both.length < 2 || both.some((u) => u.tenantId && u.tenantId !== tid)) {
-        return NextResponse.json({ error: "Użytkownik nie należy do tego portalu" }, { status: 404 });
-      }
+    const both = await prisma.user.findMany({
+      where: { id: { in: [primary, secondary] } },
+      select: { id: true, tenantId: true },
+    });
+    if (both.length < 2 || both.some((u) => u.tenantId !== tid)) {
+      return NextResponse.json({ error: "Użytkownik nie należy do tego portalu" }, { status: 404 });
     }
   }
 

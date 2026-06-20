@@ -2,7 +2,10 @@
 // Daily login bonus with a growing streak: day 1 = 50 GT, +25 GT per consecutive
 // day, capped at 200 GT (day 7+). No schema changes — claims ARE the `transaction`
 // rows (reason "daily-bonus"), and the streak is derived from their UTC days.
-// Double-claim safe: the claim re-checks inside a Serializable transaction.
+// Double-claim safe at the DB level: each claim's `externalId` is a deterministic
+// "daily-bonus:<userId>:<utcDay>" key on the already-unique `Transaction.externalId`
+// column, so two concurrent claims race on the unique index and exactly one wins
+// (P2002) — no over-credit, no Serializable/retry dance needed (#audit-M4).
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -50,24 +53,30 @@ export async function POST() {
   if (s.claimedToday) return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409 });
   const reward = s.nextReward;
 
+  const dayKey = dayStartUtc(new Date());
+  const externalId = `${REASON}:${userId}:${dayKey}`;
+
   try {
-    const newBalance = await prisma.$transaction(
-      async (tx) => {
-        const dup = await tx.transaction.findFirst({
-          where: { userId, reason: REASON, createdAt: { gte: new Date(dayStartUtc(new Date())) } },
-          select: { id: true },
-        });
-        if (dup) throw new Error("DUP");
-        await tx.user.update({ where: { id: userId }, data: { tokens: { increment: reward }, totalEarned: { increment: reward } } });
-        await tx.transaction.create({ data: { userId, type: "earn", amount: reward, reason: REASON, status: "completed" } });
-        const u = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
-        return u?.tokens ?? 0;
-      },
-      { isolationLevel: "Serializable" },
-    );
+    const newBalance = await prisma.$transaction(async (tx) => {
+      // Fast path: skip the write if today's claim already landed in this tenant.
+      const dup = await tx.transaction.findFirst({
+        where: { userId, reason: REASON, createdAt: { gte: new Date(dayKey) } },
+        select: { id: true },
+      });
+      if (dup) throw new Error("DUP");
+      await tx.user.update({ where: { id: userId }, data: { tokens: { increment: reward }, totalEarned: { increment: reward } } });
+      // The unique `externalId` is the HARD double-claim guard — a concurrent claim
+      // that slipped past the fast-path above loses here with P2002 (#audit-M4).
+      await tx.transaction.create({ data: { userId, type: "earn", amount: reward, reason: REASON, externalId, status: "completed" } });
+      const u = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
+      return u?.tokens ?? 0;
+    });
     return NextResponse.json({ ok: true, reward, streak: s.streak + 1, newBalance });
   } catch (e) {
     if (e instanceof Error && e.message === "DUP") {
+      return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409 });
+    }
+    if (typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2002") {
       return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409 });
     }
     return NextResponse.json({ error: "Błąd serwera — spróbuj ponownie" }, { status: 500 });

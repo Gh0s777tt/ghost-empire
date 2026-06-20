@@ -69,6 +69,10 @@ export async function placeWager(opts: {
   const tid = await currentTenantId();
   try {
     return await prisma.$transaction(async (tx) => {
+      // #audit-M3: lock the prediction row up front so wager / resolve / cancel
+      // serialize on it. Without this a wager can commit between resolve's entries
+      // snapshot and its claim (TOCTOU) → a paid-for stake that never gets paid out.
+      await tx.$queryRaw`SELECT id FROM "predictions" WHERE id = ${predictionId} FOR UPDATE`;
       const prediction = await tx.prediction.findFirst({ where: { id: predictionId, ...(tid ? { tenantId: tid } : {}) } });
       if (!prediction) {
         return { ok: false, status: 404, error: "Zakład nie istnieje" } as const;
@@ -158,6 +162,10 @@ export async function resolvePrediction(opts: {
   const tid = await currentTenantId();
   try {
     const result = await prisma.$transaction(async (tx) => {
+      // #audit-M3: take the prediction row lock BEFORE snapshotting entries, so a
+      // concurrent placeWager can't slip a new entry/pot in after this read but
+      // before the claim. Wager / resolve / cancel are serialized on this row.
+      await tx.$queryRaw`SELECT id FROM "predictions" WHERE id = ${predictionId} FOR UPDATE`;
       const prediction = await tx.prediction.findFirst({
         where: { id: predictionId, ...(tid ? { tenantId: tid } : {}) },
         include: { entries: true },
@@ -308,6 +316,9 @@ export async function cancelPrediction(predictionId: string): Promise<{ ok: true
   const tid = await currentTenantId();
   try {
     return await prisma.$transaction(async (tx) => {
+      // #audit-M3: lock the prediction row before reading entries so a concurrent
+      // wager / resolve can't interleave with this cancel+refund (TOCTOU).
+      await tx.$queryRaw`SELECT id FROM "predictions" WHERE id = ${predictionId} FOR UPDATE`;
       const prediction = await tx.prediction.findFirst({
         where: { id: predictionId, ...(tid ? { tenantId: tid } : {}) },
         include: { entries: true },
