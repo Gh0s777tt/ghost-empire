@@ -66,6 +66,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/push/test` | POST | Testowe powiadomienie na własne urządzenia (weryfikacja pętli) |
 | `…/api/profile/country` | POST | Ustawienie/wyczyszczenie kraju (flaga na profilu, #540) |
 | `…/api/profile/accent` | POST | Ustawienie/wyczyszczenie koloru akcentu profilu (#546) |
+| `…/api/search/users` | GET | Szukanie widzów do palety poleceń (#549 — publiczne pola, tenant-scoped, rate-limit, min 2 znaki) |
 | `…/api/profile/social-click` | POST | Licznik klików linku społ. (#542 — beacon z `/u/<nick>`, rate-limit per IP) |
 | `…/api/auth/passkey` | GET/DELETE | Lista / usunięcie passkeys użytkownika (#543) |
 | `…/api/auth/passkey/register/options` · `…/verify` | POST | Ceremonia rejestracji passkey (WebAuthn, #543) |

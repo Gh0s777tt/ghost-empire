@@ -1,14 +1,18 @@
 "use client";
 // src/components/CommandPalette.tsx
-// Global quick-nav palette (#548). Cmd/Ctrl+K opens a fuzzy search over the portal's
-// pages; ↑↓ to move, ⏎ to jump, esc to close. Mounted in the locale layout. Pure
-// matching lives in lib/command-palette; labels reuse the `nav` namespace so the
-// palette is localized for free. No schema, no network.
+// Global quick-nav palette (#548, +user search #549). Cmd/Ctrl+K opens a fuzzy search
+// over the portal's pages AND (async) viewers; ↑↓ to move across both, ⏎ to jump, esc
+// to close. Mounted in the locale layout. Page matching is pure (lib/command-palette);
+// user search hits /api/search/users (debounced, ≥2 chars).
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Search, CornerDownLeft } from "lucide-react";
+import { Search, CornerDownLeft, User as UserIcon } from "lucide-react";
 import { COMMANDS, filterCommands } from "@/lib/command-palette";
+import { displayNick } from "@/lib/utils";
+
+type UserHit = { username: string; displayName: string | null; image: string | null; level: number };
+type Entry = { key: string; label: string; href: string; hint?: string; image?: string | null; isUser?: boolean };
 
 export function CommandPalette() {
   const tn = useTranslations("nav");
@@ -17,6 +21,7 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [sel, setSel] = useState(0);
+  const [users, setUsers] = useState<UserHit[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Resolve each command's label once per locale + build its searchable string.
@@ -29,7 +34,14 @@ export function CommandPalette() {
       }),
     [tn],
   );
-  const results = useMemo(() => filterCommands(all, query), [all, query]);
+  const pageHits = useMemo(() => filterCommands(all, query), [all, query]);
+
+  // Combined, navigable list: pages first, then matching viewers.
+  const entries: Entry[] = useMemo(() => {
+    const pages: Entry[] = pageHits.map((c) => ({ key: `c:${c.id}`, label: c.label, href: c.href, hint: c.href }));
+    const people: Entry[] = users.map((u) => ({ key: `u:${u.username}`, label: displayNick(u.displayName, u.username), href: `/u/${u.username}`, hint: `@${u.username}`, image: u.image, isUser: true }));
+    return [...pages, ...people];
+  }, [pageHits, users]);
 
   // Cmd/Ctrl+K toggles; Esc closes.
   useEffect(() => {
@@ -49,11 +61,26 @@ export function CommandPalette() {
     if (open) {
       setQuery("");
       setSel(0);
+      setUsers([]);
       const id = setTimeout(() => inputRef.current?.focus(), 30);
       return () => clearTimeout(id);
     }
   }, [open]);
   useEffect(() => { setSel(0); }, [query]);
+
+  // Debounced viewer search (≥2 chars).
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) { setUsers([]); return; }
+    let cancelled = false;
+    const id = setTimeout(() => {
+      fetch(`/api/search/users?q=${encodeURIComponent(q)}`)
+        .then((r) => r.json())
+        .then((d: { users?: UserHit[] }) => { if (!cancelled) setUsers(d?.users ?? []); })
+        .catch(() => { if (!cancelled) setUsers([]); });
+    }, 280);
+    return () => { cancelled = true; clearTimeout(id); };
+  }, [query]);
 
   function go(href: string) {
     setOpen(false);
@@ -61,12 +88,14 @@ export function CommandPalette() {
   }
 
   function onInputKey(e: React.KeyboardEvent) {
-    if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, results.length - 1)); }
+    if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, entries.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
-    else if (e.key === "Enter") { e.preventDefault(); const r = results[sel]; if (r) go(r.href); }
+    else if (e.key === "Enter") { e.preventDefault(); const r = entries[sel]; if (r) go(r.href); }
   }
 
   if (!open) return null;
+  const firstUserIdx = entries.findIndex((e) => e.isUser);
+
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] px-4 bg-black/70 backdrop-blur-sm"
@@ -88,20 +117,28 @@ export function CommandPalette() {
           />
         </div>
         <div className="max-h-[50vh] overflow-y-auto py-1">
-          {results.length === 0 ? (
+          {entries.length === 0 ? (
             <div className="px-4 py-6 text-center text-xs text-zinc-600">{t("empty")}</div>
           ) : (
-            results.map((r, i) => (
-              <button
-                key={r.id}
-                onMouseEnter={() => setSel(i)}
-                onClick={() => go(r.href)}
-                className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors ${i === sel ? "bg-red-950/40 text-white" : "text-zinc-300 hover:bg-zinc-900"}`}
-              >
-                <span className="flex-1 truncate">{r.label}</span>
-                <span className="text-[10px] font-mono text-zinc-600">{r.href}</span>
-                {i === sel && <CornerDownLeft className="w-3 h-3 text-zinc-500 shrink-0" />}
-              </button>
+            entries.map((r, i) => (
+              <div key={r.key}>
+                {i === firstUserIdx && <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-widest text-zinc-600">{t("users")}</div>}
+                <button
+                  onMouseEnter={() => setSel(i)}
+                  onClick={() => go(r.href)}
+                  className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors ${i === sel ? "bg-red-950/40 text-white" : "text-zinc-300 hover:bg-zinc-900"}`}
+                >
+                  {r.isUser &&
+                    (r.image ? (
+                      <img src={r.image} alt="" className="w-4 h-4 rounded-full shrink-0 object-cover" />
+                    ) : (
+                      <UserIcon className="w-4 h-4 text-zinc-500 shrink-0" />
+                    ))}
+                  <span className="flex-1 truncate">{r.label}</span>
+                  <span className="text-[10px] font-mono text-zinc-600">{r.hint}</span>
+                  {i === sel && <CornerDownLeft className="w-3 h-3 text-zinc-500 shrink-0" />}
+                </button>
+              </div>
             ))
           )}
         </div>

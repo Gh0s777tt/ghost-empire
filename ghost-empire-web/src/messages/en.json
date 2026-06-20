@@ -2149,8 +2149,9 @@
     "testBody": "This is a test notification — it works! 🎉"
   },
   "commandPalette": {
-    "placeholder": "Search pages…  (Ctrl/⌘ K)",
+    "placeholder": "Search pages & people…  (Ctrl/⌘ K)",
     "empty": "Nothing found",
+    "users": "Viewers",
     "navigate": "navigate",
     "open": "open",
     "close": "close"

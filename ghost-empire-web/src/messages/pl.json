@@ -2149,8 +2149,9 @@
     "testBody": "To testowe powiadomienie — działa! 🎉"
   },
   "commandPalette": {
-    "placeholder": "Szukaj stron…  (Ctrl/⌘ K)",
+    "placeholder": "Szukaj stron i osób…  (Ctrl/⌘ K)",
     "empty": "Nic nie znaleziono",
+    "users": "Widzowie",
     "navigate": "nawiguj",
     "open": "otwórz",
     "close": "zamknij"
