@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
 import { apiPost, ApiError } from "@/lib/api-client";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import type { EventRow } from "../types";
 
 type HolidayTemplate = {
@@ -398,6 +399,7 @@ function EventEditor({
   const [extendByMinutes, setExtendByMinutes] = useState("");
   const [busy, setBusy] = useState(false);
   const t = useTranslations("admin.events");
+  const tc = useTranslations("common");
 
   async function save() {
     setBusy(true);
@@ -429,15 +431,17 @@ function EventEditor({
     } finally { setBusy(false); }
   }
 
+  const dialogRef = useFocusTrap<HTMLDivElement>(true, { onEscape: () => { if (!busy) onClose(); } });
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => !busy && onClose()}>
-      <div role="dialog" aria-modal="true" aria-label={t("editorAria")} className="bg-zinc-950 border-2 border-zinc-800 max-w-xl w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={t("editorAria")} className="bg-zinc-950 border-2 border-zinc-800 max-w-xl w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-display text-xl text-white tracking-wider">{t("editorHeading")}</h3>
             <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{event.type}</span>
           </div>
-          <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400">
+          <button onClick={onClose} disabled={busy} aria-label={tc("cancel")} className="text-zinc-500 hover:text-red-400">
             <X className="w-5 h-5" />
           </button>
         </div>

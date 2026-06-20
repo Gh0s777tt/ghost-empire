@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { fmt, cn } from "@/lib/utils";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import type { ShopItemRow } from "../types";
 
 const CATEGORIES_SHOP = ["games", "skins", "subs", "cosmetic", "experience"] as const;
@@ -148,6 +149,7 @@ function ShopItemEditor({
   const [imageUrl, setImageUrl] = useState(item?.imageUrl ?? "");
   const [busy, setBusy] = useState(false);
   const t = useTranslations("admin.shop");
+  const tc = useTranslations("common");
 
   async function save() {
     setBusy(true);
@@ -181,12 +183,15 @@ function ShopItemEditor({
     } finally { setBusy(false); }
   }
 
+  const dialogRef = useFocusTrap<HTMLDivElement>(true, { onEscape: () => { if (!busy) onClose(); } });
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
       onClick={() => !busy && onClose()}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={t("editorAria")}
@@ -197,7 +202,7 @@ function ShopItemEditor({
           <h3 className="font-display text-xl text-white tracking-wider">
             {isNew ? t("editorNew") : t("editorEdit")}
           </h3>
-          <button onClick={onClose} disabled={busy} className="text-zinc-500 hover:text-red-400">
+          <button onClick={onClose} disabled={busy} aria-label={tc("cancel")} className="text-zinc-500 hover:text-red-400">
             <X className="w-5 h-5" />
           </button>
         </div>
