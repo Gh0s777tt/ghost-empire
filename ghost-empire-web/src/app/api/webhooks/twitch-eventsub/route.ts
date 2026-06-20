@@ -530,9 +530,9 @@ async function handleStreamOnline(event: Record<string, unknown>, tenantId: stri
   await prisma.streamSession.create({ data: { platform: "twitch", twitchStreamId: streamId, startedAt } });
   log.info("stream online", { streamId, startedAt: startedAt.toISOString() });
   // Fire the "LIVE now" web push exactly once per stream (we're past the idempotency
-  // guard). Best-effort + dormant-safe — never throws, never blocks beyond the small
-  // subscriber fan-out.
-  await notifyStreamLive(tenantId);
+  // guard). Fire-and-forget: the EventSub webhook must return a fast 2xx to Twitch, so
+  // we must NOT await the (bounded but still network-bound) subscriber fan-out (#545).
+  void notifyStreamLive(tenantId).catch(() => {});
 }
 
 async function handleStreamOffline(): Promise<void> {

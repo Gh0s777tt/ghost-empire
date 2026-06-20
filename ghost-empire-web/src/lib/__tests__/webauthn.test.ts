@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rpIdFromHost, originFromHeaders } from "@/lib/webauthn";
+import { rpIdFromHost, originFromHeaders, isSecureContext, sanitizeTransports } from "@/lib/webauthn";
 
 describe("rpIdFromHost", () => {
   it("strips the port", () => {
@@ -25,5 +25,27 @@ describe("originFromHeaders", () => {
     expect(originFromHeaders("localhost:3000", null)).toBe("http://localhost:3000");
     expect(originFromHeaders("127.0.0.1:3000", undefined)).toBe("http://127.0.0.1:3000");
     expect(originFromHeaders("example.com", undefined)).toBe("https://example.com");
+  });
+});
+
+describe("isSecureContext", () => {
+  it("is true only for https origins", () => {
+    expect(isSecureContext("https://example.com")).toBe(true);
+    expect(isSecureContext("http://localhost:3000")).toBe(false);
+    expect(isSecureContext("")).toBe(false);
+  });
+});
+
+describe("sanitizeTransports", () => {
+  it("keeps only known transports, as CSV", () => {
+    expect(sanitizeTransports(["internal", "hybrid"])).toBe("internal,hybrid");
+    expect(sanitizeTransports(["usb", "nfc", "ble"])).toBe("usb,nfc,ble");
+  });
+  it("drops unknown / non-string entries", () => {
+    expect(sanitizeTransports(["internal", "evil", 5, null])).toBe("internal");
+    expect(sanitizeTransports(["nope", "alsonope"])).toBeNull();
+  });
+  it("returns null for non-arrays", () => {
+    for (const x of [null, undefined, "internal", 42, {}]) expect(sanitizeTransports(x)).toBeNull();
   });
 });

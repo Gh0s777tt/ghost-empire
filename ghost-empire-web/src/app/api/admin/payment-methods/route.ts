@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     });
     // Just hit the goal this save → "goal reached" web push to subscribers (#535).
     if (active && target >= 1 && (prev?.current ?? 0) < target && current >= target) {
-      void notifyGoalReached(tid, title);
+      void notifyGoalReached(tid, title).catch(() => {});
     }
     return NextResponse.json({ ok: true });
   }

@@ -81,7 +81,7 @@ export async function dispatchAlert(input: AlertInput, tenantId?: string | null)
   // Fire-and-forget like the webhooks above; dormant-safe + never throws. Already
   // gated by the per-type enable check above, so disabling donation alerts mutes it.
   if (input.type === "donation") {
-    void notifyDonation(tid, { name: input.actorName, amount: input.amount, amountLabel: input.amountLabel });
+    void notifyDonation(tid, { name: input.actorName, amount: input.amount, amountLabel: input.amountLabel }).catch(() => {});
   }
 
   return created;

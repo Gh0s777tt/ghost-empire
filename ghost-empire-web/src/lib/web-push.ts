@@ -57,7 +57,10 @@ async function deliver(subs: SubRow[], payload: PushPayload): Promise<{ sent: nu
   await Promise.all(
     subs.map(async (s) => {
       try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body);
+        // Bound each send: web-push arms a socket timeout ONLY when given one — without
+        // it a black-holed push endpoint hangs for the full OS TCP timeout, which (even
+        // fire-and-forget) keeps the serverless function + DB pool slot alive (#545).
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body, { timeout: 5000 });
         sent++;
       } catch (e) {
         const code = (e as { statusCode?: number })?.statusCode;

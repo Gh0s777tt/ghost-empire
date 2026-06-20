@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       type: "public-key" as const,
       transports: (p.transports ? p.transports.split(",") : undefined) as AuthenticatorTransportFuture[] | undefined,
     })),
-    authenticatorSelection: { residentKey: "preferred", userVerification: "preferred" },
+    authenticatorSelection: { residentKey: "preferred", userVerification: "required" },
   });
 
   const res = NextResponse.json(options);
