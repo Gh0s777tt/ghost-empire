@@ -2,7 +2,7 @@
 // src/components/collectibles/CollectiblesClient.tsx
 // Collection grid + GT pack opening (#551). Cards you own show in full colour with a
 // ×qty badge; ones you don't are dimmed silhouettes. Opening a pack reveals the card.
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Package, Sparkles } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
@@ -25,6 +25,15 @@ export function CollectiblesClient() {
   const [opening, setOpening] = useState(false);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  // Auto-dismissing error toast (replaces the old sticky amber banner, matches the
+  // marketplace pattern). Success feedback is the card reveal animation below. #audit-v2
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showErr = (text: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setMsg(text);
+    toastTimer.current = setTimeout(() => setMsg(null), 3200);
+  };
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   async function load() {
     try { setData(await apiGet<Data>("/api/collectibles")); } catch { /* keep */ } finally { setLoading(false); }
@@ -40,10 +49,10 @@ export function CollectiblesClient() {
         setReveal(card);
         setData((d) => (d ? { ...d, balance: r.balance ?? d.balance, cards: d.cards.map((c) => (c.id === card.id ? { ...c, qty: c.qty + 1 } : c)) } : d));
       } else {
-        setMsg(t(`err_${r.reason ?? "error"}`));
+        showErr(t(`err_${r.reason ?? "error"}`));
       }
     } catch {
-      setMsg(t("err_error"));
+      showErr(t("err_error"));
     } finally {
       setOpening(false);
     }
@@ -82,7 +91,7 @@ export function CollectiblesClient() {
             </button>
           </div>
 
-          {msg && <div className="mb-4 text-xs text-amber-300 border border-amber-700/50 bg-amber-950/20 rounded-lg px-3 py-2">{msg}</div>}
+          {msg && <div role="alert" aria-live="assertive" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border bg-red-950/90 border-red-600 text-red-200">{msg}</div>}
 
           {reveal && (
             <div className="mb-5 flex flex-col items-center gap-2 border-2 rounded-xl p-5" style={{ borderColor: RARITY_COLOR[normalizeRarity(reveal.rarity)], background: `${RARITY_COLOR[normalizeRarity(reveal.rarity)]}14`, animation: "gerevealin 420ms cubic-bezier(0.22,1,0.36,1)" }}>

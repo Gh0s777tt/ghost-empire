@@ -62,7 +62,7 @@ export function GiftButton({ toUsername }: { toUsername: string }) {
           </button>
         </div>
       )}
-      {msg && <div className="mt-1 text-[11px] text-amber-300">{msg}</div>}
+      {msg && <div role="alert" className="mt-1 text-[11px] text-red-300">{msg}</div>}
     </div>
   );
 }
