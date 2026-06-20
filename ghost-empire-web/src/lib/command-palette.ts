@@ -16,6 +16,7 @@ export const COMMANDS: Command[] = [
   { id: "clans", href: "/clans", labelKey: "clans", keywords: "clans guild klany gildia" },
   { id: "clips", href: "/clips", labelKey: "clips", keywords: "clips clip of the week klipy klip tygodnia" },
   { id: "collectibles", href: "/collectibles", labelKey: "collectibles", keywords: "collectibles cards packs karty kolekcjonerskie paczki kolekcja" },
+  { id: "market", href: "/market", labelKey: "market", keywords: "market trade buy sell cards giełda handel kup sprzedaj karty marketplace" },
   { id: "trivia", href: "/trivia", labelKey: "trivia", keywords: "trivia quiz pytania" },
   { id: "wheel", href: "/wheel", labelKey: "wheel", keywords: "wheel fortune koło fortuny" },
   { id: "casino", href: "/kasyno", labelKey: "casino", keywords: "casino kasyno gry hazard slots dice" },

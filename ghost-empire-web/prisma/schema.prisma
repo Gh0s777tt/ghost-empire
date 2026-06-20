@@ -164,6 +164,7 @@ model User {
   pushSubscriptions PushSubscription[]
   passkeys         Passkey[]
   collectibles     UserCollectible[]
+  cardListings     CardListing[]     @relation("CardSeller")
   wheelSpins       WheelSpin[]
   gtGamePlays      GtGamePlay[]
   duelsChallenged  Duel[]            @relation("DuelChallenger")
@@ -1726,7 +1727,8 @@ model Collectible {
   sortOrder   Int     @default(0)
   createdAt   DateTime @default(now())
 
-  owners UserCollectible[]
+  owners   UserCollectible[]
+  listings CardListing[]
 
   @@index([tenantId, active])
   @@map("collectibles")
@@ -1746,6 +1748,30 @@ model UserCollectible {
   @@index([userId])
   @@index([collectibleId])
   @@map("user_collectibles")
+}
+
+// =====================================================
+// CARD MARKETPLACE (#552) — P2P listings of owned collectibles for GT. The card is
+// escrowed (removed from the seller's collection) while listed; on buy it moves to the
+// buyer and GT moves seller-ward (minus a burned fee = GT sink). Per-tenant.
+// =====================================================
+model CardListing {
+  id            String    @id @default(cuid())
+  tenantId      String?
+  sellerId      String
+  collectibleId String
+  price         Int // GT
+  status        String    @default("active") // active | sold | cancelled
+  buyerId       String? // plain ref (no relation — avoids a 2nd User<->CardListing edge)
+  createdAt     DateTime  @default(now())
+  closedAt      DateTime?
+
+  seller      User        @relation("CardSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  collectible Collectible @relation(fields: [collectibleId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([sellerId])
+  @@map("card_listings")
 }
 
 // =====================================================

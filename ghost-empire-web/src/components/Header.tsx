@@ -22,7 +22,7 @@ import { useTenantBranding } from "@/components/TenantBranding";
 // Grouped navigation. Labels are i18n keys (namespace "nav") resolved at render.
 type NavKey =
   | "home" | "shop" | "ranking" | "games" | "casino" | "wheel"
-  | "library" | "community" | "events" | "polls" | "achievements" | "schedule" | "companion" | "clans" | "clips" | "sounds" | "trivia" | "collectibles";
+  | "library" | "community" | "events" | "polls" | "achievements" | "schedule" | "companion" | "clans" | "clips" | "sounds" | "trivia" | "collectibles" | "market";
 type NavLeaf = { href: string; tk: NavKey; icon: LucideIcon };
 type NavGroup = { tk: NavKey; icon: LucideIcon; children: NavLeaf[] };
 type NavEntry = NavLeaf | NavGroup;
@@ -48,6 +48,7 @@ const NAV: NavEntry[] = [
       { href: "/clans",        tk: "clans",        icon: Users },
       { href: "/clips",        tk: "clips",        icon: Film },
       { href: "/collectibles", tk: "collectibles", icon: Sparkles },
+      { href: "/market",       tk: "market",       icon: ShoppingBag },
       { href: "/events",       tk: "events",       icon: Calendar },
       { href: "/polls",        tk: "polls",        icon: BarChart3 },
       { href: "/trivia",       tk: "trivia",       icon: Brain },
