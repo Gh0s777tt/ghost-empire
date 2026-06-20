@@ -14,6 +14,7 @@ import { rankForLevel, cn, displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { apiPost, apiPostStepUp, ApiError } from "@/lib/api-client";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 type Sort = "tokens" | "totalEarned" | "weekly" | "level" | "streak";
 
@@ -522,12 +523,18 @@ function AdminUserActions({
     } finally { setBusy(false); }
   }
 
+  const dialogRef = useFocusTrap<HTMLDivElement>(true, { onEscape: () => { if (!busy) onClose(); } });
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
       onClick={() => !busy && onClose()}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={displayNick(user.displayName, user.username)}
         className="bg-zinc-950 border-2 border-red-900/50 max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         style={{

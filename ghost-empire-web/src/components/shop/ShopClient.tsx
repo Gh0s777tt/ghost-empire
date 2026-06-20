@@ -13,6 +13,7 @@ import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { shopDiscountFraction, discountedPrice } from "@/lib/economy";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { apiPost, ApiError } from "@/lib/api-client";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import type { ShopItem } from "@prisma/client";
 
 type UserContext = {
@@ -58,6 +59,8 @@ export function ShopClient({
   const [pending, startTransition] = useTransition();
   const [busyItem, setBusyItem] = useState<string | null>(null);
   const [confirmItem, setConfirmItem] = useState<ShopItem | null>(null);
+  // Focus-trap the confirm modal (Esc closes when not mid-purchase, focus restores). #audit-v2 a11y
+  const confirmRef = useFocusTrap<HTMLDivElement>(!!confirmItem, { onEscape: () => { if (busyItem === null) setConfirmItem(null); } });
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   const { tokenSymbol } = useTenantBranding();
 
@@ -365,6 +368,10 @@ export function ShopClient({
           onClick={() => busyItem === null && setConfirmItem(null)}
         >
           <div
+            ref={confirmRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={confirmItem.name}
             className="bg-zinc-950 border border-red-900/50 max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
             style={{
