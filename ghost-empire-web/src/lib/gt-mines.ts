@@ -6,7 +6,7 @@
 // (another $transaction) but ONLY after an atomic Redis GETDEL claims the session, so a session can
 // never be cashed out twice. Hitting a bomb ends the session with the bet already lost.
 import { prisma } from "@/lib/prisma";
-import { redis } from "@/lib/redis";
+import { redis, withLock } from "@/lib/redis";
 import { randomUUID } from "node:crypto";
 
 export const MINES_TILES = 25; // 5×5
@@ -80,23 +80,30 @@ export type MinesRevealResult = { ok: true; bomb: boolean; tile: number; reveale
 
 /** Reveal one tile. A bomb ends the session (bet lost); a safe tile raises the multiplier. */
 export async function minesReveal(userId: string, sessionId: string, tile: number): Promise<MinesRevealResult> {
-  if (!redis) return { ok: false, status: 503, error: "Gra niedostępna" };
+  const r = redis;
+  if (!r) return { ok: false, status: 503, error: "Gra niedostępna" };
   if (!Number.isInteger(tile) || tile < 0 || tile >= MINES_TILES) return { ok: false, status: 400, error: "Nieprawidłowe pole" };
   const k = sk(userId, sessionId);
-  const session = await redis.get<MinesSession>(k);
-  if (!session) return { ok: false, status: 404, error: "Sesja wygasła" };
-  if (session.revealed.includes(tile)) return { ok: false, status: 400, error: "Pole już odkryte" };
+  // Serialize reveals on this session: without the lock two concurrent reveals could
+  // interleave so a safe-tile `set` lands after a bomb-tile `del`, resurrecting a
+  // session that should have ended (and erasing the loss). #audit-v2
+  const locked = await withLock(`lock:${k}`, 5_000, async (): Promise<MinesRevealResult> => {
+    const session = await r.get<MinesSession>(k);
+    if (!session) return { ok: false, status: 404, error: "Sesja wygasła" };
+    if (session.revealed.includes(tile)) return { ok: false, status: 400, error: "Pole już odkryte" };
 
-  if (session.bombSet.includes(tile)) {
-    await redis.del(k); // end the session
-    await prisma.gtGamePlay.create({ data: { userId, game: "mines", bet: session.bet, payout: 0, net: -session.bet, detail: `💣 bomba (${session.revealed.length} bezp., ${session.bombs} bomb)`.slice(0, 80) } }).catch(() => {});
-    void grantCasino(userId);
-    return { ok: true, bomb: true, tile, revealed: session.revealed, multiplier: 0, bombSet: session.bombSet };
-  }
+    if (session.bombSet.includes(tile)) {
+      await r.del(k); // end the session
+      await prisma.gtGamePlay.create({ data: { userId, game: "mines", bet: session.bet, payout: 0, net: -session.bet, detail: `💣 bomba (${session.revealed.length} bezp., ${session.bombs} bomb)`.slice(0, 80) } }).catch(() => {});
+      void grantCasino(userId);
+      return { ok: true, bomb: true, tile, revealed: session.revealed, multiplier: 0, bombSet: session.bombSet };
+    }
 
-  session.revealed.push(tile);
-  await redis.set(k, session, { ex: TTL_S });
-  return { ok: true, bomb: false, tile, revealed: session.revealed, multiplier: minesMultiplier(session.revealed.length, session.bombs) };
+    session.revealed.push(tile);
+    await r.set(k, session, { ex: TTL_S });
+    return { ok: true, bomb: false, tile, revealed: session.revealed, multiplier: minesMultiplier(session.revealed.length, session.bombs) };
+  });
+  return locked.ok ? locked.value : { ok: false, status: 409, error: "Poczekaj chwilę" };
 }
 
 export type MinesCashoutResult = { ok: true; payout: number; multiplier: number; net: number; newBalance: number; bombSet: number[] } | { ok: false; status: number; error: string };

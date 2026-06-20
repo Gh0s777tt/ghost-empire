@@ -5,7 +5,7 @@
 // loses everything; cash out any time. Cards are drawn rank-uniform (infinite deck) so
 // the odds are exactly P(higher)=(13−r)/13, P(lower)=(r−1)/13 — clean and provable.
 import { prisma } from "@/lib/prisma";
-import { redis } from "@/lib/redis";
+import { redis, withLock } from "@/lib/redis";
 import { randomUUID } from "node:crypto";
 
 const TTL_S = 60 * 60;
@@ -86,31 +86,38 @@ export async function hiloStart(userId: string, bet: number): Promise<HiloResult
 
 /** Guess hi/lo: correct multiplies the pot, wrong/tie busts (bet already lost). */
 export async function hiloGuess(userId: string, sessionId: string, guess: "hi" | "lo"): Promise<HiloResult> {
-  if (!redis) return { ok: false, status: 503, error: "Gra niedostępna" };
+  const r = redis;
+  if (!r) return { ok: false, status: 503, error: "Gra niedostępna" };
   if (guess !== "hi" && guess !== "lo") return { ok: false, status: 400, error: "Wybierz: wyżej / niżej" };
   const k = sk(userId, sessionId);
-  const s = await redis.get<HiloSession>(k);
-  if (!s) return { ok: false, status: 404, error: "Sesja wygasła" };
+  // Serialize guesses on this session: without the lock two concurrent guesses could
+  // interleave so a winning `set` overwrites a losing `del`, keeping the favorable draw
+  // and erasing the loss. #audit-v2
+  const locked = await withLock(`lock:${k}`, 5_000, async (): Promise<HiloResult> => {
+    const s = await r.get<HiloSession>(k);
+    if (!s) return { ok: false, status: 404, error: "Sesja wygasła" };
 
-  const step = hiloStepMultiplier(s.card.rank, guess);
-  if (step === 0) return { ok: false, status: 400, error: "Ten kierunek jest niemożliwy" }; // K-hi / A-lo
+    const step = hiloStepMultiplier(s.card.rank, guess);
+    if (step === 0) return { ok: false, status: 400, error: "Ten kierunek jest niemożliwy" }; // K-hi / A-lo
 
-  const next = drawCard();
-  const won = guess === "hi" ? next.rank > s.card.rank : next.rank < s.card.rank;
+    const next = drawCard();
+    const won = guess === "hi" ? next.rank > s.card.rank : next.rank < s.card.rank;
 
-  if (!won) {
-    await redis.del(k);
-    await prisma.gtGamePlay.create({ data: { userId, game: "hilo", bet: s.bet, payout: 0, net: -s.bet, detail: `🂠 bust po ${s.steps} trafieniach (${HILO_RANKS[s.card.rank - 1]}→${HILO_RANKS[next.rank - 1]})`.slice(0, 80) } }).catch(() => {});
-    void grantCasino(userId);
-    return { ok: true, state: { sessionId, card: next, prevCard: s.card, multiplier: 0, steps: s.steps, potential: 0, status: "busted" } };
-  }
+    if (!won) {
+      await r.del(k);
+      await prisma.gtGamePlay.create({ data: { userId, game: "hilo", bet: s.bet, payout: 0, net: -s.bet, detail: `🂠 bust po ${s.steps} trafieniach (${HILO_RANKS[s.card.rank - 1]}→${HILO_RANKS[next.rank - 1]})`.slice(0, 80) } }).catch(() => {});
+      void grantCasino(userId);
+      return { ok: true, state: { sessionId, card: next, prevCard: s.card, multiplier: 0, steps: s.steps, potential: 0, status: "busted" } };
+    }
 
-  const prev = s.card;
-  s.card = next;
-  s.steps += 1;
-  s.mult = Math.min(HILO_MAX_MULT, s.mult * step);
-  await redis.set(k, s, { ex: TTL_S });
-  return { ok: true, state: { sessionId, card: next, prevCard: prev, multiplier: s.mult, steps: s.steps, potential: Math.floor(s.bet * s.mult), status: "active" } };
+    const prev = s.card;
+    s.card = next;
+    s.steps += 1;
+    s.mult = Math.min(HILO_MAX_MULT, s.mult * step);
+    await r.set(k, s, { ex: TTL_S });
+    return { ok: true, state: { sessionId, card: next, prevCard: prev, multiplier: s.mult, steps: s.steps, potential: Math.floor(s.bet * s.mult), status: "active" } };
+  });
+  return locked.ok ? locked.value : { ok: false, status: 409, error: "Poczekaj chwilę" };
 }
 
 /** Cash out (atomic GETDEL → can never pay twice). Requires at least one correct guess. */

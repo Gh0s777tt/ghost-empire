@@ -4,6 +4,7 @@
 // Gdy brak env → klient = null, a cacheJson() spada na cache in-memory (per-instancja),
 // więc lokalnie/bez Redisa wszystko działa jak dotąd (graceful degradation).
 import { Redis } from "@upstash/redis";
+import { randomUUID } from "node:crypto";
 
 const url = process.env.UPSTASH_REDIS_REST_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -64,5 +65,47 @@ export async function cacheDelete(key: string): Promise<void> {
     }
   } else {
     mem.delete(key);
+  }
+}
+
+// Atomic compare-and-delete: only release the lock if WE still hold it (token match),
+// so a lock that already expired and was re-taken by someone else is never freed by us.
+const UNLOCK_LUA = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
+
+/**
+ * Best-effort single-instance lock (Redis `SET NX PX` + CAS release). Serializes a
+ * critical section keyed by `key` — e.g. the read-modify-write on a stateful casino
+ * session, where two concurrent reveals could otherwise erase a loss. Returns
+ * `{ ok: true, value }` when the lock was held for the whole call, or `{ ok: false }`
+ * when it couldn't be acquired (caller surfaces a "busy, retry" response). The lock
+ * auto-expires after `ttlMs` so a crashed holder never deadlocks.
+ *
+ * Without Redis, or on a transient Redis error, it runs `fn` UNGUARDED (fail-open):
+ * callers that need this already require Redis to be configured, and the underlying
+ * `GETDEL` claims still protect the actual payout — the lock only closes the
+ * intermediate read-modify-write race.
+ */
+export async function withLock<T>(
+  key: string,
+  ttlMs: number,
+  fn: () => Promise<T>,
+): Promise<{ ok: true; value: T } | { ok: false }> {
+  if (!redis) return { ok: true, value: await fn() };
+  const token = randomUUID();
+  let acquired = false;
+  try {
+    acquired = (await redis.set(key, token, { nx: true, px: ttlMs })) === "OK";
+  } catch {
+    return { ok: true, value: await fn() }; // lock store blip → fail open
+  }
+  if (!acquired) return { ok: false };
+  try {
+    return { ok: true, value: await fn() };
+  } finally {
+    try {
+      await redis.eval(UNLOCK_LUA, [key], [token]);
+    } catch {
+      /* lock will expire via PX */
+    }
   }
 }

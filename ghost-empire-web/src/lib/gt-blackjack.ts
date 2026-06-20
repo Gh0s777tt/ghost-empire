@@ -6,7 +6,7 @@
 // player blackjack pays 3:2 (2.5× total), win 2×, push 1×, no splits, double on
 // the first two cards (one card, auto-stand). House edge ≈ 1-2% (GT sink).
 import { prisma } from "@/lib/prisma";
-import { redis } from "@/lib/redis";
+import { redis, withLock } from "@/lib/redis";
 import { feedJackpot } from "@/lib/gt-games";
 import { randomUUID } from "node:crypto";
 
@@ -174,24 +174,30 @@ export async function blackjackStart(userId: string, bet: number): Promise<BjRes
 
 /** Draw one card. Bust settles immediately; 21 auto-stands. */
 export async function blackjackHit(userId: string, sessionId: string): Promise<BjResult> {
-  if (!redis) return { ok: false, status: 503, error: "Gra niedostępna" };
+  const rc = redis;
+  if (!rc) return { ok: false, status: 503, error: "Gra niedostępna" };
   const k = sk(userId, sessionId);
-  const s = await redis.get<BjSession>(k);
-  if (!s) return { ok: false, status: 404, error: "Sesja wygasła" };
+  // Serialize hit/stand/double on this session so two concurrent moves can't each
+  // mutate their own copy and overwrite each other (or settle on a stale hand). #audit-v2
+  const locked = await withLock(`lock:${k}`, 5_000, async (): Promise<BjResult> => {
+    const s = await rc.get<BjSession>(k);
+    if (!s) return { ok: false, status: 404, error: "Sesja wygasła" };
 
-  s.player.push(s.deck.pop() as number);
-  const total = handValue(s.player).total;
+    s.player.push(s.deck.pop() as number);
+    const total = handValue(s.player).total;
 
-  if (total > 21) {
-    const claimed = await redis.getdel<BjSession>(k); // claim before paying out (= logging the loss)
-    if (!claimed) return { ok: false, status: 404, error: "Sesja wygasła lub zakończona" };
-    const r = await settle(userId, s, s.dealer);
-    return { ok: true, state: doneState(sessionId, s, s.dealer, r) };
-  }
-  if (total === 21) return blackjackStandWith(userId, sessionId, s, k);
+    if (total > 21) {
+      const claimed = await rc.getdel<BjSession>(k); // claim before paying out (= logging the loss)
+      if (!claimed) return { ok: false, status: 404, error: "Sesja wygasła lub zakończona" };
+      const r = await settle(userId, s, s.dealer);
+      return { ok: true, state: doneState(sessionId, s, s.dealer, r) };
+    }
+    if (total === 21) return blackjackStandWith(userId, sessionId, s, k);
 
-  await redis.set(k, s, { ex: TTL_S });
-  return { ok: true, state: activeState(sessionId, s) };
+    await rc.set(k, s, { ex: TTL_S });
+    return { ok: true, state: activeState(sessionId, s) };
+  });
+  return locked.ok ? locked.value : { ok: false, status: 409, error: "Poczekaj chwilę" };
 }
 
 async function blackjackStandWith(userId: string, sessionId: string, s: BjSession, k: string): Promise<BjResult> {
@@ -205,41 +211,51 @@ async function blackjackStandWith(userId: string, sessionId: string, s: BjSessio
 
 /** Stand: dealer draws to 17+, hand settles. */
 export async function blackjackStand(userId: string, sessionId: string): Promise<BjResult> {
-  if (!redis) return { ok: false, status: 503, error: "Gra niedostępna" };
+  const rc = redis;
+  if (!rc) return { ok: false, status: 503, error: "Gra niedostępna" };
   const k = sk(userId, sessionId);
-  const s = await redis.get<BjSession>(k);
-  if (!s) return { ok: false, status: 404, error: "Sesja wygasła" };
-  return blackjackStandWith(userId, sessionId, s, k);
+  const locked = await withLock(`lock:${k}`, 5_000, async (): Promise<BjResult> => {
+    const s = await rc.get<BjSession>(k);
+    if (!s) return { ok: false, status: 404, error: "Sesja wygasła" };
+    return blackjackStandWith(userId, sessionId, s, k);
+  });
+  return locked.ok ? locked.value : { ok: false, status: 409, error: "Poczekaj chwilę" };
 }
 
 /** Double: only on the first two cards — charges another bet, draws ONE card, auto-stands. */
 export async function blackjackDouble(userId: string, sessionId: string): Promise<BjResult> {
-  if (!redis) return { ok: false, status: 503, error: "Gra niedostępna" };
+  const rc = redis;
+  if (!rc) return { ok: false, status: 503, error: "Gra niedostępna" };
   const k = sk(userId, sessionId);
-  const s = await redis.get<BjSession>(k);
-  if (!s) return { ok: false, status: 404, error: "Sesja wygasła" };
-  if (s.player.length !== 2 || s.doubled) return { ok: false, status: 400, error: "Podwojenie możliwe tylko na starcie" };
+  // Under the lock the second-bet charge can't race a concurrent double: the loser
+  // sees the already-claimed/mutated session and bails WITHOUT charging. #audit-v2
+  const locked = await withLock(`lock:${k}`, 5_000, async (): Promise<BjResult> => {
+    const s = await rc.get<BjSession>(k);
+    if (!s) return { ok: false, status: 404, error: "Sesja wygasła" };
+    if (s.player.length !== 2 || s.doubled) return { ok: false, status: 400, error: "Podwojenie możliwe tylko na starcie" };
 
-  try {
-    await prisma.$transaction(async (tx) => {
-      const charged = await tx.user.updateMany({ where: { id: userId, tokens: { gte: s.bet } }, data: { tokens: { decrement: s.bet }, totalSpent: { increment: s.bet } } });
-      if (charged.count === 0) throw new Error("INSUFFICIENT");
-      await tx.transaction.create({ data: { userId, type: "spend", amount: -s.bet, reason: "gtgame:blackjack", status: "completed" } });
-    });
-  } catch (e) {
-    if (e instanceof Error && e.message === "INSUFFICIENT") return { ok: false, status: 402, error: "Za mało Ghost Tokens na podwojenie" };
-    return { ok: false, status: 500, error: "Błąd serwera" };
-  }
-  void feedJackpot(s.bet).catch(() => {}); // the doubled portion feeds the pool too
+    try {
+      await prisma.$transaction(async (tx) => {
+        const charged = await tx.user.updateMany({ where: { id: userId, tokens: { gte: s.bet } }, data: { tokens: { decrement: s.bet }, totalSpent: { increment: s.bet } } });
+        if (charged.count === 0) throw new Error("INSUFFICIENT");
+        await tx.transaction.create({ data: { userId, type: "spend", amount: -s.bet, reason: "gtgame:blackjack", status: "completed" } });
+      });
+    } catch (e) {
+      if (e instanceof Error && e.message === "INSUFFICIENT") return { ok: false, status: 402, error: "Za mało Ghost Tokens na podwojenie" };
+      return { ok: false, status: 500, error: "Błąd serwera" };
+    }
+    void feedJackpot(s.bet).catch(() => {}); // the doubled portion feeds the pool too
 
-  s.bet *= 2;
-  s.doubled = true;
-  s.player.push(s.deck.pop() as number);
-  if (handValue(s.player).total > 21) {
-    const claimed = await redis.getdel<BjSession>(k);
-    if (!claimed) return { ok: false, status: 404, error: "Sesja wygasła lub zakończona" };
-    const r = await settle(userId, s, s.dealer);
-    return { ok: true, state: doneState(sessionId, s, s.dealer, r) };
-  }
-  return blackjackStandWith(userId, sessionId, s, k);
+    s.bet *= 2;
+    s.doubled = true;
+    s.player.push(s.deck.pop() as number);
+    if (handValue(s.player).total > 21) {
+      const claimed = await rc.getdel<BjSession>(k);
+      if (!claimed) return { ok: false, status: 404, error: "Sesja wygasła lub zakończona" };
+      const r = await settle(userId, s, s.dealer);
+      return { ok: true, state: doneState(sessionId, s, s.dealer, r) };
+    }
+    return blackjackStandWith(userId, sessionId, s, k);
+  });
+  return locked.ok ? locked.value : { ok: false, status: 409, error: "Poczekaj chwilę" };
 }
