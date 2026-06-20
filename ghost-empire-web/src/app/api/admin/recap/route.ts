@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { currentTenantId } from "@/lib/tenant";
 import { requireTenantFeature } from "@/lib/entitlements";
+import { rateLimit } from "@/lib/rate-limit";
 import { logAdminAction } from "@/lib/audit";
 import { generateRecap, sendRecapToDiscord } from "@/lib/stream-recap";
 
@@ -63,6 +64,9 @@ export async function POST(req: Request) {
   if (!gate.ok) return NextResponse.json({ error: "ai-unavailable" }, { status: 503 });
 
   if (body.action === "generate" || body.action === "post") {
+    // Cost guard on the real LLM call — every other AI endpoint self-limits (#audit-v2).
+    const rl = await rateLimit(`recap:${auth.userId}`, 10, 5 * 60_000);
+    if (!rl.allowed) return NextResponse.json({ error: "rate-limited" }, { status: 429 });
     const recap = await generateRecap(tid, locale);
     if (!recap.ok) {
       return NextResponse.json({ error: recap.reason === "no-ai" ? "ai-unavailable" : "ai-failed", data: recap.data }, { status: recap.reason === "no-ai" ? 503 : 502 });

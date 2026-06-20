@@ -18,9 +18,13 @@ export async function POST(req: Request) {
   const username = String(body.username ?? "widz").slice(0, 50);
   if (!prompt) return NextResponse.json({ reply: null });
 
-  // Cost/abuse guard — max 5 AI replies per user per minute.
+  // Cost/abuse guard — max 5 AI replies per user per minute. The per-username key is
+  // attacker-controllable (the bot picks `username`), so add a GLOBAL cap to bound total
+  // AI spend even if the caller rotates usernames (mirrors bot/imagine). #audit-v2
   const rl = await rateLimit(`ai:reply:${username.toLowerCase()}`, 5, 60_000);
   if (!rl.allowed) return NextResponse.json({ reply: null, error: "rate_limited" });
+  const globalRl = await rateLimit("ai:reply:global", 300, 60 * 60_000);
+  if (!globalRl.allowed) return NextResponse.json({ reply: null, error: "rate_limited_global" });
 
   const reply = await aiChat(
     [

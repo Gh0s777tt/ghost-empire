@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { isPushConfigured, sendPushToUser } from "@/lib/web-push";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,11 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!isPushConfigured()) return NextResponse.json({ ok: false, reason: "not-configured" });
+
+  // Each send fans out to the user's devices + the external push provider — cap it so a
+  // tight loop can't spam them (or run up provider cost). #audit-v2
+  const rl = await rateLimit(`push:test:${session.user.id}`, 5, 60_000);
+  if (!rl.allowed) return NextResponse.json({ ok: false, reason: "rate-limited" }, { status: 429, headers: rateLimitHeaders(rl) });
 
   let body: { title?: string; body?: string } = {};
   try {
