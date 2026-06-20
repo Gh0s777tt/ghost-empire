@@ -14,7 +14,7 @@ for (const f of [".env.local", ".env"]) {
   }
 }
 
-const CARDS = [
+const CARDS: { id: string; name: string; emoji: string; rarity: string; description: string; active?: boolean }[] = [
   // common (6)
   { id: "ge-pixel-ghost", name: "Pikselowy Duch", emoji: "👻", rarity: "common", description: "Najzwyklejszy duch w Imperium. Każdy zaczyna od niego." },
   { id: "ge-lurker", name: "Podglądacz", emoji: "👁️", rarity: "common", description: "Ogląda, nie pisze. Szanujemy ciszę." },
@@ -65,6 +65,38 @@ const CARDS = [
   { id: "ge-reaper", name: "Kosiarz Dusz", emoji: "⚰️", rarity: "legendary", description: "Bany roznosi osobiście." },
   { id: "ge-cosmic", name: "Kosmiczny Widmo", emoji: "🌌", rarity: "legendary", description: "Duch z zupełnie innego wymiaru." },
   { id: "ge-goat", name: "GOAT", emoji: "🐐", rarity: "legendary", description: "Greatest Of All Time. Bezdyskusyjnie." },
+
+  // ═══ SERIA: BOSSOWIE GIER (evergreen, w puli) ═════════════════════════════
+  { id: "ge-boss-slime", name: "Śluzowiec", emoji: "🟩", rarity: "common", description: "Bossowie Gier · Pierwszy boss każdego RPG." },
+  { id: "ge-boss-goblin", name: "Goblin Wojownik", emoji: "👹", rarity: "common", description: "Bossowie Gier · Mały, ale wredny." },
+  { id: "ge-boss-golem", name: "Kamienny Golem", emoji: "🗿", rarity: "rare", description: "Bossowie Gier · Wolny i twardy jak skała." },
+  { id: "ge-boss-kraken", name: "Kraken Głębin", emoji: "🐙", rarity: "epic", description: "Bossowie Gier · Osiem macek, zero litości." },
+  { id: "ge-boss-dragon", name: "Smok Końcowy", emoji: "🐉", rarity: "epic", description: "Bossowie Gier · Strażnik ostatniego poziomu." },
+  { id: "ge-boss-deathlord", name: "Władca Śmierci", emoji: "☠️", rarity: "legendary", description: "Bossowie Gier · Final boss całego Imperium." },
+
+  // ═══ SERIA: KAMIENIE MILOWE / EVENTY (evergreen, edycja limitowana) ════════
+  { id: "ge-ev-launch", name: "Premiera Imperium", emoji: "🚀", rarity: "rare", description: "Edycja Limitowana · Na pamiątkę startu platformy." },
+  { id: "ge-ev-1k", name: "1000 Obserwujących", emoji: "🎉", rarity: "rare", description: "Kamień Milowy · Pierwszy tysiąc." },
+  { id: "ge-ev-subathon", name: "Subathon 2026", emoji: "⏳", rarity: "epic", description: "Event · Zegar nie przestawał tykać." },
+  { id: "ge-ev-anniversary", name: "Rocznica Imperium", emoji: "🎂", rarity: "epic", description: "Event · Rok cienia i chwały." },
+  { id: "ge-ev-champion", name: "Mistrz Sezonu", emoji: "🥇", rarity: "legendary", description: "Event · Numer jeden w rankingu sezonu." },
+  { id: "ge-ev-gold-founder", name: "Złoty Założyciel", emoji: "🏅", rarity: "legendary", description: "Edycja Limitowana · Tylko dla pierwszych widzów." },
+
+  // ═══ SERIA: HALLOWEEN (sezonowa — wł. w październiku w /admin#collectibles) ═
+  { id: "ge-hw-pumpkin", name: "Dyniowy Strach", emoji: "🎃", rarity: "common", description: "Halloween · Świeci w oknie co noc.", active: false },
+  { id: "ge-hw-bat", name: "Nietoperz Widmo", emoji: "🦇", rarity: "common", description: "Halloween · Krąży nad czatem.", active: false },
+  { id: "ge-hw-witch", name: "Wiedźma z Czatu", emoji: "🧙", rarity: "rare", description: "Halloween · Rzuca klątwy emotkami.", active: false },
+  { id: "ge-hw-vampire", name: "Wampir Subów", emoji: "🧛", rarity: "rare", description: "Halloween · Żywi się odnowieniami.", active: false },
+  { id: "ge-hw-reaper", name: "Żniwiarz Halloween", emoji: "💀", rarity: "epic", description: "Halloween · Zbiera dusze widzów.", active: false },
+  { id: "ge-hw-demon", name: "Demon Północy", emoji: "😈", rarity: "legendary", description: "Halloween · Budzi się dokładnie o 00:00.", active: false },
+
+  // ═══ SERIA: ZIMA / ŚWIĘTA (sezonowa — wł. w grudniu w /admin#collectibles) ══
+  { id: "ge-xmas-snowman", name: "Bałwan Streamera", emoji: "⛄", rarity: "common", description: "Mroźne Imperium · Topnieje przy laggach.", active: false },
+  { id: "ge-xmas-gift", name: "Świąteczny Prezent", emoji: "🎁", rarity: "common", description: "Mroźne Imperium · Co jest w środku?", active: false },
+  { id: "ge-xmas-elf", name: "Elf Moderator", emoji: "🧝", rarity: "rare", description: "Mroźne Imperium · Banuje niegrzecznych.", active: false },
+  { id: "ge-xmas-tree", name: "Choinka Imperium", emoji: "🎄", rarity: "rare", description: "Mroźne Imperium · Świeci na czerwono.", active: false },
+  { id: "ge-xmas-santa", name: "Święty Duch", emoji: "🎅", rarity: "epic", description: "Mroźne Imperium · Rozdaje GT zamiast węgla.", active: false },
+  { id: "ge-xmas-frost", name: "Władca Mrozu", emoji: "❄️", rarity: "legendary", description: "Mroźne Imperium · Zamraża cały czat.", active: false },
 ];
 
 async function main() {
@@ -79,8 +111,10 @@ async function main() {
   for (const c of CARDS) {
     await prisma.collectible.upsert({
       where: { id: c.id },
-      update: { name: c.name, emoji: c.emoji, rarity: c.rarity, description: c.description, active: true },
-      create: { id: c.id, tenantId: tenant.id, name: c.name, emoji: c.emoji, rarity: c.rarity, description: c.description, sortOrder: i },
+      // NOTE: `active` is intentionally NOT in `update` — so re-running the seed never
+      // clobbers a visibility toggle the streamer set by hand in /admin#collectibles.
+      update: { name: c.name, emoji: c.emoji, rarity: c.rarity, description: c.description },
+      create: { id: c.id, tenantId: tenant.id, name: c.name, emoji: c.emoji, rarity: c.rarity, description: c.description, sortOrder: i, active: c.active ?? true },
     });
     i++;
   }
