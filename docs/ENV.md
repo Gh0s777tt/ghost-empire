@@ -58,7 +58,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `STEAM_API_KEY` (O) | Steam Web API key (biblioteka gier `/games`). Z [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Ustawione w Vercelu |
 | `RUMBLE_API_URL` (O) | Pełny URL Rumble Livestream API (z kluczem) — overlay `/overlay/rumble`. Ustawione w Vercelu |
 | `PSN_NPSSO` (O) | PlayStation npsso (biblioteka gier PSN). Z `ca.account.sony.com/api/v1/ssocookie`. **Wygasa ~60 dni.** Ustawione w Vercelu |
-| `CRON_SECRET` | Bearer chroniący crony Vercel: `/api/cron/streamlabs-poll` (polling donacji) i `/api/cron/prune` (czyszczenie starych rekordów) |
+| `CRON_SECRET` | Bearer chroniący crony Vercel: `/api/cron/streamlabs-poll` (polling donacji), `/api/cron/prune` (czyszczenie starych rekordów) i `/api/cron/weekly-rewards` (poniedziałki 00:00 — nagrody rankingu tygodnia per portal) |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (O) | Upstash Redis (REST) — współdzielony cache między instancjami serverless (np. feed viewer-count). Bez nich cache spada na in-memory per-instancja. Z [upstash.com](https://upstash.com) → Redis → sekcja REST API |
 | `NEXT_PUBLIC_SITE_URL` (O) | Publiczny bazowy URL strony (linki absolutne / OG / share). Gdy brak — fallback do `NEXTAUTH_URL`. `NEXT_PUBLIC_` = widoczny w przeglądarce, **nie wkładaj tu sekretów** |
 | `LOG_LEVEL` (O) | Poziom structured loggera (`debug`/`info`/`warn`/`error`; `lib/logger.ts`). Domyślnie `info` na prod, `debug` na dev |

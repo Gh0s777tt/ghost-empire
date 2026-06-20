@@ -23,7 +23,7 @@
 [![Kick](https://img.shields.io/badge/Kick-Gh0s77tt-53FC18?style=flat-square&logo=kick&logoColor=black)](https://kick.com/Gh0s77tt)
 [![YouTube](https://img.shields.io/badge/YouTube-@Gh0s77tt-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://www.youtube.com/@Gh0s77tt)
 
-`Phase 2 ✅` &nbsp; `Phase 3A–3D ✅` &nbsp; `Studio F1–F3 + F5 ✅` &nbsp; `F6 security 🟡` &nbsp; `F4 AI 🔑 czeka na klucz`
+`Phase 2 ✅` &nbsp; `Phase 3A–3D ✅` &nbsp; `Studio F1–F3 + F5 ✅` &nbsp; `F6 security 🟡` &nbsp; `F4 AI ✅ (kod gotowy, czeka na klucz)`
 
 </div>
 
@@ -139,7 +139,7 @@ flowchart LR
 | **i18n** | next-intl **4** · **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID) · **RTL** dla arabskiego |
 | **Realtime** | DB-backed kolejki + polling (overlaye, notyfikacje) — Vercel Hobby = bez websocketów |
 | **Boty** | discord.js **14.26** · tmi.js (Twitch) · Kick/YT API · `tsx`, TypeScript 6 |
-| **Jakość** | Vitest **4** (**183 testy**) · ESLint **9** (flat config) · GitHub Actions CI · Dependabot · GitGuardian |
+| **Jakość** | Vitest **4** (**412 testów**) · ESLint **9** (flat config) · GitHub Actions CI · Dependabot · GitGuardian |
 | **Deploy** | Vercel (web, auto-deploy z `main`) · bot na PC/Docker (gotowy na VPS/Railway) |
 
 > Cały stack jest na **najnowszych majorach** (modernizacja udokumentowana w [CHANGELOG.md](CHANGELOG.md)). Świadomie pominięte: `eslint 10` (ekosystem `eslint-config-next` 16 jeszcze go nie wspiera).
@@ -190,7 +190,7 @@ flowchart LR
 | **Security** | **szyfrowanie sekretów at-rest (AES-256-GCM)** — klucze API + tokeny OAuth · HSTS, CSP, COOP, X-Frame-Options, Permissions-Policy · `noindex`/`no-store` na overlayach · rate-limit (DB sliding-window) · webhook verify (HMAC/RSA) · HMAC-signed cookies · audit log z IP · skan sekretów (GitGuardian) |
 | **Performance** | `unstable_cache`, indeksy DB, lazy-load sekcji admina, Router `staleTimes`, `Promise.all`, pula DB `max:3` pod Supabase |
 | **a11y** | `:focus-visible`, skip-link, `prefers-reduced-motion`, `aria-label`/`aria-current` na nav, `role="dialog"` na modalach |
-| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest **183 testy** (+ integracyjne na realnym Postgresie w CI) · Dependabot · dokumentacja na bieżąco |
+| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest **412 testów** (+ integracyjne na realnym Postgresie w CI) · Dependabot · dokumentacja na bieżąco |
 
 ---
 
