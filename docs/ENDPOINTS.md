@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **140** tras
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **144** tras
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -61,6 +61,9 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/profile/social-links` | GET/POST | Linki społecznościowe profilu |
 | `…/api/profile/discord-link-code` | POST | Kod do powiązania konta Discord |
 | `…/api/profile/connections/unlink` · `…/link/[provider]` | POST | Odłączanie / łączenie platform |
+| `…/api/push/vapid` | GET | Publiczny klucz VAPID dla klienta (null = push uśpiony) |
+| `…/api/push/subscribe` · `…/api/push/unsubscribe` | POST | Zapis / usunięcie subskrypcji web push (#533) |
+| `…/api/push/test` | POST | Testowe powiadomienie na własne urządzenia (weryfikacja pętli) |
 
 ## Kasyno GT (`gt-games`) — session, bramka planu `casino`
 > Mini-gry GT na stronie (`/kasyno`). Akcje gry: **session** + `featureGate("casino")` (403 gdy plan tenanta < pro). Odczyty puli/rankingu — **public**.

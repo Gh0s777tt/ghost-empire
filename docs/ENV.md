@@ -64,6 +64,15 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `LOG_LEVEL` (O) | Poziom structured loggera (`debug`/`info`/`warn`/`error`; `lib/logger.ts`). Domyślnie `info` na prod, `debug` na dev |
 | `NODE_ENV` | Ustawiane przez platformę (`production`/`development`) — nie ustawiasz ręcznie |
 
+### Web Push / powiadomienia (O — funkcja uśpiona bez kluczy)
+> Powiadomienia web push (#533) są **uśpione**, dopóki nie ustawisz pary kluczy VAPID **i** nie zrobisz `prisma db push` (tabela `push_subscriptions`). Bez tego przełącznik „Powiadomienia" na `/profile` po prostu się nie pokazuje, a wysyłki są no-opem. Klucze generujesz raz: `npx web-push generate-vapid-keys` (pakiet `web-push` jest już zależnością) — da `Public Key` i `Private Key`.
+
+| Zmienna | Po co |
+|---|---|
+| `VAPID_PUBLIC_KEY` | Publiczny klucz VAPID — serwowany klientowi przez `GET /api/push/vapid` (czytany w runtime, więc aktywacja nie wymaga rebuildu). Z natury publiczny |
+| `VAPID_PRIVATE_KEY` | Prywatny klucz VAPID — podpisuje wysyłki po stronie serwera. **Sekret** — tylko w Vercel env |
+| `VAPID_SUBJECT` (O) | Kontakt wymagany przez push services — `mailto:ty@domena` lub URL. Domyślnie `mailto:admin@ghost-empire.app` |
+
 ### SaaS multi-tenant + billing (O — dopóki nie uruchamiasz white-label/płatności)
 > Cały moduł SaaS jest **dry-wired**: bez tych zmiennych portal działa jak pojedynczy tenant (founder = plan `elite` bezterminowo), subdomeny są no-opem, a checkout zwraca 503 (trial bez karty). Ustawienie ich „włącza" multi-tenant i Stripe **bez zmian w kodzie**.
 

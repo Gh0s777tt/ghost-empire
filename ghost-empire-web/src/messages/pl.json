@@ -2086,6 +2086,17 @@
     "anon": "Anonim",
     "disclaimer": "Płatności trafiają bezpośrednio do streamera wybraną metodą — ta strona tylko pokazuje dane."
   },
+  "push": {
+    "title": "Powiadomienia push",
+    "desc": "Dostawaj powiadomienie, gdy zaczynam stream i o najważniejszych momentach — nawet przy zamkniętej karcie.",
+    "enable": "Włącz",
+    "disable": "Wyłącz",
+    "test": "Test",
+    "testSent": "Wysłano ✓",
+    "denied": "Powiadomienia są zablokowane w ustawieniach przeglądarki.",
+    "testTitle": "Jesteśmy na żywo! 🔴",
+    "testBody": "To testowe powiadomienie — działa! 🎉"
+  },
   "trivia": {
     "title": "Quiz",
     "subtitle": "Odpowiadaj poprawnie, by zdobyć %gt%. Jedna próba na pytanie.",

@@ -2086,6 +2086,17 @@
     "anon": "Anonymous",
     "disclaimer": "Payments go directly to the streamer via the method you choose — this page only shows the details."
   },
+  "push": {
+    "title": "Push notifications",
+    "desc": "Get notified when the stream goes live and for key moments — even with the tab closed.",
+    "enable": "Enable",
+    "disable": "Disable",
+    "test": "Test",
+    "testSent": "Sent ✓",
+    "denied": "Notifications are blocked in your browser settings.",
+    "testTitle": "We're live! 🔴",
+    "testBody": "This is a test notification — it works! 🎉"
+  },
   "trivia": {
     "title": "Quiz",
     "subtitle": "Answer correctly to earn %gt%. One attempt per question.",

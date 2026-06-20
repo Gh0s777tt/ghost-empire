@@ -159,6 +159,7 @@ model User {
   clipVotes        ClipVote[]
   portalFollows    PortalFollow[]
   triviaAnswers    TriviaAnswer[]
+  pushSubscriptions PushSubscription[]
   wheelSpins       WheelSpin[]
   gtGamePlays      GtGamePlay[]
   duelsChallenged  Duel[]            @relation("DuelChallenger")
@@ -1687,6 +1688,28 @@ model SupportGoal {
   updatedAt DateTime @updatedAt
 
   @@map("support_goals")
+}
+
+// =====================================================
+// WEB PUSH (#533) — browser push subscriptions (one row per browser endpoint).
+// Additive + per-tenant. Sends are VAPID-gated (dormant until keys + this table
+// exist). Distinct from the in-app Notification model — this is the delivery channel.
+// =====================================================
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String? // multi-tenant; null = legacy/founder
+  endpoint  String   @unique // the browser push endpoint — natural key (re-subscribe upserts)
+  p256dh    String // client public key (for payload encryption)
+  auth      String // client auth secret
+  userAgent String? // for the user to recognize a device in a future manage-UI
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tenantId])
+  @@map("push_subscriptions")
 }
 
 // =====================================================

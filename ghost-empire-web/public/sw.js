@@ -13,7 +13,7 @@
  *     untouched — OBS overlays and live alert streams must never be intercepted.
  *   - Bumping SW_VERSION purges every old cache on activate.
  */
-const SW_VERSION = "v1";
+const SW_VERSION = "v2"; // bumped for the web-push handlers (#533)
 const STATIC_CACHE = `ghost-static-${SW_VERSION}`;
 const OFFLINE_URL = "/offline";
 
@@ -107,3 +107,49 @@ async function networkFirstNavigation(request) {
     return offline || Response.error();
   }
 }
+
+/* ----- Web Push (#533) -----------------------------------------------------
+ * Show a notification from a pushed payload, and focus/open the target URL on
+ * click. Payload shape is produced by lib/web-push buildPushPayload:
+ *   { title, body, url, icon, tag }
+ * Defensive parsing: a malformed/empty payload still shows a generic note. */
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "GH0ST EMPIRE";
+  const options = {
+    body: data.body || "",
+    icon: data.icon || "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: data.tag || undefined,
+    data: { url: data.url || "/" },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    (async () => {
+      const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      // Reuse an open tab on this origin if there is one; otherwise open a window.
+      for (const c of all) {
+        try {
+          if (new URL(c.url).origin === self.location.origin) {
+            await c.focus();
+            if ("navigate" in c) await c.navigate(target);
+            return;
+          }
+        } catch {
+          /* ignore an unparseable client url */
+        }
+      }
+      await self.clients.openWindow(target);
+    })(),
+  );
+});
