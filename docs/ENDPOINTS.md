@@ -130,6 +130,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/chat-overlay` | admin | Config overlaya czatu (rozmiar/kolor/font/krycie/ikona platformy) |
 | `…/api/admin/assistant` | admin/perm + plan `ai` | AI-asystent panelu (pytania o konfigurację) — wymaga planu elite |
 | `…/api/admin/overlay-token` | admin | Token overlayów (do podglądów) |
+| `…/api/admin/overlay-scenes` | admin | CRUD scen overlay (#550 — wiele widżetów na jednym płótnie → jedno źródło OBS `/overlay/scene/<id>`) |
 | `…/api/admin/section-data` | admin/perm | Lazy-dane sekcji panelu (`?s=<sekcja>`) |
 | `…/api/admin/twitch-streamer-auth` (+callback) · `twitch-eventsub` | admin | Autoryzacja streamera Twitch + subskrypcje EventSub |
 | `…/api/admin/kick-streamer-auth` (+callback) · `kick-events` | admin | Autoryzacja streamera Kick + eventy |

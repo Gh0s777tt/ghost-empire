@@ -1693,6 +1693,22 @@ model Sponsor {
 }
 
 // =====================================================
+// OVERLAY SCENES (#550) — a saved multi-widget layout composited as one OBS source.
+// `elements` is a JSON array of { id, widget, x, y, w, h } (percentages). Per-tenant.
+// =====================================================
+model OverlayScene {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  name      String
+  elements  String   @db.Text // JSON: [{ id, widget, x, y, w, h }]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("overlay_scenes")
+}
+
+// =====================================================
 // AI CLIP DIRECTOR (#517) — detect a chat hype spike → auto-create a Twitch clip.
 // Per-tenant + additive. Dormant until enabled AND the streamer's Twitch token has
 // the `clips:edit` scope (otherwise clip creation no-ops gracefully).
