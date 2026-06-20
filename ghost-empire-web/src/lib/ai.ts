@@ -104,6 +104,36 @@ export async function aiImage(prompt: string): Promise<string | null> {
   }
 }
 
+/**
+ * Embed one or more texts (#554, for semantic search). Returns one vector per input,
+ * or null when AI isn't configured / the provider isn't OpenAI (embeddings + the
+ * `text-embedding-3-small` model are OpenAI-specific). Dormant-safe — never throws.
+ */
+export async function aiEmbed(texts: string[]): Promise<number[][] | null> {
+  const cfg = await getIntegrationConfig();
+  if (!cfg.aiApiKey) return null;
+  const provider = cfg.aiProvider || "openai";
+  if (provider !== "openai") return null; // embeddings only on OpenAI here
+  if (!texts.length) return [];
+  try {
+    const res = await timed(
+      fetch("https://api.openai.com/v1/embeddings", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${cfg.aiApiKey}` },
+        body: JSON.stringify({ model: "text-embedding-3-small", input: texts.slice(0, 256).map((t) => t.slice(0, 2000)) }),
+      }),
+      30_000,
+    );
+    if (!res.ok) return null;
+    const d = await res.json();
+    const out = (d?.data ?? []).map((e: { embedding: number[] }) => e.embedding as number[]);
+    return out.length ? out : null;
+  } catch (e) {
+    log.error("aiEmbed failed", e);
+    return null;
+  }
+}
+
 // Default Ghost Empire chat persona for @bot. Configurable later via the DB.
 export const DEFAULT_BOT_PERSONA =
   "Jesteś GhostBotem — zadziornym, dowcipnym botem czatu społeczności streamera Gh0s77tt (Ghost Empire). " +

@@ -2081,6 +2081,7 @@
     "quests": "Quests",
     "collectibles": "Collectibles",
     "market": "Card market",
+    "search": "Smart search",
     "themeLight": "Light mode",
     "themeDark": "Dark mode",
     "themePick": "Theme",
@@ -2274,6 +2275,19 @@
     "err_unauthorized": "Sign in to send %gt%.",
     "err_bad": "Invalid request.",
     "err_error": "Something went wrong — try again."
+  },
+  "search": {
+    "metaTitle": "Search",
+    "metaDesc": "Search the portal by meaning.",
+    "title": "Smart search",
+    "subtitle": "Describe what you're looking for — results are ranked by meaning, not just keywords.",
+    "placeholder": "e.g. how do I support the streamer?",
+    "go": "Search",
+    "dormant": "Smart search isn't switched on for this portal yet (it needs an AI key in /admin#integrations). Try the Ctrl/⌘ K quick-nav meanwhile.",
+    "empty": "No close matches — try rephrasing.",
+    "type_page": "Page",
+    "type_achievement": "Achievement",
+    "type_shop": "Shop"
   },
   "passkey": {
     "title": "Passkeys",

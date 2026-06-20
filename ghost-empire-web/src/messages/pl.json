@@ -2081,6 +2081,7 @@
     "quests": "Questy",
     "collectibles": "Karty",
     "market": "Giełda kart",
+    "search": "Inteligentne szukanie",
     "themeLight": "Tryb jasny",
     "themeDark": "Tryb ciemny",
     "themePick": "Motyw",
@@ -2274,6 +2275,19 @@
     "err_unauthorized": "Zaloguj się, by wysłać %gt%.",
     "err_bad": "Nieprawidłowe żądanie.",
     "err_error": "Coś poszło nie tak — spróbuj ponownie."
+  },
+  "search": {
+    "metaTitle": "Szukaj",
+    "metaDesc": "Przeszukaj portal po znaczeniu.",
+    "title": "Inteligentne szukanie",
+    "subtitle": "Opisz czego szukasz — wyniki są po znaczeniu, nie tylko po słowach kluczowych.",
+    "placeholder": "np. jak wesprzeć streamera?",
+    "go": "Szukaj",
+    "dormant": "Inteligentne szukanie nie jest jeszcze włączone w tym portalu (wymaga klucza AI w /admin#integrations). W międzyczasie użyj palety Ctrl/⌘ K.",
+    "empty": "Brak bliskich dopasowań — spróbuj inaczej.",
+    "type_page": "Strona",
+    "type_achievement": "Osiągnięcie",
+    "type_shop": "Sklep"
   },
   "passkey": {
     "title": "Passkeys (klucze)",

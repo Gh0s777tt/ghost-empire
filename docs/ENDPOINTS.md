@@ -70,6 +70,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/market` | GET/POST | Marketplace P2P kart (#552 — list/buy/cancel, escrow + atomowy transfer GT, 5% fee spalane) |
 | `…/api/gift` | POST | Prezent GT między widzami (#553 — atomowy transfer, limity 5k/transfer + 10k/24h, powiadomienie) |
 | `…/api/search/users` | GET | Szukanie widzów do palety poleceń (#549 — publiczne pola, tenant-scoped, rate-limit, min 2 znaki) |
+| `…/api/search/semantic` | POST | Semantic search po znaczeniu (#554 — embeddingi AI + cosine; uśpione bez klucza OpenAI) |
 | `…/api/profile/social-click` | POST | Licznik klików linku społ. (#542 — beacon z `/u/<nick>`, rate-limit per IP) |
 | `…/api/auth/passkey` | GET/DELETE | Lista / usunięcie passkeys użytkownika (#543) |
 | `…/api/auth/passkey/register/options` · `…/verify` | POST | Ceremonia rejestracji passkey (WebAuthn, #543) |
