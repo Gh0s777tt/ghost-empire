@@ -20,7 +20,8 @@ export async function GET() {
   const tid = await currentTenantId();
   const [goals, hypeTrain, settings] = await Promise.all([
     prisma.streamGoal.findMany({ where: tid ? { tenantId: tid } : {}, orderBy: [{ active: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }] }),
-    prisma.hypeTrainState.findUnique({ where: { id: "default" } }),
+    // Per-tenant hype-train state (mirrors overlay-feeds) — was always the legacy "default" row. #audit-v2
+    tid ? prisma.hypeTrainState.findUnique({ where: { tenantId: tid } }) : prisma.hypeTrainState.findUnique({ where: { id: "default" } }),
     getSettings(tid),
   ]);
 

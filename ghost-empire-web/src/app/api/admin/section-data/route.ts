@@ -107,9 +107,11 @@ export async function GET(req: Request) {
     }
 
     case "bot": {
-      const botConfig = await prisma.botConfig.upsert({
-        where: { id: "default" }, create: { id: "default" }, update: {},
-      });
+      // Per-tenant bot config (mirrors admin/bot-config) — was always the legacy
+      // "default" row, so a tenant admin saw/created the founder's reward rates. #audit-v2
+      const botConfig = tid
+        ? (await prisma.botConfig.findFirst({ where: { tenantId: tid } })) ?? (await prisma.botConfig.create({ data: { tenantId: tid } }))
+        : await prisma.botConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
       return NextResponse.json({ botConfig });
     }
 

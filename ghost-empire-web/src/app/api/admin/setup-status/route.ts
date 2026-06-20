@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getIntegrationConfig } from "@/lib/integrations";
 import { getSettings as getAlertSettings } from "@/lib/alerts";
 import { getTwitchStreamerToken, getKickStreamerToken, getYouTubeStreamerToken } from "@/lib/platform-tokens";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +15,11 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const tid = await currentTenantId();
   const [integ, mod, twitch, twitchSubs, kick, youtube, alertSettings] = await Promise.all([
     getIntegrationConfig(),
-    prisma.moderationConfig.findFirst(),
+    // Per-tenant moderation config — `findFirst()` returned an arbitrary portal's row. #audit-v2
+    tid ? prisma.moderationConfig.findUnique({ where: { tenantId: tid } }) : prisma.moderationConfig.findFirst({ where: { tenantId: null } }),
     getTwitchStreamerToken(),
     prisma.twitchEventSubscription.count(),
     getKickStreamerToken(),

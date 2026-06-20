@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { dispatchAlert, getSettings, regenerateOverlayToken, type AlertType } from "@/lib/alerts";
+import { currentTenantId } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
 
 const ALL_TYPES: AlertType[] = [
@@ -23,9 +24,13 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  // Scope the recent-alerts preview to THIS portal — an unscoped findMany leaked other
+  // tenants' alert actor names + donation/sub amounts to any portal admin. #audit-v2
+  const tid = await currentTenantId();
   const [settings, recent] = await Promise.all([
     getSettings(),
     prisma.streamAlert.findMany({
+      where: tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : { tenantId: null },
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
