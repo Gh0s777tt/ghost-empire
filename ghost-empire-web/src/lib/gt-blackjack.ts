@@ -7,7 +7,7 @@
 // the first two cards (one card, auto-stand). House edge ≈ 1-2% (GT sink).
 import { prisma } from "@/lib/prisma";
 import { redis, withLock } from "@/lib/redis";
-import { feedJackpot } from "@/lib/gt-games";
+import { feedJackpot, MIN_BET, MAX_BET } from "@/lib/gt-games";
 import { randomUUID } from "node:crypto";
 
 const TTL_S = 60 * 60;
@@ -131,7 +131,7 @@ const doneState = (id: string, s: BjSession, dealerFinal: number[], r: { multipl
 
 /** Charge the bet, deal the hand. Instant blackjacks settle immediately. */
 export async function blackjackStart(userId: string, bet: number): Promise<BjResult & { newBalance?: number }> {
-  if (!Number.isInteger(bet) || bet < 10 || bet > 100_000) return { ok: false, status: 400, error: "Stawka musi być 10-100000 GT" };
+  if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} GT` };
   if (!redis) return { ok: false, status: 503, error: "Gra chwilowo niedostępna" };
 
   let newBalance: number;

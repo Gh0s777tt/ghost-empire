@@ -13,6 +13,9 @@ export const hasRedis = Boolean(url && token);
 export const redis = hasRedis ? new Redis({ url: url as string, token: token as string }) : null;
 
 // Fallback in-process (działa w obrębie jednej instancji, gdy Redis nieskonfigurowany).
+// Capped (FIFO, insertion-ordered Map) so the no-Redis path can't grow unbounded with
+// distinct keys (e.g. per-query overlay/search keys) — TTL alone never evicted. #audit-v2
+const MEM_MAX = 1000;
 const mem = new Map<string, { at: number; val: unknown }>();
 
 /**
@@ -46,6 +49,7 @@ export async function cacheJson<T>(key: string, ttlMs: number, producer: () => P
       /* zapis do Redisa nieudany — trudno, zwróć wartość */
     }
   } else {
+    if (mem.size >= MEM_MAX) mem.delete(mem.keys().next().value as string); // evict oldest
     mem.set(key, { at: Date.now(), val });
   }
   return val;

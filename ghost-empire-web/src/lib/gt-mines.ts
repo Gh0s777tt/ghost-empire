@@ -7,6 +7,7 @@
 // never be cashed out twice. Hitting a bomb ends the session with the bet already lost.
 import { prisma } from "@/lib/prisma";
 import { redis, withLock } from "@/lib/redis";
+import { MIN_BET, MAX_BET } from "@/lib/gt-games";
 import { randomUUID } from "node:crypto";
 
 export const MINES_TILES = 25; // 5×5
@@ -43,7 +44,7 @@ export type MinesStartResult = { ok: true; sessionId: string; bombs: number; til
 
 /** Charge the bet (atomic) and open a session. Refunds if the session store is unavailable. */
 export async function minesStart(userId: string, bet: number, bombs: number): Promise<MinesStartResult> {
-  if (!Number.isInteger(bet) || bet < 10 || bet > 100_000) return { ok: false, status: 400, error: "Stawka musi być 10-100000 GT" };
+  if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} GT` };
   if (!Number.isInteger(bombs) || bombs < MINES_MIN_BOMBS || bombs > MINES_MAX_BOMBS) return { ok: false, status: 400, error: `Bomby: ${MINES_MIN_BOMBS}-${MINES_MAX_BOMBS}` };
   if (!redis) return { ok: false, status: 503, error: "Gra chwilowo niedostępna" };
 

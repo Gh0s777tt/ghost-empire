@@ -6,6 +6,7 @@
 // the odds are exactly P(higher)=(13−r)/13, P(lower)=(r−1)/13 — clean and provable.
 import { prisma } from "@/lib/prisma";
 import { redis, withLock } from "@/lib/redis";
+import { MIN_BET, MAX_BET } from "@/lib/gt-games";
 import { randomUUID } from "node:crypto";
 
 const TTL_S = 60 * 60;
@@ -53,7 +54,7 @@ export type HiloResult = { ok: true; state: HiloState } | { ok: false; status: n
 
 /** Charge the bet and deal the first card. */
 export async function hiloStart(userId: string, bet: number): Promise<HiloResult> {
-  if (!Number.isInteger(bet) || bet < 10 || bet > 100_000) return { ok: false, status: 400, error: "Stawka musi być 10-100000 GT" };
+  if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} GT` };
   if (!redis) return { ok: false, status: 503, error: "Gra chwilowo niedostępna" };
 
   let newBalance: number;
