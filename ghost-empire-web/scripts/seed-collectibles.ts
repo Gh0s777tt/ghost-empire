@@ -34,6 +34,37 @@ const CARDS = [
   // legendary (2)
   { id: "ge-phantom-king", name: "Król Widm", emoji: "👑", rarity: "legendary", description: "Włada całym Ghost Empire z cienia." },
   { id: "ge-founder", name: "Założyciel Imperium", emoji: "🔱", rarity: "legendary", description: "Ten, od którego wszystko się zaczęło." },
+
+  // ── batch 2 ──────────────────────────────────────────────────────────────
+  // common (10)
+  { id: "ge-newbie", name: "Świeżak", emoji: "🐣", rarity: "common", description: "Pierwszy raz na streamie. Witamy w Imperium." },
+  { id: "ge-copium", name: "Kopiumiarz", emoji: "🫧", rarity: "common", description: "Wierzy w comeback do samego końca." },
+  { id: "ge-backseat", name: "Backseat Gamer", emoji: "🪑", rarity: "common", description: "Wie lepiej jak grać. Zawsze." },
+  { id: "ge-vod-watcher", name: "Oglądacz VOD-ów", emoji: "📼", rarity: "common", description: "Nadrabia streamy o 3 w nocy." },
+  { id: "ge-mobile", name: "Widz z Telefonu", emoji: "📱", rarity: "common", description: "Ogląda w autobusie, na danych." },
+  { id: "ge-discord-mod", name: "Mod z Discorda", emoji: "💬", rarity: "common", description: "Pilnuje porządku po godzinach." },
+  { id: "ge-pog", name: "Pogchamp", emoji: "😮", rarity: "common", description: "POG! Reaguje na wszystko." },
+  { id: "ge-snack", name: "Przekąskowicz", emoji: "🍿", rarity: "common", description: "Stream to czas na chrupki." },
+  { id: "ge-afk", name: "AFK Andrzej", emoji: "🚪", rarity: "common", description: "Wyszedł na chwilę. Trzy godziny temu." },
+  { id: "ge-coffee", name: "Kofeinowy Duch", emoji: "☕", rarity: "common", description: "Działa wyłącznie na kawie." },
+  // rare (7)
+  { id: "ge-streamsniper", name: "Stream Sniper", emoji: "🎯", rarity: "rare", description: "Zawsze wie gdzie jesteś na mapie." },
+  { id: "ge-speedrunner", name: "Speedrunner", emoji: "⏱️", rarity: "rare", description: "Frame-perfect, bez wyjątków." },
+  { id: "ge-tts", name: "TTS Trickster", emoji: "🔊", rarity: "rare", description: "Płaci, żeby bot mówił głupoty." },
+  { id: "ge-fanart", name: "Twórca Fan Artów", emoji: "🎨", rarity: "rare", description: "Rysuje całe Imperium." },
+  { id: "ge-clutch", name: "Clutch Master", emoji: "🔥", rarity: "rare", description: "1v5? Bez stresu." },
+  { id: "ge-lucky", name: "Szczęściarz", emoji: "🍀", rarity: "rare", description: "Jackpot za pierwszym razem." },
+  { id: "ge-veteran", name: "Weteran", emoji: "🎖️", rarity: "rare", description: "Pamięta jeszcze stare emotki." },
+  // epic (5)
+  { id: "ge-whale", name: "Wieloryb", emoji: "🐋", rarity: "epic", description: "Donejty prosto z kosmosu." },
+  { id: "ge-cyber", name: "Cyber Duch", emoji: "🤖", rarity: "epic", description: "Zna każdy skrót klawiszowy." },
+  { id: "ge-dj", name: "DJ Imperium", emoji: "🎧", rarity: "epic", description: "Song requesty bez końca." },
+  { id: "ge-strategist", name: "Strateg", emoji: "♟️", rarity: "epic", description: "Trzy ruchy do przodu." },
+  { id: "ge-collector", name: "Kolekcjoner", emoji: "🗃️", rarity: "epic", description: "Ma każdą kartę. Prawie." },
+  // legendary (3)
+  { id: "ge-reaper", name: "Kosiarz Dusz", emoji: "⚰️", rarity: "legendary", description: "Bany roznosi osobiście." },
+  { id: "ge-cosmic", name: "Kosmiczny Widmo", emoji: "🌌", rarity: "legendary", description: "Duch z zupełnie innego wymiaru." },
+  { id: "ge-goat", name: "GOAT", emoji: "🐐", rarity: "legendary", description: "Greatest Of All Time. Bezdyskusyjnie." },
 ];
 
 async function main() {
