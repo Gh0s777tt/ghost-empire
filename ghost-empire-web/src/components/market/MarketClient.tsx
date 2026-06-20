@@ -2,7 +2,7 @@
 // src/components/market/MarketClient.tsx
 // P2P card marketplace UI (#552): Browse + buy, Sell (list an owned card), My listings
 // (cancel). All money/card moves go through the atomic /api/market POST actions.
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Store, Tag, X, ShoppingCart } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
@@ -31,28 +31,44 @@ export function MarketClient() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"browse" | "sell" | "mine">("browse");
   const [busy, setBusy] = useState<string | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
+  // Auto-dismissing toast (emerald = success, red = error) replaces the old amber
+  // banner so buy/list/cancel get a clear, non-sticky confirmation. #audit-UX
+  const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [sellCard, setSellCard] = useState("");
   const [sellPrice, setSellPrice] = useState("");
+
+  const showToast = useCallback((kind: "ok" | "err", text: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ kind, text });
+    toastTimer.current = setTimeout(() => setToast(null), 3200);
+  }, []);
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   const load = useCallback(async () => {
     try { setData(await apiGet<Data>("/api/market")); } catch { /* keep */ } finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
 
-  async function act(key: string, action: string, payload: Record<string, unknown>): Promise<boolean> {
-    setBusy(key); setMsg(null);
+  async function act(key: string, action: string, payload: Record<string, unknown>, okMsg?: string): Promise<boolean> {
+    setBusy(key);
     try {
       const r = await apiPost<{ ok: boolean; reason?: string }>("/api/market", { action, ...payload });
-      if (!r.ok) { setMsg(t(`err_${r.reason ?? "error"}`)); return false; }
+      if (!r.ok) { showToast("err", t(`err_${r.reason ?? "error"}`)); return false; }
       await load();
+      if (okMsg) showToast("ok", okMsg);
       return true;
-    } catch { setMsg(t("err_error")); return false; } finally { setBusy(null); }
+    } catch { showToast("err", t("err_error")); return false; } finally { setBusy(null); }
+  }
+
+  function buy(l: Listing) {
+    if (!window.confirm(t("confirmBuy", { name: l.card.name, price: l.price.toLocaleString(nf), sym }))) return;
+    void act(`buy-${l.id}`, "buy", { id: l.id }, t("bought"));
   }
 
   async function listCard() {
     if (!sellCard || !(+sellPrice > 0)) return;
-    if (await act("list", "list", { collectibleId: sellCard, price: +sellPrice })) { setSellCard(""); setSellPrice(""); setTab("mine"); }
+    if (await act("list", "list", { collectibleId: sellCard, price: +sellPrice }, t("listed"))) { setSellCard(""); setSellPrice(""); setTab("mine"); }
   }
 
   if (loading) return <div className="text-zinc-500 text-sm flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>;
@@ -77,7 +93,6 @@ export function MarketClient() {
         ))}
       </div>
 
-      {msg && <div className="mb-4 text-xs text-amber-300 border border-amber-700/50 bg-amber-950/20 rounded-lg px-3 py-2">{msg}</div>}
       {!data.loggedIn && <div className="mb-4 text-xs text-zinc-500">{t("signIn")}</div>}
 
       {tab === "browse" && (
@@ -95,7 +110,7 @@ export function MarketClient() {
                   <div className="text-[10px] text-zinc-500 mt-0.5 truncate w-full">{t("by", { name: l.seller })}</div>
                   <div className="text-sm font-bold text-amber-300 font-mono mt-1">{l.price.toLocaleString(nf)} {sym}</div>
                   <button
-                    onClick={() => void act(`buy-${l.id}`, "buy", { id: l.id })}
+                    onClick={() => buy(l)}
                     disabled={!data.loggedIn || own || poor || busy === `buy-${l.id}`}
                     className="mt-2 w-full px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-black text-[11px] font-bold uppercase tracking-wide rounded disabled:opacity-40 inline-flex items-center justify-center gap-1"
                   >
@@ -150,13 +165,24 @@ export function MarketClient() {
                   <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: RARITY_COLOR[normalizeRarity(l.card.rarity)] }}>{t(`rarity_${normalizeRarity(l.card.rarity)}`)}</div>
                 </div>
                 <span className="text-sm font-bold text-amber-300 font-mono shrink-0">{l.price.toLocaleString(nf)} {sym}</span>
-                <button onClick={() => void act(`cancel-${l.id}`, "cancel", { id: l.id })} disabled={busy === `cancel-${l.id}`} title={t("cancel")} className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-7 h-7 flex items-center justify-center shrink-0">
+                <button onClick={() => void act(`cancel-${l.id}`, "cancel", { id: l.id }, t("cancelled"))} disabled={busy === `cancel-${l.id}`} title={t("cancel")} className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-7 h-7 flex items-center justify-center shrink-0">
                   {busy === `cancel-${l.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
                 </button>
               </div>
             ))}
           </div>
         )
+      )}
+
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border animate-[getoastin_180ms_ease-out] ${toast.kind === "ok" ? "bg-emerald-950/90 border-emerald-600 text-emerald-200" : "bg-red-950/90 border-red-600 text-red-200"}`}
+        >
+          {toast.text}
+          <style>{`@keyframes getoastin { from { opacity:0; transform: translate(-50%, 8px) } to { opacity:1; transform: translate(-50%, 0) } }`}</style>
+        </div>
       )}
     </div>
   );
