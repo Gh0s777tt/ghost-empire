@@ -8,6 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { ErrorState } from "@/components/EmptyState";
 
 type Q = {
   id: string; question: string; options: string[]; reward: number; category: string | null;
@@ -17,16 +18,19 @@ type Data = { authenticated: boolean; balance: number; questions: Q[] };
 
 export function TriviaClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const t = useTranslations("trivia");
+  const tc = useTranslations("common");
   const nf = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const sym = tokenSymbol || "GT";
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    try { setData(await apiGet<Data>("/api/trivia")); } catch { /* leave */ } finally { setLoading(false); }
+    setErr(false);
+    try { setData(await apiGet<Data>("/api/trivia")); } catch { setErr(true); } finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
 
@@ -67,6 +71,8 @@ export function TriviaClient({ isAuthenticated }: { isAuthenticated: boolean }) 
 
       {loading ? (
         <div className="text-sm text-zinc-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>
+      ) : err ? (
+        <ErrorState title={tc("errorTitle")} message={t("err")} retryLabel={tc("retry")} onRetry={() => { setLoading(true); void load(); }} />
       ) : !data || data.questions.length === 0 ? (
         <div className="border border-zinc-900 bg-black/20 rounded-xl p-8 text-center">
           <Brain className="w-10 h-10 mx-auto mb-3 text-zinc-700" />

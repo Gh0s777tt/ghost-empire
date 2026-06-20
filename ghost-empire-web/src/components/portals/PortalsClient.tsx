@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Star, Check, Plus, ArrowUpRight, Globe } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { ErrorState } from "@/components/EmptyState";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
@@ -24,14 +25,17 @@ type Data = { portals: Portal[]; currentFollowed: boolean; canFollowCurrent: boo
 
 export function PortalsClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const t = useTranslations("portals");
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Data | null>(null);
+  const [err, setErr] = useState(false);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setErr(false);
     try { setData(await apiGet<Data>("/api/portals")); }
-    catch { /* leave empty — guests see the sign-in prompt */ }
+    catch { setErr(true); /* guests never reach here — they skip the load */ }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { if (isAuthenticated) void load(); else setLoading(false); }, [isAuthenticated, load]);
@@ -83,6 +87,8 @@ export function PortalsClient({ isAuthenticated }: { isAuthenticated: boolean })
 
       {loading ? (
         <div className="text-sm text-zinc-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>
+      ) : err ? (
+        <ErrorState title={tc("errorTitle")} message={t("errGeneric")} retryLabel={tc("retry")} onRetry={() => { setLoading(true); void load(); }} />
       ) : (
         <div className="space-y-6">
           {/* The portal you're currently on — with the follow toggle. */}

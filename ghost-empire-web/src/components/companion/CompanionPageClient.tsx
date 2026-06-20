@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Pencil, Check, X } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { ErrorState } from "@/components/EmptyState";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, apiPatch, ApiError } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
@@ -15,6 +16,7 @@ type CompanionData = { name: string; xp: number; lastFedAt: string | null; balan
 
 export function CompanionPageClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const t = useTranslations("companion");
+  const tc = useTranslations("common");
   const nf = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const sym = tokenSymbol || "GT";
@@ -92,7 +94,7 @@ export function CompanionPageClient({ isAuthenticated }: { isAuthenticated: bool
       ) : loading ? (
         <div className="text-sm text-zinc-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>
       ) : !data ? (
-        <div className="text-sm text-zinc-500 text-center py-8 border border-zinc-900 bg-black/20 rounded-xl">{t("errFeed")}</div>
+        <ErrorState title={tc("errorTitle")} message={t("errFeed")} retryLabel={tc("retry")} onRetry={() => { setLoading(true); void load(); }} />
       ) : (
         <CompanionInner
           data={data} sym={sym} nf={nf} t={t} busy={busy} amount={amount}

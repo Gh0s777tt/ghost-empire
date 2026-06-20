@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Volume2, Play, Coins } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { ErrorState } from "@/components/EmptyState";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
@@ -15,17 +16,20 @@ type Data = { rewards: Reward[]; balance: number };
 
 export function SoundsClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const t = useTranslations("sounds");
+  const tc = useTranslations("common");
   const nf = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const sym = tokenSymbol || "GT";
   const [loading, setLoading] = useState(isAuthenticated);
   const [data, setData] = useState<Data | null>(null);
+  const [err, setErr] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ k: "ok" | "err"; m: string } | null>(null);
 
   const load = useCallback(async () => {
+    setErr(false);
     try { setData(await apiGet<Data>("/api/sound-rewards")); }
-    catch { /* leave empty */ } finally { setLoading(false); }
+    catch { setErr(true); } finally { setLoading(false); }
   }, []);
   useEffect(() => { if (isAuthenticated) void load(); }, [isAuthenticated, load]);
 
@@ -61,6 +65,8 @@ export function SoundsClient({ isAuthenticated }: { isAuthenticated: boolean }) 
         </div>
       ) : loading ? (
         <div className="text-sm text-zinc-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>
+      ) : err ? (
+        <ErrorState title={tc("errorTitle")} message={t("errGeneric")} retryLabel={tc("retry")} onRetry={() => { setLoading(true); void load(); }} />
       ) : !data || data.rewards.length === 0 ? (
         <div className="border border-zinc-900 bg-black/20 rounded-xl p-8 text-center">
           <Volume2 className="w-10 h-10 mx-auto mb-3 text-zinc-700" />

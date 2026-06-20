@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Crown, Users, LogOut, Plus, Coins, Swords, Trophy } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { ErrorState } from "@/components/EmptyState";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
@@ -31,6 +32,7 @@ function warEndsLabel(endsAt: string, t: (k: string, v?: Record<string, number>)
 
 export function ClansPageClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const t = useTranslations("clans");
+  const tc = useTranslations("common");
   const nf = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const sym = tokenSymbol || "GT";
@@ -109,7 +111,7 @@ export function ClansPageClient({ isAuthenticated }: { isAuthenticated: boolean 
       ) : loading ? (
         <div className="text-sm text-zinc-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>
       ) : !data ? (
-        <div className="text-sm text-zinc-500 text-center py-8 border border-zinc-900 bg-black/20 rounded-xl">{t("errGeneric")}</div>
+        <ErrorState title={tc("errorTitle")} message={t("errGeneric")} retryLabel={tc("retry")} onRetry={() => { setLoading(true); void load(); }} />
       ) : (
         <div className="space-y-6">
           {data.war && (
