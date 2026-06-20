@@ -55,26 +55,27 @@ export async function POST(req: Request) {
 
   const isGrant = amount > 0;
 
-  const [, updatedUser] = await prisma.$transaction([
-    prisma.transaction.create({
-      data: {
-        userId: user.id,
-        type: isGrant ? "admin_grant" : "admin_deduct",
-        amount,
-        reason,
-        status: "completed",
-      },
-    }),
-    prisma.user.update({
-      where: { id: user.id },
-      data: {
-        tokens: { increment: amount },
-        ...(isGrant
-          ? { totalEarned: { increment: amount } }
-          : { totalSpent: { increment: Math.abs(amount) } }),
-      },
-    }),
-  ]);
+  let newBalance: number;
+  try {
+    newBalance = await prisma.$transaction(async (tx) => {
+      if (isGrant) {
+        await tx.user.update({ where: { id: user.id }, data: { tokens: { increment: amount }, totalEarned: { increment: amount } } });
+      } else {
+        // Guard the deduction with `gte` so two concurrent deducts can't both pass the
+        // stale pre-check above and drive the balance negative. #audit-v2
+        const dec = await tx.user.updateMany({ where: { id: user.id, tokens: { gte: Math.abs(amount) } }, data: { tokens: { decrement: Math.abs(amount) }, totalSpent: { increment: Math.abs(amount) } } });
+        if (dec.count === 0) throw new Error("INSUFFICIENT");
+      }
+      await tx.transaction.create({ data: { userId: user.id, type: isGrant ? "admin_grant" : "admin_deduct", amount, reason, status: "completed" } });
+      const u = await tx.user.findUnique({ where: { id: user.id }, select: { tokens: true } });
+      return u?.tokens ?? 0;
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message === "INSUFFICIENT") {
+      return NextResponse.json({ error: `User ma za mało GT, nie można odjąć ${Math.abs(amount)}` }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
+  }
 
   // Notification + audit in parallel — neither blocks the other (faster response).
   await Promise.all([
@@ -94,7 +95,7 @@ export async function POST(req: Request) {
       action: "grant_tokens",
       targetType: "user",
       targetId: user.id,
-      details: { amount, reason, targetUsername: user.username, newBalance: updatedUser.tokens },
+      details: { amount, reason, targetUsername: user.username, newBalance },
       req,
     }),
   ]);
@@ -108,6 +109,6 @@ export async function POST(req: Request) {
     ok: true,
     user: { id: user.id, username: user.username, displayName: user.displayName },
     amount,
-    newBalance: updatedUser.tokens,
+    newBalance,
   });
 }

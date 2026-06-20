@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { SectionCard, FieldInput } from "../shared";
-import { apiPost, ApiError } from "@/lib/api-client";
+import { apiPost, apiPostStepUp, ApiError } from "@/lib/api-client";
 
 function ModPermissionsPicker({
   selected,
@@ -134,7 +134,9 @@ export function UserRolesCard({
       if (role === "moderator" && enable) {
         body.modPermissions = Array.from(modPermissions);
       }
-      const data = await apiPost<{ user: { username: string | null; id: string } }>("/api/admin/user-roles", body);
+      // apiPostStepUp prompts for a 2FA code only if the server demands it (admin/moderator
+      // role changes for a 2FA-enabled admin); donator changes behave like a plain POST.
+      const data = await apiPostStepUp<{ user: { username: string | null; id: string } }>("/api/admin/user-roles", body);
       const user = data.user.username ?? data.user.id;
       onToast("ok", enable ? t("roleGranted", { role, user }) : t("roleRevoked", { role, user }));
       setTarget("");

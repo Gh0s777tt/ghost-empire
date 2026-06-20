@@ -30,8 +30,14 @@ class HeistError extends Error {}
 export async function resolveHeist(heistId: string): Promise<string | null> {
   try {
     return await prisma.$transaction(async (tx) => {
+      // Atomically CLAIM the heist (open → resolving) BEFORE paying — the row-locked
+      // updateMany means a concurrent resolve (the bot's timer racing the lazy
+      // recovery-on-join) sees count 0 and bails, instead of both running the payout
+      // loop and double-crediting the crew. #audit-v2 (mirrors predictions/duels claims)
+      const claim = await tx.heist.updateMany({ where: { id: heistId, status: "open" }, data: { status: "resolving" } });
+      if (claim.count === 0) return null; // already resolved / claimed by a concurrent call
       const heist = await tx.heist.findUnique({ where: { id: heistId }, include: { entries: true } });
-      if (!heist || heist.status !== "open") return null; // idempotent / already resolved
+      if (!heist) return null;
 
       const crew = heist.entries.length;
       const success = rollHeist(crew, cryptoRng);

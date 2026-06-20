@@ -2,7 +2,7 @@
 // Grant/revoke isModerator, isDonator (with optional totalDonated bump), isAdmin
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, findManagedUser } from "@/lib/admin";
+import { requireAdmin, findManagedUser, requireStepUp } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 
 export async function POST(req: Request) {
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     addDonation?: number;
     modNote?: string;
     modPermissions?: string[];
+    totpCode?: string;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -30,6 +31,14 @@ export async function POST(req: Request) {
   if (!target) return NextResponse.json({ error: "Brak target" }, { status: 400 });
   if (!["admin", "moderator", "donator"].includes(role ?? "")) {
     return NextResponse.json({ error: "Role: admin | moderator | donator" }, { status: 400 });
+  }
+
+  // Step-up: granting/revoking admin or moderator (the powerful, role-conferring actions)
+  // requires a fresh 2FA code — these were weaker than a reversible `ban-user`, which always
+  // steps up. No-op unless the acting admin enabled 2FA; donator is benign. #audit-v2
+  if (role === "admin" || role === "moderator") {
+    const step = await requireStepUp(auth.userId, body.totpCode);
+    if (!step.ok) return NextResponse.json({ error: step.error, stepUpRequired: true }, { status: step.status });
   }
 
   // Accept account ID (cuid), username, or Discord ID — scoped to the host
