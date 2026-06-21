@@ -41,7 +41,7 @@ export function PasskeyManager() {
     try {
       const options = await fetch("/api/auth/passkey/register/options", { method: "POST" }).then((r) => r.json());
       if (options.error) throw new Error(options.error);
-      const att = await startRegistration(options);
+      const att = await startRegistration({ optionsJSON: options }); // v13: wrapped in { optionsJSON }
       const deviceName = typeof navigator !== "undefined" ? guessDevice(navigator.userAgent) : undefined;
       const res = await fetch("/api/auth/passkey/register/verify", {
         method: "POST",

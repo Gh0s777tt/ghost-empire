@@ -76,7 +76,7 @@ export default function SignInPage() {
     try {
       const options = await fetch("/api/auth/passkey/login/options", { method: "POST" }).then((r) => r.json());
       if (options.error) throw new Error(options.error);
-      const assertion = await startAuthentication(options);
+      const assertion = await startAuthentication({ optionsJSON: options }); // v13: wrapped in { optionsJSON }
       const res = await fetch("/api/auth/passkey/login/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },

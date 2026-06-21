@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
-import type { RegistrationResponseJSON } from "@simplewebauthn/types";
+import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { webauthnContext, REG_CHALLENGE_COOKIE, b64url, sanitizeTransports } from "@/lib/webauthn";
@@ -49,14 +49,16 @@ export async function POST(req: Request) {
     return done({ error: "not-verified" }, 400);
   }
 
-  const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+  // v13: the registration result is under `registrationInfo.credential` — `id` is already a
+  // base64url string and `publicKey` is a Uint8Array (was credentialID/credentialPublicKey Buffers).
+  const { credential } = verification.registrationInfo;
   try {
     await prisma.passkey.create({
       data: {
         userId: session.user.id,
-        credentialId: b64url.fromBuffer(credentialID),
-        publicKey: b64url.fromBuffer(credentialPublicKey),
-        counter,
+        credentialId: credential.id,
+        publicKey: b64url.fromBuffer(credential.publicKey),
+        counter: credential.counter,
         transports: sanitizeTransports(body.response.response?.transports),
         deviceName: (body.deviceName ?? "").toString().trim().slice(0, 40) || null,
       },

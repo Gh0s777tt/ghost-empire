@@ -13,7 +13,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomUUID } from "node:crypto";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
-import type { AuthenticationResponseJSON, AuthenticatorTransportFuture } from "@simplewebauthn/types";
+import type { AuthenticationResponseJSON, AuthenticatorTransportFuture } from "@simplewebauthn/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { webauthnContext, AUTH_CHALLENGE_COOKIE, b64url, isSecureContext } from "@/lib/webauthn";
@@ -57,9 +57,11 @@ export async function POST(req: Request) {
       expectedChallenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
-      authenticator: {
-        credentialID: b64url.toBuffer(pk.credentialId),
-        credentialPublicKey: b64url.toBuffer(pk.publicKey),
+      // v13: `credential` (was `authenticator`) — `id` is the stored base64url string (matches
+      // resp.id), `publicKey` is a Uint8Array decoded from the stored base64url.
+      credential: {
+        id: pk.credentialId,
+        publicKey: b64url.toBuffer(pk.publicKey),
         counter: pk.counter,
         transports: (pk.transports ? pk.transports.split(",") : undefined) as AuthenticatorTransportFuture[] | undefined,
       },
