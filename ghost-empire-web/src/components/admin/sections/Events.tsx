@@ -5,7 +5,8 @@ import { useState } from "react";
 import { Calendar, Loader2, Zap, Plus, Dice5, Eye, EyeOff, Pencil, X, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
-import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { SectionCard, FieldInput, FieldTextarea, ListSearch } from "../shared";
+import { filterByText } from "@/lib/list-filter";
 import { apiPost, ApiError } from "@/lib/api-client";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import type { EventRow } from "../types";
@@ -268,9 +269,11 @@ export function EventsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.events");
+  const tc = useTranslations("common");
   const [editing, setEditing] = useState<EventRow | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [drawingId, setDrawingId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   async function toggleActive(e: EventRow) {
     setBusyId(e.id);
@@ -311,10 +314,15 @@ export function EventsManager({
   }
 
   if (events.length === 0) return null;
+  const filtered = filterByText(events, query, (e) => [e.name, e.type]);
   return (
     <SectionCard title={t("title")} icon={Calendar}>
       <div className="space-y-2">
-        {events.map((e) => {
+        {events.length > 8 && (
+          <ListSearch value={query} onChange={setQuery} placeholder={tc("searchPlaceholder")} shown={filtered.length} total={events.length} />
+        )}
+        {filtered.length === 0 && <p className="text-zinc-600 text-sm py-1">{tc("noResults")}</p>}
+        {filtered.map((e) => {
           const drawable = canDraw && e.active && !e.drawnAt && e.type !== "happy_hour";
           const hasParticipants = e.entriesCount > 0 || e.ticketsCount > 0;
           const meta: string[] = [];

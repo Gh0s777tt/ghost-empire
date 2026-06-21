@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { HelpCircle, Loader2, Eye, EyeOff, Pencil, Trash2, Check, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { SectionCard } from "../shared";
+import { SectionCard, ListSearch } from "../shared";
+import { filterByText } from "@/lib/list-filter";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type FaqRow = {
@@ -24,9 +25,11 @@ export function FaqManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.faq");
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState(true);
   const [faqs, setFaqs] = useState<FaqRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fKeyword, setFKeyword] = useState("");
@@ -121,12 +124,18 @@ export function FaqManager({
         <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : (
         <div className="space-y-2 mb-4">
+          {faqs.length > 8 && (
+            <ListSearch value={query} onChange={setQuery} placeholder={tc("searchPlaceholder")} shown={filterByText(faqs, query, (f) => [f.keyword, f.response]).length} total={faqs.length} />
+          )}
           {faqs.length === 0 ? (
             <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">
               {t("empty")}
             </div>
           ) : (
-            faqs.map((f) => (
+            (() => {
+              const filtered = filterByText(faqs, query, (f) => [f.keyword, f.response]);
+              if (filtered.length === 0) return <p className="text-zinc-600 text-sm py-1">{tc("noResults")}</p>;
+              return filtered.map((f) => (
               <div
                 key={f.id}
                 className={cn(
@@ -173,7 +182,8 @@ export function FaqManager({
                   </div>
                 </div>
               </div>
-            ))
+              ));
+            })()
           )}
         </div>
       )}
