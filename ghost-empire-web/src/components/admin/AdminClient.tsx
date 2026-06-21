@@ -111,7 +111,7 @@ type AdminEvent = {
 
 export function AdminClient({
   isAdmin, isPlatformOwner = false, myPermissions,
-  stats, drops, events, pendingOrders,
+  stats, drops, events, pendingOrders, badges = {},
 }: {
   isAdmin: boolean;
   /** Permanent-admin email (admin-of-admins) — unlocks the Tenants section. */
@@ -121,6 +121,8 @@ export function AdminClient({
   drops: Drop[];
   events: AdminEvent[];
   pendingOrders: PendingOrder[];
+  /** Per-section attention counts (e.g. pending orders, open tickets) → nav badges (#651). */
+  badges?: Record<string, number>;
   // Everything else (shop/events-manager/schedule/bot/audit/streamlabs/twitch/alerts)
   // is lazy-loaded per-section via <LazySection> + /api/admin/section-data — keeps the
   // initial /admin server render to just the Dashboard's data.
@@ -323,6 +325,7 @@ export function AdminClient({
           mode={adminMode}
           onModeChange={changeMode}
           hiddenByMode={hiddenByMode}
+          badges={badges}
         />
         {/* palette searches everything permitted — it's the escape hatch in simple mode */}
         <CommandPalette sections={permittedSections} onSelect={goToSection} />
@@ -621,7 +624,7 @@ const NAV_GROUPS: Array<{ key: string; label: string }> = [
 ];
 
 function AdminNav<T extends string>({
-  sections, active, onSelect, mode, onModeChange, hiddenByMode,
+  sections, active, onSelect, mode, onModeChange, hiddenByMode, badges,
 }: {
   sections: Array<{ id: T; label: string; icon: typeof Users; group: string }>;
   active: T;
@@ -629,6 +632,7 @@ function AdminNav<T extends string>({
   mode: AdminMode;
   onModeChange: (m: AdminMode) => void;
   hiddenByMode: number;
+  badges: Record<string, number>;
 }) {
   const t = useTranslations("admin");
   const activeGroup = sections.find((s) => s.id === active)?.group ?? "main";
@@ -684,6 +688,7 @@ function AdminNav<T extends string>({
           if (items.length === 0) return null;
           const isOpen = open[g.key] ?? false;
           const hasActive = items.some((s) => s.id === active);
+          const groupBadge = items.reduce((acc, s) => acc + (badges[s.id as string] ?? 0), 0);
           return (
             <div key={g.key}>
               <button
@@ -697,7 +702,11 @@ function AdminNav<T extends string>({
               >
                 <span className="flex items-center gap-1.5">
                   {t(g.label)}
-                  {!isOpen && hasActive && <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />}
+                  {!isOpen && groupBadge > 0 ? (
+                    <span className="min-w-[16px] text-center text-[9px] font-bold tabular-nums px-1 py-0.5 rounded-full bg-red-600 text-white">
+                      {groupBadge > 99 ? "99+" : groupBadge}
+                    </span>
+                  ) : (!isOpen && hasActive && <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />)}
                 </span>
                 <span className="flex items-center gap-1.5 text-zinc-600">
                   <span>{items.length}</span>
@@ -709,6 +718,7 @@ function AdminNav<T extends string>({
                   {items.map((s) => {
                     const Icon = s.icon;
                     const isActive = s.id === active;
+                    const count = badges[s.id as string] ?? 0;
                     return (
                       <button
                         key={s.id}
@@ -722,6 +732,11 @@ function AdminNav<T extends string>({
                       >
                         <Icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-red-400" : "")} />
                         <span className="whitespace-nowrap">{s.label}</span>
+                        {count > 0 && (
+                          <span className="ml-auto shrink-0 min-w-[18px] text-center text-[9px] font-bold tabular-nums px-1 py-0.5 rounded-full bg-red-600 text-white">
+                            {count > 99 ? "99+" : count}
+                          </span>
+                        )}
                       </button>
                     );
                   })}

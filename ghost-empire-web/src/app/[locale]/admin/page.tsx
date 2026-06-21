@@ -50,7 +50,7 @@ export default async function AdminPage() {
   // admin's tenant (counts via User.tenantId; collections + transactions via theirs).
   const [
     totalUsers, sums, eventsActive, ordersPending,
-    activeDrops, activeEvents, pendingOrders,
+    activeDrops, activeEvents, pendingOrders, openTickets,
   ] = await Promise.all([
     prisma.user.count({ where: tid ? { tenantId: tid } : {} }),
     prisma.user.aggregate({ _sum: { tokens: true, totalEarned: true }, where: tid ? { tenantId: tid } : {} }),
@@ -77,6 +77,8 @@ export default async function AdminPage() {
         user: { select: { username: true, displayName: true, discordId: true, discordUsername: true } },
       },
     }),
+    // Nav badge: open viewer support tickets awaiting a reply (#651).
+    prisma.supportTicket.count({ where: { status: "open", ...(tid ? { tenantId: tid } : {}) } }),
   ]);
 
   return (
@@ -102,6 +104,8 @@ export default async function AdminPage() {
             eventsActive,
             ordersPending,
           }}
+          // Per-section nav badges — counts that need the owner's attention (#651).
+          badges={{ shop: ordersPending, tickets: openTickets }}
           drops={activeDrops.map((d) => ({
             id: d.id,
             code: d.code,
