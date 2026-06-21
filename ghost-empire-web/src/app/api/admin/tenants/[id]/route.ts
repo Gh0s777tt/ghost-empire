@@ -55,6 +55,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
       data.socialLinks = clean.length ? clean : null;
     }
   }
+  if (typeof body.supportAlertMode === "string" && ["none", "bell", "overlay", "both"].includes(body.supportAlertMode)) {
+    data.supportAlertMode = body.supportAlertMode;
+  }
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }

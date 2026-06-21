@@ -25,5 +25,53 @@ export async function POST(req: Request) {
   await prisma.paymentMethod
     .updateMany({ where: { id, ...(tid ? { tenantId: tid } : {}) }, data: { clicks: { increment: 1 } } })
     .catch(() => {});
+  // Optional streamer alert on support engagement (#audit3) — best-effort, throttled,
+  // never blocks the beacon.
+  await fireSupportAlert(tid, id).catch(() => {});
   return NextResponse.json({ ok: true });
+}
+
+/** Notify the streamer that a viewer engaged a payment method, per the tenant's
+ *  supportAlertMode. Throttled to once per method per 5 min (a click is an intent
+ *  signal, not a confirmed payment). bell = in-app notification to the owner;
+ *  overlay = a StreamAlert the OBS overlay renders (icon-based, no enabledTypes gate). */
+async function fireSupportAlert(tid: string | null, methodId: string): Promise<void> {
+  const t = tid
+    ? await prisma.tenant.findUnique({ where: { id: tid }, select: { supportAlertMode: true, ownerUserId: true } })
+    : null;
+  const mode = t?.supportAlertMode ?? "none";
+  if (mode === "none") return;
+
+  // Throttle (fail-closed so a limiter outage can't spam): 1 alert / method / 5 min.
+  const rl = await rateLimit(`support-alert:${tid ?? "x"}:${methodId}`, 1, 300_000, { failClosed: true });
+  if (!rl.allowed) return;
+
+  const method = await prisma.paymentMethod.findUnique({ where: { id: methodId }, select: { label: true } });
+  const label = method?.label ?? "wsparcie";
+
+  if ((mode === "bell" || mode === "both") && t?.ownerUserId) {
+    await prisma.notification.create({
+      data: {
+        userId: t.ownerUserId,
+        type: "system",
+        title: "💜 Aktywność wsparcia",
+        message: `Ktoś otworzył Twoją metodę wsparcia: ${label} (możliwe wsparcie).`,
+        icon: "💜",
+        link: "/admin#payments",
+      },
+    }).catch(() => {});
+  }
+  if (mode === "overlay" || mode === "both") {
+    // Direct create (bypasses the enabledTypes gate like sound redemptions) — the overlay
+    // renders any StreamAlert by its icon.
+    await prisma.streamAlert.create({
+      data: {
+        ...(tid ? { tenantId: tid } : {}),
+        type: "support",
+        title: "💜 Możliwe wsparcie",
+        message: `ktoś korzysta z metody: ${label}`,
+        icon: "💜",
+      },
+    }).catch(() => {});
+  }
 }

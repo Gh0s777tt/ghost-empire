@@ -16,6 +16,7 @@ type TenantRow = {
   brandColor: string; logoUrl: string | null; ownerHandle: string | null;
   tokenName: string; tokenSymbol: string; companionDefaultName: string | null; bgImageUrl: string | null;
   socialLinks: { platform: string; url: string }[] | null;
+  supportAlertMode: string;
   plan: string; planExpiresAt: string | null; createdAt: string; users: number;
 };
 
@@ -128,6 +129,7 @@ function TenantCard({ row, onToast, onSaved, locale }: {
     logoUrl: row.logoUrl ?? "",
     companionDefaultName: row.companionDefaultName ?? "",
     bgImageUrl: row.bgImageUrl ?? "",
+    supportAlertMode: row.supportAlertMode ?? "none",
     plan: row.plan,
     planExpiresAt: row.planExpiresAt ? row.planExpiresAt.slice(0, 10) : "",
   });
@@ -217,6 +219,19 @@ function TenantCard({ row, onToast, onSaved, locale }: {
               className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-red-600 resize-y"
             />
             <p className="text-[10px] text-zinc-600 mt-1">{t("tntSocialLinksHint")}</p>
+          </div>
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("tntSupportAlert")}</label>
+            <select
+              value={f.supportAlertMode}
+              onChange={(e) => set("supportAlertMode")(e.target.value)}
+              className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-red-600"
+            >
+              <option value="none">{t("tntSupportAlertNone")}</option>
+              <option value="bell">{t("tntSupportAlertBell")}</option>
+              <option value="overlay">{t("tntSupportAlertOverlay")}</option>
+              <option value="both">{t("tntSupportAlertBoth")}</option>
+            </select>
           </div>
           <button
             onClick={() => void save()}

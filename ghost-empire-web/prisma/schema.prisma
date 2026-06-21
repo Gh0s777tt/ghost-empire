@@ -34,6 +34,10 @@ model Tenant {
   // Portal's own social links (#audit3): JSON array of { platform, url } shown in the
   // footer/about — per-portal so each streamer shows THEIR channels (not the founder's).
   socialLinks          Json? // [{ platform: "twitch"|"kick"|…, url }]; null → founder default (SOCIALS)
+  // Support-engagement alerts (#audit3): notify the streamer when a viewer opens/copies a
+  // payment method on /support. "none" | "bell" (in-app notification) | "overlay" (OBS) | "both".
+  // A click is an intent signal, not a confirmed payment — throttled server-side.
+  supportAlertMode     String    @default("none")
   ownerHandle          String? // streamer's public handle (%owner% in i18n), e.g. "Gh0s77tt"
   // Phase 6 — billing/entitlements. The founder tenant defaults to "elite" so the
   // existing portal never gates itself; paying tenants get their plan at checkout.
