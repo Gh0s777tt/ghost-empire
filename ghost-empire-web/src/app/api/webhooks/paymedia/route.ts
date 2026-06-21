@@ -23,6 +23,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { extractIp } from "@/lib/audit";
 import { createLogger } from "@/lib/logger";
+import { matchDonationToUser } from "@/lib/streamlabs";
 
 const log = createLogger("paymedia");
 
@@ -90,23 +91,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ignored: "non-PLN currency", currency: payload.currency });
   }
 
-  // Find user by metadata (username preferred, fallback to discord_id)
-  const metaUsername = payload.metadata?.username?.trim();
-  const metaDiscordId = payload.metadata?.discord_id?.trim();
-
-  let user = null;
-  if (metaUsername) {
-    user = await prisma.user.findUnique({ where: { username: metaUsername } });
-  }
-  if (!user && metaDiscordId) {
-    user = await prisma.user.findUnique({ where: { discordId: metaDiscordId } });
-  }
-  if (!user) {
-    // Donation received but user not matched — log it but don't fail.
-    // Manual reconciliation by admin via audit log.
-    log.warn("payment — user not matched", {
-      paymentId: payload.payment_id, amountPLN, username: metaUsername, discordId: metaDiscordId,
-    });
+  // VERIFIED-ONLY matching (#audit4 — same policy as Streamlabs #612): auto-credit ONLY when
+  // the donor put their personal donation code (GE-XXXXXX) in the metadata. The username /
+  // discord_id fields are attacker-controllable (set on the donation form), so matching on them
+  // could aim GT + Donator status at ANY account. Codeless donations → manual admin queue.
+  const searchText = [payload.metadata?.message, payload.metadata?.username, payload.metadata?.discord_id]
+    .filter(Boolean)
+    .join(" ");
+  const match = await matchDonationToUser(searchText, null); // donationCode is globally unique = the verification
+  if (!match) {
+    log.warn("payment — no valid donation code (manual queue)", { paymentId: payload.payment_id, amountPLN });
     return NextResponse.json({
       ok: true,
       warning: "user_not_matched",
@@ -114,6 +108,7 @@ export async function POST(req: Request) {
       amount: amountPLN,
     });
   }
+  const userId = match.userId;
 
   // Idempotency, soft pre-check — catches retries of payments credited before
   // `externalId` existed (legacy rows carry the payment_id only in `reason`).
@@ -137,7 +132,7 @@ export async function POST(req: Request) {
     await prisma.$transaction([
       prisma.transaction.create({
         data: {
-          userId: user.id,
+          userId: userId,
           type: "earn",
           amount: tokensGranted,
           reason: `paymedia:${payload.payment_id ?? "unknown"}`,
@@ -147,7 +142,7 @@ export async function POST(req: Request) {
         },
       }),
       prisma.user.update({
-        where: { id: user.id },
+        where: { id: userId },
         data: {
           isDonator: true,
           totalDonated: { increment: donationGrosze },
@@ -157,7 +152,7 @@ export async function POST(req: Request) {
       }),
       prisma.notification.create({
         data: {
-          userId: user.id,
+          userId: userId,
           type: "system",
           title: `Dzięki za donację ${amountPLN.toFixed(2)} PLN!`,
           message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT. Jesteś teraz oficjalnie Donatorem.`,
@@ -175,7 +170,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
-    user: user.username,
+    userId,
     amountPLN,
     tokensGranted,
     paymentId: payload.payment_id,
