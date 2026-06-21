@@ -46,7 +46,11 @@ export async function POST(req: Request) {
   });
   await updateDailyTaskProgress(userId, "poll_vote").catch(() => {}); // best-effort daily quest
 
-  const votes = await prisma.pollVote.findMany({ where: { pollId }, select: { optionIndex: true } });
-  const counts = poll.options.map((_, i) => votes.filter((v) => v.optionIndex === i).length);
-  return NextResponse.json({ ok: true, counts, total: votes.length, yourVote: optionIndex });
+  // Tally in the DB (groupBy) instead of pulling every PollVote row on each vote — a
+  // popular poll could load thousands of rows just to count them (#audit3 P1).
+  const grouped = await prisma.pollVote.groupBy({ by: ["optionIndex"], where: { pollId }, _count: { _all: true } });
+  const byIdx = new Map(grouped.map((g) => [g.optionIndex, g._count._all]));
+  const counts = poll.options.map((_, i) => byIdx.get(i) ?? 0);
+  const total = counts.reduce((s, n) => s + n, 0);
+  return NextResponse.json({ ok: true, counts, total, yourVote: optionIndex });
 }
