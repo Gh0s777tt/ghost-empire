@@ -601,7 +601,8 @@ function SocialLinksEditor({
         {t("socialIntro")}
       </p>
 
-      {/* Manual platforms (editable) */}
+      {/* Manual platforms (editable) — scrollable so the 13 cards don't dominate the page (#audit3 UX) */}
+      <div className="max-h-[26rem] overflow-y-auto space-y-2 pr-1">
       {manualPlatforms.map((platform) => {
         const meta = SOCIAL_META[platform];
         const Icon = meta.icon;
@@ -669,6 +670,7 @@ function SocialLinksEditor({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

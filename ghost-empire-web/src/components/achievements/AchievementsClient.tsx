@@ -258,14 +258,15 @@ export function AchievementsClient({
         )}
       </div>
 
-      {/* Grid */}
+      {/* Grid — in the "all" view, group by rarity (quality) so the long list reads as
+          tiers (#audit3 UX); a specific rarity filter shows a flat grid. */}
       {visible.length === 0 ? (
         <EmptyState
           icon={<Award className="w-6 h-6" />}
           title={t("emptyTitle")}
           message={t("emptyMsg")}
         />
-      ) : (
+      ) : rarityFilter !== "all" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {visible.map((a) => (
             <AchievementCard
@@ -276,6 +277,32 @@ export function AchievementsClient({
               progress={getProgress(a, userStats)}
             />
           ))}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {RARITY_ORDER.filter((r) => visible.some((a) => a.rarity === r)).map((r) => {
+            const group = visible.filter((a) => a.rarity === r);
+            const meta = RARITY_META[r];
+            return (
+              <div key={r}>
+                <div className={cn("flex items-center gap-2 mb-2 pb-1 border-b", meta.border)}>
+                  <span className={cn("text-[11px] font-bold tracking-widest uppercase", meta.text)}>{meta.label}</span>
+                  <span className="text-[10px] font-mono text-zinc-600">{group.length}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {group.map((a) => (
+                    <AchievementCard
+                      key={a.id}
+                      achievement={a}
+                      totalUsers={totalUsers}
+                      isAuthenticated={isAuthenticated}
+                      progress={getProgress(a, userStats)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
