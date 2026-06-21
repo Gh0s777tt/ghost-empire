@@ -116,7 +116,7 @@ export default async function WelcomePage() {
           })}
         </div>
 
-        <SocialLinksRow />
+        <SocialLinksRow links={tenant.socialLinks} />
 
         <Link href="/about" className="mt-8 py-1.5 text-xs font-mono uppercase tracking-widest text-zinc-400 hover:text-red-400 transition-colors">
           {t("learnMore")}

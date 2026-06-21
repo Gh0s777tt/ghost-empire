@@ -95,6 +95,24 @@ export const SOCIALS: SocialPlatform[] = [
   },
 ];
 
+// Per-platform branding, keyed by id — lets a portal supply its OWN links (#audit3)
+// while reusing the icon/colour/gradient. A tenant link is just { platform, url }.
+const BRAND: Record<string, SocialPlatform> = Object.fromEntries(SOCIALS.map((s) => [s.id, s]));
+export type TenantSocial = { platform: string; url: string };
+
+/** Resolve the links to render: a portal's own links (branded via BRAND, unknown
+ *  platforms dropped) when provided, else the founder default (SOCIALS). */
+function resolveSocials(links?: TenantSocial[] | null): SocialPlatform[] {
+  if (!links?.length) return SOCIALS;
+  const out = links
+    .map((l) => {
+      const b = BRAND[l.platform];
+      return b ? { ...b, href: l.url } : null;
+    })
+    .filter((s): s is SocialPlatform => s !== null);
+  return out.length ? out : SOCIALS;
+}
+
 function PlatformIcon({ platform }: { platform: SocialPlatform }) {
   // All brand marks are self-hosted SVGs (lucide dropped official logos in v1).
   const className = "w-7 h-7 text-white";
@@ -137,10 +155,10 @@ function PlatformIcon({ platform }: { platform: SocialPlatform }) {
   return null;
 }
 
-export function SocialLinksGrid() {
+export function SocialLinksGrid({ links }: { links?: TenantSocial[] | null }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {SOCIALS.map((s) => (
+      {resolveSocials(links).map((s) => (
         <a
           key={s.id}
           href={s.href}
@@ -194,10 +212,10 @@ export function SocialLinksGrid() {
 }
 
 /** Compact horizontal row for footers / sidebars */
-export function SocialLinksRow() {
+export function SocialLinksRow({ links }: { links?: TenantSocial[] | null }) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
-      {SOCIALS.map((s) => (
+      {resolveSocials(links).map((s) => (
         <a
           key={s.id}
           href={s.href}

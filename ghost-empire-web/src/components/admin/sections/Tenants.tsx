@@ -15,6 +15,7 @@ type TenantRow = {
   id: string; slug: string; name: string; shortName: string | null;
   brandColor: string; logoUrl: string | null; ownerHandle: string | null;
   tokenName: string; tokenSymbol: string; companionDefaultName: string | null; bgImageUrl: string | null;
+  socialLinks: { platform: string; url: string }[] | null;
   plan: string; planExpiresAt: string | null; createdAt: string; users: number;
 };
 
@@ -131,15 +132,25 @@ function TenantCard({ row, onToast, onSaved, locale }: {
     planExpiresAt: row.planExpiresAt ? row.planExpiresAt.slice(0, 10) : "",
   });
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
+  // Portal social links edited as "platform url" lines (one per line); parsed on save.
+  const [socialLinksText, setSocialLinksText] = useState(
+    (row.socialLinks ?? []).map((s) => `${s.platform} ${s.url}`).join("\n"),
+  );
 
   async function save() {
     if (busy) return;
     setBusy(true);
     try {
+      const socialLinks = socialLinksText
+        .split("\n")
+        .map((line) => line.trim().split(/\s+/))
+        .filter((parts) => parts.length >= 2 && parts[0] && parts[1])
+        .map((parts) => ({ platform: parts[0], url: parts[1] }));
       await apiPost(`/api/admin/tenants/${row.id}`, {
         ...f,
         ownerHandle: f.ownerHandle, // "" → null server-side
         logoUrl: f.logoUrl,
+        socialLinks,
         planExpiresAt: f.planExpiresAt ? new Date(f.planExpiresAt + "T23:59:59Z").toISOString() : null,
       }, { method: "PATCH" });
       onToast("ok", t("tntSaved", { slug: row.slug }));
@@ -195,6 +206,17 @@ function TenantCard({ row, onToast, onSaved, locale }: {
               </select>
             </div>
             <FieldInput label={t("tntExpiry")} value={f.planExpiresAt} onChange={set("planExpiresAt")} type="date" />
+          </div>
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("tntSocialLinks")}</label>
+            <textarea
+              value={socialLinksText}
+              onChange={(e) => setSocialLinksText(e.target.value)}
+              rows={3}
+              placeholder={"twitch https://twitch.tv/you\nkick https://kick.com/you"}
+              className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-red-600 resize-y"
+            />
+            <p className="text-[10px] text-zinc-600 mt-1">{t("tntSocialLinksHint")}</p>
           </div>
           <button
             onClick={() => void save()}

@@ -31,6 +31,9 @@ model Tenant {
   tokenSymbol          String    @default("GT") // short unit shown next to amounts
   companionDefaultName String? // per-portal default name for new Ghost Companions (#audit3); null → "Widmo"
   bgImageUrl           String? // optional portal background image (#audit3); rendered behind a dark overlay
+  // Portal's own social links (#audit3): JSON array of { platform, url } shown in the
+  // footer/about — per-portal so each streamer shows THEIR channels (not the founder's).
+  socialLinks          Json? // [{ platform: "twitch"|"kick"|…, url }]; null → founder default (SOCIALS)
   ownerHandle          String? // streamer's public handle (%owner% in i18n), e.g. "Gh0s77tt"
   // Phase 6 — billing/entitlements. The founder tenant defaults to "elite" so the
   // existing portal never gates itself; paying tenants get their plan at checkout.

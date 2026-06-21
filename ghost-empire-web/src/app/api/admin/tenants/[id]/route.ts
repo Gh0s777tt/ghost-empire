@@ -40,6 +40,21 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   // logoUrl renders site-wide as <img src>, bgImageUrl as a CSS url() — only absolute http(s) passes.
   if (typeof data.logoUrl === "string") data.logoUrl = safeMediaUrl(data.logoUrl);
   if (typeof data.bgImageUrl === "string") data.bgImageUrl = safeMediaUrl(data.bgImageUrl);
+  // Portal social links — array of { platform (known set), url (http(s)) }; empty/null clears.
+  if (body.socialLinks !== undefined) {
+    if (body.socialLinks === null || (Array.isArray(body.socialLinks) && body.socialLinks.length === 0)) {
+      data.socialLinks = null;
+    } else if (Array.isArray(body.socialLinks)) {
+      const ALLOWED = new Set(["discord", "twitch", "kick", "youtube", "tiktok", "instagram", "x"]);
+      const clean = body.socialLinks
+        .filter((s): s is { platform: string; url: string } =>
+          !!s && typeof s === "object" && typeof (s as { platform?: unknown }).platform === "string" && typeof (s as { url?: unknown }).url === "string")
+        .map((s) => ({ platform: s.platform.toLowerCase().trim().slice(0, 20), url: safeMediaUrl(s.url.trim()) ?? "" }))
+        .filter((s) => ALLOWED.has(s.platform) && s.url)
+        .slice(0, 12);
+      data.socialLinks = clean.length ? clean : null;
+    }
+  }
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }

@@ -28,7 +28,7 @@ export async function SiteFooter() {
 
           {/* Center — social icons */}
           <div className="flex justify-center">
-            <SocialLinksRow />
+            <SocialLinksRow links={tenant.socialLinks} />
           </div>
 
           {/* Right — legal links + the white-label funnel entry */}

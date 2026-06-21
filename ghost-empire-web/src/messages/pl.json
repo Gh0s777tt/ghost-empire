@@ -108,6 +108,8 @@
     "tntLogo": "Logo URL",
     "tntCompanionName": "Domyślne imię zwierzaka",
     "tntBgImage": "URL tła portalu",
+    "tntSocialLinks": "Linki społecznościowe portalu",
+    "tntSocialLinksHint": "Po jednym w linii: «platforma url». Platformy: discord, twitch, kick, youtube, tiktok, instagram, x. Puste = domyślne założyciela.",
     "tntPlan": "Plan",
     "tntExpiry": "Wygasa",
     "tntUntil": "do",

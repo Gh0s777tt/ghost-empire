@@ -9,6 +9,7 @@ import {
   Zap, Sparkles, ArrowRight, Dice5, Ticket, Rocket,
 } from "lucide-react";
 import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
+import { getCurrentTenant } from "@/lib/tenant";
 import { ChangelogList } from "@/components/ChangelogList";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -825,6 +826,7 @@ export default async function AboutPage() {
   const session = await auth();
   const isAuthed = !!session?.user?.id;
   const t = await getTranslations("about");
+  const tenant = await getCurrentTenant();
 
   const features = [
     { icon: ShoppingBag, color: "var(--brand)", href: "/shop", title: t("featShopTitle"), desc: t("featShopDesc") },
@@ -919,7 +921,7 @@ export default async function AboutPage() {
 
           {/* Compact social row under hero */}
           <div className="mt-8">
-            <SocialLinksRow />
+            <SocialLinksRow links={tenant.socialLinks} />
           </div>
         </section>
 
@@ -1044,7 +1046,7 @@ export default async function AboutPage() {
           <p className="text-zinc-400 text-sm mb-4 max-w-2xl">
             {t("socialsText")}
           </p>
-          <SocialLinksGrid />
+          <SocialLinksGrid links={tenant.socialLinks} />
         </Section>
 
         {/* Changelog */}

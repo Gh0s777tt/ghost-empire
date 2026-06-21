@@ -108,6 +108,8 @@
     "tntLogo": "Logo URL",
     "tntCompanionName": "Companion default name",
     "tntBgImage": "Background image URL",
+    "tntSocialLinks": "Portal social links",
+    "tntSocialLinksHint": "One per line: «platform url». Platforms: discord, twitch, kick, youtube, tiktok, instagram, x. Empty = founder default.",
     "tntPlan": "Plan",
     "tntExpiry": "Expires",
     "tntUntil": "until",

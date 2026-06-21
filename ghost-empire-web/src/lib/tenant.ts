@@ -34,7 +34,23 @@ export type TenantBrand = {
   companionDefaultName: string;
   /** Optional portal background image (rendered behind a dark overlay); null = none. */
   bgImageUrl: string | null;
+  /** Portal's own social links; null = fall back to the founder default (SOCIALS). */
+  socialLinks: { platform: string; url: string }[] | null;
 };
+
+/** Safely parse the Tenant.socialLinks JSON into a validated list (defensive on read). */
+function parseTenantSocials(raw: unknown): { platform: string; url: string }[] | null {
+  if (!Array.isArray(raw)) return null;
+  const out = raw
+    .filter(
+      (x): x is { platform: string; url: string } =>
+        !!x && typeof x === "object" && typeof (x as { platform?: unknown }).platform === "string" && typeof (x as { url?: unknown }).url === "string",
+    )
+    .map((x) => ({ platform: x.platform.toLowerCase().slice(0, 20), url: x.url }))
+    .filter((x) => /^https?:\/\//i.test(x.url))
+    .slice(0, 12);
+  return out.length ? out : null;
+}
 
 /** Brand used before a tenant row exists or outside any request context. */
 export const FALLBACK_TENANT: TenantBrand = {
@@ -49,6 +65,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   logoUrl: null,
   companionDefaultName: "Widmo",
   bgImageUrl: null,
+  socialLinks: null,
 };
 
 /**
@@ -88,6 +105,7 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
         // Re-sanitize on read: this value goes into a CSS url(), so be defensive even
         // though the admin write path already runs safeMediaUrl.
         bgImageUrl: t.bgImageUrl ? safeMediaUrl(t.bgImageUrl) : null,
+        socialLinks: parseTenantSocials(t.socialLinks),
       };
     }
   } catch {
