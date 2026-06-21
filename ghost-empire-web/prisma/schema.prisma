@@ -1212,6 +1212,7 @@ model GameLibraryConfig {
 
 model Game {
   id           String    @id @default(cuid())
+  tenantId     String? // multi-tenant (Phase 3) — per-portal game library (each streamer syncs their own)
   source       String // "steam" | "gog" | "psn" | "xbox"
   externalId   String // platform id (Steam appid, …)
   name         String
@@ -1222,8 +1223,11 @@ model Game {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  @@unique([source, externalId])
+  // Per-tenant uniqueness: two portals can each own the same Steam appid without colliding.
+  // (Legacy null-tenant rows get claimed by the next sync / the backfill route.)
+  @@unique([tenantId, source, externalId])
   @@index([source, playtimeMin])
+  @@index([tenantId])
   @@map("games")
 }
 

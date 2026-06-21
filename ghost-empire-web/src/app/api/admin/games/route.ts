@@ -6,16 +6,20 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { getGameLibraryConfig, syncSteamLibrary, syncPsnLibrary } from "@/lib/games";
 import { coerceSteamId } from "@/lib/steam";
+import { currentTenantId } from "@/lib/tenant";
 
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const cfg = await getGameLibraryConfig();
+  // Scope every aggregate to this portal (OR-null keeps legacy rows until backfill claims them).
+  const tid = await currentTenantId();
+  const tw = tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {};
   const [count, totals, games] = await Promise.all([
-    prisma.game.count(),
-    prisma.game.aggregate({ _sum: { playtimeMin: true } }),
-    prisma.game.findMany({ orderBy: { playtimeMin: "desc" }, take: 200 }),
+    prisma.game.count({ where: tw }),
+    prisma.game.aggregate({ _sum: { playtimeMin: true }, where: tw }),
+    prisma.game.findMany({ where: tw, orderBy: { playtimeMin: "desc" }, take: 200 }),
   ]);
 
   return NextResponse.json({
@@ -70,7 +74,13 @@ export async function POST(req: Request) {
     if (typeof body.id !== "string" || typeof body.hidden !== "boolean") {
       return NextResponse.json({ error: "id + hidden wymagane" }, { status: 400 });
     }
-    await prisma.game.update({ where: { id: body.id }, data: { hidden: body.hidden } });
+    // Scope by tenant so an admin can't flip another portal's game by id (OR-null = own + legacy).
+    const tid = await currentTenantId();
+    const r = await prisma.game.updateMany({
+      where: { id: body.id, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
+      data: { hidden: body.hidden },
+    });
+    if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono gry" }, { status: 404 });
     return NextResponse.json({ ok: true });
   }
 

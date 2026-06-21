@@ -2,6 +2,7 @@
 import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +17,9 @@ const SOURCE_LABEL: Record<string, string> = { steam: "Steam", gog: "GOG", psn: 
 
 export default async function GamesPage() {
   const t = await getTranslations("games");
+  const tid = await currentTenantId();
   const games = await prisma.game.findMany({
-    where: { hidden: false },
+    where: { hidden: false, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
     orderBy: [{ playtimeMin: "desc" }, { name: "asc" }],
   });
   const totalHours = Math.round(games.reduce((s, g) => s + g.playtimeMin, 0) / 60);

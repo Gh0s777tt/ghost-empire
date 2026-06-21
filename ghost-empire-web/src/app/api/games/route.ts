@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +14,10 @@ export async function GET(req: Request) {
   const rl = await rateLimit(`games:ip:${ip}`, 60, 60_000);
   if (!rl.allowed) return NextResponse.json({ error: "Za dużo zapytań" }, { status: 429, headers: rateLimitHeaders(rl) });
 
+  // Per-portal library; OR-null keeps legacy rows visible until the backfill claims them.
+  const tid = await currentTenantId();
   const games = await prisma.game.findMany({
-    where: { hidden: false },
+    where: { hidden: false, ...(tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {}) },
     orderBy: [{ playtimeMin: "desc" }, { name: "asc" }],
   });
   const totalMin = games.reduce((s, g) => s + g.playtimeMin, 0);

@@ -46,6 +46,7 @@ async function run(req: Request) {
   counts.botConfig = (await prisma.botConfig.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.wheelConfig = (await prisma.wheelConfig.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.gameLibraryConfig = (await prisma.gameLibraryConfig.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
+  counts.game = (await prisma.game.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.chatOverlayConfig = (await prisma.chatOverlayConfig.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.codeDropConfig = (await prisma.codeDropConfig.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;
   counts.subathon = (await prisma.subathon.updateMany({ where: { tenantId: null }, data: { tenantId } })).count;

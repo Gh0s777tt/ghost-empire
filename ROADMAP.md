@@ -131,7 +131,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 - **3B:** ✅ **zrobione w całości** (Song Requests, Chat overlay, Timery, FAQ, Welcome) + ~~dynamiczne daily questy z czatu~~ #19, ~~tytuły song requestów (oEmbed)~~ #18, ~~bonus tokenów przy powitaniu~~ #16
 - **3C:** customizacja alertów per-typ (animacja/font/grafika/dźwięk/threshold), **OBS WebSocket** (sceny/źródła), **Philips Hue / Govee / Lumia** (efekty świetlne na donejty)
 - **3D:** **AI Moderator**, AI auto-responses kontekstowe, AI shoutouts/clip-detection, ~~Subathon/Goalathon~~ ✅ (#17), analityka per-stream + heatmapy czatu, A/B testy komend
-- **Game library** — ✅ **Steam (#165) + PSN (#168)** (`/games` + `/admin#games`, sync biblioteki). **Zostaje:** GOG (licences) / Ubisoft (demux) / Xbox + voting widget „następna gra”
+- **Game library** — ✅ **Steam (#165) + PSN (#168)** (`/games` + `/admin#games`, sync biblioteki) · ✅ **per-tenant (#618)** — `Game` ma teraz `tenantId` + composite-unique `[tenantId, source, externalId]`, więc każdy portal synchronizuje **własną** bibliotekę (sync claimuje legacy null-rows, odczyty OR-null, backfill w `/api/admin/backfill-tenant`). **Zostaje:** GOG (licences) / Ubisoft (demux) / Xbox + voting widget „następna gra” + **per-tenant PSN/Xbox *connect*** (własny NPSSO per portal — kamień milowy subdomen; teraz NPSSO globalny)
 
 ### Pomysły użytkownika (2026-05-30) — do zrealizowania
 
