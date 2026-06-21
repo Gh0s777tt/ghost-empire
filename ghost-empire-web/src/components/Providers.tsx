@@ -1,6 +1,7 @@
 "use client";
 // src/components/Providers.tsx
 import { SessionProvider } from "next-auth/react";
+import { ToastProvider } from "@/components/ToastProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // refetchInterval: re-pull the session every 3 min so passively earned GT
@@ -10,7 +11,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // 180s (was 60) cuts the /api/auth/session DB hits per open tab 3×.
   return (
     <SessionProvider refetchInterval={180} refetchOnWindowFocus>
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </SessionProvider>
   );
 }

@@ -7,10 +7,11 @@ import { useTranslations, useLocale } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import { emitBalance } from "@/lib/balance-bus";
 import {
-  Zap, Check, Loader2, MessageCircle, Mic2, Gift, Flame, X, Clock,
+  Zap, Check, Loader2, MessageCircle, Mic2, Gift, Flame, Clock,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ToastProvider";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { apiPost, ApiError } from "@/lib/api-client";
@@ -71,7 +72,7 @@ export function QuestsClient({
   const [tasks, setTasks] = useState(initialTasks);
   const [pending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const toast = useToast();
   const [resetIn, setResetIn] = useState(() => secondsUntilMidnight());
   const { tokenSymbol } = useTenantBranding();
 
@@ -87,10 +88,7 @@ export function QuestsClient({
     .reduce((sum, t) => sum + t.task.reward, 0);
   const totalReward = tasks.reduce((sum, t) => sum + t.task.reward, 0);
 
-  function showToast(kind: "ok" | "err", msg: string) {
-    setToast({ kind, msg });
-    setTimeout(() => setToast(null), 4500);
-  }
+  const showToast = toast.show;
 
   async function claim(taskId: string) {
     setBusyId(taskId);
@@ -238,19 +236,6 @@ export function QuestsClient({
         </ul>
       </div>
 
-      {toast && (
-        <div
-          className={cn(
-            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
-            toast.kind === "ok"
-              ? "border-green-700 bg-green-950/90 text-green-200"
-              : "border-red-700 bg-red-950/90 text-red-200",
-          )}
-        >
-          {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-          <span className="text-sm">{toast.msg}</span>
-        </div>
-      )}
     </div>
   );
 }

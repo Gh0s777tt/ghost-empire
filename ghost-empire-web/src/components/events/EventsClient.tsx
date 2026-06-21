@@ -6,10 +6,11 @@ import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import {
-  Calendar, Gift, Ticket, Trophy, Zap, Users, Clock, Check, X, Loader2, Minus, Plus, Crown,
+  Calendar, Gift, Ticket, Trophy, Zap, Users, Clock, Check, Loader2, Minus, Plus, Crown,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { cn, displayNick } from "@/lib/utils";
+import { useToast } from "@/components/ToastProvider";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { apiPost, ApiError } from "@/lib/api-client";
@@ -70,7 +71,7 @@ export function EventsClient({
   const { update: refreshSession } = useSession();
   const [pending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const toast = useToast();
   const [now, setNow] = useState(() => Date.now());
   const entriesSet = useMemo(() => new Set(userEntries), [userEntries]);
 
@@ -79,10 +80,7 @@ export function EventsClient({
     return () => clearInterval(t);
   }, []);
 
-  function showToast(kind: "ok" | "err", msg: string) {
-    setToast({ kind, msg });
-    setTimeout(() => setToast(null), 4500);
-  }
+  const showToast = toast.show;
 
   async function joinEvent(eventId: string) {
     setBusyId(eventId);
@@ -216,20 +214,6 @@ export function EventsClient({
         </Section>
       )}
 
-      {/* Toast */}
-      {toast && (
-        <div
-          className={cn(
-            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
-            toast.kind === "ok"
-              ? "border-green-700 bg-green-950/90 text-green-200"
-              : "border-red-700 bg-red-950/90 text-red-200",
-          )}
-        >
-          {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-          <span className="text-sm">{toast.msg}</span>
-        </div>
-      )}
     </div>
   );
 }

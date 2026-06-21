@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import { Link } from "@/i18n/navigation";
-import { Ticket, Lock, Check, Loader2, Clock, Sparkles, X } from "lucide-react";
+import { Ticket, Lock, Check, Loader2, Clock, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ToastProvider";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { apiPost, ApiError } from "@/lib/api-client";
 
@@ -44,12 +45,8 @@ export function SeasonsClient({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
-
-  function showToast(kind: "ok" | "err", msg: string) {
-    setToast({ kind, msg });
-    setTimeout(() => setToast(null), 4000);
-  }
+  const toast = useToast();
+  const showToast = toast.show;
 
   async function claim(rewardId: string) {
     setBusy(rewardId);
@@ -213,19 +210,6 @@ export function SeasonsClient({
         )}
       </div>
 
-      {toast && (
-        <div
-          className={cn(
-            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
-            toast.kind === "ok"
-              ? "border-green-700 bg-green-950/90 text-green-200"
-              : "border-red-700 bg-red-950/90 text-red-200",
-          )}
-        >
-          {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-          <span className="text-sm">{toast.msg}</span>
-        </div>
-      )}
     </div>
   );
 }

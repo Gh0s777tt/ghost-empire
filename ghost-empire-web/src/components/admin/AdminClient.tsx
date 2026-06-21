@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ShieldCheck, Coins, Gift, Calendar, Package, Plus, X, Loader2, Check,
+  ShieldCheck, Coins, Gift, Calendar, Package, Plus, Loader2,
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
+import { useToast } from "@/components/ToastProvider";
 import { fmt, formatDate, cn } from "@/lib/utils";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -132,7 +133,7 @@ export function AdminClient({
   const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const toast = useToast();
   const { tokenSymbol } = useTenantBranding();
 
   // Navigation sections — each maps to a group of cards previously rendered linearly.
@@ -246,10 +247,7 @@ export function AdminClient({
     }
   }, []);
 
-  function showToast(kind: "ok" | "err", msg: string) {
-    setToast({ kind, msg });
-    setTimeout(() => setToast(null), 5000);
-  }
+  const showToast = toast.show;
 
   function refresh() {
     startTransition(() => router.refresh());
@@ -268,21 +266,20 @@ export function AdminClient({
     let matched = false;
     for (const p of providers) {
       if (params.has(p.ok)) {
-        setToast({ kind: "ok", msg: t("oauthOk", { label: p.label }) });
+        toast.ok(t("oauthOk", { label: p.label }));
         matched = true;
       } else if (params.has(p.err)) {
-        setToast({ kind: "err", msg: t("oauthErr", { label: p.label, err: params.get(p.err) ?? "" }) });
+        toast.err(t("oauthErr", { label: p.label, err: params.get(p.err) ?? "" }));
         matched = true;
       }
     }
     if (matched) {
-      setTimeout(() => setToast(null), 7000);
       const url = new URL(window.location.href);
       ["kick_success","kick_error","twitch_success","twitch_error","yt_success","yt_error"]
         .forEach((k) => { url.searchParams.delete(k); });
       window.history.replaceState(null, "", url.toString());
     }
-  }, [t]);
+  }, [t, toast]);
 
   const sharedProps = { onToast: showToast, onSuccess: refresh, pending };
 
@@ -556,21 +553,6 @@ export function AdminClient({
         onJump={(id) => goToSection(id as SectionId)}
       />
 
-      {toast && (
-        <div
-          role={toast.kind === "ok" ? "status" : "alert"}
-          aria-live={toast.kind === "ok" ? "polite" : "assertive"}
-          className={cn(
-            "fixed bottom-6 right-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
-            toast.kind === "ok"
-              ? "border-green-700 bg-green-950/90 text-green-200"
-              : "border-red-700 bg-red-950/90 text-red-200",
-          )}
-        >
-          {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-          <span className="text-sm">{toast.msg}</span>
-        </div>
-      )}
     </div>
   );
 }

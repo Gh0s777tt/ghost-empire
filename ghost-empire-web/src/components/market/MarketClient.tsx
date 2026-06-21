@@ -2,11 +2,12 @@
 // src/components/market/MarketClient.tsx
 // P2P card marketplace UI (#552): Browse + buy, Sell (list an owned card), My listings
 // (cancel). All money/card moves go through the atomic /api/market POST actions.
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Store, Tag, X, ShoppingCart } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { useToast } from "@/components/ToastProvider";
 import { EmptyState, ErrorState } from "@/components/EmptyState";
 import { RARITY_COLOR, normalizeRarity } from "@/lib/collectibles";
 import { sellerProceeds } from "@/lib/market";
@@ -31,19 +32,12 @@ export function MarketClient() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"browse" | "sell" | "mine">("browse");
   const [busy, setBusy] = useState<string | null>(null);
-  // Auto-dismissing toast (emerald = success, red = error) replaces the old amber
-  // banner so buy/list/cancel get a clear, non-sticky confirmation. #audit-UX
-  const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Shared toast (emerald = success, red = error) — buy/list/cancel get a clear,
+  // non-sticky confirmation. Migrated to the global useToast provider. #598
+  const toast = useToast();
+  const showToast = toast.show;
   const [sellCard, setSellCard] = useState("");
   const [sellPrice, setSellPrice] = useState("");
-
-  const showToast = useCallback((kind: "ok" | "err", text: string) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast({ kind, text });
-    toastTimer.current = setTimeout(() => setToast(null), 3200);
-  }, []);
-  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   const load = useCallback(async () => {
     try { setData(await apiGet<Data>("/api/market")); } catch { /* keep */ } finally { setLoading(false); }
@@ -174,16 +168,6 @@ export function MarketClient() {
         )
       )}
 
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border animate-[getoastin_180ms_ease-out] ${toast.kind === "ok" ? "bg-emerald-950/90 border-emerald-600 text-emerald-200" : "bg-red-950/90 border-red-600 text-red-200"}`}
-        >
-          {toast.text}
-          <style>{`@keyframes getoastin { from { opacity:0; transform: translate(-50%, 8px) } to { opacity:1; transform: translate(-50%, 0) } }`}</style>
-        </div>
-      )}
     </div>
   );
 }

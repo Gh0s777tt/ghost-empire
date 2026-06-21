@@ -6,9 +6,10 @@ import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import { emitBalance } from "@/lib/balance-bus";
-import { ShoppingBag, Flame, Lock, Check, X, Loader2 } from "lucide-react";
+import { ShoppingBag, Flame, Lock, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ToastProvider";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { shopDiscountFraction, discountedPrice } from "@/lib/economy";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -61,7 +62,7 @@ export function ShopClient({
   const [confirmItem, setConfirmItem] = useState<ShopItem | null>(null);
   // Focus-trap the confirm modal (Esc closes when not mid-purchase, focus restores). #audit-v2 a11y
   const confirmRef = useFocusTrap<HTMLDivElement>(!!confirmItem, { onEscape: () => { if (busyItem === null) setConfirmItem(null); } });
-  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const toast = useToast();
   const { tokenSymbol } = useTenantBranding();
 
   const visible = useMemo(
@@ -108,20 +109,18 @@ export function ShopClient({
     try {
       const data = await apiPost<Extract<BuyResponse, { ok: true }>>("/api/shop/buy", { itemId: item.id });
       emitBalance(data.newBalance);
-      setToast({
-        kind: "ok",
-        msg: data.deliveryPending
+      toast.ok(
+        data.deliveryPending
           ? t("boughtPending", { name: data.itemName })
           : t("boughtDone", { name: data.itemName }),
-      });
+      );
       await refreshSession();
       startTransition(() => router.refresh());
     } catch (err) {
-      setToast({ kind: "err", msg: err instanceof ApiError ? err.message : t("errBuy") });
+      toast.err(err instanceof ApiError ? err.message : t("errBuy"));
     } finally {
       setBusyItem(null);
       setConfirmItem(null);
-      setTimeout(() => setToast(null), 4500);
     }
   }
 
@@ -444,21 +443,6 @@ export function ShopClient({
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Toast */}
-      {toast && (
-        <div
-          className={cn(
-            "fixed bottom-6 end-6 z-50 max-w-md border px-4 py-3 flex items-center gap-3 shadow-2xl",
-            toast.kind === "ok"
-              ? "border-green-700 bg-green-950/90 text-green-200"
-              : "border-red-700 bg-red-950/90 text-red-200",
-          )}
-        >
-          {toast.kind === "ok" ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-          <span className="text-sm">{toast.msg}</span>
         </div>
       )}
     </div>

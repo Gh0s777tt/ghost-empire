@@ -2,11 +2,12 @@
 // src/components/collectibles/CollectiblesClient.tsx
 // Collection grid + GT pack opening (#551). Cards you own show in full colour with a
 // ×qty badge; ones you don't are dimmed silhouettes. Opening a pack reveals the card.
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Package, Sparkles } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { useToast } from "@/components/ToastProvider";
 import { EmptyState, ErrorState } from "@/components/EmptyState";
 import { RARITY_COLOR, normalizeRarity } from "@/lib/collectibles";
 
@@ -24,16 +25,9 @@ export function CollectiblesClient() {
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
   const [reveal, setReveal] = useState<Reveal | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
-  // Auto-dismissing error toast (replaces the old sticky amber banner, matches the
-  // marketplace pattern). Success feedback is the card reveal animation below. #audit-v2
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const showErr = (text: string) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setMsg(text);
-    toastTimer.current = setTimeout(() => setMsg(null), 3200);
-  };
-  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+  // Error feedback via the shared toast provider; success is the reveal animation. #598
+  const toast = useToast();
+  const showErr = toast.err;
 
   async function load() {
     try { setData(await apiGet<Data>("/api/collectibles")); } catch { /* keep */ } finally { setLoading(false); }
@@ -41,7 +35,7 @@ export function CollectiblesClient() {
   useEffect(() => { void load(); }, []);
 
   async function openPack() {
-    setOpening(true); setMsg(null); setReveal(null);
+    setOpening(true); setReveal(null);
     try {
       const r = await apiPost<{ ok: boolean; reason?: string; card?: Reveal; balance?: number }>("/api/collectibles/open-pack", {});
       if (r.ok && r.card) {
@@ -91,7 +85,6 @@ export function CollectiblesClient() {
             </button>
           </div>
 
-          {msg && <div role="alert" aria-live="assertive" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border bg-red-950/90 border-red-600 text-red-200">{msg}</div>}
 
           {reveal && (
             <div className="mb-5 flex flex-col items-center gap-2 border-2 rounded-xl p-5" style={{ borderColor: RARITY_COLOR[normalizeRarity(reveal.rarity)], background: `${RARITY_COLOR[normalizeRarity(reveal.rarity)]}14`, animation: "gerevealin 420ms cubic-bezier(0.22,1,0.36,1)" }}>
