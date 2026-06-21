@@ -755,6 +755,7 @@ model SupportTicket {
   userId     String
   subject    String
   message    String    @db.Text
+  category   String    @default("other") // "reward" | "bug" | "question" | "other" (#651 triage)
   status     String    @default("open") // "open" | "resolved"
   adminReply String?   @db.Text
   createdAt  DateTime  @default(now())

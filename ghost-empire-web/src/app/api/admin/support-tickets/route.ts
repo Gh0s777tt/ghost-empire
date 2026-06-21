@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     take: 200,
     select: {
-      id: true, subject: true, message: true, status: true, adminReply: true,
+      id: true, subject: true, message: true, category: true, status: true, adminReply: true,
       createdAt: true, resolvedAt: true,
       user: { select: { id: true, username: true, displayName: true, image: true } },
     },
@@ -39,6 +39,7 @@ export async function GET(req: Request) {
       id: t.id,
       subject: t.subject,
       message: t.message,
+      category: t.category,
       status: t.status,
       adminReply: t.adminReply,
       createdAt: t.createdAt.toISOString(),

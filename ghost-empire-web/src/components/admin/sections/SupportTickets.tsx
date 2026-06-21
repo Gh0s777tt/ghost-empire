@@ -14,12 +14,15 @@ type AdminTicket = {
   id: string;
   subject: string;
   message: string;
+  category: string;
   status: string;
   adminReply: string | null;
   createdAt: string;
   resolvedAt: string | null;
   user: { id: string; username: string | null; displayName: string | null; image: string | null };
 };
+
+const CATEGORIES = ["reward", "bug", "question", "other"] as const;
 
 export function SupportTicketsManager({
   onToast, pending,
@@ -97,6 +100,9 @@ export function SupportTicketsManager({
               <div key={tk.id} className="border border-zinc-800 bg-black/30 p-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold text-white flex-1 min-w-0 truncate">{tk.subject}</span>
+                  <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-700 text-zinc-400">
+                    {t(`cat_${CATEGORIES.includes(tk.category as (typeof CATEGORIES)[number]) ? tk.category : "other"}`)}
+                  </span>
                   <span className={`text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border ${resolved ? "border-emerald-700 text-emerald-300" : "border-amber-700 text-amber-300"}`}>
                     {resolved ? t("statusResolved") : t("statusOpen")}
                   </span>

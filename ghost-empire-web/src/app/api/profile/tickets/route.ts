@@ -12,6 +12,9 @@ import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
+// Allowed ticket categories (triage). Anything else falls back to "other".
+const CATEGORIES = new Set(["reward", "bug", "question", "other"]);
+
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
@@ -19,7 +22,7 @@ export async function GET() {
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
     take: 50,
-    select: { id: true, subject: true, message: true, status: true, adminReply: true, createdAt: true, resolvedAt: true },
+    select: { id: true, subject: true, message: true, category: true, status: true, adminReply: true, createdAt: true, resolvedAt: true },
   });
   return NextResponse.json({
     tickets: tickets.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), resolvedAt: t.resolvedAt?.toISOString() ?? null })),
@@ -33,10 +36,11 @@ export async function POST(req: Request) {
   const rl = await rateLimit(`ticket:${userId}`, 5, 60 * 60_000); // 5 / hour
   if (!rl.allowed) return jsonError("Za dużo zgłoszeń. Spróbuj później.", 429);
 
-  let body: { subject?: string; message?: string };
-  try { body = (await req.json()) as { subject?: string; message?: string }; } catch { return jsonError("Nieprawidłowe dane", 400); }
+  let body: { subject?: string; message?: string; category?: string };
+  try { body = (await req.json()) as { subject?: string; message?: string; category?: string }; } catch { return jsonError("Nieprawidłowe dane", 400); }
   const subject = (body.subject ?? "").trim().slice(0, 120);
   const message = (body.message ?? "").trim().slice(0, 2000);
+  const category = CATEGORIES.has(body.category ?? "") ? body.category! : "other";
   if (subject.length < 3 || message.length < 5) return jsonError("Podaj temat i treść zgłoszenia", 400);
 
   // Anti-flood: cap open (unresolved) tickets per user.
@@ -45,7 +49,7 @@ export async function POST(req: Request) {
 
   const tid = await currentTenantId();
   const ticket = await prisma.supportTicket.create({
-    data: { userId, subject, message, ...(tid ? { tenantId: tid } : {}) },
+    data: { userId, subject, message, category, ...(tid ? { tenantId: tid } : {}) },
     select: { id: true },
   });
 

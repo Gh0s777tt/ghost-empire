@@ -12,11 +12,14 @@ type Ticket = {
   id: string;
   subject: string;
   message: string;
+  category: string;
   status: string;
   adminReply: string | null;
   createdAt: string;
   resolvedAt: string | null;
 };
+
+const CATEGORIES = ["reward", "bug", "question", "other"] as const;
 
 export function SupportTicketCard() {
   const t = useTranslations("supportTicket");
@@ -25,6 +28,7 @@ export function SupportTicketCard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [category, setCategory] = useState<string>("other");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
@@ -40,8 +44,8 @@ export function SupportTicketCard() {
     if (subject.trim().length < 3 || message.trim().length < 5) { setMsg({ kind: "err", text: t("tooShort") }); return; }
     setBusy(true); setMsg(null);
     try {
-      await apiPost("/api/profile/tickets", { subject: subject.trim(), message: message.trim() });
-      setSubject(""); setMessage("");
+      await apiPost("/api/profile/tickets", { subject: subject.trim(), message: message.trim(), category });
+      setSubject(""); setMessage(""); setCategory("other");
       setMsg({ kind: "ok", text: t("sent") });
       await load();
     } catch (e) {
@@ -69,6 +73,16 @@ export function SupportTicketCard() {
         <div className="px-4 pb-4 space-y-3">
           {/* New ticket */}
           <div className="space-y-2">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              aria-label={t("categoryLabel")}
+              className="w-full border border-zinc-800 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-sky-600"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{t(`cat_${c}`)}</option>
+              ))}
+            </select>
             <input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
@@ -109,6 +123,9 @@ export function SupportTicketCard() {
                 <div key={tk.id} className="border border-zinc-800 bg-black/30 p-2.5 rounded-lg">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-white truncate flex-1">{tk.subject}</span>
+                    <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-700 text-zinc-400">
+                      {t(`cat_${CATEGORIES.includes(tk.category as (typeof CATEGORIES)[number]) ? tk.category : "other"}`)}
+                    </span>
                     <span className={`text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border ${tk.status === "resolved" ? "border-emerald-700 text-emerald-300" : "border-amber-700 text-amber-300"}`}>
                       {tk.status === "resolved" ? t("statusResolved") : t("statusOpen")}
                     </span>
