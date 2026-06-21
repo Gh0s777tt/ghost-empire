@@ -123,6 +123,7 @@ Schemat (`prisma/schema.prisma`) ma **~95 modeli**; pełna prawda jest w pliku. 
 - **Wsparcie / sponsorzy:** `PaymentMethod` (metody napiwków na `/support`, #514), `SupportGoal` (cel zbiórki, #519), `Sponsor` (partnerzy/loga, #538).
 - **Auth + powiadomienia:** `Passkey` (WebAuthn, #543/#544), `PushSubscription` (web push, #533), `TwitchEvent` (dedup/idempotencja EventSub po `eventId`).
 - **Zaangażowanie / społeczność:** `Companion` (Ghost Companion, xp), `Clan` + `ClanWar` (klany + wojny, #477), `ClipVote` (klip tygodnia, #502), `TriviaQuestion` / `TriviaAnswer` (#523), `SoundReward` (GT→dźwięki, #505), `DailyTask` / `UserTask` (questy), `StreamSession` (analityka „czas na streamie").
+- **Biblioteka gier (per-tenant):** `Game` (per portal — `tenantId` + composite-unique `[tenantId, source, externalId]`, #618), `GameVote` (1 głos „następna gra"/widz/portal, #628), `GameLibraryConfig` (Steam ID + szyfrowane at-rest `psnNpsso` #626 / `xboxApiKey` #627 — per-portal connect PSN/Xbox/OpenXBL).
 - **SaaS:** `Tenant` (portal: branding/plan/owner-handle; founder = tenant domyślny).
 
 > Indeksy: hot-pathy tenant-scoped mają composite indexy (`[tenantId, …]`) dobrane pod realne zapytania (rankingi klanów/companionów, alerty wg typu, kolekcja); `Transaction.externalId @unique` służy idempotencji (donacje + daily-bonus). Zmiana schematu = additive `prisma db push` (bez plików migracji).

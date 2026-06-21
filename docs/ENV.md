@@ -15,6 +15,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 |---|---|---|
 | `NEXTAUTH_SECRET` | Podpis sesji. Auth.js v5 czyta `AUTH_SECRET`, a gdy brak — `NEXTAUTH_SECRET`; **zostaw bez zmian** (z niego liczony jest też klucz szyfrowania `crypto.ts`, jeśli nie ma `ENCRYPTION_KEY`). | `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Bazowy URL (OAuth callbacki, sitemap, robots) | np. `https://ghost-empire-web.vercel.app` |
+| `AUTH_URL` (O) | Alias Auth.js v5 dla `NEXTAUTH_URL` — **ma pierwszeństwo** gdy ustawiony. Passkeys (`lib/webauthn`) pinują do niego rpID/origin (anti host-spoof). Ustaw na tę samą kanoniczną domenę co `NEXTAUTH_URL` (bez `/` na końcu) lub zostaw tylko `NEXTAUTH_URL`. | np. `https://ghost-empire-web.vercel.app` |
 | `DATABASE_URL` | Postgres (Supabase, **transaction pooler 6543**, `connection_limit=3`) | Supabase → Database → Connection string |
 | `DIRECT_URL` | Postgres bezpośredni (port 5432) — migracje / `db push` | Supabase (Session) |
 | `BOT_SECRET` | Bearer dla `/api/internal/*` i `/api/bot/*` — **ten sam** w obu botach | `openssl rand -hex 32` |
