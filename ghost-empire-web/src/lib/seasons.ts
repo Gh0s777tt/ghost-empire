@@ -30,7 +30,8 @@ export const SEASON_XP = {
 
 export type SeasonXpSource = keyof typeof SEASON_XP;
 
-function monthBounds(now = new Date()): { start: Date; end: Date; number: number; label: string } {
+// Exported for unit testing — pure (UTC month boundaries + season number from the 2026 epoch).
+export function monthBounds(now = new Date()): { start: Date; end: Date; number: number; label: string } {
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0));
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0));
   // Season number = months since Jan 2026 (project epoch) + 1
