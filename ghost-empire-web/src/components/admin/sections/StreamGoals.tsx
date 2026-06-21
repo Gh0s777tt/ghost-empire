@@ -291,24 +291,27 @@ export function StreamGoalsManager({
                       <button
                         onClick={() => toggleActive(g)}
                         disabled={busy === g.id || pending}
-                        className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 px-2 h-6 text-[9px] font-mono uppercase"
+                        className="text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 px-2 h-9 min-w-[36px] inline-flex items-center justify-center text-[9px] font-mono uppercase"
                         title={g.active ? t("disable") : t("enable")}
+                        aria-label={g.active ? t("disable") : t("enable")}
                       >
                         {g.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                       </button>
                       <button
                         onClick={() => resetGoal(g)}
                         disabled={busy === g.id || pending}
-                        className="text-zinc-500 hover:text-orange-400 border border-zinc-800 hover:border-orange-700 w-6 h-6 flex items-center justify-center"
+                        className="text-zinc-500 hover:text-orange-400 border border-zinc-800 hover:border-orange-700 w-9 h-9 flex items-center justify-center"
                         title={t("resetTitle")}
+                        aria-label={t("resetTitle")}
                       >
                         <RefreshCw className="w-3 h-3" />
                       </button>
                       <button
                         onClick={() => deleteGoal(g)}
                         disabled={busy === g.id || pending}
-                        className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"
+                        className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-9 h-9 flex items-center justify-center"
                         title={t("deleteTitle")}
+                        aria-label={t("deleteTitle")}
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>

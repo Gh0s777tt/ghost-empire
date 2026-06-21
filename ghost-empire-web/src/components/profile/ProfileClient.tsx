@@ -650,11 +650,11 @@ function SocialLinksEditor({
                     placeholder={t(meta.placeholder)}
                     className="flex-1 bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden font-mono min-w-0 focus:border-red-600"
                   />
-                  <button onClick={() => save(platform)} disabled={isBusy || !draft.trim()} className="text-green-400 hover:text-green-300 disabled:opacity-30" title={t("save")}>
+                  <button onClick={() => save(platform)} disabled={isBusy || !draft.trim()} className="inline-flex items-center justify-center min-w-[40px] min-h-[40px] shrink-0 text-green-400 hover:text-green-300 disabled:opacity-30" title={t("save")} aria-label={t("save")}>
                     {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                   </button>
                   {existing && (
-                    <button onClick={() => remove(platform)} disabled={isBusy} className="text-red-500 hover:text-red-400 disabled:opacity-30" title={t("remove")}>
+                    <button onClick={() => remove(platform)} disabled={isBusy} className="inline-flex items-center justify-center min-w-[40px] min-h-[40px] shrink-0 text-red-500 hover:text-red-400 disabled:opacity-30" title={t("remove")} aria-label={t("remove")}>
                       {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
                     </button>
                   )}

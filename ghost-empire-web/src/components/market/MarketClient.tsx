@@ -165,7 +165,7 @@ export function MarketClient() {
                   <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: RARITY_COLOR[normalizeRarity(l.card.rarity)] }}>{t(`rarity_${normalizeRarity(l.card.rarity)}`)}</div>
                 </div>
                 <span className="text-sm font-bold text-amber-300 font-mono shrink-0">{l.price.toLocaleString(nf)} {sym}</span>
-                <button onClick={() => void act(`cancel-${l.id}`, "cancel", { id: l.id }, t("cancelled"))} disabled={busy === `cancel-${l.id}`} title={t("cancel")} className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-7 h-7 flex items-center justify-center shrink-0">
+                <button onClick={() => void act(`cancel-${l.id}`, "cancel", { id: l.id }, t("cancelled"))} disabled={busy === `cancel-${l.id}`} title={t("cancel")} aria-label={t("cancel")} className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-10 h-10 flex items-center justify-center shrink-0">
                   {busy === `cancel-${l.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
                 </button>
               </div>

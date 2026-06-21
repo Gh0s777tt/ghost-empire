@@ -114,15 +114,15 @@ export function SupportClient({
                   {/* Actions */}
                   <div className="flex items-center gap-1.5 shrink-0">
                     {m.kind === "bank" && !isRevealed && (
-                      <button onClick={() => toggle(revealed, setRevealed, m.id)} title={t("reveal")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-8 h-8 flex items-center justify-center"><Eye className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => toggle(revealed, setRevealed, m.id)} title={t("reveal")} aria-label={t("reveal")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-10 h-10 flex items-center justify-center"><Eye className="w-3.5 h-3.5" /></button>
                     )}
                     {m.kind !== "link" && (
-                      <button onClick={() => { trackClick(m.id); void copy(m.id, m.value); }} title={t("copy")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-8 h-8 flex items-center justify-center">
+                      <button onClick={() => { trackClick(m.id); void copy(m.id, m.value); }} title={t("copy")} aria-label={t("copy")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-10 h-10 flex items-center justify-center">
                         {copied === m.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     )}
                     {m.qr && (
-                      <button onClick={() => toggle(qrOpen, setQrOpen, m.id)} title={t("qr")} className={`border rounded-lg w-8 h-8 flex items-center justify-center ${showQr ? "border-red-600 text-white" : "border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600"}`}><QrCode className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => toggle(qrOpen, setQrOpen, m.id)} title={t("qr")} aria-label={t("qr")} className={`border rounded-lg w-10 h-10 flex items-center justify-center ${showQr ? "border-red-600 text-white" : "border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600"}`}><QrCode className="w-3.5 h-3.5" /></button>
                     )}
                   </div>
                 </div>
