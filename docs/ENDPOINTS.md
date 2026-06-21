@@ -70,6 +70,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/profile/shipping` | GET/PUT/DELETE | Szyfrowany profil wysyłkowy PII do nagród fizycznych — tylko właściciel; PUT wymaga zgody, DELETE = erasure GDPR (#609) |
 | `…/api/profile/donation-code` | GET | Osobisty kod weryfikacyjny donacji (lazy-mint) — wpisany w wiadomości donacji kredytuje GT zweryfikowanemu userowi (#612) |
 | `…/api/profile/export` | GET | Eksport własnych danych (RODO art. 15/20) — pobranie JSON ze wszystkimi danymi konta; tylko właściciel, sekrety zredagowane, PII odszyfrowane dla właściciela (#619) |
+| `…/api/profile/tickets` | GET/POST | Zgłoszenia wsparcia widza — GET lista własnych (status/odpowiedź), POST nowe zgłoszenie (rate-limit 5/h, limit 10 otwartych, powiadamia właściciela portalu) (#649) |
 | `…/api/collectibles` · `…/open-pack` | GET/POST | Katalog kart + kolekcja widza; otwarcie paczki GT (#551 — atomowy zakup, ważona rzadkość) |
 | `…/api/market` | GET/POST | Marketplace P2P kart (#552 — list/buy/cancel, escrow + atomowy transfer GT, 5% fee spalane) |
 | `…/api/gift` | POST | Prezent GT między widzami (#553 — atomowy transfer, limity 5k/transfer + 10k/24h, powiadomienie) |

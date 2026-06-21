@@ -10,6 +10,7 @@ import { PasskeyManager } from "@/components/profile/PasskeyManager";
 import { ShippingProfileCard } from "@/components/profile/ShippingProfileCard";
 import { DonationCodeCard } from "@/components/profile/DonationCodeCard";
 import { DataExportCard } from "@/components/profile/DataExportCard";
+import { SupportTicketCard } from "@/components/profile/SupportTicketCard";
 import { companionStage } from "@/lib/companion";
 
 export const dynamic = "force-dynamic";
@@ -147,6 +148,7 @@ export default async function ProfilePage() {
           <DonationCodeCard />
           <ShippingProfileCard />
           <DataExportCard />
+          <SupportTicketCard />
         </div>
       </main>
     </div>

@@ -193,6 +193,7 @@ model User {
   heistEntries     HeistEntry[]
   companion        Companion?
   shippingProfile  ShippingProfile?
+  supportTickets   SupportTicket[]
   clanId           String?
   clanRole         String? // "owner" | "member" within `clan`
   clan             Clan?             @relation("ClanMembers", fields: [clanId], references: [id])
@@ -743,6 +744,28 @@ model Notification {
   @@index([userId, createdAt])
   @@index([userId, read])
   @@map("notifications")
+}
+
+// Viewer → streamer support tickets (#audit5 new feature): an in-platform contact channel
+// (e.g. "my physical reward didn't arrive", bug reports, questions). The viewer opens a ticket
+// from /profile; the portal owner is notified and replies/resolves it in /admin#tickets.
+model SupportTicket {
+  id         String    @id @default(cuid())
+  tenantId   String? // multi-tenant — per portal
+  userId     String
+  subject    String
+  message    String    @db.Text
+  status     String    @default("open") // "open" | "resolved"
+  adminReply String?   @db.Text
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, createdAt]) // admin queue per portal, open first
+  @@index([userId, createdAt]) // a viewer's own tickets
+  @@map("support_tickets")
 }
 
 // =====================================================

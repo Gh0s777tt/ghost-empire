@@ -9,6 +9,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Added
 
+- **Viewer support tickets — widz → ekipa (część 1: strona widza)** **(#649)** — nowy, samowystarczalny kanał kontaktu: zalogowany widz otwiera zgłoszenie ze swojego `/profile` (zwijana karta `SupportTicketCard` obok eksportu RODO) i widzi listę własnych zgłoszeń ze statusem (otwarte/rozwiązane) oraz odpowiedzią ekipy. Nowy model **`SupportTicket`** (nullable `tenantId` — per-portal, `userId`, temat/treść, `status`, `adminReply`, indeksy `[tenantId,status,createdAt]`+`[userId,createdAt]`; **db push** — nowa tabela `support_tickets`, czysto addytywna, zastosowana) i route **`/api/profile/tickets`** (GET własne, POST z walidacją temat 3–120/treść 5–2000, rate-limit 5/h, limit 10 otwartych zgłoszeń, scoping per-tenant, best-effort powiadomienie właściciela portalu typu `system` z linkiem `/admin#tickets`). EN + PL (`supportTicket`). Strona admina (odpowiedz/zamknij + powiadomienie widza) jest planowana jako osobny, kolejny PR. Zielone: `tsc`/**477 testów**/`eslint`/`build`/`docs:check`.
+
 - **Per-portal timezone for `/schedule` (audit v5 white-label)** **(#646)** — finishes the #643 schedule fix: the displayed timezone was still a hard-coded "Europe/Warsaw". New `Tenant.timezone` (**db push** — additive nullable, applied), set in `/admin#tenants` (validated as a real IANA zone via `Intl.DateTimeFormat`, empty → falls back to Europe/Warsaw). `tenant.ts` exposes it (`TenantBrand.timezone`); the `/schedule` subtitle now shows `{tz}` from the portal's own timezone. EN + PL label + subtitle reworked to take the `{tz}` param. Zielone: `tsc`/**473 testów**/`eslint`/`build`/`docs:check`.
 
 ### Changed

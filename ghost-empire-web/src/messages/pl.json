@@ -2264,6 +2264,21 @@
     "button": "Pobierz",
     "err": "Nie udało się wygenerować eksportu. Spróbuj ponownie."
   },
+  "supportTicket": {
+    "title": "Pomoc i zgłoszenia",
+    "subtitle": "Masz problem albo pytanie? Wyślij zgłoszenie do ekipy.",
+    "subjectPh": "Temat (np. „Nie dotarła moja nagroda”)",
+    "messagePh": "Opisz swój problem…",
+    "send": "Wyślij zgłoszenie",
+    "sent": "Zgłoszenie wysłane — odezwiemy się.",
+    "tooShort": "Podaj temat i dłuższą treść.",
+    "err": "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.",
+    "loading": "Wczytywanie Twoich zgłoszeń…",
+    "empty": "Nie masz jeszcze żadnych zgłoszeń.",
+    "statusOpen": "Otwarte",
+    "statusResolved": "Rozwiązane",
+    "reply": "Odpowiedź ekipy"
+  },
   "donationCode": {
     "title": "Twój kod donacji",
     "desc": "Wpisz ten kod w wiadomości napiwku na stronie wsparcia — wtedy donacja doliczy %gt% na Twoje konto (napiwki bez kodu dopasowuje admin).",
