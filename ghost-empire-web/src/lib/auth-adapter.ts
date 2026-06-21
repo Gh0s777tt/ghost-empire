@@ -13,7 +13,6 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter, AdapterUser, AdapterAccount } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
-import { encryptSecret, decryptSecret } from "@/lib/crypto";
 
 /**
  * Build the where-clause for resolving an account by provider identity, scoped to a
@@ -71,16 +70,10 @@ export function tenantAwarePrismaAdapter(): Adapter {
       const account = await prisma.account.findFirst({
         where: accountWhere(provider, providerAccountId, tid),
       });
-      if (!account) return null;
-      // Decrypt the OAuth tokens on the way out (encrypted at rest by linkAccount, #audit5) so
-      // NextAuth sees plaintext. decryptSecret passes legacy plaintext through unchanged, so
-      // pre-#645 rows still work and upgrade to ciphertext only if they're ever re-linked.
-      return {
-        ...account,
-        access_token: decryptSecret(account.access_token) ?? undefined,
-        refresh_token: decryptSecret(account.refresh_token) ?? undefined,
-        id_token: decryptSecret(account.id_token) ?? undefined,
-      } as unknown as AdapterAccount;
+      // #657: reverted #645's at-rest token encryption — it broke OAuth sign-in on BOTH
+      // portals once deployed. Return the row as-is (tenant-scoping kept); tokens are plaintext
+      // again (acceptable — the app reads Connection, not these Account fields; see #645 notes).
+      return (account as AdapterAccount | null) ?? null;
     },
 
     // WRITE: delegate the insert to the base adapter (keeps its field handling), then
@@ -102,16 +95,9 @@ export function tenantAwarePrismaAdapter(): Adapter {
     // leaves tenantId NULL; we patch only that just-created NULL row (unique by
     // provider id within the tenant), never another tenant's link.
     async linkAccount(account) {
-      // Encrypt OAuth tokens at rest (#audit5). getAccount decrypts on read, so this is
-      // transparent to NextAuth. The app's own token store (Connection) is already encrypted;
-      // these Account-table tokens were the last plaintext OAuth-token store.
-      const enc = {
-        ...account,
-        ...(account.access_token ? { access_token: encryptSecret(account.access_token) } : {}),
-        ...(account.refresh_token ? { refresh_token: encryptSecret(account.refresh_token) } : {}),
-        ...(account.id_token ? { id_token: encryptSecret(account.id_token) } : {}),
-      };
-      const linked = await base.linkAccount!(enc as typeof account);
+      // #657: reverted #645's token encryption here (it broke OAuth sign-in once live).
+      // Delegate the insert to the base adapter unchanged.
+      const linked = await base.linkAccount!(account);
       const tid = await currentTenantId();
       if (tid) {
         await prisma.account
