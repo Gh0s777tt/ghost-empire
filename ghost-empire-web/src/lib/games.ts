@@ -15,7 +15,16 @@ export async function getGameLibraryConfig() {
   const tid = await currentTenantId();
   if (tid) {
     const existing = await prisma.gameLibraryConfig.findFirst({ where: { tenantId: tid } });
-    return existing ?? (await prisma.gameLibraryConfig.create({ data: { tenantId: tid } }));
+    if (existing) return existing;
+    try {
+      return await prisma.gameLibraryConfig.create({ data: { tenantId: tid } });
+    } catch {
+      // Two concurrent first-syncs can race the create (tenantId is @unique) → P2002.
+      // Re-read the row the winner created instead of surfacing a sync error. #audit4
+      const row = await prisma.gameLibraryConfig.findFirst({ where: { tenantId: tid } });
+      if (row) return row;
+      throw new Error("game library config unavailable");
+    }
   }
   return prisma.gameLibraryConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
 }
@@ -59,10 +68,10 @@ export async function syncSteamLibrary(): Promise<SyncResult> {
     return { ok: false, error };
   }
 
-  // Claim any legacy null-tenant Steam rows for this portal in one shot, so a re-sync
-  // updates them in place instead of creating tenant-scoped duplicates next to them.
-  // No-op once the rows are backfilled (and in the legacy null-tenant path itself).
-  if (tid) await prisma.game.updateMany({ where: { tenantId: null, source: "steam" }, data: { tenantId: tid } });
+  // On the FIRST Steam sync only, claim any legacy null-tenant Steam rows for this portal so
+  // a re-sync updates them in place instead of duplicating. Gated by `steamSyncedAt` so it
+  // can't repeatedly land-grab another tenant's pre-backfill rows on every later sync. #audit4
+  if (tid && !cfg.steamSyncedAt) await prisma.game.updateMany({ where: { tenantId: null, source: "steam" }, data: { tenantId: tid } });
 
   const appIds: string[] = [];
   for (const g of games) {
@@ -106,16 +115,17 @@ export async function syncPsnLibrary(): Promise<SyncResult> {
     return { ok: false, error };
   }
 
-  if (tid) await prisma.game.updateMany({ where: { tenantId: null, source: "psn" }, data: { tenantId: tid } });
+  if (tid && !cfg.psnSyncedAt) await prisma.game.updateMany({ where: { tenantId: null, source: "psn" }, data: { tenantId: tid } });
 
   const ids: string[] = [];
   for (const t of titles) {
     ids.push(t.id);
+    const lp = t.lastPlayed ? new Date(t.lastPlayed) : null;
     const data = {
       name: t.name.slice(0, 200),
       imageUrl: t.image,
       playtimeMin: 0, // trophy API has no playtime
-      lastPlayedAt: t.lastPlayed ? new Date(t.lastPlayed) : null,
+      lastPlayedAt: lp && !Number.isNaN(lp.getTime()) ? lp : null,
     };
     await upsertGame(tid, "psn", t.id, data);
   }
@@ -143,7 +153,7 @@ export async function syncXboxLibrary(): Promise<SyncResult> {
     return { ok: false, error };
   }
 
-  if (tid) await prisma.game.updateMany({ where: { tenantId: null, source: "xbox" }, data: { tenantId: tid } });
+  if (tid && !cfg.xboxSyncedAt) await prisma.game.updateMany({ where: { tenantId: null, source: "xbox" }, data: { tenantId: tid } });
 
   const ids: string[] = [];
   for (const x of titles) {

@@ -15,11 +15,16 @@ export async function fetchPsnTitles(npsso: string): Promise<PsnTitle[]> {
   const auth = await exchangeCodeForAccessToken(accessCode);
 
   const res = await getUserTitles(auth, "me", { limit: 800 });
-  return (res.trophyTitles ?? []).map((t) => ({
-    id: t.npCommunicationId || t.trophyTitleName,
-    name: t.trophyTitleName,
-    image: t.trophyTitleIconUrl ?? null,
-    platform: t.trophyTitlePlatform ?? "PS",
-    lastPlayed: t.lastUpdatedDateTime ?? null,
-  }));
+  // Only titles with a STABLE external key (npCommunicationId). The old `|| trophyTitleName`
+  // fallback keyed on the display name, so a missing/changed name re-keyed the same game as a
+  // new row on the next sync — the old row was then pruned, losing its GameVotes. #audit4
+  return (res.trophyTitles ?? [])
+    .filter((t) => !!t.npCommunicationId)
+    .map((t) => ({
+      id: t.npCommunicationId!,
+      name: t.trophyTitleName,
+      image: t.trophyTitleIconUrl ?? null,
+      platform: t.trophyTitlePlatform ?? "PS",
+      lastPlayed: t.lastUpdatedDateTime ?? null,
+    }));
 }
