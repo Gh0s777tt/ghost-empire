@@ -4,17 +4,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { Sparkles, Loader2, Trash2, Plus, Eye, EyeOff, ExternalLink, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { SectionCard } from "../shared";
+import { SectionCard, ListSearch } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
+import { filterByText } from "@/lib/list-filter";
 import { RARITIES, RARITY_COLOR, normalizeRarity, type Rarity } from "@/lib/collectibles";
 
 type Card = { id: string; name: string; description: string | null; rarity: string; emoji: string | null; imageUrl: string | null; active: boolean };
 
 export function CollectiblesManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void }) {
   const t = useTranslations("admin.collectibles");
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState(true);
   const [cards, setCards] = useState<Card[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   // Collapsed-by-rarity groups (#audit3 UX) — open by default, click a rarity header to fold it.
   const [closedR, setClosedR] = useState<Record<string, boolean>>({});
   // create form
@@ -60,11 +63,16 @@ export function CollectiblesManager({ onToast }: { onToast: (k: "ok" | "err", m:
         <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
       ) : (
         <div className="space-y-2 mb-4">
+          {cards.length > 8 && (
+            <ListSearch value={query} onChange={setQuery} placeholder={tc("searchPlaceholder")} shown={filterByText(cards, query, (c) => [c.name, c.description, c.rarity]).length} total={cards.length} />
+          )}
           {cards.length === 0 ? (
             <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">{t("empty")}</div>
-          ) : (
-            RARITIES.filter((r) => cards.some((c) => normalizeRarity(c.rarity) === r)).map((r) => {
-              const group = cards.filter((c) => normalizeRarity(c.rarity) === r);
+          ) : (() => {
+            const filtered = filterByText(cards, query, (c) => [c.name, c.description, c.rarity]);
+            if (filtered.length === 0) return <p className="text-zinc-600 text-sm py-1">{tc("noResults")}</p>;
+            return RARITIES.filter((r) => filtered.some((c) => normalizeRarity(c.rarity) === r)).map((r) => {
+              const group = filtered.filter((c) => normalizeRarity(c.rarity) === r);
               const open = !closedR[r];
               return (
                 <div key={r} className="border border-zinc-900 bg-black/20">
@@ -95,8 +103,8 @@ export function CollectiblesManager({ onToast }: { onToast: (k: "ok" | "err", m:
                   )}
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
       )}
 
