@@ -67,8 +67,10 @@ Twitch/Kick chat bot.
 - **Vercel:** Pro confirmed (sub-daily crons — donation poll now `*/15`). Add any custom/tenant
   subdomains to `serverActions.allowedOrigins` in `next.config.ts` before they go live.
 - **Supabase:** connect via the transaction pooler (`:6543`, `connection_limit=3`) — keep as-is.
-  **No RLS** (app-layer tenant scoping only) — consider RLS as defense-in-depth before onboarding
-  multiple paying tenants; add composite `[tenantId, <sort>]` indexes when the leaderboard grows.
+  **No RLS yet** (app-layer tenant scoping only) — enable RLS as defense-in-depth via the
+  ready-to-paste runbook **[docs/RLS.md](RLS.md)** (one SQL block in the Supabase SQL Editor;
+  closes the anon/PostgREST exposure; the Prisma app is unaffected). Composite `[tenantId, <sort>]`
+  ranking indexes already added (#638).
 - **Upstash:** confirm `UPSTASH_REDIS_REST_URL/TOKEN` are set in prod — load-bearing for shared
   overlay reads + casino `withLock` correctness (degrades gracefully but multiplies DB reads without it).
 - **Railway (bot):** ensure `/app/tokens` is a **persistent** volume (Kick rotates refresh tokens;
