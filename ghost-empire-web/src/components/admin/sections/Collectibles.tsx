@@ -2,7 +2,7 @@
 // src/components/admin/sections/Collectibles.tsx
 // Manage the collectible-cards catalog (#551) shown on /collectibles. Per-tenant.
 import { useState, useEffect, useCallback } from "react";
-import { Sparkles, Loader2, Trash2, Plus, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { Sparkles, Loader2, Trash2, Plus, Eye, EyeOff, ExternalLink, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
@@ -15,6 +15,8 @@ export function CollectiblesManager({ onToast }: { onToast: (k: "ok" | "err", m:
   const [loading, setLoading] = useState(true);
   const [cards, setCards] = useState<Card[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  // Collapsed-by-rarity groups (#audit3 UX) — open by default, click a rarity header to fold it.
+  const [closedR, setClosedR] = useState<Record<string, boolean>>({});
   // create form
   const [name, setName] = useState("");
   const [rarity, setRarity] = useState<Rarity>("common");
@@ -60,17 +62,41 @@ export function CollectiblesManager({ onToast }: { onToast: (k: "ok" | "err", m:
         <div className="space-y-2 mb-4">
           {cards.length === 0 ? (
             <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">{t("empty")}</div>
-          ) : cards.map((c) => (
-            <div key={c.id} className={`flex items-center gap-2 border p-2.5 ${c.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-black/20 opacity-60"}`}>
-              <span className="text-xl shrink-0 w-7 text-center">{c.imageUrl ? <img src={c.imageUrl} alt="" className="w-7 h-7 object-contain inline" /> : c.emoji || "🃏"}</span>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-white truncate">{c.name}</div>
-                <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: RARITY_COLOR[normalizeRarity(c.rarity)] }}>{t(`rarity_${normalizeRarity(c.rarity)}`)}</div>
-              </div>
-              <button onClick={() => void patch(c, { active: !c.active })} disabled={busy === c.id} title={c.active ? t("disable") : t("enable")} className="shrink-0 text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center">{c.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}</button>
-              <button onClick={() => void remove(c)} disabled={busy === c.id} title={t("deleteTitle")} className="shrink-0 text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"><Trash2 className="w-3 h-3" /></button>
-            </div>
-          ))}
+          ) : (
+            RARITIES.filter((r) => cards.some((c) => normalizeRarity(c.rarity) === r)).map((r) => {
+              const group = cards.filter((c) => normalizeRarity(c.rarity) === r);
+              const open = !closedR[r];
+              return (
+                <div key={r} className="border border-zinc-900 bg-black/20">
+                  <button
+                    type="button"
+                    onClick={() => setClosedR((o) => ({ ...o, [r]: !o[r] }))}
+                    aria-expanded={open}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 text-start hover:bg-white/2 transition-colors"
+                  >
+                    <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: RARITY_COLOR[r] }}>{t(`rarity_${r}`)}</span>
+                    <span className="text-[10px] text-zinc-600 flex-1">{group.length}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+                  </button>
+                  {open && (
+                    <div className="max-h-72 overflow-y-auto px-2 pb-2 space-y-2">
+                      {group.map((c) => (
+                        <div key={c.id} className={`flex items-center gap-2 border p-2.5 ${c.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-black/20 opacity-60"}`}>
+                          <span className="text-xl shrink-0 w-7 text-center">{c.imageUrl ? <img src={c.imageUrl} alt="" className="w-7 h-7 object-contain inline" /> : c.emoji || "🃏"}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-white truncate">{c.name}</div>
+                            <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: RARITY_COLOR[normalizeRarity(c.rarity)] }}>{t(`rarity_${normalizeRarity(c.rarity)}`)}</div>
+                          </div>
+                          <button onClick={() => void patch(c, { active: !c.active })} disabled={busy === c.id} title={c.active ? t("disable") : t("enable")} className="shrink-0 text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 w-6 h-6 flex items-center justify-center">{c.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}</button>
+                          <button onClick={() => void remove(c)} disabled={busy === c.id} title={t("deleteTitle")} className="shrink-0 text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-6 h-6 flex items-center justify-center"><Trash2 className="w-3 h-3" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       )}
 

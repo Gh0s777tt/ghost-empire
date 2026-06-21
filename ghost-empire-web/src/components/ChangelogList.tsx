@@ -1,21 +1,29 @@
 "use client";
 // src/components/ChangelogList.tsx
-// Collapsible changelog used on /about — each entry is a click-to-expand card so the
-// list stays compact; the newest entry starts open.
+// Changelog on /about. Each entry is a click-to-expand card (newest open). The full
+// history is long and mostly from one month, so we show only the newest `VISIBLE`
+// entries by default and reveal the rest behind a "show older" toggle — no infinite
+// scroll. #audit3 UX
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ChangelogEntry = { date: string; title: string; items: string[] };
 
+const VISIBLE = 10; // newest N shown before the "show older" fold
+
 export function ChangelogList({ entries }: { entries: ChangelogEntry[] }) {
   const [openDates, setOpenDates] = useState<Record<string, boolean>>(
     entries[0] ? { [entries[0].date]: true } : {},
   );
+  const [showAll, setShowAll] = useState(false);
+
+  const shown = showAll ? entries : entries.slice(0, VISIBLE);
+  const hiddenCount = entries.length - shown.length;
 
   return (
     <div className="space-y-3">
-      {entries.map((entry) => {
+      {shown.map((entry) => {
         const isOpen = !!openDates[entry.date];
         return (
           <div
@@ -51,6 +59,18 @@ export function ChangelogList({ entries }: { entries: ChangelogEntry[] }) {
           </div>
         );
       })}
+
+      {entries.length > VISIBLE && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          aria-expanded={showAll}
+          className="w-full flex items-center justify-center gap-2 py-2.5 border border-zinc-800 bg-zinc-950/50 text-xs text-zinc-400 hover:text-white hover:bg-white/2 transition-colors"
+        >
+          {showAll ? "Pokaż mniej" : `Pokaż starsze (${hiddenCount})`}
+          <ChevronDown className={cn("w-4 h-4 transition-transform", showAll && "rotate-180")} />
+        </button>
+      )}
     </div>
   );
 }
