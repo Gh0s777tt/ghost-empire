@@ -17,7 +17,7 @@ const SECTIONS_A = [
   { title: "s1", items: ["s1i1", "s1i2", "s1i3"] },
   { title: "s2", items: ["s2i1", "s2i2", "s2i3", "s2i4", "s2i5"] },
   { title: "s3", items: ["s3i1", "s3i2", "s3i3", "s3i4", "s3i5", "s3i6"] },
-  { title: "s4", items: ["s4i1", "s4i2", "s4i3", "s4i4", "s4i5"] },
+  { title: "s4", items: ["s4i1", "s4i2", "s4i3", "s4i4", "s4i5", "s4i6"] },
   { title: "s5", items: ["s5i1", "s5i2", "s5i3", "s5i4", "s5i5"] },
 ];
 const SECTIONS_B = [

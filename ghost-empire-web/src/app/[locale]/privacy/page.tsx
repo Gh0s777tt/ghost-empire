@@ -14,12 +14,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 const S2B = ["s2b1", "s2b2", "s2b3", "s2b4", "s2b5", "s2b6"];
-const S2C = ["s2c1", "s2c2", "s2c3", "s2c4"];
+const S2C = ["s2c1", "s2c2", "s2c3", "s2c4", "s2c5", "s2c6", "s2c7"];
 const S3 = ["s3b1", "s3b2", "s3b3", "s3b4", "s3b5"];
-const S4 = ["s4b1", "s4b2", "s4b3", "s4b4"];
-const S5 = ["s5b1", "s5b2", "s5b3", "s5b4", "s5b5"];
+const S4 = ["s4b1", "s4b2", "s4b3", "s4b5", "s4b6", "s4b7", "s4b4"];
+const S5 = ["s5b1", "s5b2", "s5b3", "s5b4", "s5b5", "s5b6"];
 const S6 = ["s6b1", "s6b2", "s6b3", "s6b4", "s6b5", "s6b6"];
-const S7 = ["s7b1", "s7b2", "s7b3", "s7b4", "s7b5", "s7b6", "s7b7"];
+const S7 = ["s7b1", "s7b2", "s7b3", "s7b4", "s7b5", "s7b6", "s7b7", "s7b8"];
 
 export default async function PrivacyPage() {
   const t = await getTranslations("privacy");
