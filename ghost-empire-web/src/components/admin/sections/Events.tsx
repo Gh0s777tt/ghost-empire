@@ -136,6 +136,9 @@ export function CreateEventCard({
   const [multiplier, setMultiplier] = useState("2");
   const [ticketPrice, setTicketPrice] = useState("500");
   const [maxTicketsPerUser, setMaxTicketsPerUser] = useState("20");
+  const [raffleKeyword, setRaffleKeyword] = useState("");
+  const [raffleSubWeight, setRaffleSubWeight] = useState("2");
+  const [raffleModWeight, setRaffleModWeight] = useState("2");
   const [startsInMinutes, setStartsInMinutes] = useState("0");
   const [durationMinutes, setDurationMinutes] = useState("60");
   const [busy, setBusy] = useState(false);
@@ -157,6 +160,11 @@ export function CreateEventCard({
         if (type === "raffle") {
           body.ticketPrice = parseInt(ticketPrice);
           body.maxTicketsPerUser = parseInt(maxTicketsPerUser);
+          if (raffleKeyword.trim()) {
+            body.raffleKeyword = raffleKeyword.trim();
+            body.raffleSubWeight = parseInt(raffleSubWeight);
+            body.raffleModWeight = parseInt(raffleModWeight);
+          }
         }
       }
       const data = await apiPost<{ event: { name: string } }>("/api/admin/events", body);
@@ -218,10 +226,17 @@ export function CreateEventCard({
           <FieldInput label={t("multiplier")} value={multiplier} onChange={setMultiplier} type="number" placeholder={t("multiplierPh")} />
         )}
         {type === "raffle" && (
-          <div className="grid grid-cols-2 gap-2">
-            <FieldInput label={t("ticketPrice")} value={ticketPrice} onChange={setTicketPrice} type="number" />
-            <FieldInput label={t("maxTickets")} value={maxTicketsPerUser} onChange={setMaxTicketsPerUser} type="number" />
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <FieldInput label={t("ticketPrice")} value={ticketPrice} onChange={setTicketPrice} type="number" />
+              <FieldInput label={t("maxTickets")} value={maxTicketsPerUser} onChange={setMaxTicketsPerUser} type="number" />
+            </div>
+            <FieldInput label={t("raffleKeyword")} value={raffleKeyword} onChange={setRaffleKeyword} placeholder={t("raffleKeywordPh")} />
+            <div className="grid grid-cols-2 gap-2">
+              <FieldInput label={t("raffleSubWeight")} value={raffleSubWeight} onChange={setRaffleSubWeight} type="number" />
+              <FieldInput label={t("raffleModWeight")} value={raffleModWeight} onChange={setRaffleModWeight} type="number" />
+            </div>
+          </>
         )}
 
         <div className="grid grid-cols-2 gap-2">
@@ -396,6 +411,9 @@ function EventEditor({
   const [multiplier, setMultiplier] = useState(event.multiplier?.toString() ?? "2");
   const [ticketPrice, setTicketPrice] = useState(event.ticketPrice?.toString() ?? "500");
   const [maxTicketsPerUser, setMaxTicketsPerUser] = useState(event.maxTicketsPerUser?.toString() ?? "20");
+  const [raffleKeyword, setRaffleKeyword] = useState(event.raffleKeyword ?? "");
+  const [raffleSubWeight, setRaffleSubWeight] = useState(event.raffleSubWeight.toString());
+  const [raffleModWeight, setRaffleModWeight] = useState(event.raffleModWeight.toString());
   const [extendByMinutes, setExtendByMinutes] = useState("");
   const [busy, setBusy] = useState(false);
   const t = useTranslations("admin.events");
@@ -413,6 +431,9 @@ function EventEditor({
       if (event.type === "raffle") {
         if (ticketPrice !== event.ticketPrice?.toString()) payload.ticketPrice = parseInt(ticketPrice);
         if (maxTicketsPerUser !== event.maxTicketsPerUser?.toString()) payload.maxTicketsPerUser = parseInt(maxTicketsPerUser);
+        if (raffleKeyword !== (event.raffleKeyword ?? "")) payload.raffleKeyword = raffleKeyword.trim() || null;
+        if (raffleSubWeight !== event.raffleSubWeight.toString()) payload.raffleSubWeight = parseInt(raffleSubWeight);
+        if (raffleModWeight !== event.raffleModWeight.toString()) payload.raffleModWeight = parseInt(raffleModWeight);
       }
       if (extendByMinutes) payload.extendByMinutes = parseInt(extendByMinutes);
 
@@ -462,10 +483,17 @@ function EventEditor({
             <FieldInput label={t("multiplierRange")} value={multiplier} onChange={setMultiplier} type="number" />
           )}
           {event.type === "raffle" && (
-            <div className="grid grid-cols-2 gap-2">
-              <FieldInput label={t("ticketPrice")} value={ticketPrice} onChange={setTicketPrice} type="number" />
-              <FieldInput label={t("maxTicketsShort")} value={maxTicketsPerUser} onChange={setMaxTicketsPerUser} type="number" />
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <FieldInput label={t("ticketPrice")} value={ticketPrice} onChange={setTicketPrice} type="number" />
+                <FieldInput label={t("maxTicketsShort")} value={maxTicketsPerUser} onChange={setMaxTicketsPerUser} type="number" />
+              </div>
+              <FieldInput label={t("raffleKeyword")} value={raffleKeyword} onChange={setRaffleKeyword} placeholder={t("raffleKeywordPh")} />
+              <div className="grid grid-cols-2 gap-2">
+                <FieldInput label={t("raffleSubWeight")} value={raffleSubWeight} onChange={setRaffleSubWeight} type="number" />
+                <FieldInput label={t("raffleModWeight")} value={raffleModWeight} onChange={setRaffleModWeight} type="number" />
+              </div>
+            </>
           )}
           <FieldInput label={t("extendBy")} value={extendByMinutes} onChange={setExtendByMinutes} type="number" placeholder={t("extendPh")} />
 

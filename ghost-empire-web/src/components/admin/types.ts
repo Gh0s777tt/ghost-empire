@@ -95,6 +95,9 @@ export type EventRow = {
   requirement: string | null;
   ticketPrice: number | null;
   maxTicketsPerUser: number | null;
+  raffleKeyword: string | null;
+  raffleSubWeight: number;
+  raffleModWeight: number;
   startsAt: string | null;
   endsAt: string | null;
   drawnAt: string | null;

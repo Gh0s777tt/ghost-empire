@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **173** trasy (pliki `route.ts`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **175** trasy (pliki `route.ts`)
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -66,6 +66,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/push/test` | POST | Testowe powiadomienie na własne urządzenia (weryfikacja pętli) |
 | `…/api/profile/country` | POST | Ustawienie/wyczyszczenie kraju (flaga na profilu, #540) |
 | `…/api/profile/accent` | POST | Ustawienie/wyczyszczenie koloru akcentu profilu (#546) |
+| `…/api/profile/shipping` | GET/PUT/DELETE | Szyfrowany profil wysyłkowy PII do nagród fizycznych — tylko właściciel; PUT wymaga zgody, DELETE = erasure GDPR (#609) |
 | `…/api/collectibles` · `…/open-pack` | GET/POST | Katalog kart + kolekcja widza; otwarcie paczki GT (#551 — atomowy zakup, ważona rzadkość) |
 | `…/api/market` | GET/POST | Marketplace P2P kart (#552 — list/buy/cancel, escrow + atomowy transfer GT, 5% fee spalane) |
 | `…/api/gift` | POST | Prezent GT między widzami (#553 — atomowy transfer, limity 5k/transfer + 10k/24h, powiadomienie) |
@@ -191,6 +192,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/internal/link-status` | GET — czy dany Discord ID jest powiązany z kontem (E-Bot) |
 | `…/api/internal/mod-violation` | Log naruszenia automod (po egzekucji) — statystyki + eskalacja |
 | `…/api/internal/emoji-combo` | POST — bot zgłasza wykryty emoji-combo |
+| `…/api/internal/raffle-entry` | POST — bot zgłasza trafienie słowa-klucza rafli; wpis darmowy, sub/mod = więcej biletów (#611) |
 
 ## Źródła OBS (overlayToken, odczyt)
 > **Transport realtime (#189/#190):** każdy overlay łączy się najpierw przez **SSE** (push), a przy dowolnym problemie spada na **polling** (fallback) — payload identyczny, bo overlay i fallback dzielą te same producery (`lib/overlay-feeds`; alerty: `lib/alert-feed`). Klient: hook `lib/use-overlay-stream`.

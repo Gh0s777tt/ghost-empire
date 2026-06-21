@@ -86,6 +86,7 @@ export async function GET(req: Request) {
           id: e.id, type: e.type, name: e.name, description: e.description,
           multiplier: e.multiplier, prize: e.prize, winnersCount: e.winnersCount,
           requirement: e.requirement, ticketPrice: e.ticketPrice, maxTicketsPerUser: e.maxTicketsPerUser,
+          raffleKeyword: e.raffleKeyword, raffleSubWeight: e.raffleSubWeight, raffleModWeight: e.raffleModWeight,
           startsAt: e.startsAt?.toISOString() ?? null, endsAt: e.endsAt?.toISOString() ?? null,
           drawnAt: e.drawnAt?.toISOString() ?? null, active: e.active,
           entriesCount: e._count.entries, ticketsCount: e._count.raffleTickets,

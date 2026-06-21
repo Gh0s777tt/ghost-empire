@@ -544,6 +544,11 @@ model Event {
   // Raffle specific
   ticketPrice       Int?
   maxTicketsPerUser Int?
+  // Keyword raffle (#audit3): viewers enter for FREE by typing raffleKeyword in chat
+  // (bot → /api/internal/raffle-entry). Subs/mods get extra tickets (weight) = higher odds.
+  raffleKeyword     String?
+  raffleSubWeight   Int     @default(2)
+  raffleModWeight   Int     @default(2)
 
   // Auto-draw
   autoDrawAt DateTime?

@@ -21,6 +21,9 @@ export async function POST(req: Request) {
     multiplier?: number;
     ticketPrice?: number;
     maxTicketsPerUser?: number;
+    raffleKeyword?: string;
+    raffleSubWeight?: number;
+    raffleModWeight?: number;
     durationMinutes?: number;
     startsInMinutes?: number;
   };
@@ -87,6 +90,14 @@ export async function POST(req: Request) {
       }
       data.ticketPrice = price;
       data.maxTicketsPerUser = maxPer;
+      // Optional FREE keyword entry (additive to paid tickets): viewers type the keyword in
+      // chat (bot → /api/internal/raffle-entry); subs/mods get extra tickets → higher odds.
+      const kw = body.raffleKeyword?.trim().slice(0, 40);
+      if (kw) {
+        data.raffleKeyword = kw.toLowerCase();
+        data.raffleSubWeight = Math.max(1, Math.min(20, Math.floor(Number(body.raffleSubWeight) || 2)));
+        data.raffleModWeight = Math.max(1, Math.min(20, Math.floor(Number(body.raffleModWeight) || 2)));
+      }
     }
   }
 
@@ -120,6 +131,9 @@ export async function PATCH(req: Request) {
     multiplier?: number;
     ticketPrice?: number;
     maxTicketsPerUser?: number;
+    raffleKeyword?: string | null;
+    raffleSubWeight?: number;
+    raffleModWeight?: number;
     extendByMinutes?: number;       // adds to existing endsAt
     setEndsAt?: string | null;       // ISO string — overrides endsAt
     active?: boolean;
@@ -181,6 +195,19 @@ export async function PATCH(req: Request) {
     const m = Math.floor(Number(body.maxTicketsPerUser));
     if (m < 1 || m > 10_000) return NextResponse.json({ error: "maxTicketsPerUser 1-10000" }, { status: 400 });
     data.maxTicketsPerUser = m;
+  }
+  if (body.raffleKeyword !== undefined) {
+    if (existing.type !== "raffle") {
+      return NextResponse.json({ error: "raffleKeyword tylko dla raffle" }, { status: 400 });
+    }
+    const kw = body.raffleKeyword?.trim().slice(0, 40);
+    data.raffleKeyword = kw ? kw.toLowerCase() : null; // empty → disable keyword entry
+  }
+  if (body.raffleSubWeight !== undefined) {
+    data.raffleSubWeight = Math.max(1, Math.min(20, Math.floor(Number(body.raffleSubWeight) || 2)));
+  }
+  if (body.raffleModWeight !== undefined) {
+    data.raffleModWeight = Math.max(1, Math.min(20, Math.floor(Number(body.raffleModWeight) || 2)));
   }
   if (body.extendByMinutes !== undefined && body.extendByMinutes > 0) {
     const minutes = Math.floor(Number(body.extendByMinutes));
