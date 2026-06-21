@@ -164,7 +164,7 @@ async function handleSubscription(
   if (!username) return { userId: null, tokens: null };
 
   const connection = await prisma.connection.findFirst({
-    where: { platform: "kick", username: { equals: username, mode: "insensitive" } },
+    where: { platform: "kick", username: { equals: username, mode: "insensitive" }, ...(tenantId ? { OR: [{ user: { tenantId } }, { user: { tenantId: null } }] } : {}) },
     select: { userId: true, id: true },
   });
   if (!connection) {
@@ -236,7 +236,7 @@ async function handleGiftSubs(payload: Record<string, unknown>, tenantId: string
   if (isAnonymous) return { userId: null, tokens: null };
 
   const connection = await prisma.connection.findFirst({
-    where: { platform: "kick", username: { equals: gifterLogin!, mode: "insensitive" } },
+    where: { platform: "kick", username: { equals: gifterLogin!, mode: "insensitive" }, ...(tenantId ? { OR: [{ user: { tenantId } }, { user: { tenantId: null } }] } : {}) },
     select: { userId: true },
   });
   if (!connection) return { userId: null, tokens: null };
@@ -290,7 +290,7 @@ async function handleFollow(payload: Record<string, unknown>, tenantId: string |
   if (!username) return { userId: null, tokens: null };
 
   const connection = await prisma.connection.findFirst({
-    where: { platform: "kick", username: { equals: username, mode: "insensitive" } },
+    where: { platform: "kick", username: { equals: username, mode: "insensitive" }, ...(tenantId ? { OR: [{ user: { tenantId } }, { user: { tenantId: null } }] } : {}) },
     select: { userId: true },
   });
   if (!connection) return { userId: null, tokens: null };

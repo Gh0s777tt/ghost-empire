@@ -267,7 +267,7 @@ async function handleSubscribe(event: Record<string, unknown>, tenantId: string 
 
   // Find Ghost Empire user via Connection.username on Twitch
   const connection = await prisma.connection.findFirst({
-    where: { platform: "twitch", username: { equals: userLogin, mode: "insensitive" } },
+    where: { platform: "twitch", username: { equals: userLogin, mode: "insensitive" }, ...(tenantId ? { OR: [{ user: { tenantId } }, { user: { tenantId: null } }] } : {}) },
     select: { userId: true, id: true },
   });
   if (!connection) {
@@ -346,7 +346,7 @@ async function handleGiftSub(event: Record<string, unknown>, tenantId: string | 
   }
 
   const connection = await prisma.connection.findFirst({
-    where: { platform: "twitch", username: { equals: gifterLogin, mode: "insensitive" } },
+    where: { platform: "twitch", username: { equals: gifterLogin, mode: "insensitive" }, ...(tenantId ? { OR: [{ user: { tenantId } }, { user: { tenantId: null } }] } : {}) },
     select: { userId: true },
   });
   if (!connection) return { userId: null, tokens: null };
@@ -411,7 +411,7 @@ async function handleCheer(event: Record<string, unknown>, tenantId: string | nu
   }
 
   const connection = await prisma.connection.findFirst({
-    where: { platform: "twitch", username: { equals: userLogin, mode: "insensitive" } },
+    where: { platform: "twitch", username: { equals: userLogin, mode: "insensitive" }, ...(tenantId ? { OR: [{ user: { tenantId } }, { user: { tenantId: null } }] } : {}) },
     select: { userId: true, id: true, bits: true },
   });
   if (!connection) return { userId: null, tokens: null };

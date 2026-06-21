@@ -116,12 +116,19 @@ export async function fetchDonations(opts: {
 export async function matchDonationToUser(
   donorName: string,
   message: string | null,
+  tenantId: string | null,
 ): Promise<{ userId: string; matchType: string } | null> {
+  // Scope the username match to the donation's portal (+ legacy null-tenant users for
+  // back-compat) so a donation polled for portal A can't credit a portal-B user sharing
+  // a username (#audit3 HIGH-2). NOTE: this is still donor-supplied-name matching, so
+  // within a tenant it can mis-attribute — kept as the streamer's accepted auto-match,
+  // with manual reconciliation for the rest (/api/admin/donations).
+  const tw = tenantId ? { OR: [{ tenantId }, { tenantId: null }] } : {};
   // 1. Exact donor name match
   if (donorName) {
     const cleaned = donorName.trim().toLowerCase();
     const user = await prisma.user.findFirst({
-      where: { username: { equals: cleaned, mode: "insensitive" } },
+      where: { username: { equals: cleaned, mode: "insensitive" }, ...tw },
       select: { id: true },
     });
     if (user) return { userId: user.id, matchType: "auto_name" };
@@ -133,7 +140,7 @@ export async function matchDonationToUser(
     if (mention) {
       const username = mention[1].toLowerCase();
       const user = await prisma.user.findFirst({
-        where: { username: { equals: username, mode: "insensitive" } },
+        where: { username: { equals: username, mode: "insensitive" }, ...tw },
         select: { id: true },
       });
       if (user) return { userId: user.id, matchType: "auto_mention" };
@@ -184,7 +191,7 @@ export async function pollAndProcessDonations(): Promise<{
     if (!Number.isFinite(amountFloat) || amountFloat <= 0) continue;
     const amountGrosze = Math.round(amountFloat * 100);
 
-    const match = await matchDonationToUser(d.name, d.message);
+    const match = await matchDonationToUser(d.name, d.message, conn.tenantId);
 
     if (match) {
       const tokensGranted = Math.round(amountFloat * GT_PER_PLN);
