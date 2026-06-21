@@ -46,11 +46,16 @@ export async function updateDailyTaskProgress(userId: string, triggerType: Daily
   const ids = await activeTaskIds(u?.tenantId ?? null, triggerType);
   if (ids.length === 0) return; // no active quests of this type → skip the loop entirely
   const date = today();
-  for (const taskId of ids) {
-    await prisma.userTask.upsert({
-      where: { userId_taskId_date: { userId, taskId, date } },
-      create: { userId, taskId, date, progress: 1 },
-      update: { progress: { increment: 1 } },
-    });
-  }
+  // Batch the per-quest upserts into one transaction round-trip instead of N sequential
+  // awaits (eases the DB pool on the hot chat-award path). Each upsert keeps its own atomic
+  // per-row race handling (create-or-increment), so semantics are unchanged.
+  await prisma.$transaction(
+    ids.map((taskId) =>
+      prisma.userTask.upsert({
+        where: { userId_taskId_date: { userId, taskId, date } },
+        create: { userId, taskId, date, progress: 1 },
+        update: { progress: { increment: 1 } },
+      }),
+    ),
+  );
 }

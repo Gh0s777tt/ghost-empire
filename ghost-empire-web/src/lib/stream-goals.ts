@@ -37,17 +37,29 @@ export async function incrementGoals(type: GoalType, amount: number, tenantId?: 
     });
     if (goals.length === 0) return;
 
-    for (const g of goals) {
-      const next = g.current + amount;
-      const justCompleted = !g.completedAt && next >= g.target;
-      await prisma.streamGoal.update({
-        where: { id: g.id },
-        data: {
-          current: next,
-          ...(justCompleted ? { completedAt: new Date() } : {}),
-        },
-      });
+    // Atomic increment for ALL matching goals in one query — fixes the read-modify-write
+    // lost-update race (two concurrent subs/donations both read `current`, both wrote the
+    // absolute sum → one bump lost), same class as the account-XP fix (#573), and collapses
+    // the per-goal N+1. completedAt is then stamped for the goals that crossed their target
+    // (guarded `completedAt: null` so a concurrent call can't double-stamp); a goal that only
+    // crosses via combined concurrent increments gets stamped by the next event (acceptable —
+    // completion is a celebration, not removal).
+    const ids = goals.map((g) => g.id);
+    const justCompletedIds = goals
+      .filter((g) => !g.completedAt && g.current + amount >= g.target)
+      .map((g) => g.id);
+    const ops = [
+      prisma.streamGoal.updateMany({ where: { id: { in: ids } }, data: { current: { increment: amount } } }),
+    ];
+    if (justCompletedIds.length > 0) {
+      ops.push(
+        prisma.streamGoal.updateMany({
+          where: { id: { in: justCompletedIds }, completedAt: null },
+          data: { completedAt: new Date() },
+        }),
+      );
     }
+    await prisma.$transaction(ops);
   } catch (e) {
     log.error("increment failed", e, { type, amount });
   }
