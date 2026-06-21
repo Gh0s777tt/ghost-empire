@@ -2670,6 +2670,10 @@
   "schedule": {
     "metaTitle": "Plan streamów",
     "metaDesc": "Tygodniowy plan streamów %owner% — Twitch + Kick.",
+    "title": "Plan streamów",
+    "subtitle": "Kiedy {owner} jest live. Czas lokalny (Europa/Warszawa).",
+    "emptyTitle": "Plan streamów nie został jeszcze ustawiony.",
+    "emptyHint": "Wkrótce admin go skonfiguruje.",
     "daysFull": ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"],
     "daysShort": ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"],
     "months": ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],

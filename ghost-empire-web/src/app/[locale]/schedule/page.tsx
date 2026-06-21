@@ -1,7 +1,7 @@
 // src/app/schedule/page.tsx
 // Public stream schedule — weekly view + countdown to next stream
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { Calendar, Clock } from "lucide-react";
 import { ScheduleClient } from "@/components/schedule/ScheduleClient";
@@ -18,14 +18,18 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/schedule", locale) };
 }
 
-const DAYS_PL = ["niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"];
-
 export default async function SchedulePage() {
+  const t = await getTranslations("schedule");
+  const tenant = await getCurrentTenant();
   const tid = await currentTenantId();
   const slots = await prisma.streamScheduleSlot.findMany({
     where: { active: true, ...(tid ? { tenantId: tid } : {}) },
     orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }, { startMinute: "asc" }],
   });
+
+  // Localized weekday names (index 0=Sunday..6=Saturday) — reuse the schedule namespace's
+  // `daysFull` so they match the rest of the schedule UI; no more hard-coded Polish. #audit4
+  const dayNames = t.raw("daysFull") as string[];
 
   return (
     <div className="min-h-screen bg-black">
@@ -47,26 +51,26 @@ export default async function SchedulePage() {
                 className="font-display text-4xl text-white tracking-wider"
                 style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
               >
-                PLAN STREAMÓW
+                {t("title")}
               </h1>
             </div>
             <p className="text-zinc-500 text-sm">
-              Kiedy Gh0s77tt jest live. Czas lokalny (Europa/Warszawa).
+              {t("subtitle", { owner: tenant.ownerHandle })}
             </p>
           </div>
 
           {slots.length === 0 ? (
             <div className="border border-zinc-800 bg-zinc-950/50 p-12 text-center">
               <Clock className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-500">Plan streamów nie został jeszcze ustawiony.</p>
-              <p className="text-zinc-600 text-xs mt-2">Wkrótce admin go skonfiguruje.</p>
+              <p className="text-zinc-500">{t("emptyTitle")}</p>
+              <p className="text-zinc-600 text-xs mt-2">{t("emptyHint")}</p>
             </div>
           ) : (
             <ScheduleClient
               slots={slots.map((s) => ({
                 id: s.id,
                 dayOfWeek: s.dayOfWeek,
-                dayName: DAYS_PL[s.dayOfWeek],
+                dayName: dayNames[s.dayOfWeek],
                 startHour: s.startHour,
                 startMinute: s.startMinute,
                 durationMinutes: s.durationMinutes,

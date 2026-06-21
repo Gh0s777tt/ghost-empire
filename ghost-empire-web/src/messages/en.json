@@ -2670,6 +2670,10 @@
   "schedule": {
     "metaTitle": "Stream schedule",
     "metaDesc": "%owner%'s weekly stream schedule — Twitch + Kick.",
+    "title": "Stream schedule",
+    "subtitle": "When {owner} is live. Local time (Europe/Warsaw).",
+    "emptyTitle": "The stream schedule isn't set yet.",
+    "emptyHint": "The admin will configure it soon.",
     "daysFull": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     "daysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
