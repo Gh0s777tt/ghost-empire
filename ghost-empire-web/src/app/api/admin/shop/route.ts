@@ -186,7 +186,7 @@ export async function POST(req: Request) {
 
   await logAdminAction({
     adminId: auth.userId,
-    action: "create_drop", // reusing for now — TODO add "create_shop_item"
+    action: "create_shop_item",
     targetType: "shop_item",
     targetId: created.id,
     details: { name, category, price },

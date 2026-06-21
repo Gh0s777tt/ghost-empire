@@ -130,6 +130,14 @@ export function verifyBotSecret(authHeader: string | null): boolean {
   return timingSafeEqualStr(secret, expected);
 }
 
+// Verify the Vercel-cron bearer (Authorization: Bearer <CRON_SECRET>) in constant time —
+// parity with verifyBotSecret (the cron routes previously used a timing-variable `!==`). #audit4
+export function verifyCronSecret(authHeader: string | null): boolean {
+  const expected = process.env.CRON_SECRET;
+  if (!expected || !authHeader) return false;
+  return timingSafeEqualStr(authHeader, `Bearer ${expected}`);
+}
+
 // Verify a bot request that targets a specific tenant (Batch B). Accepts EITHER the
 // global BOT_SECRET (so the existing single shared bot keeps working, with no
 // behaviour change) OR — when the tenant has set its own `botSecret` — that

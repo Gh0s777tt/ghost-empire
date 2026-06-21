@@ -172,9 +172,11 @@ export async function acceptDuel(opts: {
       })
       .catch(() => {});
 
-    // Duel-win achievements (best-effort; helper swallows its own errors).
+    // Duel-win achievements — strictly best-effort AFTER the money tx committed. Guarded so a
+    // post-commit throw can never turn an already-paid, successful duel into an error message
+    // to the winner (the success message below is built from the committed `result`). #audit4
     const { checkAndGrantAchievements } = await import("@/lib/achievements");
-    await checkAndGrantAchievements({ userId: result.winnerId, triggerType: "duels_won" });
+    await checkAndGrantAchievements({ userId: result.winnerId, triggerType: "duels_won" }).catch(() => {});
 
     return {
       ok: true,

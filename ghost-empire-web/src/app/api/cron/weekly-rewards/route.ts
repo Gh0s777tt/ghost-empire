@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCachedWeeklyRanking } from "@/lib/cached";
 import { createLogger } from "@/lib/logger";
+import { verifyCronSecret } from "@/lib/utils";
 
 const log = createLogger("cron.weekly-rewards");
 const REWARDS = [1000, 500, 250];
@@ -22,9 +23,7 @@ function startOfWeekUtc(now = new Date()): Date {
 }
 
 export async function GET(req: Request) {
-  const auth = req.headers.get("authorization");
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!process.env.CRON_SECRET || auth !== expected) {
+  if (!verifyCronSecret(req.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

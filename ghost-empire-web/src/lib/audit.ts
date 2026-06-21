@@ -12,6 +12,7 @@ type AdminActionType =
   | "create_drop"
   | "deactivate_drop"
   | "edit_shop_item"
+  | "create_shop_item"
   | "create_event"
   | "edit_event"
   | "deactivate_event"
