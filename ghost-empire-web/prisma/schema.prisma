@@ -180,6 +180,7 @@ model User {
   duelsWon         Duel[]            @relation("DuelWinner")
   heistEntries     HeistEntry[]
   companion        Companion?
+  shippingProfile  ShippingProfile?
   clanId           String?
   clanRole         String? // "owner" | "member" within `clan`
   clan             Clan?             @relation("ClanMembers", fields: [clanId], references: [id])
@@ -236,6 +237,34 @@ model Companion {
   @@index([tenantId])
   @@index([tenantId, xp]) // per-tenant companion leaderboard (ORDER BY xp DESC) #perf
   @@map("companions")
+}
+
+// Shipping/contact PII for fulfilling PHYSICAL rewards (#audit3). Kept in its own table
+// (out of the heavily-`select`ed users table) so it can never be swept into a select-less
+// query and can be dropped independently for GDPR erasure. Every sensitive field is stored
+// ENCRYPTED at rest (AES-256-GCM via lib/crypto enc:v1:); `country` is plaintext (ISO-2,
+// low-sensitivity, shown for display). Collected only with explicit consent (consentAt);
+// the owner reads/edits/deletes their own row — never exposed publicly.
+model ShippingProfile {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  tenantId     String? // scope + per-tenant erasure
+  fullName     String?   @db.Text // encrypted
+  phone        String?   @db.Text // encrypted
+  email        String?   @db.Text // encrypted (separate from login email)
+  addressLine  String?   @db.Text // encrypted
+  city         String?   @db.Text // encrypted
+  postalCode   String?   @db.Text // encrypted
+  parcelLocker String?   @db.Text // encrypted — InPost/other locker code or address
+  country      String? // ISO-2, plaintext (display only)
+  consentAt    DateTime? // when the user consented to storing shipping PII
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("shipping_profiles")
 }
 
 // A clan/team: viewers band together and pool GT into a shared treasury (a real

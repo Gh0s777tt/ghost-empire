@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { ProfileClient } from "@/components/profile/ProfileClient";
 import { PushToggle } from "@/components/push/PushToggle";
 import { PasskeyManager } from "@/components/profile/PasskeyManager";
+import { ShippingProfileCard } from "@/components/profile/ShippingProfileCard";
 import { companionStage } from "@/lib/companion";
 
 export const dynamic = "force-dynamic";
@@ -141,6 +142,7 @@ export default async function ProfilePage() {
         <div className="max-w-md mx-auto mt-6 space-y-4">
           <PushToggle />
           <PasskeyManager />
+          <ShippingProfileCard />
         </div>
       </main>
     </div>
