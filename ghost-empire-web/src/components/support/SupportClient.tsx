@@ -7,6 +7,7 @@ import { Heart, Copy, Check, Eye, QrCode, ExternalLink, Download, Star, Link2, S
 import { useTranslations, useLocale } from "next-intl";
 import { maskIban, formatIban } from "@/lib/payment-methods";
 import { EmptyState } from "@/components/EmptyState";
+import { PaymentLogo } from "@/components/PaymentLogo";
 
 type Method = {
   id: string; kind: "link" | "crypto" | "bank"; label: string; value: string;
@@ -15,7 +16,6 @@ type Method = {
 type Goal = { title: string; target: number; current: number; currency: string };
 type Supporter = { name: string | null; amount: number | null; amountLabel: string | null };
 type TopSupporter = { name: string; total: number };
-const KIND_EMOJI: Record<Method["kind"], string> = { link: "🔗", crypto: "🪙", bank: "🏦" };
 const RANK_MEDAL = ["🏆", "🥈", "🥉"];
 
 const SHARE_TARGETS: { key: string; label: string; href: (u: string, text: string) => string }[] = [
@@ -90,7 +90,7 @@ export function SupportClient({
             return (
               <div key={m.id} className={`border rounded-xl p-3.5 ${m.featured ? "border-amber-600/60 bg-amber-950/10" : "border-zinc-800 bg-black/30"}`}>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl shrink-0">{m.icon || KIND_EMOJI[m.kind]}</span>
+                  <PaymentLogo kind={m.kind} network={m.network} label={m.label} icon={m.icon} size={32} />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm text-white font-semibold flex items-center gap-1.5">
                       {m.label}

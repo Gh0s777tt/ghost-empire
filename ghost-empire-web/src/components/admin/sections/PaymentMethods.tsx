@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Wallet, Loader2, Trash2, Plus, Eye, EyeOff, Star, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
+import { PaymentLogo } from "@/components/PaymentLogo";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type Kind = "link" | "crypto" | "bank";
@@ -120,7 +121,7 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
                 <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowUp className="w-3 h-3" /></button>
                 <button onClick={() => void move(i, 1)} disabled={i === methods.length - 1} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowDown className="w-3 h-3" /></button>
               </div>
-              <span className="text-lg shrink-0">{m.icon || KIND_ICON[m.kind]}</span>
+              <PaymentLogo kind={m.kind} network={m.network} label={m.label} icon={m.icon} size={26} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-white truncate flex items-center gap-1.5">
                   {m.label}
