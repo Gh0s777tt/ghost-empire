@@ -9,7 +9,7 @@ import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
-import { encryptSecret, decryptSecret } from "@/lib/crypto";
+import { encryptSecretStrict, decryptSecret } from "@/lib/crypto";
 import { cleanShippingInput, hasAnyShipping } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +49,9 @@ export async function PUT(req: Request) {
   if (!hasAnyShipping(input)) return jsonError("Brak danych do zapisania", 400);
 
   const tid = await currentTenantId();
-  const enc = (v?: string) => (v ? encryptSecret(v) : null);
+  // Fail-CLOSED for PII: a crypto error throws (→ 500) instead of storing the address in
+  // cleartext. Wrapped below so the user sees a clean error, never a silent plaintext write.
+  const enc = (v?: string) => (v ? encryptSecretStrict(v) : null);
   const fields = {
     fullName: enc(input.fullName),
     phone: enc(input.phone),

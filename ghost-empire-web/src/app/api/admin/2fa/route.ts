@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
-import { encryptSecret, decryptSecret } from "@/lib/crypto";
+import { encryptSecretStrict, decryptSecret } from "@/lib/crypto";
 import { generateTotpSecret, otpauthUri, formatSecret, verifyTotp } from "@/lib/totp";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import QRCode from "qrcode";
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     if (enabled) return NextResponse.json({ error: "2FA jest już włączone" }, { status: 409 });
     const secret = generateTotpSecret();
     // Persist pending (encrypted) so the enable step can verify against it.
-    await prisma.user.update({ where: { id: userId }, data: { totpSecret: encryptSecret(secret), totpEnabledAt: null } });
+    await prisma.user.update({ where: { id: userId }, data: { totpSecret: encryptSecretStrict(secret), totpEnabledAt: null } });
     const account = me.username || me.email || "admin";
     const uri = otpauthUri(secret, account, ISSUER);
     // Scannable QR (PNG data-url) so the admin can point a phone camera instead of typing the secret.
