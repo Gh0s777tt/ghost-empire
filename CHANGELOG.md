@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Fixed
+
+- **Admin section descriptions showed a raw i18n key (audit v4)** **(#631)** — 13 admin sections (`recap`, `clipdirector`, `economy`, `payments`, `notifications`, `sponsors`, `collectibles`, `community`, `clanwars`, `trivia`, `twofactor`, `scenes`, `soundrewards`) had no `secDesc_*` translation, so opening e.g. `/admin#payments` literally rendered the string `admin.secDesc_payments` in the help banner. Added all 13 keys (EN + PL) in the friendly explanatory style of the existing ones. UI-only, no code/schema change. Zielone: `tsc`/`eslint`/`build`/`docs:check`.
+
 ### Changed
 
 - **Regression tests for the season-rollover math (audit v3 hygiene)** **(#630)** — closes the last named test gap from the audit's Wave 5: the monthly Battle Pass rollover core, `seasons.monthBounds`, was untested. Exported it (pure; zero behavior change) and added **6 tests** locking in the UTC month window, the season **number from the Jan-2026 epoch** (Jan 2026 = 1, +12/year, December's end rolling into the next year) and the Polish month label — the off-by-one-prone bits. Audited the rest of the money/progression pure logic (`economy.ts` payouts/duel-rake/heist-odds/tiers/level+prestige multipliers/discounts) and confirmed it's **already fully covered** (no new gaps). **468 tests** total. No prod code path changed. Zielone: `tsc`/**468 testów**/`eslint`/`build`.
