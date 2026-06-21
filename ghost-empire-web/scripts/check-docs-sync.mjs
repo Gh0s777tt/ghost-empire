@@ -1,9 +1,11 @@
 // scripts/check-docs-sync.mjs
-// Guards against documentation drift: fails if the CHANGELOG has fallen behind the
-// code. It compares the highest PR number referenced in recent git history with the
-// highest PR number referenced in CHANGELOG.md — if a PR shipped but isn't in the
-// CHANGELOG, this exits non-zero so the gap is caught before it compounds (exactly
-// the #507–#512 drift that motivated this check).
+// Guards against documentation drift: fails if any PR shipped in recent git history is
+// missing from CHANGELOG.md. It checks that EVERY referenced PR number in the last N
+// commit subjects appears somewhere in the CHANGELOG — not merely that the highest one
+// does (the old "max only" test let an intermediate PR slip whenever a later one was
+// already present). Exits non-zero so the gap is caught before it compounds (the
+// #507–#512 drift that motivated this check; the #629-gap-behind-#630 that motivated
+// the gap-detection upgrade).
 //
 //   npm run docs:check     (run as part of the standard local gates + in CI)
 //
@@ -36,16 +38,21 @@ const commitPrs = logRaw
 const latestCommitPr = max(commitPrs);
 
 const changelog = readFileSync(changelogPath, "utf8");
-const latestChangelogPr = max(prNumbers(changelog));
+const changelogPrs = new Set(prNumbers(changelog));
+const latestChangelogPr = max([...changelogPrs]);
 
-if (latestCommitPr > latestChangelogPr) {
-  const missing = [...new Set(commitPrs)].filter((n) => n > latestChangelogPr).sort((a, b) => a - b);
+// Check that EVERY shipped PR in recent history appears somewhere in the CHANGELOG — not
+// just that the max is covered. The old "max only" test let an intermediate PR slip if a
+// later one was already present (e.g. #629 went missing while #630 kept the check green).
+const missing = [...new Set(commitPrs)].filter((n) => !changelogPrs.has(n)).sort((a, b) => a - b);
+
+if (missing.length) {
   console.error(`\n❌ CHANGELOG out of sync.`);
-  console.error(`   Latest shipped PR: #${latestCommitPr} — CHANGELOG only references up to #${latestChangelogPr}.`);
-  console.error(`   Missing from CHANGELOG.md [Unreleased]: ${missing.map((n) => "#" + n).join(", ")}`);
+  console.error(`   Shipped PR(s) missing from CHANGELOG.md: ${missing.map((n) => "#" + n).join(", ")}`);
+  console.error(`   (Latest shipped #${latestCommitPr}; CHANGELOG references up to #${latestChangelogPr}.)`);
   console.error(`   Add an entry for each, then re-run \`npm run docs:check\`.`);
   console.error(`   (Chore/merge commits can opt out with [skip-changelog] in the subject.)\n`);
   process.exit(1);
 }
 
-console.log(`✅ docs in sync — CHANGELOG references #${latestChangelogPr} ≥ latest shipped #${latestCommitPr}`);
+console.log(`✅ docs in sync — all ${new Set(commitPrs).size} recent shipped PR(s) present in CHANGELOG (latest #${latestChangelogPr}).`);
