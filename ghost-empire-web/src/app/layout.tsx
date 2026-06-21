@@ -34,7 +34,16 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description:
       `Oficjalny portal społeczności ${t.name}. Zbieraj ${t.tokenName}, wymieniaj na nagrody, rywalizuj w rankingu.`,
-    keywords: [...SITE.keywords],
+    // Per-tenant SEO keywords (#655 white-label): derive from the portal's own brand
+    // instead of the founder's static SITE.keywords (which leaked "ghost empire" onto
+    // every portal). Lowercased + deduped; the generic streaming terms stay.
+    keywords: Array.from(
+      new Set(
+        [t.name, t.shortName, t.ownerHandle, t.tokenName, "twitch", "kick", "youtube", "streaming", "discord"]
+          .filter(Boolean)
+          .map((k) => k.toLowerCase()),
+      ),
+    ),
     authors: [{ name: t.ownerHandle }],
     creator: t.ownerHandle,
     openGraph: {
