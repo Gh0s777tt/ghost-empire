@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **175** trasy (pliki `route.ts`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **176** trasy (pliki `route.ts`)
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -67,6 +67,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/profile/country` | POST | Ustawienie/wyczyszczenie kraju (flaga na profilu, #540) |
 | `…/api/profile/accent` | POST | Ustawienie/wyczyszczenie koloru akcentu profilu (#546) |
 | `…/api/profile/shipping` | GET/PUT/DELETE | Szyfrowany profil wysyłkowy PII do nagród fizycznych — tylko właściciel; PUT wymaga zgody, DELETE = erasure GDPR (#609) |
+| `…/api/profile/donation-code` | GET | Osobisty kod weryfikacyjny donacji (lazy-mint) — wpisany w wiadomości donacji kredytuje GT zweryfikowanemu userowi (#612) |
 | `…/api/collectibles` · `…/open-pack` | GET/POST | Katalog kart + kolekcja widza; otwarcie paczki GT (#551 — atomowy zakup, ważona rzadkość) |
 | `…/api/market` | GET/POST | Marketplace P2P kart (#552 — list/buy/cancel, escrow + atomowy transfer GT, 5% fee spalane) |
 | `…/api/gift` | POST | Prezent GT między widzami (#553 — atomowy transfer, limity 5k/transfer + 10k/24h, powiadomienie) |

@@ -2217,6 +2217,11 @@
     "f_country": "Country (ISO-2)",
     "f_parcelLocker": "Parcel locker (InPost etc.)"
   },
+  "donationCode": {
+    "title": "Your donation code",
+    "desc": "Put this code in your tip message on the support page — your donation then credits %gt% to your account (codeless tips are matched by an admin).",
+    "copy": "Copy code"
+  },
   "push": {
     "title": "Push notifications",
     "desc": "Get notified when the stream goes live and for key moments — even with the tab closed.",

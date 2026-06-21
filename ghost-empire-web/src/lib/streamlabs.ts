@@ -9,6 +9,7 @@ import { checkAndGrantAchievements } from "@/lib/achievements";
 import { httpFetch } from "@/lib/http";
 import { awardSeasonXp } from "@/lib/seasons";
 import { plnFromCurrency } from "@/lib/economy";
+import { extractDonationCode } from "@/lib/donation-code";
 import { getStreamlabsConnection } from "@/lib/platform-tokens";
 
 const STREAMLABS_OAUTH_AUTHORIZE = "https://streamlabs.com/api/v2.0/authorize";
@@ -107,47 +108,26 @@ export async function fetchDonations(opts: {
 }
 
 /**
- * Try to match a donation to a Ghost Empire user.
- * Strategy:
- *  1. Exact match donor_name → User.username (case-insensitive)
- *  2. Match first @nick in message → User.username
- *  3. Return null (admin can match manually later)
+ * Try to match a donation to a Ghost Empire user — VERIFIED only (#audit3).
+ * The only auto-credit path is a personal donation code (shown on the user's profile)
+ * present in the donation message. Donor-name / @mention auto-matching was REMOVED — it
+ * let a payer aim a donation's GT at any account they named. Codeless donations return
+ * null and land in the manual admin reconciliation queue (/api/admin/donations).
  */
 export async function matchDonationToUser(
-  donorName: string,
   message: string | null,
   tenantId: string | null,
 ): Promise<{ userId: string; matchType: string } | null> {
-  // Scope the username match to the donation's portal (+ legacy null-tenant users for
-  // back-compat) so a donation polled for portal A can't credit a portal-B user sharing
-  // a username (#audit3 HIGH-2). NOTE: this is still donor-supplied-name matching, so
-  // within a tenant it can mis-attribute — kept as the streamer's accepted auto-match,
-  // with manual reconciliation for the rest (/api/admin/donations).
+  const code = extractDonationCode(message);
+  if (!code) return null;
+  // Scope to the donation's portal (+ legacy null-tenant) for cross-tenant safety; the
+  // code is globally unique, so this resolves at most one user.
   const tw = tenantId ? { OR: [{ tenantId }, { tenantId: null }] } : {};
-  // 1. Exact donor name match
-  if (donorName) {
-    const cleaned = donorName.trim().toLowerCase();
-    const user = await prisma.user.findFirst({
-      where: { username: { equals: cleaned, mode: "insensitive" }, ...tw },
-      select: { id: true },
-    });
-    if (user) return { userId: user.id, matchType: "auto_name" };
-  }
-
-  // 2. @mention in message
-  if (message) {
-    const mention = message.match(/@([a-z0-9_]{3,32})/i);
-    if (mention) {
-      const username = mention[1].toLowerCase();
-      const user = await prisma.user.findFirst({
-        where: { username: { equals: username, mode: "insensitive" }, ...tw },
-        select: { id: true },
-      });
-      if (user) return { userId: user.id, matchType: "auto_mention" };
-    }
-  }
-
-  return null;
+  const user = await prisma.user.findFirst({
+    where: { donationCode: code, ...tw },
+    select: { id: true },
+  });
+  return user ? { userId: user.id, matchType: "code" } : null;
 }
 
 /** Poll Streamlabs for new donations, store them, auto-match where possible. */
@@ -194,7 +174,7 @@ export async function pollAndProcessDonations(): Promise<{
     if (!Number.isFinite(amountFloat) || amountFloat <= 0) continue;
     const amountGrosze = Math.round(amountFloat * 100);
 
-    const match = await matchDonationToUser(d.name, d.message, conn.tenantId);
+    const match = await matchDonationToUser(d.message, conn.tenantId);
 
     if (match) {
       // Currency-aware (convert to PLN first) + capped, so non-PLN or malformed amounts

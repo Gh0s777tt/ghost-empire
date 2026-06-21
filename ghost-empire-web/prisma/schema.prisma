@@ -107,6 +107,9 @@ model User {
   // Referrals — own shareable code + who invited this user (set once on claim)
   referralCode String? @unique
   referredById String?
+  // Donation verification code (#audit3): the viewer puts this in their donation message
+  // so a Streamlabs donation is credited to them (verified) — see lib/donation-code.
+  donationCode String? @unique
 
   // Progression
   level          Int       @default(1)

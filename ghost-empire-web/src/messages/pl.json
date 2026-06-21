@@ -2217,6 +2217,11 @@
     "f_country": "Kraj (ISO-2)",
     "f_parcelLocker": "Paczkomat (InPost itp.)"
   },
+  "donationCode": {
+    "title": "Twój kod donacji",
+    "desc": "Wpisz ten kod w wiadomości napiwku na stronie wsparcia — wtedy donacja doliczy %gt% na Twoje konto (napiwki bez kodu dopasowuje admin).",
+    "copy": "Kopiuj kod"
+  },
   "push": {
     "title": "Powiadomienia push",
     "desc": "Dostawaj powiadomienie, gdy zaczynam stream i o najważniejszych momentach — nawet przy zamkniętej karcie.",
