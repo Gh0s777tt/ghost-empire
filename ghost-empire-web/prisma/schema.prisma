@@ -38,6 +38,8 @@ model Tenant {
   // payment method on /support. "none" | "bell" (in-app notification) | "overlay" (OBS) | "both".
   // A click is an intent signal, not a confirmed payment — throttled server-side.
   supportAlertMode     String    @default("none")
+  // IANA timezone the portal's /schedule times are shown in (#audit5); null → "Europe/Warsaw".
+  timezone             String?
   ownerHandle          String? // streamer's public handle (%owner% in i18n), e.g. "Gh0s77tt"
   // Phase 6 — billing/entitlements. The founder tenant defaults to "elite" so the
   // existing portal never gates itself; paying tenants get their plan at checkout.

@@ -36,6 +36,13 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   str("tokenName", 40);
   str("tokenSymbol", 8);
   str("companionDefaultName", 30, { allowEmptyNull: true });
+  str("timezone", 64, { allowEmptyNull: true });
+  // Validate the IANA timezone (it drives /schedule's displayed times) — reject garbage rather
+  // than store an unusable zone. Empty → null (falls back to Europe/Warsaw on read).
+  if (typeof data.timezone === "string") {
+    try { new Intl.DateTimeFormat(undefined, { timeZone: data.timezone }); }
+    catch { return NextResponse.json({ error: "Nieprawidłowa strefa czasowa (IANA)" }, { status: 400 }); }
+  }
   str("logoUrl", 300, { allowEmptyNull: true });
   str("bgImageUrl", 300, { allowEmptyNull: true });
   // logoUrl renders site-wide as <img src>, bgImageUrl as a CSS url() — only absolute http(s) passes.

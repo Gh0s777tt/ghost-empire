@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Added
+
+- **Per-portal timezone for `/schedule` (audit v5 white-label)** **(#646)** — finishes the #643 schedule fix: the displayed timezone was still a hard-coded "Europe/Warsaw". New `Tenant.timezone` (**db push** — additive nullable, applied), set in `/admin#tenants` (validated as a real IANA zone via `Intl.DateTimeFormat`, empty → falls back to Europe/Warsaw). `tenant.ts` exposes it (`TenantBrand.timezone`); the `/schedule` subtitle now shows `{tz}` from the portal's own timezone. EN + PL label + subtitle reworked to take the `{tz}` param. Zielone: `tsc`/**473 testów**/`eslint`/`build`/`docs:check`.
+
 ### Changed
 
 - **Dependency batch-bump — all safe patch/minor in-range (audit v4 hygiene)** **(#640)** — `npm update` within the existing `^` ranges: **next/eslint-config-next/@next/bundle-analyzer 16.2.7 → 16.2.9**, **@sentry/nextjs 10.56 → 10.59**, **stripe 22.2.0 → 22.2.2**, **pg 8.21 → 8.22**, **tailwindcss + @tailwindcss/postcss 4.3.0 → 4.3.1**, **vitest 4.1.8 → 4.1.9**, **lucide-react 1.17 → 1.21**, **@playwright/test 1.60 → 1.61**, **@types/node → 25.9.4**. Deliberately **held**: `eslint` 9→10 (gated by eslint-config-next), `@types/node` 26 (gated by Node 26), `next-auth` v5 beta (npm "latest" 4.x is a downgrade trap). **0 vulnerabilities** (`npm audit`). Lockfile-only (all within range). Zielone: `tsc`/**468 testów**/`eslint`/`build`/`docs:check`.

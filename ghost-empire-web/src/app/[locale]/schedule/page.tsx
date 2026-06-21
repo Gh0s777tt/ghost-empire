@@ -55,7 +55,7 @@ export default async function SchedulePage() {
               </h1>
             </div>
             <p className="text-zinc-500 text-sm">
-              {t("subtitle", { owner: tenant.ownerHandle })}
+              {t("subtitle", { owner: tenant.ownerHandle, tz: tenant.timezone })}
             </p>
           </div>
 

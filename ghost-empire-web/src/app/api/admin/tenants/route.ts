@@ -20,6 +20,7 @@ export async function GET() {
       id: true, slug: true, name: true, shortName: true, brandColor: true,
       logoUrl: true, ownerHandle: true, tokenName: true, tokenSymbol: true,
       companionDefaultName: true, bgImageUrl: true, socialLinks: true, supportAlertMode: true,
+      timezone: true,
       plan: true, planExpiresAt: true, createdAt: true,
       _count: { select: { users: true } },
     },

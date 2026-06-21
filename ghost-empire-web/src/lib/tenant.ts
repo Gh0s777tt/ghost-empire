@@ -39,6 +39,8 @@ export type TenantBrand = {
   bgPreset: string | null;
   /** Portal's own social links; null = fall back to the founder default (SOCIALS). */
   socialLinks: { platform: string; url: string }[] | null;
+  /** IANA timezone the /schedule times are shown in (#audit5); defaults to Europe/Warsaw. */
+  timezone: string;
 };
 
 /** Safely parse the Tenant.socialLinks JSON into a validated list (defensive on read). */
@@ -70,6 +72,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   bgImageUrl: null,
   bgPreset: null,
   socialLinks: null,
+  timezone: "Europe/Warsaw",
 };
 
 /**
@@ -112,6 +115,7 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
         bgPreset: resolveBgPresetCss(t.bgImageUrl),
         bgImageUrl: resolveBgPresetCss(t.bgImageUrl) ? null : t.bgImageUrl ? safeMediaUrl(t.bgImageUrl) : null,
         socialLinks: parseTenantSocials(t.socialLinks),
+        timezone: t.timezone ?? "Europe/Warsaw",
       };
     }
   } catch {

@@ -18,6 +18,7 @@ type TenantRow = {
   tokenName: string; tokenSymbol: string; companionDefaultName: string | null; bgImageUrl: string | null;
   socialLinks: { platform: string; url: string }[] | null;
   supportAlertMode: string;
+  timezone: string | null;
   plan: string; planExpiresAt: string | null; createdAt: string; users: number;
 };
 
@@ -131,6 +132,7 @@ function TenantCard({ row, onToast, onSaved, locale }: {
     companionDefaultName: row.companionDefaultName ?? "",
     bgImageUrl: row.bgImageUrl ?? "",
     supportAlertMode: row.supportAlertMode ?? "none",
+    timezone: row.timezone ?? "",
     plan: row.plan,
     planExpiresAt: row.planExpiresAt ? row.planExpiresAt.slice(0, 10) : "",
   });
@@ -197,6 +199,7 @@ function TenantCard({ row, onToast, onSaved, locale }: {
             <FieldInput label={t("tntColor")} value={f.brandColor} onChange={set("brandColor")} placeholder="#E50914" />
             <FieldInput label={t("tntLogo")} value={f.logoUrl} onChange={set("logoUrl")} placeholder="https://…/logo.png" />
             <FieldInput label={t("tntCompanionName")} value={f.companionDefaultName} onChange={set("companionDefaultName")} placeholder="Widmo" />
+            <FieldInput label={t("tntTimezone")} value={f.timezone} onChange={set("timezone")} placeholder="Europe/Warsaw" />
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("tntBgPreset")}</label>
               <div className="flex flex-wrap gap-1.5 mb-2">
