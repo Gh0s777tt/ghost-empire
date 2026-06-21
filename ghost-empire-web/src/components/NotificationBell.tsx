@@ -60,7 +60,7 @@ export function NotificationBell() {
     return () => { clearInterval(iv); document.removeEventListener("visibilitychange", onVisible); };
   }, [fetchNotifications, open]);
 
-  // Click outside to close
+  // Click outside (or Escape) to close
   useEffect(() => {
     if (!open) return;
     function onClick(e: MouseEvent) {
@@ -68,8 +68,10 @@ export function NotificationBell() {
         setOpen(false);
       }
     }
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") setOpen(false); }
     document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onClick); document.removeEventListener("keydown", onKey); };
   }, [open]);
 
   async function markAllRead() {

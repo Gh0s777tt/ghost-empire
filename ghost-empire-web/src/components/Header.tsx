@@ -88,6 +88,13 @@ export function Header() {
     return () => window.removeEventListener(BALANCE_EVENT, onBalance);
   }, []);
   useEffect(() => { setLiveBalance(null); }, [sessionTokens]);
+  // Escape closes the account menu (it already closes on backdrop click). #audit-v2 a11y
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   return (
     <header
