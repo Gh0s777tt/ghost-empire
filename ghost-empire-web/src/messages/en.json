@@ -494,7 +494,8 @@
       "reason": {
         "shared_platform_id": "Shared OAuth account (strongest signal)",
         "shared_email": "Shared email",
-        "shared_discord_id": "Shared Discord ID"
+        "shared_discord_id": "Shared Discord ID",
+        "similar_username": "Similar username (review carefully)"
       },
       "loadError": "Failed to load duplicate groups",
       "netErr": "Network error",

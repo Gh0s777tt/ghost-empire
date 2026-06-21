@@ -8,9 +8,19 @@ import { prisma } from "@/lib/prisma";
 // Detection — find groups of users likely to be duplicates
 // =====================================================
 
+/**
+ * Normalize a username for duplicate detection: lowercase, strip everything but a-z0-9.
+ * "_Gh0s77tt" and "gh0s77tt" → "gh0s77tt". Empty when nothing alphanumeric remains.
+ * Used to catch the same person on a provider that gives no email/discordId (e.g. Twitch),
+ * which the email/discord/account-id signals miss. Pure → unit-tested.
+ */
+export function normalizeUsernameForDedup(username: string | null | undefined): string {
+  return (username ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 export type DuplicateGroup = {
   /** Why these users are flagged as candidates */
-  reason: "shared_platform_id" | "shared_email" | "shared_discord_id";
+  reason: "shared_platform_id" | "shared_email" | "shared_discord_id" | "similar_username";
   /** Human-readable description of the match */
   matchOn: string;
   users: Array<{
@@ -156,6 +166,31 @@ export async function detectDuplicates(maxGroups = 30): Promise<DuplicateGroup[]
       matchOn: `Discord ID: ${dup.discord_id}`,
       users,
     });
+  }
+
+  // 4. Same NORMALIZED username (lowercase, strip non-alphanumeric) — catches the same person
+  //    on a provider that supplies no email/discordId (e.g. a Twitch login "gh0s77tt" vs an
+  //    existing "_gh0s77tt"), which rules 1-3 miss. WEAKER signal → surfaced for REVIEW only;
+  //    the admin still previews + types-to-confirm before any merge runs.
+  const withUsernames = await prisma.user.findMany({
+    where: { username: { not: null } },
+    select: { id: true, username: true },
+  });
+  const byNorm = new Map<string, string[]>();
+  for (const u of withUsernames) {
+    const norm = normalizeUsernameForDedup(u.username);
+    if (!norm) continue;
+    const arr = byNorm.get(norm);
+    if (arr) arr.push(u.id);
+    else byNorm.set(norm, [u.id]);
+  }
+  for (const [norm, userIds] of byNorm) {
+    if (userIds.length < 2) continue;
+    // Skip if a stronger signal (account-id / email / discord) already grouped them.
+    if (groups.some((g) => g.users.every((u) => userIds.includes(u.id)))) continue;
+    const users = await summarizeUsers(userIds);
+    groups.push({ reason: "similar_username", matchOn: `username ≈ ${norm}`, users });
+    if (groups.length >= maxGroups) break;
   }
 
   return groups.slice(0, maxGroups);

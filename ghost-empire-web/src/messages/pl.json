@@ -494,7 +494,8 @@
       "reason": {
         "shared_platform_id": "Wspólne konto OAuth (najsilniejszy sygnał)",
         "shared_email": "Wspólny email",
-        "shared_discord_id": "Wspólny Discord ID"
+        "shared_discord_id": "Wspólny Discord ID",
+        "similar_username": "Podobny username (sprawdź uważnie)"
       },
       "loadError": "Nie udało się załadować grup duplikatów",
       "netErr": "Błąd sieci",
