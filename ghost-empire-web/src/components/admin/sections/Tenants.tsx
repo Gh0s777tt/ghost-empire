@@ -10,6 +10,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
+import { BG_PRESETS, bgPresetValue, bgPresetId } from "@/lib/bg-presets";
 
 type TenantRow = {
   id: string; slug: string; name: string; shortName: string | null;
@@ -196,6 +197,33 @@ function TenantCard({ row, onToast, onSaved, locale }: {
             <FieldInput label={t("tntColor")} value={f.brandColor} onChange={set("brandColor")} placeholder="#E50914" />
             <FieldInput label={t("tntLogo")} value={f.logoUrl} onChange={set("logoUrl")} placeholder="https://…/logo.png" />
             <FieldInput label={t("tntCompanionName")} value={f.companionDefaultName} onChange={set("companionDefaultName")} placeholder="Widmo" />
+            <div>
+              <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("tntBgPreset")}</label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                <button
+                  type="button"
+                  onClick={() => set("bgImageUrl")("")}
+                  className={`px-2 py-1 text-[10px] font-bold uppercase tracking-widest border ${!f.bgImageUrl ? "border-red-500 text-red-300" : "border-zinc-800 text-zinc-500 hover:border-zinc-600"}`}
+                >
+                  {t("tntBgNone")}
+                </button>
+                {BG_PRESETS.map((p) => {
+                  const active = bgPresetId(f.bgImageUrl) === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => set("bgImageUrl")(bgPresetValue(p.id))}
+                      title={p.label}
+                      className={`inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold uppercase tracking-widest border ${active ? "border-red-500 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"}`}
+                    >
+                      <span className="w-4 h-4 rounded-sm border border-white/10 shrink-0" style={{ backgroundImage: p.css }} />
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <FieldInput label={t("tntBgImage")} value={f.bgImageUrl} onChange={set("bgImageUrl")} placeholder="https://…/bg.jpg" />
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("tntPlan")}</label>

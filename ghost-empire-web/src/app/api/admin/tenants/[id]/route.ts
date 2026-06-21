@@ -6,6 +6,7 @@ import { requirePlatformOwner } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { normalizePlan } from "@/lib/entitlements";
 import { safeMediaUrl } from "@/lib/url-safe";
+import { isBgPreset } from "@/lib/bg-presets";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   str("bgImageUrl", 300, { allowEmptyNull: true });
   // logoUrl renders site-wide as <img src>, bgImageUrl as a CSS url() — only absolute http(s) passes.
   if (typeof data.logoUrl === "string") data.logoUrl = safeMediaUrl(data.logoUrl);
-  if (typeof data.bgImageUrl === "string") data.bgImageUrl = safeMediaUrl(data.bgImageUrl);
+  // bgImageUrl is EITHER a built-in "preset:<id>" template (kept verbatim, allowlist-checked)
+  // or a custom image URL (must be absolute http(s)).
+  if (typeof data.bgImageUrl === "string" && !isBgPreset(data.bgImageUrl)) data.bgImageUrl = safeMediaUrl(data.bgImageUrl);
   // Portal social links — array of { platform (known set), url (http(s)) }; empty/null clears.
   if (body.socialLinks !== undefined) {
     if (body.socialLinks === null || (Array.isArray(body.socialLinks) && body.socialLinks.length === 0)) {

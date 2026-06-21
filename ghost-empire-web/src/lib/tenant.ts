@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/site";
 import { resolveTenantSlug } from "@/lib/tenant-host";
 import { safeMediaUrl } from "@/lib/url-safe";
+import { resolveBgPresetCss } from "@/lib/bg-presets";
 
 /** Slug (and future subdomain) of the original single-streamer tenant. */
 export const DEFAULT_TENANT_SLUG = "ghost-empire";
@@ -34,6 +35,8 @@ export type TenantBrand = {
   companionDefaultName: string;
   /** Optional portal background image (rendered behind a dark overlay); null = none. */
   bgImageUrl: string | null;
+  /** Resolved CSS background-image of a chosen built-in preset template; null = none (#audit3). */
+  bgPreset: string | null;
   /** Portal's own social links; null = fall back to the founder default (SOCIALS). */
   socialLinks: { platform: string; url: string }[] | null;
 };
@@ -65,6 +68,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   logoUrl: null,
   companionDefaultName: "Widmo",
   bgImageUrl: null,
+  bgPreset: null,
   socialLinks: null,
 };
 
@@ -102,9 +106,11 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
         ownerHandle: t.ownerHandle ?? t.shortName ?? t.name,
         logoUrl: t.logoUrl,
         companionDefaultName: t.companionDefaultName ?? "Widmo",
-        // Re-sanitize on read: this value goes into a CSS url(), so be defensive even
-        // though the admin write path already runs safeMediaUrl.
-        bgImageUrl: t.bgImageUrl ? safeMediaUrl(t.bgImageUrl) : null,
+        // bgImageUrl holds EITHER a "preset:<id>" template (→ resolved to a gradient) or a
+        // real image URL. Resolve the preset first; otherwise re-sanitize the URL on read
+        // (it goes into a CSS url(), so be defensive even though the write path also guards).
+        bgPreset: resolveBgPresetCss(t.bgImageUrl),
+        bgImageUrl: resolveBgPresetCss(t.bgImageUrl) ? null : t.bgImageUrl ? safeMediaUrl(t.bgImageUrl) : null,
         socialLinks: parseTenantSocials(t.socialLinks),
       };
     }

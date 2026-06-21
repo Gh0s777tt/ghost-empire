@@ -107,6 +107,8 @@
     "tntColor": "Color (hex)",
     "tntLogo": "Logo URL",
     "tntCompanionName": "Companion default name",
+    "tntBgPreset": "Background template",
+    "tntBgNone": "None",
     "tntBgImage": "Background image URL",
     "tntSocialLinks": "Portal social links",
     "tntSocialLinksHint": "One per line: «platform url». Platforms: discord, twitch, kick, youtube, tiktok, instagram, x. Empty = founder default.",
