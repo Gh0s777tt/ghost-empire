@@ -2224,6 +2224,12 @@
     "f_country": "Kraj (ISO-2)",
     "f_parcelLocker": "Paczkomat (InPost itp.)"
   },
+  "dataExport": {
+    "title": "Twoje dane (RODO)",
+    "subtitle": "Pobierz wszystko, co przechowujemy o Twoim koncie, jako plik JSON.",
+    "button": "Pobierz",
+    "err": "Nie udało się wygenerować eksportu. Spróbuj ponownie."
+  },
   "donationCode": {
     "title": "Twój kod donacji",
     "desc": "Wpisz ten kod w wiadomości napiwku na stronie wsparcia — wtedy donacja doliczy %gt% na Twoje konto (napiwki bez kodu dopasowuje admin).",

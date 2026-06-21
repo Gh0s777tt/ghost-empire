@@ -9,6 +9,7 @@ import { PushToggle } from "@/components/push/PushToggle";
 import { PasskeyManager } from "@/components/profile/PasskeyManager";
 import { ShippingProfileCard } from "@/components/profile/ShippingProfileCard";
 import { DonationCodeCard } from "@/components/profile/DonationCodeCard";
+import { DataExportCard } from "@/components/profile/DataExportCard";
 import { companionStage } from "@/lib/companion";
 
 export const dynamic = "force-dynamic";
@@ -145,6 +146,7 @@ export default async function ProfilePage() {
           <PasskeyManager />
           <DonationCodeCard />
           <ShippingProfileCard />
+          <DataExportCard />
         </div>
       </main>
     </div>

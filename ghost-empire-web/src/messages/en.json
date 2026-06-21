@@ -2224,6 +2224,12 @@
     "f_country": "Country (ISO-2)",
     "f_parcelLocker": "Parcel locker (InPost etc.)"
   },
+  "dataExport": {
+    "title": "Your data (GDPR)",
+    "subtitle": "Download everything we store about your account as a JSON file.",
+    "button": "Download",
+    "err": "Couldn't generate the export. Please try again."
+  },
   "donationCode": {
     "title": "Your donation code",
     "desc": "Put this code in your tip message on the support page — your donation then credits %gt% to your account (codeless tips are matched by an admin).",
