@@ -71,9 +71,16 @@ export async function POST(req: Request) {
   }
   if (!verification.verified) return done({ error: "not-verified" }, 400);
 
-  // Advance the signature counter (clone detection) + stamp last use. Best-effort.
+  // Clone detection: a non-zero counter that fails to advance signals a duplicated
+  // authenticator — refuse the login (counter 0 means the authenticator doesn't use one).
+  const newCounter = verification.authenticationInfo.newCounter;
+  if (newCounter !== 0 && newCounter <= pk.counter) {
+    return done({ error: "not-verified" }, 400);
+  }
+
+  // Advance the signature counter + stamp last use. Best-effort.
   await prisma.passkey
-    .update({ where: { id: pk.id }, data: { counter: verification.authenticationInfo.newCounter, lastUsedAt: new Date() } })
+    .update({ where: { id: pk.id }, data: { counter: newCounter, lastUsedAt: new Date() } })
     .catch(() => {});
 
   // Mint the database session exactly like NextAuth's DB sign-in (cookie name/secure

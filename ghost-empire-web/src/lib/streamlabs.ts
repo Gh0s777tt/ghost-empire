@@ -181,6 +181,9 @@ export async function pollAndProcessDonations(): Promise<{
   let matched = 0;
   let unmatched = 0;
   const GT_PER_PLN = parseInt(process.env.DONATION_GT_PER_PLN ?? "100", 10);
+  // Cap a single donation's GT at ~100k PLN-equivalent so a malformed/huge upstream
+  // amount (or a high-nominal currency) can't mint an absurd amount into the economy.
+  const MAX_DONATION_GT = GT_PER_PLN * 100_000;
 
   for (const d of donations) {
     // Skip if already processed
@@ -194,7 +197,9 @@ export async function pollAndProcessDonations(): Promise<{
     const match = await matchDonationToUser(d.name, d.message, conn.tenantId);
 
     if (match) {
-      const tokensGranted = Math.round(amountFloat * GT_PER_PLN);
+      // Currency-aware (convert to PLN first) + capped, so non-PLN or malformed amounts
+      // don't mint GT 1:1 as if PLN. #audit3 MED-2
+      const tokensGranted = Math.min(Math.round(plnFromCurrency(amountFloat, d.currency) * GT_PER_PLN), MAX_DONATION_GT);
       await prisma.$transaction([
         prisma.donation.create({
           data: {

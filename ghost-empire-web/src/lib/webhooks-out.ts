@@ -52,7 +52,10 @@ async function deliver(event: string, payload: WebhookPayload, tenantId: string 
         headers["x-ghostempire-signature"] = "sha256=" + createHmac("sha256", secret).update(body).digest("hex");
       }
       try {
-        const res = await fetch(h.url, { method: "POST", headers, body, signal: AbortSignal.timeout(TIMEOUT_MS) });
+        // redirect:"manual" so a public webhook URL can't 302 into an internal/metadata
+        // address (the SSRF guard ran on the original URL only). A 3xx becomes a non-ok
+        // response → counted as a failure, never followed.
+        const res = await fetch(h.url, { method: "POST", headers, body, redirect: "manual", signal: AbortSignal.timeout(TIMEOUT_MS) });
         const nextFail = res.ok ? 0 : h.failCount + 1;
         await prisma.outgoingWebhook.update({
           where: { id: h.id },

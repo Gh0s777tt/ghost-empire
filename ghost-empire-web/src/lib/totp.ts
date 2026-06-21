@@ -4,7 +4,7 @@
 // Hand-rolled on node:crypto (no dependency); verified against the published
 // RFC test vectors in __tests__/totp.test.ts. The secret is base32 (RFC 4648);
 // callers encrypt it at rest with lib/crypto before persisting.
-import { createHmac, randomBytes } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const PERIOD = 30; // seconds
@@ -86,7 +86,9 @@ export function verifyTotp(secretB32: string, code: string, timeMs: number, wind
   for (let i = -window; i <= window; i++) {
     const c = counter + i;
     if (c < 0) continue; // no valid TOTP has a pre-epoch counter
-    if (hotp(key, c) === clean) return true;
+    // Constant-time compare so a near-miss code can't be probed digit-by-digit via timing.
+    const expected = hotp(key, c);
+    if (expected.length === clean.length && timingSafeEqual(Buffer.from(expected), Buffer.from(clean))) return true;
   }
   return false;
 }

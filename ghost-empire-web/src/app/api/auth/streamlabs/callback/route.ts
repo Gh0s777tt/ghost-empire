@@ -40,7 +40,8 @@ export async function GET(req: Request) {
   }
   const cookieStore = await cookies();
   const cookieNonce = cookieStore.get("streamlabs_oauth_state")?.value;
-  if (cookieNonce && cookieNonce !== payload.nonce) {
+  // Require the CSRF nonce cookie AND a match — a missing cookie must not skip the bind.
+  if (!cookieNonce || cookieNonce !== payload.nonce) {
     return NextResponse.redirect(new URL("/admin?streamlabs_error=state_mismatch", BASE));
   }
   cookieStore.delete("streamlabs_oauth_state");
