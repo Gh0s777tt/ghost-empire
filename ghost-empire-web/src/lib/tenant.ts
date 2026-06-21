@@ -11,6 +11,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/site";
 import { resolveTenantSlug } from "@/lib/tenant-host";
+import { safeMediaUrl } from "@/lib/url-safe";
 
 /** Slug (and future subdomain) of the original single-streamer tenant. */
 export const DEFAULT_TENANT_SLUG = "ghost-empire";
@@ -31,6 +32,8 @@ export type TenantBrand = {
   logoUrl: string | null;
   /** Default name a new Ghost Companion starts with on this portal (#audit3). */
   companionDefaultName: string;
+  /** Optional portal background image (rendered behind a dark overlay); null = none. */
+  bgImageUrl: string | null;
 };
 
 /** Brand used before a tenant row exists or outside any request context. */
@@ -45,6 +48,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   ownerHandle: SITE.owner,
   logoUrl: null,
   companionDefaultName: "Widmo",
+  bgImageUrl: null,
 };
 
 /**
@@ -81,6 +85,9 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
         ownerHandle: t.ownerHandle ?? t.shortName ?? t.name,
         logoUrl: t.logoUrl,
         companionDefaultName: t.companionDefaultName ?? "Widmo",
+        // Re-sanitize on read: this value goes into a CSS url(), so be defensive even
+        // though the admin write path already runs safeMediaUrl.
+        bgImageUrl: t.bgImageUrl ? safeMediaUrl(t.bgImageUrl) : null,
       };
     }
   } catch {

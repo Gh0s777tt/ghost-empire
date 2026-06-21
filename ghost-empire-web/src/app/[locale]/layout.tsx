@@ -60,6 +60,17 @@ export default async function LocaleLayout({
   const brandStyle = {
     "--brand": tenant.brandColor,
     "--brand-rgb": hexToRgbTriplet(tenant.brandColor),
+    // Optional per-portal background image (#audit3): rendered AS the body background
+    // behind a strong dark gradient overlay so text contrast/readability is preserved.
+    // The URL is sanitized in tenant.ts (safeMediaUrl) before it ever reaches this CSS.
+    ...(tenant.bgImageUrl
+      ? {
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.86), rgba(0,0,0,0.93)), url("${tenant.bgImageUrl}")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+        }
+      : {}),
   } as React.CSSProperties;
   // Arabic is the only RTL locale so far — flip the document direction so text,
   // alignment and punctuation flow correctly. (Full bidi layout mirroring of

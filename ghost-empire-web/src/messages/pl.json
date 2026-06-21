@@ -107,6 +107,7 @@
     "tntColor": "Kolor (hex)",
     "tntLogo": "Logo URL",
     "tntCompanionName": "Domyślne imię zwierzaka",
+    "tntBgImage": "URL tła portalu",
     "tntPlan": "Plan",
     "tntExpiry": "Wygasa",
     "tntUntil": "do",

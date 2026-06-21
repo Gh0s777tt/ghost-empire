@@ -30,6 +30,7 @@ model Tenant {
   tokenName            String    @default("Ghost Tokens") // full currency name, e.g. "Neo Coins"
   tokenSymbol          String    @default("GT") // short unit shown next to amounts
   companionDefaultName String? // per-portal default name for new Ghost Companions (#audit3); null → "Widmo"
+  bgImageUrl           String? // optional portal background image (#audit3); rendered behind a dark overlay
   ownerHandle          String? // streamer's public handle (%owner% in i18n), e.g. "Gh0s77tt"
   // Phase 6 — billing/entitlements. The founder tenant defaults to "elite" so the
   // existing portal never gates itself; paying tenants get their plan at checkout.

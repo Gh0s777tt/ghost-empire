@@ -36,8 +36,10 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   str("tokenSymbol", 8);
   str("companionDefaultName", 30, { allowEmptyNull: true });
   str("logoUrl", 300, { allowEmptyNull: true });
-  // logoUrl renders site-wide as <img src> — only absolute http(s) passes.
+  str("bgImageUrl", 300, { allowEmptyNull: true });
+  // logoUrl renders site-wide as <img src>, bgImageUrl as a CSS url() — only absolute http(s) passes.
   if (typeof data.logoUrl === "string") data.logoUrl = safeMediaUrl(data.logoUrl);
+  if (typeof data.bgImageUrl === "string") data.bgImageUrl = safeMediaUrl(data.bgImageUrl);
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }

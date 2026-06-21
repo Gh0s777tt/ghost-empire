@@ -107,6 +107,7 @@
     "tntColor": "Color (hex)",
     "tntLogo": "Logo URL",
     "tntCompanionName": "Companion default name",
+    "tntBgImage": "Background image URL",
     "tntPlan": "Plan",
     "tntExpiry": "Expires",
     "tntUntil": "until",
