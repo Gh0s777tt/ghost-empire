@@ -4,6 +4,7 @@
 import { prisma } from "@/lib/prisma";
 import { fetchSteamOwnedGames, steamHeaderImage } from "@/lib/steam";
 import { fetchPsnTitles } from "@/lib/psn";
+import { fetchXboxTitles } from "@/lib/xbox";
 import { createLogger } from "@/lib/logger";
 import { currentTenantId } from "@/lib/tenant";
 import { decryptSecret } from "@/lib/crypto";
@@ -123,5 +124,43 @@ export async function syncPsnLibrary(): Promise<SyncResult> {
   });
   await prisma.gameLibraryConfig.update({ where: { id: cfg.id }, data: { psnSyncedAt: new Date() } });
   log.info("psn library synced", { synced: titles.length, removed: removed.count });
+  return { ok: true, synced: titles.length, removed: removed.count };
+}
+
+/** Pull the Xbox (Xbox Live) played-titles library via OpenXBL. Needs a per-portal xbl.io key. */
+export async function syncXboxLibrary(): Promise<SyncResult> {
+  const cfg = await getGameLibraryConfig();
+  const tid = cfg.tenantId ?? null;
+  const apiKey = cfg.xboxApiKey ? decryptSecret(cfg.xboxApiKey) : null;
+  if (!apiKey) return { ok: false, error: "Xbox nie skonfigurowany — ustaw klucz xbl.io w panelu" };
+
+  let titles;
+  try {
+    titles = await fetchXboxTitles(apiKey);
+  } catch (e) {
+    const error = e instanceof Error ? e.message : "fetch_failed";
+    log.error("xbox sync failed", e);
+    return { ok: false, error };
+  }
+
+  if (tid) await prisma.game.updateMany({ where: { tenantId: null, source: "xbox" }, data: { tenantId: tid } });
+
+  const ids: string[] = [];
+  for (const x of titles) {
+    ids.push(x.id);
+    const lp = x.lastPlayed ? new Date(x.lastPlayed) : null;
+    const data = {
+      name: x.name.slice(0, 200),
+      imageUrl: x.image,
+      playtimeMin: 0, // Xbox title history has no playtime
+      lastPlayedAt: lp && !Number.isNaN(lp.getTime()) ? lp : null,
+    };
+    await upsertGame(tid, "xbox", x.id, data);
+  }
+  const removed = await prisma.game.deleteMany({
+    where: { tenantId: tid, source: "xbox", externalId: { notIn: ids.length ? ids : ["__none__"] } },
+  });
+  await prisma.gameLibraryConfig.update({ where: { id: cfg.id }, data: { xboxSyncedAt: new Date() } });
+  log.info("xbox library synced", { synced: titles.length, removed: removed.count });
   return { ok: true, synced: titles.length, removed: removed.count };
 }

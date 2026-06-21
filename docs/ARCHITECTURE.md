@@ -107,7 +107,7 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 8. Jakość i deploy
 
-- **CI** (GitHub Actions): job `quality` = `tsc --noEmit` + `eslint` + `vitest run` + `npm audit` (nieblokujący); job `integration · postgres` = `vitest run` przeciw **realnemu Postgresowi** (service container) na ścieżkach money-critical. Testy: czysta logika w `src/lib/__tests__` (458 unit, 61 plików) + integracyjne w `tests/integration` (11, real DB).
+- **CI** (GitHub Actions): job `quality` = `tsc --noEmit` + `eslint` + `vitest run` + `npm audit` (nieblokujący); job `integration · postgres` = `vitest run` przeciw **realnemu Postgresowi** (service container) na ścieżkach money-critical. Testy: czysta logika w `src/lib/__tests__` (462 unit, 62 plików) + integracyjne w `tests/integration` (11, real DB).
 - **Workflow zmian (żelazna zasada):** branch → edycja → typecheck/lint/test (+ `db push` przy zmianie schematu) → PR → squash-merge. **Dokumentacja (CHANGELOG · README · ROADMAP · PLAN · PHASE · docs/* · on-site `/about`) jest aktualizowana w TYM SAMYM PR co zmiana** — nigdy nie zostaje w tyle.
 - **Schemat:** Prisma `db push` (bez plików migracji) na Supabase; `prisma generate` regeneruje klienta.
 - Build (`next build`) po stronie Vercela (preview deploy na każdym pushu).

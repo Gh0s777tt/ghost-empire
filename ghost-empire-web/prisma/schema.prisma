@@ -1209,6 +1209,10 @@ model GameLibraryConfig {
   // (lib/crypto). Falls back to the global PSN_NPSSO env when unset (back-compat).
   psnNpsso      String?
   psnSyncedAt   DateTime?
+  // Per-portal Xbox connect (#audit3): the streamer's OpenXBL (xbl.io) API key, encrypted
+  // at rest. Dormant until set; no global env fallback (Xbox had no integration before).
+  xboxApiKey    String?
+  xboxSyncedAt  DateTime?
   updatedAt     DateTime  @updatedAt
 
   @@map("game_library_config")

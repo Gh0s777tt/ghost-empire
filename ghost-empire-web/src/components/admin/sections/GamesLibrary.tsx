@@ -11,9 +11,11 @@ type Data = {
   steamId: string | null;
   steamSyncedAt: string | null;
   psnSyncedAt: string | null;
+  xboxSyncedAt: string | null;
   hasKey: boolean;
   hasNpsso: boolean;
   hasPsnNpsso: boolean;
+  hasXboxKey: boolean;
   count: number;
   totalHours: number;
   games: Array<{ id: string; source: string; name: string; imageUrl: string | null; hours: number; hidden: boolean }>;
@@ -31,6 +33,7 @@ export function GamesLibraryManager({
   const [data, setData] = useState<Data | null>(null);
   const [steamInput, setSteamInput] = useState("");
   const [psnInput, setPsnInput] = useState("");
+  const [xboxInput, setXboxInput] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -76,6 +79,20 @@ export function GamesLibraryManager({
     setBusy("psn");
     const r = (await call({ action: "sync_psn" })) as { synced?: number } | null;
     if (r) { onToast("ok", t("psnSynced", { count: r.synced ?? 0 })); await load(); onSuccess(); }
+    setBusy(null);
+  }
+
+  async function saveXboxKey() {
+    setBusy("xboxKey");
+    const r = (await call({ action: "set_xbox_key", xboxKey: xboxInput.trim() })) as { hasXboxKey?: boolean } | null;
+    if (r) { onToast("ok", r.hasXboxKey ? t("xboxKeySet") : t("xboxKeyCleared")); setXboxInput(""); await load(); }
+    setBusy(null);
+  }
+
+  async function syncXbox() {
+    setBusy("xbox");
+    const r = (await call({ action: "sync_xbox" })) as { synced?: number } | null;
+    if (r) { onToast("ok", t("xboxSynced", { count: r.synced ?? 0 })); await load(); onSuccess(); }
     setBusy(null);
   }
 
@@ -139,6 +156,25 @@ export function GamesLibraryManager({
           </div>
         </label>
         <p className="text-[10px] text-zinc-600">{t.rich("psnNote", { code: (c) => <code className="text-zinc-500">{c}</code> })} {data.hasNpsso ? t("psnSet") : t("psnMissing")}</p>
+
+        <label className="text-[11px] text-zinc-400 block pt-1">{t("xboxKeyLabel")}
+          <div className="flex gap-2 mt-0.5">
+            <input
+              type="password" value={xboxInput} onChange={(e) => setXboxInput(e.target.value)} autoComplete="off"
+              placeholder={data.hasXboxKey ? t("xboxKeySetPh") : t("xboxKeyPh")}
+              className="flex-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600"
+            />
+            <button onClick={saveXboxKey} disabled={busy === "xboxKey" || pending}
+              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+              {busy === "xboxKey" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} {t("save")}
+            </button>
+            <button onClick={syncXbox} disabled={busy === "xbox" || pending || !data.hasXboxKey} title={data.hasXboxKey ? t("xboxTitleOn") : t("xboxTitleOff")}
+              className="px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+              {busy === "xbox" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} {t("syncXbox")}
+            </button>
+          </div>
+        </label>
+        <p className="text-[10px] text-zinc-600">{t.rich("xboxNote", { code: (c) => <code className="text-zinc-500">{c}</code> })} {data.hasXboxKey ? t("psnSet") : t("xboxMissing")}</p>
       </div>
 
       {data.games.length > 0 && (

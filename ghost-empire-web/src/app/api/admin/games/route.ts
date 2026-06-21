@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
-import { getGameLibraryConfig, syncSteamLibrary, syncPsnLibrary } from "@/lib/games";
+import { getGameLibraryConfig, syncSteamLibrary, syncPsnLibrary, syncXboxLibrary } from "@/lib/games";
 import { coerceSteamId } from "@/lib/steam";
 import { currentTenantId } from "@/lib/tenant";
 import { encryptSecret } from "@/lib/crypto";
@@ -27,10 +27,13 @@ export async function GET() {
     steamId: cfg.steamId,
     steamSyncedAt: cfg.steamSyncedAt?.toISOString() ?? null,
     psnSyncedAt: cfg.psnSyncedAt?.toISOString() ?? null,
+    xboxSyncedAt: cfg.xboxSyncedAt?.toISOString() ?? null,
     hasKey: !!process.env.STEAM_API_KEY,
     // Per-portal NPSSO set, or the global env as fallback (the secret itself is never returned).
     hasPsnNpsso: !!cfg.psnNpsso,
     hasNpsso: !!cfg.psnNpsso || !!process.env.PSN_NPSSO,
+    // Per-portal Xbox key set (no env fallback; the key itself is never returned).
+    hasXboxKey: !!cfg.xboxApiKey,
     count,
     totalHours: Math.round((totals._sum.playtimeMin ?? 0) / 60),
     games: games.map((g) => ({
@@ -44,7 +47,7 @@ export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  let body: { action?: string; steamId?: string; npsso?: string; id?: string; hidden?: boolean };
+  let body: { action?: string; steamId?: string; npsso?: string; xboxKey?: string; id?: string; hidden?: boolean };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
@@ -70,6 +73,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, hasPsnNpsso: !!raw });
   }
 
+  if (body.action === "set_xbox_key") {
+    // Per-portal Xbox (OpenXBL) API key — encrypted at rest; empty clears it.
+    const cfg = await getGameLibraryConfig();
+    const raw = typeof body.xboxKey === "string" ? body.xboxKey.trim() : "";
+    if (raw.length > 4000) return NextResponse.json({ error: "Klucz za długi" }, { status: 400 });
+    await prisma.gameLibraryConfig.update({ where: { id: cfg.id }, data: { xboxApiKey: raw ? encryptSecret(raw) : null } });
+    await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "game_library", targetId: "xbox_key", req });
+    return NextResponse.json({ ok: true, hasXboxKey: !!raw });
+  }
+
   if (body.action === "sync") {
     const result = await syncSteamLibrary();
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
@@ -81,6 +94,13 @@ export async function POST(req: Request) {
     const result = await syncPsnLibrary();
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "game_library", targetId: "sync_psn", details: result, req });
+    return NextResponse.json(result);
+  }
+
+  if (body.action === "sync_xbox") {
+    const result = await syncXboxLibrary();
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
+    await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "game_library", targetId: "sync_xbox", details: result, req });
     return NextResponse.json(result);
   }
 
