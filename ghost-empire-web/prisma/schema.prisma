@@ -1205,6 +1205,10 @@ model GameLibraryConfig {
   tenantId      String?   @unique // multi-tenant (Phase 3)
   steamId       String? // SteamID64 (resolve vanity in admin)
   steamSyncedAt DateTime?
+  // Per-portal PSN connect (#audit3): each streamer's own NPSSO, encrypted at rest
+  // (lib/crypto). Falls back to the global PSN_NPSSO env when unset (back-compat).
+  psnNpsso      String?
+  psnSyncedAt   DateTime?
   updatedAt     DateTime  @updatedAt
 
   @@map("game_library_config")

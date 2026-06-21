@@ -57,7 +57,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `AI_API_KEY` / `AI_PROVIDER` / `AI_MODEL` (O) | Klucz AI + dostawca (`openai`/`anthropic`/`grok`/`gemini`/`deepseek`/`bielik`) + model — fallback dla `/admin#integrations`. Ustawione w Vercelu (OpenAI · `gpt-4o-mini`) |
 | `STEAM_API_KEY` (O) | Steam Web API key (biblioteka gier `/games`). Z [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Ustawione w Vercelu |
 | `RUMBLE_API_URL` (O) | Pełny URL Rumble Livestream API (z kluczem) — overlay `/overlay/rumble`. Ustawione w Vercelu |
-| `PSN_NPSSO` (O) | PlayStation npsso (biblioteka gier PSN). Z `ca.account.sony.com/api/v1/ssocookie`. **Wygasa ~60 dni.** Ustawione w Vercelu |
+| `PSN_NPSSO` (O) | **Globalny fallback** dla biblioteki gier PSN. Z `ca.account.sony.com/api/v1/ssocookie`. **Wygasa ~60 dni.** Od #626 każdy portal może ustawić **własny** NPSSO w `/admin#games` (`GameLibraryConfig.psnNpsso`, szyfrowany at-rest) — ten env to już tylko fallback, gdy portal nie ma własnego |
 | `CRON_SECRET` | Bearer chroniący crony Vercel: `/api/cron/streamlabs-poll` (polling donacji), `/api/cron/prune` (czyszczenie starych rekordów) i `/api/cron/weekly-rewards` (poniedziałki 00:00 — nagrody rankingu tygodnia per portal) |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (O) | Upstash Redis (REST) — współdzielony cache między instancjami serverless (np. feed viewer-count). Bez nich cache spada na in-memory per-instancja. Z [upstash.com](https://upstash.com) → Redis → sekcja REST API |
 | `NEXT_PUBLIC_SITE_URL` (O) | Publiczny bazowy URL strony (linki absolutne / OG / share). Gdy brak — fallback do `NEXTAUTH_URL`. `NEXT_PUBLIC_` = widoczny w przeglądarce, **nie wkładaj tu sekretów** |

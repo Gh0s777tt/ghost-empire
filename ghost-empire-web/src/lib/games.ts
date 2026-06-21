@@ -6,6 +6,7 @@ import { fetchSteamOwnedGames, steamHeaderImage } from "@/lib/steam";
 import { fetchPsnTitles } from "@/lib/psn";
 import { createLogger } from "@/lib/logger";
 import { currentTenantId } from "@/lib/tenant";
+import { decryptSecret } from "@/lib/crypto";
 
 const log = createLogger("games");
 
@@ -91,10 +92,13 @@ export async function syncPsnLibrary(): Promise<SyncResult> {
   // per-tenant PSN connect lands with the subdomain milestone). Scope the rows by tenant.
   const cfg = await getGameLibraryConfig();
   const tid = cfg.tenantId ?? null;
+  // Per-portal NPSSO first (encrypted at rest), then the global env as back-compat.
+  const npsso = (cfg.psnNpsso ? decryptSecret(cfg.psnNpsso) : null) || process.env.PSN_NPSSO || null;
+  if (!npsso) return { ok: false, error: "PSN nie skonfigurowany — ustaw NPSSO w panelu" };
 
   let titles;
   try {
-    titles = await fetchPsnTitles();
+    titles = await fetchPsnTitles(npsso);
   } catch (e) {
     const error = e instanceof Error ? e.message : "fetch_failed";
     log.error("psn sync failed", e);
@@ -117,6 +121,7 @@ export async function syncPsnLibrary(): Promise<SyncResult> {
   const removed = await prisma.game.deleteMany({
     where: { tenantId: tid, source: "psn", externalId: { notIn: ids.length ? ids : ["__none__"] } },
   });
+  await prisma.gameLibraryConfig.update({ where: { id: cfg.id }, data: { psnSyncedAt: new Date() } });
   log.info("psn library synced", { synced: titles.length, removed: removed.count });
   return { ok: true, synced: titles.length, removed: removed.count };
 }

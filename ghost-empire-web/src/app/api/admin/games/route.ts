@@ -7,6 +7,7 @@ import { logAdminAction } from "@/lib/audit";
 import { getGameLibraryConfig, syncSteamLibrary, syncPsnLibrary } from "@/lib/games";
 import { coerceSteamId } from "@/lib/steam";
 import { currentTenantId } from "@/lib/tenant";
+import { encryptSecret } from "@/lib/crypto";
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -25,8 +26,11 @@ export async function GET() {
   return NextResponse.json({
     steamId: cfg.steamId,
     steamSyncedAt: cfg.steamSyncedAt?.toISOString() ?? null,
+    psnSyncedAt: cfg.psnSyncedAt?.toISOString() ?? null,
     hasKey: !!process.env.STEAM_API_KEY,
-    hasNpsso: !!process.env.PSN_NPSSO,
+    // Per-portal NPSSO set, or the global env as fallback (the secret itself is never returned).
+    hasPsnNpsso: !!cfg.psnNpsso,
+    hasNpsso: !!cfg.psnNpsso || !!process.env.PSN_NPSSO,
     count,
     totalHours: Math.round((totals._sum.playtimeMin ?? 0) / 60),
     games: games.map((g) => ({
@@ -40,7 +44,7 @@ export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  let body: { action?: string; steamId?: string; id?: string; hidden?: boolean };
+  let body: { action?: string; steamId?: string; npsso?: string; id?: string; hidden?: boolean };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
@@ -54,6 +58,16 @@ export async function POST(req: Request) {
     await prisma.gameLibraryConfig.update({ where: { id: cfg.id }, data: { steamId: resolved } });
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "game_library", targetId: "steam", req });
     return NextResponse.json({ ok: true, steamId: resolved });
+  }
+
+  if (body.action === "set_psn_npsso") {
+    // Per-portal PSN NPSSO — encrypted at rest; empty clears it (falls back to PSN_NPSSO env).
+    const cfg = await getGameLibraryConfig();
+    const raw = typeof body.npsso === "string" ? body.npsso.trim() : "";
+    if (raw.length > 4000) return NextResponse.json({ error: "NPSSO za długi" }, { status: 400 });
+    await prisma.gameLibraryConfig.update({ where: { id: cfg.id }, data: { psnNpsso: raw ? encryptSecret(raw) : null } });
+    await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "game_library", targetId: "psn_npsso", req });
+    return NextResponse.json({ ok: true, hasPsnNpsso: !!raw });
   }
 
   if (body.action === "sync") {

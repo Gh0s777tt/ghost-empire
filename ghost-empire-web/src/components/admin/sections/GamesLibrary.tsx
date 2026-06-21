@@ -10,8 +10,10 @@ import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 type Data = {
   steamId: string | null;
   steamSyncedAt: string | null;
+  psnSyncedAt: string | null;
   hasKey: boolean;
   hasNpsso: boolean;
+  hasPsnNpsso: boolean;
   count: number;
   totalHours: number;
   games: Array<{ id: string; source: string; name: string; imageUrl: string | null; hours: number; hidden: boolean }>;
@@ -28,6 +30,7 @@ export function GamesLibraryManager({
   const nf = useLocale();
   const [data, setData] = useState<Data | null>(null);
   const [steamInput, setSteamInput] = useState("");
+  const [psnInput, setPsnInput] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -59,6 +62,13 @@ export function GamesLibraryManager({
     setBusy("sync");
     const r = (await call({ action: "sync" })) as { synced?: number; removed?: number } | null;
     if (r) { onToast("ok", t("steamSynced", { count: r.synced ?? 0 })); await load(); onSuccess(); }
+    setBusy(null);
+  }
+
+  async function savePsnNpsso() {
+    setBusy("psnNpsso");
+    const r = (await call({ action: "set_psn_npsso", npsso: psnInput.trim() })) as { hasPsnNpsso?: boolean } | null;
+    if (r) { onToast("ok", r.hasPsnNpsso ? t("psnNpssoSet") : t("psnNpssoCleared")); setPsnInput(""); await load(); }
     setBusy(null);
   }
 
@@ -115,6 +125,19 @@ export function GamesLibraryManager({
             {busy === "psn" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} {t("syncPsn")}
           </button>
         </div>
+        <label className="text-[11px] text-zinc-400 block">{t("psnNpssoLabel")}
+          <div className="flex gap-2 mt-0.5">
+            <input
+              type="password" value={psnInput} onChange={(e) => setPsnInput(e.target.value)} autoComplete="off"
+              placeholder={data.hasPsnNpsso ? t("psnNpssoSetPh") : t("psnNpssoPh")}
+              className="flex-1 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-indigo-600"
+            />
+            <button onClick={savePsnNpsso} disabled={busy === "psnNpsso" || pending}
+              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+              {busy === "psnNpsso" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} {t("save")}
+            </button>
+          </div>
+        </label>
         <p className="text-[10px] text-zinc-600">{t.rich("psnNote", { code: (c) => <code className="text-zinc-500">{c}</code> })} {data.hasNpsso ? t("psnSet") : t("psnMissing")}</p>
       </div>
 
