@@ -42,6 +42,11 @@ export async function POST(req: Request) {
     const result = await prisma.$transaction(async (tx) => {
       const event = await tx.event.findFirst({ where: { id: eventId, ...(tid ? { tenantId: tid } : {}) } });
       if (!event) throw new HttpError("Event nie istnieje", 404);
+      // Serialize concurrent ticket buys for THIS raffle: lock the event row so the
+      // read-max-ticketNumber → createMany below can't interleave with another buyer and mint
+      // duplicate ticket numbers (READ COMMITTED would otherwise let both read the same max,
+      // corrupting the draw). The per-user cap count below is serialized for free too. #audit4
+      await tx.$queryRaw`SELECT id FROM events WHERE id = ${eventId} FOR UPDATE`;
       if (!event.active) throw new HttpError("Event nieaktywny", 410);
       if (event.endsAt && event.endsAt < new Date()) {
         throw new HttpError("Event się zakończył", 410);
