@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +13,14 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
   const userId = session.user.id;
-  const tid = await currentTenantId();
+  // getCurrentTenant is React-cached, so this is the same lookup currentTenantId uses —
+  // no extra query. New companions start with the portal's configured default name (#audit3).
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
 
   const companion = await prisma.companion.upsert({
     where: { userId },
-    create: { userId, ...(tid ? { tenantId: tid } : {}) },
+    create: { userId, name: tenant.companionDefaultName, ...(tid ? { tenantId: tid } : {}) },
     update: {},
     select: { name: true, xp: true, lastFedAt: true },
   });

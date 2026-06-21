@@ -14,7 +14,7 @@ import { formatDate } from "@/lib/utils";
 type TenantRow = {
   id: string; slug: string; name: string; shortName: string | null;
   brandColor: string; logoUrl: string | null; ownerHandle: string | null;
-  tokenName: string; tokenSymbol: string;
+  tokenName: string; tokenSymbol: string; companionDefaultName: string | null;
   plan: string; planExpiresAt: string | null; createdAt: string; users: number;
 };
 
@@ -125,6 +125,7 @@ function TenantCard({ row, onToast, onSaved, locale }: {
     tokenSymbol: row.tokenSymbol,
     brandColor: row.brandColor,
     logoUrl: row.logoUrl ?? "",
+    companionDefaultName: row.companionDefaultName ?? "",
     plan: row.plan,
     planExpiresAt: row.planExpiresAt ? row.planExpiresAt.slice(0, 10) : "",
   });
@@ -180,6 +181,7 @@ function TenantCard({ row, onToast, onSaved, locale }: {
             <FieldInput label={t("tntTokenSymbol")} value={f.tokenSymbol} onChange={set("tokenSymbol")} placeholder="GT" />
             <FieldInput label={t("tntColor")} value={f.brandColor} onChange={set("brandColor")} placeholder="#E50914" />
             <FieldInput label={t("tntLogo")} value={f.logoUrl} onChange={set("logoUrl")} placeholder="https://…/logo.png" />
+            <FieldInput label={t("tntCompanionName")} value={f.companionDefaultName} onChange={set("companionDefaultName")} placeholder="Widmo" />
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("tntPlan")}</label>
               <select

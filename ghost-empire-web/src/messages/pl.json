@@ -106,6 +106,7 @@
     "tntTokenSymbol": "Symbol",
     "tntColor": "Kolor (hex)",
     "tntLogo": "Logo URL",
+    "tntCompanionName": "Domyślne imię zwierzaka",
     "tntPlan": "Plan",
     "tntExpiry": "Wygasa",
     "tntUntil": "do",

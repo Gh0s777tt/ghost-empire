@@ -29,6 +29,8 @@ export type TenantBrand = {
   ownerHandle: string;
   /** Tenant logo (header/footer mark); null = default skull. */
   logoUrl: string | null;
+  /** Default name a new Ghost Companion starts with on this portal (#audit3). */
+  companionDefaultName: string;
 };
 
 /** Brand used before a tenant row exists or outside any request context. */
@@ -42,6 +44,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   tokenSymbol: "GT",
   ownerHandle: SITE.owner,
   logoUrl: null,
+  companionDefaultName: "Widmo",
 };
 
 /**
@@ -77,6 +80,7 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
         tokenSymbol: t.tokenSymbol,
         ownerHandle: t.ownerHandle ?? t.shortName ?? t.name,
         logoUrl: t.logoUrl,
+        companionDefaultName: t.companionDefaultName ?? "Widmo",
       };
     }
   } catch {

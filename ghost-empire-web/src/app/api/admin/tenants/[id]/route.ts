@@ -34,6 +34,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   str("ownerHandle", 40, { allowEmptyNull: true });
   str("tokenName", 40);
   str("tokenSymbol", 8);
+  str("companionDefaultName", 30, { allowEmptyNull: true });
   str("logoUrl", 300, { allowEmptyNull: true });
   // logoUrl renders site-wide as <img src> — only absolute http(s) passes.
   if (typeof data.logoUrl === "string") data.logoUrl = safeMediaUrl(data.logoUrl);

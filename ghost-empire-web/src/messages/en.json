@@ -106,6 +106,7 @@
     "tntTokenSymbol": "Symbol",
     "tntColor": "Color (hex)",
     "tntLogo": "Logo URL",
+    "tntCompanionName": "Companion default name",
     "tntPlan": "Plan",
     "tntExpiry": "Expires",
     "tntUntil": "until",
