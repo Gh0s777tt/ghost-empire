@@ -24,20 +24,42 @@ export default async function PollsPage() {
     where: tid ? { tenantId: tid } : {},
     orderBy: [{ createdAt: "desc" }],
     take: 30,
-    include: { votes: { select: { optionIndex: true, userId: true } } },
+    select: { id: true, question: true, options: true, status: true, accentColor: true },
   });
+  const pollIds = polls.map((p) => p.id);
+
+  // Tally per option via groupBy + fetch only THIS viewer's votes — instead of loading
+  // every PollVote row for 30 polls and counting in JS (matches the overlay feed). #audit4
+  const [tally, myVotes] = await Promise.all([
+    pollIds.length
+      ? prisma.pollVote.groupBy({ by: ["pollId", "optionIndex"], where: { pollId: { in: pollIds } }, _count: true })
+      : Promise.resolve([] as { pollId: string; optionIndex: number; _count: number }[]),
+    userId && pollIds.length
+      ? prisma.pollVote.findMany({ where: { userId, pollId: { in: pollIds } }, select: { pollId: true, optionIndex: true } })
+      : Promise.resolve([] as { pollId: string; optionIndex: number }[]),
+  ]);
+
+  const countsByPoll = new Map<string, number[]>(polls.map((p) => [p.id, p.options.map(() => 0)]));
+  for (const row of tally) {
+    const arr = countsByPoll.get(row.pollId);
+    if (arr && row.optionIndex >= 0 && row.optionIndex < arr.length) arr[row.optionIndex] = row._count;
+  }
+  const myVoteByPoll = new Map<string, number>(myVotes.map((v) => [v.pollId, v.optionIndex]));
 
   const data = polls
-    .map((p) => ({
-      id: p.id,
-      question: p.question,
-      options: p.options,
-      status: p.status,
-      accentColor: p.accentColor,
-      counts: p.options.map((_, i) => p.votes.filter((v) => v.optionIndex === i).length),
-      total: p.votes.length,
-      yourVote: userId ? (p.votes.find((v) => v.userId === userId)?.optionIndex ?? null) : null,
-    }))
+    .map((p) => {
+      const counts = countsByPoll.get(p.id) ?? p.options.map(() => 0);
+      return {
+        id: p.id,
+        question: p.question,
+        options: p.options,
+        status: p.status,
+        accentColor: p.accentColor,
+        counts,
+        total: counts.reduce((s, n) => s + n, 0),
+        yourVote: userId ? (myVoteByPoll.get(p.id) ?? null) : null,
+      };
+    })
     // Open polls first, then most recent.
     .sort((a, b) => (a.status === b.status ? 0 : a.status === "open" ? -1 : 1));
 

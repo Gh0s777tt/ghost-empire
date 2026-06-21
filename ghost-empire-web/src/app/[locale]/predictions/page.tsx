@@ -28,9 +28,7 @@ export default async function PredictionsPage() {
   const [active, recent, me] = await Promise.all([
     prisma.prediction.findMany({
       where: { status: { in: ["open", "locked"] }, ...(tid ? { tenantId: tid } : {}) },
-      include: {
-        entries: { select: { optionIndex: true, tokensWagered: true, userId: true } },
-      },
+      select: { id: true, question: true, status: true, options: true, totalPot: true, accentColor: true, opensAt: true, closesAt: true },
       orderBy: { opensAt: "desc" },
     }),
     prisma.prediction.findMany({
@@ -46,17 +44,35 @@ export default async function PredictionsPage() {
       : Promise.resolve(null),
   ]);
 
+  // Tally active predictions via groupBy (sum wagered + count per option) + fetch only the
+  // viewer's own entries — instead of loading every PredictionEntry row and reducing in JS
+  // (a popular prediction has thousands of entries). Matches the overlay feed. #audit4
+  const activeIds = active.map((p) => p.id);
+  const [activeTally, myActiveEntries] = await Promise.all([
+    activeIds.length
+      ? prisma.predictionEntry.groupBy({ by: ["predictionId", "optionIndex"], where: { predictionId: { in: activeIds } }, _sum: { tokensWagered: true }, _count: true })
+      : Promise.resolve([] as { predictionId: string; optionIndex: number; _sum: { tokensWagered: number | null }; _count: number }[]),
+    userId && activeIds.length
+      ? prisma.predictionEntry.findMany({ where: { userId, predictionId: { in: activeIds } }, select: { predictionId: true, optionIndex: true, tokensWagered: true } })
+      : Promise.resolve([] as { predictionId: string; optionIndex: number; tokensWagered: number }[]),
+  ]);
+
+  const tallyByPred = new Map<string, Map<number, { totalWagered: number; wagerCount: number }>>();
+  for (const row of activeTally) {
+    let m = tallyByPred.get(row.predictionId);
+    if (!m) { m = new Map(); tallyByPred.set(row.predictionId, m); }
+    m.set(row.optionIndex, { totalWagered: row._sum.tokensWagered ?? 0, wagerCount: row._count });
+  }
+  const myEntryByPred = new Map<string, { optionIndex: number; tokensWagered: number }>();
+  for (const e of myActiveEntries) if (!myEntryByPred.has(e.predictionId)) myEntryByPred.set(e.predictionId, { optionIndex: e.optionIndex, tokensWagered: e.tokensWagered });
+
   const activePayload = active.map((p) => {
+    const m = tallyByPred.get(p.id);
     const perOption = p.options.map((label, idx) => {
-      const entries = p.entries.filter((e) => e.optionIndex === idx);
-      return {
-        index: idx,
-        label,
-        totalWagered: entries.reduce((s, e) => s + e.tokensWagered, 0),
-        wagerCount: entries.length,
-      };
+      const t = m?.get(idx);
+      return { index: idx, label, totalWagered: t?.totalWagered ?? 0, wagerCount: t?.wagerCount ?? 0 };
     });
-    const myEntry = userId ? p.entries.find((e) => e.userId === userId) : null;
+    const myEntry = userId ? (myEntryByPred.get(p.id) ?? null) : null;
     return {
       id: p.id,
       question: p.question,
