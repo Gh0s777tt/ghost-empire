@@ -131,4 +131,4 @@ Schemat (`prisma/schema.prisma`) ma **~93 modele**; pełna prawda jest w pliku. 
 
 ## 10. Dokąd dalej
 
-Plany i pomysły: [ROADMAP.md](../ROADMAP.md). Co zrobione: [CHANGELOG.md](../CHANGELOG.md). Zmienne: [ENV.md](ENV.md). API: [ENDPOINTS.md](ENDPOINTS.md). Uprawnienia: [PERMISSIONS.md](../PERMISSIONS.md). Fazy: [PHASE2.md](../PHASE2.md) / [PHASE3.md](../PHASE3.md).
+Plany i pomysły: [ROADMAP.md](../ROADMAP.md). Co zrobione: [CHANGELOG.md](../CHANGELOG.md). Zmienne: [ENV.md](ENV.md). API: [ENDPOINTS.md](ENDPOINTS.md). Podsystemy (kasyno/odds, marketplace, crony, rate-limit): [SUBSYSTEMS.md](SUBSYSTEMS.md). Bezpieczeństwo: [SECURITY.md](../SECURITY.md). Uprawnienia: [PERMISSIONS.md](../PERMISSIONS.md). Fazy: [PHASE2.md](../PHASE2.md) / [PHASE3.md](../PHASE3.md).
