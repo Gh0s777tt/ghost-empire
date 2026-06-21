@@ -170,7 +170,9 @@ export function AdminClient({
     { id: "trivia",    label: t("secTrivia"),       icon: Brain,          group: "main",       level: 2, permission: () => isAdmin },
     { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
     { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
-    { id: "tenants",   label: t("secTenants"),      icon: Building2,       group: "main",       level: 3, permission: () => isPlatformOwner },
+    // level 1 = always visible: it's already gated to the platform owner (only they see it
+    // at all), so hiding it behind "dev" mode just made the multi-portal creator hard to find (#656).
+    { id: "tenants",   label: t("secTenants"),      icon: Building2,       group: "main",       level: 1, permission: () => isPlatformOwner },
 
     { id: "users",     label: t("secUsers"), icon: UserCog,         group: "moderation", level: 1, permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
     { id: "tickets",   label: t("secTickets"), icon: LifeBuoy,      group: "moderation", level: 1, permission: () => isAdmin },
