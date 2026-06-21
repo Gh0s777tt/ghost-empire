@@ -195,13 +195,19 @@ model User {
   clanRole         String? // "owner" | "member" within `clan`
   clan             Clan?             @relation("ClanMembers", fields: [clanId], references: [id])
 
-  // Ranking + homepage top-users sort on these (DESC, filtered > 0). Indexes
-  // turn full-table scan+sort into index range scans on free-tier Postgres.
+  // Ranking + homepage top-users sort on these (DESC, filtered > 0). The single-column
+  // indexes serve the global/legacy sort; the per-tenant leaderboards (#audit4) filter by
+  // tenantId THEN sort, which a lone [tokens] index can't fully serve — so add composites
+  // [tenantId, <sortKey>] so a portal's board is a pure index range scan as tenants grow.
   @@index([tokens])
   @@index([totalEarned])
   @@index([level, xp])
   @@index([streak])
   @@index([tenantId])
+  @@index([tenantId, tokens])
+  @@index([tenantId, totalEarned])
+  @@index([tenantId, level, xp])
+  @@index([tenantId, streak])
   @@index([clanId])
   @@index([referredById])
   // Per-tenant identity (Stage C, #511): email unique within a portal, not globally.
