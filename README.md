@@ -139,7 +139,7 @@ flowchart LR
 | **i18n** | next-intl **4** · **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID) · **RTL** dla arabskiego |
 | **Realtime** | DB-backed kolejki + polling (overlaye, notyfikacje) — Vercel Hobby = bez websocketów |
 | **Boty** | discord.js **14.26** · tmi.js (Twitch) · Kick/YT API · `tsx`, TypeScript 6 |
-| **Jakość** | Vitest **4** (**473 testów**) · ESLint **9** (flat config) · GitHub Actions CI · Dependabot · GitGuardian |
+| **Jakość** | Vitest **4** (**477 testów**) · ESLint **9** (flat config) · GitHub Actions CI · Dependabot · GitGuardian |
 | **Deploy** | Vercel (web, auto-deploy z `main`) · bot na PC/Docker (gotowy na VPS/Railway) |
 
 > Cały stack jest na **najnowszych majorach** (modernizacja udokumentowana w [CHANGELOG.md](CHANGELOG.md)). Świadomie pominięte: `eslint 10` (ekosystem `eslint-config-next` 16 jeszcze go nie wspiera).
@@ -190,7 +190,7 @@ flowchart LR
 | **Security** | **szyfrowanie sekretów at-rest (AES-256-GCM)** — klucze API + tokeny OAuth · HSTS, CSP, COOP, X-Frame-Options, Permissions-Policy · `noindex`/`no-store` na overlayach · rate-limit (DB sliding-window) · webhook verify (HMAC/RSA) · HMAC-signed cookies · audit log z IP · skan sekretów (GitGuardian) |
 | **Performance** | `unstable_cache`, indeksy DB, lazy-load sekcji admina, Router `staleTimes`, `Promise.all`, pula DB `max:3` pod Supabase |
 | **a11y** | `:focus-visible`, skip-link, `prefers-reduced-motion`, `aria-label`/`aria-current` na nav, `role="dialog"` na modalach |
-| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest **473 testów** (+ integracyjne na realnym Postgresie w CI) · Dependabot · dokumentacja na bieżąco |
+| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest **477 testów** (+ integracyjne na realnym Postgresie w CI) · Dependabot · dokumentacja na bieżąco |
 
 ---
 

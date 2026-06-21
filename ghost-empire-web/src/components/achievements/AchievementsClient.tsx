@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { formatDate, timeAgo, cn } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { achievementProgress, type AchProgress } from "@/lib/achievement-progress";
 
 type Achievement = {
   id: string;
@@ -67,26 +68,6 @@ const RARITY_META: Record<
 };
 
 const RARITY_ORDER = ["common", "rare", "epic", "legendary"];
-
-function getProgress(
-  a: Achievement,
-  stats: UserStats,
-): { current: number; target: number; ratio: number } | null {
-  if (!stats || !a.triggerType || !a.triggerValue) return null;
-  let current = 0;
-  switch (a.triggerType) {
-    case "level":          current = stats.level;        break;
-    case "tokens_earned":  current = stats.totalEarned;  break;
-    case "streak":         current = stats.streak;       break;
-    case "messages":       current = stats.messageCount; break;
-    default: return null; // "manual" or unknown
-  }
-  return {
-    current,
-    target: a.triggerValue,
-    ratio: Math.min(100, (current / a.triggerValue) * 100),
-  };
-}
 
 export function AchievementsClient({
   achievements,
@@ -274,7 +255,7 @@ export function AchievementsClient({
               achievement={a}
               totalUsers={totalUsers}
               isAuthenticated={isAuthenticated}
-              progress={getProgress(a, userStats)}
+              progress={achievementProgress(a.triggerType, a.triggerValue, userStats)}
             />
           ))}
         </div>
@@ -296,7 +277,7 @@ export function AchievementsClient({
                       achievement={a}
                       totalUsers={totalUsers}
                       isAuthenticated={isAuthenticated}
-                      progress={getProgress(a, userStats)}
+                      progress={achievementProgress(a.triggerType, a.triggerValue, userStats)}
                     />
                   ))}
                 </div>
@@ -318,7 +299,7 @@ function AchievementCard({
   achievement: Achievement;
   totalUsers: number;
   isAuthenticated: boolean;
-  progress: { current: number; target: number; ratio: number } | null;
+  progress: AchProgress | null;
 }) {
   const t = useTranslations("achievements");
   const locale = useLocale();
@@ -405,14 +386,14 @@ function AchievementCard({
             <span className="text-zinc-600">{t("progress")}</span>
             <span className="text-zinc-400">
               {fmt(Math.min(progress.current, progress.target))} / {fmt(progress.target)}
-              <span className="text-zinc-600 ms-1">({Math.floor(progress.ratio)}%)</span>
+              <span className="text-zinc-600 ms-1">({progress.pct}%)</span>
             </span>
           </div>
           <div className="h-1.5 bg-zinc-900 border border-zinc-800 overflow-hidden">
             <div
               className="h-full transition-all"
               style={{
-                width: `${progress.ratio}%`,
+                width: `${progress.pct}%`,
                 background: `linear-gradient(90deg, ${meta.color}, ${meta.color}aa)`,
               }}
             />
