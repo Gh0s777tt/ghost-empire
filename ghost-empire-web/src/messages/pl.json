@@ -2372,7 +2372,9 @@
     "empty": "Brak danych",
     "skipToContent": "Przejdź do treści",
     "errorTitle": "Coś poszło nie tak",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "searchPlaceholder": "Szukaj…",
+    "noResults": "Brak wyników"
   },
   "footer": {
     "support": "Wsparcie",

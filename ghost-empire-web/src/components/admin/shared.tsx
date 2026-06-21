@@ -3,6 +3,7 @@
 // components can live in their own (lazily-loaded) modules and import them.
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { Search, X } from "lucide-react";
 import { EmojiPicker } from "@/components/EmojiPicker";
 
 export function SectionCard({
@@ -53,6 +54,50 @@ export function FieldInput({
         {...(step !== undefined ? { step } : {})}
         className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-red-600 placeholder:text-zinc-700"
       />
+    </div>
+  );
+}
+
+/**
+ * Client-side search box for long admin lists (#audit3). Presentational (no hooks) so it
+ * stays usable from this server-compatible module — the section owns the query state and
+ * passes a localized placeholder. Shows a clear (✕) button + an optional "shown/total" count.
+ */
+export function ListSearch({
+  value, onChange, placeholder, shown, total,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  shown?: number;
+  total?: number;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="relative flex-1">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600 pointer-events-none" />
+        <input
+          type="search"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          aria-label={placeholder}
+          className="w-full border border-zinc-800 bg-black/30 pl-8 pr-8 py-2 text-sm text-white outline-hidden focus:border-red-600 placeholder:text-zinc-700"
+        />
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            aria-label="✕"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-white"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+      {value && total !== undefined && (
+        <span className="text-[10px] font-mono text-zinc-500 shrink-0 tabular-nums">{shown ?? 0}/{total}</span>
+      )}
     </div>
   );
 }

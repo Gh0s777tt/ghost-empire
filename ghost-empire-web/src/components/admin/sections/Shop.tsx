@@ -5,8 +5,9 @@ import { ShoppingBag, Plus, Loader2, Eye, EyeOff, Pencil, X, Check } from "lucid
 import { useTranslations, useLocale } from "next-intl";
 import { fmt, cn } from "@/lib/utils";
 import { useTenantBranding } from "@/components/TenantBranding";
-import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { SectionCard, FieldInput, FieldTextarea, ListSearch } from "../shared";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { filterByText } from "@/lib/list-filter";
 import type { ShopItemRow } from "../types";
 
 const CATEGORIES_SHOP = ["games", "skins", "subs", "cosmetic", "experience"] as const;
@@ -22,11 +23,14 @@ export function ShopManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.shop");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const [editing, setEditing] = useState<ShopItemRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const filtered = filterByText(items, query, (i) => [i.name, i.category, i.requiresSubTier]);
 
   async function toggleActive(item: ShopItemRow) {
     setBusyId(item.id);
@@ -56,7 +60,11 @@ export function ShopManager({
         >
           <Plus className="w-3 h-3" /> {t("addItem")}
         </button>
-        {items.map((item) => (
+        {items.length > 8 && (
+          <ListSearch value={query} onChange={setQuery} placeholder={tc("searchPlaceholder")} shown={filtered.length} total={items.length} />
+        )}
+        {items.length > 0 && filtered.length === 0 && <p className="text-zinc-600 text-sm py-1">{tc("noResults")}</p>}
+        {filtered.map((item) => (
           <div
             key={item.id}
             className={cn(

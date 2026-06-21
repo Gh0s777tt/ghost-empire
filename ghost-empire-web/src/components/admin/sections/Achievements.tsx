@@ -4,10 +4,11 @@
 import { useState, useEffect } from "react";
 import { Award, Plus, Loader2, Pencil, Trash2, X, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { SectionCard, FieldInput, FieldTextarea } from "../shared";
+import { SectionCard, FieldInput, FieldTextarea, ListSearch } from "../shared";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { filterByText } from "@/lib/list-filter";
 
 type AchRow = {
   id: string; code: string; name: string; description: string; icon: string;
@@ -27,8 +28,10 @@ export function AchievementsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.achievements");
+  const tc = useTranslations("common");
   const { tokenSymbol } = useTenantBranding();
   const [list, setList] = useState<AchRow[]>([]);
+  const [query, setQuery] = useState("");
   const [rarities, setRarities] = useState<string[]>([]);
   const [triggerTypes, setTriggerTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,10 +109,17 @@ export function AchievementsManager({
         {/* List */}
         {loading ? (
           <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
-        ) : (
-          <div className="space-y-1 max-h-[420px] overflow-y-auto">
+        ) : (() => {
+          const filtered = filterByText(list, query, (a) => [a.name, a.code, a.rarity, a.triggerType, a.rewardNote]);
+          return (
+          <div className="space-y-1">
+            {list.length > 8 && (
+              <ListSearch value={query} onChange={setQuery} placeholder={tc("searchPlaceholder")} shown={filtered.length} total={list.length} />
+            )}
+            <div className="space-y-1 max-h-[420px] overflow-y-auto">
             {list.length === 0 && <p className="text-zinc-600 text-sm">{t("empty")}</p>}
-            {list.map((a) => (
+            {list.length > 0 && filtered.length === 0 && <p className="text-zinc-600 text-sm">{tc("noResults")}</p>}
+            {filtered.map((a) => (
               <div key={a.id} className="flex items-center gap-3 border border-zinc-800 bg-zinc-950 px-3 py-2">
                 <span className="text-xl shrink-0">{a.icon}</span>
                 <div className="flex-1 min-w-0">
@@ -129,8 +139,10 @@ export function AchievementsManager({
                   disabled={busy} title={t("deleteTitle")} className="text-zinc-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
             ))}
+            </div>
           </div>
-        )}
+          );
+        })()}
       </div>
 
       {(creating || editing) && (
