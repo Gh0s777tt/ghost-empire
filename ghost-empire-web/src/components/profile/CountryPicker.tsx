@@ -11,10 +11,12 @@ import { apiPost } from "@/lib/api-client";
 
 export function CountryPicker({ initialCountry }: { initialCountry: string | null }) {
   const t = useTranslations("profile");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
   const [country, setCountry] = useState(initialCountry ?? "");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(false);
 
   // Localized, alphabetically-sorted country names for the dropdown.
   const options = useMemo(() => {
@@ -27,11 +29,14 @@ export function CountryPicker({ initialCountry }: { initialCountry: string | nul
     const prev = country;
     setCountry(next);
     setBusy(true);
+    setErr(false);
     try {
       await apiPost("/api/profile/country", { country: next });
       router.refresh();
     } catch {
-      setCountry(prev); // revert on failure
+      setCountry(prev); // revert on failure — surface it (was silent). #audit-v2
+      setErr(true);
+      setTimeout(() => setErr(false), 2500);
     } finally {
       setBusy(false);
     }
@@ -52,6 +57,7 @@ export function CountryPicker({ initialCountry }: { initialCountry: string | nul
           <option key={c.code} value={c.code} className="bg-zinc-950">{c.name}</option>
         ))}
       </select>
+      {err && <span role="alert" className="text-[10px] text-red-400">{tc("errorTitle")}</span>}
     </span>
   );
 }

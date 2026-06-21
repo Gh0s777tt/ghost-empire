@@ -12,19 +12,24 @@ import { apiPost } from "@/lib/api-client";
 
 export function AccentPicker({ initialAccent }: { initialAccent: string | null }) {
   const t = useTranslations("profile");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [accent, setAccent] = useState(initialAccent ?? "");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(false);
 
   async function change(next: string) {
     const prev = accent;
     setAccent(next);
     setBusy(true);
+    setErr(false);
     try {
       await apiPost("/api/profile/accent", { accent: next });
       router.refresh();
     } catch {
-      setAccent(prev); // revert on failure
+      setAccent(prev); // revert on failure — and tell the user why (was silent). #audit-v2
+      setErr(true);
+      setTimeout(() => setErr(false), 2500);
     } finally {
       setBusy(false);
     }
@@ -55,6 +60,7 @@ export function AccentPicker({ initialAccent }: { initialAccent: string | null }
           {accent === a.key && <Check className="w-2.5 h-2.5 text-black/80" />}
         </button>
       ))}
+      {err && <span role="alert" className="text-[10px] text-red-400">{tc("errorTitle")}</span>}
     </div>
   );
 }
