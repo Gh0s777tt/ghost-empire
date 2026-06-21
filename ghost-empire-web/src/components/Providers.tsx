@@ -2,8 +2,9 @@
 // src/components/Providers.tsx
 import { SessionProvider } from "next-auth/react";
 import { ToastProvider } from "@/components/ToastProvider";
+import { ViewerPreviewProvider, ViewerPreviewBanner } from "@/components/ViewerPreview";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, initialViewerPreview = false }: { children: React.ReactNode; initialViewerPreview?: boolean }) {
   // refetchInterval: re-pull the session every 3 min so passively earned GT
   // (watching, chat awards) shows up in the header without a navigation; focus
   // refetch catches tab switches. Actions that return a fresh balance update
@@ -11,7 +12,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // 180s (was 60) cuts the /api/auth/session DB hits per open tab 3×.
   return (
     <SessionProvider refetchInterval={180} refetchOnWindowFocus>
-      <ToastProvider>{children}</ToastProvider>
+      <ViewerPreviewProvider initial={initialViewerPreview}>
+        <ToastProvider>
+          <ViewerPreviewBanner />
+          {children}
+        </ToastProvider>
+      </ViewerPreviewProvider>
     </SessionProvider>
   );
 }

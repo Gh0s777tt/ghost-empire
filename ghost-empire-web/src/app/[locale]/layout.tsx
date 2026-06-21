@@ -12,6 +12,7 @@ import { TenantBrandingProvider } from "@/components/TenantBranding";
 import { getCurrentTenant } from "@/lib/tenant";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { normalizeTheme } from "@/lib/themes";
+import { VIEWER_PREVIEW_COOKIE, readViewerPreview } from "@/lib/viewer-preview";
 import TourProvider from "@/components/tour/SiteTour";
 import { HelpAssistant } from "@/components/HelpAssistant";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -78,7 +79,10 @@ export default async function LocaleLayout({
   const dir = locale === "ar" ? "rtl" : "ltr";
   // Theme preference from a cookie (set by the header picker). Read server-side so
   // the right theme is in the HTML on first paint — no flash, no inline script.
-  const theme = normalizeTheme((await cookies()).get("theme")?.value);
+  const cookieStore = await cookies();
+  const theme = normalizeTheme(cookieStore.get("theme")?.value);
+  // "View as viewer" lens (#audit3) — read here so the header chrome is correct on first paint.
+  const viewerPreview = readViewerPreview(cookieStore.get(VIEWER_PREVIEW_COOKIE)?.value);
 
   return (
     <html lang={locale} dir={dir} data-theme={theme} className="dark">
@@ -98,7 +102,7 @@ export default async function LocaleLayout({
         </a>
         <NextIntlClientProvider messages={messages}>
           <TenantBrandingProvider value={branding}>
-          <Providers>
+          <Providers initialViewerPreview={viewerPreview}>
             <TourProvider>
               <div id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-hidden">
                 {children}

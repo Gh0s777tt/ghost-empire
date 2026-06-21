@@ -2120,6 +2120,8 @@
     "launchPortal": "Załóż własny portal",
     "login": "Zaloguj się",
     "logout": "Wyloguj się",
+    "viewAsViewer": "Podgląd jako widz",
+    "exitViewerPreview": "Wróć do panelu",
     "drop": "Drop",
     "tagline": "Oficjalny Portal",
     "account": "Menu konta",
@@ -2375,6 +2377,10 @@
     "retry": "Spróbuj ponownie",
     "searchPlaceholder": "Szukaj…",
     "noResults": "Brak wyników"
+  },
+  "viewerPreview": {
+    "banner": "Oglądasz portal jak zwykły widz.",
+    "exit": "Wyłącz"
   },
   "footer": {
     "support": "Wsparcie",

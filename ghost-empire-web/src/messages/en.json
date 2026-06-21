@@ -2120,6 +2120,8 @@
     "launchPortal": "Launch your own portal",
     "login": "Sign in",
     "logout": "Sign out",
+    "viewAsViewer": "View as viewer",
+    "exitViewerPreview": "Back to admin view",
     "drop": "Drop",
     "tagline": "Official Portal",
     "account": "Account menu",
@@ -2375,6 +2377,10 @@
     "retry": "Try again",
     "searchPlaceholder": "Search…",
     "noResults": "No matches"
+  },
+  "viewerPreview": {
+    "banner": "You're viewing the portal as a regular viewer.",
+    "exit": "Exit"
   },
   "footer": {
     "support": "Support",
