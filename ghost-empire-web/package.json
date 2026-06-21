@@ -11,7 +11,6 @@
     "analyze": "cross-env ANALYZE=true next build",
     "start": "next start",
     "lint": "eslint .",
-    "lint:biome": "biome lint ./src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -54,7 +53,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.16",
     "@next/bundle-analyzer": "^16.2.7",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4.3.0",
