@@ -9,7 +9,9 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Fixed
 
-- **Admin section descriptions showed a raw i18n key (audit v4)** **(#631)** — 13 admin sections (`recap`, `clipdirector`, `economy`, `payments`, `notifications`, `sponsors`, `collectibles`, `community`, `clanwars`, `trivia`, `twofactor`, `scenes`, `soundrewards`) had no `secDesc_*` translation, so opening e.g. `/admin#payments` literally rendered the string `admin.secDesc_payments` in the help banner. Added all 13 keys (EN + PL) in the friendly explanatory style of the existing ones. UI-only, no code/schema change. Zielone: `tsc`/`eslint`/`build`/`docs:check`.
+- **Game-vote tally was aggregated across all portals in the null-tenant path (audit v4)** **(#632)** — on `/games` the "play next" vote tally used `where: { ...(tid ? { tenantId } : {}) }`, so when no tenant resolved (`tid` null) the `where` was **empty** and counted **every portal's** votes globally — inconsistent with `myVote`, which correctly scoped to `{ tenantId: null }`. Latent today (single live portal) but a cross-portal leak the moment a second portal exists before subdomain resolution is wired. Now the tally matches `myVote`: `tid ? { tenantId: tid } : { tenantId: null }`. The vote write path (`/api/games/vote`) was already correctly scoped. One-line scoping fix, no schema change. Zielone: `tsc`/`eslint`/`build`/`docs:check`.
+
+ — 13 admin sections (`recap`, `clipdirector`, `economy`, `payments`, `notifications`, `sponsors`, `collectibles`, `community`, `clanwars`, `trivia`, `twofactor`, `scenes`, `soundrewards`) had no `secDesc_*` translation, so opening e.g. `/admin#payments` literally rendered the string `admin.secDesc_payments` in the help banner. Added all 13 keys (EN + PL) in the friendly explanatory style of the existing ones. UI-only, no code/schema change. Zielone: `tsc`/`eslint`/`build`/`docs:check`.
 
 ### Changed
 

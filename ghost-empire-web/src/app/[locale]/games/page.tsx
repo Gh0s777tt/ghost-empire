@@ -30,7 +30,9 @@ export default async function GamesPage() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const [tally, myVote] = await Promise.all([
-    prisma.gameVote.groupBy({ by: ["gameId"], where: { ...(tid ? { tenantId: tid } : {}) }, _count: { gameId: true } }),
+    // Scope the tally to THIS portal — match myVote's scoping (tid → tenantId, else the
+    // legacy null-tenant rows). An empty where would aggregate every portal's votes globally.
+    prisma.gameVote.groupBy({ by: ["gameId"], where: tid ? { tenantId: tid } : { tenantId: null }, _count: { gameId: true } }),
     userId ? prisma.gameVote.findFirst({ where: { userId, ...(tid ? { tenantId: tid } : { tenantId: null }) }, select: { gameId: true } }) : Promise.resolve(null),
   ]);
   const voteCount = new Map(tally.map((r) => [r.gameId, r._count.gameId]));
