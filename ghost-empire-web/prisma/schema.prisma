@@ -1231,12 +1231,31 @@ model Game {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  votes        GameVote[]
+
   // Per-tenant uniqueness: two portals can each own the same Steam appid without colliding.
   // (Legacy null-tenant rows get claimed by the next sync / the backfill route.)
   @@unique([tenantId, source, externalId])
   @@index([source, playtimeMin])
   @@index([tenantId])
   @@map("games")
+}
+
+// "Vote for the next game" (#audit3) — each viewer picks ONE game per portal they'd like the
+// streamer to play next. Free (no GT). Re-voting moves the single vote; cascades on game prune.
+model GameVote {
+  id        String   @id @default(cuid())
+  tenantId  String? // multi-tenant — per portal
+  gameId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId]) // one active pick per viewer per portal
+  @@index([tenantId, gameId]) // tally per portal
+  @@index([gameId])
+  @@map("game_votes")
 }
 
 // =====================================================

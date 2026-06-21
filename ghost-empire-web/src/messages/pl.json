@@ -2914,7 +2914,10 @@
     "metaDesc": "Gry, w które gram — zagregowana biblioteka (Steam i więcej).",
     "title": "🎮 Biblioteka gier",
     "countLine": "<b>{count}</b> gier · <b>{hours}h</b> łącznie",
-    "empty": "Biblioteka jest jeszcze pusta — wróć później."
+    "empty": "Biblioteka jest jeszcze pusta — wróć później.",
+    "vote": "Zagraj następne",
+    "voted": "Zagłosowano",
+    "mostWanted": "Najbardziej chciane"
   },
   "terms": {
     "metaTitle": "Regulamin",

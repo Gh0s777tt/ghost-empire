@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **177** tras (pliki `route.ts`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **178** tras (pliki `route.ts`)
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -52,6 +52,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT (auto-zamykanie po `closesAt`) |
 | `…/api/wheel` · `…/api/wheel/spin` | GET/POST | Koło Fortuny — stan + zakręcenie (wydaje GT, rate-limit 20/min) |
 | `…/api/games` | GET | Publiczna biblioteka gier (widoczne, wg czasu gry) |
+| `…/api/games/vote` | POST | Głos „zagraj następne" — 1 gra/widz/portal (zalogowany), set/clear, tenant-scoped (#628) |
 | `…/api/daily-bonus` | GET/POST | Dzienny bonus GT (stan + odbiór, streak) |
 | `…/api/events/join` · `…/api/events/raffle-tickets` | POST | Dołączenie do eventu / kupno losów raffle |
 | `…/api/drops/claim` | POST | Odbiór drop-code z czatu |

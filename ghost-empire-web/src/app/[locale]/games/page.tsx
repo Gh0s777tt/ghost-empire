@@ -3,7 +3,9 @@ import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
+import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
+import { GameVoteButton } from "@/components/games/GameVoteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,23 @@ export default async function GamesPage() {
     orderBy: [{ playtimeMin: "desc" }, { name: "asc" }],
   });
   const totalHours = Math.round(games.reduce((s, g) => s + g.playtimeMin, 0) / 60);
+
+  // "Vote for the next game" (#audit3): per-portal tally + this viewer's single current pick.
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  const [tally, myVote] = await Promise.all([
+    prisma.gameVote.groupBy({ by: ["gameId"], where: { ...(tid ? { tenantId: tid } : {}) }, _count: { gameId: true } }),
+    userId ? prisma.gameVote.findFirst({ where: { userId, ...(tid ? { tenantId: tid } : { tenantId: null }) }, select: { gameId: true } }) : Promise.resolve(null),
+  ]);
+  const voteCount = new Map(tally.map((r) => [r.gameId, r._count.gameId]));
+  const myGameId = myVote?.gameId ?? null;
+  // Most-wanted = the loaded game with the most votes (>0).
+  let topGameId: string | null = null;
+  let topVotes = 0;
+  for (const g of games) {
+    const v = voteCount.get(g.id) ?? 0;
+    if (v > topVotes) { topVotes = v; topGameId = g.id; }
+  }
 
   return (
     <div className="min-h-screen bg-black">
@@ -51,23 +70,37 @@ export default async function GamesPage() {
 
         {games.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {games.map((g) => (
-              <div key={g.id} className="group border border-zinc-800 bg-zinc-950 overflow-hidden hover:border-zinc-600 transition-colors">
-                {g.imageUrl ? (
-                  <img src={g.imageUrl} alt={g.name} loading="lazy"
-                    className="w-full aspect-[460/215] object-cover bg-zinc-900" />
-                ) : (
-                  <div className="w-full aspect-[460/215] bg-zinc-900" />
-                )}
-                <div className="p-2">
-                  <div className="text-xs font-bold text-white truncate" title={g.name}>{g.name}</div>
-                  <div className="text-[10px] text-zinc-500 flex items-center justify-between mt-0.5">
-                    <span>{SOURCE_LABEL[g.source] ?? g.source}</span>
-                    {g.playtimeMin > 0 && <span className="text-zinc-400">{Math.round(g.playtimeMin / 60)}h</span>}
+            {games.map((g) => {
+              const votes = voteCount.get(g.id) ?? 0;
+              const isTop = g.id === topGameId && topVotes > 0;
+              const mine = g.id === myGameId;
+              return (
+                <div key={g.id} className={`group border bg-zinc-950 overflow-hidden transition-colors ${isTop ? "border-red-600" : "border-zinc-800 hover:border-zinc-600"}`}>
+                  <div className="relative">
+                    {g.imageUrl ? (
+                      <img src={g.imageUrl} alt={g.name} loading="lazy"
+                        className="w-full aspect-[460/215] object-cover bg-zinc-900" />
+                    ) : (
+                      <div className="w-full aspect-[460/215] bg-zinc-900" />
+                    )}
+                    {isTop && (
+                      <span className="absolute top-1 start-1 text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 bg-red-600 text-white">🏆 {t("mostWanted")}</span>
+                    )}
+                    {votes > 0 && (
+                      <span className="absolute top-1 end-1 text-[10px] font-bold px-1.5 py-0.5 bg-black/70 text-white">👍 {votes}</span>
+                    )}
+                  </div>
+                  <div className="p-2">
+                    <div className="text-xs font-bold text-white truncate" title={g.name}>{g.name}</div>
+                    <div className="text-[10px] text-zinc-500 flex items-center justify-between mt-0.5">
+                      <span>{SOURCE_LABEL[g.source] ?? g.source}</span>
+                      {g.playtimeMin > 0 && <span className="text-zinc-400">{Math.round(g.playtimeMin / 60)}h</span>}
+                    </div>
+                    {userId && <GameVoteButton gameId={g.id} voted={mine} />}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

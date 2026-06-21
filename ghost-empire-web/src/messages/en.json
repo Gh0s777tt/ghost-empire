@@ -2914,7 +2914,10 @@
     "metaDesc": "Games I play — an aggregated library (Steam and more).",
     "title": "🎮 Game library",
     "countLine": "<b>{count}</b> games · <b>{hours}h</b> total",
-    "empty": "The library is empty for now — check back later."
+    "empty": "The library is empty for now — check back later.",
+    "vote": "Play next",
+    "voted": "Voted",
+    "mostWanted": "Most wanted"
   },
   "terms": {
     "metaTitle": "Terms",
