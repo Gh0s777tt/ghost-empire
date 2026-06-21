@@ -107,7 +107,7 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 8. Jakość i deploy
 
-- **CI** (GitHub Actions): job `quality` = `tsc --noEmit` + `eslint` + `vitest run` + `npm audit` (nieblokujący); job `integration · postgres` = `vitest run` przeciw **realnemu Postgresowi** (service container) na ścieżkach money-critical. Testy: czysta logika w `src/lib/__tests__` (392 unit, 52 pliki) + integracyjne w `tests/integration` (11, real DB).
+- **CI** (GitHub Actions): job `quality` = `tsc --noEmit` + `eslint` + `vitest run` + `npm audit` (nieblokujący); job `integration · postgres` = `vitest run` przeciw **realnemu Postgresowi** (service container) na ścieżkach money-critical. Testy: czysta logika w `src/lib/__tests__` (431 unit, 57 plików) + integracyjne w `tests/integration` (11, real DB).
 - **Workflow zmian (żelazna zasada):** branch → edycja → typecheck/lint/test (+ `db push` przy zmianie schematu) → PR → squash-merge. **Dokumentacja (CHANGELOG · README · ROADMAP · PLAN · PHASE · docs/* · on-site `/about`) jest aktualizowana w TYM SAMYM PR co zmiana** — nigdy nie zostaje w tyle.
 - **Schemat:** Prisma `db push` (bez plików migracji) na Supabase; `prisma generate` regeneruje klienta.
 - Build (`next build`) po stronie Vercela (preview deploy na każdym pushu).
@@ -116,7 +116,7 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 9. Model danych — wybrane / najnowsze modele
 
-Schemat (`prisma/schema.prisma`) ma **~93 modele**; pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
+Schemat (`prisma/schema.prisma`) ma **~94 modele**; pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
 
 - **Karty + marketplace P2P:** `Collectible` / `UserCollectible` (katalog kart + kolekcja, paczki za GT, #551), `CardListing` (listingi P2P z escrow + 5% fee spalane, #552).
 - **Overlay + alerty:** `OverlayScene` (sceny wielowidżetowe → jedno źródło OBS, #550), `StreamAlertSettings` (ustawienia + auto-token overlaya, **per tenant 1:1**), `AlertTypeConfig` (styl/próg per typ alertu).
