@@ -16,11 +16,14 @@ const eslintConfig = [
       // <Link> would prefetch/client-nav and break those. The rule also misfires on
       // these /api links after the [locale] i18n restructure. Off intentionally.
       "@next/next/no-html-link-for-pages": "off",
-      // React Compiler rules (eslint-plugin-react-hooks v7, pulled in by
-      // eslint-config-next 16). We don't use the React Compiler; these flag
-      // idiomatic patterns in this app — setState inside effects for data
-      // fetching, and Date.now()/ref reads in live countdown overlays. Off
-      // until/unless we adopt the compiler.
+      // React Compiler correctness rules (eslint-plugin-react-hooks v7, via
+      // eslint-config-next 16). The compiler IS enabled (next.config `reactCompiler: true`),
+      // but these rules flag ~101 idiomatic patterns in this app — overwhelmingly
+      // setState-inside-effect for data fetching (~88), plus a few Date.now()/ref reads in
+      // live-countdown overlays. The compiler safely BAILS OUT of optimizing such components
+      // (it never miscompiles them — they just stay un-memoized), so these stay off to avoid
+      // 101 advisory warnings; turning them on + refactoring every flagged spot is a
+      // deliberate, separate sweep, not a build-correctness gate. #audit3
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/purity": "off",
       "react-hooks/immutability": "off",
