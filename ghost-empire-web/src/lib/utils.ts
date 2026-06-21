@@ -129,3 +129,20 @@ export function verifyBotSecret(authHeader: string | null): boolean {
   const secret = authHeader.replace("Bearer ", "");
   return timingSafeEqualStr(secret, expected);
 }
+
+// Verify a bot request that targets a specific tenant (Batch B). Accepts EITHER the
+// global BOT_SECRET (so the existing single shared bot keeps working, with no
+// behaviour change) OR — when the tenant has set its own `botSecret` — that
+// per-tenant secret. Intentionally permissive: the global secret is always accepted.
+// Strict per-tenant-only enforcement is gated on every tenant running its own bot
+// instance with its own secret, which has to be coordinated with the bot repo; until
+// then this is latent infrastructure that never rejects a currently-valid request.
+export function verifyBotSecretForTenant(
+  authHeader: string | null,
+  tenantBotSecret: string | null | undefined,
+): boolean {
+  if (verifyBotSecret(authHeader)) return true;
+  if (!tenantBotSecret || !authHeader) return false;
+  const secret = authHeader.replace("Bearer ", "");
+  return timingSafeEqualStr(secret, tenantBotSecret);
+}

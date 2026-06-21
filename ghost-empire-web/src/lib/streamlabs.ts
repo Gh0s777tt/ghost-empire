@@ -191,6 +191,7 @@ export async function pollAndProcessDonations(): Promise<{
       await prisma.$transaction([
         prisma.donation.create({
           data: {
+            tenantId: conn.tenantId, // Batch B: scope to the connection's portal
             externalId: String(d.donation_id),
             source: "streamlabs",
             donorName: d.name.slice(0, 200),
@@ -264,6 +265,7 @@ export async function pollAndProcessDonations(): Promise<{
       // Unmatched — store for admin reconciliation
       await prisma.donation.create({
         data: {
+          tenantId: conn.tenantId, // Batch B: scope to the connection's portal
           externalId: String(d.donation_id),
           source: "streamlabs",
           donorName: d.name.slice(0, 200),

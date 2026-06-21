@@ -178,7 +178,7 @@ export async function POST(req: Request) {
         } else if (eventType === "stream.online") {
           await handleStreamOnline(event, tenantId);
         } else if (eventType === "stream.offline") {
-          await handleStreamOffline();
+          await handleStreamOffline(tenantId);
         } else if (eventType === "channel.follow") {
           await handleFollow(event, tenantId);
         } else {
@@ -523,9 +523,13 @@ async function handleHypeTrainEnd(event: Record<string, unknown>, tenantId: stri
 // Stream sessions ("czas na streamie" — per-stream analytics)
 // =====================================================
 
-/** Close any session left open (e.g. a missed stream.offline), computing duration. */
-async function closeOpenStreamSessions(endedAt: Date): Promise<void> {
-  const open = await prisma.streamSession.findMany({ where: { platform: "twitch", endedAt: null } });
+/** Close any session left open (e.g. a missed stream.offline), computing duration.
+ *  Batch B: scoped to the tenant (null → unscoped, single-tenant back-compat) so one
+ *  portal's stream.offline can't close another portal's live session. */
+async function closeOpenStreamSessions(endedAt: Date, tenantId: string | null): Promise<void> {
+  const open = await prisma.streamSession.findMany({
+    where: { platform: "twitch", endedAt: null, ...(tenantId ? { tenantId } : {}) },
+  });
   for (const s of open) {
     const durationSeconds = Math.max(0, Math.floor((endedAt.getTime() - s.startedAt.getTime()) / 1000));
     await prisma.streamSession.update({ where: { id: s.id }, data: { endedAt, durationSeconds } });
@@ -535,14 +539,14 @@ async function closeOpenStreamSessions(endedAt: Date): Promise<void> {
 async function handleStreamOnline(event: Record<string, unknown>, tenantId: string | null): Promise<void> {
   const streamId = (event.id as string | undefined) ?? null;
   const startedAt = parseDate(event.started_at as string | undefined) ?? new Date();
-  // Idempotent — Twitch may redeliver the same stream.online.
+  // Idempotent — Twitch may redeliver the same stream.online (twitchStreamId is globally unique).
   if (streamId) {
     const existing = await prisma.streamSession.findUnique({ where: { twitchStreamId: streamId } });
     if (existing) return;
   }
   // Safety net: close anything left open by a missed stream.offline before opening a new one.
-  await closeOpenStreamSessions(startedAt);
-  await prisma.streamSession.create({ data: { platform: "twitch", twitchStreamId: streamId, startedAt } });
+  await closeOpenStreamSessions(startedAt, tenantId);
+  await prisma.streamSession.create({ data: { tenantId, platform: "twitch", twitchStreamId: streamId, startedAt } });
   log.info("stream online", { streamId, startedAt: startedAt.toISOString() });
   // Fire the "LIVE now" web push exactly once per stream (we're past the idempotency
   // guard). Fire-and-forget: the EventSub webhook must return a fast 2xx to Twitch, so
@@ -550,8 +554,8 @@ async function handleStreamOnline(event: Record<string, unknown>, tenantId: stri
   void notifyStreamLive(tenantId).catch(() => {});
 }
 
-async function handleStreamOffline(): Promise<void> {
-  await closeOpenStreamSessions(new Date());
+async function handleStreamOffline(tenantId: string | null): Promise<void> {
+  await closeOpenStreamSessions(new Date(), tenantId);
   log.info("stream offline");
 }
 

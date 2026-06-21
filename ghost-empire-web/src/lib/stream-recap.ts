@@ -27,7 +27,7 @@ const tw = (tid: string | null) => (tid ? { tenantId: tid } : {});
 
 /** Gather the recap stats over the last stream's window (tenant-scoped content). */
 export async function gatherRecapData(tenantId: string | null): Promise<RecapData> {
-  const session = await prisma.streamSession.findFirst({ orderBy: { startedAt: "desc" } }).catch(() => null);
+  const session = await prisma.streamSession.findFirst({ where: tw(tenantId), orderBy: { startedAt: "desc" } }).catch(() => null);
   const sixHoursAgo = new Date(Date.now() - 6 * 3600_000);
   const start = session?.startedAt ?? sixHoursAgo;
   const end = session?.endedAt ?? new Date();

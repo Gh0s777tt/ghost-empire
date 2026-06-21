@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
+import { currentTenantId } from "@/lib/tenant";
 
 const PLATFORMS = new Set(["twitch", "kick", "youtube"]);
 const VIOLATIONS = new Set(["profanity", "caps", "length", "repeat", "zalgo"]);
@@ -26,8 +27,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
+  // Batch B: tag with the resolved tenant (null at single-tenant / no tenant host —
+  // back-compat). Admin stats scope by this once subdomains + per-tenant bots light up.
+  const tenantId = await currentTenantId();
   await prisma.modViolationLog.create({
     data: {
+      tenantId,
       platform,
       username: String(body.username ?? "anon").toLowerCase().slice(0, 100),
       violation,

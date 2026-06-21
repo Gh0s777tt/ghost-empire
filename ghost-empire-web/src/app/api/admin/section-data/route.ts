@@ -192,7 +192,7 @@ export async function GET(req: Request) {
       const [conn, unmatched] = await Promise.all([
         getStreamlabsConnection(),
         prisma.donation.findMany({
-          where: { userId: null, matchType: null },
+          where: { userId: null, matchType: null, ...(tid ? { tenantId: tid } : {}) },
           orderBy: { donatedAt: "desc" },
           take: 30,
         }),

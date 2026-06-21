@@ -9,6 +9,7 @@ import {
   timeAgo,
   formatDate,
   verifyBotSecret,
+  verifyBotSecretForTenant,
 } from "@/lib/utils";
 
 describe("xpForLevel / levelFromXp", () => {
@@ -136,5 +137,40 @@ describe("verifyBotSecret", () => {
   it("rejects a missing or empty header", () => {
     expect(verifyBotSecret(null)).toBe(false);
     expect(verifyBotSecret("")).toBe(false);
+  });
+});
+
+describe("verifyBotSecretForTenant (Batch B)", () => {
+  beforeEach(() => {
+    vi.stubEnv("BOT_SECRET", "global-s3cr3t");
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("accepts the global BOT_SECRET regardless of the tenant secret (back-compat)", () => {
+    expect(verifyBotSecretForTenant("Bearer global-s3cr3t", null)).toBe(true);
+    expect(verifyBotSecretForTenant("Bearer global-s3cr3t", "tenant-key")).toBe(true);
+  });
+
+  it("accepts a matching per-tenant secret", () => {
+    expect(verifyBotSecretForTenant("Bearer tenant-key", "tenant-key")).toBe(true);
+  });
+
+  it("rejects a header that matches neither the global nor the tenant secret", () => {
+    expect(verifyBotSecretForTenant("Bearer nope", "tenant-key")).toBe(false);
+  });
+
+  it("rejects when the tenant has no secret and the global doesn't match", () => {
+    expect(verifyBotSecretForTenant("Bearer tenant-key", null)).toBe(false);
+    expect(verifyBotSecretForTenant("Bearer tenant-key", undefined)).toBe(false);
+  });
+
+  it("rejects a missing header even with a tenant secret set", () => {
+    expect(verifyBotSecretForTenant(null, "tenant-key")).toBe(false);
+  });
+
+  it("does not let an empty tenant secret authenticate an empty bearer", () => {
+    expect(verifyBotSecretForTenant("Bearer ", "")).toBe(false);
   });
 });

@@ -265,6 +265,7 @@ async function handleSuperChat(input: {
         }),
         prisma.donation.create({
           data: {
+            tenantId: input.tenantId, // Batch B: scope to the streamer's portal
             externalId: `yt:${input.messageId}`,
             source: "youtube_superchat",
             donorName: input.authorName ?? "Anon",

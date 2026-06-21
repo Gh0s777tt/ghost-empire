@@ -7,6 +7,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +15,15 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  // Batch B: stream sessions scope to this tenant (null → unscoped, back-compat).
+  // The chat-activity heatmap stays global for now — tenant-scoping it needs a
+  // destructive PK change (composite [dayOfWeek,hour]); deferred to subdomain-enable.
+  const tid = await currentTenantId();
+  const scope = tid ? { tenantId: tid } : {};
   const [buckets, recentSessions, agg] = await Promise.all([
     prisma.chatActivityBucket.findMany(),
-    prisma.streamSession.findMany({ orderBy: { startedAt: "desc" }, take: 30 }),
-    prisma.streamSession.aggregate({ _sum: { durationSeconds: true }, _count: { _all: true } }),
+    prisma.streamSession.findMany({ where: scope, orderBy: { startedAt: "desc" }, take: 30 }),
+    prisma.streamSession.aggregate({ where: scope, _sum: { durationSeconds: true }, _count: { _all: true } }),
   ]);
 
   const grid: number[][] = Array.from({ length: 7 }, () => Array<number>(24).fill(0));

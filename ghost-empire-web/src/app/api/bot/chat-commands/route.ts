@@ -21,7 +21,7 @@ export async function GET() {
       select: { trigger: true, response: true, cooldownSeconds: true, requiresLive: true, activeFromMinute: true },
     }),
     prisma.streamSession.findFirst({
-      where: { endedAt: null },
+      where: { endedAt: null, ...(tid ? { tenantId: tid } : {}) },
       orderBy: { startedAt: "desc" },
       select: { startedAt: true },
     }),

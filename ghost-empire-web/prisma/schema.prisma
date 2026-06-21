@@ -38,6 +38,12 @@ model Tenant {
   stripeSubscriptionId String?   @unique
   ownerUserId          String? // streamer-admin who owns this tenant (plain ref — no relation, to avoid a second User<->Tenant edge)
   ownerEmail           String? // owner's login email — first sign-in on the tenant's subdomain with this email gets isAdmin (Phase 6 onboarding)
+  // Per-tenant bot secret (Batch B). Optional: when set, the bot can authenticate
+  // to this portal's internal endpoints with its own secret instead of the shared
+  // global BOT_SECRET. Verification ALWAYS still accepts the global secret, so the
+  // running single bot keeps working — enforcement-per-tenant lights up only once
+  // each tenant runs its own bot instance with this secret. See verifyBotSecretForTenant.
+  botSecret            String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -965,6 +971,7 @@ model ModerationConfig {
 // the moderation stats + top-offenders view, and records the escalation level.
 model ModViolationLog {
   id         String   @id @default(cuid())
+  tenantId   String? // Batch B: nullable for back-compat (null = legacy/founder rows). Admin stats scope by tenant.
   platform   String // "twitch" | "kick" | "youtube"
   username   String // lowercased login/handle of the offender
   violation  String // "profanity" | "caps" | "length" | "repeat" | "zalgo"
@@ -974,6 +981,7 @@ model ModViolationLog {
 
   @@index([createdAt])
   @@index([platform, username])
+  @@index([tenantId, createdAt])
   @@map("mod_violation_logs")
 }
 
@@ -1017,6 +1025,7 @@ model ChatActivityBucket {
 // analytics. NB: EventSub only knows when the broadcaster is live, not per-viewer.
 model StreamSession {
   id              String    @id @default(cuid())
+  tenantId        String? // Batch B: nullable for back-compat (null = legacy/founder rows).
   platform        String    @default("twitch")
   twitchStreamId  String?   @unique // event.id from stream.online (idempotency)
   startedAt       DateTime
@@ -1025,6 +1034,7 @@ model StreamSession {
   createdAt       DateTime  @default(now())
 
   @@index([startedAt])
+  @@index([tenantId, startedAt])
   @@map("stream_sessions")
 }
 
@@ -1261,6 +1271,7 @@ model StreamlabsConnection {
 
 model Donation {
   id           String   @id @default(cuid())
+  tenantId     String? // Batch B: nullable for back-compat (null = legacy/founder rows). Streamlabs writes use conn.tenantId.
   externalId   String   @unique // donation_id from provider
   source       String   @default("streamlabs")
   donorName    String
@@ -1282,6 +1293,7 @@ model Donation {
   @@index([userId])
   @@index([donatedAt])
   @@index([matchedAt])
+  @@index([tenantId, donatedAt])
   @@map("donations")
 }
 

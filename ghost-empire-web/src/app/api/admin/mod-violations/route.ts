@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -14,23 +15,27 @@ export async function GET() {
   const now = Date.now();
   const day = new Date(now - 24 * 60 * 60 * 1000);
   const week = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  // Batch B: scope to this admin's tenant (null at single-tenant → unscoped, back-compat).
+  const tid = await currentTenantId();
+  const scope = tid ? { tenantId: tid } : {};
 
   const [byType, total24h, total7d, recent, offenders] = await Promise.all([
     prisma.modViolationLog.groupBy({
       by: ["violation"],
-      where: { createdAt: { gte: week } },
+      where: { createdAt: { gte: week }, ...scope },
       _count: { _all: true },
     }),
-    prisma.modViolationLog.count({ where: { createdAt: { gte: day } } }),
-    prisma.modViolationLog.count({ where: { createdAt: { gte: week } } }),
+    prisma.modViolationLog.count({ where: { createdAt: { gte: day }, ...scope } }),
+    prisma.modViolationLog.count({ where: { createdAt: { gte: week }, ...scope } }),
     prisma.modViolationLog.findMany({
+      where: scope,
       orderBy: { createdAt: "desc" },
       take: 20,
       select: { id: true, platform: true, username: true, violation: true, action: true, priorCount: true, createdAt: true },
     }),
     prisma.modViolationLog.groupBy({
       by: ["platform", "username"],
-      where: { createdAt: { gte: week } },
+      where: { createdAt: { gte: week }, ...scope },
       _count: { _all: true },
       orderBy: { _count: { username: "desc" } },
       take: 10,

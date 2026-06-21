@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, findManagedUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
+import { currentTenantId } from "@/lib/tenant";
 
 const GT_PER_PLN = parseInt(process.env.DONATION_GT_PER_PLN ?? "100", 10);
 
@@ -19,8 +20,11 @@ export async function PATCH(req: Request) {
 
   if (!body.donationId) return NextResponse.json({ error: "Brak donationId" }, { status: 400 });
 
+  // Batch B: a tenant admin must only touch their own portal's donations (null = legacy/
+  // founder, allowed when the caller is also the null/founder tenant).
+  const tid = await currentTenantId();
   const donation = await prisma.donation.findUnique({ where: { id: body.donationId } });
-  if (!donation) return NextResponse.json({ error: "Donejt nie istnieje" }, { status: 404 });
+  if (!donation || (tid && donation.tenantId !== tid)) return NextResponse.json({ error: "Donejt nie istnieje" }, { status: 404 });
   if (donation.userId) return NextResponse.json({ error: "Już dopasowany" }, { status: 409 });
 
   if (body.action === "skip") {
