@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Changed
+
+- **Donation poll every 15 min instead of once a day (audit v4 perf)** **(#634)** — `/api/cron/streamlabs-poll` ran `0 6 * * *` (once daily), so a Streamlabs donation could wait **up to ~24h** before crediting GT + firing the thank-you — brutal for a live-stream economy. Now `*/15 * * * *` (every 15 min). The handler is cheap and idempotent (dedup via `Donation.externalId @unique`), so the higher cadence can't double-credit. Requires Vercel **Pro** (sub-daily crons) — confirmed by the owner. Config-only. Zielone: `build`/`docs:check`.
+
 ### Fixed
 
 - **CHANGELOG repair + docs:check gap-detection (audit v4)** **(#633)** — restored two entries whose bold titles had been clobbered when later entries were prepended, leaving orphaned bodies with no PR reference: **#629** (`@simplewebauthn` 9→13) and **#631** (admin `secDesc_*`). Root cause: `docs:check` only compared the **highest** PR number, so an intermediate gap (e.g. #629 missing while #630 was present) passed green. Hardened `scripts/check-docs-sync.mjs` to verify **every** PR referenced in recent git history appears in the CHANGELOG, not just the max — the gap that hid #629 can't recur. Docs/tooling only. Zielone: `tsc`/`eslint`/`build`/`docs:check`.

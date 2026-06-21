@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/streamlabs-poll",
-      "schedule": "0 6 * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/prune",
