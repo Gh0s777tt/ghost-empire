@@ -139,6 +139,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/bot-config` | perm:manage_shop | Config bota Discord |
 | `…/api/admin/ban-user` | perm:ban_users | Ban/mute |
 | `…/api/admin/merge-users` | admin | Scalanie duplikatów kont |
+| `…/api/admin/support-tickets` | admin | Skrzynka wsparcia — GET lista (filtr open/resolved/all, tenant-scoped), PATCH reply/resolve/reopen + powiadomienie widza (#650) |
 | `…/api/admin/deliver-order` | perm:deliver_orders | Realizacja zamówień sklepu |
 | `…/api/admin/analytics` | admin | Heatmapa aktywności czatu |
 | `…/api/admin/alerts` | admin | Ustawienia Stream Alerts + test |

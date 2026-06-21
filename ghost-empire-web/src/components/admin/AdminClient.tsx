@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
@@ -83,6 +83,7 @@ const ActiveDropsList = dynamic(() => import("./sections/ActiveDrops").then((m) 
 const PendingOrdersList = dynamic(() => import("./sections/PendingOrders").then((m) => m.PendingOrdersList), { ssr: false, loading: SectionLoading });
 const StreamAlertsManager = dynamic(() => import("./sections/StreamAlerts").then((m) => m.StreamAlertsManager), { ssr: false, loading: SectionLoading });
 const TenantsManager = dynamic(() => import("./sections/Tenants").then((m) => m.TenantsManager), { ssr: false, loading: SectionLoading });
+const SupportTicketsManager = dynamic(() => import("./sections/SupportTickets").then((m) => m.SupportTicketsManager), { ssr: false, loading: SectionLoading });
 
 // Panel modes: how much of the admin is shown in the nav. Persisted per browser
 // (localStorage "ge-admin-mode"); defaults to "dev" = everything, the pre-modes behavior.
@@ -140,7 +141,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tickets" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -170,6 +171,7 @@ export function AdminClient({
     { id: "tenants",   label: t("secTenants"),      icon: Building2,       group: "main",       level: 3, permission: () => isPlatformOwner },
 
     { id: "users",     label: t("secUsers"), icon: UserCog,         group: "moderation", level: 1, permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
+    { id: "tickets",   label: t("secTickets"), icon: LifeBuoy,      group: "moderation", level: 1, permission: () => isAdmin },
     { id: "merge",     label: t("secMerge"), icon: GitMerge,   group: "moderation", level: 2, permission: () => isAdmin },
     { id: "moderation", label: t("secModeration"),    icon: ShieldCheck,   group: "moderation", level: 2, permission: () => isAdmin },
     { id: "audit",     label: t("secAudit"),   icon: History,         group: "moderation", level: 2, permission: () => can("view_audit") },
@@ -358,6 +360,10 @@ export function AdminClient({
 
           {activeSection === "merge" && isAdmin && (
             <MergeUsersSection {...sharedProps} />
+          )}
+
+          {activeSection === "tickets" && isAdmin && (
+            <SupportTicketsManager {...sharedProps} />
           )}
 
           {activeSection === "achievements" && isAdmin && (
