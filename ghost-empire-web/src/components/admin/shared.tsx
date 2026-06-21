@@ -26,13 +26,16 @@ export function SectionCard({
 }
 
 export function FieldInput({
-  label, value, onChange, placeholder, type = "text",
+  label, value, onChange, placeholder, type = "text", min, max, step,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
+  min?: number;
+  max?: number;
+  step?: number;
 }) {
   return (
     <div>
@@ -44,6 +47,10 @@ export function FieldInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        // Forward numeric bounds so number fields constrain input in-browser (#audit-v2).
+        {...(min !== undefined ? { min } : {})}
+        {...(max !== undefined ? { max } : {})}
+        {...(step !== undefined ? { step } : {})}
         className="w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white font-mono outline-hidden focus:border-red-600 placeholder:text-zinc-700"
       />
     </div>

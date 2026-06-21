@@ -99,9 +99,9 @@ export function ScheduleManager({
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <FieldInput label={t("hourLabel")} value={startHour} onChange={setStartHour} type="number" placeholder="18" />
-          <FieldInput label={t("minuteLabel")} value={startMinute} onChange={setStartMinute} type="number" placeholder="0" />
-          <FieldInput label={t("durationLabel")} value={durationMinutes} onChange={setDurationMinutes} type="number" />
+          <FieldInput label={t("hourLabel")} value={startHour} onChange={setStartHour} type="number" min={0} max={23} placeholder="18" />
+          <FieldInput label={t("minuteLabel")} value={startMinute} onChange={setStartMinute} type="number" min={0} max={59} placeholder="0" />
+          <FieldInput label={t("durationLabel")} value={durationMinutes} onChange={setDurationMinutes} type="number" min={1} />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
