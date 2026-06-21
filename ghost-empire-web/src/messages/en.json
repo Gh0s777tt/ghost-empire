@@ -108,6 +108,7 @@
     "tntLogo": "Logo URL",
     "tntCompanionName": "Companion default name",
     "tntTimezone": "Timezone (IANA, e.g. Europe/Warsaw) — /schedule",
+    "tntDomain": "Custom domain (apex, e.g. empire-forge.com) — needs DNS→Vercel + OAuth redirect URIs",
     "tntBgPreset": "Background template",
     "tntBgNone": "None",
     "tntBgImage": "Background image URL",

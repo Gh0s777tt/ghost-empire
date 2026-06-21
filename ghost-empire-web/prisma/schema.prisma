@@ -24,7 +24,7 @@ model Tenant {
   shortName            String? // manifest short_name / compact UI
   brandColor           String    @default("#E50914")
   logoUrl              String?
-  domain               String? // optional custom domain
+  domain               String?   @unique // optional custom apex domain → this portal (#653, e.g. "empire-forge.com"); null = subdomain/default only
   // White-label currency naming (Phase 5): i18n catalogs carry %tokenName%/%gt%
   // markers that the message loader replaces with these per-tenant values.
   tokenName            String    @default("Ghost Tokens") // full currency name, e.g. "Neo Coins"

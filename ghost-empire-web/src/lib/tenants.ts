@@ -17,3 +17,16 @@ export function validateTenantSlug(slug: string): "format" | "reserved" | null {
   if (RESERVED_TENANT_SLUGS.has(slug)) return "reserved";
   return null;
 }
+
+// A registrable hostname: dot-separated labels (each 1-63 chars, no leading/trailing hyphen),
+// a ≥2-letter TLD, total ≤253 chars. Expects an already-normalized value (lowercase, no
+// protocol/port/path/www — see customDomainFromHost). Rejects bare hosts like "localhost".
+const CUSTOM_DOMAIN_RE = /^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
+
+/**
+ * Validate a tenant's custom apex domain (#653). Pass the value AFTER `customDomainFromHost`
+ * has normalized it. Returns "format" for anything that isn't a real domain, else null.
+ */
+export function validateCustomDomain(domain: string): "format" | null {
+  return CUSTOM_DOMAIN_RE.test(domain) ? null : "format";
+}

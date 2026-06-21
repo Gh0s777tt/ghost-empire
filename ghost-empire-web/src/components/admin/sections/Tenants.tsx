@@ -19,6 +19,7 @@ type TenantRow = {
   socialLinks: { platform: string; url: string }[] | null;
   supportAlertMode: string;
   timezone: string | null;
+  domain: string | null;
   plan: string; planExpiresAt: string | null; createdAt: string; users: number;
 };
 
@@ -133,6 +134,7 @@ function TenantCard({ row, onToast, onSaved, locale }: {
     bgImageUrl: row.bgImageUrl ?? "",
     supportAlertMode: row.supportAlertMode ?? "none",
     timezone: row.timezone ?? "",
+    domain: row.domain ?? "",
     plan: row.plan,
     planExpiresAt: row.planExpiresAt ? row.planExpiresAt.slice(0, 10) : "",
   });
@@ -200,6 +202,7 @@ function TenantCard({ row, onToast, onSaved, locale }: {
             <FieldInput label={t("tntLogo")} value={f.logoUrl} onChange={set("logoUrl")} placeholder="https://…/logo.png" />
             <FieldInput label={t("tntCompanionName")} value={f.companionDefaultName} onChange={set("companionDefaultName")} placeholder="Widmo" />
             <FieldInput label={t("tntTimezone")} value={f.timezone} onChange={set("timezone")} placeholder="Europe/Warsaw" />
+            <FieldInput label={t("tntDomain")} value={f.domain} onChange={set("domain")} placeholder="empire-forge.com" />
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("tntBgPreset")}</label>
               <div className="flex flex-wrap gap-1.5 mb-2">

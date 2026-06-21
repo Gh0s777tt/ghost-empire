@@ -108,6 +108,7 @@
     "tntLogo": "Logo URL",
     "tntCompanionName": "Domyślne imię zwierzaka",
     "tntTimezone": "Strefa czasowa (IANA, np. Europe/Warsaw) — /schedule",
+    "tntDomain": "Własna domena (apex, np. empire-forge.com) — wymaga DNS→Vercel + adresów zwrotnych OAuth",
     "tntBgPreset": "Szablon tła",
     "tntBgNone": "Brak",
     "tntBgImage": "URL tła portalu",

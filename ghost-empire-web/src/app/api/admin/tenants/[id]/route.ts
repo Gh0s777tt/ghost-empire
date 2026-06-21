@@ -7,6 +7,8 @@ import { logAdminAction } from "@/lib/audit";
 import { normalizePlan } from "@/lib/entitlements";
 import { safeMediaUrl } from "@/lib/url-safe";
 import { isBgPreset } from "@/lib/bg-presets";
+import { customDomainFromHost } from "@/lib/tenant-host";
+import { validateCustomDomain } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +70,20 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (typeof body.supportAlertMode === "string" && ["none", "bell", "overlay", "both"].includes(body.supportAlertMode)) {
     data.supportAlertMode = body.supportAlertMode;
   }
+  // Custom apex domain (#653): empty → null (clears it); otherwise normalize (strip
+  // protocol/port/path/www) and validate as a real hostname before storing.
+  if (typeof body.domain === "string") {
+    const raw = body.domain.trim();
+    if (!raw) {
+      data.domain = null;
+    } else {
+      const norm = customDomainFromHost(raw);
+      if (!norm || validateCustomDomain(norm)) {
+        return NextResponse.json({ error: "Nieprawidłowa domena (np. empire-forge.com)" }, { status: 400 });
+      }
+      data.domain = norm;
+    }
+  }
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }
@@ -81,7 +97,16 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     return NextResponse.json({ error: "Brak zmian" }, { status: 400 });
   }
 
-  const updated = await prisma.tenant.updateMany({ where: { id }, data });
+  let updated;
+  try {
+    updated = await prisma.tenant.updateMany({ where: { id }, data });
+  } catch (e) {
+    // Unique custom-domain collision (another portal already claims it).
+    if ((e as { code?: string }).code === "P2002") {
+      return NextResponse.json({ error: "Ta domena jest już przypisana do innego portalu" }, { status: 409 });
+    }
+    throw e;
+  }
   if (updated.count === 0) return NextResponse.json({ error: "Nie znaleziono tenanta" }, { status: 404 });
 
   await logAdminAction({

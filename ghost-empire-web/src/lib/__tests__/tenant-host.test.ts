@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tenantSlugFromHost, resolveTenantSlug, hexToRgbTriplet } from "@/lib/tenant-host";
+import { tenantSlugFromHost, resolveTenantSlug, hexToRgbTriplet, customDomainFromHost } from "@/lib/tenant-host";
 
 describe("hexToRgbTriplet", () => {
   it("decodes a hex color with or without the hash", () => {
@@ -51,6 +51,29 @@ describe("tenantSlugFromHost", () => {
   it("strips the port and is case-insensitive", () => {
     expect(tenantSlugFromHost("gh0st.myapp.com:3000", ROOT)).toBe("gh0st");
     expect(tenantSlugFromHost("GH0ST.MyApp.Com", ROOT)).toBe("gh0st");
+  });
+});
+
+describe("customDomainFromHost", () => {
+  it("normalizes apex / www to the same bare domain", () => {
+    expect(customDomainFromHost("empire-forge.com")).toBe("empire-forge.com");
+    expect(customDomainFromHost("www.empire-forge.com")).toBe("empire-forge.com");
+  });
+  it("strips port, protocol and path, and lowercases", () => {
+    expect(customDomainFromHost("Empire-Forge.com:443")).toBe("empire-forge.com");
+    expect(customDomainFromHost("https://empire-forge.com/path?x=1")).toBe("empire-forge.com");
+    expect(customDomainFromHost("WWW.Empire-Forge.COM")).toBe("empire-forge.com");
+  });
+  it("returns null for empty / nullish hosts", () => {
+    expect(customDomainFromHost(null)).toBeNull();
+    expect(customDomainFromHost(undefined)).toBeNull();
+    expect(customDomainFromHost("")).toBeNull();
+  });
+  it("matches what a request Host resolves to (write == read)", () => {
+    // The admin stores the value via this same normalizer, so a request to either form resolves.
+    const stored = customDomainFromHost("https://www.empire-forge.com/");
+    expect(customDomainFromHost("empire-forge.com")).toBe(stored);
+    expect(customDomainFromHost("www.empire-forge.com:443")).toBe(stored);
   });
 });
 

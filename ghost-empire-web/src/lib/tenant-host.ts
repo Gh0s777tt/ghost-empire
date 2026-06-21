@@ -48,6 +48,23 @@ export function resolveTenantSlug(
 }
 
 /**
+ * Normalize a host (or a pasted URL) to a bare apex domain for custom-domain → tenant
+ * matching (#653): lowercases, tolerates a leading `http(s)://`, drops any path/port, and
+ * strips a leading `www.` so the apex and `www.` resolve to the same portal. Used on BOTH
+ * sides — the request Host (read, in lib/tenant.ts) and the admin-entered value (write) —
+ * so a stored domain always equals what a request resolves to. Returns null when empty.
+ */
+export function customDomainFromHost(host: string | null | undefined): string | null {
+  if (!host) return null;
+  let h = host.trim().toLowerCase();
+  h = h.replace(/^https?:\/\//, ""); // tolerate a pasted URL
+  h = h.split("/")[0]; // drop any path
+  h = h.split(":")[0]; // drop port
+  if (h.startsWith("www.")) h = h.slice(4);
+  return h || null;
+}
+
+/**
  * "#E50914" → "229 9 20" for the `--brand-rgb` CSS variable (alpha-capable
  * `rgb(var(--brand-rgb) / .3)` usages). Invalid input falls back to the default
  * brand red so a malformed tenant color can't break the whole stylesheet.
