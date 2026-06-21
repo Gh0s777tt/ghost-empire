@@ -31,7 +31,7 @@
 
 ## ⚡ TL;DR
 
-Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** za aktywność na Discordzie i streamach — czat, voice, suby, gifty, bity, donejty, drop-code'y, daily questy, predictions — i wymieniają je w **sklepie** na nagrody cyfrowe i fizyczne. Streamer steruje wszystkim z panelu **`/admin`** (~37 sekcji w 7 grupach, `Ctrl+K` do skoku): sklep, eventy, losowania, donacje, role, **alerty OBS (per-typ)**, stream goals, predictions, battle pass, ankiety, merge duplikatów, **moderacja czatu (automod)**, **biblioteka + generator widgetów**, **panel integracji (klucze API na stronie)** + **komendy czatu, timery, FAQ, powitania i song requesty** dla bota na 3 platformach.
+Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** za aktywność na Discordzie i streamach — czat, voice, suby, gifty, bity, donejty, drop-code'y, daily questy, predictions — i wymieniają je w **sklepie** na nagrody cyfrowe i fizyczne. Streamer steruje wszystkim z panelu **`/admin`** (~46 sekcji w grupach, `Ctrl+K` do skoku): sklep, eventy, losowania, donacje, role, **alerty OBS (per-typ)**, stream goals, predictions, battle pass, ankiety, merge duplikatów, **moderacja czatu (automod)**, **biblioteka + generator widgetów**, **panel integracji (klucze API na stronie)** + **komendy czatu, timery, FAQ, powitania i song requesty** dla bota na 3 platformach.
 
 > Suby/gifty/bity (Twitch + Kick), donacje (Streamlabs + YouTube Super Chat) są **wykrywane automatycznie** (webhooki / polling) i nagradzane tokenami + odznakami.
 
@@ -197,7 +197,7 @@ flowchart LR
 ## 🧑‍💻 Panel admina (`/admin`)
 
 <details>
-<summary><b>~26 sekcji (deep-link przez hash, filtrowane wg uprawnień moderatora)</b></summary>
+<summary><b>~46 sekcji (deep-link przez hash, filtrowane wg uprawnień moderatora)</b></summary>
 
 Dashboard · Użytkownicy (grant GT, role, opisy uprawnień) · Merge duplikatów · **Moderacja (automod + statystyki naruszeń)** · Eventy · Sklep · Drops · **Koło Fortuny** · **Biblioteka gier (Steam)** · Harmonogram · Bot Discord · Donacje · Twitch / Kick / YouTube (autoryzacja + eventy) · Komendy czatu · Timery · FAQ · Powitania · Song requesty · **Stream Alerts (typy + per-typ)** · Stream Goals · Subathon · Predictions · Battle Pass · **Ankiety** · **Analityka (heatmapa czatu)** · **Integracje (klucze API)** · **Webhooki wychodzące** · Audit log · **Reset bazy** (strefa niebezpieczna).
 </details>
