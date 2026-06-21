@@ -1799,11 +1799,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "新订阅",
-        "channel.subscription.renewal": "订阅续订",
-        "channel.subscription.gifts": "礼物订阅",
-        "channel.followed": "关注",
-        "livestream.status.updated": "直播状态"
+        "channel_subscription_new": "新订阅",
+        "channel_subscription_renewal": "订阅续订",
+        "channel_subscription_gifts": "礼物订阅",
+        "channel_followed": "关注",
+        "livestream_status_updated": "直播状态"
       },
       "err": "错误",
       "setupErr": "设置失败",
@@ -1852,9 +1852,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "订阅",
-        "channel.subscription.gift": "礼物订阅",
-        "channel.cheer": "Cheers (Bits)"
+        "channel_subscribe": "订阅",
+        "channel_subscription_gift": "礼物订阅",
+        "channel_cheer": "Cheers (Bits)"
       },
       "err": "错误",
       "setupConfirm": "创建 EventSub 订阅（订阅/礼物/cheers）？",

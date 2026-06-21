@@ -39,6 +39,9 @@ export function KickEventsManager({
   const nf = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const KICK_EVENT_LABEL = t.raw("eventLabel") as Record<string, string>;
+  // Raw Kick event types are dotted (e.g. "channel.subscription.new"); message
+  // keys use underscores because next-intl treats dots as nesting separators.
+  const eventLabel = (type: string) => KICK_EVENT_LABEL[type.replace(/\./g, "_")] ?? type;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<KickData | null>(null);
   const [busy, setBusy] = useState(false);
@@ -172,7 +175,7 @@ export function KickEventsManager({
               {data.subscriptions.map((s) => (
                 <div key={s.id} className="flex items-center gap-3 border border-zinc-800 bg-black/30 p-2">
                   <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 border border-zinc-700 text-zinc-300">
-                    {KICK_EVENT_LABEL[s.type] ?? s.type}
+                    {eventLabel(s.type)}
                   </span>
                   <div className="flex-1 min-w-0 text-[10px] font-mono text-zinc-500 truncate">
                     {s.lastSeenAt ? `Last: ${new Date(s.lastSeenAt).toLocaleString(nf, { dateStyle: "short", timeStyle: "short" })}` : t("noEvents")}
@@ -199,7 +202,7 @@ export function KickEventsManager({
                 {data.recentEvents.map((e) => (
                   <div key={e.id} className="flex items-center gap-2 border-l-2 border-zinc-800 pl-2 py-1">
                     <span className="text-zinc-500 uppercase tracking-widest w-32 truncate">
-                      {KICK_EVENT_LABEL[e.type] ?? e.type}
+                      {eventLabel(e.type)}
                     </span>
                     {e.tokensGranted ? (
                       <span className="text-green-400">+{e.tokensGranted.toLocaleString(nf)} {tokenSymbol}</span>

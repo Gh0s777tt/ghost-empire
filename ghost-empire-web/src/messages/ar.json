@@ -1851,11 +1851,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "اشتراك جديد",
-        "channel.subscription.renewal": "تجديد اشتراك",
-        "channel.subscription.gifts": "اشتراكات مُهداة",
-        "channel.followed": "متابعة",
-        "livestream.status.updated": "حالة البث المباشر"
+        "channel_subscription_new": "اشتراك جديد",
+        "channel_subscription_renewal": "تجديد اشتراك",
+        "channel_subscription_gifts": "اشتراكات مُهداة",
+        "channel_followed": "متابعة",
+        "livestream_status_updated": "حالة البث المباشر"
       },
       "err": "خطأ",
       "setupErr": "فشل الإعداد",
@@ -1904,9 +1904,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "اشتراكات",
-        "channel.subscription.gift": "اشتراكات مُهداة",
-        "channel.cheer": "تشجيعات (bits)"
+        "channel_subscribe": "اشتراكات",
+        "channel_subscription_gift": "اشتراكات مُهداة",
+        "channel_cheer": "تشجيعات (bits)"
       },
       "err": "خطأ",
       "setupConfirm": "إنشاء اشتراكات EventSub (اشتراكات/هدايا/تشجيعات)؟",

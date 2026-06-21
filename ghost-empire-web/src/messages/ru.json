@@ -1799,11 +1799,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "Новый саб",
-        "channel.subscription.renewal": "Продление саба",
-        "channel.subscription.gifts": "Подарочные сабы",
-        "channel.followed": "Фоллов",
-        "livestream.status.updated": "Статус эфира"
+        "channel_subscription_new": "Новый саб",
+        "channel_subscription_renewal": "Продление саба",
+        "channel_subscription_gifts": "Подарочные сабы",
+        "channel_followed": "Фоллов",
+        "livestream_status_updated": "Статус эфира"
       },
       "err": "Ошибка",
       "setupErr": "Настройка не удалась",
@@ -1852,9 +1852,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "Подписки",
-        "channel.subscription.gift": "Подарочные сабы",
-        "channel.cheer": "Cheers (биты)"
+        "channel_subscribe": "Подписки",
+        "channel_subscription_gift": "Подарочные сабы",
+        "channel_cheer": "Cheers (биты)"
       },
       "err": "Ошибка",
       "setupConfirm": "Создать подписки EventSub (сабы/подарки/cheers)?",

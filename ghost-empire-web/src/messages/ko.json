@@ -1799,11 +1799,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "새 구독",
-        "channel.subscription.renewal": "구독 갱신",
-        "channel.subscription.gifts": "선물 구독",
-        "channel.followed": "팔로우",
-        "livestream.status.updated": "방송 상태"
+        "channel_subscription_new": "새 구독",
+        "channel_subscription_renewal": "구독 갱신",
+        "channel_subscription_gifts": "선물 구독",
+        "channel_followed": "팔로우",
+        "livestream_status_updated": "방송 상태"
       },
       "err": "오류",
       "setupErr": "설정 실패",
@@ -1852,9 +1852,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "구독",
-        "channel.subscription.gift": "선물 구독",
-        "channel.cheer": "Cheers (비트)"
+        "channel_subscribe": "구독",
+        "channel_subscription_gift": "선물 구독",
+        "channel_cheer": "Cheers (비트)"
       },
       "err": "오류",
       "setupConfirm": "EventSub 구독을 생성하시겠습니까(구독/선물/cheers)?",

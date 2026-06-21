@@ -1799,11 +1799,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "Neues Abo",
-        "channel.subscription.renewal": "Abo-Verlängerung",
-        "channel.subscription.gifts": "Geschenk-Abos",
-        "channel.followed": "Follow",
-        "livestream.status.updated": "Live-Status"
+        "channel_subscription_new": "Neues Abo",
+        "channel_subscription_renewal": "Abo-Verlängerung",
+        "channel_subscription_gifts": "Geschenk-Abos",
+        "channel_followed": "Follow",
+        "livestream_status_updated": "Live-Status"
       },
       "err": "Fehler",
       "setupErr": "Einrichtung fehlgeschlagen",
@@ -1852,9 +1852,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "Abonnements",
-        "channel.subscription.gift": "Geschenk-Abos",
-        "channel.cheer": "Cheers (Bits)"
+        "channel_subscribe": "Abonnements",
+        "channel_subscription_gift": "Geschenk-Abos",
+        "channel_cheer": "Cheers (Bits)"
       },
       "err": "Fehler",
       "setupConfirm": "EventSub-Abonnements erstellen (Abos/Geschenke/Cheers)?",

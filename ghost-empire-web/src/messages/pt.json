@@ -1880,11 +1880,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "Novo sub",
-        "channel.subscription.renewal": "Renovação de sub",
-        "channel.subscription.gifts": "Subs de presente",
-        "channel.followed": "Follow",
-        "livestream.status.updated": "Status ao vivo"
+        "channel_subscription_new": "Novo sub",
+        "channel_subscription_renewal": "Renovação de sub",
+        "channel_subscription_gifts": "Subs de presente",
+        "channel_followed": "Follow",
+        "livestream_status_updated": "Status ao vivo"
       },
       "err": "Erro",
       "setupErr": "Falha na configuração",
@@ -1933,9 +1933,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "Inscrições",
-        "channel.subscription.gift": "Subs de presente",
-        "channel.cheer": "Cheers (bits)"
+        "channel_subscribe": "Inscrições",
+        "channel_subscription_gift": "Subs de presente",
+        "channel_cheer": "Cheers (bits)"
       },
       "err": "Erro",
       "setupConfirm": "Criar assinaturas EventSub (subs/presentes/cheers)?",

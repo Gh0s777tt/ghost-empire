@@ -1880,11 +1880,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "Sub baru",
-        "channel.subscription.renewal": "Perpanjangan sub",
-        "channel.subscription.gifts": "Sub hadiah",
-        "channel.followed": "Follow",
-        "livestream.status.updated": "Status live"
+        "channel_subscription_new": "Sub baru",
+        "channel_subscription_renewal": "Perpanjangan sub",
+        "channel_subscription_gifts": "Sub hadiah",
+        "channel_followed": "Follow",
+        "livestream_status_updated": "Status live"
       },
       "err": "Kesalahan",
       "setupErr": "Penyiapan gagal",
@@ -1933,9 +1933,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "Langganan",
-        "channel.subscription.gift": "Sub hadiah",
-        "channel.cheer": "Cheers (bits)"
+        "channel_subscribe": "Langganan",
+        "channel_subscription_gift": "Sub hadiah",
+        "channel_cheer": "Cheers (bits)"
       },
       "err": "Kesalahan",
       "setupConfirm": "Buat langganan EventSub (sub/hadiah/cheers)?",

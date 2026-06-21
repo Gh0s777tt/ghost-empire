@@ -539,9 +539,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "Subskrypcje",
-        "channel.subscription.gift": "Gifted Suby",
-        "channel.cheer": "Cheery (bits)"
+        "channel_subscribe": "Subskrypcje",
+        "channel_subscription_gift": "Gifted Suby",
+        "channel_cheer": "Cheery (bits)"
       },
       "err": "Błąd",
       "setupConfirm": "Utworzyć subskrypcje EventSub (subs/gifts/cheers)?",
@@ -562,11 +562,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "Nowy sub",
-        "channel.subscription.renewal": "Odnowienie subu",
-        "channel.subscription.gifts": "Gifted suby",
-        "channel.followed": "Follow",
-        "livestream.status.updated": "Live status"
+        "channel_subscription_new": "Nowy sub",
+        "channel_subscription_renewal": "Odnowienie subu",
+        "channel_subscription_gifts": "Gifted suby",
+        "channel_followed": "Follow",
+        "livestream_status_updated": "Live status"
       },
       "err": "Błąd",
       "setupErr": "Błąd setupu",

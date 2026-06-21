@@ -1799,11 +1799,11 @@
     },
     "kickEvents": {
       "eventLabel": {
-        "channel.subscription.new": "新しいサブ",
-        "channel.subscription.renewal": "サブ更新",
-        "channel.subscription.gifts": "ギフトサブ",
-        "channel.followed": "フォロー",
-        "livestream.status.updated": "配信ステータス"
+        "channel_subscription_new": "新しいサブ",
+        "channel_subscription_renewal": "サブ更新",
+        "channel_subscription_gifts": "ギフトサブ",
+        "channel_followed": "フォロー",
+        "livestream_status_updated": "配信ステータス"
       },
       "err": "エラー",
       "setupErr": "セットアップに失敗しました",
@@ -1852,9 +1852,9 @@
     },
     "twitchEventSub": {
       "eventType": {
-        "channel.subscribe": "購読",
-        "channel.subscription.gift": "ギフトサブ",
-        "channel.cheer": "Cheers (Bits)"
+        "channel_subscribe": "購読",
+        "channel_subscription_gift": "ギフトサブ",
+        "channel_cheer": "Cheers (Bits)"
       },
       "err": "エラー",
       "setupConfirm": "EventSub 購読を作成しますか（サブ/ギフト/cheers）？",

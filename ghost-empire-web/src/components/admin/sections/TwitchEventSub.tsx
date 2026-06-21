@@ -21,6 +21,9 @@ export function TwitchEventSubManager({
   const nf = useLocale();
   const { tokenSymbol } = useTenantBranding();
   const EVENT_TYPE_LABEL = t.raw("eventType") as Record<string, string>;
+  // Raw EventSub types are dotted (e.g. "channel.subscribe"); message keys use
+  // underscores because next-intl treats dots as nesting separators.
+  const eventLabel = (type: string) => EVENT_TYPE_LABEL[type.replace(/\./g, "_")] ?? type;
   const [busy, setBusy] = useState(false);
 
   async function setup() {
@@ -112,7 +115,7 @@ export function TwitchEventSubManager({
               {data.subscriptions.map((s) => (
                 <div key={s.id} className="flex items-center gap-3 border border-zinc-800 bg-black/30 p-2">
                   <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 border border-zinc-700 text-zinc-300">
-                    {EVENT_TYPE_LABEL[s.type] ?? s.type}
+                    {eventLabel(s.type)}
                   </span>
                   <span className={cn(
                     "text-[10px] font-mono uppercase tracking-widest px-2 py-0.5",
@@ -145,7 +148,7 @@ export function TwitchEventSubManager({
                 {data.recentEvents.map((e) => (
                   <div key={e.id} className="flex items-center gap-2 border-l-2 border-zinc-800 pl-2 py-1">
                     <span className="text-zinc-500 uppercase tracking-widest w-24 truncate">
-                      {EVENT_TYPE_LABEL[e.type] ?? e.type}
+                      {eventLabel(e.type)}
                     </span>
                     {e.tokensGranted ? (
                       <span className="text-green-400">+{e.tokensGranted.toLocaleString(nf)} {tokenSymbol}</span>
