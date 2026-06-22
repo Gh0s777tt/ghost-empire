@@ -79,6 +79,10 @@ export default async function PrivacyPage() {
             </ul>
           </Section>
 
+          <Section title={t("sGoogle")}>
+            <p>{tr("sGooglep")}</p>
+          </Section>
+
           <Section title={t("s5")}>
             <ul className="space-y-1.5 ms-4">
               {S5.map((k) => <Bullet key={k}>{tr(k)}</Bullet>)}
