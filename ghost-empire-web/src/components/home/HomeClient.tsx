@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, Check, Clock, Zap, Gift, Trophy, type LucideIcon } from "lucide-react";
 import { timeLeft, rankForLevel, displayNick } from "@/lib/utils";
+import { Link } from "@/i18n/navigation";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { EmptyState } from "@/components/EmptyState";
 import { apiGet, apiPost } from "@/lib/api-client";
@@ -325,6 +326,13 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
           >
             {t("watchTwitch")}
           </a>
+          {/* Self-service SaaS signup — a streamer can launch their own portal (#660). */}
+          <Link
+            href="/onboarding"
+            className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold tracking-widest uppercase transition-all text-sm clip-tag inline-flex items-center justify-center gap-2"
+          >
+            🚀 {t("launchPortal")}
+          </Link>
         </div>
       </div>
 
