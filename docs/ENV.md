@@ -14,8 +14,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | Zmienna | Po co | Skąd |
 |---|---|---|
 | `NEXTAUTH_SECRET` | Podpis sesji. Auth.js v5 czyta `AUTH_SECRET`, a gdy brak — `NEXTAUTH_SECRET`; **zostaw bez zmian** (z niego liczony jest też klucz szyfrowania `crypto.ts`, jeśli nie ma `ENCRYPTION_KEY`). | `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | Bazowy URL (OAuth callbacki, sitemap, robots) | np. `https://ghost-empire-web.vercel.app` |
-| `AUTH_URL` (O) | Alias Auth.js v5 dla `NEXTAUTH_URL` — **ma pierwszeństwo** gdy ustawiony. Passkeys (`lib/webauthn`) pinują do niego rpID/origin (anti host-spoof). Ustaw na tę samą kanoniczną domenę co `NEXTAUTH_URL` (bez `/` na końcu) lub zostaw tylko `NEXTAUTH_URL`. | np. `https://ghost-empire-web.vercel.app` |
+| `NEXTAUTH_URL` / `AUTH_URL` | ⚠️ **Przy WIELU portalach (własne domeny/subdomeny) ZOSTAW NIEUSTAWIONE.** Gdy ustawione, Auth.js przypina WSZYSTKIE callbacki OAuth do tej jednej domeny — więc logowanie zaczęte na `empire-forge.com` wraca na nią → ciasteczka `state`/PKCE nie pasują (są na domenie startowej) → logowanie pada wszędzie poza portalem głównym (#659). Z `trustHost: true` (ustawione w `auth.ts`) Auth.js sam wyprowadza callback z hosta żądania → każdy portal loguje na swojej domenie i jako swój tenant. Pozostałe użycia (sitemap/robots/admin streamer-auth/webhooki/passkeys) mają twardy fallback do `https://ghost-empire-web.vercel.app`, więc brak tej zmiennej ich nie psuje. **Ustaw tylko dla deploymentu single-domain.** | (puste przy multi-portal) |
 | `DATABASE_URL` | Postgres (Supabase, **transaction pooler 6543**, `connection_limit=3`) | Supabase → Database → Connection string |
 | `DIRECT_URL` | Postgres bezpośredni (port 5432) — migracje / `db push` | Supabase (Session) |
 | `BOT_SECRET` | Bearer dla `/api/internal/*` i `/api/bot/*` — **ten sam** w obu botach | `openssl rand -hex 32` |
