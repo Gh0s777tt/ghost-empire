@@ -18,6 +18,7 @@ import {
   getLiveChatMessages,
 } from "@/lib/youtube";
 import { getYouTubeStreamerToken } from "@/lib/platform-tokens";
+import { currentTenantId } from "@/lib/tenant";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
@@ -49,29 +50,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: authResult.error }, { status: authResult.status });
   }
 
-  try {
-    return await runPoll();
-  } catch (e) {
-    // Surface the real error to cron-job / admin UI — endpoint is auth-gated so OK to expose
-    const msg = e instanceof Error ? e.message : String(e);
-    log.error("FAILED", e);
-    return NextResponse.json(
-      { error: "poll_failed", detail: msg.slice(0, 500) },
-      { status: 500 },
-    );
+  // Admin "Poll now" → just this admin's portal (resolved from the request host). External
+  // cron/bot (Bearer) → EVERY portal that has a YouTube streamer token. Previously this
+  // polled the default row only, so sub-tenant super chats / members were never ingested.
+  if (authResult.mode === "admin") {
+    const tid = await currentTenantId();
+    try {
+      const r = await runPoll(tid);
+      return NextResponse.json(r, r.ok ? undefined : { status: r.httpStatus });
+    } catch (e) {
+      // Surface the real error to the admin UI — endpoint is auth-gated so OK to expose.
+      const msg = e instanceof Error ? e.message : String(e);
+      log.error("FAILED", e);
+      return NextResponse.json({ error: "poll_failed", detail: msg.slice(0, 500) }, { status: 500 });
+    }
   }
+
+  // bot/cron: poll every portal; one portal's failure must not abort the others.
+  const tokens = await prisma.youTubeStreamerToken.findMany({ select: { tenantId: true } });
+  const results: Array<{ tenantId: string | null; ok: boolean; status: string; error?: string }> = [];
+  for (const tk of tokens) {
+    try {
+      const r = await runPoll(tk.tenantId);
+      results.push({ tenantId: tk.tenantId, ok: r.ok, status: r.status, ...(r.ok ? {} : { error: r.error }) });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      log.error("poll failed for portal", { tenantId: tk.tenantId, error: msg });
+      results.push({ tenantId: tk.tenantId, ok: false, status: "error", error: msg.slice(0, 300) });
+    }
+  }
+  return NextResponse.json({ ok: true, portals: results.length, results });
 }
 
-async function runPoll() {
-  const streamer = await getYouTubeStreamerToken();
+async function runPoll(tenantId: string | null) {
+  const streamer = await getYouTubeStreamerToken(tenantId);
   if (!streamer) {
-    return NextResponse.json(
-      { error: "Streamer YouTube nie autoryzowany — kliknij 'Autoryzuj YouTube' w /admin#youtube" },
-      { status: 400 },
-    );
+    return {
+      ok: false as const,
+      httpStatus: 400,
+      status: "not_authorized",
+      error: "Streamer YouTube nie autoryzowany — kliknij 'Autoryzuj YouTube' w /admin#youtube",
+    };
   }
 
-  const accessToken = await getValidAccessToken();
+  const accessToken = await getValidAccessToken(tenantId);
 
   // Decide which broadcast to poll: cached or rediscover
   let liveChatId = streamer.currentLiveChatId;
@@ -84,10 +106,10 @@ async function runPoll() {
         where: { id: streamer.id },
         data: { lastPolledAt: new Date() },
       });
-      return NextResponse.json({ ok: true, status: "no_active_broadcast" });
+      return { ok: true as const, status: "no_active_broadcast" };
     }
     if (!broadcast.liveChatId) {
-      return NextResponse.json({ ok: true, status: "broadcast_without_chat", videoId: broadcast.videoId });
+      return { ok: true as const, status: "broadcast_without_chat", videoId: broadcast.videoId };
     }
     liveChatId = broadcast.liveChatId;
     videoId = broadcast.videoId;
@@ -121,7 +143,7 @@ async function runPoll() {
         lastChatPageToken: null,
       },
     });
-    return NextResponse.json({ ok: true, status: "chat_ended" });
+    return { ok: true as const, status: "chat_ended" };
   }
 
   let superChatsProcessed = 0;
@@ -182,8 +204,8 @@ async function runPoll() {
     },
   });
 
-  return NextResponse.json({
-    ok: true,
+  return {
+    ok: true as const,
     status: "polled",
     rediscovered,
     videoId,
@@ -192,7 +214,7 @@ async function runPoll() {
     memberEventsProcessed,
     messagesLogged,
     nextPollSuggestedMs: pollingIntervalMs,
-  });
+  };
 }
 
 // =====================================================
@@ -471,9 +493,10 @@ async function handleMemberEvent(input: {
   return true;
 }
 
-// Health check
+// Health check — scoped to the portal in the request host so a sub-tenant admin sees
+// THEIR YouTube connection status, not the founder's default row.
 export async function GET() {
-  const streamer = await getYouTubeStreamerToken();
+  const streamer = await getYouTubeStreamerToken(await currentTenantId());
   return NextResponse.json({
     ok: true,
     streamerConnected: !!streamer,

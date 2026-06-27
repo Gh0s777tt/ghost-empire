@@ -22,8 +22,8 @@ export const YT_STREAMER_SCOPES = "openid email profile https://www.googleapis.c
 // Token refresh — YouTube access tokens expire after 1h, refresh always required
 // =====================================================
 
-export async function getValidAccessToken(): Promise<string> {
-  const tok = await getYouTubeStreamerToken();
+export async function getValidAccessToken(tenantId?: string | null): Promise<string> {
+  const tok = await getYouTubeStreamerToken(tenantId);
   if (!tok) throw new Error("YouTube streamer not authorized — go to /admin#youtube");
 
   // Refresh if expiring within 2 minutes
