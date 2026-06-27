@@ -21,6 +21,16 @@ export const WEBHOOK_EVENTS = [
 
 export type WebhookPayload = Record<string, unknown>;
 
+/**
+ * Sign a webhook body with a per-hook secret (HMAC-SHA256, hex), in the
+ * `sha256=<hex>` form the receiver verifies. Extracted + exported so the
+ * signature format is unit-tested — a regression here silently breaks every
+ * subscriber's verification.
+ */
+export function signWebhookBody(secret: string, body: string): string {
+  return "sha256=" + createHmac("sha256", secret).update(body).digest("hex");
+}
+
 /** Deliver `event` to every enabled webhook subscribed to it (or to "*"). Per-tenant
  *  (#512): only the portal where the event fired — `tenantId` null = unscoped (legacy). */
 async function deliver(event: string, payload: WebhookPayload, tenantId: string | null): Promise<void> {
@@ -49,7 +59,7 @@ async function deliver(event: string, payload: WebhookPayload, tenantId: string 
       };
       const secret = decryptSecret(h.secret);
       if (secret) {
-        headers["x-ghostempire-signature"] = "sha256=" + createHmac("sha256", secret).update(body).digest("hex");
+        headers["x-ghostempire-signature"] = signWebhookBody(secret, body);
       }
       try {
         // redirect:"manual" so a public webhook URL can't 302 into an internal/metadata

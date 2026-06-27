@@ -7,6 +7,7 @@ import { localeAlternates } from "@/i18n/metadata";
 import QRCode from "qrcode";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 import { Header } from "@/components/Header";
 import { ProfileShareRow } from "@/components/profile/ProfileShareRow";
 import { GiftButton } from "@/components/profile/GiftButton";
@@ -165,19 +166,27 @@ export default async function PublicProfilePage({
       where: { userId: user.id },
       orderBy: { platform: "asc" },
     }),
-    // Compute ranking positions
-    Promise.all([
-      prisma.user.count({ where: { totalEarned: { gt: user.totalEarned } } }),
-      prisma.user.count({
-        where: {
-          OR: [
-            { level: { gt: user.level } },
-            { level: user.level, xp: { gt: user.xp } },
-          ],
-        },
-      }),
-      prisma.user.count({ where: { streak: { gt: user.streak } } }),
-    ]),
+    // Ranking positions — cached 120s. These three full-table COUNTs are the
+    // heaviest part of this public, uncached (force-dynamic) page, and a rank barely
+    // moves minute to minute. Keyed by the exact stat values so a different
+    // user/stat-combo can never read a stale rank. (P1)
+    unstable_cache(
+      () =>
+        Promise.all([
+          prisma.user.count({ where: { totalEarned: { gt: user.totalEarned } } }),
+          prisma.user.count({
+            where: {
+              OR: [
+                { level: { gt: user.level } },
+                { level: user.level, xp: { gt: user.xp } },
+              ],
+            },
+          }),
+          prisma.user.count({ where: { streak: { gt: user.streak } } }),
+        ]),
+      ["profile-rank", String(user.totalEarned), String(user.level), String(user.xp), String(user.streak)],
+      { revalidate: 120 },
+    )(),
     // Clan war trophies — how many wars this user's clan has won (0 if clanless).
     user.clan ? prisma.clanWar.count({ where: { winnerClanId: user.clan.id, status: "ended" } }) : Promise.resolve(0),
   ]);
