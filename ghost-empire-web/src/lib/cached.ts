@@ -107,8 +107,15 @@ export const getCachedAchievementsMeta = (tenantId: string | null = null) =>
             xpReward: true, tokenReward: true,
           },
         }),
-        prisma.user.count(),
-        prisma.userAchievement.groupBy({ by: ["achievementId"], _count: { id: true } }),
+        // Tenant-scope the denominator + per-achievement earned counts (#698): otherwise a
+        // sub-tenant's "% of users who earned this" blends every portal's users.
+        // (UserAchievement has no tenantId → scope via the user relation.)
+        prisma.user.count({ where: tenantId ? { tenantId } : {} }),
+        prisma.userAchievement.groupBy({
+          by: ["achievementId"],
+          _count: { id: true },
+          ...(tenantId ? { where: { user: { tenantId } } } : {}),
+        }),
       ]);
       const earnedCounts = grouped.map((g) => ({ achievementId: g.achievementId, count: g._count.id }));
       return { achievements: achievements as CachedAchievement[], totalUsers, earnedCounts };

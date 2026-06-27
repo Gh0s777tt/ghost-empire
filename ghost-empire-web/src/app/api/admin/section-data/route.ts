@@ -238,9 +238,13 @@ export async function GET(req: Request) {
     }
 
     case "alerts": {
+      // Tenant-scope recent alerts (#698) — otherwise a tenant admin sees the last 20 alerts
+      // across ALL portals (actor names, donation/cheer titles). getAlertSettings() is already
+      // per-tenant; this findMany was the only un-scoped read here.
+      const tid = await currentTenantId();
       const [settings, recentAlerts] = await Promise.all([
         getAlertSettings(),
-        prisma.streamAlert.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
+        prisma.streamAlert.findMany({ where: { ...(tid ? { tenantId: tid } : {}) }, orderBy: { createdAt: "desc" }, take: 20 }),
       ]);
       return NextResponse.json({
         streamAlerts: {
