@@ -79,10 +79,15 @@ export async function heistJoin(opts: { platform: string; userId: string; name: 
     const now = new Date();
     let prefix = "";
 
+    // Scope the heist pool to the joiner's own portal — a same-platform sub-tenant must never
+    // join (or recover) another portal's crew (the heist stores its opener's tenant).
+    const joiner = await prisma.user.findUnique({ where: { id: userId }, select: { tenantId: true } });
+    const tenantId = joiner?.tenantId ?? null;
+
     // Recovery: resolve an expired-but-still-open heist first (e.g. a bot restart dropped
     // its timer). Its result is prepended to this message so nothing is silently stuck.
     const expired = await prisma.heist.findFirst({
-      where: { platform, status: "open", resolvesAt: { lte: now } },
+      where: { platform, tenantId, status: "open", resolvesAt: { lte: now } },
       select: { id: true },
     });
     if (expired) {
@@ -92,7 +97,7 @@ export async function heistJoin(opts: { platform: string; userId: string; name: 
 
     // Active (open, not yet expired) heist to join?
     const active = await prisma.heist.findFirst({
-      where: { platform, status: "open", resolvesAt: { gt: now } },
+      where: { platform, tenantId, status: "open", resolvesAt: { gt: now } },
       include: { entries: { select: { userId: true } } },
     });
 
@@ -126,7 +131,7 @@ export async function heistJoin(opts: { platform: string; userId: string; name: 
       });
       if (charged.count === 0) throw new HeistError("broke");
       const heist = await tx.heist.create({
-        data: { platform, status: "open", startedById: userId, resolvesAt: new Date(now.getTime() + HEIST_TTL_MS) },
+        data: { platform, tenantId, status: "open", startedById: userId, resolvesAt: new Date(now.getTime() + HEIST_TTL_MS) },
       });
       await tx.heistEntry.create({ data: { heistId: heist.id, userId, name, bet } });
       return heist.id;

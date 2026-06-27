@@ -1175,6 +1175,7 @@ model GtGamePlay {
 model Duel {
   id             String    @id @default(cuid())
   platform       String // chat platform the duel lives on (twitch/kick/youtube)
+  tenantId       String? // per-portal — the open-duel pool is scoped to one portal so two same-platform tenants never match into each other's duels (null = founder/legacy)
   challengerId   String
   challengerName String // chat handle, stored so the result can @-mention correctly
   opponentId     String? // null = open challenge (first !accept takes it)
@@ -1190,7 +1191,7 @@ model Duel {
   opponent   User? @relation("DuelOpponent", fields: [opponentId], references: [id], onDelete: Cascade)
   winner     User? @relation("DuelWinner", fields: [winnerId], references: [id], onDelete: SetNull)
 
-  @@index([platform, status])
+  @@index([platform, tenantId, status]) // open-duel pool lookup is scoped per portal
   @@index([challengerId])
   @@index([createdAt])
   @@map("duels")
@@ -1203,6 +1204,7 @@ model Duel {
 model Heist {
   id          String       @id @default(cuid())
   platform    String // chat platform the heist lives on
+  tenantId    String? // per-portal — the joinable-heist pool is scoped to one portal so two same-platform tenants never share a crew (null = founder/legacy)
   status      String       @default("open") // open | resolved | cancelled
   startedById String // user who opened the heist
   startedAt   DateTime     @default(now())
@@ -1211,7 +1213,7 @@ model Heist {
   success     Boolean? // null until resolved
   entries     HeistEntry[]
 
-  @@index([platform, status])
+  @@index([platform, tenantId, status]) // joinable-heist pool lookup is scoped per portal
   @@index([resolvesAt])
   @@index([startedAt])
   @@map("heists")

@@ -39,7 +39,7 @@ export async function createDuel(opts: {
   }
   try {
     const now = new Date();
-    const challenger = await prisma.user.findUnique({ where: { id: challengerId }, select: { tokens: true } });
+    const challenger = await prisma.user.findUnique({ where: { id: challengerId }, select: { tokens: true, tenantId: true } });
     if (!challenger) return { ok: false, message: `@${challengerName} połącz konto przez !portal, by walczyć o GT.` };
     if (challenger.tokens < bet) {
       return { ok: false, message: `@${challengerName} masz za mało GT na taką stawkę (${fmt(bet)}).` };
@@ -55,6 +55,7 @@ export async function createDuel(opts: {
     await prisma.duel.create({
       data: {
         platform,
+        tenantId: challenger.tenantId, // pool isolation — accept matches within the same portal only
         challengerId,
         challengerName,
         opponentId: opponentId ?? null,
@@ -85,9 +86,13 @@ export async function acceptDuel(opts: {
   const { platform, accepterId, accepterName } = opts;
   try {
     const now = new Date();
+    // Scope the pool to the accepter's own portal — a same-platform sub-tenant must never
+    // be matched into another portal's open challenge (the duel stores the challenger's tenant).
+    const accepter = await prisma.user.findUnique({ where: { id: accepterId }, select: { tenantId: true } });
     const duel = await prisma.duel.findFirst({
       where: {
         platform,
+        tenantId: accepter?.tenantId ?? null,
         status: "pending",
         expiresAt: { gt: now },
         challengerId: { not: accepterId },
@@ -204,8 +209,9 @@ export async function declineDuel(opts: {
   const { platform, accepterId, accepterName } = opts;
   try {
     const now = new Date();
+    const accepter = await prisma.user.findUnique({ where: { id: accepterId }, select: { tenantId: true } });
     const duel = await prisma.duel.findFirst({
-      where: { platform, status: "pending", expiresAt: { gt: now }, opponentId: accepterId },
+      where: { platform, tenantId: accepter?.tenantId ?? null, status: "pending", expiresAt: { gt: now }, opponentId: accepterId },
       orderBy: { createdAt: "desc" },
     });
     if (!duel) return { ok: false, message: `@${accepterName} brak wyzwania skierowanego do Ciebie.` };
