@@ -1799,6 +1799,8 @@
       "expiresLabel": "Expires:"
     },
     "pendingOrders": {
+      "deliverBtn": "Done",
+      "refundBtn": "Refund",
       "secTitle": "Pending orders",
       "empty": "No orders to fulfil 🎉",
       "confirmRefund": "Refund the user?",

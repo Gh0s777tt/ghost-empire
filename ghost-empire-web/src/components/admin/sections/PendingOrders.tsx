@@ -44,7 +44,7 @@ export function PendingOrdersList({
   }
 
   return (
-    <SectionCard title="Pending orders" icon={Package}>
+    <SectionCard title={t("secTitle")} icon={Package}>
       <div className="space-y-2">
         {orders.map((o) => (
           <div key={o.id} className="border border-orange-900/50 bg-orange-950/10 p-3">
@@ -71,14 +71,14 @@ export function PendingOrdersList({
                   className="px-2.5 py-1.5 bg-green-700 hover:bg-green-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1"
                 >
                   {busyId === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                  Done
+                  {t("deliverBtn")}
                 </button>
                 <button
                   onClick={() => act(o.id, "refund")}
                   disabled={busyId === o.id || pending}
                   className="px-2.5 py-1.5 border border-zinc-700 hover:border-red-500 text-zinc-400 hover:text-red-400 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50"
                 >
-                  Refund
+                  {t("refundBtn")}
                 </button>
               </div>
             </div>

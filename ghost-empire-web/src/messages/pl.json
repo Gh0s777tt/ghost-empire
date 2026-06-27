@@ -1799,6 +1799,8 @@
       "expiresLabel": "Wygasa:"
     },
     "pendingOrders": {
+      "deliverBtn": "Gotowe",
+      "refundBtn": "Zwróć",
       "secTitle": "Oczekujące zamówienia",
       "empty": "Brak zamówień do realizacji 🎉",
       "confirmRefund": "Zwrócić środki userowi?",
