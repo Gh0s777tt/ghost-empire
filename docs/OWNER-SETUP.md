@@ -67,9 +67,10 @@ Twitch/Kick chat bot.
 - **Vercel:** Pro confirmed (sub-daily crons — donation poll now `*/15`). Add any custom/tenant
   subdomains to `serverActions.allowedOrigins` in `next.config.ts` before they go live.
 - **Supabase:** connect via the transaction pooler (`:6543`, `connection_limit=3`) — keep as-is.
-  **No RLS yet** (app-layer tenant scoping only) — enable RLS as defense-in-depth via the
-  ready-to-paste runbook **[docs/RLS.md](RLS.md)** (one SQL block in the Supabase SQL Editor;
-  closes the anon/PostgREST exposure; the Prisma app is unaffected). Composite `[tenantId, <sort>]`
+  **✅ RLS enabled (2026-06-27, all 97 tables, #671)** — anon/PostgREST exposure closed as
+  defense-in-depth; the Prisma app bypasses RLS (role `postgres`, `rolbypassrls=true`) so it's
+  unaffected. ⚠️ New tables from a future `prisma db push` default to RLS **off** — re-run the
+  matching `ENABLE` (runbook **[docs/RLS.md](RLS.md)**). Composite `[tenantId, <sort>]`
   ranking indexes already added (#638).
 - **Upstash:** confirm `UPSTASH_REDIS_REST_URL/TOKEN` are set in prod — load-bearing for shared
   overlay reads + casino `withLock` correctness (degrades gracefully but multiplies DB reads without it).
