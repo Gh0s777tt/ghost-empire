@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   if (gated) return gated;
 
   // AI calls cost real money — keep a per-user lid on it.
-  const rl = await rateLimit(`ai-assistant:${gate.userId}`, 15, 5 * 60_000);
+  const rl = await rateLimit(`ai-assistant:${gate.userId}`, 15, 5 * 60_000, { failClosed: true });
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Za dużo pytań na raz — odczekaj chwilę" },

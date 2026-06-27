@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   }
 
   // AI calls cost real money — keep a per-user lid on it.
-  const rl = await rateLimit(`help-assistant:${session.user.id}`, 12, 5 * 60_000);
+  const rl = await rateLimit(`help-assistant:${session.user.id}`, 12, 5 * 60_000, { failClosed: true });
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "rate-limited" },

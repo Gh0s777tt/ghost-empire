@@ -6,6 +6,9 @@ import type { ModPermission } from "@/lib/permissions";
 import { hasPermission } from "@/lib/permissions";
 import { decryptSecret } from "@/lib/crypto";
 import { verifyTotp } from "@/lib/totp";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("admin");
 
 type AuthResult =
   | { ok: true; userId: string; isAdmin: boolean; tenantId: string | null; isPlatformOwner: boolean }
@@ -168,7 +171,12 @@ export async function requireStepUp(
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { totpSecret: true, totpEnabledAt: true } });
   if (!u?.totpEnabledAt) return { ok: true }; // 2FA not enabled → no challenge
   const secret = decryptSecret(u.totpSecret);
-  if (!secret) return { ok: true }; // unreadable secret → don't brick the admin
+  if (!secret) {
+    // Key drift: a 2FA-enabled admin's secret no longer decrypts → step-up silently
+    // becomes a no-op. Don't brick the admin, but surface it so the operator notices (M1).
+    log.error("2FA-enabled admin has an undecryptable TOTP secret — step-up bypassed", { userId });
+    return { ok: true };
+  }
   if (!verifyTotp(secret, String(code ?? ""), Date.now())) {
     return { ok: false, status: 401, error: "Wymagany aktualny kod 2FA" };
   }

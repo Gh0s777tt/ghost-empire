@@ -19,9 +19,9 @@ export async function POST(req: Request) {
   if (!prompt) return NextResponse.json({ url: null });
 
   // Max 2 images per user per 5 min, + a global cap to bound cost.
-  const userRl = await rateLimit(`ai:imagine:${username.toLowerCase()}`, 2, 5 * 60_000);
+  const userRl = await rateLimit(`ai:imagine:${username.toLowerCase()}`, 2, 5 * 60_000, { failClosed: true });
   if (!userRl.allowed) return NextResponse.json({ url: null, error: "rate_limited" });
-  const globalRl = await rateLimit("ai:imagine:global", 30, 60 * 60_000);
+  const globalRl = await rateLimit("ai:imagine:global", 30, 60 * 60_000, { failClosed: true });
   if (!globalRl.allowed) return NextResponse.json({ url: null, error: "rate_limited_global" });
 
   const url = await aiImage(prompt);
