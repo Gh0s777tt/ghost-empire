@@ -116,6 +116,7 @@ export default async function PublicProfilePage({
       bio: true,
       country: true,
       profileAccent: true,
+      tenantId: true, // per-portal rank scope (not exposed to the client)
       // Public stats only
       level: true,
       xp: true,
@@ -173,18 +174,19 @@ export default async function PublicProfilePage({
     unstable_cache(
       () =>
         Promise.all([
-          prisma.user.count({ where: { totalEarned: { gt: user.totalEarned } } }),
+          prisma.user.count({ where: { tenantId: user.tenantId, totalEarned: { gt: user.totalEarned } } }),
           prisma.user.count({
             where: {
+              tenantId: user.tenantId,
               OR: [
                 { level: { gt: user.level } },
                 { level: user.level, xp: { gt: user.xp } },
               ],
             },
           }),
-          prisma.user.count({ where: { streak: { gt: user.streak } } }),
+          prisma.user.count({ where: { tenantId: user.tenantId, streak: { gt: user.streak } } }),
         ]),
-      ["profile-rank", String(user.totalEarned), String(user.level), String(user.xp), String(user.streak)],
+      ["profile-rank", user.tenantId ?? "global", String(user.totalEarned), String(user.level), String(user.xp), String(user.streak)],
       { revalidate: 120 },
     )(),
     // Clan war trophies — how many wars this user's clan has won (0 if clanless).
