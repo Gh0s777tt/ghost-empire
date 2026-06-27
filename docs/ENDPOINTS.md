@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **182** tras (181× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **183** tras (182× `route.ts` + 1× `route.tsx`)
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -213,6 +213,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/alerts/queue` | `/overlay` (alerty) — polling **fallback** |
 | `…/api/alerts/<feed>` | polling **fallback** pozostałych overlayów (`goals`/`chat`/`subathon`/`wheel`/`rumble`/`polls`/`predictions`/`recent-events`/`emoji-combo`/`widget`/`viewers`) — ten sam payload co SSE |
 | `…/api/chat/assets` | `/overlay/chat` (odznaki Twitch + emotki 7TV/BTTV/FFZ) |
+| `…/api/obs-control/config` | **`/overlay/obs-control`** (aktuator OBS, #672) — OBS WS url+hasło (deszyfr.) + aktywne reguły event→akcja; `no-store` |
 | `…/api/chat/translate` | POST — tłumaczenie AI wiadomości czatu (#547, overlay `?translate=`, rate-limit + cache, uśpione bez klucza AI) |
 | `…/api/codes/current` | `/overlay/codes` (rotacja kodów — bez SSE) |
 

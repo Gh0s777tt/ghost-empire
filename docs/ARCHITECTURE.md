@@ -76,6 +76,7 @@ Wzorzec: strona `/overlay/<x>` (transparentna, `pointer-events:none`) pobiera da
 | `/overlay/support-qr` | `/api/alerts/support-qr` | Karuzela kodów QR metod wsparcia |
 | `/overlay/top-supporters` | `/api/alerts/top-supporters` | Top wspierający (all-time) |
 | `/overlay/trivia` | `/api/alerts/trivia` | Runda trivia na żywo + odliczanie |
+| `/overlay/obs-control` | `/api/obs-control/config` + `/api/alerts/queue` | **Aktuator OBS (#672)** — headless browser-source: łączy się z lokalnym OBS WebSocket (`obs-websocket-js`) i wykonuje reguły event→akcja (scena/źródło/filtr + auto-revert) |
 | `/overlay/scene/[id]` | `OverlayScene` (kompozycja) | Scena wielowidżetowa → jedno źródło OBS |
 
 Jeden wspólny `OVERLAY_TOKEN` (auto-generowany w bazie, rotowalny w `/admin#alerts`). Trasy `/overlay/*` dostają nagłówki `noindex`/`no-store`. Komponenty prezentacyjne (`AlertCard`, `GoalBar`, `SubathonCard`, `ChatMessageRow`, `CodeCard`, `PredictionOverlayCard`, `PollOverlayCard`, `LastEventCard`, `CustomWidgetCard`, `WheelGraphic`) są **współdzielone** przez overlay i podglądy w panelu (w tym **biblioteka widgetów** `/admin#widgets`) → podgląd = realny wygląd. Czat overlay renderuje **prawdziwe odznaki Twitcha + emotki 7TV/BTTV/FFZ** (`lib/chat-assets.ts`, cache, `/api/chat/assets`).

@@ -204,7 +204,7 @@ Po modernizacji stacku do najnowszych majorów rozpisana **Faza A** (autonomiczn
 **🔑 Wymaga Twoich kont/creds (zostawiam na koniec):**
 - 🟡 🔑 **Social Linki interaktywne (OAuth)** — łączenie Instagram / TikTok / Facebook / X jednym kliknięciem, tak jak Twitch/Kick. Każda platforma wymaga **zarejestrowanej aplikacji deweloperskiej** (client id + secret), a IG/TikTok dodatkowo przeglądu/akceptacji. Bez tego przygotuję gotowe UI „Połącz" czekające na creds. *(Twitch / Kick / Discord / Google→YouTube już działają interaktywnie.)*
 - 🟡 🔑 **AI Moderator — wybór modelu** (Anthropic / OpenAI / Google) — abstrakcja providera + klucz API.
-- 🟡 🔑 **OBS WebSocket (hasło wklejane na stronie) + Hue / Govee** — hasło/konta deweloperskie hardware. *(Postęp 3C: silnik reguł `lib/obs-rules.ts` #663 + model `ObsRule` + API `/api/admin/obs-rules` #664 + panel admina „Sterowanie OBS" #665 dowiezione; zostaje aktuator browser-source w OBS.)*
+- 🟡 🔑 **OBS WebSocket (hasło wklejane na stronie) + Hue / Govee** — hasło/konta deweloperskie hardware. *(Postęp 3C: silnik reguł `lib/obs-rules.ts` #663 + model `ObsRule` + API #664 + panel admina #665 + **aktuator `/overlay/obs-control` #672 dowieziony — cały OBS WebSocket gotowy** (`docs/OBS-CONTROL.md`); zostaje tylko Hue/Govee (oświetlenie).)*
 
 > Sekrety (klucze API, hasła): **nie wklejaj ich na czacie** — wrzuć je sam do **Vercel → Settings → Environment Variables** (portal) lub gitignored `.env` (bot). Podam dokładne nazwy zmiennych przy każdej funkcji. Cokolwiek już gdziekolwiek wkleiłeś — zrotuj.
 
