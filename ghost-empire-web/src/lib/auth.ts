@@ -550,11 +550,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         });
 
-        // Stream alert — viewer joined Ghost Empire
+        // Stream alert — viewer joined the portal (brand-neutral so sub-tenants don't
+        // surface the founder's name on their own welcome alert).
         await dispatchAlertSafe({
           type: "welcome",
           title: "👻 Nowy duch dołączył!",
-          message: "wszedł do Ghost Empire",
+          message: "dołączył do społeczności",
           icon: "👻",
           actorName: displayNick(user.name, user.email?.split("@")[0]),
           actorImage: user.image ?? undefined,

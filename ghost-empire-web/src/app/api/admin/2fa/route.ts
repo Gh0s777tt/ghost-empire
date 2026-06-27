@@ -9,14 +9,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { getCurrentTenant } from "@/lib/tenant";
 import { encryptSecretStrict, decryptSecret } from "@/lib/crypto";
 import { generateTotpSecret, otpauthUri, formatSecret, verifyTotp } from "@/lib/totp";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import QRCode from "qrcode";
 
 export const dynamic = "force-dynamic";
-
-const ISSUER = "GHOST EMPIRE";
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -50,7 +49,9 @@ export async function POST(req: Request) {
     // Persist pending (encrypted) so the enable step can verify against it.
     await prisma.user.update({ where: { id: userId }, data: { totpSecret: encryptSecretStrict(secret), totpEnabledAt: null } });
     const account = me.username || me.email || "admin";
-    const uri = otpauthUri(secret, account, ISSUER);
+    // White-label: the authenticator shows THIS portal's brand as the issuer, not the founder's.
+    const issuer = (await getCurrentTenant()).name;
+    const uri = otpauthUri(secret, account, issuer);
     // Scannable QR (PNG data-url) so the admin can point a phone camera instead of typing the secret.
     const qrDataUrl = await QRCode.toDataURL(uri, { margin: 1, width: 220 });
     return NextResponse.json({ secret: formatSecret(secret), otpauthUri: uri, qrDataUrl });

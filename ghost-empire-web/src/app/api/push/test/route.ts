@@ -5,6 +5,7 @@
 // only ever notify your own subscriptions.
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getCurrentTenant } from "@/lib/tenant";
 import { isPushConfigured, sendPushToUser } from "@/lib/web-push";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
@@ -27,8 +28,10 @@ export async function POST(req: Request) {
     /* empty body is fine — fall back to defaults below */
   }
 
+  // Fallback title is the active portal's brand (not the hardcoded founder), in case the
+  // client didn't send its i18n title.
   const res = await sendPushToUser(session.user.id, {
-    title: body.title || "GH0ST EMPIRE",
+    title: body.title || (await getCurrentTenant()).name,
     body: body.body || "Test ✅",
     url: "/",
   });

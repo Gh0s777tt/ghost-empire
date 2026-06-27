@@ -162,7 +162,7 @@ export function ObsControlClient() {
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700 }}>
         <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />
-        Ghost Empire · Sterowanie OBS
+        Sterowanie OBS
       </div>
       <div style={{ color, marginTop: 4 }}>{label[status]}</div>
       {detail && <div style={{ color: "#a1a1aa", wordBreak: "break-all" }}>{detail}</div>}
