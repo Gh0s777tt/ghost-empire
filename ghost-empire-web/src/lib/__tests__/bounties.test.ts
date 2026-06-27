@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validatePledge, validateTitle, validateExpiry, MIN_PLEDGE, MAX_PLEDGE, TITLE_MIN, TITLE_MAX, MAX_EXPIRY_HOURS } from "../bounties";
+import { validatePledge, validateTitle, validateExpiry, summarizeBountyStats, MIN_PLEDGE, MAX_PLEDGE, TITLE_MIN, TITLE_MAX, MAX_EXPIRY_HOURS } from "../bounties";
 
 describe("validatePledge", () => {
   it("accepts an integer within range", () => {
@@ -52,5 +52,19 @@ describe("validateExpiry", () => {
     expect(validateExpiry(-5).ok).toBe(false);
     expect(validateExpiry(1.5).ok).toBe(false);
     expect(validateExpiry("24").ok).toBe(false);
+  });
+});
+
+describe("summarizeBountyStats", () => {
+  it("returns null when the user never created or backed a bounty (card hides)", () => {
+    expect(summarizeBountyStats({ created: 0, completed: 0, pooledWon: 0, backed: 0 })).toBeNull();
+  });
+  it("shows the card for a creator who has not backed anyone", () => {
+    expect(summarizeBountyStats({ created: 2, completed: 1, pooledWon: 500, backed: 0 })).toEqual({
+      created: 2, completed: 1, pooledWon: 500, backed: 0,
+    });
+  });
+  it("shows the card for a backer who never created their own", () => {
+    expect(summarizeBountyStats({ created: 0, completed: 0, pooledWon: 0, backed: 3 })).toMatchObject({ backed: 3 });
   });
 });

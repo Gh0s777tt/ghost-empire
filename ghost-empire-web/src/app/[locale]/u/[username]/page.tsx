@@ -14,7 +14,7 @@ import { GiftButton } from "@/components/profile/GiftButton";
 import { TrackedLink } from "@/components/profile/TrackedLink";
 import {
   Trophy, Award, Link as LinkIcon, Globe, MessageCircle, Mic2, Flame,
-  ShieldCheck, Heart, Crown, Ban, Star, Music2, Users, Send,
+  ShieldCheck, Heart, Crown, Ban, Star, Music2, Users, Send, Target, Coins,
 } from "lucide-react";
 import type { ComponentType, CSSProperties } from "react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
@@ -24,6 +24,8 @@ import { countryFlag } from "@/lib/countries";
 import { accentColor } from "@/lib/profile-accents";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP } from "@/lib/economy";
 import { companionStage } from "@/lib/companion";
+import { getPredictorRecord, getMyLeagueStats } from "@/lib/prediction-leagues";
+import { getBountyProfileStats } from "@/lib/bounties";
 
 export const dynamic = "force-dynamic";
 
@@ -140,7 +142,7 @@ export default async function PublicProfilePage({
 
   if (!user) notFound();
 
-  const [connections, earnedAchievements, socialLinks, rankPositions, clanWarWins] = await Promise.all([
+  const [connections, earnedAchievements, socialLinks, rankPositions, clanWarWins, predictorRecord, seasonStats, bountyStats] = await Promise.all([
     prisma.connection.findMany({
       where: { userId: user.id },
       select: {
@@ -191,6 +193,11 @@ export default async function PublicProfilePage({
     )(),
     // Clan war trophies — how many wars this user's clan has won (0 if clanless).
     user.clan ? prisma.clanWar.count({ where: { winnerClanId: user.clan.id, status: "ended" } }) : Promise.resolve(0),
+    // Predictor record (#686) — public, read-only. All-time betting track record, current-season
+    // league rank (for the badge), and bounty counters. Tenant-scoped to this profile's portal.
+    getPredictorRecord(user.id, user.tenantId),
+    getMyLeagueStats(user.id, user.tenantId),
+    getBountyProfileStats(user.id, user.tenantId),
   ]);
 
   const [aheadByEarned, aheadByLevel, aheadByStreak] = rankPositions;
@@ -379,6 +386,68 @@ export default async function PublicProfilePage({
             </div>
           </div>
 
+          {/* Predictor record (#686) — public all-time betting track record + bounty counters */}
+          {(predictorRecord || bountyStats) && (
+            <div
+              className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-4"
+              style={{
+                clipPath:
+                  "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+              }}
+            >
+              <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4 text-red-500" />
+                  <h2 className="font-display text-base text-white tracking-wider">{t("predictorTitle")}</h2>
+                </div>
+                {seasonStats && (
+                  <Link
+                    href="/leagues"
+                    title={t("predictorLeagueTitle")}
+                    className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest border border-yellow-700/60 bg-yellow-950/30 text-yellow-300 px-2 py-0.5 hover:border-yellow-500 transition-all"
+                  >
+                    <Crown className="w-3 h-3" /> {t("predictorLeagueBadge", { rank: seasonStats.rank })}
+                  </Link>
+                )}
+              </div>
+              {predictorRecord ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <StatTile label={t("predWinRate")} value={`${Math.round(predictorRecord.winRate * 100)}%`} emoji="🎯" />
+                  <StatTile label={t("predPlays")} value={fmt(predictorRecord.plays, locale)} emoji="🎲" />
+                  <StatTile
+                    label={t("predNet")}
+                    value={`${predictorRecord.net >= 0 ? "+" : "−"}${fmt(Math.abs(predictorRecord.net), locale)}`}
+                    emoji="📊"
+                    valueClassName={predictorRecord.net >= 0 ? "text-green-400" : "text-red-400"}
+                  />
+                  <StatTile
+                    label={t("predBiggest")}
+                    value={predictorRecord.biggestWin > 0 ? `+${fmt(predictorRecord.biggestWin, locale)}` : "—"}
+                    emoji="🚀"
+                    valueClassName={predictorRecord.biggestWin > 0 ? "text-green-400" : undefined}
+                  />
+                </div>
+              ) : (
+                <p className="text-zinc-500 text-sm">{t("predNone")}</p>
+              )}
+              {bountyStats && (
+                <div className="mt-3 pt-3 border-t border-zinc-800/60 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400 font-mono">
+                  <span className="inline-flex items-center gap-1.5 text-zinc-300">
+                    <Coins className="w-3.5 h-3.5 text-red-500" /> {t("bountyRowLabel")}
+                  </span>
+                  <span>{t("bountyCreated", { count: bountyStats.created })}</span>
+                  <span className="text-zinc-700">·</span>
+                  <span>{t("bountyCompleted", { count: bountyStats.completed })}</span>
+                  <span className="text-zinc-700">·</span>
+                  <span>{t("bountyBacked", { count: bountyStats.backed })}</span>
+                  <Link href="/bounties" className="ms-auto text-[10px] uppercase tracking-widest text-zinc-500 hover:text-red-400">
+                    {t("bountyView")}
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Clan — tag, name, role and the clan's war trophies */}
           {user.clan && (
             <div
@@ -559,7 +628,7 @@ export default async function PublicProfilePage({
   );
 }
 
-function StatTile({ label, value, emoji }: { label: string; value: string; emoji: string }) {
+function StatTile({ label, value, emoji, valueClassName }: { label: string; value: string; emoji: string; valueClassName?: string }) {
   return (
     <div className="border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-3">
       <div className="flex items-center gap-1.5 mb-1">
@@ -568,7 +637,7 @@ function StatTile({ label, value, emoji }: { label: string; value: string; emoji
           {label}
         </span>
       </div>
-      <div className="font-mono text-xl font-bold text-white tabular-nums">{value}</div>
+      <div className={cn("font-mono text-xl font-bold tabular-nums", valueClassName ?? "text-white")}>{value}</div>
     </div>
   );
 }

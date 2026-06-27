@@ -120,3 +120,54 @@ export async function getMyLeagueStats(userId: string, tenantId: string | null):
     rank: rankRes[0]?.rank ?? 1,
   };
 }
+
+// ── Public predictor record (#686) — a user's ALL-TIME betting track record ──────────
+// Unlike getMyLeagueStats (current month + rank), this aggregates every resolved bet ever
+// and carries NO rank — it powers the read-only "predictor record" card on the public
+// /u/[username] profile. Same tenant-scoped JOIN, just without the season window.
+
+export type PredictorRecord = {
+  plays: number;
+  wins: number;
+  net: number; // sum(payout - tokensWagered) over all resolved bets — can be negative
+  wagered: number;
+  biggestWin: number;
+  winRate: number;
+};
+
+/** Pure: shape a raw all-time aggregate into a PredictorRecord. Returns null when the user
+ *  has no resolved bets (plays === 0) so the profile card can hide entirely. Unit-tested. */
+export function summarizePredictor(
+  row: { plays: number; wins: number; net: number; wagered: number; biggestwin: number } | undefined | null,
+): PredictorRecord | null {
+  if (!row || row.plays <= 0) return null;
+  return {
+    plays: row.plays,
+    wins: row.wins,
+    net: row.net,
+    wagered: row.wagered,
+    biggestWin: row.biggestwin,
+    winRate: row.plays > 0 ? row.wins / row.plays : 0,
+  };
+}
+
+/** A user's all-time predictor record for a portal (every resolved bet, all seasons).
+ *  Uncached — the only caller is the per-profile, force-dynamic /u/[username] page. */
+export async function getPredictorRecord(userId: string, tenantId: string | null): Promise<PredictorRecord | null> {
+  const rows = await prisma.$queryRaw<
+    Array<{ plays: number; wins: number; net: number; wagered: number; biggestwin: number }>
+  >`
+    SELECT COUNT(*)::int                                                                  AS plays,
+           (COUNT(*) FILTER (WHERE pe.payout > pe."tokensWagered"))::int                  AS wins,
+           COALESCE(SUM(pe.payout - pe."tokensWagered"), 0)::int                          AS net,
+           COALESCE(SUM(pe."tokensWagered"), 0)::int                                      AS wagered,
+           COALESCE(MAX(pe.payout - pe."tokensWagered")
+                    FILTER (WHERE pe.payout > pe."tokensWagered"), 0)::int                AS biggestwin
+    FROM "prediction_entries" pe
+    JOIN "predictions" p ON p.id = pe."predictionId"
+    WHERE p.status = 'resolved'
+      AND (${tenantId}::text IS NULL OR p."tenantId" = ${tenantId})
+      AND pe."userId" = ${userId}
+  `;
+  return summarizePredictor(rows[0]);
+}

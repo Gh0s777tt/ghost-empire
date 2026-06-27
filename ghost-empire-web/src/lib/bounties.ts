@@ -220,3 +220,44 @@ export async function expireBounties(): Promise<{ expired: number; refunded: num
   if (expired) log.info("expired bounties", { expired, refunded });
   return { expired, refunded };
 }
+
+// ── Public bounty stats (#686) — counters for the predictor card on /u/[username] ────
+// Read-only, public aggregates: how many challenges this user raised, how many the streamer
+// fulfilled, GT the community pooled on the fulfilled ones, and how many OTHER people's
+// challenges they chipped in on. All tenant-scoped.
+
+export type BountyProfileStats = {
+  created: number; // challenges this user raised (any status)
+  completed: number; // …that the streamer fulfilled
+  pooledWon: number; // total GT pooled across the fulfilled ones
+  backed: number; // distinct OTHER users' bounties this user pledged to
+};
+
+/** Pure: returns null when the user never touched bounties (so the profile card hides). Unit-tested. */
+export function summarizeBountyStats(input: BountyProfileStats): BountyProfileStats | null {
+  if (input.created <= 0 && input.backed <= 0) return null;
+  return input;
+}
+
+/** Public bounty counters for a user in a portal. Uncached — only caller is the
+ *  per-profile, force-dynamic /u/[username] page. */
+export async function getBountyProfileStats(userId: string, tenantId: string | null): Promise<BountyProfileStats | null> {
+  const tenant = tenantId ? { tenantId } : {};
+  const [created, completed, pooled, backedRows] = await Promise.all([
+    prisma.bounty.count({ where: { creatorId: userId, ...tenant } }),
+    prisma.bounty.count({ where: { creatorId: userId, status: "completed", ...tenant } }),
+    prisma.bounty.aggregate({ _sum: { pooledGt: true }, where: { creatorId: userId, status: "completed", ...tenant } }),
+    // Distinct OTHER people's bounties this user pledged to (excludes their own initial pledge).
+    prisma.bountyPledge.findMany({
+      where: { userId, bounty: { creatorId: { not: userId }, ...tenant } },
+      distinct: ["bountyId"],
+      select: { bountyId: true },
+    }),
+  ]);
+  return summarizeBountyStats({
+    created,
+    completed,
+    pooledWon: pooled._sum.pooledGt ?? 0,
+    backed: backedRows.length,
+  });
+}

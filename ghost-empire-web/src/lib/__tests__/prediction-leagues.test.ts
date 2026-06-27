@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rankRows, type LeagueRow } from "../prediction-leagues";
+import { rankRows, summarizePredictor, type LeagueRow } from "../prediction-leagues";
 
 const mk = (userId: string, p: Partial<LeagueRow> = {}): LeagueRow => ({
   userId, plays: 0, wins: 0, net: 0, wagered: 0, biggestWin: 0, ...p,
@@ -38,5 +38,29 @@ describe("rankRows", () => {
     const before = input.map((r) => r.userId).join(",");
     rankRows(input);
     expect(input.map((r) => r.userId).join(",")).toBe(before);
+  });
+});
+
+describe("summarizePredictor", () => {
+  it("returns null for no row, null, or zero plays (card hides)", () => {
+    expect(summarizePredictor(undefined)).toBeNull();
+    expect(summarizePredictor(null)).toBeNull();
+    expect(summarizePredictor({ plays: 0, wins: 0, net: 0, wagered: 0, biggestwin: 0 })).toBeNull();
+  });
+
+  it("maps a raw aggregate (biggestwin → biggestWin) and derives winRate", () => {
+    expect(summarizePredictor({ plays: 8, wins: 6, net: 1200, wagered: 4000, biggestwin: 800 })).toEqual({
+      plays: 8,
+      wins: 6,
+      net: 1200,
+      wagered: 4000,
+      biggestWin: 800,
+      winRate: 0.75,
+    });
+  });
+
+  it("keeps a negative net (a losing predictor still has a record)", () => {
+    const r = summarizePredictor({ plays: 3, wins: 0, net: -150, wagered: 150, biggestwin: 0 });
+    expect(r).toMatchObject({ net: -150, wins: 0, winRate: 0 });
   });
 });
