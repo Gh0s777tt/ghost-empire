@@ -5,6 +5,7 @@
 //   npx tsx scripts/seed-achievements.ts      (reads DATABASE_URL from .env.local / .env)
 //
 // Mirrors the same rows added to prisma/seed.ts so fresh installs get them too.
+export {}; // module marker — isolates `main` from sibling scripts' top-level scope (TS2393)
 
 // Load env BEFORE importing the prisma client — the pg driver adapter reads DATABASE_URL
 // at import time (src/lib/prisma.ts), so a dynamic import after loadEnvFile is required.

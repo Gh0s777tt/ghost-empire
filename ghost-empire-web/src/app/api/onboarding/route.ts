@@ -10,6 +10,7 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { validateTenantSlug } from "@/lib/tenants";
 import { normalizePlan } from "@/lib/entitlements";
 import { logAdminAction } from "@/lib/audit";
+import { seedTenantAchievements } from "@/lib/achievements";
 
 export const dynamic = "force-dynamic";
 
@@ -79,11 +80,15 @@ export async function POST(req: Request) {
     },
   });
 
+  // Give the fresh portal the full achievement catalog (cloned from the founder tenant).
+  // Best-effort: never throws (returns 0 on failure), so it can't block provisioning. (#689)
+  const seededAchievements = await seedTenantAchievements(tenant.id);
+
   await logAdminAction({
     adminId: session.user.id,
     action: "set_user_role",
     targetType: "tenant_onboarding",
-    details: { slug: tenant.slug, plan: tenant.plan, trialDays: TRIAL_DAYS },
+    details: { slug: tenant.slug, plan: tenant.plan, trialDays: TRIAL_DAYS, seededAchievements },
     req,
   });
 

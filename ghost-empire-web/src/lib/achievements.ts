@@ -316,3 +316,47 @@ export async function grantManualAchievement(userId: string, code: string): Prom
     return false;
   }
 }
+
+// ── Per-tenant achievement seeding (#689) ────────────────────────────────────────────
+// A freshly onboarded portal has an empty achievement catalog (codes are unique PER tenant).
+// We clone the catalog from the founder/template tenant so a new portal's viewers can earn
+// the same achievements from day one. Cloning from the DB (not a hard-coded list) keeps the
+// new tenant in sync with whatever the founder catalog actually contains.
+const TEMPLATE_TENANT_SLUG = "ghost-empire";
+
+type AchievementSeed = {
+  code: string; name: string; description: string; icon: string; rarity: string;
+  hidden: boolean; triggerType: string | null; triggerValue: number | null;
+  xpReward: number; tokenReward: number; rewardNote: string | null;
+};
+
+/** Pure: map source achievement rows into createMany payloads for `tenantId` (drops id /
+ *  createdAt / source tenantId; stamps the target tenantId). Unit-tested. */
+export function achievementCloneRows<T extends AchievementSeed>(
+  source: T[],
+  tenantId: string,
+): Array<AchievementSeed & { tenantId: string }> {
+  return source.map((a) => ({
+    tenantId,
+    code: a.code, name: a.name, description: a.description, icon: a.icon, rarity: a.rarity,
+    hidden: a.hidden, triggerType: a.triggerType, triggerValue: a.triggerValue,
+    xpReward: a.xpReward, tokenReward: a.tokenReward, rewardNote: a.rewardNote,
+  }));
+}
+
+/** Clone the founder tenant's achievement catalog into a fresh tenant. Idempotent
+ *  (`skipDuplicates` on the unique `[tenantId, code]`), best-effort (never throws — returns
+ *  the number of rows created, 0 if nothing to copy). Safe to call right after creating a tenant. */
+export async function seedTenantAchievements(tenantId: string): Promise<number> {
+  try {
+    const template = await prisma.tenant.findUnique({ where: { slug: TEMPLATE_TENANT_SLUG }, select: { id: true } });
+    if (!template || template.id === tenantId) return 0; // no template, or seeding the template itself
+    const source = await prisma.achievement.findMany({ where: { tenantId: template.id } });
+    if (source.length === 0) return 0;
+    const res = await prisma.achievement.createMany({ data: achievementCloneRows(source, tenantId), skipDuplicates: true });
+    return res.count;
+  } catch (e) {
+    log.error("seedTenantAchievements failed", e, { tenantId });
+    return 0;
+  }
+}
