@@ -2533,6 +2533,23 @@
     "open": "open",
     "close": "close"
   },
+  "commandHelp": {
+    "button": "Commands",
+    "title": "Chat commands",
+    "close": "Close",
+    "note": "Type these in the streamer's live chat (Twitch / Kick / YouTube).",
+    "cmd_bet": "Bet GT on a casino game.",
+    "cmd_slots": "Slots — spin for GT.",
+    "cmd_coinflip": "Coinflip — double or nothing.",
+    "cmd_roulette": "Roulette — bet a color (2×) or a number 0–36 (36×).",
+    "cmd_duelOpen": "Open a PvP duel for GT — first to !accept takes it.",
+    "cmd_duelTarget": "Challenge a specific person to a duel.",
+    "cmd_accept": "Accept an open duel.",
+    "cmd_heist": "Start or join a co-op heist for GT (more people = better odds).",
+    "cmd_sr": "Request a song for the stream.",
+    "cmd_bot": "Ask the AI bot a question.",
+    "cmd_imagine": "Generate an AI image."
+  },
   "collectibles": {
     "filterAll": "All",
     "metaTitle": "Collectible cards",

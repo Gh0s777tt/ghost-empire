@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
+import { CommandHelp } from "@/components/CommandHelp";
 import InfoTip from "@/components/InfoTip";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { emitBalance } from "@/lib/balance-bus";
@@ -1267,6 +1268,10 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </p>
         )}
       </HowItWorks>
+
+      <div className="flex justify-center">
+        <CommandHelp feature="kasyno" />
+      </div>
 
       {!isAuthenticated ? (
         <Link href="/" className="px-8 py-3 rounded-full font-extrabold text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500">{t("loginToPlay")}</Link>

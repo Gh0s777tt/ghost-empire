@@ -2533,6 +2533,23 @@
     "open": "otwórz",
     "close": "zamknij"
   },
+  "commandHelp": {
+    "button": "Komendy",
+    "title": "Komendy czatu",
+    "close": "Zamknij",
+    "note": "Wpisuj je na czacie streamera (Twitch / Kick / YouTube).",
+    "cmd_bet": "Postaw GT w grze kasyna.",
+    "cmd_slots": "Sloty — zakręć o GT.",
+    "cmd_coinflip": "Coinflip — podwój albo nic.",
+    "cmd_roulette": "Ruletka — obstaw kolor (2×) lub liczbę 0–36 (36×).",
+    "cmd_duelOpen": "Otwarty pojedynek PvP o GT — pierwszy !accept go bierze.",
+    "cmd_duelTarget": "Wyzwij konkretną osobę na pojedynek.",
+    "cmd_accept": "Przyjmij otwarty pojedynek.",
+    "cmd_heist": "Rozpocznij lub dołącz do napadu o GT (więcej osób = większa szansa).",
+    "cmd_sr": "Zamów utwór na stream.",
+    "cmd_bot": "Zadaj pytanie botowi AI.",
+    "cmd_imagine": "Wygeneruj obrazek AI."
+  },
   "collectibles": {
     "filterAll": "Wszystkie",
     "metaTitle": "Karty kolekcjonerskie",
