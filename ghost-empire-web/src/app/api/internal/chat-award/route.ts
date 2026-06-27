@@ -76,11 +76,11 @@ export async function POST(req: Request) {
   const connection = platformUserId
     ? await prisma.connection.findUnique({
         where: { platform_platformId: { platform, platformId: String(platformUserId) } },
-        select: { userId: true, user: { select: { level: true, prestige: true } } },
+        select: { userId: true, user: { select: { level: true, prestige: true, tenantId: true } } },
       })
     : await prisma.connection.findFirst({
         where: { platform, username: { equals: username!, mode: "insensitive" } },
-        select: { userId: true, user: { select: { level: true, prestige: true } } },
+        select: { userId: true, user: { select: { level: true, prestige: true, tenantId: true } } },
       });
 
   if (!connection) {
@@ -128,6 +128,9 @@ export async function POST(req: Request) {
   // platforms) and the DB pool is only 3, so we don't make the bot wait on ~6 more serial
   // round-trips. Kept as dynamic imports (avoids a static import cycle). #audit-v2 perf
   const userId = connection.userId;
+  // The heatmap bucket is now per-portal — scope it to the chatter's tenant (always set for
+  // real users). If somehow absent, skip the bucket (its PK requires a non-null tenantId).
+  const chatTenantId = connection.user?.tenantId ?? null;
   after(async () => {
     try {
       const { awardSeasonXp } = await import("@/lib/seasons");
@@ -135,18 +138,20 @@ export async function POST(req: Request) {
       const { updateDailyTaskProgress } = await import("@/lib/daily-tasks");
       await updateDailyTaskProgress(userId, "messages");
 
-      // Activity heatmap bucket (Europe/Warsaw day-of-week + hour).
-      const parts = new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Europe/Warsaw", weekday: "short", hour: "2-digit", hour12: false,
-      }).formatToParts(new Date());
-      const wd = parts.find((p) => p.type === "weekday")?.value ?? "Sun";
-      const dayOfWeek = ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 } as Record<string, number>)[wd] ?? 0;
-      const hour = (parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10) || 0) % 24;
-      await prisma.chatActivityBucket.upsert({
-        where: { dayOfWeek_hour: { dayOfWeek, hour } },
-        create: { dayOfWeek, hour, count: 1 },
-        update: { count: { increment: 1 } },
-      });
+      // Activity heatmap bucket (Europe/Warsaw day-of-week + hour), per portal.
+      if (chatTenantId) {
+        const parts = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Europe/Warsaw", weekday: "short", hour: "2-digit", hour12: false,
+        }).formatToParts(new Date());
+        const wd = parts.find((p) => p.type === "weekday")?.value ?? "Sun";
+        const dayOfWeek = ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 } as Record<string, number>)[wd] ?? 0;
+        const hour = (parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10) || 0) % 24;
+        await prisma.chatActivityBucket.upsert({
+          where: { tenantId_dayOfWeek_hour: { tenantId: chatTenantId, dayOfWeek, hour } },
+          create: { tenantId: chatTenantId, dayOfWeek, hour, count: 1 },
+          update: { count: { increment: 1 } },
+        });
+      }
     } catch {
       /* best-effort secondary effects — never affect the award */
     }

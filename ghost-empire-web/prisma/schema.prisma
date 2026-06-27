@@ -1093,11 +1093,12 @@ model OutgoingWebhook {
 // =====================================================
 
 model ChatActivityBucket {
+  tenantId  String // per-portal — each portal gets its own 7×24 heatmap (PK columns are NOT NULL; the chatter's user.tenantId is always set)
   dayOfWeek Int // 0=Sun .. 6=Sat (Europe/Warsaw)
   hour      Int // 0-23
-  count     Int @default(0)
+  count     Int    @default(0)
 
-  @@id([dayOfWeek, hour])
+  @@id([tenantId, dayOfWeek, hour])
   @@map("chat_activity_buckets")
 }
 

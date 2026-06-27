@@ -15,13 +15,13 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  // Batch B: stream sessions scope to this tenant (null → unscoped, back-compat).
-  // The chat-activity heatmap stays global for now — tenant-scoping it needs a
-  // destructive PK change (composite [dayOfWeek,hour]); deferred to subdomain-enable.
+  // Both the stream sessions AND the chat-activity heatmap scope to this portal (null →
+  // unscoped, back-compat). The heatmap is now per-tenant (PK is [tenantId,dayOfWeek,hour]
+  // since #713), so a portal's analytics no longer sum every portal's chatter activity.
   const tid = await currentTenantId();
   const scope = tid ? { tenantId: tid } : {};
   const [buckets, recentSessions, agg] = await Promise.all([
-    prisma.chatActivityBucket.findMany(),
+    prisma.chatActivityBucket.findMany({ where: scope }),
     prisma.streamSession.findMany({ where: scope, orderBy: { startedAt: "desc" }, take: 30 }),
     prisma.streamSession.aggregate({ where: scope, _sum: { durationSeconds: true }, _count: { _all: true } }),
   ]);
