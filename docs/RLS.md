@@ -22,7 +22,7 @@ keeps full access. This is exactly Supabase's recommended baseline ("enable RLS 
 > would break the Prisma app. Plain `ENABLE` is what you want.
 
 ## Step 1 — canary (recommended, ~30 s)
-Confirm the app's role really bypasses RLS before doing all 96 tables. Run on **one** low-risk table:
+Confirm the app's role really bypasses RLS before doing all 97 tables. Run on **one** low-risk table:
 ```sql
 ALTER TABLE public."notifications" ENABLE ROW LEVEL SECURITY;
 ```
@@ -82,6 +82,7 @@ ALTER TABLE public."mod_violation_logs" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."moderation_config" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."notifications" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."outgoing_webhooks" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."obs_rules" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."overlay_scenes" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."passkeys" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."payment_methods" ENABLE ROW LEVEL SECURITY;
@@ -158,4 +159,4 @@ scope. The app's own per-portal isolation remains enforced at the application la
 
 > New tables added later default to RLS **off** — re-run the matching `ENABLE` line after any
 > future `prisma db push` that adds a model. (Keep `schema.prisma` the source of truth; this
-> doc lists the tables as of the current schema, 96 tables.)
+> doc lists the tables as of the current schema, 97 tables.)

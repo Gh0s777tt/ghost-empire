@@ -2212,3 +2212,27 @@ model IntegrationConfig {
 
   @@map("integration_config")
 }
+
+// PHASE 3C — OBS WebSocket control: a per-tenant rule mapping a StreamAlert event
+// (triggerType + optional minAmount) to an OBS action. Pure matching/validation lives
+// in lib/obs-rules.ts; the in-OBS browser-source controller (later slice) actuates.
+// Dormant until a streamer adds the controller source + OBS WebSocket creds.
+model ObsRule {
+  id            String   @id @default(cuid())
+  tenantId      String? // multi-tenant — per-portal; null = legacy
+  enabled       Boolean  @default(true)
+  triggerType   String // StreamAlert.type, or "*" for any
+  minAmount     Int? // only fire when alert.amount >= this
+  actionKind    String // switch_scene | toggle_source | toggle_filter
+  scene         String? // switch_scene target / toggle_source owning scene
+  source        String? // toggle_source / toggle_filter source name
+  filter        String? // toggle_filter filter name
+  targetState   Boolean? // toggle_source visible / toggle_filter enabled
+  revertAfterMs Int? // optional auto-revert window (ms)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId, triggerType])
+  @@map("obs_rules")
+}
