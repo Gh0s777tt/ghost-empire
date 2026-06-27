@@ -2509,6 +2509,7 @@
     "close": "zamknij"
   },
   "collectibles": {
+    "filterAll": "Wszystkie",
     "metaTitle": "Karty kolekcjonerskie",
     "metaDesc": "Otwieraj paczki za GT i zbieraj karty.",
     "title": "Karty",

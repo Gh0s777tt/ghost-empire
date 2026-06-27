@@ -25,6 +25,7 @@ export function CollectiblesClient() {
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
   const [reveal, setReveal] = useState<Reveal | null>(null);
+  const [rarity, setRarity] = useState<string>("all");
   // Error feedback via the shared toast provider; success is the reveal animation. #598
   const toast = useToast();
   const showErr = toast.err;
@@ -57,6 +58,12 @@ export function CollectiblesClient() {
 
   const owned = data.cards.filter((c) => c.qty > 0).length;
   const canOpen = data.loggedIn && data.cards.length > 0 && data.balance >= data.packPrice;
+  // Rarity filter (#697) — split the collection by quality so it's not one endless grid.
+  const RARITY_ORDER = ["common", "rare", "epic", "legendary", "mythic"];
+  const rarities = [...new Set(data.cards.map((c) => normalizeRarity(c.rarity)))].sort(
+    (a, b) => RARITY_ORDER.indexOf(a) - RARITY_ORDER.indexOf(b),
+  );
+  const visibleCards = rarity === "all" ? data.cards : data.cards.filter((c) => normalizeRarity(c.rarity) === rarity);
 
   return (
     <div>
@@ -96,9 +103,30 @@ export function CollectiblesClient() {
             </div>
           )}
 
+          {/* Rarity filter */}
+          {rarities.length > 1 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {["all", ...rarities].map((r) => {
+                const active = rarity === r;
+                const count = r === "all" ? data.cards.length : data.cards.filter((c) => normalizeRarity(c.rarity) === r).length;
+                const color = r === "all" ? undefined : RARITY_COLOR[r as keyof typeof RARITY_COLOR];
+                return (
+                  <button
+                    key={r}
+                    onClick={() => setRarity(r)}
+                    className={`px-3 py-1.5 border text-[11px] font-semibold tracking-widest uppercase flex items-center gap-2 transition-all ${active ? "border-amber-500 bg-amber-600/15 text-amber-200" : "border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:border-zinc-600"}`}
+                  >
+                    <span style={color ? { color } : undefined}>{r === "all" ? t("filterAll") : t(`rarity_${r}`)}</span>
+                    <span className="text-zinc-600 font-mono">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Collection grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {data.cards.map((c) => {
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[40rem] overflow-y-auto pr-1">
+            {visibleCards.map((c) => {
               const rc = RARITY_COLOR[normalizeRarity(c.rarity)];
               const have = c.qty > 0;
               return (

@@ -2509,6 +2509,7 @@
     "close": "close"
   },
   "collectibles": {
+    "filterAll": "All",
     "metaTitle": "Collectible cards",
     "metaDesc": "Open GT packs and collect cards.",
     "title": "Collectibles",
