@@ -884,6 +884,14 @@
       "quotaNote": "YouTube Data API quota: 10,000 jednostek/dzień. Polling co 30s przez 3h streama ≈ 1800 jednostek (sporo headroomu). Polluj tylko podczas live żeby oszczędzać quota."
     },
     "integrations": {
+      "goveeTitle": "Oświetlenie Govee",
+      "goveeApiKeyLabel": "Klucz API Govee",
+      "goveeApiKeyPh": "Govee-API-Key z aplikacji Govee Home",
+      "goveeDeviceIdLabel": "ID urządzenia",
+      "goveeDeviceIdPh": "AA:BB:CC:DD:… (z API Govee)",
+      "goveeDeviceModelLabel": "Model urządzenia",
+      "goveeDeviceModelPh": "np. H6159",
+      "goveeHint": "Klucz API zdobędziesz w aplikacji Govee Home (Profil → Ustawienia → Apply for API Key). ID urządzenia + model pochodzą z listy urządzeń API Govee. Potem dodaj reguły w sekcji Govee.",
       "err": "Błąd",
       "saved": "Integracje zapisane",
       "loading": "Ładowanie…",

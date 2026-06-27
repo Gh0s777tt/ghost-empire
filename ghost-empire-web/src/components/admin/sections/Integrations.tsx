@@ -25,6 +25,8 @@ type Meta = {
   hasSentry: boolean; sentryPreview: string | null;
   obsWebsocketUrl: string;
   hasObsPassword: boolean; obsPasswordPreview: string | null;
+  goveeDeviceId: string; goveeDeviceModel: string;
+  hasGoveeApiKey: boolean; goveeApiKeyPreview: string | null;
 };
 
 function SecretField({ label, has, preview, value, onChange, onClear, placeholder }: {
@@ -103,15 +105,19 @@ export function IntegrationsManager({
   const [aiProvider, setAiProvider] = useState("anthropic");
   const [aiModel, setAiModel] = useState("");
   const [obsUrl, setObsUrl] = useState("");
+  const [goveeDeviceId, setGoveeDeviceId] = useState("");
+  const [goveeDeviceModel, setGoveeDeviceModel] = useState("");
   // secrets — empty unless the admin types a new value; null = clear
   const [aiKey, setAiKey] = useState<string | null>("");
   const [sentry, setSentry] = useState<string | null>("");
   const [obsPass, setObsPass] = useState<string | null>("");
+  const [goveeKey, setGoveeKey] = useState<string | null>("");
 
   const load = useCallback(async () => {
     try {
       const d = await apiGet<Meta>("/api/admin/integrations");
       setMeta(d); setAiProvider(d.aiProvider); setAiModel(d.aiModel); setObsUrl(d.obsWebsocketUrl);
+      setGoveeDeviceId(d.goveeDeviceId); setGoveeDeviceModel(d.goveeDeviceModel);
     } catch { /* keep current */ }
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -119,15 +125,15 @@ export function IntegrationsManager({
   async function save() {
     setSaving(true);
     try {
-      const body: Record<string, unknown> = { aiProvider, aiModel, obsWebsocketUrl: obsUrl };
+      const body: Record<string, unknown> = { aiProvider, aiModel, obsWebsocketUrl: obsUrl, goveeDeviceId, goveeDeviceModel };
       // Only send a field when it changed: a typed value sets it, explicit null clears.
       const touched = (v: string | null) => v === null || (typeof v === "string" && v.trim().length > 0);
-      const fields: Array<[string, string | null]> = [["aiApiKey", aiKey], ["sentryDsn", sentry], ["obsWebsocketPassword", obsPass]];
+      const fields: Array<[string, string | null]> = [["aiApiKey", aiKey], ["sentryDsn", sentry], ["obsWebsocketPassword", obsPass], ["goveeApiKey", goveeKey]];
       for (const [k, v] of fields) if (touched(v)) body[k] = v;
 
       await apiPost("/api/admin/integrations", body);
       onToast("ok", t("saved"));
-      setAiKey(""); setSentry(""); setObsPass(""); // clear inputs; reload shows masked state
+      setAiKey(""); setSentry(""); setObsPass(""); setGoveeKey(""); // clear inputs; reload shows masked state
       await load();
       onSuccess();
     } catch (err) {
@@ -145,6 +151,7 @@ export function IntegrationsManager({
 
   const aiProviderLabel = AI_PROVIDERS.find(([v]) => v === meta.aiProvider)?.[1] ?? meta.aiProvider;
   const obsConfigured = meta.hasObsPassword || meta.obsWebsocketUrl.trim().length > 0;
+  const goveeConfigured = meta.hasGoveeApiKey || meta.goveeDeviceId.trim().length > 0;
 
   return (
     <SectionCard title={t("title")} icon={Plug}>
@@ -183,6 +190,20 @@ export function IntegrationsManager({
           <input value={obsUrl} onChange={(e) => setObsUrl(e.target.value)} placeholder="ws://localhost:4455" className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
         </label>
         <SecretField label={t("passwordLabel")} has={meta.hasObsPassword} preview={meta.obsPasswordPreview} value={obsPass ?? ""} onChange={setObsPass} onClear={() => setObsPass(null)} placeholder={t("obsPassPh")} />
+      </IntegrationCard>
+
+      {/* Govee lighting (per-tenant) — drives smart lights from alerts; rules live in the Govee section */}
+      <IntegrationCard title={t("goveeTitle")} configured={goveeConfigured} statusLabel={goveeConfigured ? t("configured") : undefined}>
+        <SecretField label={t("goveeApiKeyLabel")} has={meta.hasGoveeApiKey} preview={meta.goveeApiKeyPreview} value={goveeKey ?? ""} onChange={setGoveeKey} onClear={() => setGoveeKey(null)} placeholder={t("goveeApiKeyPh")} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label className="text-[11px] text-zinc-400">{t("goveeDeviceIdLabel")}
+            <input value={goveeDeviceId} onChange={(e) => setGoveeDeviceId(e.target.value)} placeholder={t("goveeDeviceIdPh")} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
+          </label>
+          <label className="text-[11px] text-zinc-400">{t("goveeDeviceModelLabel")}
+            <input value={goveeDeviceModel} onChange={(e) => setGoveeDeviceModel(e.target.value)} placeholder={t("goveeDeviceModelPh")} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
+          </label>
+        </div>
+        <p className="text-[10px] text-zinc-600">{t("goveeHint")}</p>
       </IntegrationCard>
 
       <button

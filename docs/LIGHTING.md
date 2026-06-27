@@ -1,6 +1,10 @@
 # 💡 LIGHTING.md — Govee smart-light flash (dormant until configured)
 
-Your stream light reacts to events: a donation / sub / cheer flashes a colour. Off by default; turns on the moment you set the env (#678).
+Your stream light reacts to events: a donation / sub / cheer changes a colour, brightness or turns it on/off. Off by default.
+
+## Two ways to configure (#720–#724)
+- **Per-portal, via the admin panel (recommended, multi-tenant):** in **`/admin#integrations`** enter your **Govee API key + device ID + model** (stored encrypted, per portal). Then in **`/admin#goverules`** ("Govee lighting") add rules: *when `<alert>` (and ≥ amount) → `set color` / `set brightness` / `turn on-off`* (with an optional flash→revert window). The server actuator (`lib/govee.ts`) runs them on each alert. Pure rule logic + validation: `lib/govee-rules.ts`.
+- **Env-based (founder v1 / fallback, #678):** set the `GOVEE_*` vars below. Used only when a portal has **no** per-tenant creds+rules — i.e. the founder's original flash setup keeps working unchanged.
 
 ## How it works
 Govee's **cloud** Developer API → the portal calls it server-side from the alert dispatch (no local bridge, unlike OBS WebSocket). On a matching alert the light is set to the flash colour, then optionally reverts to a resting colour.
