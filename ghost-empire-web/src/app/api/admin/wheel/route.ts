@@ -6,19 +6,28 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { getWheelConfig, getWheelConfigRow, parseSegments } from "@/lib/wheel";
+import { currentTenantId } from "@/lib/tenant";
 import { displayNick } from "@/lib/utils";
 
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  // Scope the spin list AND the totals to THIS portal — WheelSpin is user-owned, so filter
+  // via user.tenantId (same pattern the public /api/wheel feed + the OBS overlay already use).
+  // Previously both queries were global, so an admin saw every portal's spins + summed stats.
+  const tid = await currentTenantId();
+  const ownerScope = tid ? { user: { tenantId: tid } } : {};
+
   const cfg = await getWheelConfig();
   const recent = await prisma.wheelSpin.findMany({
+    where: ownerScope,
     orderBy: { createdAt: "desc" },
     take: 20,
     include: { user: { select: { username: true, displayName: true } } },
   });
   const totals = await prisma.wheelSpin.aggregate({
+    where: ownerScope,
     _count: { _all: true },
     _sum: { cost: true, rewardTokens: true },
   });
