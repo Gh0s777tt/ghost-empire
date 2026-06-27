@@ -380,6 +380,7 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
 function ProfileHero({ user }: { user: HomeUser }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
+  const { tokenName } = useTenantBranding();
   const rank = rankForLevel(user.level);
   const xpPct = Math.min((user.xp % 500) / 500 * 100, 100);
 
@@ -425,7 +426,7 @@ function ProfileHero({ user }: { user: HomeUser }) {
 
         {/* Stats */}
         <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatBox icon="👻" label="GHOST TOKENS" value={fmt(user.tokens)} accent />
+          <StatBox icon="👻" label={tokenName.toUpperCase()} value={fmt(user.tokens)} accent />
           <StatBox icon="⬆️" label={t("phEarned")} value={fmt(user.totalEarned)} />
           <StatBox icon="🛍️" label={t("phSpent")} value={fmt(user.totalSpent)} />
           <StatBox icon="💬" label={t("phMessages")} value={fmt(user.messageCount)} />

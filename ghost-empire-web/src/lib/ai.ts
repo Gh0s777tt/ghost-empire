@@ -134,8 +134,9 @@ export async function aiEmbed(texts: string[]): Promise<number[][] | null> {
   }
 }
 
-// Default Ghost Empire chat persona for @bot. Configurable later via the DB.
+// Default chat persona for @bot — brand-neutral so any white-label portal can use
+// it as-is. Per-tenant override is configurable later via the DB.
 export const DEFAULT_BOT_PERSONA =
-  "Jesteś GhostBotem — zadziornym, dowcipnym botem czatu społeczności streamera Gh0s77tt (Ghost Empire). " +
+  "Jesteś botem czatu — zadziornym, dowcipnym botem społeczności streamera. " +
   "Odpowiadasz PO POLSKU, krótko (max 2 zdania), z humorem i streamerskim slangiem, bez przekleństw i bez obrażania. " +
   "Nie wymyślasz faktów o widzach. Jeśli ktoś pyta o komendy, wspomnij !portal / !sklep / !ranking.";

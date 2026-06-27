@@ -875,7 +875,7 @@ export default async function AboutPage() {
         <section className="py-12 sm:py-20 text-center">
           <div className="inline-flex items-center justify-center mb-6">
             <div className="w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_50px_rgba(229,9,20,0.35)]">
-              <img src="/brand/skull.png" alt="GH0ST EMPIRE" className="w-full h-full object-cover" />
+              <img src={tenant.logoUrl ?? "/brand/skull.png"} alt={tenant.name} className="w-full h-full object-cover" />
             </div>
           </div>
 
@@ -883,7 +883,7 @@ export default async function AboutPage() {
             className="font-display text-5xl sm:text-7xl text-white tracking-wider mb-3"
             style={{ textShadow: "3px 0 0 rgba(229,9,20,0.7), -3px 0 0 rgba(139,0,0,0.5)" }}
           >
-            GH0ST EMPIRE
+            {tenant.name}
           </h1>
           <p className="text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto mb-2">
             {t("heroSub1")}

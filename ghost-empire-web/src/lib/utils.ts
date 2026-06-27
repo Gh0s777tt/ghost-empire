@@ -84,7 +84,7 @@ export function rankForLevel(level: number): {
   color: string;
   emoji: string;
 } {
-  if (level >= 100) return { name: "GH0ST GOD",     color: "#E50914", emoji: "👁️" };
+  if (level >= 100) return { name: "ETERNAL",       color: "#E50914", emoji: "👁️" };
   if (level >= 75)  return { name: "PHANTOM LORD",  color: "#8B0000", emoji: "💀" };
   if (level >= 50)  return { name: "WRAITH",        color: "#FF4500", emoji: "🔥" };
   if (level >= 30)  return { name: "HAUNT",         color: "#4B0082", emoji: "👻" };

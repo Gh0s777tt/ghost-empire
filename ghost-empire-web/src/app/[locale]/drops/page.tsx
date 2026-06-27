@@ -1,7 +1,7 @@
 // src/app/drops/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import HowItWorks from "@/components/HowItWorks";
 import { DropRedeemBox } from "@/components/drops/DropRedeemBox";
@@ -26,6 +26,7 @@ export default async function DropsPage() {
   const locale = await getLocale();
   const t = await getTranslations("drops");
   const tid = await currentTenantId();
+  const tenant = await getCurrentTenant();
 
   let myClaims: Array<{
     id: string;
@@ -132,7 +133,7 @@ export default async function DropsPage() {
               <StatTile
                 label={t("statEarned")}
                 value={fmt(totalEarnedFromDrops, locale)}
-                suffix="GT"
+                suffix={tenant.tokenSymbol}
                 emoji="💰"
               />
             </div>
@@ -184,7 +185,7 @@ export default async function DropsPage() {
                           </div>
                         </div>
                         <div className="font-mono text-sm font-bold text-green-400 tabular-nums">
-                          +{fmt(c.reward, locale)} GT
+                          +{fmt(c.reward, locale)} {tenant.tokenSymbol}
                         </div>
                       </div>
                     );

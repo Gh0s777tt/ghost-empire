@@ -37,8 +37,8 @@ describe("rankForLevel", () => {
     expect(rankForLevel(30).name).toBe("HAUNT");
     expect(rankForLevel(50).name).toBe("WRAITH");
     expect(rankForLevel(75).name).toBe("PHANTOM LORD");
-    expect(rankForLevel(100).name).toBe("GH0ST GOD");
-    expect(rankForLevel(999).name).toBe("GH0ST GOD");
+    expect(rankForLevel(100).name).toBe("ETERNAL");
+    expect(rankForLevel(999).name).toBe("ETERNAL");
   });
 });
 
