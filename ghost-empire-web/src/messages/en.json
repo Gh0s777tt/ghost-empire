@@ -27,6 +27,13 @@
     "you": "You"
   },
   "bounties": {
+    "expiryLabel": "Expiry:",
+    "expiryNone": "No deadline",
+    "expiry1d": "24h",
+    "expiry3d": "3 days",
+    "expiry7d": "7 days",
+    "expiry14d": "14 days",
+    "expiresOn": "expires {date}",
     "metaTitle": "Bounties",
     "metaDesc": "Pool Ghost Tokens behind a challenge — back what you want to see on stream.",
     "heading": "BOUNTIES",

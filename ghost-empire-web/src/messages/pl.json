@@ -27,6 +27,13 @@
     "you": "Ty"
   },
   "bounties": {
+    "expiryLabel": "Wygaśnięcie:",
+    "expiryNone": "Bez limitu",
+    "expiry1d": "24h",
+    "expiry3d": "3 dni",
+    "expiry7d": "7 dni",
+    "expiry14d": "14 dni",
+    "expiresOn": "wygasa {date}",
     "metaTitle": "Bounty",
     "metaDesc": "Zrzuć Ghost Tokeny na wyzwanie — wesprzyj to, co chcesz zobaczyć na streamie.",
     "heading": "BOUNTY",

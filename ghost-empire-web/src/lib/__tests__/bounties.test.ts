@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validatePledge, validateTitle, MIN_PLEDGE, MAX_PLEDGE, TITLE_MIN, TITLE_MAX } from "../bounties";
+import { validatePledge, validateTitle, validateExpiry, MIN_PLEDGE, MAX_PLEDGE, TITLE_MIN, TITLE_MAX, MAX_EXPIRY_HOURS } from "../bounties";
 
 describe("validatePledge", () => {
   it("accepts an integer within range", () => {
@@ -33,5 +33,24 @@ describe("validateTitle", () => {
   it("accepts exactly at the boundaries", () => {
     expect(validateTitle("x".repeat(TITLE_MIN)).ok).toBe(true);
     expect(validateTitle("x".repeat(TITLE_MAX)).ok).toBe(true);
+  });
+});
+
+describe("validateExpiry", () => {
+  it("treats undefined / null / 0 as no expiry", () => {
+    expect(validateExpiry(undefined)).toEqual({ ok: true, hours: null });
+    expect(validateExpiry(null)).toEqual({ ok: true, hours: null });
+    expect(validateExpiry(0)).toEqual({ ok: true, hours: null });
+  });
+  it("accepts integer hours within 1..MAX", () => {
+    expect(validateExpiry(1)).toEqual({ ok: true, hours: 1 });
+    expect(validateExpiry(168)).toEqual({ ok: true, hours: 168 });
+    expect(validateExpiry(MAX_EXPIRY_HOURS)).toEqual({ ok: true, hours: MAX_EXPIRY_HOURS });
+  });
+  it("rejects out-of-range and non-integers", () => {
+    expect(validateExpiry(MAX_EXPIRY_HOURS + 1).ok).toBe(false);
+    expect(validateExpiry(-5).ok).toBe(false);
+    expect(validateExpiry(1.5).ok).toBe(false);
+    expect(validateExpiry("24").ok).toBe(false);
   });
 });

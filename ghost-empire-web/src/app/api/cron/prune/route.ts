@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { pruneOldRecords } from "@/lib/pruning";
 import { createLogger } from "@/lib/logger";
 import { verifyCronSecret } from "@/lib/utils";
+import { expireBounties } from "@/lib/bounties";
 
 const log = createLogger("cron.prune");
 
@@ -17,7 +18,11 @@ export async function GET(req: Request) {
   try {
     const result = await pruneOldRecords();
     log.info("pruned old records", result);
-    return NextResponse.json({ ok: true, ...result });
+    // Backstop: refund + close any bounties whose deadline passed (#681). Best-effort —
+    // a failure here must not fail the prune job.
+    let bounties = { expired: 0, refunded: 0 };
+    try { bounties = await expireBounties(); } catch (e) { log.error("expireBounties failed", e); }
+    return NextResponse.json({ ok: true, ...result, bountiesExpired: bounties.expired });
   } catch (e) {
     log.error("prune failed", e);
     return NextResponse.json({ error: "prune_failed" }, { status: 500 });

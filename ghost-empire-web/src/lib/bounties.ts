@@ -17,6 +17,7 @@ export const TITLE_MIN = 3;
 export const TITLE_MAX = 120;
 export const MAX_OPEN_PER_USER = 3;
 export const MAX_OPEN_PER_PORTAL = 40;
+export const MAX_EXPIRY_HOURS = 720; // 30 days
 
 type Result<T> = ({ ok: true } & T) | { ok: false; status: number; error: string };
 
@@ -38,6 +39,15 @@ export function validateTitle(title: unknown): { ok: true; title: string } | { o
   return { ok: true, title: t };
 }
 
+/** Pure validation of an optional expiry in hours-from-now. undefined/null/0 = no expiry. */
+export function validateExpiry(hours: unknown): { ok: true; hours: number | null } | { ok: false; error: string } {
+  if (hours === undefined || hours === null || hours === 0) return { ok: true, hours: null };
+  if (typeof hours !== "number" || !Number.isInteger(hours) || hours < 1 || hours > MAX_EXPIRY_HOURS) {
+    return { ok: false, error: `Czas wygaśnięcia: 1–${MAX_EXPIRY_HOURS} h lub brak` };
+  }
+  return { ok: true, hours };
+}
+
 export type CreateResult = Result<{ bountyId: string; newBalance: number }>;
 
 export async function createBounty(opts: {
@@ -45,11 +55,15 @@ export async function createBounty(opts: {
   title: string;
   description?: string | null;
   initialPledge: number;
+  expiresInHours?: number | null;
 }): Promise<CreateResult> {
   const vt = validateTitle(opts.title);
   if (!vt.ok) return { ok: false, status: 400, error: vt.error };
   const vp = validatePledge(opts.initialPledge);
   if (!vp.ok) return { ok: false, status: 400, error: vp.error };
+  const ve = validateExpiry(opts.expiresInHours);
+  if (!ve.ok) return { ok: false, status: 400, error: ve.error };
+  const expiresAt = ve.hours ? new Date(Date.now() + ve.hours * 3_600_000) : null;
   const desc = typeof opts.description === "string" ? opts.description.trim().slice(0, 500) || null : null;
 
   const tid = await currentTenantId();
@@ -69,7 +83,7 @@ export async function createBounty(opts: {
       if (charged.count === 0) return { ok: false, status: 402, error: "Za mało Ghost Tokens" } as const;
 
       const bounty = await tx.bounty.create({
-        data: { tenantId: tid, creatorId: opts.userId, title: vt.title, description: desc, pooledGt: vp.amount, status: "open" },
+        data: { tenantId: tid, creatorId: opts.userId, title: vt.title, description: desc, pooledGt: vp.amount, status: "open", expiresAt },
         select: { id: true },
       });
       await tx.bountyPledge.create({ data: { bountyId: bounty.id, userId: opts.userId, amount: vp.amount } });
@@ -118,14 +132,16 @@ export async function pledgeToBounty(opts: { userId: string; bountyId: string; a
   }
 }
 
-export type ResolveResult = Result<{ outcome: "completed" | "rejected"; refunded: number; burned: number }>;
+export type ResolveResult = Result<{ outcome: "completed" | "rejected" | "expired"; refunded: number; burned: number }>;
 
-/** Streamer resolves a bounty: "completed" keeps (burns) the pool, "rejected" refunds all pledges. */
-export async function resolveBounty(opts: { bountyId: string; outcome: "completed" | "rejected" }): Promise<ResolveResult> {
-  if (opts.outcome !== "completed" && opts.outcome !== "rejected") {
-    return { ok: false, status: 400, error: "outcome: completed | rejected" };
+/** Resolve a bounty: "completed" keeps (burns) the pool; "rejected"/"expired" refund all pledges.
+ *  Request paths derive the tenant from the host; the expiry cron passes tenantId:null to
+ *  operate across ALL portals (it already selected the due rows globally). */
+export async function resolveBounty(opts: { bountyId: string; outcome: "completed" | "rejected" | "expired"; tenantId?: string | null }): Promise<ResolveResult> {
+  if (opts.outcome !== "completed" && opts.outcome !== "rejected" && opts.outcome !== "expired") {
+    return { ok: false, status: 400, error: "outcome: completed | rejected | expired" };
   }
-  const tid = await currentTenantId();
+  const tid = opts.tenantId !== undefined ? opts.tenantId : await currentTenantId();
   try {
     return await prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "bounties" WHERE id = ${opts.bountyId} FOR UPDATE`;
@@ -142,15 +158,17 @@ export async function resolveBounty(opts: { bountyId: string; outcome: "complete
       const byUser = new Map<string, number>();
       for (const pl of b.pledges) byUser.set(pl.userId, (byUser.get(pl.userId) ?? 0) + pl.amount);
 
-      if (opts.outcome === "rejected") {
+      if (opts.outcome !== "completed") {
+        // "rejected" (streamer declines) and "expired" (deadline passed) both refund in full.
+        const title = opts.outcome === "expired" ? "Bounty wygasło — zwrot GT" : "Bounty odrzucone — zwrot GT";
         for (const [userId, amount] of byUser) {
           await tx.user.update({ where: { id: userId }, data: { tokens: { increment: amount }, totalEarned: { increment: amount } } });
           await tx.transaction.create({ data: { userId, type: "earn", amount, reason: `bounty_refund:${b.id}`, status: "completed" } });
           await tx.notification.create({
-            data: { userId, type: "system", title: "Bounty odrzucone — zwrot GT", message: `Zwrócono ${amount.toLocaleString("pl-PL")} GT za „${b.title.slice(0, 60)}".`, icon: "↩️", link: "/bounties" },
+            data: { userId, type: "system", title, message: `Zwrócono ${amount.toLocaleString("pl-PL")} GT za „${b.title.slice(0, 60)}".`, icon: "↩️", link: "/bounties" },
           });
         }
-        return { ok: true, outcome: "rejected", refunded: byUser.size, burned: 0 } as const;
+        return { ok: true, outcome: opts.outcome, refunded: byUser.size, burned: 0 } as const;
       }
 
       for (const [userId] of byUser) {
@@ -164,4 +182,31 @@ export async function resolveBounty(opts: { bountyId: string; outcome: "complete
     log.error("resolveBounty failed", e);
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
+}
+
+/**
+ * Backstop run from the daily prune cron (currentTenantId() is null there → all portals):
+ * every open bounty whose `expiresAt` has passed is resolved "expired" (full refund). Each
+ * bounty resolves in its own atomic transaction; one failure doesn't abort the rest.
+ */
+export async function expireBounties(): Promise<{ expired: number; refunded: number }> {
+  const now = new Date();
+  const due = await prisma.bounty.findMany({
+    where: { status: "open", expiresAt: { not: null, lte: now } },
+    select: { id: true },
+    take: 500,
+  });
+  let expired = 0;
+  let refunded = 0;
+  for (const b of due) {
+    try {
+      // tenantId:null → resolve by id across all portals (cron has no portal context).
+      const r = await resolveBounty({ bountyId: b.id, outcome: "expired", tenantId: null });
+      if (r.ok) { expired++; refunded += r.refunded; }
+    } catch (e) {
+      log.error(`expireBounties: failed for ${b.id}`, e);
+    }
+  }
+  if (expired) log.info("expired bounties", { expired, refunded });
+  return { expired, refunded };
 }

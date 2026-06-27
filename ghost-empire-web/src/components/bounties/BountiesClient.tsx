@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import { emitBalance } from "@/lib/balance-bus";
 import { Link } from "@/i18n/navigation";
-import { Target, Coins, Plus, Loader2, History, Users, Trophy } from "lucide-react";
+import { Target, Coins, Plus, Loader2, History, Users, Trophy, Clock } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ToastProvider";
@@ -156,6 +156,7 @@ function CreateBountyForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [pledgeInput, setPledgeInput] = useState("");
+  const [expiryHours, setExpiryHours] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -171,10 +172,11 @@ function CreateBountyForm({
         title: trimmed,
         description: description.trim() || undefined,
         initialPledge: pledge,
+        expiresInHours: expiryHours ? parseInt(expiryHours, 10) : undefined,
       });
       emitBalance(data.newBalance);
       onToast("ok", t("created", { balance: fmt(data.newBalance) }));
-      setTitle(""); setDescription(""); setPledgeInput("");
+      setTitle(""); setDescription(""); setPledgeInput(""); setExpiryHours("");
       onSuccess();
     } catch (err) {
       onToast("err", err instanceof ApiError ? err.message : t("err"));
@@ -206,6 +208,20 @@ function CreateBountyForm({
           onChange={(e) => setDescription(e.target.value)}
           className="w-full border border-zinc-700 bg-black/40 px-3 py-2 text-sm text-white outline-hidden focus:border-red-600 resize-none"
         />
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("expiryLabel")}</span>
+          <select
+            value={expiryHours}
+            onChange={(e) => setExpiryHours(e.target.value)}
+            className="border border-zinc-700 bg-black/40 px-2 py-1.5 text-sm text-white outline-hidden focus:border-red-600"
+          >
+            <option value="">{t("expiryNone")}</option>
+            <option value="24">{t("expiry1d")}</option>
+            <option value="72">{t("expiry3d")}</option>
+            <option value="168">{t("expiry7d")}</option>
+            <option value="336">{t("expiry14d")}</option>
+          </select>
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("initialPledge")}</span>
           <input
@@ -295,6 +311,9 @@ function OpenBountyCard({
       <div className="flex items-center gap-3 text-xs text-zinc-500 mb-3 flex-wrap">
         <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {bounty.backers} {t("backers", { count: bounty.backers })}</span>
         <span>{t("by", { name: bounty.creator.name })}</span>
+        {bounty.expiresAt && (
+          <span className="flex items-center gap-1 text-orange-300/70"><Clock className="w-3 h-3" /> {t("expiresOn", { date: bounty.expiresAt.slice(0, 10) })}</span>
+        )}
         {bounty.iBacked && (
           <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-green-700 bg-green-950/40 text-green-300">
             {t("youBacked")}

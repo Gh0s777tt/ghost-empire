@@ -228,7 +228,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/webhooks/stripe` | Webhook Stripe (podpis `STRIPE_WEBHOOK_SECRET`) — aktywacja/odnowienie/wygaśnięcie planu tenanta |
 | `…/api/yt/poll-live-chat` | Polling YouTube Live Chat (super chaty / membery) |
 | `…/api/cron/streamlabs-poll` | Cron (Vercel) — polling donacji Streamlabs (`CRON_SECRET`) |
-| `…/api/cron/prune` | Cron (Vercel, 04:00) — czyszczenie starych rekordów transientowych (`CRON_SECRET`) |
+| `…/api/cron/prune` | Cron (Vercel, 04:00) — czyszczenie starych rekordów transientowych + **auto-wygasanie bounty ze zwrotem** (#681); `CRON_SECRET` |
 | `…/api/cron/weekly-rewards` | Cron (Vercel) — tygodniowe nagrody GT (`CRON_SECRET`) |
 | `…/api/cron/backup` | Cron (Vercel, 05:00) — off-site backup JSON → bucket S3-compatible (R2/B2/S3); **dormant** bez `BACKUP_S3_*` (`CRON_SECRET`, #677) |
 

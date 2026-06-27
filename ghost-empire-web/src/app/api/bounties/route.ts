@@ -91,7 +91,7 @@ export async function POST(req: Request) {
   const rl = await rateLimit(`bounty:create:${userId}`, 3, 5 * 60_000);
   if (!rl.allowed) return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
 
-  let body: { title?: string; description?: string; initialPledge?: number };
+  let body: { title?: string; description?: string; initialPledge?: number; expiresInHours?: number };
   try { body = await req.json(); } catch { return jsonError("Nieprawidłowe dane", 400); }
   if (typeof body.title !== "string" || typeof body.initialPledge !== "number") {
     return jsonError("Wymagane: title (string) + initialPledge (number)", 400);
@@ -102,6 +102,7 @@ export async function POST(req: Request) {
     title: body.title,
     description: typeof body.description === "string" ? body.description : null,
     initialPledge: Math.floor(body.initialPledge),
+    expiresInHours: typeof body.expiresInHours === "number" ? Math.floor(body.expiresInHours) : null,
   });
   if (!result.ok) return jsonError(result.error, result.status);
   return NextResponse.json(result);
