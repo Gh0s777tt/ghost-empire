@@ -22,21 +22,24 @@ export async function GET() {
     take: 50,
   });
 
-  // Per-prediction option breakdown
+  // Per-prediction option breakdown — aggregated in the DB (groupBy) instead of loading
+  // every entry row and summing in memory, which grew O(entries) with the bettor count. #perf
   const ids = all.map((p) => p.id);
-  const entries = await prisma.predictionEntry.findMany({
+  const grouped = await prisma.predictionEntry.groupBy({
+    by: ["predictionId", "optionIndex"],
     where: { predictionId: { in: ids } },
-    select: { predictionId: true, optionIndex: true, tokensWagered: true },
+    _sum: { tokensWagered: true },
+    _count: { _all: true },
   });
+  const aggByKey = new Map<string, { total: number; count: number }>();
+  for (const g of grouped) {
+    aggByKey.set(`${g.predictionId}:${g.optionIndex}`, { total: g._sum.tokensWagered ?? 0, count: g._count._all });
+  }
   const breakdownById = new Map<string, Array<{ index: number; total: number; count: number }>>();
   for (const p of all) {
     const opts = p.options.map((_, idx) => {
-      const entriesForOpt = entries.filter((e) => e.predictionId === p.id && e.optionIndex === idx);
-      return {
-        index: idx,
-        total: entriesForOpt.reduce((s, e) => s + e.tokensWagered, 0),
-        count: entriesForOpt.length,
-      };
+      const a = aggByKey.get(`${p.id}:${idx}`);
+      return { index: idx, total: a?.total ?? 0, count: a?.count ?? 0 };
     });
     breakdownById.set(p.id, opts);
   }
