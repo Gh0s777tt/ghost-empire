@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Crown, Users, LogOut, Plus, Coins, Swords, Trophy } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { ErrorState } from "@/components/EmptyState";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
@@ -94,6 +95,7 @@ export function ClansPageClient({ isAuthenticated }: { isAuthenticated: boolean 
     <div>
       <h1 className="text-2xl font-bold text-white mb-1">{t("title")}</h1>
       <p className="text-zinc-500 text-sm mb-6">{t("subtitle")}</p>
+      <div className="mb-6 -mt-3"><HowItWorks>{t("help")}</HowItWorks></div>
 
       {toast && (
         <div className={`mb-4 text-sm px-3 py-2 rounded-lg border ${toast.kind === "ok" ? "border-emerald-800/60 bg-emerald-950/30 text-emerald-300" : "border-red-800/60 bg-red-950/30 text-red-300"}`}>

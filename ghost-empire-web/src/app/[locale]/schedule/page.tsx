@@ -8,6 +8,7 @@ import { ScheduleClient } from "@/components/schedule/ScheduleClient";
 
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import HowItWorks from "@/components/HowItWorks";
 import { localeAlternates } from "@/i18n/metadata";
 
 export const dynamic = "force-dynamic";
@@ -57,6 +58,7 @@ export default async function SchedulePage() {
             <p className="text-zinc-500 text-sm">
               {t("subtitle", { owner: tenant.ownerHandle, tz: tenant.timezone })}
             </p>
+            <HowItWorks>{t("help")}</HowItWorks>
           </div>
 
           {slots.length === 0 ? (

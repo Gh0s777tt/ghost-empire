@@ -3,6 +3,7 @@
 // Season "Wrapped" (#684): a personal monthly recap card. Read-only; data computed
 // server-side in lib/wrapped. The "vibe" drives a personalised headline.
 import { useTranslations, useLocale } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { Link } from "@/i18n/navigation";
 import { Sparkles, Crown, Target, Coins, Trophy, Award, TrendingUp, TrendingDown, Share2 } from "lucide-react";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
@@ -68,6 +69,7 @@ export function WrappedClient({
   return (
     <div className="space-y-6">
       <Heading season={t("season", { label: formatSeasonLabel(data.season.number, locale) })} />
+      {!isPublic && <HowItWorks>{t("help")}</HowItWorks>}
 
       {/* Vibe headline */}
       <section className="relative border border-red-900/60 bg-zinc-950/70 p-6 text-center overflow-hidden card-ghost-red">

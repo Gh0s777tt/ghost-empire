@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Brain, Check, X, Coins, Trophy } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { signIn } from "next-auth/react";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -66,6 +67,7 @@ export function TriviaClient({ isAuthenticated }: { isAuthenticated: boolean }) 
         )}
       </div>
       <p className="text-zinc-500 text-sm mb-6">{t("subtitle")} {total > 0 && <span className="text-zinc-600">· {answered}/{total}</span>}</p>
+      <div className="mb-6 -mt-3"><HowItWorks>{t("help")}</HowItWorks></div>
 
       {toast && <div className="mb-4 text-sm px-3 py-2 rounded-lg border border-red-800/60 bg-red-950/30 text-red-200">{toast}</div>}
 

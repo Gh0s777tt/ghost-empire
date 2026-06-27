@@ -1,5 +1,6 @@
 // src/app/games/page.tsx
 import { getTranslations } from "next-intl/server";
+import HowItWorks from "@/components/HowItWorks";
 import { localeAlternates } from "@/i18n/metadata";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
@@ -68,6 +69,7 @@ export default async function GamesPage() {
                 })
               : t("empty")}
           </p>
+          <HowItWorks>{t("help")}</HowItWorks>
         </div>
 
         {games.length > 0 && (

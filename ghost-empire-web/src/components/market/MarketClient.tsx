@@ -4,6 +4,7 @@
 // (cancel). All money/card moves go through the atomic /api/market POST actions.
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { Loader2, Store, Tag, X, ShoppingCart } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -80,6 +81,8 @@ export function MarketClient() {
         <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Store className="w-6 h-6 text-amber-400" /> {t("title")}</h1>
         {data.loggedIn && <span className="text-xs font-mono text-zinc-400 border border-zinc-800 rounded px-2 py-1">{data.balance.toLocaleString(nf)} {sym}</span>}
       </header>
+
+      <div className="mb-4 -mt-1"><HowItWorks>{t("help")}</HowItWorks></div>
 
       <div className="flex items-center gap-1.5 mb-4">
         {tabs.map((x) => (

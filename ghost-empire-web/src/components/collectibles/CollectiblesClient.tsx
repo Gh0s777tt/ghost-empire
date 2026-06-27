@@ -4,6 +4,7 @@
 // ×qty badge; ones you don't are dimmed silhouettes. Opening a pack reveals the card.
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import HowItWorks from "@/components/HowItWorks";
 import { Loader2, Package, Sparkles } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -70,6 +71,7 @@ export function CollectiblesClient() {
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Sparkles className="w-6 h-6 text-amber-400" /> {t("title")}</h1>
         <p className="text-zinc-500 text-sm mt-1">{t("subtitle")}</p>
+        <HowItWorks>{t("help")}</HowItWorks>
       </header>
 
       {data.cards.length === 0 ? (

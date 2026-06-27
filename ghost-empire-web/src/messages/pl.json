@@ -1,5 +1,6 @@
 {
   "wrapped": {
+    "help": "Wrapped to Twoje osobiste podsumowanie miesiąca — pozycja w lidze, bounty, przepływ %tokenName%, osiągnięcia i ranga, wszystko na jednej karcie do udostępnienia. Udostępnij swój link, a podgląd pokaże Twoje liczby.",
     "metaTitle": "Twój Sezon",
     "metaDesc": "Twój miesiąc na portalu w pigułce — predykcje, bounty, GT i osiągnięcia.",
     "publicMetaTitle": "Podsumowanie sezonu — {name}",
@@ -2564,6 +2565,7 @@
     "cmd_imagine": "Wygeneruj obrazek AI."
   },
   "collectibles": {
+    "help": "Otwieraj paczki kart za %tokenName%, by zdobywać karty kolekcjonerskie o różnej rzadkości. Kompletuj zestawy i rozbudowuj kolekcję — to, co masz, możesz filtrować po rzadkości.",
     "filterAll": "Wszystkie",
     "metaTitle": "Karty kolekcjonerskie",
     "metaDesc": "Otwieraj paczki za GT i zbieraj karty.",
@@ -2587,6 +2589,7 @@
     "err_error": "Coś poszło nie tak — spróbuj ponownie."
   },
   "market": {
+    "help": "Handluj kartami kolekcjonerskimi z innymi widzami za %tokenName%. Wystaw własną kartę albo kup ją z rynku — ceny ustalają sprzedający.",
     "metaTitle": "Giełda kart",
     "metaDesc": "Kupuj i sprzedawaj karty kolekcjonerskie za %gt%.",
     "title": "Giełda kart",
@@ -2662,6 +2665,7 @@
     "errVerify": "Nie udało się zweryfikować passkey."
   },
   "trivia": {
+    "help": "Odpowiadaj poprawnie na pytania quizu, by zdobyć %tokenName%. Na każde pytanie masz jedną próbę, więc zastanów się przed zatwierdzeniem odpowiedzi.",
     "title": "Quiz",
     "subtitle": "Odpowiadaj poprawnie, by zdobyć %gt%. Jedna próba na pytanie.",
     "loading": "Ładowanie…",
@@ -2957,6 +2961,7 @@
     "claimedItem": "Odebrano: {label}"
   },
   "schedule": {
+    "help": "Tygodniowy plan streamów — kiedy streamer wchodzi na żywo i na jakiej platformie. Godziny podane są w strefie czasowej streamera.",
     "metaTitle": "Plan streamów",
     "metaDesc": "Tygodniowy plan streamów %owner% — Twitch + Kick.",
     "title": "Plan streamów",
@@ -3102,6 +3107,7 @@
     "gameMines": "Miny"
   },
   "companion": {
+    "help": "Karm swojego upiornego towarzysza %tokenName%, by zdobywał poziomy. Każde karmienie dodaje XP i odblokowuje kolejne stadia ewolucji — im więcej zainwestujesz, tym bardziej się przemienia.",
     "title": "Widmowy Kompan",
     "subtitle": "Karm swojego widmowego kompana Ghost Tokenami i patrz, jak ewoluuje.",
     "guestTitle": "Adoptuj Widmowego Kompana",
@@ -3131,6 +3137,7 @@
     "cancel": "Anuluj"
   },
   "clans": {
+    "help": "Dołącz do klanu lub załóż własny, a potem wrzucaj %tokenName% do wspólnego skarbca. Klany rywalizują w osobnym rankingu — im więcej wpłacają członkowie, tym wyżej jesteście.",
     "title": "Klany",
     "subtitle": "Zbierzcie się w drużynę, zrzucajcie GT do skarbca klanu i wbijajcie na szczyt rankingu.",
     "guestTitle": "Dołącz do klanu",
@@ -3172,6 +3179,7 @@
     "hofPoints": "{n} pkt"
   },
   "clips": {
+    "help": "Zagłosuj na ulubiony klip z ostatnich 7 dni — klip z największą liczbą głosów zdobywa koronę. Masz jeden głos na tydzień, więc wybieraj rozważnie.",
     "title": "Klip tygodnia",
     "subtitle": "Zagłosuj na najlepszy klip z ostatnich 7 dni — prowadzący zgarnia koronę. Jeden głos na tydzień.",
     "loading": "Ładowanie klipów…",
@@ -3185,6 +3193,7 @@
     "errGeneric": "Coś poszło nie tak."
   },
   "sounds": {
+    "help": "Wydaj %tokenName%, by odtworzyć dźwięk na żywo na streamie. Każdy dźwięk możesz najpierw odsłuchać — streamer usłyszy go w chwili potwierdzenia.",
     "title": "Dźwięki na streamie",
     "subtitle": "Wydaj %gt%, by odpalić dźwięk na żywo na streamie. Posłuchaj przed zakupem.",
     "guestText": "Zaloguj się, by odpalać dźwięki na streamie.",
@@ -3216,6 +3225,7 @@
     "recentWins": "Ostatnie wygrane"
   },
   "games": {
+    "help": "Biblioteka gier streamera wraz z łącznym czasem gry. Zalogowani widzowie mogą zagłosować na grę, którą chcą zobaczyć następną — najczęściej wybierana dostaje koronę.",
     "metaTitle": "Biblioteka gier",
     "metaDesc": "Gry, w które gram — zagregowana biblioteka (Steam i więcej).",
     "title": "🎮 Biblioteka gier",

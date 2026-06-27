@@ -1,5 +1,6 @@
 {
   "wrapped": {
+    "help": "Wrapped is your personal monthly recap — league standing, bounties, %tokenName% flow, achievements and rank, all on one shareable card. Share your link and the preview shows your own numbers.",
     "metaTitle": "Your Season",
     "metaDesc": "Your month on the portal, wrapped — predictions, bounties, GT and achievements.",
     "publicMetaTitle": "{name}'s Season Wrapped",
@@ -2564,6 +2565,7 @@
     "cmd_imagine": "Generate an AI image."
   },
   "collectibles": {
+    "help": "Open card packs with %tokenName% to pull collectibles of different rarities. Complete sets to build your collection — you can filter what you own by rarity.",
     "filterAll": "All",
     "metaTitle": "Collectible cards",
     "metaDesc": "Open GT packs and collect cards.",
@@ -2587,6 +2589,7 @@
     "err_error": "Something went wrong — try again."
   },
   "market": {
+    "help": "Trade collectible cards with other viewers for %tokenName%. List a card you own or buy one from the market — sellers set the prices.",
     "metaTitle": "Card market",
     "metaDesc": "Buy and sell collectible cards for %gt%.",
     "title": "Card market",
@@ -2662,6 +2665,7 @@
     "errVerify": "The passkey couldn't be verified."
   },
   "trivia": {
+    "help": "Answer the quiz questions correctly to earn %tokenName%. You get one attempt per question, so think before you lock in your answer.",
     "title": "Quiz",
     "subtitle": "Answer correctly to earn %gt%. One attempt per question.",
     "loading": "Loading…",
@@ -2957,6 +2961,7 @@
     "claimedItem": "Claimed: {label}"
   },
   "schedule": {
+    "help": "The streamer's weekly schedule — when they go live and on which platform. Times are shown in the streamer's timezone.",
     "metaTitle": "Stream schedule",
     "metaDesc": "%owner%'s weekly stream schedule — Twitch + Kick.",
     "title": "Stream schedule",
@@ -3102,6 +3107,7 @@
     "gameMines": "Mines"
   },
   "companion": {
+    "help": "Feed your spectral companion %tokenName% to level it up. Each feeding adds XP and unlocks new evolution stages — the more you invest, the more it transforms.",
     "title": "Ghost Companion",
     "subtitle": "Feed your spectral companion Ghost Tokens and watch it evolve.",
     "guestTitle": "Adopt your Ghost Companion",
@@ -3131,6 +3137,7 @@
     "cancel": "Cancel"
   },
   "clans": {
+    "help": "Join or found a clan, then pool %tokenName% into its shared treasury. Clans compete on a dedicated leaderboard — the more your members contribute, the higher you rank.",
     "title": "Clans",
     "subtitle": "Band together, pool GT into your clan's treasury and climb the leaderboard.",
     "guestTitle": "Join a clan",
@@ -3172,6 +3179,7 @@
     "hofPoints": "{n} pts"
   },
   "clips": {
+    "help": "Vote for your favourite clip from the last 7 days — the clip with the most votes takes the crown. You get one vote per week, so pick wisely.",
     "title": "Clip of the Week",
     "subtitle": "Vote for the best clip from the last 7 days — the leader takes the crown. One vote per week.",
     "loading": "Loading clips…",
@@ -3185,6 +3193,7 @@
     "errGeneric": "Something went wrong."
   },
   "sounds": {
+    "help": "Spend %tokenName% to play a sound live on the stream. Preview any sound before you buy — the streamer hears it the moment you confirm.",
     "title": "Stream sounds",
     "subtitle": "Spend %gt% to play a sound live on the stream. Preview it before you buy.",
     "guestText": "Sign in to play sounds on the stream.",
@@ -3216,6 +3225,7 @@
     "recentWins": "Recent wins"
   },
   "games": {
+    "help": "The streamer's game library with total playtime. Logged-in viewers can vote for the game they want to see next — the most-wanted game gets a crown.",
     "metaTitle": "Game library",
     "metaDesc": "Games I play — an aggregated library (Steam and more).",
     "title": "🎮 Game library",
