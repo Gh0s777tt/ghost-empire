@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentTenant } from "@/lib/tenant";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { getWrapped } from "@/lib/wrapped";
-import { fmt } from "@/lib/utils";
+import { fmt, formatSeasonLabel } from "@/lib/utils";
 
 export const alt = "Season Wrapped";
 export const size = { width: 1200, height: 630 };
@@ -84,7 +84,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
           {data.user.name}
         </div>
         <div style={{ marginTop: 8, fontSize: 26, color: "#a1a1aa", letterSpacing: "0.18em", textTransform: "uppercase", display: "flex" }}>
-          {(pl ? "Podsumowanie · " : "Season Wrapped · ") + data.season.label}
+          {(pl ? "Podsumowanie · " : "Season Wrapped · ") + formatSeasonLabel(data.season.number, locale)}
         </div>
 
         {/* Vibe headline */}

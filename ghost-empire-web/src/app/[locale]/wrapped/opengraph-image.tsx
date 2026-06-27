@@ -8,6 +8,7 @@ import { ImageResponse } from "next/og";
 import { getCurrentTenant } from "@/lib/tenant";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { monthBounds } from "@/lib/seasons";
+import { formatSeasonLabel } from "@/lib/utils";
 
 export const alt = "Season Wrapped";
 export const size = { width: 1200, height: 630 };
@@ -17,7 +18,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const { locale } = await params;
   const t = await getCurrentTenant();
   const rgb = hexToRgbTriplet(t.brandColor).replaceAll(" ", ",");
-  const { label } = monthBounds();
+  const label = formatSeasonLabel(monthBounds().number, locale);
   const headline = locale === "pl" ? "PODSUMOWANIE SEZONU" : "SEASON WRAPPED";
   const tagline =
     locale === "pl"

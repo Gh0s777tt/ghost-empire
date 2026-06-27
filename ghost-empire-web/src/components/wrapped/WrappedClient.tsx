@@ -2,13 +2,13 @@
 // src/components/wrapped/WrappedClient.tsx
 // Season "Wrapped" (#684): a personal monthly recap card. Read-only; data computed
 // server-side in lib/wrapped. The "vibe" drives a personalised headline.
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Sparkles, Crown, Target, Coins, Trophy, Award, TrendingUp, TrendingDown, Share2 } from "lucide-react";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { useToast } from "@/components/ToastProvider";
-import { cn } from "@/lib/utils";
+import { cn, formatSeasonLabel } from "@/lib/utils";
 
 type WrappedData = {
   season: { number: number; label: string };
@@ -32,6 +32,7 @@ export function WrappedClient({
   isPublic?: boolean; // public /wrapped/[username] view — hides the private GT card, adds a CTA
 }) {
   const t = useTranslations("wrapped");
+  const locale = useLocale();
   const fmt = useLocaleFmt();
   const { tokenSymbol } = useTenantBranding();
   const toast = useToast();
@@ -54,7 +55,7 @@ export function WrappedClient({
       !isPublic && data!.user.username
         ? `${window.location.origin}/wrapped/${data!.user.username}`
         : window.location.href;
-    const text = t("shareText", { label: data!.season.label, rank: data!.rank ?? 0 });
+    const text = t("shareText", { label: formatSeasonLabel(data!.season.number, locale), rank: data!.rank ?? 0 });
     if (typeof navigator !== "undefined" && navigator.share) {
       try { await navigator.share({ title: t("metaTitle"), text, url }); } catch { /* user cancelled */ }
       return;
@@ -66,7 +67,7 @@ export function WrappedClient({
 
   return (
     <div className="space-y-6">
-      <Heading season={t("season", { label: data.season.label })} />
+      <Heading season={t("season", { label: formatSeasonLabel(data.season.number, locale) })} />
 
       {/* Vibe headline */}
       <section className="relative border border-red-900/60 bg-zinc-950/70 p-6 text-center overflow-hidden card-ghost-red">

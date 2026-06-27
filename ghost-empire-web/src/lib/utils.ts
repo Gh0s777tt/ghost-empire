@@ -35,6 +35,19 @@ export function formatDate(date: string | Date, locale: string = "pl"): string {
   });
 }
 
+/** Localized season label ("Czerwiec 2026" / "June 2026" / "六月 2026") from the season
+ *  number (months since the 2026 epoch, 1-based — see seasons.monthBounds). seasons.ts keeps a
+ *  Polish label for storage; this localizes the *display* per locale. Month is capitalized so it
+ *  reads as a title in every locale. Pure — unit-tested. */
+export function formatSeasonLabel(seasonNumber: number, locale: string = "pl"): string {
+  const month0 = (((seasonNumber - 1) % 12) + 12) % 12; // guard negative/odd inputs
+  const year = 2026 + Math.floor((seasonNumber - 1) / 12);
+  const s = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(year, month0, 1)),
+  );
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function today(): string {
   return new Date().toISOString().split("T")[0];
 }

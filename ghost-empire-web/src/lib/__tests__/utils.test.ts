@@ -8,6 +8,7 @@ import {
   timeLeft,
   timeAgo,
   formatDate,
+  formatSeasonLabel,
   verifyBotSecret,
   verifyBotSecretForTenant,
 } from "@/lib/utils";
@@ -115,6 +116,23 @@ describe("formatDate (locale)", () => {
 
   it("uses the English month name for en", () => {
     expect(formatDate(new Date(2026, 5, 15), "en")).toMatch(/Jun/);
+  });
+});
+
+describe("formatSeasonLabel (localized, capitalized)", () => {
+  it("uses the Polish month + year by default, capitalized", () => {
+    expect(formatSeasonLabel(6)).toBe("Czerwiec 2026"); // season 6 = June 2026
+    expect(formatSeasonLabel(1)).toBe("Styczeń 2026"); // season 1 = Jan 2026
+  });
+  it("localizes per locale", () => {
+    expect(formatSeasonLabel(6, "en")).toBe("June 2026");
+    expect(formatSeasonLabel(1, "en")).toBe("January 2026");
+    expect(formatSeasonLabel(6, "de")).toMatch(/Juni 2026/);
+  });
+  it("rolls the year over after December", () => {
+    expect(formatSeasonLabel(12, "en")).toBe("December 2026");
+    expect(formatSeasonLabel(13, "en")).toBe("January 2027");
+    expect(formatSeasonLabel(18, "en")).toBe("June 2027");
   });
 });
 

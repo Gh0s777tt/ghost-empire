@@ -2,12 +2,12 @@
 // src/components/leagues/LeaguesClient.tsx
 // Prediction Leagues / "Liga Typerów" (#680): a seasonal leaderboard of the best predictors
 // + a personal "Wrapped" card. Read-only — all data derived from resolved prediction entries.
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import { Link } from "@/i18n/navigation";
 import { Crown, TrendingUp, TrendingDown, Target, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { cn } from "@/lib/utils";
+import { cn, formatSeasonLabel } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
 
@@ -51,6 +51,7 @@ export function LeaguesClient({
   hallOfFame: HofSeason[];
 }) {
   const t = useTranslations("leagues");
+  const locale = useLocale();
   const fmt = useLocaleFmt();
   const { tokenSymbol } = useTenantBranding();
 
@@ -66,7 +67,7 @@ export function LeaguesClient({
             {t("heading")}
           </h1>
           <span className="ms-1 text-[10px] font-mono uppercase tracking-widest px-2 py-1 border border-zinc-700 text-zinc-300">
-            {t("season", { label: season.label })}
+            {t("season", { label: formatSeasonLabel(season.number, locale) })}
           </span>
         </div>
         <p className="text-zinc-500 text-sm max-w-2xl">{t("subtitle")}</p>
@@ -113,7 +114,7 @@ export function LeaguesClient({
       <section>
         <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
           <Crown className="w-5 h-5 text-yellow-500" />
-          {t("tableTitle", { label: season.label })}
+          {t("tableTitle", { label: formatSeasonLabel(season.number, locale) })}
         </h2>
         {rows.length === 0 ? (
           <EmptyState icon={<Crown className="w-6 h-6" />} title={t("empty")} message={t("emptyMsg")} />
@@ -176,7 +177,7 @@ export function LeaguesClient({
           <div className="space-y-3">
             {hallOfFame.map((s) => (
               <div key={s.seasonNumber} className="border border-zinc-800 bg-zinc-950/40 p-3">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{s.seasonLabel}</div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{formatSeasonLabel(s.seasonNumber, locale)}</div>
                 <div className="grid sm:grid-cols-3 gap-2">
                   {s.podium.map((p) => (
                     <div key={p.rank} className="flex items-center gap-2 border border-zinc-800/70 bg-black/20 px-2 py-1.5">
