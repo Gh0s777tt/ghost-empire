@@ -2562,7 +2562,8 @@
     "cmd_heist": "Start or join a co-op heist for GT (more people = better odds).",
     "cmd_sr": "Request a song for the stream.",
     "cmd_bot": "Ask the AI bot a question.",
-    "cmd_imagine": "Generate an AI image."
+    "cmd_imagine": "Generate an AI image.",
+    "cmd_raffleKeyword": "Type the keyword the streamer announces (e.g. GHOST) in chat to enter the raffle — one entry per person."
   },
   "collectibles": {
     "help": "Open card packs with %tokenName% to pull collectibles of different rarities. Complete sets to build your collection — you can filter what you own by rarity.",

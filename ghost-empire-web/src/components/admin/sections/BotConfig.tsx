@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Bot, Loader2, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
+import { CommandHelp } from "@/components/CommandHelp";
 import type { BotConfigData } from "../types";
 
 export function BotConfigCard({
@@ -62,6 +63,7 @@ export function BotConfigCard({
       <p className="text-zinc-500 text-xs mb-3">
         {t("intro")}
       </p>
+      <div className="mb-3"><CommandHelp feature="ai" /></div>
 
       <div className="space-y-3">
         <label className="flex items-center gap-2 cursor-pointer">

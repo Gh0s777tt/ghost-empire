@@ -5,6 +5,7 @@ import { Music, Loader2, Play, Check, SkipForward, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
+import { CommandHelp } from "@/components/CommandHelp";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 type SongRow = {
@@ -97,6 +98,7 @@ export function SongQueueManager({
       <p className="text-zinc-500 text-xs mb-3">
         {t.rich("intro", { code: (c) => <code className="text-zinc-300">{c}</code>, cmd: t("cmd") })}
       </p>
+      <div className="mb-3"><CommandHelp feature="songs" /></div>
 
       {loading ? (
         <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>

@@ -2562,7 +2562,8 @@
     "cmd_heist": "Rozpocznij lub dołącz do napadu o GT (więcej osób = większa szansa).",
     "cmd_sr": "Zamów utwór na stream.",
     "cmd_bot": "Zadaj pytanie botowi AI.",
-    "cmd_imagine": "Wygeneruj obrazek AI."
+    "cmd_imagine": "Wygeneruj obrazek AI.",
+    "cmd_raffleKeyword": "Wpisz na czacie słowo-klucz ogłoszone przez streamera (np. GHOST), aby dołączyć do losowania — jeden wpis na osobę."
   },
   "collectibles": {
     "help": "Otwieraj paczki kart za %tokenName%, by zdobywać karty kolekcjonerskie o różnej rzadkości. Kompletuj zestawy i rozbudowuj kolekcję — to, co masz, możesz filtrować po rzadkości.",

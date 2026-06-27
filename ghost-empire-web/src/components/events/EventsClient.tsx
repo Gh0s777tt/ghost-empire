@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
+import { CommandHelp } from "@/components/CommandHelp";
 import {
   Calendar, Gift, Ticket, Trophy, Zap, Users, Clock, Check, Loader2, Minus, Plus, Crown,
 } from "lucide-react";
@@ -137,6 +138,7 @@ export function EventsClient({
           {t("subtitle")}
         </p>
         <HowItWorks>{t("help")}</HowItWorks>
+        <div className="mt-3"><CommandHelp feature="raffle" /></div>
       </div>
 
       {events.length === 0 && (

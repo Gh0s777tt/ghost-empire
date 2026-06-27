@@ -3,7 +3,10 @@
 // translated); descriptions are i18n keys in the `commandHelp` namespace. Rendered by the
 // reusable <CommandHelp feature="…"> popover on viewer pages + admin sections, so anyone can
 // see "what can I type for this feature and what does it do". Authoritative strings mirror the
-// bot (see /about changelog + ghost-empire-chat): !bet, !roulette, !duel/!accept, !heist, !sr, !imagine.
+// bot's actual message handlers (ghost-empire-chat: gtGames/gtDuel/heist/songRequest/aiCommands/
+// raffle) + /about: !slots/!coinflip/!roulette, !duel/!accept, !heist, !sr, @bot/!imagine, and the
+// chat-keyword raffle. NOTE: predictions/trivia/wheel are placed on the WEB (no viewer chat
+// command), so they intentionally have no entry here.
 export type FeatureCmd = { cmd: string; descKey: string };
 
 export const FEATURE_COMMANDS: Record<string, FeatureCmd[]> = {
@@ -24,4 +27,7 @@ export const FEATURE_COMMANDS: Record<string, FeatureCmd[]> = {
     { cmd: "@bot <pytanie>", descKey: "cmd_bot" },
     { cmd: "!imagine <opis>", descKey: "cmd_imagine" },
   ],
+  // Chat-keyword raffle (#673) — viewers enter by typing the streamer's announced keyword,
+  // not a fixed command, so the "trigger" is the keyword itself.
+  raffle: [{ cmd: "<słowo-klucz>", descKey: "cmd_raffleKeyword" }],
 };
