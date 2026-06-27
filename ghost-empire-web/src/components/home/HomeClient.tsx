@@ -285,7 +285,7 @@ function DailyBonusCard() {
 function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
-  const { brandName, logoUrl } = useTenantBranding();
+  const { brandName, logoUrl, channels } = useTenantBranding();
   const stats = [
     { label: t("statPlayers"), value: "847+" },
     { label: t("statTokens"), value: "12M+" },
@@ -322,14 +322,16 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
           >
             {t("join")}
           </button>
-          <a
-            href="https://twitch.tv/gh0s77tt"
-            target="_blank"
-            rel="noreferrer"
-            className="px-8 py-4 border border-zinc-700 hover:border-zinc-500 text-zinc-300 font-bold tracking-widest uppercase transition-all text-sm"
-          >
-            {t("watchTwitch")}
-          </a>
+          {channels[0] && (
+            <a
+              href={channels[0].url}
+              target="_blank"
+              rel="noreferrer"
+              className="px-8 py-4 border border-zinc-700 hover:border-zinc-500 text-zinc-300 font-bold tracking-widest uppercase transition-all text-sm"
+            >
+              {t("watchLive")}
+            </a>
+          )}
           {/* Self-service SaaS signup — a streamer can launch their own portal (#660). */}
           <Link
             href="/onboarding"
@@ -652,6 +654,7 @@ type LiveData = { live: boolean; viewers?: number; game?: string | null; title?:
 function LiveBanner() {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
+  const { channels } = useTenantBranding();
   const [live, setLive] = useState<LiveData | null>(null);
 
   useEffect(() => {
@@ -701,7 +704,7 @@ function LiveBanner() {
           {live.game && <p className="text-xs text-zinc-400">🎮 {live.game}</p>}
         </div>
         <a
-          href={live.watchUrl ?? "https://twitch.tv/gh0s77tt"}
+          href={live.watchUrl ?? channels[0]?.url ?? "#"}
           target="_blank"
           rel="noreferrer"
           className="hidden sm:flex shrink-0 items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider transition-colors clip-tag"

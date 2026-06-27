@@ -5,6 +5,7 @@
 // client components read them via useTenantBranding() — most commonly the
 // currency naming for "123 GT"-style suffixes that live outside i18n strings.
 import { createContext, useContext } from "react";
+import { streamingChannels, type ChannelLink } from "@/lib/channels";
 
 export type TenantBrandingValue = {
   tokenName: string;
@@ -16,6 +17,8 @@ export type TenantBrandingValue = {
   logoUrl: string | null;
   /** Tenant accent color (hex) — same value the layout feeds into --brand. */
   brandColor: string;
+  /** Portal's public streaming channels (ordered; [0] = primary "watch live" target). */
+  channels: ChannelLink[];
 };
 
 const TenantBrandingContext = createContext<TenantBrandingValue>({
@@ -26,6 +29,7 @@ const TenantBrandingContext = createContext<TenantBrandingValue>({
   owner: "Gh0s77tt",
   logoUrl: null,
   brandColor: "#E50914",
+  channels: streamingChannels(null, true),
 });
 
 export function TenantBrandingProvider({

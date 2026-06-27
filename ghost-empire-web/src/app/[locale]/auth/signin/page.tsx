@@ -27,7 +27,7 @@ const PROVIDER_CONFIG: Record<
 
 export default function SignInPage() {
   const t = useTranslations("signin");
-  const { brandName, logoUrl } = useTenantBranding();
+  const { brandName, logoUrl, channels } = useTenantBranding();
   const [providers, setProviders] = useState<Record<string, Provider> | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -268,8 +268,12 @@ export default function SignInPage() {
           <Link href="/about" className="hover:text-red-400 transition-colors underline-offset-2 hover:underline">
             {t("learnMore")}
           </Link>
-          <br />
-          twitch.tv/gh0s77tt · kick.com/Gh0s77tt
+          {channels.length > 0 && (
+            <>
+              <br />
+              {channels.map((c) => c.label).join(" · ")}
+            </>
+          )}
         </p>
       </div>
     </div>

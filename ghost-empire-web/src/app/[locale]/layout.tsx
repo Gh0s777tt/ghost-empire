@@ -9,7 +9,8 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TenantBrandingProvider } from "@/components/TenantBranding";
-import { getCurrentTenant } from "@/lib/tenant";
+import { getCurrentTenant, DEFAULT_TENANT_SLUG } from "@/lib/tenant";
+import { streamingChannels } from "@/lib/channels";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { normalizeTheme } from "@/lib/themes";
 import { VIEWER_PREVIEW_COOKIE, readViewerPreview } from "@/lib/viewer-preview";
@@ -48,6 +49,7 @@ export default async function LocaleLayout({
   const t = await getTranslations("common");
   // White-label branding for client components ("123 GT" suffixes outside i18n).
   const tenant = await getCurrentTenant();
+  const isFounderPortal = tenant.id === null || tenant.slug === DEFAULT_TENANT_SLUG;
   const branding = {
     tokenName: tenant.tokenName,
     tokenSymbol: tenant.tokenSymbol,
@@ -56,6 +58,7 @@ export default async function LocaleLayout({
     owner: tenant.ownerHandle,
     logoUrl: tenant.logoUrl,
     brandColor: tenant.brandColor,
+    channels: streamingChannels(tenant.socialLinks, isFounderPortal),
   };
   // Tenant accent → CSS variables; globals.css derives every red/glow from these.
   const brandStyle = {

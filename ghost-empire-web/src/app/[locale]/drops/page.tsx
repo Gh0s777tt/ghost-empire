@@ -1,7 +1,8 @@
 // src/app/drops/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant, DEFAULT_TENANT_SLUG } from "@/lib/tenant";
+import { streamingChannels } from "@/lib/channels";
 import { Header } from "@/components/Header";
 import HowItWorks from "@/components/HowItWorks";
 import { DropRedeemBox } from "@/components/drops/DropRedeemBox";
@@ -27,6 +28,8 @@ export default async function DropsPage() {
   const t = await getTranslations("drops");
   const tid = await currentTenantId();
   const tenant = await getCurrentTenant();
+  const isFounderPortal = tenant.id === null || tenant.slug === DEFAULT_TENANT_SLUG;
+  const liveChannel = streamingChannels(tenant.socialLinks, isFounderPortal)[0]?.label;
 
   let myClaims: Array<{
     id: string;
@@ -117,9 +120,11 @@ export default async function DropsPage() {
               {t("activeDrops")}{" "}
               <span className="text-white font-mono font-bold">{activeDropsCount}</span>
             </span>
-            <span className="text-zinc-700 text-xs ml-auto font-mono uppercase tracking-widest">
-              {t("liveAt", { channel: "twitch.tv/gh0s77tt" })}
-            </span>
+            {liveChannel && (
+              <span className="text-zinc-700 text-xs ml-auto font-mono uppercase tracking-widest">
+                {t("liveAt", { channel: liveChannel })}
+              </span>
+            )}
           </div>
 
           {/* User stats */}
