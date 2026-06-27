@@ -7,6 +7,7 @@
 import { prisma } from "@/lib/prisma";
 import { monthBounds } from "@/lib/seasons";
 import { createLogger } from "@/lib/logger";
+import { grantManualAchievement } from "@/lib/achievements";
 
 const log = createLogger("league-rewards");
 
@@ -17,6 +18,14 @@ export const MIN_PLAYS_FOR_PRIZE = 3;
 /** Pure: GT prize for a 1-based rank (0 outside the prize table). Unit-tested. */
 export function prizeForRank(rank: number): number {
   return LEAGUE_PRIZES[rank - 1] ?? 0;
+}
+
+/** Pure: the one-time milestone achievement codes a finishing rank earns (#683). Unit-tested. */
+export function leagueAchievementCodes(rank: number): string[] {
+  const codes: string[] = [];
+  if (rank >= 1 && rank <= 3) codes.push("league_podium");
+  if (rank === 1) codes.push("league_winner");
+  return codes;
 }
 
 /** Pure: the [start,end) bounds + number/label of the calendar month BEFORE `now`. Unit-tested. */
@@ -90,6 +99,10 @@ export async function settleLeagueSeason(
       }
       return total;
     });
+    // Post-commit: one-time milestone achievements (#683) — idempotent + never throws.
+    for (let i = 0; i < top.length; i++) {
+      for (const code of leagueAchievementCodes(i + 1)) await grantManualAchievement(top[i].userId, code);
+    }
     log.info("league settled", { tenantId, seasonNumber, winners: top.length, prized });
     return { tenantId, settled: true, winners: top.length, prized };
   } catch (e) {

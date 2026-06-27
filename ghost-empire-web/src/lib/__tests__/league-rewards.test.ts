@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prizeForRank, previousMonthBounds, LEAGUE_PRIZES } from "../league-rewards";
+import { prizeForRank, previousMonthBounds, leagueAchievementCodes, LEAGUE_PRIZES } from "../league-rewards";
 
 describe("prizeForRank", () => {
   it("pays the prize table for ranks 1..3, nothing beyond", () => {
@@ -32,5 +32,19 @@ describe("previousMonthBounds", () => {
     const b = previousMonthBounds(new Date(Date.UTC(2026, 6, 1, 0, 0, 0))); // Jul 1 -> June
     expect(b.label).toBe("Czerwiec 2026");
     expect(b.end.toISOString()).toBe("2026-07-01T00:00:00.000Z");
+  });
+});
+
+describe("leagueAchievementCodes", () => {
+  it("rank 1 earns both podium and winner", () => {
+    expect(leagueAchievementCodes(1).sort()).toEqual(["league_podium", "league_winner"]);
+  });
+  it("ranks 2 and 3 earn podium only", () => {
+    expect(leagueAchievementCodes(2)).toEqual(["league_podium"]);
+    expect(leagueAchievementCodes(3)).toEqual(["league_podium"]);
+  });
+  it("rank 4+ and non-podium earn nothing", () => {
+    expect(leagueAchievementCodes(4)).toEqual([]);
+    expect(leagueAchievementCodes(0)).toEqual([]);
   });
 });

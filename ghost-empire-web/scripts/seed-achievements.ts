@@ -28,6 +28,11 @@ const NEW_ACHIEVEMENTS = [
   { code: "companion_phantom", name: "Władca Widm",   icon: "👑", rarity: "legendary", description: "Wyhoduj kompana do etapu Władca Widm (40000 XP)", triggerType: "companion_xp",     triggerValue: 40000, tokenReward: 30000 },
   { code: "clan_member",       name: "Drużynowy",     icon: "🛡️", rarity: "common",    description: "Dołącz lub załóż klan",                           triggerType: "clans_joined",     triggerValue: 1,     tokenReward: 500 },
   { code: "clan_patron",       name: "Mecenas Klanu", icon: "💰", rarity: "epic",      description: "Wpłać 10 000 GT do skarbca klanu jednorazowo",    triggerType: "clan_contributed", triggerValue: 10000, tokenReward: 5000 },
+  // Viewer Bounties + Liga Typerów (#683) — manual (granted by code at the event).
+  { code: "bounty_creator",    name: "Łowca Wyzwań",       icon: "🎯", rarity: "common",    description: "Otwórz swoje pierwsze bounty",                            triggerType: "manual", triggerValue: 1, tokenReward: 500 },
+  { code: "bounty_backer_win", name: "Spełnione Życzenie", icon: "✅", rarity: "rare",      description: "Bounty, które wsparłeś, zostało wykonane przez streamera", triggerType: "manual", triggerValue: 1, tokenReward: 1000 },
+  { code: "league_podium",     name: "Na Podium",          icon: "🏅", rarity: "epic",      description: "Zakończ miesiąc w top 3 Ligi Typerów",                    triggerType: "manual", triggerValue: 1, tokenReward: 2000 },
+  { code: "league_winner",     name: "Król Typerów",       icon: "👑", rarity: "legendary", description: "Wygraj miesięczną Ligę Typerów (1. miejsce)",             triggerType: "manual", triggerValue: 1, tokenReward: 5000 },
 ];
 
 async function main() {

@@ -8,6 +8,7 @@
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { createLogger } from "@/lib/logger";
+import { grantManualAchievement } from "@/lib/achievements";
 
 const log = createLogger("bounties");
 
@@ -68,7 +69,7 @@ export async function createBounty(opts: {
 
   const tid = await currentTenantId();
   try {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const [mine, portal] = await Promise.all([
         tx.bounty.count({ where: { creatorId: opts.userId, status: "open", ...(tid ? { tenantId: tid } : {}) } }),
         tx.bounty.count({ where: { status: "open", ...(tid ? { tenantId: tid } : {}) } }),
@@ -93,6 +94,9 @@ export async function createBounty(opts: {
       const fresh = await tx.user.findUnique({ where: { id: opts.userId }, select: { tokens: true } });
       return { ok: true, bountyId: bounty.id, newBalance: fresh?.tokens ?? 0 } as const;
     });
+    // Post-commit: first-bounty milestone (#683) — idempotent + never throws.
+    if (result.ok) await grantManualAchievement(opts.userId, "bounty_creator");
+    return result;
   } catch (e) {
     log.error("createBounty failed", e);
     return { ok: false, status: 500, error: "Błąd serwera" };
@@ -143,7 +147,7 @@ export async function resolveBounty(opts: { bountyId: string; outcome: "complete
   }
   const tid = opts.tenantId !== undefined ? opts.tenantId : await currentTenantId();
   try {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "bounties" WHERE id = ${opts.bountyId} FOR UPDATE`;
       const b = await tx.bounty.findFirst({ where: { id: opts.bountyId, ...(tid ? { tenantId: tid } : {}) }, include: { pledges: true } });
       if (!b) return { ok: false, status: 404, error: "Nie znaleziono" } as const;
@@ -178,6 +182,12 @@ export async function resolveBounty(opts: { bountyId: string; outcome: "complete
       }
       return { ok: true, outcome: "completed", refunded: 0, burned: b.pooledGt } as const;
     });
+    // Post-commit: backers of a COMPLETED bounty earn the "wish granted" milestone (#683).
+    if (result.ok && result.outcome === "completed") {
+      const backers = await prisma.bountyPledge.findMany({ where: { bountyId: opts.bountyId }, distinct: ["userId"], select: { userId: true } });
+      for (const { userId } of backers) await grantManualAchievement(userId, "bounty_backer_win");
+    }
+    return result;
   } catch (e) {
     log.error("resolveBounty failed", e);
     return { ok: false, status: 500, error: "Błąd serwera" };
