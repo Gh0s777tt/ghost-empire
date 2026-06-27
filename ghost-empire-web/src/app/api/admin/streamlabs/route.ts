@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { pollAndProcessDonations } from "@/lib/streamlabs";
 import { getStreamlabsConnection } from "@/lib/platform-tokens";
+import { currentTenantId } from "@/lib/tenant";
 
 // POST { action: "sync" | "disconnect" }
 export async function POST(req: Request) {
@@ -15,8 +16,12 @@ export async function POST(req: Request) {
   let body: { action?: string };
   try { body = await req.json(); } catch { body = {}; }
 
+  // Scope to THIS admin's portal (resolved from the request host) — a sub-tenant admin
+  // must sync/disconnect their OWN Streamlabs connection, not the founder's default row.
+  const tid = await currentTenantId();
+
   if (body.action === "sync") {
-    const result = await pollAndProcessDonations();
+    const result = await pollAndProcessDonations(tid);
     await logAdminAction({
       adminId: auth.userId,
       action: "set_user_role",
@@ -28,7 +33,7 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "disconnect") {
-    const conn = await getStreamlabsConnection();
+    const conn = await getStreamlabsConnection(tid);
     if (conn) await prisma.streamlabsConnection.delete({ where: { id: conn.id } }).catch(() => {});
     await logAdminAction({
       adminId: auth.userId,

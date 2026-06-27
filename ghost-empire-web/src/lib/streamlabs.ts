@@ -131,14 +131,16 @@ export async function matchDonationToUser(
 }
 
 /** Poll Streamlabs for new donations, store them, auto-match where possible. */
-export async function pollAndProcessDonations(): Promise<{
+export async function pollAndProcessDonations(tenantId?: string | null): Promise<{
   ok: boolean;
   fetched: number;
   matched: number;
   unmatched: number;
   error?: string;
 }> {
-  const conn = await getStreamlabsConnection();
+  // Per-portal: resolve THIS tenant's Streamlabs connection (the cron loops every portal).
+  // Downstream writes scope to conn.tenantId, so a sub-tenant's donations stay on its board.
+  const conn = await getStreamlabsConnection(tenantId);
   if (!conn) return { ok: false, fetched: 0, matched: 0, unmatched: 0, error: "not_connected" };
 
   let donations: StreamlabsDonation[];
