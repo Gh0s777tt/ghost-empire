@@ -1,4 +1,34 @@
 {
+  "wrapped": {
+    "metaTitle": "Your Season",
+    "metaDesc": "Your month on the portal, wrapped — predictions, bounties, GT and achievements.",
+    "heading": "WRAPPED",
+    "season": "{label}",
+    "noSeason": "Your season",
+    "loginPrompt": "Sign in to see your season wrapped.",
+    "login": "Sign in",
+    "vibe_legend": "You ruled the League. 👑",
+    "vibe_sharp": "Sharpest predictor in the room. 🎯",
+    "vibe_profit": "You finished the month in the green. 📈",
+    "vibe_active": "You were everywhere this month. ⚡",
+    "vibe_newcomer": "Your story is just beginning. 👻",
+    "level": "Lv. {n}",
+    "bets": "bets",
+    "rankTitle": "Portal rank",
+    "rankSub": "by Ghost Tokens",
+    "leagueTitle": "Predictors' League",
+    "leagueEmpty": "No bets this month",
+    "bountiesTitle": "Bounties (made / backed)",
+    "bountiesSub": "{pledged} %gt% pledged",
+    "gtTitle": "Ghost Tokens this month",
+    "spentLabel": "spent",
+    "achievementsTitle": "Achievements",
+    "thisSeason": "this month",
+    "achTotal": "{total} total",
+    "share": "Share my season",
+    "shareCopied": "Link copied!",
+    "shareText": "My season on the portal: rank #{rank} in {label}! 👻"
+  },
   "leagues": {
     "hofTitle": "Hall of Fame",
     "metaTitle": "Predictors' League",
@@ -2277,6 +2307,7 @@
     "reasonRefund": "Refund: {inner}"
   },
   "nav": {
+    "wrapped": "Your Season",
     "leagues": "Predictors' League",
     "bounties": "Bounties",
     "home": "Home",

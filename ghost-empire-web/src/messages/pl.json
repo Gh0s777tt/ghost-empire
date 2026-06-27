@@ -1,4 +1,34 @@
 {
+  "wrapped": {
+    "metaTitle": "Twój Sezon",
+    "metaDesc": "Twój miesiąc na portalu w pigułce — predykcje, bounty, GT i osiągnięcia.",
+    "heading": "WRAPPED",
+    "season": "{label}",
+    "noSeason": "Twój sezon",
+    "loginPrompt": "Zaloguj się, aby zobaczyć podsumowanie sezonu.",
+    "login": "Zaloguj się",
+    "vibe_legend": "Rządziłeś Ligą. 👑",
+    "vibe_sharp": "Najlepszy typer w stawce. 🎯",
+    "vibe_profit": "Skończyłeś miesiąc na plusie. 📈",
+    "vibe_active": "Byłeś wszędzie w tym miesiącu. ⚡",
+    "vibe_newcomer": "Twoja historia dopiero się zaczyna. 👻",
+    "level": "Poz. {n}",
+    "bets": "typów",
+    "rankTitle": "Miejsce na portalu",
+    "rankSub": "wg Ghost Tokenów",
+    "leagueTitle": "Liga Typerów",
+    "leagueEmpty": "Brak typów w tym miesiącu",
+    "bountiesTitle": "Bounty (otwarte / wsparte)",
+    "bountiesSub": "{pledged} %gt% zastawione",
+    "gtTitle": "Ghost Tokeny w tym miesiącu",
+    "spentLabel": "wydane",
+    "achievementsTitle": "Osiągnięcia",
+    "thisSeason": "w tym miesiącu",
+    "achTotal": "łącznie {total}",
+    "share": "Udostępnij sezon",
+    "shareCopied": "Skopiowano link!",
+    "shareText": "Mój sezon na portalu: {rank}. miejsce w {label}! 👻"
+  },
   "leagues": {
     "hofTitle": "Galeria Sław",
     "metaTitle": "Liga Typerów",
@@ -2277,6 +2307,7 @@
     "reasonRefund": "Zwrot: {inner}"
   },
   "nav": {
+    "wrapped": "Twój Sezon",
     "leagues": "Liga Typerów",
     "bounties": "Bounty",
     "home": "Home",
