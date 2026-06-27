@@ -123,6 +123,54 @@
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
 
+/* ============================================================
+   Direction B — "Cinematic Mono" admin skin (#692). Scoped to .admin-cine so the
+   app's Midnight-Neon look is untouched. Flat graphite "control-room" panels,
+   hairline rules and a single surgical red "cut" — no neon glow, sharp corners.
+   ============================================================ */
+.admin-cine {
+  --cine-line: #232327;
+  --cine-line-bright: #37373d;
+  --cine-surface: #0b0b0d;
+}
+/* Section panel + flat panel (nav / stat tiles): same control-room frame. */
+.cine-card,
+.cine-panel {
+  position: relative;
+  background: var(--cine-surface);
+  border: 1px solid var(--cine-line);
+  box-shadow: inset 0 1px 0 0 var(--cine-line-bright);
+}
+.cine-card:hover {
+  border-color: #2f2f35;
+}
+.cine-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--cine-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent);
+}
+/* The single red "cut" — cinematic accent that replaces the neon glow. */
+.cine-cut {
+  width: 3px;
+  align-self: stretch;
+  background: var(--brand);
+  flex-shrink: 0;
+}
+/* Letterbox rule under the ADMIN title: a short red segment, then a hairline. */
+.cine-rule {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--brand) 0,
+    var(--brand) 52px,
+    var(--cine-line) 52px,
+    var(--cine-line) 100%
+  );
+}
+
 @utility scanlines {
   /* Ghost scanlines overlay */
   &::after {

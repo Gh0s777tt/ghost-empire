@@ -9,20 +9,17 @@ import { EmojiPicker } from "@/components/EmojiPicker";
 export function SectionCard({
   title, icon: Icon, children,
 }: { title: string; icon: LucideIcon; children: ReactNode }) {
+  // Direction B — "Cinematic Mono" (#692): a flat control-room panel with a hairline
+  // header, a single red "cut" accent and wide-tracked mono title (no neon glow).
   return (
-    <div
-      className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs p-5"
-      style={{
-        clipPath:
-          "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
-      }}
-    >
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="w-4 h-4 text-red-500" />
-        <h2 className="font-display text-lg text-white tracking-wider">{title.toUpperCase()}</h2>
+    <section className="cine-card">
+      <div className="cine-card-head">
+        <span className="cine-cut" aria-hidden />
+        <Icon className="w-4 h-4 text-zinc-400" />
+        <h2 className="font-display text-lg text-white tracking-[0.18em]">{title.toUpperCase()}</h2>
       </div>
-      {children}
-    </div>
+      <div className="p-5 pt-4">{children}</div>
+    </section>
   );
 }
 

@@ -294,15 +294,15 @@ export function AdminClient({
   const sharedProps = { onToast: showToast, onSuccess: refresh, pending };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <ShieldCheck className="w-6 h-6 text-red-500" />
-        <h1
-          className="font-display text-4xl text-white tracking-wider"
-          style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
-        >
-          ADMIN
-        </h1>
+    <div className="space-y-6 admin-cine">
+      {/* Direction B — "Cinematic Mono" header: red cut + letterbox rule, no neon glitch. */}
+      <div>
+        <div className="flex items-center gap-3">
+          <span className="cine-cut h-8" aria-hidden />
+          <ShieldCheck className="w-6 h-6 text-zinc-300" />
+          <h1 className="font-display text-4xl text-white tracking-[0.2em]">ADMIN</h1>
+        </div>
+        <div className="cine-rule mt-3" />
       </div>
 
       {/* Stats — always visible above the sidebar */}
@@ -659,12 +659,8 @@ function AdminNav<T extends string>({
       <nav
         className={cn(
           "flex flex-col gap-0.5 lg:sticky lg:top-4 max-h-[80vh] overflow-y-auto",
-          "border border-zinc-800 bg-zinc-950/70 backdrop-blur-xs p-2",
+          "cine-panel p-2",
         )}
-        style={{
-          clipPath:
-            "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
-        }}
       >
         <div className="grid grid-cols-3 gap-0.5 mb-1" role="group" aria-label={t("modeLabel")}>
           {MODES.map((m) => (
@@ -891,8 +887,8 @@ function StatTile({
   return (
     <div
       className={cn(
-        "border bg-zinc-950/70 backdrop-blur-xs p-3",
-        accent ? "border-orange-700 bg-orange-950/20" : "border-zinc-800",
+        "p-3",
+        accent ? "border border-orange-700 bg-orange-950/20" : "cine-panel",
       )}
     >
       <div className="flex items-center gap-1.5 mb-1">
