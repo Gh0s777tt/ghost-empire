@@ -100,17 +100,19 @@ export const SOCIALS: SocialPlatform[] = [
 const BRAND: Record<string, SocialPlatform> = Object.fromEntries(SOCIALS.map((s) => [s.id, s]));
 export type TenantSocial = { platform: string; url: string };
 
-/** Resolve the links to render: a portal's own links (branded via BRAND, unknown
- *  platforms dropped) when provided, else the founder default (SOCIALS). */
-function resolveSocials(links?: TenantSocial[] | null): SocialPlatform[] {
-  if (!links?.length) return SOCIALS;
+/** Resolve the links to render: a portal's own links (branded via BRAND, unknown platforms
+ *  dropped) when provided, else the founder default (SOCIALS) ONLY on the founder portal —
+ *  a sub-tenant with no (or no known) socials shows nothing, never the founder's brand. */
+function resolveSocials(links: TenantSocial[] | null | undefined, isFounderPortal: boolean): SocialPlatform[] {
+  const fallback = isFounderPortal ? SOCIALS : [];
+  if (!links?.length) return fallback;
   const out = links
     .map((l) => {
       const b = BRAND[l.platform];
       return b ? { ...b, href: l.url } : null;
     })
     .filter((s): s is SocialPlatform => s !== null);
-  return out.length ? out : SOCIALS;
+  return out.length ? out : fallback;
 }
 
 function PlatformIcon({ platform }: { platform: SocialPlatform }) {
@@ -155,10 +157,12 @@ function PlatformIcon({ platform }: { platform: SocialPlatform }) {
   return null;
 }
 
-export function SocialLinksGrid({ links }: { links?: TenantSocial[] | null }) {
+export function SocialLinksGrid({ links, isFounderPortal = false }: { links?: TenantSocial[] | null; isFounderPortal?: boolean }) {
+  const items = resolveSocials(links, isFounderPortal);
+  if (items.length === 0) return null;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {resolveSocials(links).map((s) => (
+      {items.map((s) => (
         <a
           key={s.id}
           href={s.href}
@@ -212,10 +216,12 @@ export function SocialLinksGrid({ links }: { links?: TenantSocial[] | null }) {
 }
 
 /** Compact horizontal row for footers / sidebars */
-export function SocialLinksRow({ links }: { links?: TenantSocial[] | null }) {
+export function SocialLinksRow({ links, isFounderPortal = false }: { links?: TenantSocial[] | null; isFounderPortal?: boolean }) {
+  const items = resolveSocials(links, isFounderPortal);
+  if (items.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
-      {resolveSocials(links).map((s) => (
+      {items.map((s) => (
         <a
           key={s.id}
           href={s.href}

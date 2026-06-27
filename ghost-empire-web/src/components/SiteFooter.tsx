@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { SocialLinksRow } from "@/components/SocialLinks";
 import { SITE } from "@/lib/site";
-import { getCurrentTenant } from "@/lib/tenant";
+import { getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 
 export async function SiteFooter() {
   const t = await getTranslations("footer");
@@ -28,7 +28,7 @@ export async function SiteFooter() {
 
           {/* Center — social icons */}
           <div className="flex justify-center">
-            <SocialLinksRow links={tenant.socialLinks} />
+            <SocialLinksRow links={tenant.socialLinks} isFounderPortal={isFounderBrand(tenant)} />
           </div>
 
           {/* Right — legal links + the white-label funnel entry */}

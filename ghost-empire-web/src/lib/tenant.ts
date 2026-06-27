@@ -150,3 +150,12 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
 export async function currentTenantId(): Promise<string | null> {
   return (await getCurrentTenant()).id;
 }
+
+/**
+ * Is this the founder/default portal? Only here are the hardcoded founder defaults
+ * (SOCIALS channel links, etc.) the CORRECT thing to show — a sub-tenant with nothing
+ * configured must show nothing, never the founder's. `id === null` is the pre-row fallback.
+ */
+export function isFounderBrand(t: { id: string | null; slug: string }): boolean {
+  return t.id === null || t.slug === DEFAULT_TENANT_SLUG;
+}

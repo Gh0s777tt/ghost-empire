@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { getCurrentTenant } from "@/lib/tenant";
+import { getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio } from "lucide-react";
 import { YoutubeIcon } from "@/components/BrandIcons";
 import { SocialLinksRow } from "@/components/SocialLinks";
@@ -116,7 +116,7 @@ export default async function WelcomePage() {
           })}
         </div>
 
-        <SocialLinksRow links={tenant.socialLinks} />
+        <SocialLinksRow links={tenant.socialLinks} isFounderPortal={isFounderBrand(tenant)} />
 
         <Link href="/about" className="mt-8 py-1.5 text-xs font-mono uppercase tracking-widest text-zinc-400 hover:text-red-400 transition-colors">
           {t("learnMore")}

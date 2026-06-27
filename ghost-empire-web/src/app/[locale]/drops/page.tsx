@@ -1,7 +1,7 @@
 // src/app/drops/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId, getCurrentTenant, DEFAULT_TENANT_SLUG } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import { streamingChannels } from "@/lib/channels";
 import { Header } from "@/components/Header";
 import HowItWorks from "@/components/HowItWorks";
@@ -28,7 +28,7 @@ export default async function DropsPage() {
   const t = await getTranslations("drops");
   const tid = await currentTenantId();
   const tenant = await getCurrentTenant();
-  const isFounderPortal = tenant.id === null || tenant.slug === DEFAULT_TENANT_SLUG;
+  const isFounderPortal = isFounderBrand(tenant);
   const liveChannel = streamingChannels(tenant.socialLinks, isFounderPortal)[0]?.label;
 
   let myClaims: Array<{
