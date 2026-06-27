@@ -170,6 +170,37 @@
     var(--cine-line) 100%
   );
 }
+/* Clickable mono tile (dashboard cards, shortcuts): flat, with a red "cut" on hover. */
+.cine-tile {
+  background: var(--cine-surface);
+  border: 1px solid var(--cine-line);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.cine-tile:hover {
+  border-color: #3a3a41;
+  box-shadow: inset 3px 0 0 0 var(--brand);
+}
+/* Form controls across the WHOLE admin — flat, sharp, brand focus (no glow). One rule unifies
+   every section's editors. Excludes toggles/sliders/color/file which have their own chrome.
+   Unlayered, so it wins over the per-field Tailwind utility classes already on these inputs. */
+.admin-cine input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="submit"]),
+.admin-cine select,
+.admin-cine textarea {
+  background: #0a0a0c;
+  border: 1px solid var(--cine-line);
+  border-radius: 0;
+  color: #fafafa;
+}
+.admin-cine input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="submit"]):focus,
+.admin-cine select:focus,
+.admin-cine textarea:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+.admin-cine input::placeholder,
+.admin-cine textarea::placeholder {
+  color: #52525b;
+}
 
 @utility scanlines {
   /* Ghost scanlines overlay */

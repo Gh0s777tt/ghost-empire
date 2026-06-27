@@ -338,7 +338,10 @@ export function AdminClient({
 
         <div key={activeSection} className="flex-1 min-w-0 space-y-6 animate-fade-in-up">
           {activeSection !== "dashboard" && (
-            <div className="border border-zinc-800/80 bg-zinc-950/50 px-4 py-2.5 flex items-start gap-2.5 text-xs text-zinc-400 leading-relaxed">
+            <div
+              className="cine-panel px-4 py-2.5 flex items-start gap-2.5 text-xs text-zinc-400 leading-relaxed"
+              style={{ borderLeft: "2px solid var(--brand)" }}
+            >
               <span aria-hidden className="shrink-0">💡</span>
               <p>{t(`secDesc_${activeSection}`)}</p>
             </div>
@@ -788,8 +791,8 @@ function DashboardSection({
           <button
             onClick={() => onJump("shop")}
             className={cn(
-              "border bg-black/30 p-4 text-left hover:border-red-700 transition-colors",
-              stats.ordersPending > 0 ? "border-orange-700 bg-orange-950/20" : "border-zinc-800",
+              "p-4 text-left transition-colors",
+              stats.ordersPending > 0 ? "border border-orange-700 bg-orange-950/20" : "cine-tile",
             )}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -806,7 +809,7 @@ function DashboardSection({
 
           <button
             onClick={() => onJump("events")}
-            className="border border-zinc-800 bg-black/30 p-4 text-left hover:border-red-700 transition-colors"
+            className="cine-tile p-4 text-left transition-colors"
           >
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-4 h-4 text-zinc-500" />
@@ -822,7 +825,7 @@ function DashboardSection({
 
           <button
             onClick={() => onJump("drops")}
-            className="border border-zinc-800 bg-black/30 p-4 text-left hover:border-red-700 transition-colors"
+            className="cine-tile p-4 text-left transition-colors"
           >
             <div className="flex items-center gap-2 mb-1">
               <Gift className="w-4 h-4 text-zinc-500" />
@@ -843,16 +846,16 @@ function DashboardSection({
           {t("dashShortcutsHint")}
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] font-mono uppercase tracking-widest">
-          <a href="#users" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
+          <a href="#users" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="cine-tile p-3 text-zinc-300">
             ▸ {t("secEvents")}
           </a>
-          <a href="#drops" onClick={(e) => { e.preventDefault(); onJump("drops"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
+          <a href="#drops" onClick={(e) => { e.preventDefault(); onJump("drops"); }} className="cine-tile p-3 text-zinc-300">
             ▸ {t("scNewDrop")}
           </a>
-          <a href="#alerts" onClick={(e) => { e.preventDefault(); onJump("alerts"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
+          <a href="#alerts" onClick={(e) => { e.preventDefault(); onJump("alerts"); }} className="cine-tile p-3 text-zinc-300">
             ▸ {t("scObsAlerts")}
           </a>
-          <a href="#shop" onClick={(e) => { e.preventDefault(); onJump("shop"); }} className="border border-zinc-800 bg-black/30 p-3 hover:border-red-700 text-zinc-300">
+          <a href="#shop" onClick={(e) => { e.preventDefault(); onJump("shop"); }} className="cine-tile p-3 text-zinc-300">
             ▸ {t("secShop")}
           </a>
         </div>
