@@ -194,6 +194,16 @@
     "doneNext": "We'll follow up with subdomain setup and channel-connection steps. Everything is editable later in your portal's admin panel."
   },
   "admin": {
+    "rosterTitle": "Role roster",
+    "rosterEmpty": "No admins or moderators yet.",
+    "rosterNote": "Set roles in “User roles” above. Owner = the portal account; admins have full access; moderators have only the permissions listed.",
+    "rosterOwner": "Owner",
+    "rosterAdmin": "Admin",
+    "rosterMod": "Moderator",
+    "rosterAdmins": "Admins",
+    "rosterMods": "Mods",
+    "rosterNoPerms": "no permissions set",
+    "secDesc_bounties": "Resolve viewer bounties — mark a challenge completed (the pooled GT is spent/burned) or rejected (every backer is refunded).",
     "bounties": {
       "title": "Bounties",
       "empty": "No bounties yet.",

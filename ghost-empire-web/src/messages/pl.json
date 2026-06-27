@@ -194,6 +194,16 @@
     "doneNext": "Odezwiemy się z instrukcją podpięcia subdomeny i połączenia kanału. Wszystkie ustawienia zmienisz potem w panelu administracyjnym swojego portalu."
   },
   "admin": {
+    "rosterTitle": "Lista ról",
+    "rosterEmpty": "Brak adminów i moderatorów.",
+    "rosterNote": "Role ustawiasz w „Role userów” wyżej. Właściciel = konto portalu; admini mają pełny dostęp; moderatorzy tylko wypisane uprawnienia.",
+    "rosterOwner": "Właściciel",
+    "rosterAdmin": "Admin",
+    "rosterMod": "Moderator",
+    "rosterAdmins": "Admini",
+    "rosterMods": "Moderatorzy",
+    "rosterNoPerms": "brak uprawnień",
+    "secDesc_bounties": "Rozstrzygaj bounty widzów — oznacz wyzwanie jako wykonane (pula GT zostaje wydana/spalona) lub odrzucone (zwrot wszystkim wspierającym).",
     "bounties": {
       "title": "Bounty",
       "empty": "Brak bounty.",

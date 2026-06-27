@@ -86,6 +86,7 @@ const PendingOrdersList = dynamic(() => import("./sections/PendingOrders").then(
 const StreamAlertsManager = dynamic(() => import("./sections/StreamAlerts").then((m) => m.StreamAlertsManager), { ssr: false, loading: SectionLoading });
 const TenantsManager = dynamic(() => import("./sections/Tenants").then((m) => m.TenantsManager), { ssr: false, loading: SectionLoading });
 const SupportTicketsManager = dynamic(() => import("./sections/SupportTickets").then((m) => m.SupportTicketsManager), { ssr: false, loading: SectionLoading });
+const RoleRoster = dynamic(() => import("./sections/RoleRoster").then((m) => m.RoleRoster), { ssr: false, loading: SectionLoading });
 
 // Panel modes: how much of the admin is shown in the nav. Persisted per browser
 // (localStorage "ge-admin-mode"); defaults to "dev" = everything, the pre-modes behavior.
@@ -366,6 +367,7 @@ export function AdminClient({
                 </div>
               )}
               {!isAdmin && can("mark_subs") && <ConnectionRolesCard {...sharedProps} />}
+              {isAdmin && <RoleRoster />}
               {isAdmin && <DatabaseResetCard {...sharedProps} />}
             </div>
           )}
