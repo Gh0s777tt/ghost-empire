@@ -201,6 +201,47 @@
 .admin-cine textarea::placeholder {
   color: #52525b;
 }
+/* Comprehensive element pass (#694) — finishes the look across every section at once. */
+/* Buttons: sharp corners (cinematic), keep their semantic colors. */
+.admin-cine button {
+  border-radius: 0;
+}
+/* Consistent brand focus ring on every interactive element (a11y + cinematic). */
+.admin-cine button:focus-visible,
+.admin-cine a:focus-visible,
+.admin-cine [role="button"]:focus-visible,
+.admin-cine [tabindex]:focus-visible {
+  outline: 1px solid var(--brand);
+  outline-offset: 1px;
+}
+/* Keyboard chips (Ctrl K etc.). */
+.admin-cine kbd {
+  border-radius: 0;
+  border: 1px solid var(--cine-line);
+  background: #0a0a0c;
+}
+/* Tables (analytics / audit / lists): hairline grid — light + additive so it can't break
+   a section's own column alignment. */
+.admin-cine th,
+.admin-cine td {
+  border-bottom: 1px solid var(--cine-line);
+}
+/* Thin cinematic scrollbars inside the admin (the long nav + scrollable lists). */
+.admin-cine *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.admin-cine *::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-cine *::-webkit-scrollbar-thumb {
+  background: #2a2a30;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.admin-cine *::-webkit-scrollbar-thumb:hover {
+  background: #3b3b43;
+}
 
 @utility scanlines {
   /* Ghost scanlines overlay */
