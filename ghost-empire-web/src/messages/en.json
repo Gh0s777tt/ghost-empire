@@ -1,4 +1,31 @@
 {
+  "leagues": {
+    "metaTitle": "Predictors' League",
+    "metaDesc": "The season leaderboard of the sharpest predictors — net Ghost Tokens, win rate and your personal recap.",
+    "heading": "PREDICTORS' LEAGUE",
+    "season": "Season {label}",
+    "subtitle": "Every resolved prediction counts. Climb the monthly leaderboard by net %gt% won — and check your personal season recap.",
+    "help": "Your standing is built from your resolved predictions this month: net %gt% (winnings minus stakes), win rate and your biggest single win. Wins beat losses — bet smart, not just big.",
+    "loginPrompt": "Sign in to see your season stats and rank.",
+    "login": "Sign in",
+    "yourSeason": "Your season",
+    "rank": "Rank",
+    "winRate": "Win rate",
+    "winsOf": "{wins} of {plays} won",
+    "net": "Net",
+    "biggestWin": "Biggest win",
+    "noStats": "No resolved predictions this month yet.",
+    "toPredictions": "Go to predictions",
+    "tableTitle": "Leaderboard — {label}",
+    "empty": "No predictors yet",
+    "emptyMsg": "Be the first to climb the league — make a prediction and win %gt% 👑",
+    "colRank": "#",
+    "colPlayer": "Player",
+    "colWinRate": "Win %",
+    "colNet": "Net %gt%",
+    "colPlays": "Bets",
+    "you": "You"
+  },
   "bounties": {
     "metaTitle": "Bounties",
     "metaDesc": "Pool Ghost Tokens behind a challenge — back what you want to see on stream.",
@@ -2242,6 +2269,7 @@
     "reasonRefund": "Refund: {inner}"
   },
   "nav": {
+    "leagues": "Predictors' League",
     "bounties": "Bounties",
     "home": "Home",
     "shop": "Shop",

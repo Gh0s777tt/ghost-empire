@@ -1,4 +1,31 @@
 {
+  "leagues": {
+    "metaTitle": "Liga Typerów",
+    "metaDesc": "Sezonowy ranking najlepszych typerów — bilans Ghost Tokenów, skuteczność i Twoje osobiste podsumowanie.",
+    "heading": "LIGA TYPERÓW",
+    "season": "Sezon {label}",
+    "subtitle": "Każda rozstrzygnięta predykcja się liczy. Wespnij się w miesięcznym rankingu po bilansie wygranych %gt% — i sprawdź swoje podsumowanie sezonu.",
+    "help": "Twoja pozycja liczona jest z rozstrzygniętych predykcji w tym miesiącu: bilans %gt% (wygrane minus stawki), skuteczność i największa pojedyncza wygrana. Liczą się trafienia — typuj mądrze, nie tylko grubo.",
+    "loginPrompt": "Zaloguj się, aby zobaczyć swoje statystyki i miejsce w lidze.",
+    "login": "Zaloguj się",
+    "yourSeason": "Twój sezon",
+    "rank": "Miejsce",
+    "winRate": "Skuteczność",
+    "winsOf": "{wins} z {plays} trafione",
+    "net": "Bilans",
+    "biggestWin": "Największa wygrana",
+    "noStats": "Brak rozstrzygniętych predykcji w tym miesiącu.",
+    "toPredictions": "Przejdź do predykcji",
+    "tableTitle": "Ranking — {label}",
+    "empty": "Brak typerów",
+    "emptyMsg": "Bądź pierwszy w lidze — postaw typ i wygraj %gt% 👑",
+    "colRank": "#",
+    "colPlayer": "Gracz",
+    "colWinRate": "Skut. %",
+    "colNet": "Bilans %gt%",
+    "colPlays": "Typy",
+    "you": "Ty"
+  },
   "bounties": {
     "metaTitle": "Bounty",
     "metaDesc": "Zrzuć Ghost Tokeny na wyzwanie — wesprzyj to, co chcesz zobaczyć na streamie.",
@@ -2242,6 +2269,7 @@
     "reasonRefund": "Zwrot: {inner}"
   },
   "nav": {
+    "leagues": "Liga Typerów",
     "bounties": "Bounty",
     "home": "Home",
     "shop": "Sklep",
