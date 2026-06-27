@@ -2,6 +2,9 @@
   "wrapped": {
     "metaTitle": "Twój Sezon",
     "metaDesc": "Twój miesiąc na portalu w pigułce — predykcje, bounty, GT i osiągnięcia.",
+    "publicMetaTitle": "Podsumowanie sezonu — {name}",
+    "publicMetaDesc": "Miesiąc gracza {name} na %brandShort% — liga, bounty i osiągnięcia.",
+    "ownCta": "Zobacz swoje Wrapped →",
     "heading": "WRAPPED",
     "season": "{label}",
     "noSeason": "Twój sezon",

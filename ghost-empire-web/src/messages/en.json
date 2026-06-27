@@ -2,6 +2,9 @@
   "wrapped": {
     "metaTitle": "Your Season",
     "metaDesc": "Your month on the portal, wrapped — predictions, bounties, GT and achievements.",
+    "publicMetaTitle": "{name}'s Season Wrapped",
+    "publicMetaDesc": "{name}'s month on %brandShort% — league, bounties and achievements.",
+    "ownCta": "See your own Wrapped →",
     "heading": "WRAPPED",
     "season": "{label}",
     "noSeason": "Your season",

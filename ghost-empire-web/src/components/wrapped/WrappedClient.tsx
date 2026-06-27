@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 type WrappedData = {
   season: { number: number; label: string };
-  user: { name: string; image: string | null; level: number; prestige: number };
+  user: { name: string; username: string | null; image: string | null; level: number; prestige: number };
   rank: number | null;
   league: { rank: number; net: number; winRate: number; plays: number } | null;
   bounties: { created: number; backed: number; pledgedGt: number };
@@ -22,7 +22,15 @@ type WrappedData = {
   vibe: "legend" | "sharp" | "profit" | "active" | "newcomer";
 };
 
-export function WrappedClient({ data, isAuthenticated }: { data: WrappedData | null; isAuthenticated: boolean }) {
+export function WrappedClient({
+  data,
+  isAuthenticated,
+  isPublic = false,
+}: {
+  data: WrappedData | null;
+  isAuthenticated: boolean;
+  isPublic?: boolean; // public /wrapped/[username] view — hides the private GT card, adds a CTA
+}) {
   const t = useTranslations("wrapped");
   const fmt = useLocaleFmt();
   const { tokenSymbol } = useTenantBranding();
@@ -41,7 +49,11 @@ export function WrappedClient({ data, isAuthenticated }: { data: WrappedData | n
   }
 
   async function share() {
-    const url = window.location.href;
+    // Self view → share the per-user URL so the crawler renders THIS user's OG card (#691).
+    const url =
+      !isPublic && data!.user.username
+        ? `${window.location.origin}/wrapped/${data!.user.username}`
+        : window.location.href;
     const text = t("shareText", { label: data!.season.label, rank: data!.rank ?? 0 });
     if (typeof navigator !== "undefined" && navigator.share) {
       try { await navigator.share({ title: t("metaTitle"), text, url }); } catch { /* user cancelled */ }
@@ -104,10 +116,13 @@ export function WrappedClient({ data, isAuthenticated }: { data: WrappedData | n
           <Sub>{t("bountiesSub", { pledged: fmt(data.bounties.pledgedGt) })}</Sub>
         </StatCard>
 
-        <StatCard icon={<Coins className="w-4 h-4 text-yellow-500" />} title={t("gtTitle")}>
-          <Big className="text-green-400">+{fmt(data.gt.earned)}</Big>
-          <Sub><span className="text-red-400">−{fmt(data.gt.spent)} {tokenSymbol}</span> {t("spentLabel")}</Sub>
-        </StatCard>
+        {/* GT flow is private (spent is never shown publicly) → only on the owner's own view. */}
+        {!isPublic && (
+          <StatCard icon={<Coins className="w-4 h-4 text-yellow-500" />} title={t("gtTitle")}>
+            <Big className="text-green-400">+{fmt(data.gt.earned)}</Big>
+            <Sub><span className="text-red-400">−{fmt(data.gt.spent)} {tokenSymbol}</span> {t("spentLabel")}</Sub>
+          </StatCard>
+        )}
 
         <StatCard icon={<Award className="w-4 h-4 text-purple-400" />} title={t("achievementsTitle")} wide>
           <Big>+{fmt(data.achievementsThisSeason)} <span className="text-sm text-zinc-500">{t("thisSeason")}</span></Big>
@@ -121,6 +136,15 @@ export function WrappedClient({ data, isAuthenticated }: { data: WrappedData | n
       >
         <Share2 className="w-4 h-4" /> {t("share")}
       </button>
+
+      {isPublic && (
+        <Link
+          href="/wrapped"
+          className="block text-center text-xs font-mono uppercase tracking-widest text-zinc-500 hover:text-red-400"
+        >
+          {t("ownCta")}
+        </Link>
+      )}
     </div>
   );
 }

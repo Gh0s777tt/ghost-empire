@@ -9,7 +9,7 @@ import { getMyLeagueStats } from "@/lib/prediction-leagues";
 
 export type WrappedData = {
   season: { number: number; label: string };
-  user: { name: string; image: string | null; level: number; prestige: number };
+  user: { name: string; username: string | null; image: string | null; level: number; prestige: number };
   rank: number | null;
   league: { rank: number; net: number; winRate: number; plays: number } | null;
   bounties: { created: number; backed: number; pledgedGt: number };
@@ -71,7 +71,7 @@ export async function getWrapped(userId: string, tenantId: string | null): Promi
 
   return {
     season: { number, label },
-    user: { name: displayName(user), image: user.image, level: user.level, prestige: user.prestige },
+    user: { name: displayName(user), username: user.username, image: user.image, level: user.level, prestige: user.prestige },
     rank,
     league: leagueSummary,
     bounties,
