@@ -9,15 +9,16 @@ Kuracja pomysłów na rozwój Ghost Empire (funkcje · narzędzia · wygląd · 
 
 ## 🎯 Priorytety (wpływ × wysiłek)
 
-- **Szybkie wygrane (zrób najpierw):** landing page · WebSockets + presence · Web Push + PWA · AI Stream Recap · activation checklist.
-- **Duże zakłady (świadome inwestycje):** 🎬 AI Clip Director · 🐾 Ghost Companion (pet idle) · 🛡️ klany · 🧩 wizualny builder overlayów.
-- **Higiena/fundament:** ✅ dashboard zdrowia ekonomii (dowieziony) · view transitions · passkeys.
+- **Szybkie wygrane:** ✅ landing page · WebSockets + presence *(wciąż SSE — niezrobione)* · ✅ Web Push + PWA · ✅ AI Stream Recap · activation checklist.
+- **Duże zakłady:** 🟡 AI Clip Director *(detekcja gotowa, brak publikacji)* · ✅ Ghost Companion · ✅ klany · ✅ wizualny builder overlayów (faza 1).
+- **Higiena/fundament:** ✅ dashboard zdrowia ekonomii · ✅ view transitions · ✅ passkeys.
 
 ---
 
 ## 🚩 Flagowce — mini-specy
 
-### 🎬 AI Clip Director — 🔑
+### 🎬 AI Clip Director — 🟡 CZĘŚCIOWO DOWIEZIONY
+> **Stan (audyt 2026-06):** detekcja momentów + tworzenie klipu jest na produkcji (#517 — `lib/clip-director.ts`, model `ClipDirectorConfig`, `/admin#clip-director`, dormant do włączenia). **Pozostała część:** kolejka publikacji na Shorts/TikTok/Reels (`ClipPublishJob` + OAuth upload) — niezrobiona.
 Wykrywa szczyt zaangażowania (sentyment/tempo czatu, hype train, gwałtowny wzrost widzów) → tworzy klip → AI generuje tytuł + miniaturę → kolejka publikacji na Shorts/TikTok/Reels.
 - **Modele:** `ClipMoment { id, tenantId, source, detectedAt, score, twitchClipId?, title?, status }` + `ClipPublishJob { id, clipId, platform, status, externalUrl? }`.
 - **Detekcja:** rolling-window licznik wiadomości/min + emotki-combo (masz `EmojiComboState`) + EventSub `channel.hype_train.*`; próg konfigurowalny w `/admin#clips`.
@@ -46,26 +47,26 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 ---
 
 ## 🤖 Tor AI (masz `lib/ai.ts` — czeka na klucz z quotą)
-- **AI Stream Recap** — po streamie auto-podsumowanie (highlighty, top widzowie, cytaty, statystyki) → Discord/X.
-- **Semantyczny search VOD/czat** — embeddingi + **pgvector** (masz Postgres, zero nowej infry).
-- **AI tłumacz czatu na żywo** — wielojęzyczny czat (masz 14 lokalizacji).
-- **AI moderacja kontekstowa** — toksyczność z kontekstem jako rozszerzenie automoda.
+- ✅ **AI Stream Recap** (dowiezione) — po streamie auto-podsumowanie (highlighty, top widzowie, cytaty, statystyki) → Discord/X.
+- ✅ **Semantyczny search** (dowiezione, #554) — embeddingi (`lib/semantic.ts`, `/search`).
+- **AI tłumacz czatu na żywo** — wielojęzyczny czat (masz 14 lokalizacji). *(niezrobione)*
+- ✅ **AI moderacja kontekstowa** (dowiezione) — toksyczność z kontekstem jako rozszerzenie automoda.
 
 ## ⚡ Tor nowoczesnej platformy (jesteś na Vercel Pro)
-- **SSE → WebSockets + presence** — prawdziwy realtime, „kto teraz ogląda portal".
-- **Web Push + PWA** — natywne „streamer LIVE!" + instalowalna apka (VAPID, bez third-party).
-- **View Transitions API + Framer Motion** — płynne przejścia + mikro-interakcje.
-- **Passkeys (WebAuthn)** — logowanie bez hasła obok OAuth.
+- **SSE → WebSockets + presence** — prawdziwy realtime, „kto teraz ogląda portal". *(wciąż SSE — niezrobione)*
+- ✅ **Web Push + PWA** (dowiezione, #533) — natywne „streamer LIVE!" + instalowalna apka (VAPID, bez third-party).
+- ✅ **View Transitions API** (dowiezione, #479) — płynne przejścia + mikro-interakcje.
+- ✅ **Passkeys (WebAuthn)** (dowiezione, #543) — logowanie bez hasła obok OAuth.
 
 ## 🎨 Tor wyglądu
-- **Landing page** (🎨 — realnie blokuje sprzedaż): hero z animacją, social proof, CTA.
-- **System motywów** — presety + edytor (masz brand-color per tenant).
+- ✅ **Landing page** (dowiezione) — hero + CTA „Załóż własny portal" (#660), sekcja społeczności.
+- ✅ **System motywów** (dowiezione, #521/#532) — presety + edytor (brand-color per tenant).
 - **Piękna analityka** — animowane wykresy, cohort-retention.
 - **Reaktywne overlaye** — cząsteczki/fizyka, WebGL/WebGPU (masz kości 3D).
 
 ## 🧰 Tor narzędzi twórcy
 - **Marketplace szablonów** overlayów (UGC = wzrost SaaS).
-- **Menedżer sponsorów** — segmenty, auto-overlay, raporty.
+- ✅ **Menedżer sponsorów** (dowiezione, #538) — partnerzy + overlay `/overlay/sponsors`; *follow-up:* segmenty, raporty.
 - **Mobilny companion / Stream Deck plugin**.
 - **A/B testy komend/alertów** (jest w ROADMAP 3D).
 

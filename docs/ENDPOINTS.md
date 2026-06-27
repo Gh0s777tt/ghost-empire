@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **178** tras (pliki `route.ts`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **181** tras (180× `route.ts` + 1× `route.tsx`)
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -83,6 +83,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/clans` | GET/POST | Klany/drużyny — mój klan + ranking skarbca (GET); POST = utwórz / dołącz / opuść / wpłać GT (#477) |
 | `…/api/clips` | GET/POST | Klip tygodnia — klipy + liczby głosów + mój głos (GET publiczne); POST = głos (1/tydzień ISO, #502) |
 | `…/api/companion` | GET/PATCH | Ghost Companion usera (create-on-read); PATCH = akcje (karmienie/zmiana nazwy) |
+| `…/api/companion/feed` | POST | Karmienie companiona GT (osobny endpoint akcji) |
+| `…/api/assistant` | session + plan `ai` | Asystent pomocy („?" na każdej stronie) — wymaga zalogowania; degraduje się gdy brak planu/klucza AI |
 | `…/api/trivia` | GET/POST | Trivia/quiz (widz, #523) — aktywne pytania + moje odpowiedzi; POST = odpowiedź za GT (poprawna ukryta do czasu) |
 | `…/api/sound-rewards` | GET/POST | GT→dźwięki (widz, #505) — aktywny katalog + saldo; POST = wykup dźwięku (atomowy spend → alert) |
 | `…/api/referral` | GET/POST | Referrals (#501) — mój kod + statystyki + czy odebrałem; POST = odbiór kodu znajomego (oboje GT) |
@@ -147,6 +149,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/custom-alerts` | admin | CRUD własnych alertów (ręczne wyzwalanie na overlayu) |
 | `…/api/admin/chat-overlay` | admin | Config overlaya czatu (rozmiar/kolor/font/krycie/ikona platformy) |
 | `…/api/admin/assistant` | admin/perm + plan `ai` | AI-asystent panelu (pytania o konfigurację) — wymaga planu elite |
+| `…/api/admin/collectibles` | admin | CRUD katalogu kart kolekcjonerskich (#551) |
 | `…/api/admin/overlay-token` | admin | Token overlayów (do podglądów) |
 | `…/api/admin/overlay-scenes` | admin | CRUD scen overlay (#550 — wiele widżetów na jednym płótnie → jedno źródło OBS `/overlay/scene/<id>`) |
 | `…/api/admin/2fa` | admin | Enrollment/zarządzanie TOTP bieżącego admina (step-up dla wrażliwych akcji, #490) |

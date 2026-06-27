@@ -56,6 +56,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `OVERLAY_TOKEN` | **Legacy/fallback** — token overlayów OBS. Domyślnie token jest auto-generowany w bazie i widoczny/rotowalny w `/admin#alerts`; ten env nie jest potrzebny |
 | `AI_API_KEY` / `AI_PROVIDER` / `AI_MODEL` (O) | Klucz AI + dostawca (`openai`/`anthropic`/`grok`/`gemini`/`deepseek`/`bielik`) + model — fallback dla `/admin#integrations`. Ustawione w Vercelu (OpenAI · `gpt-4o-mini`) |
 | `STEAM_API_KEY` (O) | Steam Web API key (biblioteka gier `/games`). Z [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Ustawione w Vercelu |
+| `STEAM_ID` (O) | SteamID64 dla skryptu `scripts/sync-steam.ts` (ręczny sync biblioteki). Produkcyjnie Steam ID jest per-portal w `GameLibraryConfig`, nie tu |
 | `RUMBLE_API_URL` (O) | Pełny URL Rumble Livestream API (z kluczem) — overlay `/overlay/rumble`. Ustawione w Vercelu |
 | `PSN_NPSSO` (O) | **Globalny fallback** dla biblioteki gier PSN. Z `ca.account.sony.com/api/v1/ssocookie`. **Wygasa ~60 dni.** Od #626 każdy portal może ustawić **własny** NPSSO w `/admin#games` (`GameLibraryConfig.psnNpsso`, szyfrowany at-rest) — ten env to już tylko fallback, gdy portal nie ma własnego |
 | `CRON_SECRET` | Bearer chroniący crony Vercel: `/api/cron/streamlabs-poll` (polling donacji), `/api/cron/prune` (czyszczenie starych rekordów) i `/api/cron/weekly-rewards` (poniedziałki 00:00 — nagrody rankingu tygodnia per portal) |

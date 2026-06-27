@@ -67,6 +67,16 @@ Wzorzec: strona `/overlay/<x>` (transparentna, `pointer-events:none`) pobiera da
 | `/overlay/widget?id=` | `/api/alerts/widget` | Własny widget z generatora (tekst/kolor/font/gradient) |
 | `/overlay/emoji-combo` | `/api/alerts/emoji-combo` | Wybuch „×N COMBO" przy spamie emoji |
 | `/overlay/wheel` | `/api/alerts/wheel` | Koło Fortuny — animacja zakręcenia + zwycięzca |
+| `/overlay/clan` | `/api/alerts/clan` | Czołowy klan portalu (skarbiec) |
+| `/overlay/clan-war` | `/api/alerts/clan-war` | Wojna klanów na żywo — standings + pula |
+| `/overlay/companion` | `/api/alerts/companion` | Champion Companion (top pet wg XP) |
+| `/overlay/rumble` | `/api/alerts/rumble` | Status „LIVE" na Rumble |
+| `/overlay/sponsors` | `/api/alerts/sponsors` | Karuzela sponsorów / partnerów |
+| `/overlay/support-goal` | `/api/alerts/support-goal` | Cel zbiórki (donation goal) — pasek postępu |
+| `/overlay/support-qr` | `/api/alerts/support-qr` | Karuzela kodów QR metod wsparcia |
+| `/overlay/top-supporters` | `/api/alerts/top-supporters` | Top wspierający (all-time) |
+| `/overlay/trivia` | `/api/alerts/trivia` | Runda trivia na żywo + odliczanie |
+| `/overlay/scene/[id]` | `OverlayScene` (kompozycja) | Scena wielowidżetowa → jedno źródło OBS |
 
 Jeden wspólny `OVERLAY_TOKEN` (auto-generowany w bazie, rotowalny w `/admin#alerts`). Trasy `/overlay/*` dostają nagłówki `noindex`/`no-store`. Komponenty prezentacyjne (`AlertCard`, `GoalBar`, `SubathonCard`, `ChatMessageRow`, `CodeCard`, `PredictionOverlayCard`, `PollOverlayCard`, `LastEventCard`, `CustomWidgetCard`, `WheelGraphic`) są **współdzielone** przez overlay i podglądy w panelu (w tym **biblioteka widgetów** `/admin#widgets`) → podgląd = realny wygląd. Czat overlay renderuje **prawdziwe odznaki Twitcha + emotki 7TV/BTTV/FFZ** (`lib/chat-assets.ts`, cache, `/api/chat/assets`).
 
@@ -116,7 +126,7 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 9. Model danych — wybrane / najnowsze modele
 
-Schemat (`prisma/schema.prisma`) ma **~95 modeli**; pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
+Schemat (`prisma/schema.prisma`) ma **~96 modeli**; pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
 
 - **Karty + marketplace P2P:** `Collectible` / `UserCollectible` (katalog kart + kolekcja, paczki za GT, #551), `CardListing` (listingi P2P z escrow + 5% fee spalane, #552).
 - **Overlay + alerty:** `OverlayScene` (sceny wielowidżetowe → jedno źródło OBS, #550), `StreamAlertSettings` (ustawienia + auto-token overlaya, **per tenant 1:1**), `AlertTypeConfig` (styl/próg per typ alertu).
