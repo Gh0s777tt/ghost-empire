@@ -270,15 +270,15 @@ export function RankingClient({
           {/* Table (positions 4+) */}
           {rest.length > 0 && (
             <div
-              className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs overflow-hidden"
+              className="border border-zinc-800 bg-zinc-950/80 backdrop-blur-xs max-h-[34rem] overflow-y-auto"
               style={{
                 clipPath:
                   "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
               }}
             >
               <table className="w-full">
-                <thead>
-                  <tr className="border-b border-zinc-800 text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                <thead className="sticky top-0 z-10">
+                  <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] font-mono uppercase tracking-widest text-zinc-500">
                     <th className="text-start p-3 w-16">#</th>
                     <th className="text-start p-3">{t("thUser")}</th>
                     <th className="text-end p-3 hidden sm:table-cell">{t("thLevel")}</th>

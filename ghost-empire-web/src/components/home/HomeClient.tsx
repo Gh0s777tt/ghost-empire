@@ -119,7 +119,7 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
             </div>
             <span className="font-mono text-[10px] text-zinc-500">{t("resetMidnight")}</span>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="p-4 space-y-3 max-h-[26rem] overflow-y-auto">
             {tasks.length === 0 ? (
               <p className="text-sm text-zinc-500 text-center py-4">{t("loadingTasks")}</p>
             ) : (

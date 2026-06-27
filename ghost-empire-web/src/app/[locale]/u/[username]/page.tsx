@@ -612,7 +612,7 @@ export default async function PublicProfilePage({
             {earnedAchievements.length === 0 ? (
               <p className="text-zinc-500 text-sm">{t("noAchievements")}</p>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-[22rem] overflow-y-auto pr-1">
                 {earnedAchievements.map((ua) => {
                   const style = RARITY_STYLE[ua.achievement.rarity] ?? RARITY_STYLE.common;
                   return (
