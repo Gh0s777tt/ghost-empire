@@ -119,7 +119,7 @@ export function SeasonsClient({
               </div>
             </div>
             <div className="text-end">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Total XP</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("totalXp")}</div>
               <div className="text-white font-mono font-bold tabular-nums">{fmt(userXp)}</div>
             </div>
           </div>

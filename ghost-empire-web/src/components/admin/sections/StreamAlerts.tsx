@@ -246,7 +246,7 @@ export function StreamAlertsManager({
   }
 
   return (
-    <SectionCard title="Stream Alerts (OBS Overlay)" icon={Zap}>
+    <SectionCard title={t("secTitle")} icon={Zap}>
       <p className="text-zinc-500 text-xs mb-3">
         {t("intro")}
       </p>

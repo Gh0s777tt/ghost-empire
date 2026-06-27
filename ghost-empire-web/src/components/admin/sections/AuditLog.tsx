@@ -37,7 +37,7 @@ export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
   const nf = useLocale();
   if (auditLog.length === 0) {
     return (
-      <SectionCard title="Audit log" icon={History}>
+      <SectionCard title={t("secTitle")} icon={History}>
         <p className="text-zinc-500 text-sm">{t("empty")}</p>
       </SectionCard>
     );

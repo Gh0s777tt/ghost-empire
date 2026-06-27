@@ -37,7 +37,7 @@ export function PendingOrdersList({
 
   if (orders.length === 0) {
     return (
-      <SectionCard title="Pending orders" icon={Package}>
+      <SectionCard title={t("secTitle")} icon={Package}>
         <p className="text-zinc-500 text-sm">{t("empty")}</p>
       </SectionCard>
     );

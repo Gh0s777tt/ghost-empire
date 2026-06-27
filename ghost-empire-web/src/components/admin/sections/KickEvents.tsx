@@ -110,7 +110,7 @@ export function KickEventsManager({
   }
 
   return (
-    <SectionCard title="Kick — webhook events (subs/gifts/follows)" icon={Radio}>
+    <SectionCard title={t("secTitle")} icon={Radio}>
       <p className="text-zinc-500 text-xs mb-3">
         {t.rich("intro", { code: (c) => <code className="text-green-400">{c}</code> })}
       </p>

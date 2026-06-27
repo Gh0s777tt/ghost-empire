@@ -194,6 +194,12 @@
     "doneNext": "Odezwiemy się z instrukcją podpięcia subdomeny i połączenia kanału. Wszystkie ustawienia zmienisz potem w panelu administracyjnym swojego portalu."
   },
   "admin": {
+    "emojiPicker": {
+      "insert": "Wstaw emoji",
+      "dialogLabel": "Wybór emoji",
+      "searchPlaceholder": "Wklej/szukaj emoji…",
+      "empty": "Brak — wklej emoji w pole wyżej."
+    },
     "supportPreviewTitle": "Podgląd na żywo — strona /support",
     "supportPreviewShow": "Pokaż podgląd",
     "supportPreviewHide": "Ukryj podgląd",
@@ -683,6 +689,7 @@
       "resetBtn": "Zresetuj bazę danych"
     },
     "auditLog": {
+      "secTitle": "Audit log",
       "title": "Audit log (ostatnie {count})",
       "empty": "Brak akcji admin w bazie. Tu pojawi się każdy grant/draw/refund kto i kiedy.",
       "accountDeleted": "konto usunięte",
@@ -734,6 +741,7 @@
       "recentSummary": "Ostatnie {count} zdarzeń"
     },
     "twitchEventSub": {
+      "secTitle": "Twitch EventSub (auto suby/prezenty/bity)",
       "eventType": {
         "channel_subscribe": "Subskrypcje",
         "channel_subscription_gift": "Gifted Suby",
@@ -784,6 +792,7 @@
       "done_reopen": "Zgłoszenie otwarte ponownie."
     },
     "kickEvents": {
+      "secTitle": "Kick — zdarzenia webhook (suby/prezenty/followy)",
       "eventLabel": {
         "channel_subscription_new": "Nowy sub",
         "channel_subscription_renewal": "Odnowienie subu",
@@ -812,6 +821,7 @@
       "recentTitle": "Ostatnie eventy ({count})"
     },
     "youtubeLive": {
+      "secTitle": "YouTube Live Chat (Super Chaty + członkostwa)",
       "noBroadcast": "Nie ma aktywnej transmisji live",
       "chatEnded": "Stream skończył się — cache wyczyszczony",
       "polled": "Pobrane: {messages} wiadomości, {superchats} super chat",
@@ -865,6 +875,7 @@
       "saveBtn": "Zapisz integracje"
     },
     "streamAlerts": {
+      "secTitle": "Stream Alerts (overlay OBS)",
       "err": "Błąd",
       "netErr": "Błąd sieci",
       "saved": "Zapisano",
@@ -1204,6 +1215,7 @@
       "addGoalBtn": "Dodaj cel"
     },
     "subathon": {
+      "secTitle": "Subathon",
       "err": "Błąd",
       "intro": "Odliczanie przedłużane automatycznie przez <b>suby/gifty</b> (Twitch + Kick) i <b>donacje</b> (Streamlabs + YouTube).",
       "obsNote": "Odliczanie pojawia się u góry ekranu, gdy subathon jest aktywny. Token współdzielony z alertami/goals.",
@@ -1786,6 +1798,7 @@
       "expiresLabel": "Wygasa:"
     },
     "pendingOrders": {
+      "secTitle": "Oczekujące zamówienia",
       "empty": "Brak zamówień do realizacji 🎉",
       "confirmRefund": "Zwrócić środki userowi?",
       "notePrompt": "Notatka (opcjonalnie):",
@@ -2925,6 +2938,7 @@
     "bonusGone": "Bonusy zostały już rozdane innym 🐢"
   },
   "seasons": {
+    "totalXp": "Suma XP",
     "help": "Battle Pass sezonu: zdobywaj XP, wbijaj poziomy i odbieraj nagrody ze ścieżki. Sezon trwa ograniczony czas — pasek pokazuje postęp.",
     "metaTitle": "Battle Pass",
     "metaDesc": "Zdobywaj XP sezonowe za aktywność i odbieraj nagrody na kolejnych tierach.",

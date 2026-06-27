@@ -194,6 +194,12 @@
     "doneNext": "We'll follow up with subdomain setup and channel-connection steps. Everything is editable later in your portal's admin panel."
   },
   "admin": {
+    "emojiPicker": {
+      "insert": "Insert emoji",
+      "dialogLabel": "Emoji picker",
+      "searchPlaceholder": "Paste/search emoji…",
+      "empty": "None — paste an emoji in the field above."
+    },
     "supportPreviewTitle": "Live preview — /support page",
     "supportPreviewShow": "Show preview",
     "supportPreviewHide": "Hide preview",
@@ -683,6 +689,7 @@
       "resetBtn": "Reset the database"
     },
     "auditLog": {
+      "secTitle": "Audit log",
       "title": "Audit log (last {count})",
       "empty": "No admin actions in the database. Every grant/draw/refund will show up here — who and when.",
       "accountDeleted": "account deleted",
@@ -734,6 +741,7 @@
       "recentSummary": "Last {count} events"
     },
     "twitchEventSub": {
+      "secTitle": "Twitch EventSub (auto subs/gifts/bits)",
       "eventType": {
         "channel_subscribe": "Subscriptions",
         "channel_subscription_gift": "Gifted subs",
@@ -784,6 +792,7 @@
       "done_reopen": "Ticket reopened."
     },
     "kickEvents": {
+      "secTitle": "Kick — webhook events (subs/gifts/follows)",
       "eventLabel": {
         "channel_subscription_new": "New sub",
         "channel_subscription_renewal": "Sub renewal",
@@ -812,6 +821,7 @@
       "recentTitle": "Recent events ({count})"
     },
     "youtubeLive": {
+      "secTitle": "YouTube Live Chat (Super Chats + Members)",
       "noBroadcast": "No active live broadcast",
       "chatEnded": "Stream ended — cache cleared",
       "polled": "Fetched: {messages} messages, {superchats} super chats",
@@ -865,6 +875,7 @@
       "saveBtn": "Save integrations"
     },
     "streamAlerts": {
+      "secTitle": "Stream Alerts (OBS Overlay)",
       "err": "Error",
       "netErr": "Network error",
       "saved": "Saved",
@@ -1204,6 +1215,7 @@
       "addGoalBtn": "Add goal"
     },
     "subathon": {
+      "secTitle": "Subathon",
       "err": "Error",
       "intro": "Countdown automatically extended by <b>subs/gifts</b> (Twitch + Kick) and <b>donations</b> (Streamlabs + YouTube).",
       "obsNote": "The countdown appears at the top of the screen when the subathon is active. Token shared with alerts/goals.",
@@ -1786,6 +1798,7 @@
       "expiresLabel": "Expires:"
     },
     "pendingOrders": {
+      "secTitle": "Pending orders",
       "empty": "No orders to fulfil 🎉",
       "confirmRefund": "Refund the user?",
       "notePrompt": "Note (optional):",
@@ -2925,6 +2938,7 @@
     "bonusGone": "Bonuses have already been claimed by others 🐢"
   },
   "seasons": {
+    "totalXp": "Total XP",
     "help": "The season Battle Pass: earn XP, level up and claim rewards along the track. A season runs for a limited time — the bar shows your progress.",
     "metaTitle": "Battle Pass",
     "metaDesc": "Earn seasonal XP through activity and unlock rewards across tiers.",

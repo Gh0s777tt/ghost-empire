@@ -81,7 +81,7 @@ export function YouTubeLiveManager({
   }
 
   return (
-    <SectionCard title="YouTube Live Chat (Super Chats + Members)" icon={MonitorPlay}>
+    <SectionCard title={t("secTitle")} icon={MonitorPlay}>
       <p className="text-zinc-500 text-xs mb-3">
         {t("intro")}
       </p>

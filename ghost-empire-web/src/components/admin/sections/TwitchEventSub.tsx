@@ -52,7 +52,7 @@ export function TwitchEventSubManager({
   }
 
   return (
-    <SectionCard title="Twitch EventSub (auto subs/gifts/bits)" icon={ShieldCheck}>
+    <SectionCard title={t("secTitle")} icon={ShieldCheck}>
       <p className="text-zinc-500 text-xs mb-3">
         {t.rich("intro", { code: (c) => <code className="text-red-400">{c}</code> })}
       </p>

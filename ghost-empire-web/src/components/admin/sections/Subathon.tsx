@@ -89,7 +89,7 @@ export function SubathonManager({
   const remainingMs = data?.active && data.endsAt ? new Date(data.endsAt).getTime() - Date.now() : 0;
 
   return (
-    <SectionCard title="Subathon" icon={Hourglass}>
+    <SectionCard title={t("secTitle")} icon={Hourglass}>
       <p className="text-zinc-500 text-xs mb-3">
         {t.rich("intro", { b: (c) => <strong>{c}</strong> })}
       </p>

@@ -4,6 +4,7 @@
 // of stream-friendly emojis + a quick filter. Calls onPick(emoji); the parent decides
 // where to insert (usually appends to a text field). No external emoji dataset.
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Smile, Search } from "lucide-react";
 
 const GROUPS: Array<{ label: string; emojis: string[] }> = [
@@ -16,7 +17,9 @@ const GROUPS: Array<{ label: string; emojis: string[] }> = [
 
 const ALL = GROUPS.flatMap((g) => g.emojis);
 
-export function EmojiPicker({ onPick, title = "Wstaw emoji" }: { onPick: (emoji: string) => void; title?: string }) {
+export function EmojiPicker({ onPick, title }: { onPick: (emoji: string) => void; title?: string }) {
+  const t = useTranslations("admin.emojiPicker");
+  const label = title ?? t("insert");
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const ref = useRef<HTMLDivElement>(null);
@@ -37,8 +40,8 @@ export function EmojiPicker({ onPick, title = "Wstaw emoji" }: { onPick: (emoji:
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        title={title}
-        aria-label={title}
+        title={label}
+        aria-label={label}
         aria-haspopup="dialog"
         aria-expanded={open}
         className="px-2 py-1.5 border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition-all"
@@ -48,7 +51,7 @@ export function EmojiPicker({ onPick, title = "Wstaw emoji" }: { onPick: (emoji:
       {open && (
         <div
           role="dialog"
-          aria-label="Wybór emoji"
+          aria-label={t("dialogLabel")}
           className="absolute end-0 z-50 mt-1 w-64 max-h-72 overflow-y-auto border border-zinc-700 bg-zinc-950 shadow-2xl p-2"
         >
           <div className="flex items-center gap-1.5 mb-2 border border-zinc-800 px-2 py-1">
@@ -56,14 +59,14 @@ export function EmojiPicker({ onPick, title = "Wstaw emoji" }: { onPick: (emoji:
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Wklej/szukaj emoji…"
+              placeholder={t("searchPlaceholder")}
               className="w-full bg-transparent text-xs text-white outline-hidden"
             />
           </div>
           {filtered ? (
             <div className="grid grid-cols-8 gap-0.5">
               {filtered.length === 0 ? (
-                <span className="col-span-8 text-[11px] text-zinc-600 py-2 text-center">Brak — wklej emoji w pole wyżej.</span>
+                <span className="col-span-8 text-[11px] text-zinc-600 py-2 text-center">{t("empty")}</span>
               ) : filtered.map((e, i) => <EmojiBtn key={i} e={e} onPick={onPick} />)}
             </div>
           ) : (
