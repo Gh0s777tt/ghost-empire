@@ -6,7 +6,7 @@ import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, Loader2,
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
-  LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay,
+  LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay, Lightbulb,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
@@ -48,6 +48,7 @@ const ModerationManager = dynamic(() => import("./sections/Moderation").then((m)
 const WidgetsLibrary = dynamic(() => import("./sections/Widgets").then((m) => m.WidgetsLibrary), { ssr: false, loading: SectionLoading });
 const IntegrationsManager = dynamic(() => import("./sections/Integrations").then((m) => m.IntegrationsManager), { ssr: false, loading: SectionLoading });
 const ObsRulesManager = dynamic(() => import("./sections/ObsRules").then((m) => m.ObsRulesManager), { ssr: false, loading: SectionLoading });
+const GoveeRulesManager = dynamic(() => import("./sections/GoveeRules").then((m) => m.GoveeRulesManager), { ssr: false, loading: SectionLoading });
 const WheelManager = dynamic(() => import("./sections/Wheel").then((m) => m.WheelManager), { ssr: false, loading: SectionLoading });
 const WebhooksOutManager = dynamic(() => import("./sections/WebhooksOut").then((m) => m.WebhooksOutManager), { ssr: false, loading: SectionLoading });
 const GamesLibraryManager = dynamic(() => import("./sections/GamesLibrary").then((m) => m.GamesLibraryManager), { ssr: false, loading: SectionLoading });
@@ -148,7 +149,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "wheel" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -175,6 +176,7 @@ export function AdminClient({
     { id: "trivia",    label: t("secTrivia"),       icon: Brain,          group: "main",       level: 2, permission: () => isAdmin },
     { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
     { id: "obsrules",  label: t("secObsRules"),     icon: MonitorPlay,    group: "main",       level: 3, permission: () => isAdmin },
+    { id: "goverules", label: t("secGoveeRules"),   icon: Lightbulb,      group: "main",       level: 3, permission: () => isAdmin },
     { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
     // level 1 = always visible: it's already gated to the platform owner (only they see it
     // at all), so hiding it behind "dev" mode just made the multi-portal creator hard to find (#656).
@@ -569,6 +571,7 @@ export function AdminClient({
           {activeSection === "notifications" && isAdmin && <PushBroadcastManager onToast={showToast} />}
           {activeSection === "sponsors" && isAdmin && <SponsorsManager onToast={showToast} />}
           {activeSection === "obsrules" && isAdmin && <ObsRulesManager onToast={showToast} />}
+          {activeSection === "goverules" && isAdmin && <GoveeRulesManager onToast={showToast} />}
           {activeSection === "scenes" && isAdmin && <SceneBuilder onToast={showToast} />}
           {activeSection === "collectibles" && isAdmin && <CollectiblesManager onToast={showToast} />}
           {activeSection === "recap" && isAdmin && <RecapManager onToast={showToast} />}
