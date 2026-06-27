@@ -88,6 +88,7 @@ const TenantsManager = dynamic(() => import("./sections/Tenants").then((m) => m.
 const SupportTicketsManager = dynamic(() => import("./sections/SupportTickets").then((m) => m.SupportTicketsManager), { ssr: false, loading: SectionLoading });
 const RoleRoster = dynamic(() => import("./sections/RoleRoster").then((m) => m.RoleRoster), { ssr: false, loading: SectionLoading });
 const SubscribersManager = dynamic(() => import("./sections/Subscribers").then((m) => m.SubscribersManager), { ssr: false, loading: SectionLoading });
+const SupportPreview = dynamic(() => import("./sections/SupportPreview").then((m) => m.SupportPreview), { ssr: false, loading: SectionLoading });
 
 // Panel modes: how much of the admin is shown in the nav. Persisted per browser
 // (localStorage "ge-admin-mode"); defaults to "dev" = everything, the pre-modes behavior.
@@ -559,7 +560,12 @@ export function AdminClient({
           {activeSection === "community" && isAdmin && <CommunitySection />}
           {activeSection === "clanwars" && isAdmin && <ClanWarsManager onToast={showToast} />}
           {activeSection === "soundrewards" && isAdmin && <SoundRewardsManager onToast={showToast} />}
-          {activeSection === "payments" && isAdmin && <PaymentMethodsManager onToast={showToast} />}
+          {activeSection === "payments" && isAdmin && (
+            <div className="space-y-6">
+              <PaymentMethodsManager onToast={showToast} />
+              <SupportPreview />
+            </div>
+          )}
           {activeSection === "notifications" && isAdmin && <PushBroadcastManager onToast={showToast} />}
           {activeSection === "sponsors" && isAdmin && <SponsorsManager onToast={showToast} />}
           {activeSection === "obsrules" && isAdmin && <ObsRulesManager onToast={showToast} />}

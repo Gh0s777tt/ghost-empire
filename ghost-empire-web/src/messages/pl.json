@@ -194,6 +194,12 @@
     "doneNext": "Odezwiemy się z instrukcją podpięcia subdomeny i połączenia kanału. Wszystkie ustawienia zmienisz potem w panelu administracyjnym swojego portalu."
   },
   "admin": {
+    "supportPreviewTitle": "Podgląd na żywo — strona /support",
+    "supportPreviewShow": "Pokaż podgląd",
+    "supportPreviewHide": "Ukryj podgląd",
+    "supportPreviewRefresh": "Odśwież",
+    "supportPreviewOpen": "Otwórz /support",
+    "supportPreviewNote": "Podgląd na żywo Twojej publicznej strony wsparcia z metodami powyżej. Po edycji kliknij Odśwież, aby zobaczyć zmiany.",
     "secSubscribers": "Subskrybenci",
     "secDesc_subscribers": "Wszyscy oznaczeni jako subskrybenci platformy (Twitch/Kick/YouTube) — zweryfikuj kto ma aktywny sub, jego poziom i staż.",
     "subsTitle": "Subskrybenci",

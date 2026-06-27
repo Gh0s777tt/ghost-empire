@@ -194,6 +194,12 @@
     "doneNext": "We'll follow up with subdomain setup and channel-connection steps. Everything is editable later in your portal's admin panel."
   },
   "admin": {
+    "supportPreviewTitle": "Live preview — /support page",
+    "supportPreviewShow": "Show preview",
+    "supportPreviewHide": "Hide preview",
+    "supportPreviewRefresh": "Refresh",
+    "supportPreviewOpen": "Open /support",
+    "supportPreviewNote": "Live render of your public support page with the methods above. Click Refresh after editing to see changes.",
     "secSubscribers": "Subscribers",
     "secDesc_subscribers": "Everyone flagged as a platform subscriber (Twitch/Kick/YouTube) — verify who has an active sub, their tier and months.",
     "subsTitle": "Subscribers",
