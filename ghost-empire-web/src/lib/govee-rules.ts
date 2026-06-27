@@ -69,6 +69,28 @@ export function goveeActionsForAlert(alert: AlertLike, rules: readonly GoveeRule
     .map((r) => r.action);
 }
 
+/** The flat DB-row shape of a GoveeRule's action (the `govee_rules` columns). */
+export type GoveeActionRow = {
+  actionKind: string;
+  color: string | null;
+  revertColor: string | null;
+  brightness: number | null;
+  turnOn: boolean | null;
+  revertAfterMs: number | null;
+};
+
+/**
+ * Rebuild a discriminated GoveeAction from a flat DB row (null if malformed). Shared by the
+ * admin API (serialize) and the actuator so the column↔action mapping lives in one tested place.
+ */
+export function goveeActionFromRow(r: GoveeActionRow): GoveeAction | null {
+  const revertAfterMs = r.revertAfterMs;
+  if (r.actionKind === "set_color" && r.color) return { kind: "set_color", color: r.color, revertColor: r.revertColor ?? null, revertAfterMs };
+  if (r.actionKind === "set_brightness" && r.brightness != null) return { kind: "set_brightness", brightness: r.brightness, revertAfterMs };
+  if (r.actionKind === "turn" && r.turnOn != null) return { kind: "turn", on: r.turnOn, revertAfterMs };
+  return null;
+}
+
 type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 function validRevert(ms: unknown): ms is number | null | undefined {

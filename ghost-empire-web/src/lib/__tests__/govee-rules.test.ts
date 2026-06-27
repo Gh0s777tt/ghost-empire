@@ -3,6 +3,7 @@ import {
   goveeActionsForAlert,
   validateGoveeAction,
   validateGoveeRule,
+  goveeActionFromRow,
   normalizeHex,
   GOVEE_ACTION_KINDS,
   ANY_TRIGGER,
@@ -133,6 +134,36 @@ describe("validateGoveeAction", () => {
       const base: Record<string, unknown> =
         kind === "set_color" ? { color: "#000000" } : kind === "set_brightness" ? { brightness: 10 } : { on: true };
       expect(validateGoveeAction({ kind, ...base }).ok).toBe(true);
+    }
+  });
+});
+
+describe("goveeActionFromRow", () => {
+  const row = (over = {}) => ({ actionKind: "turn", color: null, revertColor: null, brightness: null, turnOn: true, revertAfterMs: null, ...over });
+
+  it("rebuilds set_color (with revertColor)", () => {
+    expect(goveeActionFromRow(row({ actionKind: "set_color", color: "#e50914", revertColor: "#ffffff", revertAfterMs: 4000 }))).toEqual({
+      kind: "set_color", color: "#e50914", revertColor: "#ffffff", revertAfterMs: 4000,
+    });
+  });
+  it("rebuilds set_brightness", () => {
+    expect(goveeActionFromRow(row({ actionKind: "set_brightness", brightness: 40 }))).toEqual({ kind: "set_brightness", brightness: 40, revertAfterMs: null });
+  });
+  it("rebuilds turn", () => {
+    expect(goveeActionFromRow(row({ actionKind: "turn", turnOn: false }))).toEqual({ kind: "turn", on: false, revertAfterMs: null });
+  });
+  it("returns null for malformed rows (missing the kind's required column)", () => {
+    expect(goveeActionFromRow(row({ actionKind: "set_color", color: null }))).toBeNull();
+    expect(goveeActionFromRow(row({ actionKind: "set_brightness", brightness: null }))).toBeNull();
+    expect(goveeActionFromRow(row({ actionKind: "turn", turnOn: null }))).toBeNull();
+    expect(goveeActionFromRow(row({ actionKind: "bogus" }))).toBeNull();
+  });
+  it("round-trips validate → row-shape → goveeActionFromRow", () => {
+    const v = validateGoveeAction({ kind: "set_color", color: "#abcdef", revertColor: "#000000", revertAfterMs: 2000 });
+    expect(v.ok).toBe(true);
+    if (v.ok && v.value.kind === "set_color") {
+      const r = { actionKind: "set_color", color: v.value.color, revertColor: v.value.revertColor ?? null, brightness: null, turnOn: null, revertAfterMs: v.value.revertAfterMs ?? null };
+      expect(goveeActionFromRow(r)).toEqual(v.value);
     }
   });
 });

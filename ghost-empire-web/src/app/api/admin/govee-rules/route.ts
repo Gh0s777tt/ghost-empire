@@ -8,7 +8,7 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
-import { validateGoveeRule, type GoveeAction } from "@/lib/govee-rules";
+import { validateGoveeRule, goveeActionFromRow, type GoveeAction } from "@/lib/govee-rules";
 
 const MAX_RULES = 50;
 
@@ -37,17 +37,8 @@ function actionToColumns(a: GoveeAction) {
   return { actionKind: a.kind, color: null, revertColor: null, brightness: null, turnOn: a.on, revertAfterMs: a.revertAfterMs ?? null };
 }
 
-/** Rebuild the discriminated GoveeAction from a row (null if the row is malformed). */
-function rowToAction(r: GoveeRuleRow): GoveeAction | null {
-  const revertAfterMs = r.revertAfterMs;
-  if (r.actionKind === "set_color" && r.color) return { kind: "set_color", color: r.color, revertColor: r.revertColor ?? null, revertAfterMs };
-  if (r.actionKind === "set_brightness" && r.brightness != null) return { kind: "set_brightness", brightness: r.brightness, revertAfterMs };
-  if (r.actionKind === "turn" && r.turnOn != null) return { kind: "turn", on: r.turnOn, revertAfterMs };
-  return null;
-}
-
 function serialize(r: GoveeRuleRow) {
-  return { id: r.id, enabled: r.enabled, triggerType: r.triggerType, minAmount: r.minAmount, sortOrder: r.sortOrder, action: rowToAction(r) };
+  return { id: r.id, enabled: r.enabled, triggerType: r.triggerType, minAmount: r.minAmount, sortOrder: r.sortOrder, action: goveeActionFromRow(r) };
 }
 
 export async function GET() {

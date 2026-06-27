@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
 import { notifyDonation } from "@/lib/web-push";
-import { flashGoveeOnAlert } from "@/lib/govee";
+import { actuateGoveeForAlert } from "@/lib/govee";
 import { cacheJson, cacheDelete } from "@/lib/redis";
 import type { AlertAnimation, AlertPosition, AlertTypeCfg } from "@/lib/alert-types";
 import { createLogger } from "@/lib/logger";
@@ -90,9 +90,9 @@ export async function dispatchAlert(input: AlertInput, tenantId?: string | null)
     amountLabel: input.amountLabel ?? null,
   }, tid);
 
-  // Smart-light flash (Govee) on celebratory events — dormant without GOVEE_* env,
-  // best-effort + never throws (like the webhooks above). (#678)
-  void flashGoveeOnAlert({ type: input.type, amount: input.amount ?? null }, tid).catch(() => {});
+  // Per-tenant Govee lighting on celebratory events — dormant without creds+rules (or GOVEE_*
+  // env for the founder), best-effort + never throws (like the webhooks above). (#678/#722)
+  void actuateGoveeForAlert({ type: input.type, amount: input.amount ?? null }, tid).catch(() => {});
 
   // A real-money tip → "new tip" web push to this portal's subscribers (#535).
   // Fire-and-forget like the webhooks above; dormant-safe + never throws. Already
