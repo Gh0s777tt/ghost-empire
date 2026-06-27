@@ -5,8 +5,9 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
 import { fmt, rankForLevel, displayNick } from "@/lib/utils";
+import { getCurrentTenant } from "@/lib/tenant";
 
-export const alt = "Ghost Empire — User Profile";
+export const alt = "User profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 // Profile OG cards tolerate staleness — cache 10 min so each social-scrape/crawl doesn't
@@ -19,6 +20,8 @@ export default async function Image({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
+  // White-label (#699): brand the card per portal (Host), not hardcoded founder.
+  const tenant = await getCurrentTenant();
 
   let user;
   try {
@@ -97,7 +100,7 @@ export default async function Image({
               width: 50,
               height: 50,
               display: "flex",
-              background: "linear-gradient(135deg, #E50914 0%, #8B0000 100%)",
+              background: `linear-gradient(135deg, ${tenant.brandColor} 0%, #000 100%)`,
               clipPath:
                 "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
             }}
@@ -110,7 +113,7 @@ export default async function Image({
               letterSpacing: "0.1em",
             }}
           >
-            GH0ST EMPIRE
+            {tenant.name}
           </div>
         </div>
 
@@ -299,7 +302,7 @@ export default async function Image({
                 gap: 20,
               }}
             >
-              <Stat label="LIFETIME GT" value={fmt(user.totalEarned)} />
+              <Stat label={`LIFETIME ${tenant.tokenSymbol}`} value={fmt(user.totalEarned)} />
               <Stat label="STREAK" value={`${user.streak} dni`} />
               <Stat label="WIADOMOSCI" value={fmt(user.messageCount)} />
             </div>
@@ -317,8 +320,8 @@ export default async function Image({
             fontFamily: "monospace",
           }}
         >
-          <div style={{ display: "flex" }}>ghost-empire-web.vercel.app/u/{user.username}</div>
-          <div style={{ display: "flex" }}>twitch.tv/gh0s77tt</div>
+          <div style={{ display: "flex" }}>/u/{user.username}</div>
+          <div style={{ display: "flex" }}>{tenant.name}</div>
         </div>
       </div>
     ),
