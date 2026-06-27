@@ -53,6 +53,7 @@ const WebhooksOutManager = dynamic(() => import("./sections/WebhooksOut").then((
 const GamesLibraryManager = dynamic(() => import("./sections/GamesLibrary").then((m) => m.GamesLibraryManager), { ssr: false, loading: SectionLoading });
 const AchievementsManager = dynamic(() => import("./sections/Achievements").then((m) => m.AchievementsManager), { ssr: false, loading: SectionLoading });
 const PredictionsManager = dynamic(() => import("./sections/Predictions").then((m) => m.PredictionsManager), { ssr: false, loading: SectionLoading });
+const BountiesManager = dynamic(() => import("./sections/Bounties").then((m) => m.BountiesManager), { ssr: false, loading: SectionLoading });
 const WelcomeManager = dynamic(() => import("./sections/Welcome").then((m) => m.WelcomeManager), { ssr: false, loading: SectionLoading });
 const FaqManager = dynamic(() => import("./sections/Faq").then((m) => m.FaqManager), { ssr: false, loading: SectionLoading });
 const ChatTimersManager = dynamic(() => import("./sections/ChatTimers").then((m) => m.ChatTimersManager), { ssr: false, loading: SectionLoading });
@@ -144,7 +145,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "wheel" | "webhooks" | "games" | "tickets" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "wheel" | "webhooks" | "games" | "tickets" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -209,6 +210,7 @@ export function AdminClient({
 
     { id: "events",    label: t("secEvents"),      icon: Calendar,        group: "community",  level: 1, permission: () => can("create_events") || can("edit_events") || can("draw_events") },
     { id: "predictions", label: t("secPredictions"), icon: Dice5,         group: "community",  level: 1, permission: () => can("create_events") },
+    { id: "bounties",  label: t("secBounties"),  icon: Target,          group: "community",  level: 1, permission: () => can("create_events") },
     { id: "polls",     label: t("secPolls"),     icon: BarChart3,       group: "community",  level: 1, permission: () => isAdmin },
     { id: "achievements", label: t("secAchievements"), icon: Award,        group: "community",  level: 2, permission: () => isAdmin },
     { id: "schedule",  label: t("secSchedule"), icon: CalendarDays,    group: "community",  level: 1, permission: () => can("manage_shop") },
@@ -531,6 +533,10 @@ export function AdminClient({
 
           {activeSection === "predictions" && can("create_events") && (
             <PredictionsManager {...sharedProps} />
+          )}
+
+          {activeSection === "bounties" && can("create_events") && (
+            <BountiesManager onToast={showToast} />
           )}
 
           {activeSection === "seasons" && isAdmin && (

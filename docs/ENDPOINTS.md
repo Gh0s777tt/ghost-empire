@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **184** tras (183× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **187** tras (186× `route.ts` + 1× `route.tsx`)
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -50,6 +50,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/shop/buy` | POST | Zakup przedmiotu (sprawdza wymagania: level/sub/mc/osiągnięcie) |
 | `…/api/polls/vote` | POST | Głos w ankiecie (1/usera, zmienialny; rate-limit) |
 | `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT (auto-zamykanie po `closesAt`) |
+| `…/api/bounties` · `…/api/bounties/pledge` | GET/POST | Viewer Bounties — lista/otwórz wyzwanie + zrzutka GT do puli (escrow, atomowo) |
 | `…/api/wheel` · `…/api/wheel/spin` | GET/POST | Koło Fortuny — stan + zakręcenie (wydaje GT, rate-limit 20/min) |
 | `…/api/games` | GET | Publiczna biblioteka gier (widoczne, wg czasu gry) |
 | `…/api/games/vote` | POST | Głos „zagraj następne" — 1 gra/widz/portal (zalogowany), set/clear, tenant-scoped (#628) |
@@ -129,6 +130,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/drops` | perm:create_drops | Drop-code'y |
 | `…/api/admin/stream-goals` | admin | Stream Goals (overlay) |
 | `…/api/admin/predictions` | perm:create_events | Tworzenie/rozliczanie predykcji (+ `toggle_announce`) |
+| `…/api/admin/bounties` | perm:create_events | Viewer Bounties — lista + rozstrzyganie (`resolve` wykonane/odrzuć) / `delete` |
 | `…/api/admin/wheel` | admin | Konfiguracja Koła Fortuny (koszt, segmenty) + statystyki |
 | `…/api/admin/mod-violations` | admin | Statystyki naruszeń moderacji + top recydywiści |
 | `…/api/admin/games` | admin | Biblioteka gier — konfiguracja SteamID + sync + ukrywanie |

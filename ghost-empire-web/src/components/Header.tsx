@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 // Transition crossfade between pages (locale routing preserved; degrades gracefully).
 import { usePathname } from "@/i18n/navigation";
 import { TransitionLink as Link } from "@/components/TransitionLink";
-import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, HelpCircle, Rocket, Film, Volume2, Globe, Brain, Sparkles, Eye, type LucideIcon } from "lucide-react";
+import { Ghost, ShoppingBag, Trophy, Calendar, Award, Users, ShieldCheck, LogOut, Zap, Gift, Heart, BarChart3, Disc3, Gamepad2, Dice5, ChevronDown, HelpCircle, Rocket, Film, Volume2, Globe, Brain, Sparkles, Eye, Target, type LucideIcon } from "lucide-react";
 import { displayNick } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -23,7 +23,7 @@ import { useViewerPreview } from "@/components/ViewerPreview";
 // Grouped navigation. Labels are i18n keys (namespace "nav") resolved at render.
 type NavKey =
   | "home" | "shop" | "ranking" | "games" | "casino" | "wheel"
-  | "library" | "community" | "events" | "polls" | "achievements" | "schedule" | "companion" | "clans" | "clips" | "sounds" | "trivia" | "collectibles" | "market";
+  | "library" | "community" | "events" | "polls" | "achievements" | "schedule" | "companion" | "clans" | "clips" | "sounds" | "trivia" | "collectibles" | "market" | "bounties";
 type NavLeaf = { href: string; tk: NavKey; icon: LucideIcon };
 type NavGroup = { tk: NavKey; icon: LucideIcon; children: NavLeaf[] };
 type NavEntry = NavLeaf | NavGroup;
@@ -51,6 +51,7 @@ const NAV: NavEntry[] = [
       { href: "/collectibles", tk: "collectibles", icon: Sparkles },
       { href: "/market",       tk: "market",       icon: ShoppingBag },
       { href: "/events",       tk: "events",       icon: Calendar },
+      { href: "/bounties",     tk: "bounties",     icon: Target },
       { href: "/polls",        tk: "polls",        icon: BarChart3 },
       { href: "/trivia",       tk: "trivia",       icon: Brain },
       { href: "/achievements", tk: "achievements", icon: Award },

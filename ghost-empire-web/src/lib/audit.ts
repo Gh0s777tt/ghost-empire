@@ -39,6 +39,8 @@ type AdminActionType =
   | "update_wheel"
   | "push_broadcast"
   | "respond_ticket"
+  | "resolve_bounty"
+  | "delete_bounty"
   | "backfill_tenant";
 
 export async function logAdminAction(opts: {

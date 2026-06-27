@@ -194,6 +194,8 @@ model User {
   companion        Companion?
   shippingProfile  ShippingProfile?
   supportTickets   SupportTicket[]
+  bountiesCreated  Bounty[]
+  bountyPledges    BountyPledge[]
   clanId           String?
   clanRole         String? // "owner" | "member" within `clan`
   clan             Clan?             @relation("ClanMembers", fields: [clanId], references: [id])
@@ -2235,4 +2237,43 @@ model ObsRule {
 
   @@index([tenantId, triggerType])
   @@map("obs_rules")
+}
+
+// Viewer Bounties (#679): viewers pool GT to challenge the streamer to do something on
+// stream. Pledges ESCROW GT (deducted at pledge time). On "completed" the pool is kept —
+// burned, a GT sink, the viewers got the action; on "rejected"/"expired" every pledge is
+// refunded. Resolved by the streamer (admin). Mirrors the predictions escrow pattern.
+model Bounty {
+  id          String    @id @default(cuid())
+  tenantId    String? // per-portal
+  creatorId   String
+  title       String // the challenge
+  description String?
+  status      String    @default("open") // open | completed | rejected | expired
+  pooledGt    Int       @default(0) // total GT escrowed across all pledges
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  creator User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  pledges BountyPledge[]
+
+  @@index([tenantId, status, createdAt])
+  @@index([creatorId])
+  @@map("bounties")
+}
+
+model BountyPledge {
+  id        String   @id @default(cuid())
+  bountyId  String
+  userId    String
+  amount    Int
+  createdAt DateTime @default(now())
+
+  bounty Bounty @relation(fields: [bountyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([bountyId])
+  @@index([userId])
+  @@map("bounty_pledges")
 }

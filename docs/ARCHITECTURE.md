@@ -127,13 +127,13 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 9. Model danych — wybrane / najnowsze modele
 
-Schemat (`prisma/schema.prisma`) ma **~97 modeli** (m.in. `ObsRule` — reguły sterowania OBS, #664); pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
+Schemat (`prisma/schema.prisma`) ma **~99 modeli** (m.in. `ObsRule` — reguły sterowania OBS #664; `Bounty` / `BountyPledge` — Viewer Bounties #679); pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
 
 - **Karty + marketplace P2P:** `Collectible` / `UserCollectible` (katalog kart + kolekcja, paczki za GT, #551), `CardListing` (listingi P2P z escrow + 5% fee spalane, #552).
 - **Overlay + alerty:** `OverlayScene` (sceny wielowidżetowe → jedno źródło OBS, #550), `StreamAlertSettings` (ustawienia + auto-token overlaya, **per tenant 1:1**), `AlertTypeConfig` (styl/próg per typ alertu).
 - **Wsparcie / sponsorzy:** `PaymentMethod` (metody napiwków na `/support`, #514), `SupportGoal` (cel zbiórki, #519), `Sponsor` (partnerzy/loga, #538).
 - **Auth + powiadomienia:** `Passkey` (WebAuthn, #543/#544), `PushSubscription` (web push, #533), `TwitchEvent` (dedup/idempotencja EventSub po `eventId`).
-- **Zaangażowanie / społeczność:** `Companion` (Ghost Companion, xp), `Clan` + `ClanWar` (klany + wojny, #477), `ClipVote` (klip tygodnia, #502), `TriviaQuestion` / `TriviaAnswer` (#523), `SoundReward` (GT→dźwięki, #505), `DailyTask` / `UserTask` (questy), `StreamSession` (analityka „czas na streamie").
+- **Zaangażowanie / społeczność:** `Companion` (Ghost Companion, xp), `Clan` + `ClanWar` (klany + wojny, #477), `ClipVote` (klip tygodnia, #502), `TriviaQuestion` / `TriviaAnswer` (#523), `SoundReward` (GT→dźwięki, #505), `DailyTask` / `UserTask` (questy), `StreamSession` (analityka „czas na streamie"), `Bounty` + `BountyPledge` (Viewer Bounties — widzowie zrzucają GT na wyzwanie streamera; escrow + atomowy resolve, #679).
 - **Biblioteka gier (per-tenant):** `Game` (per portal — `tenantId` + composite-unique `[tenantId, source, externalId]`, #618), `GameVote` (1 głos „następna gra"/widz/portal, #628), `GameLibraryConfig` (Steam ID + szyfrowane at-rest `psnNpsso` #626 / `xboxApiKey` #627 — per-portal connect PSN/Xbox/OpenXBL).
 - **SaaS:** `Tenant` (portal: branding/plan/owner-handle; founder = tenant domyślny).
 
