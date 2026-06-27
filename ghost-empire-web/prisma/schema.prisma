@@ -2212,6 +2212,10 @@ model IntegrationConfig {
   obsWebsocketPassword String?
   recapDiscordWebhook  String? // Discord webhook URL for AI stream recaps (#516)
 
+  goveeApiKey      String? // per-tenant Govee cloud Developer API key (encrypted at rest) (#720)
+  goveeDeviceId    String? // Govee device id to control
+  goveeDeviceModel String? // Govee device model (e.g. H6159)
+
   tenantId String? @unique // multi-tenant (Phase 3): one config row per tenant
 
   updatedAt DateTime @updatedAt
@@ -2241,6 +2245,30 @@ model ObsRule {
 
   @@index([tenantId, triggerType])
   @@map("obs_rules")
+}
+
+// Per-tenant Govee lighting rules (#720): a StreamAlert event -> a Govee light action.
+// Mirrors ObsRule (flattened action columns). Pure logic + validation in lib/govee-rules.ts;
+// the server-side actuator in lib/govee.ts reads these + the tenant's Govee creds (in
+// IntegrationConfig) and calls the Govee cloud API. Dormant until creds + rules exist.
+model GoveeRule {
+  id            String   @id @default(cuid())
+  tenantId      String? // multi-tenant — per-portal; null = legacy/founder
+  enabled       Boolean  @default(true)
+  triggerType   String // StreamAlert.type, or "*" for any
+  minAmount     Int? // only fire when alert.amount >= this
+  actionKind    String // set_color | set_brightness | turn
+  color         String? // set_color hex (#rrggbb)
+  revertColor   String? // set_color flash → rest hex (optional)
+  brightness    Int? // set_brightness 0-100
+  turnOn        Boolean? // turn on/off
+  revertAfterMs Int? // optional auto-revert window (ms)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId, triggerType])
+  @@map("govee_rules")
 }
 
 // Viewer Bounties (#679): viewers pool GT to challenge the streamer to do something on
