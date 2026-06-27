@@ -13,6 +13,7 @@ import { apiGet, apiPost } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
 import { emitDailyClaimed, DAILY_CLAIMED_EVENT } from "@/lib/daily-bus";
 import { GettingStarted } from "./GettingStarted";
+import { WatchStreakCard } from "@/components/WatchStreakCard";
 import { sfxPlay } from "@/lib/sfx";
 import { useTenantBranding } from "@/components/TenantBranding";
 import type { Session } from "next-auth";
@@ -100,6 +101,9 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
 
       {/* Daily login bonus */}
       <DailyBonusCard />
+
+      {/* Watch streak + loyalty (#687) — daily watch check-in, milestone GT + tiers */}
+      <WatchStreakCard />
 
       {/* Getting started — self-hides once every step is done */}
       <GettingStarted />
