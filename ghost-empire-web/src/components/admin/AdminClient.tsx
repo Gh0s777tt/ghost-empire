@@ -87,6 +87,7 @@ const StreamAlertsManager = dynamic(() => import("./sections/StreamAlerts").then
 const TenantsManager = dynamic(() => import("./sections/Tenants").then((m) => m.TenantsManager), { ssr: false, loading: SectionLoading });
 const SupportTicketsManager = dynamic(() => import("./sections/SupportTickets").then((m) => m.SupportTicketsManager), { ssr: false, loading: SectionLoading });
 const RoleRoster = dynamic(() => import("./sections/RoleRoster").then((m) => m.RoleRoster), { ssr: false, loading: SectionLoading });
+const SubscribersManager = dynamic(() => import("./sections/Subscribers").then((m) => m.SubscribersManager), { ssr: false, loading: SectionLoading });
 
 // Panel modes: how much of the admin is shown in the nav. Persisted per browser
 // (localStorage "ge-admin-mode"); defaults to "dev" = everything, the pre-modes behavior.
@@ -146,7 +147,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "wheel" | "webhooks" | "games" | "tickets" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "wheel" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -180,6 +181,7 @@ export function AdminClient({
 
     { id: "users",     label: t("secUsers"), icon: UserCog,         group: "moderation", level: 1, permission: () => can("grant_tokens") || isAdmin || can("mark_subs") },
     { id: "tickets",   label: t("secTickets"), icon: LifeBuoy,      group: "moderation", level: 1, permission: () => isAdmin },
+    { id: "subscribers", label: t("secSubscribers"), icon: Heart,   group: "moderation", level: 2, permission: () => isAdmin },
     { id: "merge",     label: t("secMerge"), icon: GitMerge,   group: "moderation", level: 2, permission: () => isAdmin },
     { id: "moderation", label: t("secModeration"),    icon: ShieldCheck,   group: "moderation", level: 2, permission: () => isAdmin },
     { id: "audit",     label: t("secAudit"),   icon: History,         group: "moderation", level: 2, permission: () => can("view_audit") },
@@ -378,6 +380,10 @@ export function AdminClient({
 
           {activeSection === "tickets" && isAdmin && (
             <SupportTicketsManager {...sharedProps} />
+          )}
+
+          {activeSection === "subscribers" && isAdmin && (
+            <SubscribersManager />
           )}
 
           {activeSection === "achievements" && isAdmin && (

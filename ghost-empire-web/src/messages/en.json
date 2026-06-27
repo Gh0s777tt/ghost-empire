@@ -194,6 +194,15 @@
     "doneNext": "We'll follow up with subdomain setup and channel-connection steps. Everything is editable later in your portal's admin panel."
   },
   "admin": {
+    "secSubscribers": "Subscribers",
+    "secDesc_subscribers": "Everyone flagged as a platform subscriber (Twitch/Kick/YouTube) — verify who has an active sub, their tier and months.",
+    "subsTitle": "Subscribers",
+    "subsEmpty": "No subscribers yet. Subs sync from Twitch/Kick/YouTube events + manual sub markers.",
+    "subsNote": "Read-only. Sub status syncs from platform events (EventSub / Kick / YouTube) and manual markers in “User roles”. Mark/unmark subs there.",
+    "subsSearch": "Search subscribers…",
+    "subsTotal": "Total",
+    "subsAll": "All",
+    "subsMo": "mo",
     "rosterTitle": "Role roster",
     "rosterEmpty": "No admins or moderators yet.",
     "rosterNote": "Set roles in “User roles” above. Owner = the portal account; admins have full access; moderators have only the permissions listed.",

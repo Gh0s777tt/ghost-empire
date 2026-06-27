@@ -194,6 +194,15 @@
     "doneNext": "Odezwiemy się z instrukcją podpięcia subdomeny i połączenia kanału. Wszystkie ustawienia zmienisz potem w panelu administracyjnym swojego portalu."
   },
   "admin": {
+    "secSubscribers": "Subskrybenci",
+    "secDesc_subscribers": "Wszyscy oznaczeni jako subskrybenci platformy (Twitch/Kick/YouTube) — zweryfikuj kto ma aktywny sub, jego poziom i staż.",
+    "subsTitle": "Subskrybenci",
+    "subsEmpty": "Brak subskrybentów. Suby synchronizują się z eventów Twitch/Kick/YouTube + ręcznych oznaczeń.",
+    "subsNote": "Tylko podgląd. Status sub synchronizuje się z eventów platform (EventSub / Kick / YouTube) i ręcznych oznaczeń w „Role userów”. Tam oznaczasz/odznaczasz suby.",
+    "subsSearch": "Szukaj subskrybentów…",
+    "subsTotal": "Razem",
+    "subsAll": "Wszyscy",
+    "subsMo": "mies.",
     "rosterTitle": "Lista ról",
     "rosterEmpty": "Brak adminów i moderatorów.",
     "rosterNote": "Role ustawiasz w „Role userów” wyżej. Właściciel = konto portalu; admini mają pełny dostęp; moderatorzy tylko wypisane uprawnienia.",
