@@ -2759,7 +2759,7 @@
     "phSpent": "SPENT",
     "phMessages": "MESSAGES",
     "progressTo": "PROGRESS TO LVL {level}",
-    "liveOnTwitch": "● LIVE ON TWITCH",
+    "liveNow": "● LIVE",
     "watching": "{count} watching",
     "watch": "Watch"
   },

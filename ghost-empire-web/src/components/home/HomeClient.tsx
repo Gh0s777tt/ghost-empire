@@ -692,7 +692,7 @@ function LiveBanner() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="font-mono text-[10px] tracking-widest text-red-400 font-bold">
-              {t("liveOnTwitch")}
+              {t("liveNow")}
             </span>
             {typeof live.viewers === "number" && (
               <span className="font-mono text-[10px] text-zinc-500">

@@ -2759,7 +2759,7 @@
     "phSpent": "WYDANE",
     "phMessages": "WIADOMOŚCI",
     "progressTo": "POSTĘP DO LVL {level}",
-    "liveOnTwitch": "● LIVE NA TWITCH",
+    "liveNow": "● NA ŻYWO",
     "watching": "{count} oglądających",
     "watch": "Oglądaj"
   },
