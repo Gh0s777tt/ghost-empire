@@ -228,6 +228,7 @@ export function SocialLinksRow({ links, isFounderPortal = false }: { links?: Ten
           target="_blank"
           rel="noreferrer"
           title={`${s.name} ${s.handle}`}
+          aria-label={`${s.name} ${s.handle}`}
           className="group w-9 h-9 flex items-center justify-center border border-zinc-800 hover:border-transparent transition-all"
           style={{ background: "rgba(0,0,0,0.4)" }}
           onMouseEnter={(e) => { e.currentTarget.style.background = s.gradient; }}

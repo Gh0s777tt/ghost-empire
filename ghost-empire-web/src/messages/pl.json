@@ -2886,6 +2886,7 @@
     "learnMore": "Dowiedz się więcej o %brandShort%"
   },
   "predictions": {
+    "title": "Predykcje",
     "help": "Obstaw wynik wydarzenia za %tokenName%. Pula dzieli się między trafiających proporcjonalnie do wpłat — im śmielszy typ, tym większa wygrana.",
     "metaTitle": "Predictions",
     "metaDesc": "Obstawiaj wydarzenia streamowe za %tokenName% — wygrywający dzielą się pulą.",
@@ -2913,6 +2914,9 @@
     "you": "Ty:"
   },
   "drops": {
+    "redeemTitle": "KOD DROPU",
+    "redeem": "Odbierz",
+    "go": "Dalej",
     "title": "DROP CODES",
     "subtitle": "Wpisz sekretny kod który Ghost wrzucił na czat. Pierwsi <b>N osób</b> dostają bonus.",
     "activeDrops": "Aktywnych dropów:",
@@ -3407,6 +3411,7 @@
     "trgManual": "Ręcznie"
   },
   "ranking": {
+    "title": "Ranking",
     "sortWeeklyShort": "Tydzień",
     "sortWeeklyLabel": "%gt% zdobyte w ostatnich 7 dniach",
     "help": "Ranking graczy społeczności — sortuj po %tokenName%, XP i innych statystykach. Pozycję budujesz aktywnością: czat, oglądanie, questy i gry.",

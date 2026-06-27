@@ -92,6 +92,7 @@ function EmojiBtn({ e, onPick }: { e: string; onPick: (emoji: string) => void })
       onClick={() => onPick(e)}
       className="text-lg leading-none p-1 hover:bg-zinc-800 rounded-sm"
       title={e}
+      aria-label={e}
     >
       {e}
     </button>

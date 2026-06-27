@@ -108,7 +108,7 @@ export function DropRedeemBox({
       <div className="flex items-center gap-2 mb-3">
         <Gift className="w-4 h-4 text-orange-400" />
         <h2 className="font-display text-lg sm:text-xl text-white tracking-wider">
-          DROP CODE
+          {t("redeemTitle")}
         </h2>
         <Zap className="w-4 h-4 text-orange-400 animate-pulse" />
       </div>
@@ -139,7 +139,7 @@ export function DropRedeemBox({
           className="px-4 sm:px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-bold tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {variant === "full" ? "REDEEM" : "GO"}
+          {variant === "full" ? t("redeem") : t("go")}
         </button>
       </div>
 

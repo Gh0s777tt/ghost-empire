@@ -70,7 +70,7 @@ export function PredictionsClient({
             className="font-display text-4xl text-white tracking-wider"
             style={{ textShadow: "2px 0 0 rgba(229,9,20,0.6), -2px 0 0 rgba(139,0,0,0.4)" }}
           >
-            PREDICTIONS
+            {t("title")}
           </h1>
         </div>
         <p className="text-zinc-500 text-sm max-w-2xl">

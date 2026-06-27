@@ -2886,6 +2886,7 @@
     "learnMore": "Learn more about %brandShort%"
   },
   "predictions": {
+    "title": "Predictions",
     "help": "Bet %tokenName% on an outcome. The pool is split among correct picks in proportion to their stakes — the bolder the call, the bigger the win.",
     "metaTitle": "Predictions",
     "metaDesc": "Bet %tokenName% on stream events — winners split the pool.",
@@ -2913,6 +2914,9 @@
     "you": "You:"
   },
   "drops": {
+    "redeemTitle": "DROP CODE",
+    "redeem": "Redeem",
+    "go": "Go",
     "title": "DROP CODES",
     "subtitle": "Enter the secret code Ghost dropped in chat. The first <b>N people</b> get a bonus.",
     "activeDrops": "Active drops:",
@@ -3407,6 +3411,7 @@
     "trgManual": "Manual"
   },
   "ranking": {
+    "title": "Ranking",
     "sortWeeklyShort": "Week",
     "sortWeeklyLabel": "%gt% earned in the last 7 days",
     "help": "The community leaderboard — sort by %tokenName%, XP and more. You climb through activity: chat, watching, quests and games.",
