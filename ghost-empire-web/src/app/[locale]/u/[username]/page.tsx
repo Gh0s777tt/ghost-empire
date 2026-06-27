@@ -26,8 +26,12 @@ import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP } from "@/lib/economy";
 import { companionStage } from "@/lib/companion";
 import { getPredictorRecord, getMyLeagueStats } from "@/lib/prediction-leagues";
 import { getBountyProfileStats } from "@/lib/bounties";
+import { getWatchStreakStatus } from "@/lib/watch-streak";
 
 export const dynamic = "force-dynamic";
+
+// Loyalty tier badge (#688) — current watch-streak tier (#687). Names reuse home.wsTier_*.
+const LOYALTY_EMOJI: Record<string, string> = { bronze: "🥉", silver: "🥈", gold: "🥇", diamond: "💎" };
 
 const RARITY_STYLE: Record<string, { border: string; bg: string; text: string }> = {
   common:    { border: "border-zinc-700",   bg: "bg-zinc-900/40",   text: "text-zinc-300" },
@@ -97,6 +101,7 @@ export default async function PublicProfilePage({
 }) {
   const { username } = await params;
   const t = await getTranslations("userProfile");
+  const loyaltyT = await getTranslations("home"); // reuse the watch-streak tier names (#688)
   const locale = await getLocale();
   const session = await auth();
   const isOwnProfile = session?.user?.username === username;
@@ -142,7 +147,7 @@ export default async function PublicProfilePage({
 
   if (!user) notFound();
 
-  const [connections, earnedAchievements, socialLinks, rankPositions, clanWarWins, predictorRecord, seasonStats, bountyStats] = await Promise.all([
+  const [connections, earnedAchievements, socialLinks, rankPositions, clanWarWins, predictorRecord, seasonStats, bountyStats, watchStreak] = await Promise.all([
     prisma.connection.findMany({
       where: { userId: user.id },
       select: {
@@ -198,6 +203,8 @@ export default async function PublicProfilePage({
     getPredictorRecord(user.id, user.tenantId),
     getMyLeagueStats(user.id, user.tenantId),
     getBountyProfileStats(user.id, user.tenantId),
+    // Loyalty tier (#688) — current watch-streak status drives a hero badge (read-only).
+    getWatchStreakStatus(user.id),
   ]);
 
   const [aheadByEarned, aheadByLevel, aheadByStreak] = rankPositions;
@@ -281,6 +288,11 @@ export default async function PublicProfilePage({
                   {user.isDonator && (
                     <span className="text-[10px] font-bold tracking-widest uppercase border border-yellow-500 bg-yellow-600/15 text-yellow-300 px-2 py-0.5 flex items-center gap-1">
                       <Heart className="w-2.5 h-2.5" /> DONATOR
+                    </span>
+                  )}
+                  {watchStreak.tier !== "none" && (
+                    <span className="text-[10px] font-bold tracking-widest uppercase border border-violet-500 bg-violet-600/15 text-violet-300 px-2 py-0.5 flex items-center gap-1">
+                      {LOYALTY_EMOJI[watchStreak.tier]} {loyaltyT(`wsTier_${watchStreak.tier}`)}
                     </span>
                   )}
                   {user.isBanned && (
