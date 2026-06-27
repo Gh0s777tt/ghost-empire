@@ -233,70 +233,101 @@ async function handleSuperChat(input: {
       tokensGranted = Math.round(pln * YT_SUPERCHAT_GT_PER_PLN);
 
       const amountGrosze = Math.round(pln * 100);
-      await prisma.$transaction([
-        prisma.user.update({
-          where: { id: matchedUserId },
-          data: {
-            isDonator: true,
-            totalDonated: { increment: amountGrosze },
-            tokens: { increment: tokensGranted },
-            totalEarned: { increment: tokensGranted },
-          },
-        }),
-        prisma.transaction.create({
-          data: {
-            userId: matchedUserId,
-            type: "earn",
-            amount: tokensGranted,
-            reason: `yt_superchat:${input.currency}:${amountFloat.toFixed(2)}`,
-            status: "completed",
-            note: input.message?.slice(0, 500) ?? null,
-          },
-        }),
-        prisma.notification.create({
-          data: {
-            userId: matchedUserId,
-            type: "system",
-            title: `⭐ Dzięki za Super Chat ${amountFloat.toFixed(2)} ${input.currency}!`,
-            message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT.`,
-            icon: "⭐",
-            link: "/profile",
-          },
-        }),
-        prisma.donation.create({
-          data: {
-            tenantId: input.tenantId, // Batch B: scope to the streamer's portal
-            externalId: `yt:${input.messageId}`,
-            source: "youtube_superchat",
-            donorName: input.authorName ?? "Anon",
-            message: input.message?.slice(0, 2000) ?? null,
-            amountGrosze,
-            currency: input.currency,
-            donatedAt: new Date(),
-            userId: matchedUserId,
-            matchedAt: new Date(),
-            matchType: "auto_yt_channel",
-            tokensGranted,
-          },
-        }),
-      ]);
+      try {
+        await prisma.$transaction([
+          // Dedup write folded INTO the grant tx so a concurrent replay (admin
+          // "Poll now" racing the cron) trips the unique messageId and rolls the
+          // double credit back instead of paying out twice (B1).
+          prisma.youTubeEvent.create({
+            data: {
+              messageId: input.messageId,
+              videoId: input.videoId,
+              type: "superChat",
+              authorChannelId: input.authorChannelId,
+              authorName: input.authorName,
+              message: input.message?.slice(0, 2000),
+              amountMicros: input.amountMicros,
+              currency: input.currency,
+              userId: matchedUserId,
+              tokensGranted,
+            },
+          }),
+          prisma.user.update({
+            where: { id: matchedUserId },
+            data: {
+              isDonator: true,
+              totalDonated: { increment: amountGrosze },
+              tokens: { increment: tokensGranted },
+              totalEarned: { increment: tokensGranted },
+            },
+          }),
+          prisma.transaction.create({
+            data: {
+              userId: matchedUserId,
+              type: "earn",
+              amount: tokensGranted,
+              reason: `yt_superchat:${input.currency}:${amountFloat.toFixed(2)}`,
+              status: "completed",
+              note: input.message?.slice(0, 500) ?? null,
+            },
+          }),
+          prisma.notification.create({
+            data: {
+              userId: matchedUserId,
+              type: "system",
+              title: `⭐ Dzięki za Super Chat ${amountFloat.toFixed(2)} ${input.currency}!`,
+              message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT.`,
+              icon: "⭐",
+              link: "/profile",
+            },
+          }),
+          prisma.donation.create({
+            data: {
+              tenantId: input.tenantId, // Batch B: scope to the streamer's portal
+              externalId: `yt:${input.messageId}`,
+              source: "youtube_superchat",
+              donorName: input.authorName ?? "Anon",
+              message: input.message?.slice(0, 2000) ?? null,
+              amountGrosze,
+              currency: input.currency,
+              donatedAt: new Date(),
+              userId: matchedUserId,
+              matchedAt: new Date(),
+              matchType: "auto_yt_channel",
+              tokensGranted,
+            },
+          }),
+        ]);
+      } catch (e) {
+        // Unique messageId tripped → another poll already processed this super chat.
+        if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") return false;
+        throw e;
+      }
     }
   }
 
-  await prisma.youTubeEvent.create({
-    data: {
-      messageId: input.messageId,
-      videoId: input.videoId,
-      type: "superChat",
-      authorChannelId: input.authorChannelId,
-      authorName: input.authorName,
-      message: input.message?.slice(0, 2000),
-      amountMicros: input.amountMicros,
-      currency: input.currency,
-      userId: matchedUserId,
-      tokensGranted,
-    },
-  });
+  // Unmatched donor (or no channel id): still record the event for dedup/analytics.
+  if (!matchedUserId) {
+    try {
+      await prisma.youTubeEvent.create({
+        data: {
+          messageId: input.messageId,
+          videoId: input.videoId,
+          type: "superChat",
+          authorChannelId: input.authorChannelId,
+          authorName: input.authorName,
+          message: input.message?.slice(0, 2000),
+          amountMicros: input.amountMicros,
+          currency: input.currency,
+          userId: null,
+          tokensGranted: null,
+        },
+      });
+    } catch (e) {
+      if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") return false;
+      throw e;
+    }
+  }
 
   // Stream alert — fires for every super chat regardless of match
   await dispatchAlertSafe({
@@ -349,52 +380,79 @@ async function handleMemberEvent(input: {
     if (connection) {
       matchedUserId = connection.userId;
       tokensGranted = YT_MEMBER_REWARD;
-      await prisma.$transaction([
-        prisma.connection.update({
-          where: { id: connection.id },
-          data: { isSubscriber: true, subStartDate: new Date() },
-        }),
-        prisma.user.update({
-          where: { id: matchedUserId },
-          data: {
-            tokens: { increment: tokensGranted },
-            totalEarned: { increment: tokensGranted },
-          },
-        }),
-        prisma.transaction.create({
-          data: {
-            userId: matchedUserId,
-            type: "earn",
-            amount: tokensGranted,
-            reason: `yt_member:${input.type}`,
-            status: "completed",
-          },
-        }),
-        prisma.notification.create({
-          data: {
-            userId: matchedUserId,
-            type: "system",
-            title: input.type === "newSponsorEvent" ? "📺 Witaj członku!" : "📺 Dzięki za milestone!",
-            message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT za członkostwo YouTube.`,
-            icon: "📺",
-          },
-        }),
-      ]);
+      try {
+        await prisma.$transaction([
+          // Dedup write folded INTO the grant tx so a concurrent replay can't
+          // double-credit the member reward (B2 — same fix as the super chat path).
+          prisma.youTubeEvent.create({
+            data: {
+              messageId: input.messageId,
+              videoId: input.videoId,
+              type: input.type === "newSponsorEvent" ? "newSponsor" : "memberMilestone",
+              authorChannelId: input.authorChannelId,
+              authorName: input.authorName,
+              message: input.message?.slice(0, 2000),
+              userId: matchedUserId,
+              tokensGranted,
+            },
+          }),
+          prisma.connection.update({
+            where: { id: connection.id },
+            data: { isSubscriber: true, subStartDate: new Date() },
+          }),
+          prisma.user.update({
+            where: { id: matchedUserId },
+            data: {
+              tokens: { increment: tokensGranted },
+              totalEarned: { increment: tokensGranted },
+            },
+          }),
+          prisma.transaction.create({
+            data: {
+              userId: matchedUserId,
+              type: "earn",
+              amount: tokensGranted,
+              reason: `yt_member:${input.type}`,
+              status: "completed",
+            },
+          }),
+          prisma.notification.create({
+            data: {
+              userId: matchedUserId,
+              type: "system",
+              title: input.type === "newSponsorEvent" ? "📺 Witaj członku!" : "📺 Dzięki za milestone!",
+              message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT za członkostwo YouTube.`,
+              icon: "📺",
+            },
+          }),
+        ]);
+      } catch (e) {
+        if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") return false;
+        throw e;
+      }
     }
   }
 
-  await prisma.youTubeEvent.create({
-    data: {
-      messageId: input.messageId,
-      videoId: input.videoId,
-      type: input.type === "newSponsorEvent" ? "newSponsor" : "memberMilestone",
-      authorChannelId: input.authorChannelId,
-      authorName: input.authorName,
-      message: input.message?.slice(0, 2000),
-      userId: matchedUserId,
-      tokensGranted,
-    },
-  });
+  // Unmatched member (or no channel id): still record the event for dedup/analytics.
+  if (!matchedUserId) {
+    try {
+      await prisma.youTubeEvent.create({
+        data: {
+          messageId: input.messageId,
+          videoId: input.videoId,
+          type: input.type === "newSponsorEvent" ? "newSponsor" : "memberMilestone",
+          authorChannelId: input.authorChannelId,
+          authorName: input.authorName,
+          message: input.message?.slice(0, 2000),
+          userId: null,
+          tokensGranted: null,
+        },
+      });
+    } catch (e) {
+      if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") return false;
+      throw e;
+    }
+  }
 
   await dispatchAlertSafe({
     type: "twitch_sub", // reuse the sub alert type — visually equivalent

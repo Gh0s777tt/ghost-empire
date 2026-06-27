@@ -75,8 +75,10 @@ export async function POST(req: Request) {
     if (!war) return NextResponse.json({ error: "Brak aktywnej wojny" }, { status: 404 });
     const winner = await topClan(tid);
     await prisma.$transaction(async (tx) => {
-      await tx.clanWar.update({
-        where: { id: war.id },
+      // Guarded claim: only end a war that's still active, so two concurrent "end"
+      // requests can't both award the prize pool (B5). count===0 → already ended.
+      const claim = await tx.clanWar.updateMany({
+        where: { id: war.id, status: "active" },
         data: {
           status: "ended",
           winnerClanId: winner?.id ?? null,
@@ -84,6 +86,7 @@ export async function POST(req: Request) {
           winnerPoints: winner?.warPoints ?? null,
         },
       });
+      if (claim.count === 0) return; // a concurrent request already ended it
       if (winner && war.prizePool > 0) {
         await tx.clan.update({ where: { id: winner.id }, data: { treasury: { increment: war.prizePool } } });
       }

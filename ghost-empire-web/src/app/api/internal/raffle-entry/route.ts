@@ -58,6 +58,11 @@ export async function POST(req: Request) {
   const weight = Math.max(1, body.isMod ? event.raffleModWeight : 0, body.isSub ? event.raffleSubWeight : 0);
 
   const created = await prisma.$transaction(async (tx) => {
+    // Lock the event row so concurrent free entries for THIS raffle serialize through
+    // the one-entry check → read-max-ticketNumber → createMany section. READ COMMITTED
+    // would otherwise let two entries read the same max and mint duplicate ticket
+    // numbers (and both pass the per-user count). Mirrors the paid path. (B3)
+    await tx.$queryRaw`SELECT id FROM events WHERE id = ${event.id} FOR UPDATE`;
     const existing = await tx.raffleTicket.count({ where: { eventId: event.id, userId: connection.userId } });
     if (existing > 0) return false; // already entered — one entry per user
     const last = await tx.raffleTicket.findFirst({

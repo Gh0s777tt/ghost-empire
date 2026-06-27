@@ -52,17 +52,20 @@ export async function PATCH(req: Request) {
   const amountFloat = donation.amountGrosze / 100;
   const tokensGranted = Math.round(amountFloat * GT_PER_PLN);
 
-  await prisma.$transaction([
-    prisma.donation.update({
-      where: { id: body.donationId },
+  const matched = await prisma.$transaction(async (tx) => {
+    // Atomically claim the donation ONLY if still unmatched — two concurrent "assign"
+    // calls can't both credit (B4: where:{id} → where:{id,userId:null}, count===0 → lost).
+    const claim = await tx.donation.updateMany({
+      where: { id: body.donationId, userId: null },
       data: {
         userId: user.id,
         matchedAt: new Date(),
         matchType: "manual",
         tokensGranted,
       },
-    }),
-    prisma.user.update({
+    });
+    if (claim.count === 0) return false; // another admin assigned it first
+    await tx.user.update({
       where: { id: user.id },
       data: {
         isDonator: true,
@@ -70,8 +73,8 @@ export async function PATCH(req: Request) {
         tokens: { increment: tokensGranted },
         totalEarned: { increment: tokensGranted },
       },
-    }),
-    prisma.transaction.create({
+    });
+    await tx.transaction.create({
       data: {
         userId: user.id,
         type: "earn",
@@ -80,8 +83,8 @@ export async function PATCH(req: Request) {
         status: "completed",
         note: donation.message?.slice(0, 500) ?? null,
       },
-    }),
-    prisma.notification.create({
+    });
+    await tx.notification.create({
       data: {
         userId: user.id,
         type: "system",
@@ -90,8 +93,10 @@ export async function PATCH(req: Request) {
         icon: "❤️",
         link: "/profile",
       },
-    }),
-  ]);
+    });
+    return true;
+  });
+  if (!matched) return NextResponse.json({ error: "Już dopasowany" }, { status: 409 });
 
   await logAdminAction({
     adminId: auth.userId,
