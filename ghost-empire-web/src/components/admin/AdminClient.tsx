@@ -47,6 +47,7 @@ const PollsManager = dynamic(() => import("./sections/Polls").then((m) => m.Poll
 const ModerationManager = dynamic(() => import("./sections/Moderation").then((m) => m.ModerationManager), { ssr: false, loading: SectionLoading });
 const WidgetsLibrary = dynamic(() => import("./sections/Widgets").then((m) => m.WidgetsLibrary), { ssr: false, loading: SectionLoading });
 const IntegrationsManager = dynamic(() => import("./sections/Integrations").then((m) => m.IntegrationsManager), { ssr: false, loading: SectionLoading });
+const ObsRulesManager = dynamic(() => import("./sections/ObsRules").then((m) => m.ObsRulesManager), { ssr: false, loading: SectionLoading });
 const WheelManager = dynamic(() => import("./sections/Wheel").then((m) => m.WheelManager), { ssr: false, loading: SectionLoading });
 const WebhooksOutManager = dynamic(() => import("./sections/WebhooksOut").then((m) => m.WebhooksOutManager), { ssr: false, loading: SectionLoading });
 const GamesLibraryManager = dynamic(() => import("./sections/GamesLibrary").then((m) => m.GamesLibraryManager), { ssr: false, loading: SectionLoading });
@@ -143,7 +144,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "wheel" | "webhooks" | "games" | "tickets" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "wheel" | "webhooks" | "games" | "tickets" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -169,6 +170,7 @@ export function AdminClient({
     { id: "clanwars",  label: t("secClanwars"),     icon: Swords,         group: "main",       level: 2, permission: () => isAdmin },
     { id: "trivia",    label: t("secTrivia"),       icon: Brain,          group: "main",       level: 2, permission: () => isAdmin },
     { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
+    { id: "obsrules",  label: t("secObsRules"),     icon: MonitorPlay,    group: "main",       level: 3, permission: () => isAdmin },
     { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
     // level 1 = always visible: it's already gated to the platform owner (only they see it
     // at all), so hiding it behind "dev" mode just made the multi-portal creator hard to find (#656).
@@ -543,6 +545,7 @@ export function AdminClient({
           {activeSection === "payments" && isAdmin && <PaymentMethodsManager onToast={showToast} />}
           {activeSection === "notifications" && isAdmin && <PushBroadcastManager onToast={showToast} />}
           {activeSection === "sponsors" && isAdmin && <SponsorsManager onToast={showToast} />}
+          {activeSection === "obsrules" && isAdmin && <ObsRulesManager onToast={showToast} />}
           {activeSection === "scenes" && isAdmin && <SceneBuilder onToast={showToast} />}
           {activeSection === "collectibles" && isAdmin && <CollectiblesManager onToast={showToast} />}
           {activeSection === "recap" && isAdmin && <RecapManager onToast={showToast} />}

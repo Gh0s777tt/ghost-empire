@@ -76,3 +76,8 @@ export function apiPatch<T>(url: string, payload?: unknown, init?: RequestInit):
     ...init,
   });
 }
+
+/** DELETE, returning parsed JSON. */
+export function apiDelete<T>(url: string, init?: RequestInit): Promise<T> {
+  return request<T>(url, { method: "DELETE", ...init });
+}
