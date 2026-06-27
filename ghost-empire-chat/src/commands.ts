@@ -3,6 +3,7 @@
 // few minutes (cached). The list below is only a FALLBACK used when the very first
 // fetch fails (offline / portal down) so the bot is never command-less on boot.
 import { env } from "./env";
+import { setRaffleKeywords } from "./raffle";
 
 type Command = {
   trigger: string;
@@ -42,10 +43,14 @@ export async function refreshCommands(): Promise<void> {
       commands?: { trigger: string; response: string; cooldownSeconds: number; requiresLive?: boolean; activeFromMinute?: number }[];
       live?: boolean;
       liveSince?: string | null;
+      raffleKeywords?: string[];
     };
     // Live status travels with the command sync (independent of the commands array).
     live = data.live ?? false;
     liveSince = data.liveSince ? new Date(data.liveSince).getTime() : null;
+    // Active raffle keywords ride along on the same response (#615) — hand them to the
+    // raffle module so chat-keyword entries work without an extra fetch.
+    setRaffleKeywords(data.raffleKeywords ?? []);
     if (Array.isArray(data.commands)) {
       // Empty list from the portal is intentional (admin disabled/removed all) — respect it,
       // but only once we've successfully loaded at least once.

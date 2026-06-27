@@ -1,9 +1,14 @@
 # 🎟️ RAFFLE-BOT.md — chat-keyword raffle: wiring `ghost-empire-chat`
 
-The web side of the chat-keyword raffle shipped in **#611 / #615** and is **dormant until the
-bot calls it**. This runbook is the exact contract the sibling bot repo
-(`ghost-empire-chat`) must implement. No web changes are needed — everything below already
-lives in `ghost-empire-web`.
+> **✅ WIRED 2026-06-27 (#673)** — `ghost-empire-chat` now implements this contract:
+> `src/raffle.ts` (`setRaffleKeywords` + `checkRaffleEntry`) + per-platform hooks in
+> `twitch.ts` / `kick.ts` / `youtube.ts`, reading `raffleKeywords` off the existing
+> `/api/bot/chat-commands` poll. **Redeploy the bot to activate.** This runbook stays as the
+> contract reference.
+
+The web side of the chat-keyword raffle shipped in **#611 / #615**; the bot side was wired in
+**#673**. This runbook is the exact contract the bot package (`ghost-empire-chat`) implements.
+No web changes are needed — everything below already lives in `ghost-empire-web`.
 
 ## How it works
 

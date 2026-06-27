@@ -1,5 +1,6 @@
 import { env } from "./env";
 import { matchCommand } from "./commands";
+import { checkRaffleEntry } from "./raffle";
 import { awardChat } from "./portal";
 import { refreshYouTubeToken } from "./youtubeAuth";
 import { registerSender, markActivity } from "./broadcast";
@@ -122,16 +123,14 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
   const text = m.snippet?.displayMessage ?? "";
   const channelId = m.authorDetails?.channelId;
   const username = m.authorDetails?.displayName;
+  const ad = m.authorDetails;
+  const isSub = Boolean(ad?.isChatSponsor);
+  const isMod = Boolean(ad?.isChatModerator) || Boolean(ad?.isChatOwner);
 
   // Automod — YouTube (force-ssl scope) supports delete + temporary ban. Offending
   // messages skip the feed + GT award. Bot account must be a moderator of the chat.
   if (channelId && channelId !== ownChannelId) {
-    const ad = m.authorDetails;
-    const verdict = checkMessage(text, {
-      isSub: Boolean(ad?.isChatSponsor),
-      isVip: false,
-      isMod: Boolean(ad?.isChatModerator) || Boolean(ad?.isChatOwner),
-    });
+    const verdict = checkMessage(text, { isSub, isVip: false, isMod });
     if (verdict) {
       const v = escalate("youtube", username, verdict);
       void enforceYouTube(m.id, channelId, username, v);
@@ -142,6 +141,7 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
 
   pushChatFeed("youtube", username, text);
   trackEmojis(text);
+  if (channelId && channelId !== ownChannelId) checkRaffleEntry("youtube", username, text, isSub, isMod);
 
   // award GT (skip our own messages so we don't award/loop on the channel account)
   if (channelId && channelId !== ownChannelId) {

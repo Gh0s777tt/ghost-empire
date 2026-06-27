@@ -1,5 +1,6 @@
 import { env } from "./env";
 import { matchCommand } from "./commands";
+import { checkRaffleEntry } from "./raffle";
 import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
@@ -75,11 +76,9 @@ function handleChat(d: KickChat): void {
   // Automod — Kick's public bot API (chat:write) can't delete/timeout, so we warn
   // and skip the feed + GT award (the offending message earns nothing).
   const badges = d.sender?.identity?.badges ?? [];
-  const verdict = checkMessage(content, {
-    isSub: badges.some((b) => b.type === "subscriber"),
-    isVip: badges.some((b) => b.type === "vip" || b.type === "og"),
-    isMod: badges.some((b) => b.type === "moderator" || b.type === "broadcaster"),
-  });
+  const isSub = badges.some((b) => b.type === "subscriber");
+  const isMod = badges.some((b) => b.type === "moderator" || b.type === "broadcaster");
+  const verdict = checkMessage(content, { isSub, isVip: badges.some((b) => b.type === "vip" || b.type === "og"), isMod });
   if (verdict) {
     // Kick's public bot API can only warn, but we still escalate the strike count
     // (shared across platforms) and log it for stats.
@@ -91,6 +90,7 @@ function handleChat(d: KickChat): void {
 
   pushChatFeed("kick", username, content);
   trackEmojis(content);
+  checkRaffleEntry("kick", username, content, isSub, isMod);
 
   if (isAiTrigger(content)) {
     void handleAiTrigger(username, content).then((r) => {

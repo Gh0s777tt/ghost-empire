@@ -1,6 +1,7 @@
 import tmi from "tmi.js";
 import { env } from "./env";
 import { matchCommand } from "./commands";
+import { checkRaffleEntry } from "./raffle";
 import { matchFaq } from "./faq";
 import { welcomeMessage, welcomeBonus } from "./welcome";
 import { isSongRequest, handleSongRequest } from "./songRequest";
@@ -46,11 +47,9 @@ function build(password: string): tmi.Client {
 
     // Automod first — offending messages are removed/timed-out and skip the chat
     // feed, commands and the GT award. Requires the bot to be a Twitch moderator.
-    const verdict = checkMessage(message, {
-      isSub: Boolean(tags.subscriber) || tags.badges?.subscriber != null,
-      isVip: tags.badges?.vip != null,
-      isMod: Boolean(tags.mod) || tags.badges?.broadcaster != null,
-    });
+    const isSub = Boolean(tags.subscriber) || tags.badges?.subscriber != null;
+    const isMod = Boolean(tags.mod) || tags.badges?.broadcaster != null;
+    const verdict = checkMessage(message, { isSub, isVip: tags.badges?.vip != null, isMod });
     if (verdict) {
       const u = tags.username ?? "";
       // Escalate repeat offenders (harsher action / longer timeout), then log for stats.
@@ -73,6 +72,7 @@ function build(password: string): tmi.Client {
 
     pushChatFeed("twitch", tags.username, message, { emotes: tags.emotes, badges: tags.badges });
     trackEmojis(message);
+    checkRaffleEntry("twitch", tags.username, message, isSub, isMod);
 
     if (isAiTrigger(message)) {
       void handleAiTrigger(tags.username, message).then((r) => {
