@@ -32,17 +32,23 @@ type Mine = {
   wagered: number;
   biggestWin: number;
 };
+type HofSeason = {
+  seasonNumber: number;
+  seasonLabel: string;
+  podium: Array<{ rank: number; name: string; image: string | null; prize: number; net: number }>;
+};
 
 const MEDAL = ["🥇", "🥈", "🥉"];
 
 export function LeaguesClient({
-  isAuthenticated, meId, season, rows, mine,
+  isAuthenticated, meId, season, rows, mine, hallOfFame,
 }: {
   isAuthenticated: boolean;
   meId: string | null;
   season: { number: number; label: string };
   rows: Row[];
   mine: Mine | null;
+  hallOfFame: HofSeason[];
 }) {
   const t = useTranslations("leagues");
   const fmt = useLocaleFmt();
@@ -159,6 +165,37 @@ export function LeaguesClient({
           </div>
         )}
       </section>
+
+      {/* Hall of Fame — past season podiums */}
+      {hallOfFame.length > 0 && (
+        <section>
+          <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+            <Crown className="w-5 h-5 text-yellow-500" />
+            {t("hofTitle")}
+          </h2>
+          <div className="space-y-3">
+            {hallOfFame.map((s) => (
+              <div key={s.seasonNumber} className="border border-zinc-800 bg-zinc-950/40 p-3">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{s.seasonLabel}</div>
+                <div className="grid sm:grid-cols-3 gap-2">
+                  {s.podium.map((p) => (
+                    <div key={p.rank} className="flex items-center gap-2 border border-zinc-800/70 bg-black/20 px-2 py-1.5">
+                      <span className="text-base shrink-0">{MEDAL[p.rank - 1] ?? `#${p.rank}`}</span>
+                      {p.image ? (
+                        <img src={p.image} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700 shrink-0" />
+                      ) : (
+                        <span className="w-5 h-5 rounded-full bg-zinc-800 shrink-0" />
+                      )}
+                      <span className="text-zinc-200 text-sm truncate flex-1">{p.name}</span>
+                      {p.prize > 0 && <span className="text-[10px] font-mono text-yellow-500 shrink-0">+{fmt(p.prize)}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

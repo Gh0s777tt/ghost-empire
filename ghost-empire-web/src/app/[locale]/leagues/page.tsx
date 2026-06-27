@@ -6,6 +6,7 @@ import { currentTenantId } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { LeaguesClient } from "@/components/leagues/LeaguesClient";
 import { getPredictionLeague, getMyLeagueStats } from "@/lib/prediction-leagues";
+import { getHallOfFame } from "@/lib/league-rewards";
 
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -24,9 +25,10 @@ export default async function LeaguesPage() {
   const userId = session?.user?.id ?? null;
   const tid = await currentTenantId();
 
-  const [league, mine] = await Promise.all([
+  const [league, mine, hallOfFame] = await Promise.all([
     getPredictionLeague(tid, 50),
     userId ? getMyLeagueStats(userId, tid) : Promise.resolve(null),
+    getHallOfFame(tid),
   ]);
 
   return (
@@ -47,6 +49,7 @@ export default async function LeaguesPage() {
           season={league.season}
           rows={league.rows}
           mine={mine}
+          hallOfFame={hallOfFame}
         />
       </main>
     </div>

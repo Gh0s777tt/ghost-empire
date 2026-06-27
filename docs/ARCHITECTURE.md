@@ -127,7 +127,7 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 9. Model danych — wybrane / najnowsze modele
 
-Schemat (`prisma/schema.prisma`) ma **~99 modeli** (m.in. `ObsRule` — reguły sterowania OBS #664; `Bounty` / `BountyPledge` — Viewer Bounties #679); pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
+Schemat (`prisma/schema.prisma`) ma **~100 modeli** (m.in. `ObsRule` — reguły sterowania OBS #664; `Bounty` / `BountyPledge` — Viewer Bounties #679; `LeagueSeasonResult` — podia Ligi Typerów + Hall of Fame #682); pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
 
 - **Karty + marketplace P2P:** `Collectible` / `UserCollectible` (katalog kart + kolekcja, paczki za GT, #551), `CardListing` (listingi P2P z escrow + 5% fee spalane, #552).
 - **Overlay + alerty:** `OverlayScene` (sceny wielowidżetowe → jedno źródło OBS, #550), `StreamAlertSettings` (ustawienia + auto-token overlaya, **per tenant 1:1**), `AlertTypeConfig` (styl/próg per typ alertu).

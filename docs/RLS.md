@@ -87,6 +87,7 @@ ALTER TABLE public."integration_config" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."kick_event_subscriptions" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."kick_events" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."kick_streamer_token" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."league_season_results" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."mod_violation_logs" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."moderation_config" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."notifications" ENABLE ROW LEVEL SECURITY;

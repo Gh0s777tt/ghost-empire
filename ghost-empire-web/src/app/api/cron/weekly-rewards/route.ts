@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getCachedWeeklyRanking } from "@/lib/cached";
 import { createLogger } from "@/lib/logger";
 import { verifyCronSecret } from "@/lib/utils";
+import { settlePreviousMonthLeagues } from "@/lib/league-rewards";
 
 const log = createLogger("cron.weekly-rewards");
 const REWARDS = [1000, 500, 250];
@@ -79,7 +80,21 @@ export async function GET(req: Request) {
     }
 
     log.info("weekly rewards paid", { paidCount: paid.length, skippedCount: skipped.length });
-    return NextResponse.json({ ok: true, paid, skipped });
+
+    // Monthly Prediction League settlement (#682) folded in here to avoid a 5th Vercel cron.
+    // Idempotent (LeagueSeasonResult unique), so attempting it every Monday is safe — it only
+    // actually pays the first Monday after a month closes; later attempts skip. Best-effort.
+    let leagueSeason = 0;
+    let leagueSettled = 0;
+    try {
+      const league = await settlePreviousMonthLeagues();
+      leagueSeason = league.seasonNumber;
+      leagueSettled = league.results.filter((r) => r.settled).length;
+    } catch (e) {
+      log.error("league settlement failed", e);
+    }
+
+    return NextResponse.json({ ok: true, paid, skipped, leagueSeason, leagueSettled });
   } catch (e) {
     log.error("weekly rewards failed", e);
     return NextResponse.json({ error: "weekly_rewards_failed" }, { status: 500 });

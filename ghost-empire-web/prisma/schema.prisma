@@ -196,6 +196,7 @@ model User {
   supportTickets   SupportTicket[]
   bountiesCreated  Bounty[]
   bountyPledges    BountyPledge[]
+  leagueResults    LeagueSeasonResult[]
   clanId           String?
   clanRole         String? // "owner" | "member" within `clan`
   clan             Clan?             @relation("ClanMembers", fields: [clanId], references: [id])
@@ -2276,4 +2277,26 @@ model BountyPledge {
   @@index([bountyId])
   @@index([userId])
   @@map("bounty_pledges")
+}
+
+// Prediction League (#682): a recorded month-end podium + GT prize. One row per
+// (portal, season, user); the unique makes settlement idempotent. Powers the Hall of Fame.
+model LeagueSeasonResult {
+  id           String   @id @default(cuid())
+  tenantId     String? // per-portal (null = founder/legacy)
+  seasonNumber Int // months since 2026-01 (matches seasons.monthBounds)
+  seasonLabel  String // e.g. "Maj 2026"
+  userId       String
+  rank         Int // 1-based finishing position
+  net          Int // net GT that season (winnings minus stakes)
+  wins         Int
+  plays        Int
+  prize        Int // GT awarded (0 if Hall-of-Fame-only)
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, seasonNumber, userId])
+  @@index([tenantId, seasonNumber, rank])
+  @@map("league_season_results")
 }
