@@ -61,13 +61,56 @@ the contract in **[docs/RAFFLE-BOT.md](RAFFLE-BOT.md)** in the `ghost-empire-cha
 (Bearer `BOT_SECRET`). The Discord bot (`../Bot DC`) is a different runtime — this is the
 Twitch/Kick chat bot.
 
+## 🔵 6. Turn on AI features — `/admin#integrations`
+The whole AI layer (`lib/ai.ts`) ships wired but **dormant until a key is set** — there is none yet
+on either portal (providers are pre-picked: `ghost-empire`→OpenAI, `e-forge`→Anthropic). Both
+portals are `plan: elite`, so there is **no plan gate** — a key is all that's missing.
+1. **`/admin#integrations` → "AI" card** → choose a provider + paste the API key → Save.
+   Stored **encrypted at rest** (per portal). No deploy, no Vercel token needed.
+   *(Alternatively set one global `AI_API_KEY` in Vercel env — it's the fallback for every portal
+   that has no per-portal key, but then all portals share that one provider.)*
+2. Unlocks: **@bot AI replies**, **chat moderation**, **stream recap**, **chat translation** (overlay
+   `?translate=`), **semantic search** (`/search`), and **`!imagine`** image generation.
+3. ⚠️ **Provider nuance (real, by design):** image gen (`!imagine`) and semantic-search embeddings
+   **always call OpenAI** (`api.openai.com`), using whatever key you saved. So:
+   - **OpenAI key → everything works** (chat + moderation + recap + translate + **images** + **search**).
+   - **Anthropic/Grok/Gemini/DeepSeek/Bielik key → chat / moderation / recap / translate only** —
+     `!imagine` and `/search` stay dark (the key isn't an OpenAI key). One key field per portal, so
+     you can't mix. Given the OpenAI-only image/embed path, **OpenAI is the fullest-coverage choice.**
+4. Two sub-features need one extra step each:
+   - **Stream recap → Discord:** also paste a Discord **webhook URL** in the same Integrations card.
+   - **Clip Director:** also re-auth the streamer's Twitch with the **`clips:edit`** scope (the AI key alone isn't enough).
+5. Verify: in chat `@bot hello` / `!imagine a neon skull` should reply; `/search` returns semantic hits.
+   Send me the portal + any error and I'll confirm it end-to-end on the live site.
+
+## 🔵 7. Turn on Govee lighting — `/admin#integrations` + `/admin#goverules`
+Per-portal smart-light reactions (#720–#724) — built, dormant until creds are entered.
+1. **`/admin#integrations` → "Govee Lighting" card** → API key + device id + model → Save (encrypted).
+2. **`/admin#goverules`** → add rules (event/min-amount → set colour / brightness / on-off, optional flash→revert).
+3. Hit **"Test light"** to confirm creds + device respond. Runbook: **[docs/LIGHTING.md](LIGHTING.md)**.
+
+## 🔵 8. Off-site backups (env)
+Daily logical JSON dump → S3-compatible bucket is wired (#677) but dormant until the bucket env is set.
+Add `BACKUP_S3_ENDPOINT` / `BACKUP_S3_BUCKET` / `BACKUP_S3_ACCESS_KEY_ID` / `BACKUP_S3_SECRET_ACCESS_KEY`
+(+ optional `BACKUP_S3_REGION` / `PREFIX`) in Vercel env → the nightly `cron/backup` ships. Runbook: **[docs/BACKUP.md](BACKUP.md)**.
+
+## 🚧 NOT a key-paste — these need building first
+The "dormant, waiting for keys" note over-promised two items. Verified against the code, they are
+**not wired at all** (so adding a key does nothing — they're future development):
+- **Social-OAuth (IG / TikTok / Facebook / X):** today only **manual social *links*** exist (you paste a
+  profile URL in `/admin` / `/profile`). There is **no OAuth connect flow** and no `*_CLIENT_ID` wiring.
+  Building it = a per-platform dev-app + callback routes + token storage — say the word and it's a feature, not a setting.
+- **Philips Hue:** **no code in the repo** (no `lib/hue`, no `HUE_*`). Also the Hue bridge lives on the
+  streamer's **LAN**, which a cloud app can't reach without a local agent — so it needs both building **and** a
+  local-bridge design (Govee, a cloud API, is the working smart-light path today).
+
 ---
 
 ## 🔐 Infra hygiene (verify in the provider dashboards)
 - **Vercel:** Pro confirmed (sub-daily crons — donation poll now `*/15`). Add any custom/tenant
   subdomains to `serverActions.allowedOrigins` in `next.config.ts` before they go live.
 - **Supabase:** connect via the transaction pooler (`:6543`, `connection_limit=3`) — keep as-is.
-  **✅ RLS enabled (2026-06-27, all 97 tables, #671)** — anon/PostgREST exposure closed as
+  **✅ RLS enabled (all 102 tables — #671, re-audited 102/102 in #731)** — anon/PostgREST exposure closed as
   defense-in-depth; the Prisma app bypasses RLS (role `postgres`, `rolbypassrls=true`) so it's
   unaffected. ⚠️ New tables from a future `prisma db push` default to RLS **off** — re-run the
   matching `ENABLE` (runbook **[docs/RLS.md](RLS.md)**). Composite `[tenantId, <sort>]`
