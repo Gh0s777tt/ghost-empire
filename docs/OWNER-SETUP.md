@@ -100,9 +100,12 @@ The "dormant, waiting for keys" note over-promised two items. Verified against t
 - **X (Twitter) — BUILT (#752), paste-in-panel:** `/admin#integrations` → "X (Twitter)" card → paste your
   **@handle** + an **X API v2 app Bearer token** (encrypted) → your follower count + latest posts render on
   `/about`. Dormant until set. ⚠️ reading posts needs an X API v2 token with **read** access (X's paid tier).
-- **Social IG / Facebook / TikTok — still need building:** today only **manual social *links*** exist (paste a
-  profile URL). No OAuth connect flow / `*_CLIENT_ID` yet. Each = a per-platform dev-app + **platform app review**
-  (Meta business verification, TikTok approval) + callback routes — a feature, not a setting. (Meta/Hue are the next slices.)
+- **Instagram (Meta) — BUILT (#753), paste-in-panel:** `/admin#integrations` → "Instagram" card → paste your
+  **IG Business-account id** + a **Graph API long-lived token** (encrypted) → follower count + latest posts on
+  `/about`. ⚠️ needs an IG Business/Creator account + a Meta app whose **app review** is approved (business
+  verification) for live data — built + dormant until then.
+- **Facebook / TikTok — still need building:** only manual social *links* exist today; each = a per-platform
+  dev-app + app review + connect flow. (Hue is the next slice.)
 - **Philips Hue:** **no code in the repo** (no `lib/hue`, no `HUE_*`). Also the Hue bridge lives on the
   streamer's **LAN**, which a cloud app can't reach without a local agent — so it needs both building **and** a
   local-bridge design (Govee, a cloud API, is the working smart-light path today).

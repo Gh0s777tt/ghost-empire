@@ -45,6 +45,8 @@ export async function GET() {
     hasGoveeApiKey: !!c.goveeApiKey, goveeApiKeyPreview: mask(c.goveeApiKey),
     xUsername: c.xUsername ?? "",
     hasXToken: !!c.xApiToken, xTokenPreview: mask(c.xApiToken),
+    metaIgUserId: c.metaIgUserId ?? "",
+    hasMetaIgToken: !!c.metaIgToken, metaIgTokenPreview: mask(c.metaIgToken),
   });
 }
 
@@ -72,11 +74,13 @@ export async function POST(req: Request) {
   if (typeof body.goveeDeviceId === "string") data.goveeDeviceId = body.goveeDeviceId.trim().slice(0, 200) || null;
   if (typeof body.goveeDeviceModel === "string") data.goveeDeviceModel = body.goveeDeviceModel.trim().slice(0, 100) || null;
   if (typeof body.xUsername === "string") data.xUsername = body.xUsername.trim().slice(0, 50) || null; // normalized on read
+  if (typeof body.metaIgUserId === "string") data.metaIgUserId = body.metaIgUserId.trim().slice(0, 40) || null;
   setSecret(data, "aiApiKey", body.aiApiKey);
   setSecret(data, "sentryDsn", body.sentryDsn);
   setSecret(data, "obsWebsocketPassword", body.obsWebsocketPassword);
   setSecret(data, "goveeApiKey", body.goveeApiKey);
   setSecret(data, "xApiToken", body.xApiToken);
+  setSecret(data, "metaIgToken", body.metaIgToken);
 
   await prisma.integrationConfig.update({ where: { id: row.id }, data });
   await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "integrations", targetId: "default", req });

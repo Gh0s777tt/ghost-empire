@@ -946,6 +946,12 @@
       "urlRequired": "Paste your Rumble API URL first"
     },
     "integrations": {
+      "igTitle": "Instagram",
+      "igUserIdLabel": "IG account id",
+      "igUserIdPh": "17841400000000000",
+      "igTokenLabel": "Graph API token",
+      "igTokenPh": "paste a long-lived IG access token",
+      "igHint": "Shows your follower count and latest posts on /about. Needs an Instagram Business account + a Graph API token; encrypted at rest. Meta app review gates live access.",
       "xTitle": "X (Twitter)",
       "xUsernameLabel": "X handle",
       "xUsernamePh": "yourhandle",
@@ -3838,6 +3844,10 @@
   },
   "xSocial": {
     "title": "Latest on X",
+    "followers": "{count, plural, one {{n} follower} other {{n} followers}}"
+  },
+  "igSocial": {
+    "title": "Latest on Instagram",
     "followers": "{count, plural, one {{n} follower} other {{n} followers}}"
   }
 }

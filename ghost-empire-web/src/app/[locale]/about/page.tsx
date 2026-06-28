@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
 import { XPresence } from "@/components/XPresence";
+import { MetaPresence } from "@/components/MetaPresence";
 import { getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import { ChangelogList } from "@/components/ChangelogList";
 
@@ -1051,6 +1052,10 @@ export default async function AboutPage() {
           {/* Streamer's X (Twitter) presence — renders only when an X token is configured (#752) */}
           <div className="mt-4 max-w-2xl">
             <XPresence tenantId={tenant.id} />
+          </div>
+          {/* Streamer's Instagram presence — renders only when an IG token is configured (#753) */}
+          <div className="mt-4 max-w-2xl">
+            <MetaPresence tenantId={tenant.id} />
           </div>
         </Section>
 

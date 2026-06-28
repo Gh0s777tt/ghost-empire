@@ -29,6 +29,8 @@ type Meta = {
   hasGoveeApiKey: boolean; goveeApiKeyPreview: string | null;
   xUsername: string;
   hasXToken: boolean; xTokenPreview: string | null;
+  metaIgUserId: string;
+  hasMetaIgToken: boolean; metaIgTokenPreview: string | null;
 };
 
 function SecretField({ label, has, preview, value, onChange, onClear, placeholder }: {
@@ -110,12 +112,14 @@ export function IntegrationsManager({
   const [goveeDeviceId, setGoveeDeviceId] = useState("");
   const [goveeDeviceModel, setGoveeDeviceModel] = useState("");
   const [xUsername, setXUsername] = useState("");
+  const [metaIgUserId, setMetaIgUserId] = useState("");
   // secrets — empty unless the admin types a new value; null = clear
   const [aiKey, setAiKey] = useState<string | null>("");
   const [sentry, setSentry] = useState<string | null>("");
   const [obsPass, setObsPass] = useState<string | null>("");
   const [goveeKey, setGoveeKey] = useState<string | null>("");
   const [xToken, setXToken] = useState<string | null>("");
+  const [metaIgToken, setMetaIgToken] = useState<string | null>("");
 
   const load = useCallback(async () => {
     try {
@@ -123,6 +127,7 @@ export function IntegrationsManager({
       setMeta(d); setAiProvider(d.aiProvider); setAiModel(d.aiModel); setObsUrl(d.obsWebsocketUrl);
       setGoveeDeviceId(d.goveeDeviceId); setGoveeDeviceModel(d.goveeDeviceModel);
       setXUsername(d.xUsername);
+      setMetaIgUserId(d.metaIgUserId);
     } catch { /* keep current */ }
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -130,15 +135,15 @@ export function IntegrationsManager({
   async function save() {
     setSaving(true);
     try {
-      const body: Record<string, unknown> = { aiProvider, aiModel, obsWebsocketUrl: obsUrl, goveeDeviceId, goveeDeviceModel, xUsername };
+      const body: Record<string, unknown> = { aiProvider, aiModel, obsWebsocketUrl: obsUrl, goveeDeviceId, goveeDeviceModel, xUsername, metaIgUserId };
       // Only send a field when it changed: a typed value sets it, explicit null clears.
       const touched = (v: string | null) => v === null || (typeof v === "string" && v.trim().length > 0);
-      const fields: Array<[string, string | null]> = [["aiApiKey", aiKey], ["sentryDsn", sentry], ["obsWebsocketPassword", obsPass], ["goveeApiKey", goveeKey], ["xApiToken", xToken]];
+      const fields: Array<[string, string | null]> = [["aiApiKey", aiKey], ["sentryDsn", sentry], ["obsWebsocketPassword", obsPass], ["goveeApiKey", goveeKey], ["xApiToken", xToken], ["metaIgToken", metaIgToken]];
       for (const [k, v] of fields) if (touched(v)) body[k] = v;
 
       await apiPost("/api/admin/integrations", body);
       onToast("ok", t("saved"));
-      setAiKey(""); setSentry(""); setObsPass(""); setGoveeKey(""); setXToken(""); // clear inputs; reload shows masked state
+      setAiKey(""); setSentry(""); setObsPass(""); setGoveeKey(""); setXToken(""); setMetaIgToken(""); // clear inputs; reload shows masked state
       await load();
       onSuccess();
     } catch (err) {
@@ -158,6 +163,7 @@ export function IntegrationsManager({
   const obsConfigured = meta.hasObsPassword || meta.obsWebsocketUrl.trim().length > 0;
   const goveeConfigured = meta.hasGoveeApiKey || meta.goveeDeviceId.trim().length > 0;
   const xConfigured = meta.hasXToken || meta.xUsername.trim().length > 0;
+  const igConfigured = meta.hasMetaIgToken || meta.metaIgUserId.trim().length > 0;
 
   return (
     <SectionCard title={t("title")} icon={Plug}>
@@ -219,6 +225,15 @@ export function IntegrationsManager({
         </label>
         <SecretField label={t("xTokenLabel")} has={meta.hasXToken} preview={meta.xTokenPreview} value={xToken ?? ""} onChange={setXToken} onClear={() => setXToken(null)} placeholder={t("xTokenPh")} />
         <p className="text-[10px] text-zinc-600">{t("xHint")}</p>
+      </IntegrationCard>
+
+      {/* Instagram (Meta) — paste a long-lived Graph API token + IG business-account id (#753) */}
+      <IntegrationCard title={t("igTitle")} configured={igConfigured} statusLabel={igConfigured ? t("configured") : undefined}>
+        <label className="text-[11px] text-zinc-400 block">{t("igUserIdLabel")}
+          <input value={metaIgUserId} onChange={(e) => setMetaIgUserId(e.target.value)} placeholder={t("igUserIdPh")} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
+        </label>
+        <SecretField label={t("igTokenLabel")} has={meta.hasMetaIgToken} preview={meta.metaIgTokenPreview} value={metaIgToken ?? ""} onChange={setMetaIgToken} onClear={() => setMetaIgToken(null)} placeholder={t("igTokenPh")} />
+        <p className="text-[10px] text-zinc-600">{t("igHint")}</p>
       </IntegrationCard>
 
       <button

@@ -2246,6 +2246,9 @@ model IntegrationConfig {
   xApiToken String? // per-tenant X (Twitter) API v2 app Bearer token (encrypted) — follower count + latest posts (#752)
   xUsername String? // X @handle to display (plain; bare username, no leading @)
 
+  metaIgToken  String? // per-tenant Instagram Graph API long-lived access token (encrypted) (#753)
+  metaIgUserId String? // IG Business/Creator account numeric id (plain)
+
   tenantId String? @unique // multi-tenant (Phase 3): one config row per tenant
 
   updatedAt DateTime @updatedAt

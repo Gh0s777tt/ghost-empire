@@ -946,6 +946,12 @@
       "urlRequired": "Najpierw wklej adres URL API Rumble"
     },
     "integrations": {
+      "igTitle": "Instagram",
+      "igUserIdLabel": "ID konta IG",
+      "igUserIdPh": "17841400000000000",
+      "igTokenLabel": "Token Graph API",
+      "igTokenPh": "wklej długoterminowy token IG",
+      "igHint": "Pokazuje liczbę obserwujących i ostatnie posty na /about. Wymaga konta Instagram Business + tokenu Graph API; szyfrowany at-rest. Dostęp na żywo wymaga zatwierdzenia aplikacji Meta.",
       "xTitle": "X (Twitter)",
       "xUsernameLabel": "Nazwa na X",
       "xUsernamePh": "twojanazwa",
@@ -3838,6 +3844,10 @@
   },
   "xSocial": {
     "title": "Ostatnio na X",
+    "followers": "{count, plural, one {{n} obserwujący} few {{n} obserwujących} many {{n} obserwujących} other {{n} obserwujących}}"
+  },
+  "igSocial": {
+    "title": "Ostatnio na Instagramie",
     "followers": "{count, plural, one {{n} obserwujący} few {{n} obserwujących} many {{n} obserwujących} other {{n} obserwujących}}"
   }
 }
