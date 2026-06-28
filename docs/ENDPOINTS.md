@@ -121,7 +121,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/sponsors` | admin | CRUD sponsorów/partnerów portalu (pasek na `/support`, #538) |
 | `…/api/admin/user-roles` | admin | Role: admin / moderator / donator |
 | `…/api/admin/connection-roles` | perm:mark_subs | Status sub/mod/VIP per platforma |
-| `…/api/admin/reset-database` | admin | **Reset bazy** (wipe userów, fraza potwierdzająca) |
+| `…/api/admin/reset-database` | platform-owner | **Reset bazy** (#741) — `scope: all` (wszystkie portale, fraza „USUŃ WSZYSTKO") lub `scope: tenant`+`tenantId` (jeden portal, fraza = slug portalu). Tylko owner + step-up 2FA (failClosed) |
 | `…/api/admin/shop` | perm:manage_shop | CRUD sklepu |
 | `…/api/admin/seasons` | admin | Sezony + nagrody Battle Pass |
 | `…/api/admin/achievements` | admin | CRUD osiągnięć + ręczne przyznawanie |

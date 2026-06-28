@@ -753,7 +753,13 @@
       "dangerDesc1": "Usuwa <b>wszystkich użytkowników</b> i ich dane: konta i logowania, połączone platformy, tokeny i transakcje, osiągnięcia, questy, progres battle passa, zakłady, udziały w eventach, powiadomienia i social linki. Czyści też kolejkę alertów, feed czatu oraz logi zdarzeń (Twitch / Kick / YouTube). Użytkownicy zalogują się od nowa (z bonusem powitalnym).",
       "dangerDesc2": "<b>Zostaje:</b> konfiguracja i katalog — sklep, definicje eventów, osiągnięć, questów i dropów, sezony battle passa, komendy / timery / FAQ czatu, harmonogram, ustawienia alertów, integracje (Twitch / Kick / YouTube / Streamlabs) oraz audit log. Konto właściciela wraca jako admin po ponownym zalogowaniu.",
       "unlockLabel": "Wpisz dokładnie <red>{p}</red>, aby odblokować",
-      "resetBtn": "Zresetuj bazę danych"
+      "resetBtn": "Zresetuj bazę danych",
+      "scopeTenant": "Jeden portal",
+      "scopeAll": "Wszystkie portale",
+      "pickPortal": "Portal do skasowania",
+      "usersCount": "{count} kont",
+      "scopeTenantDesc": "Skasuje konta i dane userów <b>tylko tego portalu</b> — pozostałe portale nietknięte. Konfiguracja i katalog zostają.",
+      "resetBtnTenant": "Skasuj dane portalu {name}"
     },
     "auditLog": {
       "secTitle": "Audit log",

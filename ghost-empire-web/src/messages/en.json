@@ -753,7 +753,13 @@
       "dangerDesc1": "Deletes <b>all users</b> and their data: accounts and logins, connected platforms, tokens and transactions, achievements, quests, battle pass progress, bets, event entries, notifications and social links. Also clears the alert queue, chat feed and event logs (Twitch / Kick / YouTube). Users log in fresh (with the welcome bonus).",
       "dangerDesc2": "<b>Kept:</b> configuration and catalog — shop, event/achievement/quest/drop definitions, battle pass seasons, chat commands / timers / FAQ, schedule, alert settings, integrations (Twitch / Kick / YouTube / Streamlabs) and the audit log. The owner account returns as admin after logging back in.",
       "unlockLabel": "Type exactly <red>{p}</red> to unlock",
-      "resetBtn": "Reset the database"
+      "resetBtn": "Reset the database",
+      "scopeTenant": "One portal",
+      "scopeAll": "All portals",
+      "pickPortal": "Portal to wipe",
+      "usersCount": "{count} accounts",
+      "scopeTenantDesc": "Wipes accounts + user data for <b>this portal only</b> — every other portal is untouched. Configuration and catalog stay.",
+      "resetBtnTenant": "Wipe {name} data"
     },
     "auditLog": {
       "secTitle": "Audit log",
