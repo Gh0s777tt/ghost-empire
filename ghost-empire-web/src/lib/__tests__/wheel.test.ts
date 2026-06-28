@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseSegments, DEFAULT_SEGMENTS } from "@/lib/wheel";
+import { parseSegments, DEFAULT_SEGMENTS, resolveLandingIndex } from "@/lib/wheel";
 
 describe("parseSegments", () => {
   it("falls back to DEFAULT_SEGMENTS for non-array input", () => {
@@ -91,5 +91,33 @@ describe("parseSegments", () => {
     expect(out).toHaveLength(12);
     expect(out[0].label).toBe("S0");
     expect(out[11].label).toBe("S11");
+  });
+});
+
+describe("resolveLandingIndex", () => {
+  // Two slices share the label "A" — the odds-shaping case that the old
+  // findIndex-by-label recovery got wrong (it always returned the first "A").
+  const segs = [{ label: "A" }, { label: "B" }, { label: "A" }, { label: "C" }];
+
+  it("returns the persisted index — the authoritative slice even when labels duplicate", () => {
+    expect(resolveLandingIndex(segs, 2, "A")).toBe(2); // the bug: label lookup would return 0
+    expect(resolveLandingIndex(segs, 0, "A")).toBe(0);
+    expect(resolveLandingIndex(segs, 1, "B")).toBe(1);
+  });
+
+  it("falls back to a label lookup for legacy rows with no stored index", () => {
+    expect(resolveLandingIndex(segs, null, "B")).toBe(1);
+    expect(resolveLandingIndex(segs, undefined, "C")).toBe(3);
+    // a legacy duplicate label can only recover the first match — the historical behaviour
+    expect(resolveLandingIndex(segs, null, "A")).toBe(0);
+  });
+
+  it("falls back to label when the stored index is out of range (config changed since the spin)", () => {
+    expect(resolveLandingIndex(segs, 9, "B")).toBe(1);
+    expect(resolveLandingIndex(segs, -1, "C")).toBe(3);
+  });
+
+  it("returns -1 when nothing matches (label removed from config for a legacy row)", () => {
+    expect(resolveLandingIndex(segs, null, "ZZZ")).toBe(-1);
   });
 });

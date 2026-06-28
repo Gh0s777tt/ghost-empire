@@ -9,7 +9,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/alerts";
 import { getRumbleStatus } from "@/lib/rumble";
-import { getWheelConfig } from "@/lib/wheel";
+import { getWheelConfig, resolveLandingIndex } from "@/lib/wheel";
 import { lockExpiredPredictions } from "@/lib/predictions";
 import { displayNick } from "@/lib/utils";
 import { companionStage } from "@/lib/companion";
@@ -231,8 +231,10 @@ async function wheelFeed(_p: URLSearchParams, tid: string | null): Promise<unkno
       include: { user: { select: { username: true, displayName: true, image: true } } },
     }),
   ]);
-  // Map the recorded label back to a segment index so the overlay knows where to land.
-  const segmentIndex = latest ? cfg.segments.findIndex((s) => s.label === latest.segmentLabel) : -1;
+  // Where the overlay wheel should land. Prefer the spin's persisted slice index
+  // (authoritative even when segments share a label); legacy rows fall back to a
+  // label lookup. See resolveLandingIndex in lib/wheel.ts.
+  const segmentIndex = latest ? resolveLandingIndex(cfg.segments, latest.segmentIndex, latest.segmentLabel) : -1;
   return {
     enabled: cfg.enabled,
     segments: cfg.segments.map((s) => ({ label: s.label, color: s.color, rewardTokens: s.rewardTokens })),

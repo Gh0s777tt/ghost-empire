@@ -49,6 +49,24 @@ export function parseSegments(raw: unknown): WheelSegment[] {
   return out.length >= 2 ? out.slice(0, 12) : DEFAULT_SEGMENTS;
 }
 
+/**
+ * Resolve which slice a recorded spin landed on. Prefers the persisted
+ * `segmentIndex` — the authoritative slice the spin actually picked, and the ONLY
+ * reliable source when several segments share a label (a common way to shape wheel
+ * odds). Falls back to a label lookup for legacy rows written before the index was
+ * stored (segmentIndex null), or when the config changed since the spin so the
+ * stored index is now out of range. Returns -1 when nothing matches. Pure — unit
+ * tested; the overlay feed (lib/overlay-feeds.ts) is the caller.
+ */
+export function resolveLandingIndex(
+  segments: { label: string }[],
+  storedIndex: number | null | undefined,
+  segmentLabel: string,
+): number {
+  if (storedIndex != null && storedIndex >= 0 && storedIndex < segments.length) return storedIndex;
+  return segments.findIndex((s) => s.label === segmentLabel);
+}
+
 export type WheelConfigView = { enabled: boolean; costPerSpin: number; segments: WheelSegment[] };
 
 /** Per-tenant wheel config row (get-or-create); legacy id:"default" when no tenant. */
@@ -117,7 +135,7 @@ export async function spinWheel(userId: string): Promise<SpinResult> {
     }
 
     const spin = await tx.wheelSpin.create({
-      data: { userId, segmentLabel: seg.label, rewardTokens: seg.rewardTokens, cost },
+      data: { userId, segmentIndex: idx, segmentLabel: seg.label, rewardTokens: seg.rewardTokens, cost },
       select: { id: true },
     });
 

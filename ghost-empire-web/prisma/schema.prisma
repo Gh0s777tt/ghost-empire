@@ -1164,6 +1164,7 @@ model WheelSpin {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segmentIndex Int? // slice index landed on; null = legacy rows pre-#760 (recover via label). Persisted so the overlay lands on the exact slice even when two segments share a label.
   segmentLabel String // label of the segment landed on
   rewardTokens Int // GT won (0 = no reward)
   cost         Int // GT spent to spin
