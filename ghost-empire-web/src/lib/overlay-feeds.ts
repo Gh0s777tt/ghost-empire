@@ -215,8 +215,8 @@ async function emojiComboFeed(_p: URLSearchParams, tid: string | null): Promise<
   return { active: true, emoji: s.emoji, count: s.count, ts: s.updatedAt.getTime() };
 }
 
-async function rumbleFeed(): Promise<unknown> {
-  return getRumbleStatus();
+async function rumbleFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  return getRumbleStatus(tid);
 }
 
 async function wheelFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {

@@ -2229,6 +2229,8 @@ model IntegrationConfig {
   goveeDeviceId    String? // Govee device id to control
   goveeDeviceModel String? // Govee device model (e.g. H6159)
 
+  rumbleApiUrl String? // per-tenant Rumble Livestream API URL incl. embedded key (encrypted) (#730)
+
   tenantId String? @unique // multi-tenant (Phase 3): one config row per tenant
 
   updatedAt DateTime @updatedAt

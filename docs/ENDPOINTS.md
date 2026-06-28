@@ -170,6 +170,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/twitch-streamer-auth` (+callback) · `twitch-eventsub` | admin | Autoryzacja streamera Twitch + subskrypcje EventSub |
 | `…/api/admin/kick-streamer-auth` (+callback) · `kick-events` | admin | Autoryzacja streamera Kick + eventy |
 | `…/api/admin/youtube-streamer-auth` (+callback) | admin | Autoryzacja konta YouTube |
+| `…/api/admin/rumble` | admin | Per-portal Rumble (#730) — GET status na żywo + `hasUrl`, POST zapis/wyczyść `rumbleApiUrl` (szyfrowany), tenant-scoped, audit-logged |
 
 ### SaaS — właściciel platformy (`requirePlatformOwner`)
 > „Admin-of-admins" — tylko właściciel platformy (nie admin pojedynczego tenanta). Tworzenie i zarządzanie portalami najemców.

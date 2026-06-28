@@ -6,7 +6,7 @@ import {
   ShieldCheck, Coins, Gift, Calendar, Package, Plus, Loader2,
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
-  LayoutDashboard, LayoutGrid, Bell, Tv, Menu, GitMerge, Radio, MonitorPlay, Lightbulb,
+  LayoutDashboard, LayoutGrid, Bell, Tv, Tv2, Menu, GitMerge, Radio, MonitorPlay, Lightbulb,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
@@ -69,6 +69,7 @@ const ChatOverlayCard = dynamic(() => import("./sections/ChatOverlay").then((m) 
 const StreamGoalsManager = dynamic(() => import("./sections/StreamGoals").then((m) => m.StreamGoalsManager), { ssr: false, loading: SectionLoading });
 const KickEventsManager = dynamic(() => import("./sections/KickEvents").then((m) => m.KickEventsManager), { ssr: false, loading: SectionLoading });
 const YouTubeLiveManager = dynamic(() => import("./sections/YouTubeLive").then((m) => m.YouTubeLiveManager), { ssr: false, loading: SectionLoading });
+const RumbleManager = dynamic(() => import("./sections/Rumble").then((m) => m.RumbleManager), { ssr: false, loading: SectionLoading });
 const SeasonsManager = dynamic(() => import("./sections/Seasons").then((m) => m.SeasonsManager), { ssr: false, loading: SectionLoading });
 const MergeUsersSection = dynamic(() => import("./sections/MergeUsers").then((m) => m.MergeUsersSection), { ssr: false, loading: SectionLoading });
 const BotConfigCard = dynamic(() => import("./sections/BotConfig").then((m) => m.BotConfigCard), { ssr: false, loading: SectionLoading });
@@ -149,7 +150,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -193,6 +194,7 @@ export function AdminClient({
     { id: "twitch",    label: t("secTwitch"),      icon: Tv,              group: "platforms",  level: 2, permission: () => isAdmin },
     { id: "kick",      label: t("secKick"),        icon: Radio,           group: "platforms",  level: 2, permission: () => isAdmin },
     { id: "youtube",   label: t("secYoutube"),     icon: MonitorPlay,     group: "platforms",  level: 2, permission: () => isAdmin },
+    { id: "rumble",    label: t("secRumble"),      icon: Tv2,             group: "platforms",  level: 2, permission: () => isAdmin },
 
     { id: "bot",       label: t("secBot"), icon: Bot,             group: "bot",        level: 2, permission: () => can("manage_shop") },
     { id: "chat",      label: t("secChat"), icon: MessageSquare, group: "bot",        level: 2, permission: () => isAdmin },
@@ -503,6 +505,10 @@ export function AdminClient({
 
           {activeSection === "youtube" && isAdmin && (
             <YouTubeLiveManager {...sharedProps} />
+          )}
+
+          {activeSection === "rumble" && isAdmin && (
+            <RumbleManager onToast={showToast} />
           )}
 
           {activeSection === "chat" && isAdmin && (
