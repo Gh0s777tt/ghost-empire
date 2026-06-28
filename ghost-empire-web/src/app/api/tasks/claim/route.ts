@@ -23,8 +23,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const { taskId } = await req.json();
-  if (!taskId) {
+  let body: { taskId?: unknown };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 }); }
+  const taskId = body.taskId;
+  if (typeof taskId !== "string" || !taskId) {
     return NextResponse.json({ error: "Missing taskId" }, { status: 400 });
   }
 

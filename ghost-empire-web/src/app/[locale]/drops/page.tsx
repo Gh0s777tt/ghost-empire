@@ -35,7 +35,7 @@ export default async function DropsPage() {
     id: string;
     reward: number;
     claimedAt: string;
-    drop: { code: string; bonusReward: number; bonusSlots: number };
+    drop: { code: string; reward: number; bonusReward: number; bonusSlots: number };
   }> = [];
   let totalEarnedFromDrops = 0;
   let activeDropsCount = 0;
@@ -56,7 +56,7 @@ export default async function DropsPage() {
       take: 20,
       include: {
         drop: {
-          select: { code: true, bonusReward: true, bonusSlots: true },
+          select: { code: true, reward: true, bonusReward: true, bonusSlots: true },
         },
       },
     });
@@ -172,7 +172,7 @@ export default async function DropsPage() {
                   {myClaims.map((c) => {
                     const wasBonus =
                       c.drop.bonusReward > 0 &&
-                      c.reward > c.drop.bonusReward; // crude detection: if total > bonus, bonus was included
+                      c.reward > c.drop.reward; // total > BASE reward ⇒ the bonus was included (#756; was wrongly compared to bonusReward)
                     return (
                       <div key={c.id} className="flex items-center gap-3 py-2.5">
                         <span className="text-xl">{wasBonus ? "🌟" : "🎁"}</span>

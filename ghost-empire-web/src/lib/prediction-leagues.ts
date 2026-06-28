@@ -102,17 +102,27 @@ export async function getMyLeagueStats(userId: string, tenantId: string | null):
   const row = mine[0];
   if (!row || row.plays === 0) return null;
 
+  // #756: rank = count of users who sort STRICTLY BEFORE the caller under the SAME ordering
+  // the leaderboard uses (rankRows: net DESC, wins DESC, wagered DESC, userId ASC) + 1. The old
+  // query compared net only, so two users tied on net got the same personal rank while the
+  // leaderboard gave them distinct ranks (the "Your season" card then disagreed with the table).
   const rankRes = await prisma.$queryRaw<{ rank: number }[]>`
     SELECT (COUNT(*) + 1)::int AS rank FROM (
-      SELECT pe."userId", SUM(pe.payout - pe."tokensWagered") AS net
+      SELECT pe."userId"                                                   AS uid,
+             COALESCE(SUM(pe.payout - pe."tokensWagered"), 0)::int         AS net,
+             (COUNT(*) FILTER (WHERE pe.payout > pe."tokensWagered"))::int  AS wins,
+             COALESCE(SUM(pe."tokensWagered"), 0)::int                     AS wagered
       FROM "prediction_entries" pe
       JOIN "predictions" p ON p.id = pe."predictionId"
       WHERE p.status = 'resolved'
         AND p."resolvedAt" >= ${start}
         AND (${tenantId}::text IS NULL OR p."tenantId" = ${tenantId})
       GROUP BY pe."userId"
-      HAVING SUM(pe.payout - pe."tokensWagered") > ${row.net}
     ) s
+    WHERE s.net > ${row.net}
+       OR (s.net = ${row.net} AND s.wins > ${row.wins})
+       OR (s.net = ${row.net} AND s.wins = ${row.wins} AND s.wagered > ${row.wagered})
+       OR (s.net = ${row.net} AND s.wins = ${row.wins} AND s.wagered = ${row.wagered} AND s.uid < ${userId})
   `;
   return {
     userId, plays: row.plays, wins: row.wins, net: row.net, wagered: row.wagered, biggestWin: row.biggestwin,

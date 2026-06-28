@@ -14,7 +14,7 @@ import {
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { CountryPicker } from "@/components/profile/CountryPicker";
 import { AccentPicker } from "@/components/profile/AccentPicker";
-import { formatDate, rankForLevel, xpForLevel, cn, displayNick, isPublicHandle } from "@/lib/utils";
+import { formatDate, rankForLevel, xpForLevel, levelProgress, cn, displayNick, isPublicHandle } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscountFraction } from "@/lib/economy";
 import { useTenantBranding } from "@/components/TenantBranding";
@@ -147,14 +147,16 @@ export function ProfileClient({
   const duelTotal = duelStats.wins + duelStats.losses;
   const duelWinrate = duelTotal > 0 ? Math.round((duelStats.wins / duelTotal) * 100) : 0;
   const xpNeeded = xpForLevel(user.level + 1);
-  const xpCurrent = user.xp % 500;
+  // #756: progress vs the real level boundary (level 1 spans [0,1000) — xp%500 would reset at 500).
+  const lp = levelProgress(user.xp);
+  const xpCurrent = lp.into;
   // At the level cap, the XP bar tracks prestige progress (overflow XP past the cap)
   // instead of the cosmetic 0-499 cycle.
   const atMax = user.level >= MAX_LEVEL;
   const prestigeProgress = atMax ? Math.max(0, user.xp - LEVEL_CAP_XP) % PRESTIGE_XP : 0;
   const xpProgress = atMax
     ? Math.min(100, (prestigeProgress / PRESTIGE_XP) * 100)
-    : Math.min(100, (xpCurrent / 500) * 100);
+    : lp.pct;
   const earnedIds = new Set(earnedAchievements.map((ua) => ua.achievement.id));
   // Map achievement code -> name so transaction reasons like "achievement:linked_2"
   // render as the real achievement name in the history.
@@ -277,7 +279,7 @@ export function ProfileClient({
                   {atMax ? t("xpToPrestige", { n: user.prestige + 1 }) : t("xpToLevel", { n: user.level + 1 })}
                 </span>
                 <span className="text-white">
-                  {atMax ? `${fmt(prestigeProgress)} / ${fmt(PRESTIGE_XP)}` : `${fmt(xpCurrent)} / 500`}
+                  {atMax ? `${fmt(prestigeProgress)} / ${fmt(PRESTIGE_XP)}` : `${fmt(xpCurrent)} / ${fmt(lp.span)}`}
                 </span>
               </div>
               <div className="h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">

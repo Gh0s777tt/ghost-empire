@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   xpForLevel,
   levelFromXp,
+  levelProgress,
   rankForLevel,
   pluralPL,
   fmt,
@@ -25,6 +26,28 @@ describe("xpForLevel / levelFromXp", () => {
     expect(levelFromXp(500)).toBe(1);
     expect(levelFromXp(1000)).toBe(2);
     expect(levelFromXp(5250)).toBe(10);
+  });
+});
+
+describe("levelProgress (#756)", () => {
+  it("level 1 spans xp [0,1000) with NO reset at 500 (matches levelFromXp)", () => {
+    expect(levelProgress(0)).toMatchObject({ level: 1, into: 0, span: 1000, pct: 0, nextLevelXp: 1000 });
+    expect(levelProgress(500)).toMatchObject({ level: 1, into: 500, span: 1000, pct: 50 }); // was wrongly 0% before
+    expect(levelProgress(999)).toMatchObject({ level: 1, pct: 100 });
+  });
+  it("level-up at 1000 resets progress to 0% of a 500-wide level", () => {
+    expect(levelProgress(1000)).toMatchObject({ level: 2, into: 0, span: 500, pct: 0, nextLevelXp: 1500 });
+    expect(levelProgress(1200)).toMatchObject({ level: 2, into: 200, span: 500, pct: 40 });
+    expect(levelProgress(1499)).toMatchObject({ level: 2, pct: 100 });
+    expect(levelProgress(1500)).toMatchObject({ level: 3, into: 0, span: 500, nextLevelXp: 2000 });
+  });
+  it("pct is always consistent with the level returned by levelFromXp", () => {
+    for (const xp of [0, 250, 499, 500, 750, 1000, 1234, 5250]) {
+      const p = levelProgress(xp);
+      expect(p.level).toBe(levelFromXp(xp));
+      expect(p.pct).toBeGreaterThanOrEqual(0);
+      expect(p.pct).toBeLessThanOrEqual(100);
+    }
   });
 });
 

@@ -79,6 +79,24 @@ export function levelFromXp(xp: number): number {
   return Math.max(1, Math.floor(xp / 500));
 }
 
+/**
+ * Progress within the CURRENT level, consistent with `levelFromXp` (the authoritative
+ * level-up curve — `lib/leveling.ts` uses it). #756: because `levelFromXp` floors with a
+ * `Math.max(1, …)`, **level 1 spans xp [0, 1000)** (two 500-buckets) while every level ≥ 2
+ * spans one 500-bucket. So a naive `xp % 500 / 500` bar is WRONG at level 1 — it fills, snaps
+ * back to 0% at xp 500 with no level-up, then fills again. Use this for every XP bar/label so
+ * the display matches the real boundaries.
+ */
+export function levelProgress(xp: number): { level: number; into: number; span: number; pct: number; nextLevelXp: number } {
+  const level = levelFromXp(xp);
+  const levelStartXp = level === 1 ? 0 : level * 500; // level 1 starts at 0; level N≥2 at N*500
+  const nextLevelXp = (level + 1) * 500; // the next level (≥2) begins at (level+1)*500
+  const span = nextLevelXp - levelStartXp; // 1000 at level 1, 500 thereafter
+  const into = Math.max(0, xp - levelStartXp);
+  const pct = span > 0 ? Math.max(0, Math.min(100, Math.round((into / span) * 100))) : 0;
+  return { level, into, span, pct, nextLevelXp };
+}
+
 export function rankForLevel(level: number): {
   name: string;
   color: string;

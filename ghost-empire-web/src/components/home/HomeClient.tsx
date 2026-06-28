@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { Radio, Eye, Target, Flame, Calendar, Award, ChevronRight, Check, Clock, Zap, Gift, Trophy, type LucideIcon } from "lucide-react";
-import { timeLeft, rankForLevel, displayNick } from "@/lib/utils";
+import { timeLeft, rankForLevel, levelProgress, displayNick } from "@/lib/utils";
 import { Link } from "@/i18n/navigation";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { EmptyState } from "@/components/EmptyState";
@@ -384,7 +384,9 @@ function ProfileHero({ user }: { user: HomeUser }) {
   const fmt = useLocaleFmt();
   const { tokenName } = useTenantBranding();
   const rank = rankForLevel(user.level);
-  const xpPct = Math.min((user.xp % 500) / 500 * 100, 100);
+  // #756: progress vs the real level boundary (level 1 spans [0,1000) — xp%500 would reset at 500).
+  const lp = levelProgress(user.xp);
+  const xpPct = lp.pct;
 
   return (
     <div
@@ -438,10 +440,10 @@ function ProfileHero({ user }: { user: HomeUser }) {
         <div className="lg:col-span-12">
           <div className="flex items-end justify-between mb-1.5">
             <span className="font-mono text-[10px] tracking-widest text-zinc-500">
-              {t("progressTo", { level: user.level + 1 })}
+              {t("progressTo", { level: lp.level + 1 })}
             </span>
             <span className="font-mono text-xs text-zinc-400">
-              <span className="text-white font-bold">{user.xp % 500}</span>/{500} XP
+              <span className="text-white font-bold">{lp.into}</span>/{lp.span} XP
             </span>
           </div>
           <div className="relative h-2.5 bg-zinc-900 border border-zinc-800 overflow-hidden">

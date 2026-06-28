@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
+import { ErrorState } from "@/components/EmptyState";
 import { emitBalance } from "@/lib/balance-bus";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { apiGet } from "@/lib/api-client";
@@ -36,8 +37,10 @@ type SpinResponse = {
 
 export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const t = useTranslations("wheel");
+  const tc = useTranslations("common");
   const fmt = useLocaleFmt();
   const [state, setState] = useState<WheelState | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<{ label: string; reward: number } | null>(null);
@@ -48,8 +51,9 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
   const load = useCallback(async () => {
     try {
       setState(await apiGet<WheelState>("/api/wheel"));
+      setLoadError(false);
     } catch {
-      /* ignore */
+      setLoadError(true); // #756: surface the failure with a retry instead of an endless "loading…"
     }
   }, []);
 
@@ -85,6 +89,9 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
   }, [spinning, state, load, t]);
 
   if (!state) {
+    if (loadError) {
+      return <ErrorState title={tc("errorTitle")} message={t("connError")} retryLabel={tc("retry")} onRetry={() => { setLoadError(false); void load(); }} />;
+    }
     return <div className="text-center text-zinc-500 py-20">{t("loading")}</div>;
   }
 

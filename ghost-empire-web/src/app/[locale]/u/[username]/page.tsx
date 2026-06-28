@@ -19,7 +19,7 @@ import {
 import type { ComponentType, CSSProperties } from "react";
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { Link } from "@/i18n/navigation";
-import { fmt, formatDate, rankForLevel, xpForLevel, cn, displayNick } from "@/lib/utils";
+import { fmt, formatDate, rankForLevel, xpForLevel, levelProgress, cn, displayNick } from "@/lib/utils";
 import { countryFlag } from "@/lib/countries";
 import { accentColor } from "@/lib/profile-accents";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP } from "@/lib/economy";
@@ -209,14 +209,16 @@ export default async function PublicProfilePage({
 
   const [aheadByEarned, aheadByLevel, aheadByStreak] = rankPositions;
   const rankInfo = rankForLevel(user.level);
-  const xpCurrent = user.xp % 500;
+  // #756: progress vs the real level boundary (level 1 spans [0,1000) — xp%500 would reset at 500).
+  const lp = levelProgress(user.xp);
+  const xpCurrent = lp.into;
   const atMax = user.level >= MAX_LEVEL;
   // Self-chosen profile accent (#546) — tints the avatar ring + name glow; null = rank color.
   const accent = accentColor(user.profileAccent);
   const prestigeProgress = atMax ? Math.max(0, user.xp - LEVEL_CAP_XP) % PRESTIGE_XP : 0;
   const xpProgress = atMax
     ? Math.min(100, (prestigeProgress / PRESTIGE_XP) * 100)
-    : Math.min(100, (xpCurrent / 500) * 100);
+    : lp.pct;
 
   return (
     <div className="min-h-screen bg-black">
@@ -335,7 +337,7 @@ export default async function PublicProfilePage({
                       {atMax ? t("xpToPrestige", { n: user.prestige + 1 }) : t("xpToLevel", { n: user.level + 1 })}
                     </span>
                     <span className="text-white">
-                      {atMax ? `${fmt(prestigeProgress, locale)} / ${fmt(PRESTIGE_XP, locale)}` : `${fmt(xpCurrent, locale)} / 500`}
+                      {atMax ? `${fmt(prestigeProgress, locale)} / ${fmt(PRESTIGE_XP, locale)}` : `${fmt(xpCurrent, locale)} / ${fmt(lp.span, locale)}`}
                     </span>
                   </div>
                   <div className="h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">

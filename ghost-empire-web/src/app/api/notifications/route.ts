@@ -63,11 +63,17 @@ export async function POST(req: Request) {
   if (!Array.isArray(body.ids) || body.ids.length === 0) {
     return NextResponse.json({ error: "Brak ids lub all=true" }, { status: 400 });
   }
+  // #756: only string ids, capped — an untyped/oversized ids[] otherwise hits the DB unbounded
+  // (or errors on non-string elements in the `in` clause).
+  const ids = (body.ids as unknown[]).filter((x): x is string => typeof x === "string").slice(0, 200);
+  if (ids.length === 0) {
+    return NextResponse.json({ error: "Brak ids lub all=true" }, { status: 400 });
+  }
 
   const result = await prisma.notification.updateMany({
     where: {
       userId: session.user.id,
-      id: { in: body.ids },
+      id: { in: ids },
       read: false,
     },
     data: { read: true },
