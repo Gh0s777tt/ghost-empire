@@ -31,16 +31,23 @@ export async function GET() {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const tid = await currentTenantId();
-  const [integ, mod, twitch, twitchSubs, kick, youtube, alertSettings, tenant] = await Promise.all([
+  const [integ, mod, twitch, kick, youtube, alertSettings, tenant] = await Promise.all([
     getIntegrationConfig(),
     tid ? prisma.moderationConfig.findUnique({ where: { tenantId: tid } }) : prisma.moderationConfig.findFirst({ where: { tenantId: null } }),
     getTwitchStreamerToken(),
-    prisma.twitchEventSubscription.count(),
     getKickStreamerToken(),
     getYouTubeStreamerToken(),
     getAlertSettings(),
     tid ? prisma.tenant.findUnique({ where: { id: tid }, select: { createdAt: true, setupCompletedAt: true, setupDismissedAt: true } }) : null,
   ]);
+
+  // EventSub subscriptions are keyed by the channel's broadcasterId (the table has no tenantId),
+  // so scope the count to THIS portal's connected Twitch channel — a global count() would let one
+  // portal's subscriptions mark another portal's "EventSub created" step done (#743). No connected
+  // broadcaster → no subs yet → 0.
+  const twitchSubs = twitch?.broadcasterId
+    ? await prisma.twitchEventSubscription.count({ where: { broadcasterId: twitch.broadcasterId } })
+    : 0;
 
   // Derive each step from real config — this is what self-heals the checklist.
   const okByKey: Record<string, boolean> = {
