@@ -19,6 +19,10 @@ export type TenantBrandingValue = {
   brandColor: string;
   /** Portal's public streaming channels (ordered; [0] = primary "watch live" target). */
   channels: ChannelLink[];
+  /** True on a platform storefront brand (founder portal or a platform-seeded brand like
+   *  E-Forge), false on a streamer's white-label sub-portal. Gates platform-commercial chrome
+   *  (the "Go Premium" CTA) so a sub-portal doesn't advertise the SaaS plan to its viewers (#746). */
+  isPlatformBrand: boolean;
 };
 
 const TenantBrandingContext = createContext<TenantBrandingValue>({
@@ -30,6 +34,7 @@ const TenantBrandingContext = createContext<TenantBrandingValue>({
   logoUrl: null,
   brandColor: "#E50914",
   channels: streamingChannels(null, true),
+  isPlatformBrand: true,
 });
 
 export function TenantBrandingProvider({

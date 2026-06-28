@@ -9,7 +9,7 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Providers } from "@/components/Providers";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TenantBrandingProvider } from "@/components/TenantBranding";
-import { getCurrentTenant, isFounderBrand } from "@/lib/tenant";
+import { getCurrentTenant, isFounderBrand, isPlatformBrand } from "@/lib/tenant";
 import { streamingChannels } from "@/lib/channels";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { normalizeTheme } from "@/lib/themes";
@@ -59,6 +59,7 @@ export default async function LocaleLayout({
     logoUrl: tenant.logoUrl,
     brandColor: tenant.brandColor,
     channels: streamingChannels(tenant.socialLinks, isFounderPortal),
+    isPlatformBrand: isPlatformBrand(tenant),
   };
   // Tenant accent → CSS variables; globals.css derives every red/glow from these.
   const brandStyle = {

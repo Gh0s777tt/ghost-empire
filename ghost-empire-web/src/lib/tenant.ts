@@ -22,6 +22,10 @@ export type TenantBrand = {
   /** Tenant row id, or null when falling back to SITE (no row yet). */
   id: string | null;
   slug: string;
+  /** Streamer-admin who owns this portal; null for platform-seeded brands (founder / the
+   *  E-Forge public brand). Tells a streamer's white-label sub-portal from a platform
+   *  storefront — see isPlatformBrand (#746). Kept server-side (never in client branding). */
+  ownerUserId: string | null;
   name: string;
   shortName: string;
   brandColor: string;
@@ -66,6 +70,7 @@ function parseTenantSocials(raw: unknown): { platform: string; url: string }[] |
 export const FALLBACK_TENANT: TenantBrand = {
   id: null,
   slug: DEFAULT_TENANT_SLUG,
+  ownerUserId: null,
   name: SITE.name,
   shortName: SITE.shortName,
   brandColor: SITE.brandColor,
@@ -100,6 +105,7 @@ function toBrand(t: Tenant): TenantBrand {
   return {
     id: t.id,
     slug: t.slug,
+    ownerUserId: t.ownerUserId,
     name: t.name,
     shortName: t.shortName ?? t.name,
     brandColor: t.brandColor,
@@ -168,4 +174,17 @@ export async function currentTenantId(): Promise<string | null> {
  */
 export function isFounderBrand(t: { id: string | null; slug: string }): boolean {
   return t.id === null || t.slug === DEFAULT_TENANT_SLUG;
+}
+
+/**
+ * Is this a platform storefront brand — where the "Go Premium" CTA belongs for EVERYONE —
+ * as opposed to a streamer's white-label sub-portal? True for the founder portal and for any
+ * platform-seeded brand (no streamer owner, e.g. the E-Forge brand on empire-forge.com).
+ * A streamer's portal is created via onboarding, so it has an `ownerUserId` and isn't the
+ * founder → NOT a storefront: there only the portal admin (who can actually upgrade it) sees
+ * Premium, never the streamer's viewers (#746). Note the founder portal keeps an ownerUserId,
+ * so `isFounderBrand` is the needed second arm — neither test alone covers both brands.
+ */
+export function isPlatformBrand(t: { id: string | null; slug: string; ownerUserId: string | null }): boolean {
+  return isFounderBrand(t) || t.ownerUserId === null;
 }
