@@ -114,7 +114,7 @@ export function WheelManager({
           <div key={i} className="grid grid-cols-[1fr_70px_90px_44px_32px] gap-2 items-center">
             <input value={seg.label} onChange={(e) => updateSeg(i, { label: e.target.value })} placeholder={t("phLabel")}
               className="bg-black border border-zinc-800 px-2 py-1 text-sm text-white outline-hidden focus:border-violet-600" />
-            <input type="number" min={1} value={seg.weight} onChange={(e) => updateSeg(i, { weight: Math.max(0, parseInt(e.target.value || "0", 10)) })} title={t("titleWeight")}
+            <input type="number" min={1} value={seg.weight} onChange={(e) => updateSeg(i, { weight: Math.max(1, parseInt(e.target.value || "1", 10)) })} title={t("titleWeight")}
               className="bg-black border border-zinc-800 px-2 py-1 text-sm text-white font-mono outline-hidden focus:border-violet-600" />
             <input type="number" min={0} value={seg.rewardTokens} onChange={(e) => updateSeg(i, { rewardTokens: Math.max(0, parseInt(e.target.value || "0", 10)) })} title={t("titleReward")}
               className="bg-black border border-zinc-800 px-2 py-1 text-sm text-white font-mono outline-hidden focus:border-violet-600" />

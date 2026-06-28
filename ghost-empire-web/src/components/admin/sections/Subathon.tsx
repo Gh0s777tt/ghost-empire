@@ -1,6 +1,6 @@
 "use client";
 // src/components/admin/sections/Subathon.tsx — lazily-loaded subathon manager.
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Hourglass, Loader2, Play } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
@@ -50,15 +50,22 @@ export function SubathonManager({
   const [accent, setAccent] = useState("#E50914");
   const [label, setLabel] = useState("Subathon");
 
+  const seededRef = useRef(false);
+
   const load = useCallback(async () => {
     try {
       const d = await apiGet<{ subathon?: SubathonData }>("/api/admin/subathon");
       if (d.subathon) {
         setData(d.subathon);
-        setPerSub(String(d.subathon.secondsPerSub));
-        setPerPln(String(d.subathon.secondsPerPln));
-        if (d.subathon.accentColor) setAccent(d.subathon.accentColor);
-        if (typeof d.subathon.label === "string") setLabel(d.subathon.label);
+        // #757: seed the editable fields only ONCE — the 10s resync must not clobber
+        // in-progress edits (label/accent/per-sub/per-PLN inputs bind to this state).
+        if (!seededRef.current) {
+          seededRef.current = true;
+          setPerSub(String(d.subathon.secondsPerSub));
+          setPerPln(String(d.subathon.secondsPerPln));
+          if (d.subathon.accentColor) setAccent(d.subathon.accentColor);
+          if (typeof d.subathon.label === "string") setLabel(d.subathon.label);
+        }
       }
     } catch { /* keep current */ } finally {
       setLoading(false);

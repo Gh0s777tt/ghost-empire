@@ -66,14 +66,17 @@ function AlertTypeList({
   async function save(row: AlertTypeRow) {
     setSavingType(row.type);
     try {
-      await apiPost("/api/admin/alert-types", {
+      const res = await apiPost<{ config?: Partial<AlertTypeRow> }>("/api/admin/alert-types", {
         type: row.type,
         animation: row.animation,
         position: row.position,
         soundUrl: row.soundUrl,
         minAmount: row.minAmount,
       });
-      onToast("ok", t("savedType", { label: typeLabel(row.type, row.label) })); patch(row.type, "configured", true);
+      // #757: sync the SERVER-sanitized config back (a non-http soundUrl comes back null) so the
+      // field shows what actually persisted — not the un-saved text behind a false "saved" toast.
+      setRows((rs) => rs.map((r) => (r.type === row.type ? { ...r, ...(res?.config ?? {}), configured: true } : r)));
+      onToast("ok", t("savedType", { label: typeLabel(row.type, row.label) }));
     } catch (err) {
       if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
       else onToast("err", t("netErr"));

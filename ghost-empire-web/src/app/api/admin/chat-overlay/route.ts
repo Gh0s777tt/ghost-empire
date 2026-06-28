@@ -5,8 +5,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { currentTenantId } from "@/lib/tenant";
+import { WIDGET_FONTS } from "@/lib/widget-fonts";
 
-const FONTS = ["Inter", "JetBrains Mono", "Anton", "system"];
+// #757: derive from the single font source the UI uses (was a stale 4-font list, so the
+// other 9 fonts silently failed to save while the admin saw a success toast).
+const FONTS = WIDGET_FONTS.map((f) => f.value);
 
 // Per-tenant chat-overlay config (get-or-create); legacy id:"default" when no tenant.
 async function getConfig() {
