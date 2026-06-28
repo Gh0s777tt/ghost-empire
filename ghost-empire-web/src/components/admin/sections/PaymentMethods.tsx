@@ -146,8 +146,8 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
           ) : methods.map((m, i) => (
             <div key={m.id} className={`flex items-center gap-2 border p-2.5 ${m.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-black/20 opacity-60"}`}>
               <div className="flex flex-col shrink-0">
-                <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowUp className="w-3 h-3" /></button>
-                <button onClick={() => void move(i, 1)} disabled={i === methods.length - 1} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowDown className="w-3 h-3" /></button>
+                <button onClick={() => void move(i, -1)} disabled={i === 0} title={t("moveUp")} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowUp className="w-3 h-3" /></button>
+                <button onClick={() => void move(i, 1)} disabled={i === methods.length - 1} title={t("moveDown")} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowDown className="w-3 h-3" /></button>
               </div>
               <PaymentLogo kind={m.kind} network={m.network} label={m.label} icon={m.icon} size={26} />
               <div className="flex-1 min-w-0">

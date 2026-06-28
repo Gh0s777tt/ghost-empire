@@ -175,7 +175,7 @@ export function SubathonManager({
               disabled={!!busy || pending}
               className="border border-red-800 hover:border-red-600 text-red-300 px-3 py-1.5 text-xs font-mono uppercase tracking-widest disabled:opacity-50 ml-auto"
             >
-              Stop
+              {t("stopBtn")}
             </button>
           </div>
 
@@ -214,7 +214,7 @@ export function SubathonManager({
             className="bg-red-900/40 border border-red-800 hover:border-red-600 text-red-200 px-3 py-1.5 text-xs font-mono uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
           >
             {busy === "start" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-            Start
+            {t("startBtn")}
           </button>
         </div>
       )}

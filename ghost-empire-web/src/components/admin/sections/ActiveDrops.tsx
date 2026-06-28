@@ -43,6 +43,7 @@ export function ActiveDropsList({
               <button
                 onClick={() => deactivate(d.id)}
                 disabled={pending}
+                title={t("deleteTitle")}
                 className="text-zinc-500 hover:text-red-400"
               >
                 <Trash2 className="w-3.5 h-3.5" />

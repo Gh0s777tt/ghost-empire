@@ -247,7 +247,7 @@ export function PredictionsManager({
                               className="text-[10px] font-mono uppercase tracking-widest text-green-300 hover:text-green-200 border border-green-900 hover:border-green-700 px-1.5 py-0.5 disabled:opacity-50 shrink-0"
                               title={t("resolveTitle")}
                             >
-                              ✓ Win
+                              ✓ {t("winBtn")}
                             </button>
                           )}
                           {isWinner && <span className="text-[10px] text-green-300 shrink-0">★ WINNER</span>}

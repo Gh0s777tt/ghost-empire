@@ -168,7 +168,7 @@ export function SeasonsManager({
                 <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{t("addRewardTitle")}</div>
                 <div className="grid grid-cols-2 sm:grid-cols-6 gap-1.5 items-end">
                   <div>
-                    <label className="text-[9px] text-zinc-500 block">Tier</label>
+                    <label className="text-[9px] text-zinc-500 block">{t("tierLabel")}</label>
                     <input type="number" min={1} max={activeSeason.totalTiers} value={rTier} onChange={(e) => setRTier(e.target.value)}
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600" />
                   </div>
@@ -180,12 +180,12 @@ export function SeasonsManager({
                     </select>
                   </div>
                   <div className="col-span-2">
-                    <label className="text-[9px] text-zinc-500 block">Label</label>
+                    <label className="text-[9px] text-zinc-500 block">{t("rewardLabel")}</label>
                     <input value={rLabel} onChange={(e) => setRLabel(e.target.value)} placeholder={t("labelPh")}
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white outline-hidden focus:border-red-600" />
                   </div>
                   <div>
-                    <label className="text-[9px] text-zinc-500 block">Value</label>
+                    <label className="text-[9px] text-zinc-500 block">{t("valueLabel")}</label>
                     <input value={rValue} onChange={(e) => setRValue(e.target.value)}
                       placeholder={rType === "tokens" ? t("valuePhTokens") : rType === "code" ? t("valuePhCode") : rType === "item" ? t("valuePhItem") : t("valuePhOther")}
                       className="w-full border border-zinc-700 bg-black/40 px-1.5 py-1 text-xs text-white font-mono outline-hidden focus:border-red-600" />
@@ -202,7 +202,7 @@ export function SeasonsManager({
                 <div className="flex items-center gap-3 mt-2">
                   <label className="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer">
                     <input type="checkbox" checked={rPremium} onChange={(e) => setRPremium(e.target.checked)} className="accent-yellow-600" />
-                    Premium track
+                    {t("premiumTrackLabel")}
                   </label>
                   <button
                     onClick={() => addReward(activeSeason.id)}

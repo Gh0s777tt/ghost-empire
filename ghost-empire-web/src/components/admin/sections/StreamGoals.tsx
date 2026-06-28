@@ -374,7 +374,7 @@ export function StreamGoalsManager({
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">Reset</label>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("resetLabel")}</label>
             <select
               value={newResetMode}
               onChange={(e) => setNewResetMode(e.target.value)}
@@ -395,7 +395,7 @@ export function StreamGoalsManager({
             />
           </div>
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">Target</label>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("targetLabel")}</label>
             <input
               type="number"
               min={1}

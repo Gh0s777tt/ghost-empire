@@ -143,7 +143,7 @@ export function YouTubeLiveManager({
               className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
             >
               {polling ? <Loader2 className="w-3 h-3 animate-spin" /> : <Radio className="w-3 h-3" />}
-              Poll now
+              {t("pollNow")}
             </button>
             <button
               onClick={loadStatus}

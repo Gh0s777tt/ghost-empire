@@ -154,6 +154,7 @@ export function ScheduleManager({
               <button
                 onClick={() => deleteSlot(s.id)}
                 disabled={busyId === s.id || pending}
+                title={t("deleteTitle")}
                 className="text-zinc-500 hover:text-red-400"
               >
                 <Trash2 className="w-3.5 h-3.5" />

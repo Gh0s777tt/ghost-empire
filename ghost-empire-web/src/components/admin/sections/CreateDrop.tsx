@@ -53,11 +53,11 @@ export function CreateDropCard({
           placeholder={t("phCode")}
         />
         <div className="grid grid-cols-2 gap-2">
-          <FieldInput label={`Reward ${tokenSymbol}`} value={reward} onChange={setReward} type="number" min={0} />
-          <FieldInput label={`Bonus ${tokenSymbol}`} value={bonusReward} onChange={setBonusReward} type="number" min={0} />
+          <FieldInput label={t("lblReward", { sym: tokenSymbol })} value={reward} onChange={setReward} type="number" min={0} />
+          <FieldInput label={t("lblBonus", { sym: tokenSymbol })} value={bonusReward} onChange={setBonusReward} type="number" min={0} />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <FieldInput label="Bonus slots" value={bonusSlots} onChange={setBonusSlots} type="number" min={0} />
+          <FieldInput label={t("lblBonusSlots")} value={bonusSlots} onChange={setBonusSlots} type="number" min={0} />
           <FieldInput label={t("lblExpires")} value={expiresInMinutes} onChange={setExpiresInMinutes} type="number" min={1} />
         </div>
         <button

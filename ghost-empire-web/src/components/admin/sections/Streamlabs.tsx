@@ -29,7 +29,7 @@ export function StreamlabsManager({
       if (act === "sync") {
         onToast(
           "ok",
-          `Sync: fetched ${data.fetched ?? 0}, matched ${data.matched ?? 0}, unmatched ${data.unmatched ?? 0}`,
+          t("syncResult", { fetched: data.fetched ?? 0, matched: data.matched ?? 0, unmatched: data.unmatched ?? 0 }),
         );
       } else onToast("ok", t("disconnected"));
       onSuccess();
@@ -84,7 +84,7 @@ export function StreamlabsManager({
               className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
             >
               {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-              Sync now
+              {t("syncBtn")}
             </button>
             <button
               onClick={() => action("disconnect")}
