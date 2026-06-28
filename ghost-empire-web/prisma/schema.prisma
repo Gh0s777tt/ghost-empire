@@ -55,6 +55,11 @@ model Tenant {
   // running single bot keeps working — enforcement-per-tenant lights up only once
   // each tenant runs its own bot instance with this secret. See verifyBotSecretForTenant.
   botSecret            String?
+  // Setup wizard (#737): when the streamer FINISHED or DISMISSED the guided go-live wizard.
+  // Per-step completion is DERIVED from real config (lib/setup-status.ts), not stored — these
+  // only track the wizard's own state so it stops auto-opening once handled.
+  setupCompletedAt     DateTime?
+  setupDismissedAt     DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 

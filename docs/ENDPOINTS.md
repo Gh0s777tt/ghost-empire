@@ -18,7 +18,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 |---|---|
 | `…/api/admin/moderation` | Config automoda (przekleństwa/CAPS/długość/flood/zalgo + akcje) |
 | `…/api/admin/integrations` | Klucze API funkcji (AI / Sentry / OBS) — zapis w bazie, maskowane |
-| `…/api/admin/setup-status` | Checklista konfiguracji na dashboardzie |
+| `…/api/admin/setup-status` | Checklista konfiguracji + dane Setup Wizarda (#737) — GET: kroki (wyprowadzane z realnej konfiguracji) + `progress` + `autoOpen` + flagi tenanta; POST `{action: complete\|dismiss\|reopen}` zapisuje stan kreatora |
 | `…/api/admin/backup` | Pobranie backupu JSON (config/katalog/salda, bez sekretów) |
 | `…/api/admin/widgets` | CRUD własnych widgetów (generator) |
 
