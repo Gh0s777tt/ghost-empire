@@ -18,12 +18,15 @@ const eslintConfig = [
       "@next/next/no-html-link-for-pages": "off",
       // React Compiler correctness rules (eslint-plugin-react-hooks v7, via
       // eslint-config-next 16). The compiler IS enabled (next.config `reactCompiler: true`),
-      // but these rules flag ~101 idiomatic patterns in this app — overwhelmingly
-      // setState-inside-effect for data fetching (~88), plus a few Date.now()/ref reads in
-      // live-countdown overlays. The compiler safely BAILS OUT of optimizing such components
-      // (it never miscompiles them — they just stay un-memoized), so these stay off to avoid
-      // 101 advisory warnings; turning them on + refactoring every flagged spot is a
-      // deliberate, separate sweep, not a build-correctness gate. #audit3
+      // but these rules flag idiomatic patterns in this app. Verified count (#732, rules
+      // flipped on locally): 110 warnings = 98 `set-state-in-effect` + 5 `purity` + 5
+      // `immutability` + 2 `refs`. The 98 are overwhelmingly the standard client-side
+      // DATA-FETCHING pattern (`useEffect(() => { apiGet().then(setState) }, [])`); the other
+      // 12 are Date.now()/ref reads in live-countdown overlays. The compiler safely BAILS OUT
+      // of optimizing such components (it never miscompiles them — they just stay un-memoized),
+      // so these stay OFF. "Fixing" them would mean migrating every client fetch to RSC/SWR (an
+      // architecture change) or 98 inline-disable comments (noisier than this) — no correctness
+      // gain, real regression risk. Deliberate, permanent decision, not deferred debt. #audit3/#732
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/purity": "off",
       "react-hooks/immutability": "off",

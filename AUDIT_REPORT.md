@@ -20,12 +20,12 @@ Po audycie wykonano remediację (commit **#731**, wszystkie bramki zielone, bez 
 - **Coverage (v8)** skonfigurowane — `npm run test:coverage` (pierwszy pomiar ~**42% statements**).
 - **Dryf docs domknięty:** README · ARCHITECTURE · ENDPOINTS · ENV · ROADMAP · RLS.
 
-**↩️ Świadomie odroczone** (ryzyko regresji > wartość; czysto-organizacyjne)
-- Podział `KasynoClient.tsx` (1622 l.) + przepięcie 6 handlerów na `apiPost` — refaktor money-UI bez taniej weryfikacji end-to-end.
-- Dekompozycja 6 komponentów 600+ l. — czysta organizacja, zero zmiany zachowania.
-- ~101 zduszonych ostrzeżeń React Compiler — udokumentowane, kompilator bailuje bezpiecznie.
-- CSP `style-src 'unsafe-inline'` — usunięcie złamałoby inline-style overlayów (wymaga nonce/refaktoru).
-- 8 branchy dependabot + tag backup — higiena **GitHub** (część to realne update'y bezpieczeństwa do przejrzenia — zostawione właścicielowi).
+**🔁 Pozostałe pozycje — rozpatrzone (#732–#733):**
+- ✅ **Podział `KasynoClient.tsx`** (#732) — **ZROBIONE**: 1620 → 593 l. (sub-komponenty plansz + helpery → `kasyno/shared.tsx`) + 5 surowych `fetch` → `apiPost`/`apiGet`. Render `/kasyno` zweryfikowany.
+- ⏸️ **Dekompozycja pozostałych 6 komponentów 600+ l.** — **świadomie NIE robione** (#733). Analiza strukturalna: w odróżnieniu od KasynoClient (kolekcja ~15 niezależnych sub-komponentów → czyste szwy), te są **spójne/stanowe** (RankingClient: 5 decl/9 hooków = jeden komponent; AdminClient: 72 decl ≈ **51 lazy-importów** = sekcje już wydzielone do osobnych plików). Ich rozmiar to nieodłączna logika renderu ze współdzielonymi danymi — podział wymusiłby **prop-drilling (gorszy smell)**, bez zysku poprawnościowego. Heurystyka „>600 linii" z audytu nie wskazuje tu realnego długu. Robić chirurgicznie przy następnym dotknięciu danej sekcji.
+- ✅ **~101 ostrzeżeń React Compiler** — **rozpatrzone, zostają OFF** (#733). Zweryfikowane lokalnie: **110 = 98 `set-state-in-effect` + 12 purity/immutability/refs**. 98 to standardowy client-side data-fetching (`useEffect(()=>apiGet().then(setState))`); kompilator bezpiecznie bailuje (nigdy nie miskompiluje). „Naprawa" = migracja do RSC/SWR (przebudowa) lub 98 inline-disable (gorzej) — zero zysku, realne ryzyko. Komentarz w `eslint.config.mjs` doprecyzowany zweryfikowanymi liczbami.
+- ✅ **CSP `style-src 'unsafe-inline'`** — **rozpatrzone, zostaje** (#733). Zweryfikowane: **638 inline `style={{}}` w 142 plikach + 31 bloków `<style>`**. CSP nonce/hash obejmuje tylko `<style>` *elementy*, **nigdy inline-`style=` atrybuty**, a wartości są dynamiczne (nie do zahashowania) → usunięcie jest niewykonalne bez złamania overlayów/animacji. Ryzyko CSS-injection niskie; `script-src` już ciasne (nonce+strict-dynamic, bez unsafe-eval). Rationale dopisane w `proxy.ts`.
+- 👤 **8 branchy dependabot + tag backup** — higiena **GitHub**, akcja właściciela (część to realne update'y bezpieczeństwa — eslint10/esbuild — do przejrzenia przed zamknięciem).
 
 **👤 Akcje właściciela** (niemożliwe z kodu): potwierdź `ENCRYPTION_KEY` w env produkcyjnym Vercela; przejrzyj/zamknij branche dependabot.
 

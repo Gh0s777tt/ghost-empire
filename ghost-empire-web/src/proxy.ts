@@ -19,6 +19,13 @@ function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    // style-src KEEPS 'unsafe-inline' by necessity (#732): the app has ~638 dynamic inline
+    // `style={{}}` attributes (overlay positions/colors, progress bars, animations) + 31 inline
+    // <style> keyframe blocks. CSP nonces/hashes only cover <style> ELEMENTS, never inline style
+    // ATTRIBUTES, and the values are runtime-dynamic (un-hashable) — so there is NO way to drop
+    // 'unsafe-inline' here without breaking them. Accepted trade-off: CSS injection is low-risk vs.
+    // script injection, and script-src above is already locked down (nonce + strict-dynamic, no
+    // unsafe-inline/unsafe-eval), which is where the real XSS protection lives.
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
