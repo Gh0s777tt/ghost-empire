@@ -812,6 +812,7 @@ model StreamDrop {
 
 model AdminAction {
   id         String   @id @default(cuid())
+  tenantId   String? // portal where the action happened (#750) — scopes the audit log per portal; null = legacy/global
   adminId    String // user.id who did the action
   adminName  String? // snapshot of admin username at time of action
   action     String // "grant_tokens" | "create_drop" | "create_event" | "draw_event" | "deliver_order" | "refund_order" | "set_user_role" | "set_connection_role" | "deactivate_drop" | "deactivate_event"
@@ -823,7 +824,9 @@ model AdminAction {
 
   @@index([adminId, createdAt])
   @@index([action, createdAt])
-  // Admin dashboard reads the global recent log (ORDER BY createdAt DESC) —
+  // Per-portal recent log — scoped read ORDER BY createdAt DESC (#750).
+  @@index([tenantId, createdAt])
+  // Admin dashboard reads the recent log (ORDER BY createdAt DESC) —
   // the composite indexes above don't serve an unfiltered sort.
   @@index([createdAt])
   @@map("admin_actions")

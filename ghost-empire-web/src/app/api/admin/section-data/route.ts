@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, requirePermission, requireAnyPermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getTwitchStreamerToken, getStreamlabsConnection } from "@/lib/platform-tokens";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import { getSettings as getAlertSettings } from "@/lib/alerts";
 import { getCodeConfig } from "@/lib/codes";
 import { displayNick } from "@/lib/utils";
@@ -136,7 +136,15 @@ export async function GET(req: Request) {
     }
 
     case "audit": {
-      const auditLog = await prisma.adminAction.findMany({ orderBy: { createdAt: "desc" }, take: 30 });
+      // Scope the audit log to the caller's portal so a sub-tenant admin can't see other
+      // portals' actions / nicks / IPs (#750). The founder portal ALSO surfaces legacy/orphan
+      // rows (NULL tenantId — predating #750; their actor users were since deleted by resets),
+      // so its history isn't lost; every other portal is strict, so nothing cross-portal leaks.
+      const tenant = await getCurrentTenant();
+      const where = isFounderBrand(tenant)
+        ? { OR: [{ tenantId: tenant.id }, { tenantId: null }] }
+        : { tenantId: tenant.id };
+      const auditLog = await prisma.adminAction.findMany({ where, orderBy: { createdAt: "desc" }, take: 30 });
 
       // Resolve human-readable names so the log shows WHO did it + WHO it affected,
       // not raw cuids. Admin + user-targets come from User; connection-targets join

@@ -3,6 +3,7 @@
 // user state through admin authority. Never blocks the calling request on failure
 // — auditing should never break the user flow.
 import { prisma } from "@/lib/prisma";
+import { currentTenantId } from "@/lib/tenant";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("audit");
@@ -57,8 +58,12 @@ export async function logAdminAction(opts: {
 }) {
   try {
     const ip = opts.req ? extractIp(opts.req) : null;
+    // Stamp the portal where the action happened so the audit log is per-portal (#750):
+    // a sub-tenant admin must not see other portals' actions/nicks/IPs.
+    const tenantId = await currentTenantId();
     await prisma.adminAction.create({
       data: {
+        tenantId,
         adminId: opts.adminId,
         adminName: opts.adminName ?? null,
         action: opts.action,
