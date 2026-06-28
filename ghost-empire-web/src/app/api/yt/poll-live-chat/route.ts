@@ -150,10 +150,21 @@ async function runPoll(tenantId: string | null) {
   let memberEventsProcessed = 0;
   let messagesLogged = 0;
 
+  // Idempotency: ONE batched read of already-logged messageIds instead of a findUnique
+  // per message against the small (max:3) pool (#748). messageId is @unique.
+  const processed = new Set(
+    (
+      await prisma.youTubeEvent.findMany({
+        where: { messageId: { in: messages.map((m) => m.id) } },
+        select: { messageId: true },
+      })
+    ).map((row) => row.messageId),
+  );
+
   for (const msg of messages) {
     // Idempotency — skip if already processed
-    const existing = await prisma.youTubeEvent.findUnique({ where: { messageId: msg.id } });
-    if (existing) continue;
+    if (processed.has(msg.id)) continue;
+    processed.add(msg.id); // remember within-page so a duplicate id can't double-insert
 
     if (msg.type === "superChatEvent" || msg.type === "superStickerEvent") {
       const result = await handleSuperChat({

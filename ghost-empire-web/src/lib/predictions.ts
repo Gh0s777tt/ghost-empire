@@ -273,17 +273,18 @@ export async function resolvePrediction(opts: {
         });
       }
 
-      // Loser notifications (no token movement — already deducted at wager time)
-      for (const e of losers) {
-        await tx.notification.create({
-          data: {
+      // Loser notifications (no token movement — already deducted at wager time). One
+      // createMany instead of N inserts to shorten the tx's hold on the small pool (#748).
+      if (losers.length > 0) {
+        await tx.notification.createMany({
+          data: losers.map((e) => ({
             userId: e.userId,
             type: "system",
             title: "Niestety, ten zakład nie wygrał",
             message: `Przegrana stawka: ${e.tokensWagered.toLocaleString("pl-PL")} GT. Wygrywająca opcja: "${prediction.options[winningOptionIndex]}".`,
             icon: "😔",
             link: "/predictions",
-          },
+          })),
         });
       }
 

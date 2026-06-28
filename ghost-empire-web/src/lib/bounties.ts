@@ -168,16 +168,34 @@ export async function resolveBounty(opts: { bountyId: string; outcome: "complete
         for (const [userId, amount] of byUser) {
           await tx.user.update({ where: { id: userId }, data: { tokens: { increment: amount }, totalEarned: { increment: amount } } });
           await tx.transaction.create({ data: { userId, type: "earn", amount, reason: `bounty_refund:${b.id}`, status: "completed" } });
-          await tx.notification.create({
-            data: { userId, type: "system", title, message: `Zwrócono ${amount.toLocaleString("pl-PL")} GT za „${b.title.slice(0, 60)}".`, icon: "↩️", link: "/bounties" },
+        }
+        // Notifications batched into one insert to shorten the tx's hold on the small pool (#748).
+        if (byUser.size > 0) {
+          await tx.notification.createMany({
+            data: [...byUser].map(([userId, amount]) => ({
+              userId,
+              type: "system",
+              title,
+              message: `Zwrócono ${amount.toLocaleString("pl-PL")} GT za „${b.title.slice(0, 60)}".`,
+              icon: "↩️",
+              link: "/bounties",
+            })),
           });
         }
         return { ok: true, outcome: opts.outcome, refunded: byUser.size, burned: 0 } as const;
       }
 
-      for (const [userId] of byUser) {
-        await tx.notification.create({
-          data: { userId, type: "system", title: "🎯 Bounty wykonane!", message: `Streamer wykonał „${b.title.slice(0, 60)}". Dzięki za wsparcie!`, icon: "🎯", link: "/bounties" },
+      // Notifications batched into one insert to shorten the tx's hold on the small pool (#748).
+      if (byUser.size > 0) {
+        await tx.notification.createMany({
+          data: [...byUser.keys()].map((userId) => ({
+            userId,
+            type: "system",
+            title: "🎯 Bounty wykonane!",
+            message: `Streamer wykonał „${b.title.slice(0, 60)}". Dzięki za wsparcie!`,
+            icon: "🎯",
+            link: "/bounties",
+          })),
         });
       }
       return { ok: true, outcome: "completed", refunded: 0, burned: b.pooledGt } as const;

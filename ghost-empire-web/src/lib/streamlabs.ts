@@ -167,10 +167,21 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
   // amount (or a high-nominal currency) can't mint an absurd amount into the economy.
   const MAX_DONATION_GT = GT_PER_PLN * 100_000;
 
+  // Idempotency: ONE batched read of which donation_ids are already stored, instead of a
+  // findUnique per donation against the small (max:3) pool (#748). externalId is @unique.
+  const processed = new Set(
+    (
+      await prisma.donation.findMany({
+        where: { externalId: { in: donations.map((d) => String(d.donation_id)) } },
+        select: { externalId: true },
+      })
+    ).map((row) => row.externalId),
+  );
+
   for (const d of donations) {
+    const externalId = String(d.donation_id);
     // Skip if already processed
-    const exists = await prisma.donation.findUnique({ where: { externalId: String(d.donation_id) } });
-    if (exists) continue;
+    if (processed.has(externalId)) continue;
 
     const amountFloat = Number(d.amount);
     if (!Number.isFinite(amountFloat) || amountFloat <= 0) continue;
@@ -186,7 +197,7 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
         prisma.donation.create({
           data: {
             tenantId: conn.tenantId, // Batch B: scope to the connection's portal
-            externalId: String(d.donation_id),
+            externalId,
             source: "streamlabs",
             donorName: d.name.slice(0, 200),
             message: d.message?.slice(0, 2000) ?? null,
@@ -285,6 +296,10 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
 
       unmatched++;
     }
+
+    // Both branches above persisted the donation row — remember it so a duplicate id
+    // within the same batch can't double-insert (parity with the old per-row check).
+    processed.add(externalId);
 
     // Bump donations_pln goal — applies to BOTH matched and unmatched donations.
     // Currency conversion shared with YouTube super chats (see economy.ts).
