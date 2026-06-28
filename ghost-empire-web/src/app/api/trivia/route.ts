@@ -100,6 +100,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     if (e instanceof AnswerError) return jsonError(e.message, e.status);
+    // A concurrent double-submit hits the unique (userId, questionId) — return a clean 409
+    // ("already answered") instead of a scary generic 500 (#759).
+    if (e && typeof e === "object" && (e as { code?: unknown }).code === "P2002") {
+      return jsonError("Już odpowiedziałeś na to pytanie.", 409);
+    }
     return jsonError("Błąd serwera", 500);
   }
 }
