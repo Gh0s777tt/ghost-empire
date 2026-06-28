@@ -23,7 +23,9 @@ function buildCsp(nonce: string): string {
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://id.twitch.tv https://discord.com",
-    "frame-ancestors 'none'",
+    // 'self' (not 'none') so the admin Payments section can embed its own /support page in a
+    // same-origin preview iframe (#702/#728); cross-origin framing (clickjacking) stays blocked.
+    "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self' https://id.twitch.tv https://discord.com",
     "object-src 'none'",
