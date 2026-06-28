@@ -1428,6 +1428,14 @@
       "saveBtn": "Save"
     },
     "songQueue": {
+      "addPh": "Add a song — link or title…",
+      "addBtn": "Add",
+      "added": "Song added to the queue",
+      "banTitle": "Ban this requester from song requests",
+      "banConfirm": "Ban {name} from song requests? Their queued songs are removed.",
+      "banned": "{name} banned from song requests",
+      "bannedTitle": "Banned from song requests",
+      "unbanTitle": "Click to unban",
       "err": "Error",
       "queueCleared": "Queue cleared",
       "clearConfirm": "Clear the whole queue?",

@@ -951,6 +951,19 @@ model SongRequest {
   @@map("song_requests")
 }
 
+// Per-tenant ban list for song requests: a chatter handle here can't enqueue via the bot
+// (the streamer bans abusers from the admin Song Queue). Matched on the lowercased handle.
+model SongRequestBan {
+  id        String   @id @default(cuid())
+  tenantId  String? // per-portal; null = legacy/founder
+  name      String // lowercased chat handle banned from requesting
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("song_request_bans")
+}
+
 // =====================================================
 // CHAT FEED — recent chat messages from all platforms, pushed by the bot and
 // shown on the /overlay/chat OBS browser source. Rolling buffer (old rows pruned).

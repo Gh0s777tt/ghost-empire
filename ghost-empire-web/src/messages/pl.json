@@ -1428,6 +1428,14 @@
       "saveBtn": "Zapisz"
     },
     "songQueue": {
+      "addPh": "Dodaj utwór — link lub tytuł…",
+      "addBtn": "Dodaj",
+      "added": "Utwór dodany do kolejki",
+      "banTitle": "Zbanuj zgłaszającego z kolejki utworów",
+      "banConfirm": "Zbanować {name} z kolejki utworów? Jego utwory w kolejce zostaną usunięte.",
+      "banned": "{name} zbanowany z kolejki utworów",
+      "bannedTitle": "Zbanowani z kolejki utworów",
+      "unbanTitle": "Kliknij, by odbanować",
       "err": "Błąd",
       "queueCleared": "Kolejka wyczyszczona",
       "clearConfirm": "Wyczyścić całą kolejkę?",

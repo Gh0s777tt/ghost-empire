@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
+import { fetchSongTitle, normalizeRequester } from "@/lib/song-requests";
+
+const MAX_QUERY = 200;
 
 type Row = {
   id: string; query: string; title: string | null; requestedBy: string; platform: string;
@@ -24,7 +27,7 @@ export async function GET() {
 
   const tid = await currentTenantId();
   const tenantScope = tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {};
-  const [active, recent] = await Promise.all([
+  const [active, recent, banned] = await Promise.all([
     prisma.songRequest.findMany({
       where: { status: { in: ["queued", "playing"] }, ...tenantScope },
       orderBy: [{ status: "desc" }, { createdAt: "asc" }], // "playing" before "queued", then FIFO
@@ -34,11 +37,13 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
+    prisma.songRequestBan.findMany({ where: { tenantId: tid }, orderBy: { createdAt: "desc" }, take: 100 }),
   ]);
 
   return NextResponse.json({
     queue: active.map(serialize),
     recent: recent.map(serialize),
+    banned: banned.map((b) => ({ id: b.id, name: b.name })),
   });
 }
 
@@ -46,7 +51,7 @@ export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  let body: { action?: string; id?: string };
+  let body: { action?: string; id?: string; query?: string; name?: string };
   try {
     body = await req.json();
   } catch {
@@ -57,6 +62,35 @@ export async function POST(req: Request) {
   const tenantScope = tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {};
 
   switch (body.action) {
+    case "add": {
+      // Streamer manually adds a song to the queue (title resolved via oEmbed like the bot).
+      const query = (body.query ?? "").trim();
+      if (!query || query.length > MAX_QUERY) return NextResponse.json({ error: "Podaj link lub tytuł utworu" }, { status: 400 });
+      const created = await prisma.songRequest.create({
+        data: { tenantId: tid, query, title: await fetchSongTitle(query), requestedBy: "🎛️ Panel", platform: "manual", status: "queued" },
+      });
+      return NextResponse.json({ ok: true, song: serialize(created) });
+    }
+    case "ban": {
+      // Ban a chatter from requesting (by handle) + drop their queued requests.
+      const name = normalizeRequester(body.name ?? "");
+      if (!name) return NextResponse.json({ error: "Brak nicku do zbanowania" }, { status: 400 });
+      // findFirst + create (not upsert): the compound unique includes the nullable tenantId,
+      // which Prisma's unique-where input rejects when tid is null (legacy/founder fallback).
+      const already = await prisma.songRequestBan.findFirst({ where: { tenantId: tid, name }, select: { id: true } });
+      if (!already) await prisma.songRequestBan.create({ data: { tenantId: tid, name } });
+      await prisma.songRequest.updateMany({
+        where: { status: "queued", requestedBy: { equals: name, mode: "insensitive" }, ...tenantScope },
+        data: { status: "skipped" },
+      });
+      return NextResponse.json({ ok: true });
+    }
+    case "unban": {
+      const name = normalizeRequester(body.name ?? "");
+      if (!name) return NextResponse.json({ error: "Brak nicku" }, { status: 400 });
+      await prisma.songRequestBan.deleteMany({ where: { tenantId: tid, name } });
+      return NextResponse.json({ ok: true });
+    }
     case "play": {
       if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
       const owned = await prisma.songRequest.findFirst({ where: { id: body.id, ...tenantScope } });
@@ -92,6 +126,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, cleared: res.count });
     }
     default:
-      return NextResponse.json({ error: "action: play | played | skip | delete | clear" }, { status: 400 });
+      return NextResponse.json({ error: "action: add | play | played | skip | delete | clear | ban | unban" }, { status: 400 });
   }
 }
