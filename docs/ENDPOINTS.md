@@ -111,7 +111,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 |---|---|---|
 | `…/api/onboarding` | POST | Provisioning portalu tenanta przy zakładaniu konta (slug/nazwa/branding) |
 | `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta |
-| `…/api/billing/checkout` | GET/POST | Plan + ceny (GET) / utworzenie Stripe Checkout dla planu (POST). Gdy Stripe nieskonfigurowany → 503 (trial bez karty) |
+| `…/api/billing/checkout` | GET/POST | Status billingu (GET `{configured}`) / utworzenie Stripe Checkout (POST `{plan,months,currency}` — wielowaluta przez `currency_options`, trial 14 dni, #744). Gdy Stripe nieskonfigurowany → 503 (trial bez karty) |
 
 ## Admin
 | Trasa | Auth | Po co |

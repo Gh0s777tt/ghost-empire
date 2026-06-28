@@ -148,6 +148,19 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            {/* Go Premium CTA (#744) — gold, prominent, links to the pricing page */}
+            <Link
+              href="/premium"
+              data-tour="premium"
+              title={t("premium")}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase text-black transition-all clip-tag ${
+                pathname.startsWith("/premium") ? "ring-1 ring-amber-300" : ""
+              }`}
+              style={{ background: "linear-gradient(135deg,#fbbf24,#f59e0b)" }}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t("premium")}</span>
+            </Link>
             {/* Interactive tour — available anytime, also for guests */}
             <button
               onClick={startTour}

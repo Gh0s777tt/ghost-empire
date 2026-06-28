@@ -39,6 +39,9 @@ export function priceIdFor(plan: Plan, months: BillingMonths): string | null {
   return process.env[`STRIPE_PRICE_${plan.toUpperCase()}_${months}M`] || null;
 }
 
+// Premium-offer constants (currencies, trial, display prices) live in the Stripe-free
+// `lib/premium.ts` so the client bundle never pulls in the Stripe SDK. See #744.
+
 /**
  * Stripe gives `current_period_end` in unix SECONDS; we stamp planExpiresAt
  * with a 24h grace so a renewal webhook that arrives late never flickers the

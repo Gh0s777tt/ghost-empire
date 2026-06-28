@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { getStripe, billingConfigured, priceIdFor, isBillingMonths } from "@/lib/billing";
+import { isBillingCurrency, TRIAL_DAYS } from "@/lib/premium";
 import { normalizePlan } from "@/lib/entitlements";
 import { SITE } from "@/lib/site";
 import { createLogger } from "@/lib/logger";
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Za dużo prób — odczekaj chwilę" }, { status: 429, headers: rateLimitHeaders(rl) });
   }
 
-  let body: { plan?: string; months?: number };
+  let body: { plan?: string; months?: number; currency?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
@@ -47,6 +48,9 @@ export async function POST(req: Request) {
   if (!isBillingMonths(body.months)) {
     return NextResponse.json({ error: "Okres: 1, 3, 6 albo 12 miesięcy" }, { status: 400 });
   }
+  // Presentment currency — the Stripe price carries currency_options for each (#744);
+  // an unknown value falls back to the price's default (PLN) rather than erroring.
+  const currency = isBillingCurrency(body.currency) ? body.currency : "pln";
   const price = priceIdFor(plan, body.months);
   if (!price) {
     return NextResponse.json({ error: "Ten wariant planu nie jest jeszcze dostępny" }, { status: 400 });
@@ -77,12 +81,14 @@ export async function POST(req: Request) {
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
+      currency, // selects the price's matching currency_option (#744)
       line_items: [{ price, quantity: 1 }],
       success_url: `${SITE.url}/onboarding?billing=success`,
       cancel_url: `${SITE.url}/onboarding?billing=cancelled`,
       // The webhook reads these to know WHICH tenant/plan to activate.
       metadata: { tenantId: tenant.id, plan },
-      subscription_data: { metadata: { tenantId: tenant.id, plan } },
+      // 14-day free trial on every premium checkout (#744) — no charge until it ends.
+      subscription_data: { metadata: { tenantId: tenant.id, plan }, trial_period_days: TRIAL_DAYS },
     });
 
     return NextResponse.json({ ok: true, url: checkout.url });
