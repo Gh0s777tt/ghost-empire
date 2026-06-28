@@ -64,6 +64,7 @@ export function SeasonsClient({
   // XP within current tier
   const xpIntoTier = userXp % season.xpPerTier;
   const tierPct = Math.min(100, (xpIntoTier / season.xpPerTier) * 100);
+  // eslint-disable-next-line react-hooks/purity -- harmless render-time Date.now() for a days-left display (non-ticking); compiler bails out safely (#733)
   const daysLeft = Math.max(0, Math.ceil((new Date(season.endsAt).getTime() - Date.now()) / 86_400_000));
 
   // Group rewards by tier for the track display

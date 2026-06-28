@@ -16,21 +16,25 @@ const eslintConfig = [
       // <Link> would prefetch/client-nav and break those. The rule also misfires on
       // these /api links after the [locale] i18n restructure. Off intentionally.
       "@next/next/no-html-link-for-pages": "off",
-      // React Compiler correctness rules (eslint-plugin-react-hooks v7, via
-      // eslint-config-next 16). The compiler IS enabled (next.config `reactCompiler: true`),
-      // but these rules flag idiomatic patterns in this app. Verified count (#732, rules
-      // flipped on locally): 110 warnings = 98 `set-state-in-effect` + 5 `purity` + 5
-      // `immutability` + 2 `refs`. The 98 are overwhelmingly the standard client-side
-      // DATA-FETCHING pattern (`useEffect(() => { apiGet().then(setState) }, [])`); the other
-      // 12 are Date.now()/ref reads in live-countdown overlays. The compiler safely BAILS OUT
-      // of optimizing such components (it never miscompiles them — they just stay un-memoized),
-      // so these stay OFF. "Fixing" them would mean migrating every client fetch to RSC/SWR (an
-      // architecture change) or 98 inline-disable comments (noisier than this) — no correctness
-      // gain, real regression risk. Deliberate, permanent decision, not deferred debt. #audit3/#732
+      // React Compiler correctness rules (eslint-plugin-react-hooks v7, via eslint-config-next
+      // 16; compiler is ON via next.config `reactCompiler: true`). Original audit count: 110 =
+      // 98 `set-state-in-effect` + 5 `purity` + 5 `immutability` + 2 `refs`.
+      //
+      // purity/immutability/refs are NOW ENFORCED (#733): the 12 real hits were resolved — 2
+      // structural fixes (use-focus-trap ref→effect, OverlayClient self-ref→ref) + targeted
+      // inline-disables on the legitimately-flagged ones (server-component Date.now, Date.now /
+      // navigation / DOM writes inside click handlers, one live drift-corrected countdown). So
+      // any NEW violation of these three now fails lint.
+      //
+      // `set-state-in-effect` stays OFF: its 98 hits are all the standard client-side
+      // DATA-FETCHING pattern (`useEffect(() => { apiGet().then(setState) }, [])`). The compiler
+      // safely BAILS OUT (never miscompiles — components just stay un-memoized). Enabling it would
+      // need ~98 inline-disables (noise) or migrating every fetch to RSC/SWR (architecture change)
+      // — no correctness gain. Deliberate decision, not deferred debt. #audit3/#732/#733
       "react-hooks/set-state-in-effect": "off",
-      "react-hooks/purity": "off",
-      "react-hooks/immutability": "off",
-      "react-hooks/refs": "off",
+      "react-hooks/purity": "error",
+      "react-hooks/immutability": "error",
+      "react-hooks/refs": "error",
     },
   },
 ];

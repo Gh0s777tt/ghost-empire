@@ -60,6 +60,7 @@ export function OnboardingClient() {
     setError(null);
     try {
       const res = await apiPost<{ ok: true; url: string }>("/api/billing/checkout", { plan, months });
+      // eslint-disable-next-line react-hooks/immutability -- navigation in a click handler (not render) is intentional (#733)
       window.location.href = res.url;
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t("error"));

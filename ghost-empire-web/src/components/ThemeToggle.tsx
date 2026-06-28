@@ -31,8 +31,10 @@ export function ThemeToggle() {
   }, [open]);
 
   function pick(next: Theme) {
+    /* eslint-disable react-hooks/immutability -- DOM + cookie writes in a click handler (not render) are intentional (#733) */
     document.documentElement.dataset.theme = next;
     document.cookie = `theme=${next}; path=/; max-age=31536000; samesite=lax`;
+    /* eslint-enable react-hooks/immutability */
     setTheme(next);
     setOpen(false);
   }

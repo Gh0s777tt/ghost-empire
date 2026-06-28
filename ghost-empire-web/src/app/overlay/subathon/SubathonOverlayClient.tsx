@@ -30,6 +30,7 @@ export function SubathonOverlayClient() {
   const endsAtMs = data?.endsAt ? new Date(data.endsAt).getTime() : null;
   if (!data?.active || endsAtMs == null) return null;
 
+  // eslint-disable-next-line react-hooks/purity, react-hooks/refs -- live drift-corrected countdown: reads Date.now() + offsetRef each render BY DESIGN (a 1s tick drives it); compiler bails out safely (#733)
   const serverNow = Date.now() - offsetRef.current;
   const remainingMs = Math.max(0, endsAtMs - serverNow);
   const ended = remainingMs <= 0;

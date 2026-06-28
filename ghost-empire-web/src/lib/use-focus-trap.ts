@@ -24,9 +24,12 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
   { onEscape, initialFocus }: Options = {},
 ): RefObject<T | null> {
   const containerRef = useRef<T>(null);
-  // Keep the latest onEscape without re-arming the effect each render.
+  // Keep the latest onEscape without re-arming the trap effect each render. Synced in an
+  // effect (not during render) so the render stays pure (react-hooks/refs). #733
   const onEscapeRef = useRef(onEscape);
-  onEscapeRef.current = onEscape;
+  useEffect(() => {
+    onEscapeRef.current = onEscape;
+  });
 
   useEffect(() => {
     if (!active) return;

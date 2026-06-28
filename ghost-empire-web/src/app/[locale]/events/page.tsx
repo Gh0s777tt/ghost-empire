@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function EventsPage() {
   const session = await auth();
 
+  // eslint-disable-next-line react-hooks/purity -- async SERVER component: Date.now() at request time is correct + intended (#733)
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const tid = await currentTenantId();
   const events = await prisma.event.findMany({

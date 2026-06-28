@@ -99,6 +99,7 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
   function addWidget(widgetId: string) {
     const w = sceneWidget(widgetId);
     if (!w) return;
+    // eslint-disable-next-line react-hooks/purity -- Date.now() generates a unique id inside a click handler (not render); intentional (#733)
     const el = clampElement({ id: `${widgetId}-${Date.now().toString(36)}`, widget: widgetId, x: 50 - w.w / 2, y: 50 - w.h / 2, w: w.w, h: w.h });
     setEls((p) => [...p, el]);
     setSel(el.id);

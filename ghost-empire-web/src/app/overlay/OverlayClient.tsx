@@ -115,6 +115,10 @@ export function OverlayClient() {
     setToken(t);
   }, []);
 
+  // Live ref to the latest showNext — lets showNext defer to ITSELF (the fade-out timer below)
+  // and the connection effect call the current version without re-subscribing. Synced in an
+  // effect, so showNext never references its own binding before declaration (react-hooks). #733
+  const showNextRef = useRef<() => void>(() => {});
   const showNext = useCallback(() => {
     const next = queueRef.current.shift();
     if (!next) {
@@ -138,13 +142,10 @@ export function OverlayClient() {
     if (currentTimerRef.current) clearTimeout(currentTimerRef.current);
     currentTimerRef.current = setTimeout(() => {
       setVisible(false);
-      setTimeout(() => showNext(), 400); // wait for fade-out anim
+      setTimeout(() => showNextRef.current(), 400); // wait for fade-out anim (latest showNext via ref)
     }, duration);
   }, [duration, soundEnabled]);
 
-  // Live ref to showNext so the connection effect can call the latest version
-  // without re-subscribing (and tearing down the stream) on every settings change.
-  const showNextRef = useRef(showNext);
   useEffect(() => {
     showNextRef.current = showNext;
   }, [showNext]);

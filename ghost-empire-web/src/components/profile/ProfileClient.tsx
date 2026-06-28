@@ -880,6 +880,7 @@ function AccountsAndLinks({
   const connByPlatform = new Map(connections.map((c) => [c.platform, c] as const));
 
   function startLink(providerId: string) {
+    // eslint-disable-next-line react-hooks/immutability -- OAuth-link navigation in a click handler (not render) is intentional (#733)
     window.location.href = `/api/profile/connections/link/${providerId}`;
   }
 

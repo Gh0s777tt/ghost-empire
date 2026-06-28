@@ -86,6 +86,7 @@ export function SubathonManager({
     }
   }
 
+  // eslint-disable-next-line react-hooks/purity -- harmless render-time Date.now() for the admin subathon preview; compiler bails out safely (#733)
   const remainingMs = data?.active && data.endsAt ? new Date(data.endsAt).getTime() - Date.now() : 0;
 
   return (
