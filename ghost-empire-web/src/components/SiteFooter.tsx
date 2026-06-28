@@ -39,6 +39,10 @@ export async function SiteFooter() {
               ♥ {t("support")}
             </Link>
             <span className="text-zinc-800">·</span>
+            <Link href="/wiki" className="inline-block py-1.5 text-zinc-400 hover:text-red-400 transition-colors">
+              📖 {t("wiki")}
+            </Link>
+            <span className="text-zinc-800">·</span>
             <Link href="/onboarding" className="inline-block py-1.5 text-red-400/80 hover:text-red-300 transition-colors">
               🚀 {t("launchPortal")}
             </Link>

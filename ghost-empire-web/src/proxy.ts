@@ -104,6 +104,6 @@ export const config = {
     // All document routes except API, Next internals and static assets. Prefetch
     // requests are NOT excluded here — they must run through next-intl for locale
     // rewriting (see the isPrefetch branch above); they just skip the CSP nonce.
-    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|map)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|map|pdf)$).*)",
   ],
 };
