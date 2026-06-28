@@ -16,6 +16,8 @@ import { companionStage } from "@/lib/companion";
 import { isWarLive } from "@/lib/clan-wars";
 import { cacheJson } from "@/lib/redis";
 import { getLiveStatus } from "@/lib/live-status";
+import { getXProfile } from "@/lib/x-social";
+import { getInstagramProfile } from "@/lib/meta-social";
 import QRCode from "qrcode";
 import { cryptoUri, sepaQrPayload } from "@/lib/payment-methods";
 
@@ -38,7 +40,8 @@ export type OverlayFeedKey =
   | "support-goal"
   | "top-supporters"
   | "sponsors"
-  | "trivia";
+  | "trivia"
+  | "social";
 
 export type OverlayFeedDef = {
   /**
@@ -473,6 +476,21 @@ async function triviaFeed(_p: URLSearchParams, tid: string | null): Promise<unkn
   };
 }
 
+// Social "latest post" (#755): the streamer's most recent X or Instagram post, shown on stream
+// to cross-promote their socials. Reuses the per-tenant getXProfile/getInstagramProfile (each
+// cached 5 min) — X first, else IG. Dormant ({active:false}) until a token is configured (#752/#753).
+async function socialFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const [x, ig] = await Promise.all([getXProfile(tid), getInstagramProfile(tid)]);
+  const xPost = x.configured && x.posts[0]
+    ? { platform: "x", handle: x.username, followers: x.followers, avatarUrl: x.avatarUrl, text: x.posts[0].text, imageUrl: null as string | null, url: x.posts[0].url }
+    : null;
+  const igPost = ig.configured && ig.posts[0]
+    ? { platform: "ig", handle: ig.username, followers: ig.followers, avatarUrl: ig.avatarUrl, text: ig.posts[0].caption, imageUrl: ig.posts[0].imageUrl, url: ig.posts[0].permalink }
+    : null;
+  const post = xPost ?? igPost;
+  return post ? { active: true, ...post } : { active: false };
+}
+
 /**
  * Wrap a producer so that all OBS connections to the SAME feed+tenant share ONE
  * execution per tick instead of each running its own DB query loop. TTL =
@@ -508,6 +526,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   "top-supporters": shared("top-supporters", { producer: topSupportersFeed, intervalMs: 30000 }), // leaderboard shifts slowly
   sponsors: shared("sponsors", { producer: sponsorsFeed, intervalMs: 30000 }), // sponsor list changes rarely
   trivia: shared("trivia", { producer: triviaFeed, intervalMs: 2000 }),
+  social: shared("social", { producer: socialFeed, intervalMs: 60000 }), // posts change rarely; getX/getInstagram are cached 5 min
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
 };
 

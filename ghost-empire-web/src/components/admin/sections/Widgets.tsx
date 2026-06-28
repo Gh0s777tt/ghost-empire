@@ -108,6 +108,7 @@ const WIDGET_META: WidgetMeta[] = [
   { id: "top-supporters", path: "/overlay/top-supporters", size: "340×320" },
   { id: "sponsors",     path: "/overlay/sponsors",    size: "300×180" },
   { id: "trivia",       path: "/overlay/trivia",      size: "440×320" },
+  { id: "social",       path: "/overlay/social",      size: "420×140" },
 ];
 
 export function WidgetsLibrary({

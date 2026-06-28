@@ -1105,6 +1105,10 @@
         "bottom-right": "Dół-prawo"
       },
       "widget": {
+        "social": {
+          "name": "Ostatni post social",
+          "desc": "Twój najnowszy post z X lub Instagrama — promuj swoje social media na streamie. Wymaga tokenu X/Instagram w Integracjach (X pierwszy)."
+        },
         "alerts": {
           "name": "Stream Alerts",
           "desc": "Alerty na żywo: suby, gifty, bity, donejty, zakupy, eventy, powitania."

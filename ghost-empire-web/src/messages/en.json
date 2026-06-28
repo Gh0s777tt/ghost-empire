@@ -1105,6 +1105,10 @@
         "bottom-right": "Bottom-right"
       },
       "widget": {
+        "social": {
+          "name": "Latest social post",
+          "desc": "Your most recent X or Instagram post, to cross-promote your socials on stream. Requires an X/Instagram token in Integrations (X shown first)."
+        },
         "alerts": {
           "name": "Stream Alerts",
           "desc": "Live alerts: subs, gifts, bits, donations, purchases, events, welcomes."
