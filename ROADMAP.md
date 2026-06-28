@@ -201,12 +201,14 @@ Po modernizacji stacku do najnowszych majorów rozpisana **Faza A** (autonomiczn
 - ✅ 🤖 **Mini-gra `!roulette`** — **ZROBIONE (#182)**: europejska ruletka 0–36 (red/black 2×, liczba 36×, RTP ≈0,973) w frameworku `gt-games` — **bez nowego modelu → bez db push**. Chat `!roulette`/`!roleta` + web `/kasyno` (przyciski 🔴/⚫ + liczba). `spinRoulette`/`rouletteColor`/`normRouletteChoice` (+4 testy). **⚠️ restart bota.**
 - ✅ 🤖 **Górny pasek — grupowana nawigacja** — **ZROBIONE (#183)**: desktop = 3 bezpośrednie (HOME/SKLEP/RANKING) + 2 rozwijane grupy (GRY ▾, SPOŁECZNOŚĆ ▾, jak panel admina), hover + focus-within (a11y), czysto CSS. Rozwiązuje brak miejsca przy rosnącej liczbie zakładek; nowe funkcje → do grupy. PROFIL w menu avatara. Mobile bez zmian.
 
-> ✅ **Wszystkie autonomiczne (🤖) pozycje z listy 2026-06-01 zrobione.** Zostają tylko pozycje 🔑 (wymagają Twoich kluczy/kont): social OAuth (IG/TikTok/FB/X), AI moderator (klucz API), OBS WebSocket / Hue / Govee.
+> ✅ **Wszystkie autonomiczne (🤖) pozycje z listy 2026-06-01 zrobione.** **OBS WebSocket i Govee (per-portal) też dowiezione.** Zostają tylko pozycje 🔑 (wymagają Twoich kluczy/kont): social OAuth (IG/TikTok/FB/X), AI moderator (klucz API), Philips Hue.
 
 **🔑 Wymaga Twoich kont/creds (zostawiam na koniec):**
 - 🟡 🔑 **Social Linki interaktywne (OAuth)** — łączenie Instagram / TikTok / Facebook / X jednym kliknięciem, tak jak Twitch/Kick. Każda platforma wymaga **zarejestrowanej aplikacji deweloperskiej** (client id + secret), a IG/TikTok dodatkowo przeglądu/akceptacji. Bez tego przygotuję gotowe UI „Połącz" czekające na creds. *(Twitch / Kick / Discord / Google→YouTube już działają interaktywnie.)*
 - 🟡 🔑 **AI Moderator — wybór modelu** (Anthropic / OpenAI / Google) — abstrakcja providera + klucz API.
-- 🟡 🔑 **OBS WebSocket (hasło wklejane na stronie) + Hue / Govee** — hasło/konta deweloperskie hardware. *(Postęp 3C: silnik reguł `lib/obs-rules.ts` #663 + model `ObsRule` + API #664 + panel admina #665 + **aktuator `/overlay/obs-control` #672 dowieziony — cały OBS WebSocket gotowy** (`docs/OBS-CONTROL.md`) + **Govee v1 (env, #678, `docs/LIGHTING.md`)** — lampka reaguje na eventy. Zostaje tylko Hue (most lokalny, jak OBS) oraz per-tenant rules+UI dla Govee.)*
+- ✅ **OBS WebSocket — DOWIEZIONE** (silnik reguł `lib/obs-rules.ts` #663 + model `ObsRule` + API #664 + panel #665 + **aktuator `/overlay/obs-control` #672**, hasło per-portal wklejane na stronie, `docs/OBS-CONTROL.md`).
+- ✅ **Govee — DOWIEZIONE per-portal** (#720–#725, `docs/LIGHTING.md`): creds per-portal w Integracjach + reguły alert→akcja (kolor/jasność/on-off + flash→revert) + aktuator w `dispatchAlert` + przycisk „Testuj lampkę". (v1 env-based foundera #678 nadal działa jako fallback.)
+- 🟡 🔑 **Philips Hue** — jedyny pozostały element hardware (most lokalny, jak OBS) — wymaga konta/mostu deweloperskiego.
 
 > Sekrety (klucze API, hasła): **nie wklejaj ich na czacie** — wrzuć je sam do **Vercel → Settings → Environment Variables** (portal) lub gitignored `.env` (bot). Podam dokładne nazwy zmiennych przy każdej funkcji. Cokolwiek już gdziekolwiek wkleiłeś — zrotuj.
 

@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,13 @@ export async function POST() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userId = session.user.id;
+
+  // Per-user throttle on the token-granting path. The unique `externalId` already blocks
+  // double-claims; this caps session/spam attempts for parity with other economy routes. #audit-M
+  const rl = await rateLimit(`daily-bonus:${userId}`, 10, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Za szybko. Spróbuj za chwilę." }, { status: 429, headers: rateLimitHeaders(rl) });
+  }
 
   const s = await getStatus(userId);
   if (s.claimedToday) return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409 });

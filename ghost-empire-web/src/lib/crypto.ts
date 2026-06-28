@@ -24,7 +24,16 @@ const HKDF_SALT = Buffer.from("ghost-empire/crypto/hkdf/v2");
 
 /** Legacy master key — sha256(secret). Used for v1 decrypt + v1 HMAC fallback + as HKDF input. */
 function masterKey(): Buffer {
-  const secret = process.env.ENCRYPTION_KEY || process.env.NEXTAUTH_SECRET || "ghost-empire-dev-key";
+  const secret = process.env.ENCRYPTION_KEY || process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    // The dev fallback below is a PUBLIC constant — using it in production would make every
+    // "encrypted" secret trivially decryptable by anyone. Fail fast rather than silently
+    // downgrading at-rest crypto to a known key. #audit-N
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("ENCRYPTION_KEY (or NEXTAUTH_SECRET) must be set in production — refusing to fall back to the public dev key");
+    }
+    return createHash("sha256").update("ghost-empire-dev-key").digest(); // dev/test only
+  }
   return createHash("sha256").update(secret).digest(); // 32 bytes
 }
 

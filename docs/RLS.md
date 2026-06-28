@@ -1,9 +1,12 @@
 # 🔒 RLS.md — enable Row-Level Security in Supabase (defense-in-depth)
 
-> **✅ APPLIED 2026-06-27 (#671) — RLS is ON for all 97 public tables.** Verified the `postgres`
+> **✅ APPLIED 2026-06-27 (#671) — RLS is ON for all public tables.** Verified the `postgres`
 > connection has `rolbypassrls=true` (Prisma unaffected) and the app is Prisma-only (no
 > `@supabase/supabase-js`/PostgREST), then enabled via a safe script: canary on `notifications` +
-> read test → enable-all → verify (97/97, live app-reads OK) with auto-rollback on any failure.
+> read test → enable-all → verify (live app-reads OK) with auto-rollback on any failure.
+> **Re-audited live 2026-06-28 (#731): 102/102 public tables have RLS ON, 0 open** (count grew
+> from the original 97 as tables shipped since #671 — e.g. `govee_rules` #721, `song_request_bans`
+> #729 — each enabled via the post-`db push` step below).
 > This doc is retained as the runbook + rollback reference. **Re-run the matching `ENABLE` line
 > after any future `db push` that adds a table** (new tables default to RLS off).
 

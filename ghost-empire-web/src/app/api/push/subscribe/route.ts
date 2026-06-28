@@ -7,12 +7,18 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const rl = await rateLimit(`push:sub:${session.user.id}`, 20, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: rateLimitHeaders(rl) });
+  }
 
   let body: { subscription?: { endpoint?: string; keys?: { p256dh?: string; auth?: string } } };
   try {

@@ -66,8 +66,8 @@ export function KickEventsManager({
         "/api/admin/kick-events",
         { action: "setup" },
       );
-      // Always log the full response so we can see exactly what Kick said
-      console.log("[kick setup] response:", result);
+      // Diagnostic for the flaky Kick API — gated to dev so it never ships to the prod browser console. #audit-N
+      if (process.env.NODE_ENV !== "production") console.log("[kick setup] response:", result);
       if (result.error) {
         // Error case (HTTP 200 but Kick rejected / created nothing)
         onToast("err", result.error ?? t("setupErr"));
@@ -84,7 +84,7 @@ export function KickEventsManager({
       // HTTP-error response (non-2xx) — mirror the legacy `!res.ok` branch, which
       // still refreshed the list afterwards.
       if (err instanceof ApiError && err.status !== 0) {
-        console.log("[kick setup] response:", err.body);
+        if (process.env.NODE_ENV !== "production") console.log("[kick setup] response:", err.body);
         onToast("err", err.message || t("setupErr"));
         await load();
         onSuccess();

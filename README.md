@@ -39,7 +39,7 @@ Portal **Next.js** + boty, w których widzowie zarabiają **Ghost Tokens (GT)** 
 
 ## ✨ W skrócie — co potrafi
 
-`👻 Ekonomia GT` &nbsp; `🛒 Sklep` &nbsp; `🎁 Eventy & raffle` &nbsp; `🎲 Predictions` &nbsp; `🏆 Battle Pass / Sezony` &nbsp; `🗳️ Ankiety` &nbsp; `🏅 60 osiągnięć` &nbsp; `📅 Daily questy` &nbsp; `🔑 Drop-code'y` &nbsp; `📊 Ranking` &nbsp; `💬 Chat bot ×3 platformy` &nbsp; `🛡️ Automod` &nbsp; `⏱️ Timery` &nbsp; `❓ FAQ` &nbsp; `👋 Powitania` &nbsp; `🎵 Song requesty` &nbsp; `🔔 Alerty OBS (per-typ)` &nbsp; `🎯 Stream Goals + Hype Train` &nbsp; `⏳ Subathon` &nbsp; `🧩 Biblioteka + generator widgetów` &nbsp; `🖼️ 11 overlayów z podglądem`
+`👻 Ekonomia GT` &nbsp; `🛒 Sklep` &nbsp; `🎁 Eventy & raffle` &nbsp; `🎲 Predictions` &nbsp; `🏆 Battle Pass / Sezony` &nbsp; `🗳️ Ankiety` &nbsp; `🏅 60 osiągnięć` &nbsp; `📅 Daily questy` &nbsp; `🔑 Drop-code'y` &nbsp; `📊 Ranking` &nbsp; `💬 Chat bot ×3 platformy` &nbsp; `🛡️ Automod` &nbsp; `⏱️ Timery` &nbsp; `❓ FAQ` &nbsp; `👋 Powitania` &nbsp; `🎵 Song requesty` &nbsp; `🔔 Alerty OBS (per-typ)` &nbsp; `🎯 Stream Goals + Hype Train` &nbsp; `⏳ Subathon` &nbsp; `🧩 Biblioteka + generator widgetów` &nbsp; `🖼️ 23 overlaye z podglądem`
 
 ---
 
@@ -139,7 +139,7 @@ flowchart LR
 | **i18n** | next-intl **4** · **14 lokalizacji UI** (PL/EN/DE/ES/IT/FR/RU/UK/ZH/JA/KO/AR/PT/ID) · **RTL** dla arabskiego |
 | **Realtime** | DB-backed kolejki + polling (overlaye, notyfikacje) — Vercel Hobby = bez websocketów |
 | **Boty** | discord.js **14.26** · tmi.js (Twitch) · Kick/YT API · `tsx`, TypeScript 6 |
-| **Jakość** | Vitest **4** (**477 testów**) · ESLint **9** (flat config) · GitHub Actions CI · Dependabot · GitGuardian |
+| **Jakość** | Vitest **4** (**622 testy**) · ESLint **9** (flat config) · GitHub Actions CI · Dependabot · GitGuardian |
 | **Deploy** | Vercel (web, auto-deploy z `main`) · bot na PC/Docker (gotowy na VPS/Railway) |
 
 > Cały stack jest na **najnowszych majorach** (modernizacja udokumentowana w [CHANGELOG.md](CHANGELOG.md)). Świadomie pominięte: `eslint 10` (ekosystem `eslint-config-next` 16 jeszcze go nie wspiera).
@@ -176,7 +176,7 @@ flowchart LR
 - **Engagement (3B)** — timery, FAQ, powitania, song requesty `!sr`, **chat overlay** (kolory per platforma, customizacja)
 - **Stream Goals + Hype Train**, **Predictions** (`/predictions`, auto-zamykanie), **Battle Pass / Sezony** (30 tierów, nagrody tokenowe i rzeczowe), **Subathon**, **Koło Fortuny** (`/wheel` + overlay)
 - **Alerty per-typ (3C)** — animacja / pozycja / dźwięk / próg kwotowy **osobno dla każdego typu** (`/admin#alerts`, klik → rozwija)
-- **NASTĘPNE (3C/3D):** OBS WebSocket (sceny), Philips Hue / Govee (światła), AI moderator, analityka per-stream — plan w [PHASE3.md](PHASE3.md)
+- **3C/3D ✅ dowiezione:** **OBS WebSocket** (sceny/źródła, per-portal hasło) · **Govee** (światła per-portal, reguły alert→akcja). **Zostaje:** Philips Hue, AI moderator, analityka per-stream — plan w [PHASE3.md](PHASE3.md)
 </details>
 
 ---
@@ -190,16 +190,16 @@ flowchart LR
 | **Security** | **szyfrowanie sekretów at-rest (AES-256-GCM)** — klucze API + tokeny OAuth · HSTS, CSP, COOP, X-Frame-Options, Permissions-Policy · `noindex`/`no-store` na overlayach · rate-limit (DB sliding-window) · webhook verify (HMAC/RSA) · HMAC-signed cookies · audit log z IP · skan sekretów (GitGuardian) |
 | **Performance** | `unstable_cache`, indeksy DB, lazy-load sekcji admina, Router `staleTimes`, `Promise.all`, pula DB `max:3` pod Supabase |
 | **a11y** | `:focus-visible`, skip-link, `prefers-reduced-motion`, `aria-label`/`aria-current` na nav, `role="dialog"` na modalach |
-| **DX** | `strict` TS · **0 `as any`** w `src` · ESLint flat config w CI · Vitest **477 testów** (+ integracyjne na realnym Postgresie w CI) · Dependabot · dokumentacja na bieżąco |
+| **DX** | `strict` TS · **4 uzasadnione `as any`** w `src` (zero `@ts-ignore`) · ESLint flat config w CI · Vitest **622 testy** (+ integracyjne na realnym Postgresie w CI) · Dependabot · dokumentacja na bieżąco |
 
 ---
 
 ## 🧑‍💻 Panel admina (`/admin`)
 
 <details>
-<summary><b>~46 sekcji (deep-link przez hash, filtrowane wg uprawnień moderatora)</b></summary>
+<summary><b>51 sekcji (deep-link przez hash, filtrowane wg uprawnień moderatora)</b></summary>
 
-Dashboard · Użytkownicy (grant GT, role, opisy uprawnień) · Merge duplikatów · **Moderacja (automod + statystyki naruszeń)** · Eventy · Sklep · Drops · **Koło Fortuny** · **Biblioteka gier (Steam)** · Harmonogram · Bot Discord · Donacje · Twitch / Kick / YouTube (autoryzacja + eventy) · Komendy czatu · Timery · FAQ · Powitania · Song requesty · **Stream Alerts (typy + per-typ)** · Stream Goals · Subathon · Predictions · Battle Pass · **Ankiety** · **Analityka (heatmapa czatu)** · **Integracje (klucze API)** · **Webhooki wychodzące** · Audit log · **Reset bazy** (strefa niebezpieczna).
+Dashboard · Użytkownicy (grant GT, role, opisy uprawnień) · Merge duplikatów · **Moderacja (automod + statystyki naruszeń)** · Eventy · Sklep · Drops · **Koło Fortuny** · **Biblioteka gier (Steam)** · Harmonogram · Bot Discord · Donacje · Twitch / Kick / YouTube / **Rumble** (autoryzacja + eventy) · Komendy czatu · Timery · FAQ · Powitania · Song requesty · **Stream Alerts (typy + per-typ)** · Stream Goals · Subathon · Predictions · Battle Pass · **Ankiety** · **Analityka (heatmapa czatu)** · **Integracje (klucze API)** · **Webhooki wychodzące** · Audit log · **Reset bazy** (strefa niebezpieczna).
 </details>
 
 ---
@@ -223,7 +223,7 @@ Wymagania: **Node 22+**, PostgreSQL (Supabase), konto Vercel + konta dev OAuth.
 <details>
 <summary><b>🤖 Bot Discord (E-Bot — osobne repo)</b></summary>
 
-Discordem zajmuje się teraz **E-Bot** (`Gh0s777tt/E-Bot`) — osobny projekt, który przejął ekonomię GT (nagrody za wiadomości + voice) i linkowanie kont. Stary katalog `ghost-empire-bot/` został **usunięty** (zastąpiony przez E-Bota; dwa boty Discord = podwójne naliczanie GT — historia pozostaje w gicie).
+Discordem zajmuje się teraz **E-Bot** (`Gh0s777tt/E-Bot`) — osobny projekt, który przejął ekonomię GT (nagrody za wiadomości + voice) i linkowanie kont. Stary katalog `ghost-empire-bot/` jest **zdeprecjonowany i wyłączony** (zastąpiony przez E-Bota; dwa boty Discord = podwójne naliczanie GT), ale **pozostaje w repo jako referencja**.
 
 Włączenie ekonomii w E-Bocie (opt-in): `GHOST_ECONOMY=1` + `GHOST_BOT_SECRET` (= `BOT_SECRET` portalu) w jego `.env`, privileged intents (Message Content + Server Members) w Discord Dev Portal, `npm run deploy`, restart. Szczegóły w `README.md` E-Bota.
 </details>

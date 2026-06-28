@@ -47,3 +47,6 @@ logs
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Vitest coverage
+/coverage/

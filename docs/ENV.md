@@ -66,6 +66,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `NEXT_PUBLIC_SITE_URL` (O) | Publiczny bazowy URL strony (linki absolutne / OG / share). Gdy brak — fallback do `NEXTAUTH_URL`. `NEXT_PUBLIC_` = widoczny w przeglądarce, **nie wkładaj tu sekretów** |
 | `LOG_LEVEL` (O) | Poziom structured loggera (`debug`/`info`/`warn`/`error`; `lib/logger.ts`). Domyślnie `info` na prod, `debug` na dev |
 | `NODE_ENV` | Ustawiane przez platformę (`production`/`development`) — nie ustawiasz ręcznie |
+| `VERCEL_ENV` · `NEXT_RUNTIME` | Auto-ustawiane przez Vercel/Next (`production`/`preview`/`development`, `nodejs`/`edge`) — odczytywane w kodzie, nie ustawiasz ręcznie |
 
 ### Web Push / powiadomienia (O — funkcja uśpiona bez kluczy)
 > Powiadomienia web push (#533) są **uśpione**, dopóki nie ustawisz pary kluczy VAPID **i** nie zrobisz `prisma db push` (tabela `push_subscriptions`). Bez tego przełącznik „Powiadomienia" na `/profile` po prostu się nie pokazuje, a wysyłki są no-opem. Klucze generujesz raz: `npx web-push generate-vapid-keys` (pakiet `web-push` jest już zależnością) — da `Public Key` i `Private Key`.

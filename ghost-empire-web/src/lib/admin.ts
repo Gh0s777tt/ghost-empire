@@ -160,21 +160,29 @@ export async function requireAnyPermission(permissions: ModPermission[]): Promis
 /**
  * Step-up check for a sensitive admin action. A NO-OP when the acting admin has
  * not enabled 2FA (it's opt-in) — only admins who turned it on are challenged.
- * When enabled, a valid current TOTP code is required. Fails OPEN only if the
- * stored secret can't be decrypted (e.g. encryption-key drift), so an admin who
- * enabled 2FA is never permanently locked out of their own tools.
+ * When enabled, a valid current TOTP code is required.
+ *
+ * On encryption-key drift (the stored secret no longer decrypts) the DEFAULT is to
+ * fail OPEN, so a 2FA-enabled admin is never permanently locked out of their own
+ * tools. Callers guarding the most destructive paths (global DB wipe) pass
+ * `failClosed:true` to BLOCK instead and force key remediation rather than silently
+ * skipping the second factor. #audit-W1
  */
 export async function requireStepUp(
   userId: string,
   code: string | null | undefined,
+  opts?: { failClosed?: boolean },
 ): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { totpSecret: true, totpEnabledAt: true } });
   if (!u?.totpEnabledAt) return { ok: true }; // 2FA not enabled → no challenge
   const secret = decryptSecret(u.totpSecret);
   if (!secret) {
-    // Key drift: a 2FA-enabled admin's secret no longer decrypts → step-up silently
-    // becomes a no-op. Don't brick the admin, but surface it so the operator notices (M1).
-    log.error("2FA-enabled admin has an undecryptable TOTP secret — step-up bypassed", { userId });
+    // Key drift: a 2FA-enabled admin's secret no longer decrypts. Surface it loudly either way.
+    log.error("2FA-enabled admin has an undecryptable TOTP secret", { userId, failClosed: opts?.failClosed ?? false });
+    if (opts?.failClosed) {
+      // Destructive path: do NOT bypass the second factor. Block and force key remediation.
+      return { ok: false, status: 503, error: "2FA chwilowo niedostępne (klucz szyfrowania) — napraw konfigurację klucza przed wykonaniem tej akcji" };
+    }
     return { ok: true };
   }
   if (!verifyTotp(secret, String(code ?? ""), Date.now())) {

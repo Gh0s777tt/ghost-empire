@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function GET() {
   const session = await auth();
@@ -39,6 +40,11 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
+  }
+
+  const rl = await rateLimit(`notif:read:${session.user.id}`, 60, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Za szybko. Spróbuj za chwilę." }, { status: 429, headers: rateLimitHeaders(rl) });
   }
 
   let body: { ids?: string[]; all?: boolean };

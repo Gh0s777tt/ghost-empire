@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { safeMediaUrl } from "@/lib/url-safe";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 // Manual links — no OAuth needed. Socials + streaming + gaming handles. For platforms
 // without a public profile URL by handle (PSN / Xbox) we link a well-known lookup site.
@@ -38,6 +39,11 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
+  }
+
+  const rl = await rateLimit(`social-links:${session.user.id}`, 20, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Za szybko. Spróbuj za chwilę." }, { status: 429, headers: rateLimitHeaders(rl) });
   }
 
   let body: { platform?: string; handle?: string };

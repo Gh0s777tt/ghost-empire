@@ -34,7 +34,9 @@ export async function POST(req: Request) {
   // Step-up: this wipes EVERY user across EVERY tenant — the single most destructive
   // action in the app. Require a fresh 2FA code on top of the owner gate (no-op unless
   // the owner enabled 2FA; the danger-zone UI retries via apiPostStepUp). #audit-C1.
-  const step = await requireStepUp(auth.userId, body.totpCode);
+  // failClosed: a global wipe must NEVER proceed with the 2FA challenge silently skipped —
+  // if the owner's TOTP secret can't be decrypted (key drift), block instead of bypassing. #audit-W1
+  const step = await requireStepUp(auth.userId, body.totpCode, { failClosed: true });
   if (!step.ok) return NextResponse.json({ error: step.error, stepUpRequired: true }, { status: step.status });
 
   // Snapshot for the audit log BEFORE the wipe — the acting admin's own account is

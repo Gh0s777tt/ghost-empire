@@ -195,7 +195,7 @@
     "doneNext": "Odezwiemy się z instrukcją podpięcia subdomeny i połączenia kanału. Wszystkie ustawienia zmienisz potem w panelu administracyjnym swojego portalu."
   },
   "admin": {
-    "secDesc_goveeRules": "Niech alerty (donejty, suby…) sterują lampką Govee: ustawiają kolor, jasność albo włączają/wyłączają. Dodaj klucz API Govee + urządzenie w Integracjach, potem dodaj reguły tu.",
+    "secDesc_goverules": "Niech alerty (donejty, suby…) sterują lampką Govee: ustawiają kolor, jasność albo włączają/wyłączają. Dodaj klucz API Govee + urządzenie w Integracjach, potem dodaj reguły tu.",
     "secGoveeRules": "Oświetlenie Govee",
     "goveeRules": {
       "testBtn": "Testuj lampkę",

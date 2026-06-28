@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **187** tras (186× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **193** trasy (192× `route.ts` + 1× `route.tsx`)
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -89,6 +89,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/trivia` | GET/POST | Trivia/quiz (widz, #523) — aktywne pytania + moje odpowiedzi; POST = odpowiedź za GT (poprawna ukryta do czasu) |
 | `…/api/sound-rewards` | GET/POST | GT→dźwięki (widz, #505) — aktywny katalog + saldo; POST = wykup dźwięku (atomowy spend → alert) |
 | `…/api/referral` | GET/POST | Referrals (#501) — mój kod + statystyki + czy odebrałem; POST = odbiór kodu znajomego (oboje GT) |
+| `…/api/watch-streak` | GET/POST | Watch Streaks (#687) — passa dni oglądania: GET status, POST zalicza dzień (rate-limited, idempotentne per UTC-dzień) |
 | `…/api/portals` | GET/POST/DELETE | Hub „przełącz portale" (#508) — portale, które obserwuję; POST follow, DELETE unfollow |
 | `…/api/getting-started` | GET | Flagi ukończenia checklisty „Pierwsze kroki" na home (#503 — tylko odczyt) |
 
@@ -171,6 +172,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/kick-streamer-auth` (+callback) · `kick-events` | admin | Autoryzacja streamera Kick + eventy |
 | `…/api/admin/youtube-streamer-auth` (+callback) | admin | Autoryzacja konta YouTube |
 | `…/api/admin/rumble` | admin | Per-portal Rumble (#730) — GET status na żywo + `hasUrl`, POST zapis/wyczyść `rumbleApiUrl` (szyfrowany), tenant-scoped, audit-logged |
+| `…/api/admin/role-roster` | admin | Lista posiadaczy ról/rang portalu (#700) — odczyt do panelu Role |
+| `…/api/admin/subscribers` | admin | Subskrybenci portalu (#701) — lista + statusy do sekcji Subskrybenci |
 
 ### SaaS — właściciel platformy (`requirePlatformOwner`)
 > „Admin-of-admins" — tylko właściciel platformy (nie admin pojedynczego tenanta). Tworzenie i zarządzanie portalami najemców.
