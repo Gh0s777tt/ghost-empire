@@ -228,7 +228,10 @@ export function AdminClient({
       })
       .catch(() => { /* dashboard still loads without the wizard */ });
   }, [isAdmin, changeMode]);
-  const showSetupPill = !!setup && !setup.completedAt && !setup.progress.allRequiredDone;
+  // Persistent entry point: show the "Setup X%" pill until the streamer FINISHES the wizard
+  // (clicks "you're live" → setupCompletedAt). It stays through dismiss/snooze and even once the
+  // required steps are done, so there's always a way back into setup until it's truly complete. #740
+  const showSetupPill = !!setup && !setup.completedAt;
 
   function refresh() {
     startTransition(() => router.refresh());

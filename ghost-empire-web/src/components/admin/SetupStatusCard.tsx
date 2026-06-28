@@ -13,12 +13,13 @@ type Item = { key: string; label: string; ok: boolean; section: string; hint: st
 export function SetupStatusCard({ onJump, onOpenWizard }: { onJump: (id: string) => void; onOpenWizard?: () => void }) {
   const t = useTranslations("admin.setupStatus");
   const [items, setItems] = useState<Item[] | null>(null);
+  const [completedAt, setCompletedAt] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     fetch("/api/admin/setup-status")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (!cancelled && d?.items) setItems(d.items); })
+      .then((d) => { if (!cancelled && d?.items) { setItems(d.items); setCompletedAt(d.completedAt ?? null); } })
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
@@ -38,7 +39,7 @@ export function SetupStatusCard({ onJump, onOpenWizard }: { onJump: (id: string)
           {allReqOk ? t("allReqOk") : t("reqProgress", { done: reqDone, total: required.length })}
         </span>
       </div>
-      {onOpenWizard && !allReqOk && (
+      {onOpenWizard && !completedAt && (
         <button
           onClick={onOpenWizard}
           className="w-full mb-3 px-3 py-2 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase inline-flex items-center justify-center gap-1.5 transition-colors"
