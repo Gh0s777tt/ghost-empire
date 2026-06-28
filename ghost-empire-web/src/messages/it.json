@@ -189,7 +189,7 @@
     "descKick": "Collega Kick — secondo canale di stream",
     "descGoogle": "Accedi con YouTube (account Google)",
     "errOAuthSignin": "Impossibile avviare l'accesso con il provider — di solito una chiave mancante / errata nelle variabili d'ambiente (es. TWITCH_CLIENT_ID/SECRET su Vercel).",
-    "errOAuthCallback": "Errore al ritorno dal provider — controlla la Redirect URI nella console sviluppatori (deve essere /api/auth/callback/<provider>).",
+    "errOAuthCallback": "Errore al ritorno dal provider — controlla la Redirect URI nella console sviluppatori (deve essere /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "Impossibile creare un account con questo provider.",
     "errCallback": "Errore di accesso (callback). Riprova.",
     "errOAuthAccountNotLinked": "Questa email è già collegata a un'altra piattaforma — accedi con quella usata per prima.",

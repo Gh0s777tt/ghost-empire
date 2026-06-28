@@ -189,7 +189,7 @@
     "descKick": "Lie Kick — deuxième chaîne de stream",
     "descGoogle": "Connexion avec YouTube (compte Google)",
     "errOAuthSignin": "Impossible de démarrer la connexion avec le fournisseur — généralement une clé manquante / incorrecte dans les variables d'environnement (ex. TWITCH_CLIENT_ID/SECRET sur Vercel).",
-    "errOAuthCallback": "Erreur au retour du fournisseur — vérifie la Redirect URI dans la console développeur (doit être /api/auth/callback/<provider>).",
+    "errOAuthCallback": "Erreur au retour du fournisseur — vérifie la Redirect URI dans la console développeur (doit être /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "Impossible de créer un compte avec ce fournisseur.",
     "errCallback": "Erreur de connexion (callback). Réessaie.",
     "errOAuthAccountNotLinked": "Cet e-mail est déjà lié à une autre plateforme — connecte-toi avec celle utilisée en premier.",

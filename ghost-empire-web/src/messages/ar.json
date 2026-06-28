@@ -189,7 +189,7 @@
     "descKick": "اربط Kick — قناة بث ثانية",
     "descGoogle": "تسجيل الدخول عبر YouTube (حساب Google)",
     "errOAuthSignin": "تعذّر بدء تسجيل الدخول عبر المزوّد — عادةً مفتاح ناقص / خاطئ في env (مثل TWITCH_CLIENT_ID/SECRET في Vercel).",
-    "errOAuthCallback": "خطأ عند العودة من المزوّد — تحقق من Redirect URI في وحدة تحكم المطوّر (يجب أن يكون /api/auth/callback/<provider>).",
+    "errOAuthCallback": "خطأ عند العودة من المزوّد — تحقق من Redirect URI في وحدة تحكم المطوّر (يجب أن يكون /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "تعذّر إنشاء حساب من هذا المزوّد.",
     "errCallback": "خطأ في تسجيل الدخول (callback). حاول مرة أخرى.",
     "errOAuthAccountNotLinked": "هذا البريد مرتبط بالفعل بمنصة أخرى — سجّل الدخول بالتي استخدمتها أولًا.",

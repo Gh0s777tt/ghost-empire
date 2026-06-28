@@ -189,7 +189,7 @@
     "descKick": "Прив'яжи Kick — другий стрим-канал",
     "descGoogle": "Увійти через YouTube (акаунт Google)",
     "errOAuthSignin": "Не вдалося почати вхід через провайдера — зазвичай відсутній / невірний ключ у змінних середовища (напр. TWITCH_CLIENT_ID/SECRET у Vercel).",
-    "errOAuthCallback": "Помилка при поверненні від провайдера — перевір Redirect URI у консолі розробника (має бути /api/auth/callback/<provider>).",
+    "errOAuthCallback": "Помилка при поверненні від провайдера — перевір Redirect URI у консолі розробника (має бути /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "Не вдалося створити акаунт через цього провайдера.",
     "errCallback": "Помилка входу (callback). Спробуй ще раз.",
     "errOAuthAccountNotLinked": "Цей email уже прив'язаний до іншої платформи — увійди через ту, яку використав першою.",

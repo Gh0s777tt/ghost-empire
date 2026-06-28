@@ -189,7 +189,7 @@
     "descKick": "Vincule o Kick — segundo canal de transmissão",
     "descGoogle": "Entre com o YouTube (conta Google)",
     "errOAuthSignin": "Não foi possível iniciar o login com o provedor — geralmente uma chave ausente / errada no env (ex.: TWITCH_CLIENT_ID/SECRET na Vercel).",
-    "errOAuthCallback": "Erro ao retornar do provedor — verifique o Redirect URI no console do desenvolvedor (deve ser /api/auth/callback/<provider>).",
+    "errOAuthCallback": "Erro ao retornar do provedor — verifique o Redirect URI no console do desenvolvedor (deve ser /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "Não foi possível criar uma conta a partir deste provedor.",
     "errCallback": "Erro de login (callback). Tente novamente.",
     "errOAuthAccountNotLinked": "Este e-mail já está vinculado a outra plataforma — entre com a que você usou primeiro.",

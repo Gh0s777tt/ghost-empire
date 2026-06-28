@@ -189,7 +189,7 @@
     "descKick": "Vincula Kick — segundo canal de stream",
     "descGoogle": "Inicia sesión con YouTube (cuenta de Google)",
     "errOAuthSignin": "No se pudo iniciar sesión con el proveedor — normalmente una clave ausente / incorrecta en las variables de entorno (p. ej. TWITCH_CLIENT_ID/SECRET en Vercel).",
-    "errOAuthCallback": "Error al volver del proveedor — revisa la Redirect URI en la consola de desarrollador (debe ser /api/auth/callback/<provider>).",
+    "errOAuthCallback": "Error al volver del proveedor — revisa la Redirect URI en la consola de desarrollador (debe ser /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "No se pudo crear una cuenta con este proveedor.",
     "errCallback": "Error de inicio de sesión (callback). Inténtalo de nuevo.",
     "errOAuthAccountNotLinked": "Este correo ya está vinculado a otra plataforma — inicia sesión con la que usaste primero.",

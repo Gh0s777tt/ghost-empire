@@ -189,7 +189,7 @@
     "descKick": "Kick verbinden — zweiter Stream-Kanal",
     "descGoogle": "Mit YouTube anmelden (Google-Konto)",
     "errOAuthSignin": "Anmeldung beim Anbieter konnte nicht gestartet werden — meist ein fehlender / falscher Schlüssel in den Env-Variablen (z. B. TWITCH_CLIENT_ID/SECRET in Vercel).",
-    "errOAuthCallback": "Fehler bei der Rückkehr vom Anbieter — prüfe die Redirect-URI in der Entwicklerkonsole (muss /api/auth/callback/<provider> sein).",
+    "errOAuthCallback": "Fehler bei der Rückkehr vom Anbieter — prüfe die Redirect-URI in der Entwicklerkonsole (muss /api/auth/callback/[provider] sein).",
     "errOAuthCreateAccount": "Konto konnte mit diesem Anbieter nicht erstellt werden.",
     "errCallback": "Anmeldefehler (Callback). Bitte versuche es erneut.",
     "errOAuthAccountNotLinked": "Diese E-Mail ist bereits mit einer anderen Plattform verknüpft — melde dich mit der zuerst verwendeten an.",

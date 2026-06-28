@@ -2914,7 +2914,7 @@
     "descKick": "Link Kick — second stream channel",
     "descGoogle": "Sign in with YouTube (Google account)",
     "errOAuthSignin": "Couldn't start sign-in with the provider — usually a missing / wrong key in env (e.g. TWITCH_CLIENT_ID/SECRET in Vercel).",
-    "errOAuthCallback": "Error returning from the provider — check the Redirect URI in the developer console (must be /api/auth/callback/<provider>).",
+    "errOAuthCallback": "Error returning from the provider — check the Redirect URI in the developer console (must be /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "Couldn't create an account from this provider.",
     "errCallback": "Sign-in error (callback). Please try again.",
     "errOAuthAccountNotLinked": "This email is already linked to another platform — sign in with the one you used first.",

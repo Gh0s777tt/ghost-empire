@@ -189,7 +189,7 @@
     "descKick": "Tautkan Kick — kanal siaran kedua",
     "descGoogle": "Masuk dengan YouTube (akun Google)",
     "errOAuthSignin": "Tidak dapat memulai masuk dengan penyedia — biasanya kunci yang hilang / salah di env (mis. TWITCH_CLIENT_ID/SECRET di Vercel).",
-    "errOAuthCallback": "Kesalahan saat kembali dari penyedia — periksa Redirect URI di konsol developer (harus /api/auth/callback/<provider>).",
+    "errOAuthCallback": "Kesalahan saat kembali dari penyedia — periksa Redirect URI di konsol developer (harus /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "Tidak dapat membuat akun dari penyedia ini.",
     "errCallback": "Kesalahan masuk (callback). Silakan coba lagi.",
     "errOAuthAccountNotLinked": "Email ini sudah tertaut ke platform lain — masuk dengan yang kamu gunakan pertama kali.",

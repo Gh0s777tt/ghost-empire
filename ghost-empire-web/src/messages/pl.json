@@ -2914,7 +2914,7 @@
     "descKick": "Połącz Kick — drugi stream channel",
     "descGoogle": "Zaloguj przez YouTube (Google account)",
     "errOAuthSignin": "Nie udało się rozpocząć logowania u dostawcy — najczęściej brakujący / zły klucz w env (np. TWITCH_CLIENT_ID/SECRET w Vercel).",
-    "errOAuthCallback": "Błąd przy powrocie od dostawcy — sprawdź Redirect URI w konsoli dewelopera (musi być /api/auth/callback/<provider>).",
+    "errOAuthCallback": "Błąd przy powrocie od dostawcy — sprawdź Redirect URI w konsoli dewelopera (musi być /api/auth/callback/[provider]).",
     "errOAuthCreateAccount": "Nie udało się utworzyć konta z tego dostawcy.",
     "errCallback": "Błąd logowania (callback). Spróbuj ponownie.",
     "errOAuthAccountNotLinked": "To konto e-mail jest już powiązane z inną platformą — zaloguj się tą, której użyłeś pierwszy raz.",

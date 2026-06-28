@@ -189,7 +189,7 @@
     "descKick": "Kick を連携——2つ目の配信チャンネル",
     "descGoogle": "YouTube でログイン（Google アカウント）",
     "errOAuthSignin": "プロバイダーでのログインを開始できませんでした——通常は環境変数のキーの欠落 / 誤り（例：Vercel の TWITCH_CLIENT_ID/SECRET）。",
-    "errOAuthCallback": "プロバイダーからの戻り時にエラー——開発者コンソールの Redirect URI を確認してください（/api/auth/callback/<provider> である必要があります）。",
+    "errOAuthCallback": "プロバイダーからの戻り時にエラー——開発者コンソールの Redirect URI を確認してください（/api/auth/callback/[provider] である必要があります）。",
     "errOAuthCreateAccount": "このプロバイダーでアカウントを作成できませんでした。",
     "errCallback": "ログインエラー（callback）。もう一度お試しください。",
     "errOAuthAccountNotLinked": "このメールはすでに別のプラットフォームに連携されています——最初に使用したもので登録してください。",

@@ -189,7 +189,7 @@
     "descKick": "关联 Kick——第二个直播频道",
     "descGoogle": "通过 YouTube 登录（Google 账户）",
     "errOAuthSignin": "无法通过提供商开始登录——通常是环境变量中缺少 / 错误的密钥（例如 Vercel 中的 TWITCH_CLIENT_ID/SECRET）。",
-    "errOAuthCallback": "从提供商返回时出错——请检查开发者控制台中的 Redirect URI（必须为 /api/auth/callback/<provider>）。",
+    "errOAuthCallback": "从提供商返回时出错——请检查开发者控制台中的 Redirect URI（必须为 /api/auth/callback/[provider]）。",
     "errOAuthCreateAccount": "无法通过此提供商创建账户。",
     "errCallback": "登录错误（callback）。请重试。",
     "errOAuthAccountNotLinked": "此邮箱已关联到另一个平台——请使用你最先使用的平台登录。",

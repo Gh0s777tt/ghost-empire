@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Fixed
+
+- **Błąd ICU `UNCLOSED_TAG` na stronie logowania (`<provider>` w 14 lokalizacjach)** **(#727)** — wykryty podczas pełnej weryfikacji platformy. Klucz `signin.errOAuthCallback` zawierał literalne **`<provider>`** (z tekstu „…/api/auth/callback/<provider>"), które next-intl/ICU MessageFormat parsuje jako **nieзамknięty tag rich-text** → `INVALID_MESSAGE: UNCLOSED_TAG`. `SignInPage` buduje mapę `errorMessages` **zachłannie** (woła `t()` na wszystkich kluczach przy każdym renderze), więc błąd leciał do logu przy **każdym** wejściu na `/auth/signin`, a przy `?error=OAuthCallback` użytkownik widział zepsuty komunikat. Naprawione we **wszystkich 14 lokalizacjach** (`<provider>` → ICU-safe `[provider]`); skan całego katalogu i18n potwierdził **brak innych** nieзамkniętych tagów. Zweryfikowane na żywo (`/auth/signin?error=OAuthCallback` → 200, komunikat renderuje się poprawnie, log błędów czysty). Bez zmiany kodu/schematu/testów. Zielone: tsc/618 testów/eslint/build/docs:check.
+
 ### Added
 
 - **RLS na nowej tabeli `govee_rules` + audyt całego DB** **(#726)** — domknięcie security feature'u Govee: włączony **`ENABLE ROW LEVEL SECURITY`** na `govee_rules` (dodana do `docs/RLS.md`) — parytet z bulkiem #671. Przy okazji **audyt RLS całej bazy** (pg-adapter): **wszystkie publiczne tabele mają już RLS ON** (potwierdzone — m.in. `obs_rules`, które wg starej noty „czekało", jest pokryte). RLS to obrona w głąb dla anon/PostgREST; aplikacja łączy się rolą service (omija RLS), więc włączenie jest bezpieczne i nie-destrukcyjne. Wzorzec: po każdym `db push` dodającym tabelę uruchom `ALTER TABLE public."<t>" ENABLE ROW LEVEL SECURITY`. Zielone: tsc/618 testów/eslint/build/docs:check.
