@@ -403,6 +403,8 @@
       "copyTitle": "Copy URL to OBS",
       "loadingUrl": "Loading overlay URL…"
     },
+    "setupPill": "Setup {percent}%",
+    "setupPillHint": "Finish setting up your portal",
     "setupStatus": {
       "item": {
         "ai": {
@@ -458,7 +460,11 @@
       "live": "You're live!",
       "liveDesc": "Portal configured — the dashboard checklist is green.",
       "loading": "Loading…",
-      "close": "Close"
+      "close": "Close",
+      "obsHint": "Paste as a Browser source in OBS (1920×1080, transparent background).",
+      "obsDone": "Got it",
+      "copy": "Copy",
+      "copied": "Copied"
     },
     "schedule": {
       "days": [

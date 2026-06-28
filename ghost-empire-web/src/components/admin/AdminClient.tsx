@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Tv2, Menu, GitMerge, Radio, MonitorPlay, Lightbulb,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy, Wand2,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
@@ -212,16 +212,23 @@ export function AdminClient({
 
   const showToast = toast.show;
 
-  // Setup wizard (#738): open state + proactive auto-open for fresh portals. The server decides
-  // (shouldAutoOpenWizard via /api/admin/setup-status) — it only fires once per fresh, un-handled
-  // portal that still has a required step left, so it never nags repeatedly.
+  // Setup wizard (#738/#739): open state + the setup snapshot that drives auto-open, the header
+  // "Setup X%" pill, and the fresh-portal "simple mode" default. The server decides auto-open
+  // (shouldAutoOpenWizard) — it only fires for a fresh, un-handled portal with a required step left.
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [setup, setSetup] = useState<{ progress: { allRequiredDone: boolean; percent: number }; completedAt: string | null; autoOpen: boolean } | null>(null);
   useEffect(() => {
     if (!isAdmin) return;
-    apiGet<{ autoOpen?: boolean }>("/api/admin/setup-status")
-      .then((d) => { if (d?.autoOpen) setWizardOpen(true); })
+    apiGet<{ progress: { allRequiredDone: boolean; percent: number }; completedAt: string | null; autoOpen: boolean }>("/api/admin/setup-status")
+      .then((d) => {
+        setSetup(d);
+        if (d?.autoOpen) setWizardOpen(true);
+        // Fresh portal that hasn't picked a panel mode → start in "simple" (16 sections, not 51).
+        try { if (d?.autoOpen && !localStorage.getItem("ge-admin-mode")) changeMode("simple"); } catch { /* private mode */ }
+      })
       .catch(() => { /* dashboard still loads without the wizard */ });
-  }, [isAdmin]);
+  }, [isAdmin, changeMode]);
+  const showSetupPill = !!setup && !setup.completedAt && !setup.progress.allRequiredDone;
 
   function refresh() {
     startTransition(() => router.refresh());
@@ -261,10 +268,21 @@ export function AdminClient({
     <div className="space-y-6 admin-cine">
       {/* Direction B — "Cinematic Mono" header: red cut + letterbox rule, no neon glitch. */}
       <div>
-        <div className="flex items-center gap-3">
-          <span className="cine-cut h-8" aria-hidden />
-          <ShieldCheck className="w-6 h-6 text-zinc-300" />
-          <h1 className="font-display text-4xl text-white tracking-[0.2em]">ADMIN</h1>
+        <div className="flex items-center gap-3 justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="cine-cut h-8" aria-hidden />
+            <ShieldCheck className="w-6 h-6 text-zinc-300" />
+            <h1 className="font-display text-4xl text-white tracking-[0.2em]">ADMIN</h1>
+          </div>
+          {showSetupPill && (
+            <button
+              onClick={() => setWizardOpen(true)}
+              title={t("setupPillHint")}
+              className="shrink-0 inline-flex items-center gap-2 border border-red-800/60 bg-red-950/30 hover:bg-red-950/50 text-red-200 hover:text-red-100 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest transition-colors"
+            >
+              <Wand2 className="w-3.5 h-3.5" /> {t("setupPill", { percent: setup!.progress.percent })}
+            </button>
+          )}
         </div>
         <div className="cine-rule mt-3" />
       </div>
