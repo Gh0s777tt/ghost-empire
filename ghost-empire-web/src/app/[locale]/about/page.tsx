@@ -9,6 +9,7 @@ import {
   Zap, Sparkles, ArrowRight, Dice5, Ticket, Rocket,
 } from "lucide-react";
 import { SocialLinksGrid, SocialLinksRow } from "@/components/SocialLinks";
+import { XPresence } from "@/components/XPresence";
 import { getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import { ChangelogList } from "@/components/ChangelogList";
 
@@ -1047,6 +1048,10 @@ export default async function AboutPage() {
             {t("socialsText")}
           </p>
           <SocialLinksGrid links={tenant.socialLinks} isFounderPortal={isFounderBrand(tenant)} />
+          {/* Streamer's X (Twitter) presence — renders only when an X token is configured (#752) */}
+          <div className="mt-4 max-w-2xl">
+            <XPresence tenantId={tenant.id} />
+          </div>
         </Section>
 
         {/* Changelog */}

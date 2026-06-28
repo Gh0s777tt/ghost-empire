@@ -2243,6 +2243,9 @@ model IntegrationConfig {
 
   rumbleApiUrl String? // per-tenant Rumble Livestream API URL incl. embedded key (encrypted) (#730)
 
+  xApiToken String? // per-tenant X (Twitter) API v2 app Bearer token (encrypted) — follower count + latest posts (#752)
+  xUsername String? // X @handle to display (plain; bare username, no leading @)
+
   tenantId String? @unique // multi-tenant (Phase 3): one config row per tenant
 
   updatedAt DateTime @updatedAt

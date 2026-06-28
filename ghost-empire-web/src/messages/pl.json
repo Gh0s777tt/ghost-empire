@@ -946,6 +946,12 @@
       "urlRequired": "Najpierw wklej adres URL API Rumble"
     },
     "integrations": {
+      "xTitle": "X (Twitter)",
+      "xUsernameLabel": "Nazwa na X",
+      "xUsernamePh": "twojanazwa",
+      "xTokenLabel": "Token API (Bearer)",
+      "xTokenPh": "wklej token Bearer X API v2",
+      "xHint": "Pokazuje liczbę obserwujących i ostatnie posty na /about. Wymaga tokenu aplikacji X API v2 z dostępem do odczytu; szyfrowany at-rest.",
       "goveeTitle": "Oświetlenie Govee",
       "goveeApiKeyLabel": "Klucz API Govee",
       "goveeApiKeyPh": "Govee-API-Key z aplikacji Govee Home",
@@ -3829,5 +3835,9 @@
   "errorPage": {
     "desc": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie — jeśli problem się powtarza, wróć na stronę główną i spróbuj za chwilę.",
     "home": "Strona główna"
+  },
+  "xSocial": {
+    "title": "Ostatnio na X",
+    "followers": "{count, plural, one {{n} obserwujący} few {{n} obserwujących} many {{n} obserwujących} other {{n} obserwujących}}"
   }
 }

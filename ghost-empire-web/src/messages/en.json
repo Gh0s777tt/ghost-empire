@@ -946,6 +946,12 @@
       "urlRequired": "Paste your Rumble API URL first"
     },
     "integrations": {
+      "xTitle": "X (Twitter)",
+      "xUsernameLabel": "X handle",
+      "xUsernamePh": "yourhandle",
+      "xTokenLabel": "API Bearer token",
+      "xTokenPh": "paste an X API v2 Bearer token",
+      "xHint": "Shows your follower count and latest posts on /about. Needs an X API v2 app token with read access; encrypted at rest.",
       "goveeTitle": "Govee lighting",
       "goveeApiKeyLabel": "Govee API key",
       "goveeApiKeyPh": "Govee-API-Key from the Govee Home app",
@@ -3829,5 +3835,9 @@
   "errorPage": {
     "desc": "An unexpected error occurred. Try again — if it keeps happening, head back home and try again in a moment.",
     "home": "Home"
+  },
+  "xSocial": {
+    "title": "Latest on X",
+    "followers": "{count, plural, one {{n} follower} other {{n} followers}}"
   }
 }

@@ -97,9 +97,12 @@ Add `BACKUP_S3_ENDPOINT` / `BACKUP_S3_BUCKET` / `BACKUP_S3_ACCESS_KEY_ID` / `BAC
 ## 🚧 NOT a key-paste — these need building first
 The "dormant, waiting for keys" note over-promised two items. Verified against the code, they are
 **not wired at all** (so adding a key does nothing — they're future development):
-- **Social-OAuth (IG / TikTok / Facebook / X):** today only **manual social *links*** exist (you paste a
-  profile URL in `/admin` / `/profile`). There is **no OAuth connect flow** and no `*_CLIENT_ID` wiring.
-  Building it = a per-platform dev-app + callback routes + token storage — say the word and it's a feature, not a setting.
+- **X (Twitter) — BUILT (#752), paste-in-panel:** `/admin#integrations` → "X (Twitter)" card → paste your
+  **@handle** + an **X API v2 app Bearer token** (encrypted) → your follower count + latest posts render on
+  `/about`. Dormant until set. ⚠️ reading posts needs an X API v2 token with **read** access (X's paid tier).
+- **Social IG / Facebook / TikTok — still need building:** today only **manual social *links*** exist (paste a
+  profile URL). No OAuth connect flow / `*_CLIENT_ID` yet. Each = a per-platform dev-app + **platform app review**
+  (Meta business verification, TikTok approval) + callback routes — a feature, not a setting. (Meta/Hue are the next slices.)
 - **Philips Hue:** **no code in the repo** (no `lib/hue`, no `HUE_*`). Also the Hue bridge lives on the
   streamer's **LAN**, which a cloud app can't reach without a local agent — so it needs both building **and** a
   local-bridge design (Govee, a cloud API, is the working smart-light path today).
