@@ -112,6 +112,22 @@ async function legacyEnvFlash(alert: AlertLike, creds: GoveeCreds): Promise<void
 }
 
 /**
+ * Fire a one-off visible test on the portal's light so a streamer can confirm their creds +
+ * device work without waiting for a real alert: flash green ~1.5 s, then settle to white.
+ * Returns whether creds exist and whether the Govee API accepted the command.
+ */
+export async function testGoveeLight(tenantId: string | null): Promise<{ ok: boolean; reason: "ok" | "no_creds" | "api_error" }> {
+  const creds = await resolveGoveeCreds(tenantId);
+  if (!creds) return { ok: false, reason: "no_creds" };
+  const accepted = await goveeCmd(creds, { name: "color", value: { r: 46, g: 213, b: 115 } });
+  if (accepted) {
+    await sleep(1500);
+    await goveeCmd(creds, { name: "color", value: { r: 255, g: 255, b: 255 } });
+  }
+  return { ok: accepted, reason: accepted ? "ok" : "api_error" };
+}
+
+/**
  * Run a portal's Govee lighting for an alert (best-effort, never throws). Resolves the portal's
  * creds + rules and actuates each matched action; falls back to the legacy env-flash only when
  * the creds came from env (founder v1) and no per-tenant rules exist.

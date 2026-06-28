@@ -198,6 +198,10 @@
     "secDesc_goveeRules": "Niech alerty (donejty, suby…) sterują lampką Govee: ustawiają kolor, jasność albo włączają/wyłączają. Dodaj klucz API Govee + urządzenie w Integracjach, potem dodaj reguły tu.",
     "secGoveeRules": "Oświetlenie Govee",
     "goveeRules": {
+      "testBtn": "Testuj lampkę",
+      "testOk": "Test wysłany — sprawdź lampkę Govee.",
+      "testNoCreds": "Najpierw dodaj klucz API Govee + urządzenie w sekcji Integracje.",
+      "testErr": "Govee nie przyjęło komendy — sprawdź klucz API + ID/model urządzenia.",
       "title": "Oświetlenie Govee",
       "intro": "Niech donejt, sub czy inny alert zmieni Twoją lampkę Govee — ustawi kolor, jasność albo ją włączy/wyłączy, automatycznie i na żywo.",
       "dormantNote": "Najpierw dodaj klucz API Govee + urządzenie w sekcji Integracje; potem reguły poniżej uruchamiają się automatycznie przy pasującym alercie.",

@@ -198,6 +198,10 @@
     "secDesc_goveeRules": "Make alerts (donations, subs…) drive a Govee smart light: set a color, brightness or turn it on/off. Add your Govee API key + device in Integrations, then add rules here.",
     "secGoveeRules": "Govee lighting",
     "goveeRules": {
+      "testBtn": "Test light",
+      "testOk": "Light test sent — check your Govee device.",
+      "testNoCreds": "Add your Govee API key + device in the Integrations section first.",
+      "testErr": "Govee didn't accept the command — check the API key + device ID/model.",
       "title": "Govee lighting",
       "intro": "Make a donation, sub or other alert change your Govee smart light — set a color, brightness, or turn it on/off, automatically and live.",
       "dormantNote": "Add your Govee API key + device in the Integrations section first; then the rules below run automatically on each matching alert.",

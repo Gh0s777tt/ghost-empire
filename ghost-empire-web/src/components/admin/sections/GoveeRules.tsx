@@ -4,7 +4,7 @@
 // /api/admin/govee-rules. Dormant until the portal's Govee creds (in Integrations) + rules
 // exist. lib/govee-rules.ts holds the shared types/validation; the server actuator is lib/govee.ts.
 import { useState, useEffect, useCallback } from "react";
-import { Lightbulb, Loader2, Trash2, Plus, Eye, EyeOff } from "lucide-react";
+import { Lightbulb, Loader2, Trash2, Plus, Eye, EyeOff, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, apiPatch, apiDelete, ApiError } from "@/lib/api-client";
@@ -120,6 +120,18 @@ export function GoveeRulesManager({ onToast }: { onToast: (k: "ok" | "err", m: s
     setBusy(null);
   }
 
+  async function test() {
+    setBusy("test");
+    try {
+      const r = await apiPost<{ ok: boolean; reason: string }>("/api/admin/govee-test", {});
+      if (r.ok) onToast("ok", t("testOk"));
+      else onToast("err", r.reason === "no_creds" ? t("testNoCreds") : t("testErr"));
+    } catch (e) {
+      onToast("err", e instanceof ApiError ? e.message : t("err"));
+    }
+    setBusy(null);
+  }
+
   function describe(a: GoveeAction | null): string {
     if (!a) return "—";
     if (a.kind === "set_color") return `${t("kindColor")} ${a.color}${a.revertColor ? ` → ${a.revertColor}` : ""}`;
@@ -131,6 +143,12 @@ export function GoveeRulesManager({ onToast }: { onToast: (k: "ok" | "err", m: s
     <SectionCard title={t("title")} icon={Lightbulb}>
       <p className="text-zinc-500 text-xs mb-2">{t("intro")}</p>
       <div className="text-[11px] text-amber-400/80 border border-amber-900/40 bg-amber-950/20 px-2.5 py-1.5 mb-3">{t("dormantNote")}</div>
+
+      <div className="mb-3">
+        <button onClick={() => void test()} disabled={busy === "test"} className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 px-2.5 py-1.5 transition-colors disabled:opacity-50">
+          {busy === "test" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 text-amber-400" />} {t("testBtn")}
+        </button>
+      </div>
 
       {loading ? (
         <div className="text-xs text-zinc-500 flex items-center gap-2 mb-3"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
