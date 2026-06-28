@@ -61,7 +61,6 @@ export function SupportQrOverlayClient() {
           </div>
         )}
       </div>
-      <style>{`@keyframes geqr-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }`}</style>
     </div>
   );
 }

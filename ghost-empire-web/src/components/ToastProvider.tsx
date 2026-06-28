@@ -90,7 +90,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <span className="text-sm">{t.message}</span>
           </button>
         ))}
-        <style>{`@keyframes getoastin { from { opacity:0; transform: translateY(8px) } to { opacity:1; transform: translateY(0) } }`}</style>
       </div>
     </ToastCtx.Provider>
   );

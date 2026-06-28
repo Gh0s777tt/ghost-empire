@@ -8,7 +8,6 @@ export const metadata = { title: "Rumble Overlay", robots: { index: false, follo
 export default function RumbleOverlayPage() {
   return (
     <>
-      <style>{`html,body{background:transparent !important;} body footer{display:none !important;} body{min-height:0 !important;}`}</style>
       <RumbleOverlayClient />
     </>
   );

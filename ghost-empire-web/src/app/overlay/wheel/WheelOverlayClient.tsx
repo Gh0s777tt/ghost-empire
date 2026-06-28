@@ -90,7 +90,6 @@ export function WheelOverlayClient() {
           </div>
         </div>
       )}
-      <style>{`@keyframes wheelPop { from { transform: scale(.7); opacity: 0 } to { transform: scale(1); opacity: 1 } }`}</style>
     </div>
   );
 }

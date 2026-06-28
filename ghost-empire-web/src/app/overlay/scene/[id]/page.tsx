@@ -20,11 +20,6 @@ export default async function SceneOverlayPage({ params }: { params: Promise<{ i
 
   return (
     <>
-      <style>{`
-        html, body { background: transparent !important; }
-        body footer { display: none !important; }
-        body { min-height: 0 !important; }
-      `}</style>
       <SceneClient elements={elements} found={!!scene} />
     </>
   );

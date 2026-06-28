@@ -65,7 +65,6 @@ export function SupportGoalOverlayClient() {
           <div style={{ color: "#a1a1aa", fontSize: 12 }}>/ {fmt(target)} {currency}</div>
         </div>
       </div>
-      <style>{`@keyframes gegoal-shimmer { from { background-position: -60% 0; } to { background-position: 160% 0; } }`}</style>
     </div>
   );
 }

@@ -13,11 +13,6 @@ export const metadata = {
 export default function SponsorsOverlayPage() {
   return (
     <>
-      <style>{`
-        html, body { background: transparent !important; }
-        body footer { display: none !important; }
-        body { min-height: 0 !important; }
-      `}</style>
       <SponsorsOverlayClient />
     </>
   );

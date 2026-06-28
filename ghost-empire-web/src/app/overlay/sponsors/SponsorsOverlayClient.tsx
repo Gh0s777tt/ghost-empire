@@ -59,7 +59,6 @@ export function SponsorsOverlayClient() {
           </div>
         )}
       </div>
-      <style>{`@keyframes gesp-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }`}</style>
     </div>
   );
 }

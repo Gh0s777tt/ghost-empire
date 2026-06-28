@@ -682,3 +682,21 @@
 [data-theme="plum"] .bg-zinc-950\/60 { background-color: rgba(22, 11, 27, 0.92) !important; }
 [data-theme="plum"] .border-zinc-900 { border-color: #251530 !important; }
 [data-theme="plum"] .border-zinc-800 { border-color: #34203f !important; }
+
+/* ── Animations extracted from inline <style> blocks (#735) so the CSP can drop 'unsafe-inline'
+   from style-src-elem. Names are referenced from inline style/className across the app. ── */
+@keyframes gefx-spin { to { transform: rotate(360deg); } }
+@keyframes gefx-dice-sweep { from { left: 6%; } to { left: 94%; } }
+@keyframes gefx-pop { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes gefx-shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+@keyframes gefx-flash { 0% { filter: brightness(1); } 30% { filter: brightness(2); } 100% { filter: brightness(1); } }
+@keyframes gefx-part { 0% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; } }
+@keyframes gefx-tumble { from { transform: rotateX(0deg) rotateY(0deg); } to { transform: rotateX(360deg) rotateY(720deg); } }
+@keyframes getoastin { from { opacity:0; transform: translateY(8px) } to { opacity:1; transform: translateY(0) } }
+@keyframes ge-combo-pop { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes ge-combo-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes gesp-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes gegoal-shimmer { from { background-position: -60% 0; } to { background-position: 160% 0; } }
+@keyframes geqr-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes wheelPop { from { transform: scale(.7); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+@keyframes gerevealin { from { opacity:0; transform: scale(0.9) } to { opacity:1; transform:none } }

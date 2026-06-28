@@ -101,7 +101,6 @@ export function CollectiblesClient() {
               <div className="text-5xl">{reveal.imageUrl ? <img src={reveal.imageUrl} alt="" className="w-20 h-20 object-contain" /> : reveal.emoji || "🃏"}</div>
               <div className="text-lg font-bold text-white">{reveal.name}</div>
               <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: RARITY_COLOR[normalizeRarity(reveal.rarity)] }}>{t(`rarity_${normalizeRarity(reveal.rarity)}`)}</div>
-              <style>{`@keyframes gerevealin { from { opacity:0; transform: scale(0.9) } to { opacity:1; transform:none } }`}</style>
             </div>
           )}
 

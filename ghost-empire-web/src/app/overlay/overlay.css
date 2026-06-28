@@ -1,0 +1,6 @@
+/* src/app/overlay/overlay.css — OBS overlay reset (#735). Imported once by overlay/layout.tsx
+   so every /overlay/* route is a transparent capture with no app chrome. Replaces 22 duplicate
+   inline <style> blocks → lets the CSP drop 'unsafe-inline' from style-src-elem. */
+html, body { background: transparent !important; }
+body footer { display: none !important; }
+body { min-height: 0 !important; }

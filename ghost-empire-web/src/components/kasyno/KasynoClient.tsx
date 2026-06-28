@@ -212,15 +212,6 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <style>{`
-        @keyframes gefx-spin { to { transform: rotate(360deg); } }
-        @keyframes gefx-dice-sweep { from { left: 6%; } to { left: 94%; } }
-        @keyframes gefx-pop { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes gefx-shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
-        @keyframes gefx-flash { 0% { filter: brightness(1); } 30% { filter: brightness(2); } 100% { filter: brightness(1); } }
-        @keyframes gefx-part { 0% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; } }
-        @keyframes gefx-tumble { from { transform: rotateX(0deg) rotateY(0deg); } to { transform: rotateX(360deg) rotateY(720deg); } }
-      `}</style>
       <div className="text-center">
         <h1 className="text-3xl font-black text-white tracking-tight">{t("title")}</h1>
         <p className="text-zinc-400 mt-1 text-sm">{t("subtitlePre")} <code className="text-zinc-500">!slots 100</code> · <code className="text-zinc-500">!coinflip 50</code> · <code className="text-zinc-500">!roulette 100 red</code></p>

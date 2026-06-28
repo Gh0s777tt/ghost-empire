@@ -6,6 +6,7 @@
 // (Providers/footer/Analytics): overlays render their own transparent UI.
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
+import "./overlay.css"; // OBS reset for all /overlay/* routes (#735)
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const jetbrainsMono = JetBrains_Mono({
