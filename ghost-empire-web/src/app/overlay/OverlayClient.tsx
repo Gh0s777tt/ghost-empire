@@ -124,6 +124,10 @@ export function OverlayClient() {
     if (!next) {
       setVisible(false);
       setCurrent(null);
+      // #758 CRITICAL: clear the (already-fired) timer ref when the queue drains. Otherwise it
+      // stays truthy forever, so the enqueueAlerts guard `!currentTimerRef.current` never passes
+      // again — every alert after the first burst is queued but NEVER shown on stream.
+      currentTimerRef.current = null;
       return;
     }
     setCurrent(next);
