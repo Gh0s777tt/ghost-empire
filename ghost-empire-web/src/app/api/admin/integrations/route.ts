@@ -47,6 +47,8 @@ export async function GET() {
     hasXToken: !!c.xApiToken, xTokenPreview: mask(c.xApiToken),
     metaIgUserId: c.metaIgUserId ?? "",
     hasMetaIgToken: !!c.metaIgToken, metaIgTokenPreview: mask(c.metaIgToken),
+    hueBridgeIp: c.hueBridgeIp ?? "",
+    hasHueApiKey: !!c.hueApiKey, hueApiKeyPreview: mask(c.hueApiKey),
   });
 }
 
@@ -75,12 +77,14 @@ export async function POST(req: Request) {
   if (typeof body.goveeDeviceModel === "string") data.goveeDeviceModel = body.goveeDeviceModel.trim().slice(0, 100) || null;
   if (typeof body.xUsername === "string") data.xUsername = body.xUsername.trim().slice(0, 50) || null; // normalized on read
   if (typeof body.metaIgUserId === "string") data.metaIgUserId = body.metaIgUserId.trim().slice(0, 40) || null;
+  if (typeof body.hueBridgeIp === "string") data.hueBridgeIp = body.hueBridgeIp.trim().slice(0, 100) || null;
   setSecret(data, "aiApiKey", body.aiApiKey);
   setSecret(data, "sentryDsn", body.sentryDsn);
   setSecret(data, "obsWebsocketPassword", body.obsWebsocketPassword);
   setSecret(data, "goveeApiKey", body.goveeApiKey);
   setSecret(data, "xApiToken", body.xApiToken);
   setSecret(data, "metaIgToken", body.metaIgToken);
+  setSecret(data, "hueApiKey", body.hueApiKey);
 
   await prisma.integrationConfig.update({ where: { id: row.id }, data });
   await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "integrations", targetId: "default", req });

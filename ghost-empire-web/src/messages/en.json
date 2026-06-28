@@ -946,6 +946,12 @@
       "urlRequired": "Paste your Rumble API URL first"
     },
     "integrations": {
+      "hueTitle": "Philips Hue",
+      "hueIpLabel": "Bridge IP (LAN)",
+      "hueIpPh": "192.168.1.50",
+      "hueKeyLabel": "Bridge API key",
+      "hueKeyPh": "press the bridge button, then generate a key",
+      "hueHint": "Stores your Hue bridge creds (encrypted). The Hue bridge is on your LAN, so the light actuator runs as a browser-source on your machine (like OBS control) — that slice ships next. Govee already drives lights server-side today.",
       "igTitle": "Instagram",
       "igUserIdLabel": "IG account id",
       "igUserIdPh": "17841400000000000",

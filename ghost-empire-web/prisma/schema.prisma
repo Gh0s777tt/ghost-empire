@@ -2249,6 +2249,9 @@ model IntegrationConfig {
   metaIgToken  String? // per-tenant Instagram Graph API long-lived access token (encrypted) (#753)
   metaIgUserId String? // IG Business/Creator account numeric id (plain)
 
+  hueBridgeIp String? // Philips Hue bridge LAN address (plain), e.g. 192.168.1.50 (#754)
+  hueApiKey   String? // Hue bridge application key / whitelist username (encrypted) — used by the (future) LAN browser-source actuator
+
   tenantId String? @unique // multi-tenant (Phase 3): one config row per tenant
 
   updatedAt DateTime @updatedAt

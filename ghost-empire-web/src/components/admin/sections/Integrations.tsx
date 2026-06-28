@@ -31,6 +31,8 @@ type Meta = {
   hasXToken: boolean; xTokenPreview: string | null;
   metaIgUserId: string;
   hasMetaIgToken: boolean; metaIgTokenPreview: string | null;
+  hueBridgeIp: string;
+  hasHueApiKey: boolean; hueApiKeyPreview: string | null;
 };
 
 function SecretField({ label, has, preview, value, onChange, onClear, placeholder }: {
@@ -113,6 +115,7 @@ export function IntegrationsManager({
   const [goveeDeviceModel, setGoveeDeviceModel] = useState("");
   const [xUsername, setXUsername] = useState("");
   const [metaIgUserId, setMetaIgUserId] = useState("");
+  const [hueBridgeIp, setHueBridgeIp] = useState("");
   // secrets — empty unless the admin types a new value; null = clear
   const [aiKey, setAiKey] = useState<string | null>("");
   const [sentry, setSentry] = useState<string | null>("");
@@ -120,6 +123,7 @@ export function IntegrationsManager({
   const [goveeKey, setGoveeKey] = useState<string | null>("");
   const [xToken, setXToken] = useState<string | null>("");
   const [metaIgToken, setMetaIgToken] = useState<string | null>("");
+  const [hueApiKey, setHueApiKey] = useState<string | null>("");
 
   const load = useCallback(async () => {
     try {
@@ -128,6 +132,7 @@ export function IntegrationsManager({
       setGoveeDeviceId(d.goveeDeviceId); setGoveeDeviceModel(d.goveeDeviceModel);
       setXUsername(d.xUsername);
       setMetaIgUserId(d.metaIgUserId);
+      setHueBridgeIp(d.hueBridgeIp);
     } catch { /* keep current */ }
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -135,15 +140,15 @@ export function IntegrationsManager({
   async function save() {
     setSaving(true);
     try {
-      const body: Record<string, unknown> = { aiProvider, aiModel, obsWebsocketUrl: obsUrl, goveeDeviceId, goveeDeviceModel, xUsername, metaIgUserId };
+      const body: Record<string, unknown> = { aiProvider, aiModel, obsWebsocketUrl: obsUrl, goveeDeviceId, goveeDeviceModel, xUsername, metaIgUserId, hueBridgeIp };
       // Only send a field when it changed: a typed value sets it, explicit null clears.
       const touched = (v: string | null) => v === null || (typeof v === "string" && v.trim().length > 0);
-      const fields: Array<[string, string | null]> = [["aiApiKey", aiKey], ["sentryDsn", sentry], ["obsWebsocketPassword", obsPass], ["goveeApiKey", goveeKey], ["xApiToken", xToken], ["metaIgToken", metaIgToken]];
+      const fields: Array<[string, string | null]> = [["aiApiKey", aiKey], ["sentryDsn", sentry], ["obsWebsocketPassword", obsPass], ["goveeApiKey", goveeKey], ["xApiToken", xToken], ["metaIgToken", metaIgToken], ["hueApiKey", hueApiKey]];
       for (const [k, v] of fields) if (touched(v)) body[k] = v;
 
       await apiPost("/api/admin/integrations", body);
       onToast("ok", t("saved"));
-      setAiKey(""); setSentry(""); setObsPass(""); setGoveeKey(""); setXToken(""); setMetaIgToken(""); // clear inputs; reload shows masked state
+      setAiKey(""); setSentry(""); setObsPass(""); setGoveeKey(""); setXToken(""); setMetaIgToken(""); setHueApiKey(""); // clear inputs; reload shows masked state
       await load();
       onSuccess();
     } catch (err) {
@@ -164,6 +169,7 @@ export function IntegrationsManager({
   const goveeConfigured = meta.hasGoveeApiKey || meta.goveeDeviceId.trim().length > 0;
   const xConfigured = meta.hasXToken || meta.xUsername.trim().length > 0;
   const igConfigured = meta.hasMetaIgToken || meta.metaIgUserId.trim().length > 0;
+  const hueConfigured = meta.hasHueApiKey || meta.hueBridgeIp.trim().length > 0;
 
   return (
     <SectionCard title={t("title")} icon={Plug}>
@@ -234,6 +240,15 @@ export function IntegrationsManager({
         </label>
         <SecretField label={t("igTokenLabel")} has={meta.hasMetaIgToken} preview={meta.metaIgTokenPreview} value={metaIgToken ?? ""} onChange={setMetaIgToken} onClear={() => setMetaIgToken(null)} placeholder={t("igTokenPh")} />
         <p className="text-[10px] text-zinc-600">{t("igHint")}</p>
+      </IntegrationCard>
+
+      {/* Philips Hue (LAN bridge) — store creds here; the actuator browser-source (next slice) runs on the streamer's machine to reach the LAN bridge (#754) */}
+      <IntegrationCard title={t("hueTitle")} configured={hueConfigured} statusLabel={hueConfigured ? t("configured") : undefined}>
+        <label className="text-[11px] text-zinc-400 block">{t("hueIpLabel")}
+          <input value={hueBridgeIp} onChange={(e) => setHueBridgeIp(e.target.value)} placeholder={t("hueIpPh")} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
+        </label>
+        <SecretField label={t("hueKeyLabel")} has={meta.hasHueApiKey} preview={meta.hueApiKeyPreview} value={hueApiKey ?? ""} onChange={setHueApiKey} onClear={() => setHueApiKey(null)} placeholder={t("hueKeyPh")} />
+        <p className="text-[10px] text-zinc-600">{t("hueHint")}</p>
       </IntegrationCard>
 
       <button

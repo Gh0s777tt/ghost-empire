@@ -946,6 +946,12 @@
       "urlRequired": "Najpierw wklej adres URL API Rumble"
     },
     "integrations": {
+      "hueTitle": "Philips Hue",
+      "hueIpLabel": "IP mostka (LAN)",
+      "hueIpPh": "192.168.1.50",
+      "hueKeyLabel": "Klucz API mostka",
+      "hueKeyPh": "naciśnij przycisk mostka, potem wygeneruj klucz",
+      "hueHint": "Zapisuje creds mostka Hue (szyfrowane). Mostek Hue jest w Twoim LAN, więc actuator świateł działa jako browser-source na Twojej maszynie (jak sterowanie OBS) — ten slice dojdzie wkrótce. Govee już steruje światłami server-side.",
       "igTitle": "Instagram",
       "igUserIdLabel": "ID konta IG",
       "igUserIdPh": "17841400000000000",

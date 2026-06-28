@@ -106,9 +106,11 @@ The "dormant, waiting for keys" note over-promised two items. Verified against t
   verification) for live data — built + dormant until then.
 - **Facebook / TikTok — still need building:** only manual social *links* exist today; each = a per-platform
   dev-app + app review + connect flow. (Hue is the next slice.)
-- **Philips Hue:** **no code in the repo** (no `lib/hue`, no `HUE_*`). Also the Hue bridge lives on the
-  streamer's **LAN**, which a cloud app can't reach without a local agent — so it needs both building **and** a
-  local-bridge design (Govee, a cloud API, is the working smart-light path today).
+- **Philips Hue — creds card BUILT (#754), actuator pending:** `/admin#integrations` → "Philips Hue" card →
+  paste your **bridge LAN IP** + a **bridge API key** (press the bridge button, generate a key). Stored encrypted.
+  ⚠️ the Hue bridge is on your **LAN** (a cloud app can't reach it), so the light **actuator** runs as a
+  **browser-source on your machine** (the OBS-control pattern) — that slice ships next. Govee (a cloud API) already
+  drives lights server-side today, so Hue is for those who specifically have a Hue bridge.
 
 ---
 
