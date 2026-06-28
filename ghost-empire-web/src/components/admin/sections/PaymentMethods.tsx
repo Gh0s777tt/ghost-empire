@@ -36,12 +36,21 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
   const [gCurrent, setGCurrent] = useState("0");
   const [gCurrency, setGCurrency] = useState("PLN");
   const [gActive, setGActive] = useState(false);
+  // per-portal /support page copy (#742) — streamer's own words
+  const [sHeading, setSHeading] = useState("");
+  const [sIntro, setSIntro] = useState("");
+  const [sThanks, setSThanks] = useState("");
 
   const load = useCallback(async () => {
     try {
-      const d = await apiGet<{ methods: Method[]; goal: { title: string; target: number; current: number; currency: string; active: boolean } | null }>("/api/admin/payment-methods");
+      const d = await apiGet<{
+        methods: Method[];
+        goal: { title: string; target: number; current: number; currency: string; active: boolean } | null;
+        supportText?: { heading: string; intro: string; thanks: string };
+      }>("/api/admin/payment-methods");
       setMethods(d.methods);
       if (d.goal) { setGTitle(d.goal.title); setGTarget(String(d.goal.target)); setGCurrent(String(d.goal.current)); setGCurrency(d.goal.currency); setGActive(d.goal.active); }
+      if (d.supportText) { setSHeading(d.supportText.heading); setSIntro(d.supportText.intro); setSThanks(d.supportText.thanks); }
     } catch { /* keep */ } finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -49,6 +58,12 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
   async function saveGoal() {
     setBusy("goal");
     if (await call("save-goal", { title: gTitle.trim(), target: +gTarget || 0, current: +gCurrent || 0, currency: gCurrency.trim(), active: gActive })) onToast("ok", t("goalSaved"));
+    setBusy(null);
+  }
+
+  async function saveSupportText() {
+    setBusy("text");
+    if (await call("save-support-text", { supportHeading: sHeading.trim(), supportIntro: sIntro.trim(), supportThanks: sThanks.trim() })) onToast("ok", t("textSaved"));
     setBusy(null);
   }
 
@@ -90,6 +105,19 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
   return (
     <SectionCard title={t("title")} icon={Wallet}>
       <p className="text-zinc-500 text-xs mb-3">{t("intro")} <a href="/support" target="_blank" rel="noreferrer" className="text-red-400 hover:text-red-300 inline-flex items-center gap-0.5">/support <ExternalLink className="w-3 h-3" /></a></p>
+
+      {/* Per-portal page copy (#742) — streamer's own headline / intro / thank-you. Empty = template. */}
+      <div className="border border-zinc-800 bg-black/30 p-3 mb-4">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{t("textTitle")}</div>
+        <div className="space-y-2">
+          <input value={sHeading} maxLength={120} placeholder={t("textHeadingPh")} onChange={(e) => setSHeading(e.target.value)} className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600" />
+          <textarea value={sIntro} maxLength={600} rows={3} placeholder={t("textIntroPh")} onChange={(e) => setSIntro(e.target.value)} className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600 resize-y" />
+          <input value={sThanks} maxLength={200} placeholder={t("textThanksPh")} onChange={(e) => setSThanks(e.target.value)} className="w-full border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600" />
+        </div>
+        <button onClick={() => void saveSupportText()} disabled={busy === "text"} className="mt-2 px-3 py-1.5 border border-zinc-700 text-zinc-200 hover:border-red-600 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 inline-flex items-center gap-1.5">
+          {busy === "text" ? <Loader2 className="w-3 h-3 animate-spin" /> : null} {t("textSave")}
+        </button>
+      </div>
 
       {/* Fundraising goal */}
       <div className="border border-zinc-800 bg-black/30 p-3 mb-4">

@@ -2241,6 +2241,12 @@
       "goalTargetPh": "Cel",
       "goalSave": "Zapisz cel",
       "goalSaved": "Cel zapisany.",
+      "textTitle": "Tekst strony wsparcia",
+      "textHeadingPh": "Własny nagłówek (np. Wesprzyj mój stream)",
+      "textIntroPh": "Opis pod nagłówkiem — napisz widzom dlaczego",
+      "textThanksPh": "Podziękowanie po skopiowaniu metody",
+      "textSave": "Zapisz tekst",
+      "textSaved": "Tekst zapisany.",
       "addBtn": "Dodaj",
       "created": "Metoda dodana.",
       "deleted": "Metoda usunięta.",
@@ -2587,6 +2593,7 @@
     "topTitle": "Najwięksi wspierający",
     "sponsorsTitle": "Sponsorzy i partnerzy",
     "anon": "Anonim",
+    "thanksDefault": "Dziękuję za wsparcie!",
     "disclaimer": "Płatności trafiają bezpośrednio do streamera wybraną metodą — ta strona tylko pokazuje dane."
   },
   "shipping": {

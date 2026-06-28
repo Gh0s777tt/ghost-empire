@@ -159,7 +159,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/overlay-token` | admin | Token overlayów (do podglądów) |
 | `…/api/admin/overlay-scenes` | admin | CRUD scen overlay (#550 — wiele widżetów na jednym płótnie → jedno źródło OBS `/overlay/scene/<id>`) |
 | `…/api/admin/2fa` | admin | Enrollment/zarządzanie TOTP bieżącego admina (step-up dla wrażliwych akcji, #490) |
-| `…/api/admin/payment-methods` | admin | CRUD metod wsparcia/napiwków na `/support` (link/krypto/IBAN, #514) |
+| `…/api/admin/payment-methods` | admin | CRUD metod wsparcia/napiwków na `/support` (link/krypto/IBAN, #514) + cel zbiórki (`save-goal`) + konfigurowalny tekst strony (`save-support-text`: nagłówek/opis/dziękuję, #742) |
 | `…/api/admin/sound-rewards` | admin | CRUD katalogu GT-dźwięków (widz wykupuje na `/sounds`, #505) |
 | `…/api/admin/trivia` | admin | CRUD pytań trivia + runda live na overlayu (#523/#524) |
 | `…/api/admin/clan-wars` | admin | Wojny klanów — start/koniec/punkty/pula (#477) |

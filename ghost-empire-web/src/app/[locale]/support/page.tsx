@@ -161,6 +161,9 @@ export default async function SupportPage() {
           supporters={data.supporters}
           topSupporters={data.topSupporters}
           tipCurrency={data.tipCurrency}
+          customHeading={tenant.supportHeading}
+          customIntro={tenant.supportIntro}
+          customThanks={tenant.supportThanks}
         />
         <SponsorStrip sponsors={data.sponsors} />
       </main>

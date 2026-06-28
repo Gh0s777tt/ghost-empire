@@ -38,6 +38,10 @@ model Tenant {
   // payment method on /support. "none" | "bell" (in-app notification) | "overlay" (OBS) | "both".
   // A click is an intent signal, not a confirmed payment — throttled server-side.
   supportAlertMode     String    @default("none")
+  // Per-portal /support page copy (#742) — the streamer's own words. null → localized template.
+  supportHeading       String? // custom /support headline (e.g. "Wesprzyj mój stream")
+  supportIntro         String?  @db.Text // custom intro/description shown under the headline
+  supportThanks        String? // custom thank-you shown after a viewer copies/opens a method
   // IANA timezone the portal's /schedule times are shown in (#audit5); null → "Europe/Warsaw".
   timezone             String?
   ownerHandle          String? // streamer's public handle (%owner% in i18n), e.g. "Gh0s77tt"

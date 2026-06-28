@@ -2241,6 +2241,12 @@
       "goalTargetPh": "Target",
       "goalSave": "Save goal",
       "goalSaved": "Goal saved.",
+      "textTitle": "Support page text",
+      "textHeadingPh": "Custom headline (e.g. Support my stream)",
+      "textIntroPh": "Intro shown under the headline — tell viewers why",
+      "textThanksPh": "Thank-you shown after copying a method",
+      "textSave": "Save text",
+      "textSaved": "Text saved.",
       "addBtn": "Add",
       "created": "Method added.",
       "deleted": "Method deleted.",
@@ -2587,6 +2593,7 @@
     "topTitle": "Top supporters",
     "sponsorsTitle": "Sponsors & partners",
     "anon": "Anonymous",
+    "thanksDefault": "Thank you for your support!",
     "disclaimer": "Payments go directly to the streamer via the method you choose — this page only shows the details."
   },
   "shipping": {

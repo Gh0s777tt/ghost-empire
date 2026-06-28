@@ -42,6 +42,10 @@ export type TenantBrand = {
   socialLinks: { platform: string; url: string }[] | null;
   /** IANA timezone the /schedule times are shown in (#audit5); defaults to Europe/Warsaw. */
   timezone: string;
+  /** Per-portal /support copy (#742); null → localized template. */
+  supportHeading: string | null;
+  supportIntro: string | null;
+  supportThanks: string | null;
 };
 
 /** Safely parse the Tenant.socialLinks JSON into a validated list (defensive on read). */
@@ -74,6 +78,9 @@ export const FALLBACK_TENANT: TenantBrand = {
   bgPreset: null,
   socialLinks: null,
   timezone: "Europe/Warsaw",
+  supportHeading: null,
+  supportIntro: null,
+  supportThanks: null,
 };
 
 /**
@@ -108,6 +115,9 @@ function toBrand(t: Tenant): TenantBrand {
     bgImageUrl: resolveBgPresetCss(t.bgImageUrl) ? null : t.bgImageUrl ? safeMediaUrl(t.bgImageUrl) : null,
     socialLinks: parseTenantSocials(t.socialLinks),
     timezone: t.timezone ?? "Europe/Warsaw",
+    supportHeading: t.supportHeading,
+    supportIntro: t.supportIntro,
+    supportThanks: t.supportThanks,
   };
 }
 

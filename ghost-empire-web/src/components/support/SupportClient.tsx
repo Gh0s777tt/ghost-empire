@@ -2,7 +2,7 @@
 // src/components/support/SupportClient.tsx
 // Public support/tip page UI (#514): payment links, crypto (one-tap copy + QR),
 // bank/IBAN (masked → reveal-on-click + copy + SEPA QR), plus a shareable page-QR.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Heart, Copy, Check, Eye, QrCode, ExternalLink, Download, Star, Link2, Share2, Trophy } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { maskIban, formatIban } from "@/lib/payment-methods";
@@ -27,10 +27,13 @@ const SHARE_TARGETS: { key: string; label: string; href: (u: string, text: strin
 
 export function SupportClient({
   owner, brandName, logoUrl, methods, pageQr, pageUrl, goal, supporters = [], topSupporters = [], tipCurrency = null,
+  customHeading = null, customIntro = null, customThanks = null,
 }: {
   owner: string; brandName: string; logoUrl: string | null;
   methods: Method[]; pageQr: string | null; pageUrl: string; goal: Goal | null;
   supporters?: Supporter[]; topSupporters?: TopSupporter[]; tipCurrency?: string | null;
+  // Per-portal /support copy (#742); null → localized template.
+  customHeading?: string | null; customIntro?: string | null; customThanks?: string | null;
 }) {
   const nf = useLocale();
   const t = useTranslations("support");
@@ -38,6 +41,15 @@ export function SupportClient({
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [qrOpen, setQrOpen] = useState<Set<string>>(new Set());
   const [pageQrOpen, setPageQrOpen] = useState(false);
+  // Transient "thank you" toast (#742), fired when a viewer copies/opens a method.
+  const [thanks, setThanks] = useState(false);
+  const thanksTimer = useRef<number | null>(null);
+  const thanksMsg = customThanks || t("thanksDefault");
+  function fireThanks() {
+    setThanks(true);
+    if (thanksTimer.current) window.clearTimeout(thanksTimer.current);
+    thanksTimer.current = window.setTimeout(() => setThanks(false), 2800);
+  }
 
   async function copy(id: string, text: string) {
     try { await navigator.clipboard.writeText(text); setCopied(id); setTimeout(() => setCopied(null), 1600); }
@@ -62,9 +74,14 @@ export function SupportClient({
         <div className="w-16 h-16 mx-auto mb-3 rounded-2xl border border-zinc-800 flex items-center justify-center overflow-hidden" style={{ background: "rgb(var(--brand-rgb) / 0.15)" }}>
           {logoUrl ? <img src={logoUrl} alt="" className="w-full h-full object-cover" /> : <Heart className="w-7 h-7 text-red-500" />}
         </div>
-        <h1 className="text-2xl font-bold text-white">{t("title", { name: owner })}</h1>
+        <h1 className="text-2xl font-bold text-white">{customHeading || t("title", { name: owner })}</h1>
         <p className="text-zinc-500 text-sm mt-1">{t("subtitle", { brand: brandName })}</p>
       </header>
+
+      {/* Streamer's own intro copy (#742); preserves their line breaks. */}
+      {customIntro && (
+        <p className="text-center text-sm text-zinc-300 mb-6 whitespace-pre-line">{customIntro}</p>
+      )}
 
       {/* Fundraising goal */}
       {goal && (
@@ -101,7 +118,7 @@ export function SupportClient({
 
                     {/* Value row — varies by kind */}
                     {m.kind === "link" ? (
-                      <a href={m.value} onClick={() => trackClick(m.id)} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-medium">
+                      <a href={m.value} onClick={() => { trackClick(m.id); fireThanks(); }} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-medium">
                         <Link2 className="w-3.5 h-3.5" /> {t("open")} <ExternalLink className="w-3 h-3" />
                       </a>
                     ) : (
@@ -117,7 +134,7 @@ export function SupportClient({
                       <button onClick={() => toggle(revealed, setRevealed, m.id)} title={t("reveal")} aria-label={t("reveal")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-10 h-10 flex items-center justify-center"><Eye className="w-3.5 h-3.5" /></button>
                     )}
                     {m.kind !== "link" && (
-                      <button onClick={() => { trackClick(m.id); void copy(m.id, m.value); }} title={t("copy")} aria-label={t("copy")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-10 h-10 flex items-center justify-center">
+                      <button onClick={() => { trackClick(m.id); void copy(m.id, m.value); fireThanks(); }} title={t("copy")} aria-label={t("copy")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg w-10 h-10 flex items-center justify-center">
                         {copied === m.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     )}
@@ -215,6 +232,16 @@ export function SupportClient({
       )}
 
       <p className="mt-6 text-center text-[10px] text-zinc-600">{t("disclaimer")}</p>
+
+      {/* "Thank you" toast (#742) — the streamer's own words, shown on copy/open. */}
+      {thanks && (
+        <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4 pointer-events-none" role="status" aria-live="polite">
+          <div className="pointer-events-auto max-w-sm rounded-xl border border-emerald-700/60 bg-emerald-950/90 backdrop-blur px-4 py-2.5 text-sm text-emerald-100 shadow-lg flex items-center gap-2">
+            <Heart className="w-4 h-4 text-emerald-300 fill-emerald-300 shrink-0" />
+            <span>{thanksMsg}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

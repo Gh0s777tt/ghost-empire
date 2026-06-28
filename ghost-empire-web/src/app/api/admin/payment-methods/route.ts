@@ -25,14 +25,19 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const tid = await currentTenantId();
-  const [methods, goal] = await Promise.all([
+  const [methods, goal, tenant] = await Promise.all([
     prisma.paymentMethod.findMany({
       where: tid ? { tenantId: tid } : {},
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
     (tid ? prisma.supportGoal.findUnique({ where: { tenantId: tid } }) : prisma.supportGoal.findFirst()).catch(() => null),
+    tid ? prisma.tenant.findUnique({ where: { id: tid }, select: { supportHeading: true, supportIntro: true, supportThanks: true } }).catch(() => null) : null,
   ]);
-  return NextResponse.json({ methods, goal });
+  return NextResponse.json({
+    methods,
+    goal,
+    supportText: { heading: tenant?.supportHeading ?? "", intro: tenant?.supportIntro ?? "", thanks: tenant?.supportThanks ?? "" },
+  });
 }
 
 export async function POST(req: Request) {
@@ -70,6 +75,18 @@ export async function POST(req: Request) {
     if (active && target >= 1 && (prev?.current ?? 0) < target && current >= target) {
       void notifyGoalReached(tid, title).catch(() => {});
     }
+    return NextResponse.json({ ok: true });
+  }
+
+  // Per-portal /support copy (#742): the streamer's own headline/intro/thank-you. Empty → null
+  // (the page falls back to the localized template). Tenant-scoped to the acting admin's portal.
+  if (action === "save-support-text") {
+    if (!tid) return NextResponse.json({ ok: true, scoped: false }); // no tenant row (legacy)
+    const supportHeading = String(body.supportHeading ?? "").trim().slice(0, 120) || null;
+    const supportIntro = String(body.supportIntro ?? "").trim().slice(0, 600) || null;
+    const supportThanks = String(body.supportThanks ?? "").trim().slice(0, 200) || null;
+    await prisma.tenant.update({ where: { id: tid }, data: { supportHeading, supportIntro, supportThanks } });
+    await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "support_text", targetId: "support", req });
     return NextResponse.json({ ok: true });
   }
 
