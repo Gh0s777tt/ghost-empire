@@ -3,14 +3,14 @@
 // Dashboard "what's configured" checklist — at-a-glance status + one-click jump to the
 // section that needs setting up. Data from /api/admin/setup-status.
 import { useState, useEffect } from "react";
-import { CheckCircle2, AlertCircle, ArrowRight, ListChecks } from "lucide-react";
+import { CheckCircle2, AlertCircle, ArrowRight, ListChecks, Wand2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "./shared";
 
 type Item = { key: string; label: string; ok: boolean; section: string; hint: string; optional?: boolean };
 
-export function SetupStatusCard({ onJump }: { onJump: (id: string) => void }) {
+export function SetupStatusCard({ onJump, onOpenWizard }: { onJump: (id: string) => void; onOpenWizard?: () => void }) {
   const t = useTranslations("admin.setupStatus");
   const [items, setItems] = useState<Item[] | null>(null);
 
@@ -38,6 +38,14 @@ export function SetupStatusCard({ onJump }: { onJump: (id: string) => void }) {
           {allReqOk ? t("allReqOk") : t("reqProgress", { done: reqDone, total: required.length })}
         </span>
       </div>
+      {onOpenWizard && !allReqOk && (
+        <button
+          onClick={onOpenWizard}
+          className="w-full mb-3 px-3 py-2 bg-red-700 hover:bg-red-600 text-white text-[10px] font-bold tracking-widest uppercase inline-flex items-center justify-center gap-1.5 transition-colors"
+        >
+          <Wand2 className="w-3.5 h-3.5" /> {t("openWizard")}
+        </button>
+      )}
       <div className="space-y-1.5">
         {items.map((i) => (
           <div key={i.key} className="flex items-center gap-2.5 border border-zinc-800 bg-black/20 px-3 py-2">

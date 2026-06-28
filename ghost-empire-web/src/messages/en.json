@@ -439,7 +439,26 @@
       "allReqOk": "✓ All required ready",
       "reqProgress": "{done}/{total} required",
       "optional": "optional",
-      "configure": "Configure"
+      "configure": "Configure",
+      "openWizard": "Open setup wizard"
+    },
+    "setupWizard": {
+      "eyebrow": "Setup",
+      "title": "Set up your portal",
+      "subtitle": "A few steps to go live. Progress is computed from your real config.",
+      "percent": "{percent}% set up",
+      "req": "{done} of {total} required",
+      "allReq": "All required done",
+      "groupRequired": "Required to launch",
+      "groupOptional": "Optional — expand later",
+      "configure": "Configure",
+      "doneTag": "Done",
+      "skip": "Skip for now",
+      "finish": "Finish — you're live",
+      "live": "You're live!",
+      "liveDesc": "Portal configured — the dashboard checklist is green.",
+      "loading": "Loading…",
+      "close": "Close"
     },
     "schedule": {
       "days": [

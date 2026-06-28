@@ -439,7 +439,26 @@
       "allReqOk": "✓ Wszystko wymagane gotowe",
       "reqProgress": "{done}/{total} wymaganych",
       "optional": "opcjonalne",
-      "configure": "Konfiguruj"
+      "configure": "Konfiguruj",
+      "openWizard": "Otwórz kreator konfiguracji"
+    },
+    "setupWizard": {
+      "eyebrow": "Konfiguracja",
+      "title": "Skonfiguruj swój portal",
+      "subtitle": "Ostatnie kroki, by ruszyć na żywo. Postęp liczy się z realnej konfiguracji.",
+      "percent": "{percent}% skonfigurowane",
+      "req": "{done} z {total} wymaganych",
+      "allReq": "Wszystko wymagane gotowe",
+      "groupRequired": "Wymagane do startu",
+      "groupOptional": "Opcjonalne — rozszerz później",
+      "configure": "Konfiguruj",
+      "doneTag": "Gotowe",
+      "skip": "Pomiń na razie",
+      "finish": "Gotowe — jesteś live",
+      "live": "Jesteś live!",
+      "liveDesc": "Portal skonfigurowany — checklista na dashboardzie jest zielona.",
+      "loading": "Ładowanie…",
+      "close": "Zamknij"
     },
     "schedule": {
       "days": [

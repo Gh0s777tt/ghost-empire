@@ -17,6 +17,8 @@ import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { CommandPalette, openCommandPalette } from "./CommandPalette";
 import { SetupStatusCard } from "./SetupStatusCard";
+import { SetupWizard } from "./SetupWizard";
+import { apiGet } from "@/lib/api-client";
 import { AdminAssistant } from "./AdminAssistant";
 import { SectionCard, FieldInput } from "./shared";
 import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, StreamlabsConnectionData, UnmatchedDonation, ShopItemRow, CodeRow, CodeConfig, EventRow, Drop, PendingOrder, StreamAlertsData } from "./types";
@@ -210,6 +212,17 @@ export function AdminClient({
 
   const showToast = toast.show;
 
+  // Setup wizard (#738): open state + proactive auto-open for fresh portals. The server decides
+  // (shouldAutoOpenWizard via /api/admin/setup-status) — it only fires once per fresh, un-handled
+  // portal that still has a required step left, so it never nags repeatedly.
+  const [wizardOpen, setWizardOpen] = useState(false);
+  useEffect(() => {
+    if (!isAdmin) return;
+    apiGet<{ autoOpen?: boolean }>("/api/admin/setup-status")
+      .then((d) => { if (d?.autoOpen) setWizardOpen(true); })
+      .catch(() => { /* dashboard still loads without the wizard */ });
+  }, [isAdmin]);
+
   function refresh() {
     startTransition(() => router.refresh());
   }
@@ -304,7 +317,12 @@ export function AdminClient({
               events={events}
               pendingOrders={pendingOrders}
               onJump={(id) => goToSection(id as SectionId)}
+              onOpenWizard={() => setWizardOpen(true)}
             />
+          )}
+
+          {wizardOpen && isAdmin && (
+            <SetupWizard onClose={() => setWizardOpen(false)} onJump={(id) => goToSection(id as SectionId)} />
           )}
 
           {activeSection === "users" && (
@@ -738,20 +756,21 @@ function AdminNav<T extends string>({
 // ============== DASHBOARD SECTION ==============
 
 function DashboardSection({
-  stats, drops, events, pendingOrders, onJump,
+  stats, drops, events, pendingOrders, onJump, onOpenWizard,
 }: {
   stats: Stats;
   drops: Drop[];
   events: AdminEvent[];
   pendingOrders: PendingOrder[];
   onJump: (id: string) => void;
+  onOpenWizard: () => void;
 }) {
   const t = useTranslations("admin");
   const locale = useLocale();
   const nf = locale;
   return (
     <div className="space-y-6">
-      <SetupStatusCard onJump={onJump} />
+      <SetupStatusCard onJump={onJump} onOpenWizard={onOpenWizard} />
       <SectionCard title={t("dashNeedsAttention")} icon={LayoutDashboard}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
