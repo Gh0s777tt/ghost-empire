@@ -1178,6 +1178,50 @@ model WheelSpin {
 }
 
 // =====================================================
+// AUCTION HOUSE (#762) — the owner lists a perk/item; viewers bid GT. A bid HOLDS the GT
+// (escrow), being outbid REFUNDS it, and the winner's hold is BURNED at settlement (a real
+// GT sink). The atomic money path lives in /api/auctions (FOR UPDATE on the auction row,
+// like gift/titles). userId/bidder refs are plain Strings (like Transaction.userId) so the
+// User model needs no back-relation.
+// =====================================================
+
+model Auction {
+  id              String       @id @default(cuid())
+  tenantId        String? // per-portal (#762)
+  title           String
+  description     String?
+  imageUrl        String? // optional thumbnail (https only, validated)
+  minBid          Int // starting / minimum opening bid in GT
+  currentBid      Int? // highest bid so far; null = no bids yet
+  currentBidderId String? // current high bidder — their GT is held in escrow
+  status          String       @default("open") // "open" | "closed" | "cancelled"
+  endsAt          DateTime // bidding closes at this instant
+  winnerUserId    String? // set at settlement (= final high bidder)
+  winningBid      Int? // set at settlement
+  createdById     String // admin who created it (audit trail)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  bids            AuctionBid[]
+
+  @@index([tenantId, status])
+  @@index([endsAt]) // lazy-settlement scan: open auctions past their end
+  @@map("auctions")
+}
+
+model AuctionBid {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  userId    String // bidder (plain ref, like Transaction.userId)
+  amount    Int
+  createdAt DateTime @default(now())
+
+  @@index([auctionId])
+  @@index([userId])
+  @@map("auction_bids")
+}
+
+// =====================================================
 // GT MINI-GAMES — slots / coinflip gambling with Ghost Tokens (GT sink + engagement)
 // =====================================================
 

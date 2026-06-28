@@ -45,6 +45,8 @@ type AdminActionType =
   | "respond_ticket"
   | "resolve_bounty"
   | "delete_bounty"
+  | "create_auction"
+  | "cancel_auction"
   | "backfill_tenant";
 
 export async function logAdminAction(opts: {
