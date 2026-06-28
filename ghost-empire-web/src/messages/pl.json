@@ -3859,5 +3859,30 @@
   "igSocial": {
     "title": "Ostatnio na Instagramie",
     "followers": "{count, plural, one {{n} obserwujący} few {{n} obserwujących} many {{n} obserwujących} other {{n} obserwujących}}"
+  },
+  "titles": {
+    "title": "Tytuły",
+    "subtitle": "Kup tytuł za {sym} i załóż go obok nicku.",
+    "loading": "Ładowanie…",
+    "equip": "Załóż",
+    "unequip": "Zdejmij",
+    "equipped": "Założony",
+    "bought": "Tytuł kupiony!",
+    "tooPoor": "Za mało",
+    "err": "Nie udało się",
+    "rarity_common": "Zwykły",
+    "rarity_rare": "Rzadki",
+    "rarity_epic": "Epicki",
+    "rarity_legendary": "Legendarny",
+    "title_rookie": "Nowicjusz",
+    "title_regular": "Bywalec",
+    "title_insider": "Wtajemniczony",
+    "title_supporter": "Wspierający",
+    "title_veteran": "Weteran",
+    "title_highroller": "Gruba Ryba",
+    "title_elite": "Elita",
+    "title_legend": "Legenda",
+    "title_phantom": "Widmo",
+    "title_eternal": "Wieczny"
   }
 }

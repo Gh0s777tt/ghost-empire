@@ -9,6 +9,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
 import { Header } from "@/components/Header";
+import { TitleFlair } from "@/components/TitleFlair";
 import { ProfileShareRow } from "@/components/profile/ProfileShareRow";
 import { GiftButton } from "@/components/profile/GiftButton";
 import { TrackedLink } from "@/components/profile/TrackedLink";
@@ -123,6 +124,7 @@ export default async function PublicProfilePage({
       bio: true,
       country: true,
       profileAccent: true,
+      equippedTitleId: true, // cosmetic profile title flair (#761)
       tenantId: true, // per-portal rank scope (not exposed to the client)
       // Public stats only
       level: true,
@@ -274,6 +276,7 @@ export default async function PublicProfilePage({
                   >
                     {displayNick(user.displayName, user.username)}
                   </h1>
+                  <TitleFlair titleId={user.equippedTitleId} />
                   {countryFlag(user.country) && (
                     <span className="text-2xl leading-none" title={user.country ?? ""} aria-label={user.country ?? ""}>{countryFlag(user.country)}</span>
                   )}

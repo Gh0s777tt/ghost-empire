@@ -3859,5 +3859,30 @@
   "igSocial": {
     "title": "Latest on Instagram",
     "followers": "{count, plural, one {{n} follower} other {{n} followers}}"
+  },
+  "titles": {
+    "title": "Titles",
+    "subtitle": "Buy a title with {sym} and equip it next to your name.",
+    "loading": "Loading…",
+    "equip": "Equip",
+    "unequip": "Take off",
+    "equipped": "Equipped",
+    "bought": "Title bought!",
+    "tooPoor": "Not enough",
+    "err": "Could not complete",
+    "rarity_common": "Common",
+    "rarity_rare": "Rare",
+    "rarity_epic": "Epic",
+    "rarity_legendary": "Legendary",
+    "title_rookie": "Rookie",
+    "title_regular": "Regular",
+    "title_insider": "Insider",
+    "title_supporter": "Supporter",
+    "title_veteran": "Veteran",
+    "title_highroller": "High Roller",
+    "title_elite": "Elite",
+    "title_legend": "Legend",
+    "title_phantom": "Phantom",
+    "title_eternal": "Eternal"
   }
 }

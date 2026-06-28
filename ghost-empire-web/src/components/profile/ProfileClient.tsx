@@ -14,6 +14,7 @@ import {
 import { InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/BrandIcons";
 import { CountryPicker } from "@/components/profile/CountryPicker";
 import { AccentPicker } from "@/components/profile/AccentPicker";
+import { TitlesCard } from "@/components/profile/TitlesCard";
 import { formatDate, rankForLevel, xpForLevel, levelProgress, cn, displayNick, isPublicHandle } from "@/lib/utils";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscountFraction } from "@/lib/economy";
@@ -266,6 +267,10 @@ export function ProfileClient({
 
             <div className="mb-3">
               <AccentPicker initialAccent={user.profileAccent} />
+            </div>
+
+            <div className="mb-3">
+              <TitlesCard />
             </div>
 
             {user.bio && (
