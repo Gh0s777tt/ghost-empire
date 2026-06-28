@@ -3625,6 +3625,9 @@
     "admFullAdmin": "→ Full admin"
   },
   "events": {
+    "qtyDecrease": "Decrease quantity",
+    "qtyIncrease": "Increase quantity",
+    "qtyLabel": "Ticket quantity",
     "help": "Events are community happenings: tournaments and raffles. Join, earn tickets through activity and take part in prize draws.",
     "metaTitle": "Events",
     "metaDesc": "Giveaways, raffles, happy hours and contests in %brandShort%.",
@@ -3796,5 +3799,16 @@
     "terms": "Terms",
     "ready": "Ready?",
     "join": "Join the empire"
+  },
+  "notFound": {
+    "subtitle": "THE GHOST GOT LOST",
+    "desc": "The page you are looking for does not exist. It may have moved, been removed, or not exist yet. Head back to the portal.",
+    "home": "Back to portal",
+    "ranking": "Check the ranking",
+    "footer": "Error 404 · Page not found"
+  },
+  "errorPage": {
+    "desc": "An unexpected error occurred. Try again — if it keeps happening, head back home and try again in a moment.",
+    "home": "Home"
   }
 }

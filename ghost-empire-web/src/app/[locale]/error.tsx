@@ -1,11 +1,14 @@
 "use client";
 
-// src/app/error.tsx
+// src/app/[locale]/error.tsx
 // Route-level error boundary. Catches runtime exceptions thrown while rendering
-// any page/segment below the root layout and shows a friendly fallback instead
+// any page/segment below the [locale] layout and shows a friendly fallback instead
 // of a white screen. `reset()` re-renders the segment (retry without full reload).
+// Localized via next-intl (#747): it renders inside the layout's NextIntlClientProvider
+// so the viewer's locale is respected; title/retry reuse the shared `common` keys.
 import { useEffect } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { RotateCw, ArrowLeft } from "lucide-react";
 
 export default function GlobalError({
@@ -15,6 +18,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorPage");
+  const tc = useTranslations("common");
   useEffect(() => {
     // Surface in the browser console + Vercel logs for debugging.
     console.error("[app/error]", error);
@@ -40,11 +45,10 @@ export default function GlobalError({
           className="font-display text-5xl text-white tracking-wider mb-2"
           style={{ textShadow: "3px 0 0 rgba(229,9,20,0.6), -3px 0 0 rgba(139,0,0,0.4)" }}
         >
-          COŚ POSZŁO NIE TAK
+          {tc("errorTitle")}
         </h1>
         <p className="text-zinc-500 text-sm mb-8 max-w-sm mx-auto">
-          Wystąpił nieoczekiwany błąd. Spróbuj ponownie — jeśli problem się
-          powtarza, wróć na stronę główną i spróbuj za chwilę.
+          {t("desc")}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-2 justify-center">
@@ -53,14 +57,14 @@ export default function GlobalError({
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-xs tracking-widest uppercase transition-all"
           >
             <RotateCw className="w-4 h-4" />
-            Spróbuj ponownie
+            {tc("retry")}
           </button>
           <Link
             href="/"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-zinc-700 hover:border-zinc-500 text-zinc-300 font-bold text-xs tracking-widest uppercase transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
-            Strona główna
+            {t("home")}
           </Link>
         </div>
 

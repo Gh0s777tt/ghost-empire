@@ -369,7 +369,18 @@ function UserRow({
   return (
     <tr
       onClick={handleClick}
+      onKeyDown={
+        handleClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleClick();
+              }
+            }
+          : undefined
+      }
       role={handleClick ? "button" : undefined}
+      tabIndex={handleClick ? 0 : undefined}
       className={cn(
         "border-b border-zinc-900 last:border-0 transition-colors",
         isMe ? "bg-red-950/20" : "hover:bg-zinc-900/50",

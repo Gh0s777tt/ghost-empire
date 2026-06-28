@@ -57,7 +57,7 @@ export function PremiumClient() {
       </header>
 
       {/* Currency switcher */}
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-2" role="group" aria-label={t("currencyLabel")}>
         <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">{t("currencyLabel")}</span>
         {BILLING_CURRENCIES.map((c) => (
           <button

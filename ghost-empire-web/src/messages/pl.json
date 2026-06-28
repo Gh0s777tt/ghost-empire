@@ -3625,6 +3625,9 @@
     "admFullAdmin": "→ Pełen admin"
   },
   "events": {
+    "qtyDecrease": "Zmniejsz ilość",
+    "qtyIncrease": "Zwiększ ilość",
+    "qtyLabel": "Liczba biletów",
     "help": "Eventy to wydarzenia społeczności: turnieje i loterie. Dołącz, zbieraj bilety za aktywność i bierz udział w losowaniach nagród.",
     "metaTitle": "Eventy",
     "metaDesc": "Giveawaye, raffle, happy hours i konkursy w %brandShort%.",
@@ -3796,5 +3799,16 @@
     "terms": "Regulamin",
     "ready": "Gotowy?",
     "join": "Dołącz do imperium"
+  },
+  "notFound": {
+    "subtitle": "DUCH SIĘ ZGUBIŁ",
+    "desc": "Strona której szukasz nie istnieje. Może został przeniesiony, usunięty, albo jeszcze nie powstał. Wróć na portal.",
+    "home": "Wróć do portalu",
+    "ranking": "Sprawdź ranking",
+    "footer": "Błąd 404 · Strona nie znaleziona"
+  },
+  "errorPage": {
+    "desc": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie — jeśli problem się powtarza, wróć na stronę główną i spróbuj za chwilę.",
+    "home": "Strona główna"
   }
 }

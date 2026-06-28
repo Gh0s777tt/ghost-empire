@@ -1,9 +1,14 @@
-// src/app/not-found.tsx
-// Global 404 page (also catches notFound() calls from server components)
+// src/app/[locale]/not-found.tsx
+// 404 page (also catches notFound() calls from server components). Localized via
+// next-intl (#747): the request locale resolves from the [locale] segment (falling
+// back to the default locale), so a streamer's non-Polish audience sees a translated
+// 404 instead of always-Polish copy.
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getTranslations("notFound");
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -29,11 +34,10 @@ export default function NotFound() {
         <p
           className="font-display text-2xl text-zinc-400 tracking-wider mb-3"
         >
-          DUCH SIĘ ZGUBIŁ
+          {t("subtitle")}
         </p>
         <p className="text-zinc-500 text-sm mb-8 max-w-sm mx-auto">
-          Strona której szukasz nie istnieje. Może został przeniesiony, usunięty,
-          albo jeszcze nie powstał. Wróć na portal.
+          {t("desc")}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-2 justify-center">
@@ -42,18 +46,18 @@ export default function NotFound() {
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-xs tracking-widest uppercase transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
-            Wróć do portalu
+            {t("home")}
           </Link>
           <Link
             href="/ranking"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-zinc-700 hover:border-zinc-500 text-zinc-300 font-bold text-xs tracking-widest uppercase transition-all"
           >
-            Sprawdź ranking
+            {t("ranking")}
           </Link>
         </div>
 
         <p className="text-zinc-700 text-[10px] font-mono uppercase tracking-widest mt-8">
-          Error 404 · Strona nie znaleziona
+          {t("footer")}
         </p>
       </div>
     </div>

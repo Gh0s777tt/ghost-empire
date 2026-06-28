@@ -624,6 +624,7 @@ function RaffleCard({
             <button
               onClick={() => setQty((q) => Math.max(1, q - 1))}
               disabled={qty <= 1}
+              aria-label={t("qtyDecrease")}
               className="w-9 h-9 border border-zinc-800 hover:border-zinc-700 text-zinc-400 disabled:opacity-30 flex items-center justify-center"
             >
               <Minus className="w-3.5 h-3.5" />
@@ -633,6 +634,7 @@ function RaffleCard({
               min={1}
               max={remaining}
               value={qty}
+              aria-label={t("qtyLabel")}
               onChange={(e) => {
                 const v = Math.max(1, Math.min(remaining, parseInt(e.target.value) || 1));
                 setQty(v);
@@ -642,6 +644,7 @@ function RaffleCard({
             <button
               onClick={() => setQty((q) => Math.min(remaining, q + 1))}
               disabled={qty >= remaining}
+              aria-label={t("qtyIncrease")}
               className="w-9 h-9 border border-zinc-800 hover:border-zinc-700 text-zinc-400 disabled:opacity-30 flex items-center justify-center"
             >
               <Plus className="w-3.5 h-3.5" />
