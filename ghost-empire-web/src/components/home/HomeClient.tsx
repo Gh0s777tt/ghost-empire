@@ -285,7 +285,7 @@ function DailyBonusCard() {
 function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
-  const { brandName, logoUrl, channels } = useTenantBranding();
+  const { brandName, logoUrl, channels, isPlatformBrand } = useTenantBranding();
   const stats = [
     { label: t("statPlayers"), value: "847+" },
     { label: t("statTokens"), value: "12M+" },
@@ -313,7 +313,9 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
           {brandName}
         </h1>
         <p className="text-zinc-400 text-lg mb-8 max-w-xl mx-auto">
-          {t("heroSubtitle")}
+          {/* Platform brands (E-Forge / founder) are universal — don't name a single
+              streamer in the hero; a streamer's own portal keeps the %owner% line (#763). */}
+          {t(isPlatformBrand ? "heroSubtitlePlatform" : "heroSubtitle")}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button

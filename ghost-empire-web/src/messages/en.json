@@ -2995,6 +2995,7 @@
     "stock": "Stock",
     "evContest": "CONTEST",
     "heroSubtitle": "Collect %tokenName%, redeem them for real rewards, climb the ranking. The official community portal of streamer %owner%.",
+    "heroSubtitlePlatform": "Collect %tokenName%, redeem them for real rewards, climb the ranking. A community portal for streamers and their viewers.",
     "join": "👻 JOIN THE EMPIRE",
     "watchTwitch": "💜 WATCH ON TWITCH",
     "watchLive": "🔴 WATCH LIVE",

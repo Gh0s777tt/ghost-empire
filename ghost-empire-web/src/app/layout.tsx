@@ -7,7 +7,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 import { SITE } from "@/lib/site";
-import { getCurrentTenant } from "@/lib/tenant";
+import { getCurrentTenant, isPlatformBrand } from "@/lib/tenant";
 
 // CSP nonce (src/proxy.ts) is per-request → every route must render dynamically to
 // receive it (a statically-prerendered page ships build-time scripts WITHOUT the
@@ -26,6 +26,16 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = host ? `${proto}://${host}` : SITE.url;
   // The founder keeps the hand-made static image; tenants get the dynamic one.
   const ogImage = t.slug === "ghost-empire" ? `${origin}/og-founder.jpg` : `${origin}/api/og`;
+  // Platform brands (E-Forge / founder) are universal portals — their OG/Twitter
+  // descriptions must not frame them as one streamer's community (#763). A streamer's
+  // own portal still names the streamer.
+  const platform = isPlatformBrand(t);
+  const ogDesc = platform
+    ? `Oficjalny portal społeczności ${t.name}. Ekonomia ${t.tokenName}, eventy, sklep, ranking.`
+    : `Oficjalny portal społeczności streamera ${t.ownerHandle}. Ekonomia ${t.tokenName}, eventy, sklep, ranking.`;
+  const twitterDesc = platform
+    ? `Oficjalny portal społeczności ${t.name}`
+    : `Oficjalny portal społeczności streamera ${t.ownerHandle}`;
   return {
     metadataBase: new URL(SITE.url),
     title: {
@@ -48,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
     creator: t.ownerHandle,
     openGraph: {
       title: t.name,
-      description: `Oficjalny portal społeczności streamera ${t.ownerHandle}. Ekonomia ${t.tokenName}, eventy, sklep, ranking.`,
+      description: ogDesc,
       type: "website",
       locale: "pl_PL",
       siteName: t.shortName,
@@ -58,7 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: t.name,
-      description: `Oficjalny portal społeczności streamera ${t.ownerHandle}`,
+      description: twitterDesc,
       creator: `@${t.ownerHandle}`,
       images: [ogImage],
     },
