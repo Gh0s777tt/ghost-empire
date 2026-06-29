@@ -94,8 +94,8 @@ export function WikiView() {
               <Icon className="w-3.5 h-3.5 shrink-0" /> {label}
             </a>
           ))}
-          <a href="/wiki/Ghost-Empire-Streamer.pdf" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 mt-3 text-[11px] text-amber-300/80 hover:text-amber-200 border border-amber-700/40">
-            <FileText className="w-3.5 h-3.5 shrink-0" /> PDF dla streamerów
+          <a href="/wiki/E-Forge-Przewodnik-Kompletny.pdf" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 mt-3 text-[11px] text-amber-300/80 hover:text-amber-200 border border-amber-700/40">
+            <FileText className="w-3.5 h-3.5 shrink-0" /> Kompletny przewodnik (PDF)
           </a>
           <a href="/wiki/Ghost-Empire-Developer.pdf" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 text-[11px] text-zinc-400 hover:text-white border border-zinc-700">
             <FileText className="w-3.5 h-3.5 shrink-0" /> PDF dla developerów
@@ -118,7 +118,7 @@ export function WikiView() {
           </ul>
           {/* PDF links (mobile-visible) */}
           <div className="flex flex-wrap gap-2 mt-5 lg:hidden">
-            <a href="/wiki/Ghost-Empire-Streamer.pdf" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-amber-300 border border-amber-700/50"><FileText className="w-3.5 h-3.5" /> PDF streamer</a>
+            <a href="/wiki/E-Forge-Przewodnik-Kompletny.pdf" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-amber-300 border border-amber-700/50"><FileText className="w-3.5 h-3.5" /> Przewodnik (PDF)</a>
             <a href="/wiki/Ghost-Empire-Developer.pdf" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-zinc-300 border border-zinc-700"><FileText className="w-3.5 h-3.5" /> PDF developer</a>
           </div>
         </section>
