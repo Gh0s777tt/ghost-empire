@@ -9,6 +9,40 @@ import { logAdminAction } from "@/lib/audit";
 const VALID_PLATFORMS = ["twitch", "kick", "discord", "youtube"];
 const VALID_TIERS = ["T1", "T2", "T3", "Prime"];
 
+export const dynamic = "force-dynamic";
+
+// GET — read a connection's CURRENT sub/mod/VIP so the admin card can prefill itself.
+// Without this the card opens all-false and the POST below (which writes every flag that is
+// `!== undefined`) full-overwrites it — silently wiping the flags the admin never touched
+// (#757 → #765). Same gate + tenant scope as POST; `select` returns only the 5 role flags
+// and deliberately omits the OAuth tokens that also live on the Connection row.
+export async function GET(req: Request) {
+  const auth = await requirePermission("mark_subs");
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  const { searchParams } = new URL(req.url);
+  const target = searchParams.get("target")?.trim();
+  const platform = searchParams.get("platform")?.trim().toLowerCase();
+
+  if (!target) return NextResponse.json({ error: "Brak target" }, { status: 400 });
+  if (!platform || !VALID_PLATFORMS.includes(platform)) {
+    return NextResponse.json({ error: `Platform: ${VALID_PLATFORMS.join("|")}` }, { status: 400 });
+  }
+
+  // user-not-found / no-connection are expected while the admin is still typing the target —
+  // surface them as `found:false` (200), not an error, so the card stays quiet until a hit.
+  const user = await findManagedUser(target, auth);
+  if (!user) return NextResponse.json({ found: false });
+
+  const connection = await prisma.connection.findUnique({
+    where: { userId_platform: { userId: user.id, platform } },
+    select: { isSubscriber: true, subTier: true, subMonths: true, isModerator: true, isVip: true },
+  });
+  if (!connection) return NextResponse.json({ found: false });
+
+  return NextResponse.json({ found: true, connection });
+}
+
 export async function POST(req: Request) {
   const auth = await requirePermission("mark_subs");
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });

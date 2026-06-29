@@ -759,7 +759,11 @@
       "platformLabel": "Platform",
       "subMonths": "Sub months",
       "update": "Update",
-      "statusUpdated": "{platform} status updated for {target}"
+      "statusUpdated": "{platform} status updated for {target}",
+      "loadingStatus": "Loading current status…",
+      "loadedStatus": "✓ Loaded current status",
+      "noConnection": "No such connection — nothing to update yet",
+      "loadError": "Couldn't load current status"
     },
     "mergeUsers": {
       "reason": {

@@ -1,13 +1,13 @@
 "use client";
 // src/components/admin/sections/UserRoles.tsx — lazily-loaded user-role + connection-role
 // management (admin/mod/donator + per-platform sub/mod/VIP).
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, Crown, Heart, UserCog, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
 import { SectionCard, FieldInput } from "../shared";
-import { apiPost, apiPostStepUp, ApiError } from "@/lib/api-client";
+import { apiGet, apiPost, apiPostStepUp, ApiError } from "@/lib/api-client";
 
 function ModPermissionsPicker({
   selected,
@@ -268,6 +268,61 @@ export function ConnectionRolesCard({
   const [isModerator, setIsModerator] = useState(false);
   const [isVip, setIsVip] = useState(false);
   const [busy, setBusy] = useState(false);
+  // "loaded" means the form mirrors the connection's real DB state; submit is gated on it so
+  // an untouched (all-false) form can never full-overwrite live flags — the #757 → #765 fix.
+  const [loadState, setLoadState] = useState<"idle" | "loading" | "loaded" | "notfound" | "error">("idle");
+
+  // Stable (useState setters are stable) so the prefill effect can depend on it without re-running.
+  const resetFlags = useCallback(() => {
+    setIsSubscriber(false);
+    setSubTier("T1");
+    setSubMonths("");
+    setIsModerator(false);
+    setIsVip(false);
+  }, []);
+
+  // Prefill the card with the connection's CURRENT sub/mod/VIP whenever the target or platform
+  // changes (debounced, race-safe). Without this the form opens all-false and the POST writes
+  // every flag, so marking one status silently wiped the other two.
+  useEffect(() => {
+    const tg = target.trim();
+    if (!tg) {
+      resetFlags();
+      setLoadState("idle");
+      return;
+    }
+    let cancelled = false;
+    setLoadState("loading");
+    const handle = setTimeout(async () => {
+      try {
+        const data = await apiGet<{
+          found: boolean;
+          connection?: { isSubscriber: boolean; subTier: string | null; subMonths: number; isModerator: boolean; isVip: boolean };
+        }>(`/api/admin/connection-roles?target=${encodeURIComponent(tg)}&platform=${platform}`);
+        if (cancelled) return;
+        if (!data.found || !data.connection) {
+          resetFlags();
+          setLoadState("notfound");
+          return;
+        }
+        const c = data.connection;
+        setIsSubscriber(c.isSubscriber);
+        setSubTier(c.subTier === "T2" || c.subTier === "T3" || c.subTier === "Prime" ? c.subTier : "T1");
+        setSubMonths(c.subMonths ? String(c.subMonths) : "");
+        setIsModerator(c.isModerator);
+        setIsVip(c.isVip);
+        setLoadState("loaded");
+      } catch {
+        if (cancelled) return;
+        resetFlags();
+        setLoadState("error");
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [target, platform, resetFlags]);
 
   async function submit() {
     setBusy(true);
@@ -321,6 +376,32 @@ export function ConnectionRolesCard({
             ))}
           </div>
         </div>
+
+        {target.trim() && (
+          <p
+            className={cn(
+              "text-[10px] font-mono flex items-center gap-1.5",
+              loadState === "loaded"
+                ? "text-green-500"
+                : loadState === "notfound"
+                  ? "text-amber-500"
+                  : loadState === "error"
+                    ? "text-red-400"
+                    : "text-zinc-500",
+            )}
+          >
+            {loadState === "loading" && <Loader2 className="w-3 h-3 animate-spin shrink-0" />}
+            {loadState === "loading"
+              ? t("loadingStatus")
+              : loadState === "loaded"
+                ? t("loadedStatus")
+                : loadState === "notfound"
+                  ? t("noConnection")
+                  : loadState === "error"
+                    ? t("loadError")
+                    : null}
+          </p>
+        )}
 
         <div className="grid grid-cols-3 gap-2">
           <label className="flex items-center gap-2 border border-zinc-800 bg-black/30 p-2 cursor-pointer">
@@ -381,7 +462,7 @@ export function ConnectionRolesCard({
 
         <button
           onClick={submit}
-          disabled={busy || pending || !target}
+          disabled={busy || pending || !target || loadState !== "loaded"}
           className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}

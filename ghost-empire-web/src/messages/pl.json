@@ -759,7 +759,11 @@
       "platformLabel": "Platforma",
       "subMonths": "Miesięcy sub",
       "update": "Zaktualizuj",
-      "statusUpdated": "Status {platform} zaktualizowany dla {target}"
+      "statusUpdated": "Status {platform} zaktualizowany dla {target}",
+      "loadingStatus": "Ładowanie aktualnego statusu…",
+      "loadedStatus": "✓ Wczytano aktualny status",
+      "noConnection": "Brak takiego połączenia — nie ma jeszcze czego zmienić",
+      "loadError": "Nie udało się wczytać statusu"
     },
     "mergeUsers": {
       "reason": {
