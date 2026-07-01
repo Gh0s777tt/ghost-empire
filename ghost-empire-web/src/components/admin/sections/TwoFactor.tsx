@@ -87,7 +87,7 @@ export function TwoFactorManager({ onToast }: { onToast: (k: "ok" | "err", m: st
           <p className="text-[11px] text-zinc-500">{t("setupHint")}</p>
           {setup.qrDataUrl && (
             <div className="flex flex-col items-center gap-1.5">
-              <img src={setup.qrDataUrl} alt={t("qrAlt")} width={200} height={200} className="rounded-lg border border-zinc-800 bg-white p-2" />
+              <img src={setup.qrDataUrl} alt={t("qrAlt")} width={200} height={200} className="rounded-lg border border-zinc-800 bg-white p-2" loading="lazy" decoding="async" />
               <span className="text-[10px] text-zinc-500">{t("qrHint")}</span>
             </div>
           )}

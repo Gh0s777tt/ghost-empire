@@ -72,7 +72,7 @@ export function SupportClient({
     <div>
       <header className="text-center mb-8">
         <div className="w-16 h-16 mx-auto mb-3 rounded-2xl border border-zinc-800 flex items-center justify-center overflow-hidden" style={{ background: "rgb(var(--brand-rgb) / 0.15)" }}>
-          {logoUrl ? <img src={logoUrl} alt="" className="w-full h-full object-cover" /> : <Heart className="w-7 h-7 text-red-500" />}
+          {logoUrl ? <img src={logoUrl} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <Heart className="w-7 h-7 text-red-500" />}
         </div>
         <h1 className="text-2xl font-bold text-white">{customHeading || t("title", { name: owner })}</h1>
         <p className="text-zinc-500 text-sm mt-1">{t("subtitle", { brand: brandName })}</p>
@@ -146,7 +146,7 @@ export function SupportClient({
 
                 {showQr && m.qr && (
                   <div className="mt-3 flex flex-col items-center">
-                    <img src={m.qr} alt="QR" className="w-44 h-44 rounded-lg" />
+                    <img src={m.qr} alt="QR" className="w-44 h-44 rounded-lg" loading="lazy" decoding="async" />
                     <a href={m.qr} download={`${m.label}-qr.png`} className="mt-1.5 text-[10px] text-zinc-500 hover:text-white inline-flex items-center gap-1"><Download className="w-3 h-3" /> PNG</a>
                   </div>
                 )}
@@ -207,7 +207,7 @@ export function SupportClient({
           </button>
           {pageQrOpen && (
             <div className="mt-3 flex flex-col items-center">
-              <img src={pageQr} alt="QR" className="w-48 h-48 rounded-lg" />
+              <img src={pageQr} alt="QR" className="w-48 h-48 rounded-lg" loading="lazy" decoding="async" />
               <div className="mt-2 font-mono text-[10px] text-zinc-500 break-all text-center">{pageUrl}</div>
               <div className="mt-1.5 flex items-center gap-3">
                 <button onClick={() => void copy("page", pageUrl)} className="text-[10px] text-zinc-400 hover:text-white inline-flex items-center gap-1">{copied === "page" ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />} {t("copyLink")}</button>

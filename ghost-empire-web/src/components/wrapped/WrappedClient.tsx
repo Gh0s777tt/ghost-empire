@@ -82,7 +82,7 @@ export function WrappedClient({
         </div>
         <div className="mt-3 flex items-center justify-center gap-2 text-zinc-400 text-sm">
           {data.user.image ? (
-            <img src={data.user.image} alt="" className="w-7 h-7 rounded-full object-cover border border-zinc-700" />
+            <img src={data.user.image} alt="" className="w-7 h-7 rounded-full object-cover border border-zinc-700" loading="lazy" decoding="async" />
           ) : (
             <span className="w-7 h-7 rounded-full bg-zinc-800" />
           )}

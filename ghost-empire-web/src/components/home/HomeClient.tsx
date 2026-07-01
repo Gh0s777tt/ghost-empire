@@ -307,7 +307,8 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
             className="w-28 h-28 overflow-hidden rounded-2xl"
             style={{ border: "2px solid rgba(var(--brand-rgb), 0.4)", boxShadow: "0 0 60px rgba(var(--brand-rgb), 0.35)" }}
           >
-            <img src={logoUrl ?? "/brand/skull.png"} alt={brandName} className="w-full h-full object-cover" />
+            {/* LCP candidate on the guest home — keep eager and hint high priority (#768). */}
+            <img src={logoUrl ?? "/brand/skull.png"} alt={brandName} fetchPriority="high" decoding="async" className="w-full h-full object-cover" />
           </div>
         </div>
         <h1
@@ -368,7 +369,7 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
             <div key={u.id} className="flex items-center gap-4 p-4 border border-zinc-800 bg-zinc-950/60">
               <span className="font-display text-3xl text-zinc-600">#{i + 1}</span>
               <div className="w-10 h-10 border border-zinc-700 overflow-hidden bg-zinc-900 flex items-center justify-center text-lg">
-                {u.image ? <img src={u.image} alt="" width={40} height={40} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" /> : <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />}
+                {u.image ? <img src={u.image} alt="" width={40} height={40} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" /> : <img src="/brand/skull.png" alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />}
               </div>
               <div className="flex-1">
                 <p className="font-bold text-white">{displayNick(u.displayName, u.username)}</p>
@@ -417,7 +418,7 @@ function ProfileHero({ user }: { user: HomeUser }) {
               {user.image ? (
                 <img src={user.image} alt="" width={80} height={80} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               ) : (
-                <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
+                <img src="/brand/skull.png" alt="" decoding="async" className="w-full h-full object-cover" />
               )}
             </div>
             <div className="absolute -bottom-1.5 -end-1.5 px-1.5 py-0.5 bg-red-600 text-white font-mono text-[9px] font-bold clip-tag">

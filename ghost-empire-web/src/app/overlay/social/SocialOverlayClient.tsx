@@ -43,9 +43,9 @@ export function SocialOverlayClient() {
         }}
       >
         {data.imageUrl ? (
-          <img src={data.imageUrl} alt="" width={84} height={84} style={{ width: 84, height: 84, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
+          <img src={data.imageUrl} alt="" width={84} height={84} style={{ width: 84, height: 84, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} loading="lazy" decoding="async" />
         ) : data.avatarUrl ? (
-          <img src={data.avatarUrl} alt="" width={48} height={48} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: "50%", flexShrink: 0 }} />
+          <img src={data.avatarUrl} alt="" width={48} height={48} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: "50%", flexShrink: 0 }} loading="lazy" decoding="async" />
         ) : null}
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>

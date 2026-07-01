@@ -54,8 +54,7 @@ export function AlertCard({
             <img
               src={alert.actorImage}
               alt=""
-              style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: `2px solid ${accent}` }}
-            />
+              style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: `2px solid ${accent}` }} loading="lazy" decoding="async" />
           ) : (
             <div
               style={{

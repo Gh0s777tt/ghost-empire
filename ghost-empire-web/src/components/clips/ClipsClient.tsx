@@ -75,7 +75,7 @@ export function ClipsClient({ isAuthenticated }: { isAuthenticated: boolean }) {
             return (
               <div key={c.id} className={`border rounded-xl overflow-hidden bg-black/30 ${isLeader ? "border-amber-600/70" : "border-zinc-800"}`}>
                 <a href={c.url} target="_blank" rel="noreferrer" className="block relative aspect-video bg-zinc-900 group">
-                  <img src={c.thumbnailUrl} alt="" className="w-full h-full object-cover group-hover:opacity-90 transition-opacity" />
+                  <img src={c.thumbnailUrl} alt="" className="w-full h-full object-cover group-hover:opacity-90 transition-opacity" loading="lazy" decoding="async" />
                   {isLeader && (
                     <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500 text-black text-[10px] font-bold tracking-widest uppercase">
                       <Crown className="w-3 h-3" /> {t("leader")}

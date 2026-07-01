@@ -221,15 +221,13 @@ export function RankingClient({
                         src={u.image}
                         alt=""
                         className="w-16 h-16 sm:w-20 sm:h-20 border-2 object-cover mb-3"
-                        style={{ borderColor: style.color }}
-                      />
+                        style={{ borderColor: style.color }} loading="lazy" decoding="async" />
                     ) : (
                       <img
                         src="/brand/skull.png"
                         alt=""
                         className="w-16 h-16 sm:w-20 sm:h-20 border-2 object-cover bg-black mb-3"
-                        style={{ borderColor: style.color }}
-                      />
+                        style={{ borderColor: style.color }} loading="lazy" decoding="async" />
                     )}
 
                     <div className="flex items-center gap-1.5 mb-1">
@@ -400,7 +398,7 @@ function UserRow({
           {user.image ? (
             <img src={user.image} alt="" width={32} height={32} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-8 h-8 object-cover border border-zinc-800 shrink-0" />
           ) : (
-            <img src="/brand/skull.png" alt="" width={32} height={32} className="w-8 h-8 border border-zinc-800 object-cover bg-black shrink-0" />
+            <img src="/brand/skull.png" alt="" width={32} height={32} className="w-8 h-8 border border-zinc-800 object-cover bg-black shrink-0" loading="lazy" decoding="async" />
           )}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -558,7 +556,7 @@ function AdminUserActions({
           {user.image ? (
             <img src={user.image} alt="" width={48} height={48} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-12 h-12 border-2 border-red-700 object-cover shrink-0" />
           ) : (
-            <img src="/brand/skull.png" alt="" width={48} height={48} className="w-12 h-12 border-2 border-red-700 object-cover bg-black shrink-0" />
+            <img src="/brand/skull.png" alt="" width={48} height={48} className="w-12 h-12 border-2 border-red-700 object-cover bg-black shrink-0" loading="lazy" decoding="async" />
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">

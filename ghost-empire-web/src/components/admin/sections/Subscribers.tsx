@@ -100,7 +100,7 @@ export function SubscribersManager() {
                   {s.image ? (
                     <img src={s.image} alt="" width={28} height={28} loading="lazy" referrerPolicy="no-referrer" className="w-7 h-7 object-cover border border-zinc-800 shrink-0" />
                   ) : (
-                    <img src="/brand/skull.png" alt="" width={28} height={28} className="w-7 h-7 object-cover border border-zinc-800 bg-black shrink-0" />
+                    <img src="/brand/skull.png" alt="" width={28} height={28} className="w-7 h-7 object-cover border border-zinc-800 bg-black shrink-0" loading="lazy" decoding="async" />
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">

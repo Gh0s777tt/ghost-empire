@@ -18,14 +18,13 @@ export default function OfflinePage() {
         fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
       }}
     >
-      {/* Plain <img>, not next/image: the offline page must render with no JS runtime. */}
+      {/* Plain <img loading="lazy" decoding="async">, not next/image: the offline page must render with no JS runtime. */}
       <img
         src="/icons/icon-192.png"
         alt=""
         width={88}
         height={88}
-        style={{ opacity: 0.85, marginBottom: "1.5rem", filter: "drop-shadow(0 0 18px rgba(255,0,0,0.25))" }}
-      />
+        style={{ opacity: 0.85, marginBottom: "1.5rem", filter: "drop-shadow(0 0 18px rgba(255,0,0,0.25))" }} loading="lazy" decoding="async" />
       <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: "0 0 0.5rem", color: "#fff", letterSpacing: "0.02em" }}>
         Jesteś offline
       </h1>

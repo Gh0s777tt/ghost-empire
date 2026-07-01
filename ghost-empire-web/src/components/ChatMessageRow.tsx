@@ -53,8 +53,7 @@ function renderText(
           src={emote.url}
           alt={tok}
           title={tok}
-          style={{ height: size, verticalAlign: "middle", margin: "0 1px" }}
-        />,
+          style={{ height: size, verticalAlign: "middle", margin: "0 1px" }} loading="lazy" decoding="async" />,
       );
     } else {
       out.push(<span key={key.n++} style={{ color: textColor }}>{tok}</span>);
@@ -102,8 +101,7 @@ function renderMessage(
         key={key.n++}
         src={`https://static-cdn.jtvnw.net/emoticons/v2/${r.id}/default/dark/2.0`}
         alt={chars.slice(r.start, r.end + 1).join("")}
-        style={{ height: size, verticalAlign: "middle", margin: "0 1px" }}
-      />,
+        style={{ height: size, verticalAlign: "middle", margin: "0 1px" }} loading="lazy" decoding="async" />,
     );
     cursor = r.end + 1;
   }
@@ -121,7 +119,7 @@ function renderBadges(badges: ChatMsg["badges"], assetBadges: ChatBadges | undef
     if (url) {
       nodes.push(
         <img key={setId} src={url} alt={setId} title={setId}
-          style={{ height: size, verticalAlign: "middle", marginRight: 3 }} />,
+          style={{ height: size, verticalAlign: "middle", marginRight: 3 }} loading="lazy" decoding="async" />,
       );
     } else if (BADGE_EMOJI[setId]) {
       nodes.push(<span key={setId} style={{ marginRight: 3 }}>{BADGE_EMOJI[setId]}</span>);

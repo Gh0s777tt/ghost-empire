@@ -227,7 +227,7 @@ function ShopItemEditor({
 
           <FieldInput label={t("imageUrlLabel")} value={imageUrl} onChange={setImageUrl} placeholder="https://..." />
           {imageUrl.trim() && (
-            <img src={imageUrl} alt="" className="w-full max-h-40 object-contain border border-zinc-800 bg-black" />
+            <img src={imageUrl} alt="" className="w-full max-h-40 object-contain border border-zinc-800 bg-black" loading="lazy" decoding="async" />
           )}
 
           <div>

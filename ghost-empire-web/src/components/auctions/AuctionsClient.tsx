@@ -254,7 +254,7 @@ function AuctionCard({
     <div className={`border bg-black/30 overflow-hidden ${a.youAreHighBidder && isLive ? "border-amber-500" : "border-zinc-800"}`}>
       <div className="flex flex-col sm:flex-row">
         {a.imageUrl && (
-          <img src={a.imageUrl} alt="" className="w-full sm:w-40 h-36 sm:h-auto object-cover bg-zinc-900" />
+          <img src={a.imageUrl} alt="" className="w-full sm:w-40 h-36 sm:h-auto object-cover bg-zinc-900" loading="lazy" decoding="async" />
         )}
         <div className="flex-1 p-4">
           <div className="flex items-start justify-between gap-2">

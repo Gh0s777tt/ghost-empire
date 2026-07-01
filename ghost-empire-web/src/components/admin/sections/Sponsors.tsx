@@ -83,7 +83,7 @@ export function SponsorsManager({ onToast }: { onToast: (k: "ok" | "err", m: str
                 <button onClick={() => void move(i, 1)} disabled={i === sponsors.length - 1} className="text-zinc-600 hover:text-white disabled:opacity-30"><ArrowDown className="w-3 h-3" /></button>
               </div>
               {s.logoUrl
-                ? <img src={s.logoUrl} alt="" className="w-8 h-8 rounded object-contain bg-white/5 shrink-0" />
+                ? <img src={s.logoUrl} alt="" className="w-8 h-8 rounded object-contain bg-white/5 shrink-0" loading="lazy" decoding="async" />
                 : <span className="w-8 h-8 rounded bg-zinc-800 shrink-0 inline-flex items-center justify-center text-zinc-500"><Handshake className="w-4 h-4" /></span>}
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-white truncate flex items-center gap-1.5">

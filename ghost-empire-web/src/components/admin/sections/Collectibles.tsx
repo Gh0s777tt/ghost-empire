@@ -90,7 +90,7 @@ export function CollectiblesManager({ onToast }: { onToast: (k: "ok" | "err", m:
                     <div className="max-h-72 overflow-y-auto px-2 pb-2 space-y-2">
                       {group.map((c) => (
                         <div key={c.id} className={`flex items-center gap-2 border p-2.5 ${c.active ? "border-zinc-800 bg-black/30" : "border-zinc-900 bg-black/20 opacity-60"}`}>
-                          <span className="text-xl shrink-0 w-7 text-center">{c.imageUrl ? <img src={c.imageUrl} alt="" className="w-7 h-7 object-contain inline" /> : c.emoji || "🃏"}</span>
+                          <span className="text-xl shrink-0 w-7 text-center">{c.imageUrl ? <img src={c.imageUrl} alt="" className="w-7 h-7 object-contain inline" loading="lazy" decoding="async" /> : c.emoji || "🃏"}</span>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm text-white truncate">{c.name}</div>
                             <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: RARITY_COLOR[normalizeRarity(c.rarity)] }}>{t(`rarity_${normalizeRarity(c.rarity)}`)}</div>

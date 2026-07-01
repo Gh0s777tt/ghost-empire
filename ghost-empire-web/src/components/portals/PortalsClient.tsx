@@ -170,7 +170,7 @@ function PortalCard({ portal, children }: { portal: Portal; children?: React.Rea
         style={{ background: `${portal.brandColor}22` }}
       >
         {portal.logoUrl ? (
-          <img src={portal.logoUrl} alt="" className="w-full h-full object-cover" />
+          <img src={portal.logoUrl} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
         ) : (
           <span className="text-lg" style={{ color: portal.brandColor }}>👻</span>
         )}

@@ -20,7 +20,7 @@ export default function Loading() {
             style={{ background: "var(--brand)" }}
           />
           <div className="relative w-16 h-16 overflow-hidden rounded-2xl ring-2 ring-red-600/40 animate-pulse">
-            <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" />
+            <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
           </div>
         </div>
         {/* Language-neutral pulsing dots — this is a Suspense fallback (no locale

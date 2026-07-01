@@ -254,7 +254,7 @@ export function ShopClient({
                 {/* Icon + category */}
                 <div className="flex items-start gap-3 mb-3">
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt="" className="w-12 h-12 object-cover border border-zinc-800 shrink-0" />
+                    <img src={item.imageUrl} alt="" className="w-12 h-12 object-cover border border-zinc-800 shrink-0" loading="lazy" decoding="async" />
                   ) : (
                     <div className="text-4xl shrink-0">{item.imageEmoji ?? "🎁"}</div>
                   )}
@@ -380,7 +380,7 @@ export function ShopClient({
           >
             <div className="flex items-start gap-4 mb-5">
               {confirmItem.imageUrl ? (
-                <img src={confirmItem.imageUrl} alt="" className="w-16 h-16 object-cover border border-zinc-800 shrink-0" />
+                <img src={confirmItem.imageUrl} alt="" className="w-16 h-16 object-cover border border-zinc-800 shrink-0" loading="lazy" decoding="async" />
               ) : (
                 <div className="text-5xl">{confirmItem.imageEmoji ?? "🎁"}</div>
               )}

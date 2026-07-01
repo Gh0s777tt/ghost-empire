@@ -28,7 +28,7 @@ export function SponsorStrip({ sponsors }: { sponsors: Sponsor[] }) {
           >
             {s.logoUrl ? (
               <>
-                <img src={s.logoUrl} alt={s.name} className="h-7 max-w-[120px] object-contain" />
+                <img src={s.logoUrl} alt={s.name} className="h-7 max-w-[120px] object-contain" loading="lazy" decoding="async" />
                 <span className="sr-only">{s.name}</span>
               </>
             ) : (

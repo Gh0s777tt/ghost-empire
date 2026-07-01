@@ -114,7 +114,7 @@ function TopUsers({ rows, label, sym }: { rows: UserRow[]; label: string; sym: s
           {rows.map((r, i) => (
             <div key={i} className="flex items-center gap-2 text-xs">
               <span className="text-zinc-600 font-mono w-3 shrink-0">{i + 1}</span>
-              {r.image ? <img src={r.image} alt="" className="w-4 h-4 rounded-full shrink-0" /> : <span className="w-4 h-4 rounded-full bg-zinc-800 shrink-0" />}
+              {r.image ? <img src={r.image} alt="" className="w-4 h-4 rounded-full shrink-0" loading="lazy" decoding="async" /> : <span className="w-4 h-4 rounded-full bg-zinc-800 shrink-0" />}
               <span className="text-zinc-300 truncate flex-1">{r.name}</span>
               <span className="font-mono tabular-nums text-zinc-400 shrink-0">{r.amount.toLocaleString(nf)} {sym}</span>
             </div>

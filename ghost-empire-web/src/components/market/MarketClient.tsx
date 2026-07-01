@@ -20,7 +20,7 @@ type MyCard = { qty: number; card: Card };
 type Data = { items: Listing[]; myListings: MyListing[]; myCards: MyCard[]; balance: number; loggedIn: boolean; currentUserId: string | null };
 
 function Face({ card }: { card: Card }) {
-  return card.imageUrl ? <img src={card.imageUrl} alt="" className="w-10 h-10 object-contain" /> : <span className="text-3xl leading-none">{card.emoji || "🃏"}</span>;
+  return card.imageUrl ? <img src={card.imageUrl} alt="" className="w-10 h-10 object-contain" loading="lazy" decoding="async" /> : <span className="text-3xl leading-none">{card.emoji || "🃏"}</span>;
 }
 
 export function MarketClient() {

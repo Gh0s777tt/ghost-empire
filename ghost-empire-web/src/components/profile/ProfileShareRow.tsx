@@ -42,7 +42,7 @@ export function ProfileShareRow({ url, name, qr, handle }: { url: string; name: 
       </div>
       {qr && showQr && (
         <div className="inline-flex flex-col items-center gap-1.5 border border-zinc-800 bg-black/40 p-3 rounded">
-          <img src={qr} alt={t("qrAlt", { name })} width={160} height={160} className="rounded bg-white" />
+          <img src={qr} alt={t("qrAlt", { name })} width={160} height={160} className="rounded bg-white" loading="lazy" decoding="async" />
           <a download={`${handle || "profile"}-qr.png`} href={qr} className={PILL}>
             <Download className="w-3 h-3" /> {t("qrDownload")}
           </a>

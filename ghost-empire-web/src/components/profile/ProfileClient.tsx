@@ -190,6 +190,7 @@ export function ProfileClient({
               <img
                 src={user.image}
                 alt={displayNick(user.displayName, user.username)}
+                decoding="async"
                 className="w-24 h-24 md:w-28 md:h-28 object-cover border-2"
                 style={{ borderColor: rank.color }}
               />
@@ -197,6 +198,7 @@ export function ProfileClient({
               <img
                 src="/brand/skull.png"
                 alt=""
+                decoding="async"
                 className="w-24 h-24 md:w-28 md:h-28 object-cover border-2 bg-black"
                 style={{ borderColor: rank.color }}
               />

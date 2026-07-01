@@ -46,7 +46,7 @@ export function SponsorsOverlayClient() {
           {cur.tier ? `${cur.tier} sponsor` : "Sponsored by"}
         </div>
         {cur.logoUrl ? (
-          <img src={cur.logoUrl} alt={cur.name} style={{ height: 48, maxWidth: 240, objectFit: "contain", display: "block", margin: "0 auto" }} />
+          <img src={cur.logoUrl} alt={cur.name} style={{ height: 48, maxWidth: 240, objectFit: "contain", display: "block", margin: "0 auto" }} loading="lazy" decoding="async" />
         ) : (
           <div style={{ color: "#fff", fontSize: 24, fontWeight: 800 }}>{cur.name}</div>
         )}

@@ -143,7 +143,7 @@ export function LeaguesClient({
                   </span>
                   <span className="flex items-center gap-2 min-w-0">
                     {r.image ? (
-                      <img src={r.image} alt="" className="w-6 h-6 rounded-full object-cover shrink-0 border border-zinc-700" />
+                      <img src={r.image} alt="" className="w-6 h-6 rounded-full object-cover shrink-0 border border-zinc-700" loading="lazy" decoding="async" />
                     ) : (
                       <span className="w-6 h-6 rounded-full bg-zinc-800 shrink-0" />
                     )}
@@ -183,7 +183,7 @@ export function LeaguesClient({
                     <div key={p.rank} className="flex items-center gap-2 border border-zinc-800/70 bg-black/20 px-2 py-1.5">
                       <span className="text-base shrink-0">{MEDAL[p.rank - 1] ?? `#${p.rank}`}</span>
                       {p.image ? (
-                        <img src={p.image} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700 shrink-0" />
+                        <img src={p.image} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700 shrink-0" loading="lazy" decoding="async" />
                       ) : (
                         <span className="w-5 h-5 rounded-full bg-zinc-800 shrink-0" />
                       )}

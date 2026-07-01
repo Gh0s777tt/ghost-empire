@@ -47,7 +47,7 @@ export default async function WelcomePage() {
           className="w-24 h-24 sm:w-28 sm:h-28 mb-6 overflow-hidden rounded-2xl"
           style={{ border: "2px solid rgba(var(--brand-rgb), 0.4)", boxShadow: "0 0 60px rgba(var(--brand-rgb), 0.35)" }}
         >
-          <img src={tenant.logoUrl ?? "/brand/skull.png"} alt={tenant.name} className="w-full h-full object-cover" />
+          <img src={tenant.logoUrl ?? "/brand/skull.png"} alt={tenant.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         </div>
 
         <h1

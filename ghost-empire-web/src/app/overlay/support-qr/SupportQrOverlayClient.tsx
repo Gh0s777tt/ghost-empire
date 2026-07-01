@@ -46,7 +46,7 @@ export function SupportQrOverlayClient() {
         <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "rgb(var(--brand-rgb))", fontWeight: 700, marginBottom: 10 }}>
           ♥ Wesprzyj / Support
         </div>
-        <img src={cur.qr} alt="" width={228} height={228} style={{ borderRadius: 12, display: "block", margin: "0 auto" }} />
+        <img src={cur.qr} alt="" width={228} height={228} style={{ borderRadius: 12, display: "block", margin: "0 auto" }} loading="lazy" decoding="async" />
         <div style={{ marginTop: 10, color: "#fff", fontSize: 17, fontWeight: 700 }}>
           {cur.icon || KIND_EMOJI[cur.kind]} {cur.label}
         </div>

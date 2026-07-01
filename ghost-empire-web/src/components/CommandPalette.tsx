@@ -140,7 +140,7 @@ export function CommandPalette() {
                 >
                   {r.isUser &&
                     (r.image ? (
-                      <img src={r.image} alt="" className="w-4 h-4 rounded-full shrink-0 object-cover" />
+                      <img src={r.image} alt="" className="w-4 h-4 rounded-full shrink-0 object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <UserIcon className="w-4 h-4 text-zinc-500 shrink-0" />
                     ))}

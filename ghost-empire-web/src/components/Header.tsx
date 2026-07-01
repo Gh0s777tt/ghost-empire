@@ -115,7 +115,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-9 h-9 shrink-0 overflow-hidden rounded-md ring-1 ring-red-600/50 bg-black transition-transform group-hover:scale-105">
-              <img src={logoUrl ?? "/brand/skull.png"} alt={brandName} width={36} height={36} className="w-full h-full object-cover" />
+              <img src={logoUrl ?? "/brand/skull.png"} alt={brandName} width={36} height={36} decoding="async" className="w-full h-full object-cover" />
             </div>
             <div className="hidden sm:block leading-none">
               <span

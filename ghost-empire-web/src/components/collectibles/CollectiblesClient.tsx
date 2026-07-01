@@ -98,7 +98,7 @@ export function CollectiblesClient() {
           {reveal && (
             <div className="mb-5 flex flex-col items-center gap-2 border-2 rounded-xl p-5" style={{ borderColor: RARITY_COLOR[normalizeRarity(reveal.rarity)], background: `${RARITY_COLOR[normalizeRarity(reveal.rarity)]}14`, animation: "gerevealin 420ms cubic-bezier(0.22,1,0.36,1)" }}>
               <div className="text-[10px] uppercase tracking-widest text-zinc-400">{t("youGot")}</div>
-              <div className="text-5xl">{reveal.imageUrl ? <img src={reveal.imageUrl} alt="" className="w-20 h-20 object-contain" /> : reveal.emoji || "🃏"}</div>
+              <div className="text-5xl">{reveal.imageUrl ? <img src={reveal.imageUrl} alt="" className="w-20 h-20 object-contain" loading="lazy" decoding="async" /> : reveal.emoji || "🃏"}</div>
               <div className="text-lg font-bold text-white">{reveal.name}</div>
               <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: RARITY_COLOR[normalizeRarity(reveal.rarity)] }}>{t(`rarity_${normalizeRarity(reveal.rarity)}`)}</div>
             </div>
@@ -133,7 +133,7 @@ export function CollectiblesClient() {
               return (
                 <div key={c.id} className={`relative border rounded-xl p-3 flex flex-col items-center text-center transition-opacity ${have ? "bg-black/40" : "bg-black/20 opacity-50"}`} style={{ borderColor: have ? `${rc}88` : "#27272a" }}>
                   {c.qty > 1 && <span className="absolute top-1.5 right-1.5 text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-black/70 text-white border border-zinc-700">×{c.qty}</span>}
-                  <div className="text-4xl mb-1.5 h-12 flex items-center justify-center">{have ? (c.imageUrl ? <img src={c.imageUrl} alt="" className="w-12 h-12 object-contain" /> : c.emoji || "🃏") : "❔"}</div>
+                  <div className="text-4xl mb-1.5 h-12 flex items-center justify-center">{have ? (c.imageUrl ? <img src={c.imageUrl} alt="" className="w-12 h-12 object-contain" loading="lazy" decoding="async" /> : c.emoji || "🃏") : "❔"}</div>
                   <div className="text-xs font-semibold text-white truncate w-full">{have ? c.name : "???"}</div>
                   <div className="text-[9px] font-mono uppercase tracking-widest mt-0.5" style={{ color: have ? rc : "#52525b" }}>{t(`rarity_${normalizeRarity(c.rarity)}`)}</div>
                 </div>

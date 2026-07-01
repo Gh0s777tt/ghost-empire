@@ -24,7 +24,7 @@ export async function XPresence({ tenantId }: { tenantId: string | null }) {
     <section className="border border-zinc-800 bg-black/30 p-4 sm:p-5" aria-label={t("title")}>
       <div className="flex items-center gap-3 mb-3">
         {x.avatarUrl ? (
-          <img src={x.avatarUrl} alt="" width={40} height={40} className="w-10 h-10 rounded-full border border-zinc-700 object-cover" />
+          <img src={x.avatarUrl} alt="" width={40} height={40} className="w-10 h-10 rounded-full border border-zinc-700 object-cover" loading="lazy" decoding="async" />
         ) : null}
         <div className="min-w-0">
           <div className="font-display text-lg text-white tracking-wide leading-none">{t("title")}</div>

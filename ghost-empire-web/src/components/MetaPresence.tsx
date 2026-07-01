@@ -17,7 +17,7 @@ export async function MetaPresence({ tenantId }: { tenantId: string | null }) {
     <section className="border border-zinc-800 bg-black/30 p-4 sm:p-5" aria-label={t("title")}>
       <div className="flex items-center gap-3 mb-3">
         {ig.avatarUrl ? (
-          <img src={ig.avatarUrl} alt="" width={40} height={40} className="w-10 h-10 rounded-full border border-zinc-700 object-cover" />
+          <img src={ig.avatarUrl} alt="" width={40} height={40} className="w-10 h-10 rounded-full border border-zinc-700 object-cover" loading="lazy" decoding="async" />
         ) : null}
         <div className="min-w-0">
           <div className="font-display text-lg text-white tracking-wide leading-none">{t("title")}</div>
@@ -45,7 +45,7 @@ export async function MetaPresence({ tenantId }: { tenantId: string | null }) {
               className="block aspect-square overflow-hidden border border-zinc-900 hover:border-zinc-600 transition-colors bg-zinc-950"
             >
               {p.imageUrl ? (
-                <img src={p.imageUrl} alt={p.caption ?? ""} className="w-full h-full object-cover" />
+                <img src={p.imageUrl} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <span className="w-full h-full flex items-center justify-center text-zinc-700 text-xs">IG</span>
               )}
