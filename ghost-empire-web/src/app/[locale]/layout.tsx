@@ -19,6 +19,7 @@ import { HelpAssistant } from "@/components/HelpAssistant";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ClientErrorReporter } from "@/components/ClientErrorReporter";
 import { RegisterServiceWorker } from "@/components/pwa/RegisterServiceWorker";
+import { PresenceBeacon } from "@/components/PresenceBeacon";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -131,6 +132,8 @@ export default async function LocaleLayout({
         <ClientErrorReporter />
         {/* PWA: register the offline/installable service worker (prod only). */}
         <RegisterServiceWorker />
+        {/* Portal presence heartbeat (#767) — no UI; dormant without Redis. */}
+        <PresenceBeacon />
       </body>
     </html>
   );

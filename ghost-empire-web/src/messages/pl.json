@@ -1198,6 +1198,10 @@
           "name": "Ostatni follower",
           "desc": "Najnowszy obserwujący. Wymaga re-auth Twitcha (scope followers) + subskrypcji."
         },
+        "presence": {
+          "name": "Online teraz (portal)",
+          "desc": "Ilu ludzi jest teraz na Twoim portalu (obecność na stronie, nie widzowie streamu). Wymaga skonfigurowanego Redisa; bez niego sam się ukrywa."
+        },
         "viewers": {
           "name": "Liczba widzów",
           "desc": "Aktualna liczba widzów na Twitchu (gdy live). Wymaga połączonego Twitcha."
@@ -3000,6 +3004,7 @@
     "evContest": "KONKURS",
     "heroSubtitle": "Zbieraj %tokenName%, wymieniaj na realne nagrody, rywalizuj w rankingu. Oficjalny portal społeczności streamera %owner%.",
     "heroSubtitlePlatform": "Zbieraj %tokenName%, wymieniaj na realne nagrody, rywalizuj w rankingu. Portal społeczności dla streamerów i ich widzów.",
+    "onlineNow": "{n, plural, one {# osoba teraz na portalu} few {# osoby teraz na portalu} many {# osób teraz na portalu} other {# osoby teraz na portalu}}",
     "join": "👻 DOŁĄCZ DO IMPERIUM",
     "watchTwitch": "💜 OGLĄDAJ NA TWITCH",
     "watchLive": "🔴 OGLĄDAJ NA ŻYWO",

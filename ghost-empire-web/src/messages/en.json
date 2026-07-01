@@ -1198,6 +1198,10 @@
           "name": "Last follower",
           "desc": "Latest follower. Requires Twitch re-auth (followers scope) + subscription."
         },
+        "presence": {
+          "name": "Online now (portal)",
+          "desc": "How many people are on your portal right now (site presence, not stream viewers). Needs Redis configured; hides itself otherwise."
+        },
         "viewers": {
           "name": "Viewer count",
           "desc": "Current viewer count on Twitch (when live). Requires a connected Twitch."
@@ -3000,6 +3004,7 @@
     "evContest": "CONTEST",
     "heroSubtitle": "Collect %tokenName%, redeem them for real rewards, climb the ranking. The official community portal of streamer %owner%.",
     "heroSubtitlePlatform": "Collect %tokenName%, redeem them for real rewards, climb the ranking. A community portal for streamers and their viewers.",
+    "onlineNow": "{n, plural, one {# person online now} other {# people online now}}",
     "join": "👻 JOIN THE EMPIRE",
     "watchTwitch": "💜 WATCH ON TWITCH",
     "watchLive": "🔴 WATCH LIVE",

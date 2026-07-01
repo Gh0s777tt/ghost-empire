@@ -53,7 +53,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 - ✅ **AI moderacja kontekstowa** (dowiezione) — toksyczność z kontekstem jako rozszerzenie automoda.
 
 ## ⚡ Tor nowoczesnej platformy (jesteś na Vercel Pro)
-- **SSE → WebSockets + presence** — prawdziwy realtime, „kto teraz ogląda portal". *(wciąż SSE — niezrobione)*
+- ✅ **Presence — „kto teraz ogląda portal"** (dowiezione, #767) — realtime licznik online (Redis ZSET + heartbeat + SSE; WebSocket-serwer nie działa na Vercel serverless, ta architektura daje tę samą wartość). Badge na home + overlay `/overlay/presence`.
 - ✅ **Web Push + PWA** (dowiezione, #533) — natywne „streamer LIVE!" + instalowalna apka (VAPID, bez third-party).
 - ✅ **View Transitions API** (dowiezione, #479) — płynne przejścia + mikro-interakcje.
 - ✅ **Passkeys (WebAuthn)** (dowiezione, #543) — logowanie bez hasła obok OAuth.

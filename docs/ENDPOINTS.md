@@ -84,6 +84,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/clans` | GET/POST | Klany/drużyny — mój klan + ranking skarbca (GET); POST = utwórz / dołącz / opuść / wpłać GT (#477) |
 | `…/api/clips` | GET/POST | Klip tygodnia — klipy + liczby głosów + mój głos (GET publiczne); POST = głos (1/tydzień ISO, #502) |
 | `…/api/companion` | GET/PATCH | Ghost Companion usera (create-on-read); PATCH = akcje (karmienie/zmiana nazwy) |
+| `…/api/presence` | GET/POST | Obecność na portalu (#767) — GET publiczny snapshot (online + próbka userów); POST heartbeat (zalogowany `u:<id>` server-side, gość `a:<anonId>` hex-walidowany). Dormant bez Upstash Redis (`{active:false}`) |
 | `…/api/companion/feed` | POST | Karmienie companiona GT (osobny endpoint akcji) |
 | `…/api/assistant` | session + plan `ai` | Asystent pomocy („?" na każdej stronie) — wymaga zalogowania; degraduje się gdy brak planu/klucza AI |
 | `…/api/trivia` | GET/POST | Trivia/quiz (widz, #523) — aktywne pytania + moje odpowiedzi; POST = odpowiedź za GT (poprawna ukryta do czasu) |
@@ -216,7 +217,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 | Trasa | Overlay / rola |
 |---|---|
-| `…/api/overlay/stream/[feed]` | **Generyczny SSE** dla overlayów — `feed` ∈ `goals` · `subathon` · `polls` · `predictions` · `recent-events` · `emoji-combo` · `rumble` · `wheel` · `widget` · `chat` · `viewers` (push, heartbeat, self-close 50 s) |
+| `…/api/overlay/stream/[feed]` | **Generyczny SSE** dla overlayów — `feed` ∈ `goals` · `subathon` · `polls` · `predictions` · `recent-events` · `emoji-combo` · `rumble` · `wheel` · `widget` · `chat` · `viewers` · `presence` (push, heartbeat, self-close 50 s) |
 | `…/api/alerts/stream` | `/overlay` (alerty) — dedykowany **SSE** (push, heartbeat, self-close 50 s) |
 | `…/api/alerts/queue` | `/overlay` (alerty) — polling **fallback** |
 | `…/api/alerts/<feed>` | polling **fallback** pozostałych overlayów (`goals`/`chat`/`subathon`/`wheel`/`rumble`/`polls`/`predictions`/`recent-events`/`emoji-combo`/`widget`/`viewers`) — ten sam payload co SSE |

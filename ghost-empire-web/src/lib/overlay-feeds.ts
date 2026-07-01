@@ -18,6 +18,7 @@ import { cacheJson } from "@/lib/redis";
 import { getLiveStatus } from "@/lib/live-status";
 import { getXProfile } from "@/lib/x-social";
 import { getInstagramProfile } from "@/lib/meta-social";
+import { presenceSnapshot } from "@/lib/presence";
 import QRCode from "qrcode";
 import { cryptoUri, sepaQrPayload } from "@/lib/payment-methods";
 
@@ -41,7 +42,8 @@ export type OverlayFeedKey =
   | "top-supporters"
   | "sponsors"
   | "trivia"
-  | "social";
+  | "social"
+  | "presence";
 
 export type OverlayFeedDef = {
   /**
@@ -337,6 +339,15 @@ async function viewersFeed(_p: URLSearchParams, tid: string | null): Promise<unk
   return getLiveStatus(tid);
 }
 
+// Portal presence (#767): how many people are on the PORTAL right now (site tabs,
+// not platform viewers). Dormant without Redis → { active: false } and the overlay
+// renders nothing.
+async function presenceFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
+  const snap = await presenceSnapshot(tid);
+  if (!snap) return { active: false };
+  return { active: true, online: snap.online };
+}
+
 // Champion Companion: the top pet by xp in the tenant — shown on stream to drive
 // the feeding sink (feed yours to claim the spotlight).
 async function companionFeed(_p: URLSearchParams, tid: string | null): Promise<unknown> {
@@ -530,6 +541,7 @@ export const OVERLAY_FEEDS: Record<OverlayFeedKey, OverlayFeedDef> = {
   trivia: shared("trivia", { producer: triviaFeed, intervalMs: 2000 }),
   social: shared("social", { producer: socialFeed, intervalMs: 60000 }), // posts change rarely; getX/getInstagram are cached 5 min
   viewers: { producer: viewersFeed, intervalMs: 20000 }, // already internally cached (Helix)
+  presence: { producer: presenceFeed, intervalMs: 5000 }, // cheap ZCARD; dormant without Redis
 };
 
 /** Look up a feed definition by key (null for an unknown key). */

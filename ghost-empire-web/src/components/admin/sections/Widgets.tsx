@@ -53,6 +53,8 @@ function widgetPreview(id: string, t: TFn, tokenSymbol: string, brandColor: stri
       return <LastEventCard label={t("prevLastFollowLabel")} name={t("prevNewViewer")} icon="⭐" accent="#3b82f6" />;
     case "viewers":
       return <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(15,15,20,0.92)", border: `2px solid ${brandColor}`, borderRadius: 999, padding: "7px 14px", color: "#fff", fontWeight: 800 }}>👁 1 234</div>;
+    case "presence":
+      return <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(15,15,20,0.92)", border: "2px solid #10b981", borderRadius: 999, padding: "7px 14px", color: "#fff", fontWeight: 800 }}><span style={{ width: 9, height: 9, borderRadius: 999, background: "#10b981", boxShadow: "0 0 8px #10b981" }} /> 87 <span style={{ fontSize: 10, letterSpacing: 2, opacity: 0.75 }}>ONLINE</span></div>;
     case "emoji-combo":
       return <div style={{ textAlign: "center", color: "#fff" }}><div style={{ fontSize: 64, lineHeight: 1 }}>🔥</div><div style={{ fontSize: 28, fontWeight: 900, textShadow: `0 0 12px ${brandColor}` }}>×12 COMBO!</div></div>;
     case "companion":
@@ -109,6 +111,7 @@ const WIDGET_META: WidgetMeta[] = [
   { id: "sponsors",     path: "/overlay/sponsors",    size: "300×180" },
   { id: "trivia",       path: "/overlay/trivia",      size: "440×320" },
   { id: "social",       path: "/overlay/social",      size: "420×140" },
+  { id: "presence",     path: "/overlay/presence",    size: "220×70" },
 ];
 
 export function WidgetsLibrary({

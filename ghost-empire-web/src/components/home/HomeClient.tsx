@@ -16,6 +16,7 @@ import { GettingStarted } from "./GettingStarted";
 import { WatchStreakCard } from "@/components/WatchStreakCard";
 import { sfxPlay } from "@/lib/sfx";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { OnlineNowBadge } from "@/components/OnlineNowBadge";
 import type { Session } from "next-auth";
 
 // Shapes mirror the prisma selects in app/[locale]/page.tsx (minimal fields the
@@ -95,6 +96,9 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
     <div className="space-y-6 animate-fade-in">
       {/* Live banner — self-hides when the streamer is offline */}
       <LiveBanner />
+
+      {/* Portal presence (#767) — hides itself when dormant/empty */}
+      <div className="flex justify-end -mb-2"><OnlineNowBadge /></div>
 
       {/* Profile hero */}
       {user && <ProfileHero user={user} />}
@@ -312,11 +316,13 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
         >
           {brandName}
         </h1>
-        <p className="text-zinc-400 text-lg mb-8 max-w-xl mx-auto">
+        <p className="text-zinc-400 text-lg mb-4 max-w-xl mx-auto">
           {/* Platform brands (E-Forge / founder) are universal — don't name a single
               streamer in the hero; a streamer's own portal keeps the %owner% line (#763). */}
           {t(isPlatformBrand ? "heroSubtitlePlatform" : "heroSubtitle")}
         </p>
+        {/* Portal presence (#767) — live "N online now"; hides itself when dormant/empty */}
+        <div className="flex justify-center mb-6"><OnlineNowBadge /></div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => signIn()}
