@@ -24,6 +24,10 @@ const LABELS: Record<string, { label: string; hint: string }> = {
   youtube: { label: "YouTube połączony", hint: "Połącz YouTube w sekcji YouTube" },
   moderation: { label: "Moderacja czatu włączona", hint: "Włącz reguły automoderacji w sekcji Moderacja" },
   ai: { label: "Klucz AI (postać @bot + !imagine)", hint: "Wklej klucz AI w sekcji Integracje" },
+  shopItem: { label: "Pierwszy przedmiot w sklepie", hint: "Dodaj nagrodę za GT w sekcji Sklep — daje widzom powód, by zbierać" },
+  firstEvent: { label: "Pierwszy event lub zakład", hint: "Utwórz event/loterię albo predykcję — pierwsza wspólna aktywność" },
+  payment: { label: "Metoda wsparcia na /support", hint: "Dodaj link/krypto/konto w sekcji Wsparcie / płatności" },
+  firstDrop: { label: "Pierwszy drop-code na stream", hint: "Utwórz kod w sekcji Dropy i ogłoś go na streamie" },
 };
 
 export async function GET() {
@@ -31,7 +35,8 @@ export async function GET() {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const tid = await currentTenantId();
-  const [integ, mod, twitch, kick, youtube, alertSettings, tenant] = await Promise.all([
+  const scope = tid ? { tenantId: tid } : {};
+  const [integ, mod, twitch, kick, youtube, alertSettings, tenant, shopItems, events, predictions, payMethods, drops] = await Promise.all([
     getIntegrationConfig(),
     tid ? prisma.moderationConfig.findUnique({ where: { tenantId: tid } }) : prisma.moderationConfig.findFirst({ where: { tenantId: null } }),
     getTwitchStreamerToken(),
@@ -39,6 +44,12 @@ export async function GET() {
     getYouTubeStreamerToken(),
     getAlertSettings(),
     tid ? prisma.tenant.findUnique({ where: { id: tid }, select: { createdAt: true, setupCompletedAt: true, setupDismissedAt: true } }) : null,
+    // Activation funnel counts (#772) — first content of each kind, tenant-scoped.
+    prisma.shopItem.count({ where: { ...scope } }),
+    prisma.event.count({ where: { ...scope } }),
+    prisma.prediction.count({ where: { ...scope } }),
+    prisma.paymentMethod.count({ where: { ...scope } }),
+    prisma.streamDrop.count({ where: { ...scope } }),
   ]);
 
   // EventSub subscriptions are keyed by the channel's broadcasterId (the table has no tenantId),
@@ -58,6 +69,10 @@ export async function GET() {
     youtube: !!youtube,
     moderation: !!mod?.enabled,
     ai: !!integ.aiApiKey,
+    shopItem: shopItems > 0,
+    firstEvent: events + predictions > 0,
+    payment: payMethods > 0,
+    firstDrop: drops > 0,
   };
 
   const progress = computeSetupProgress(okByKey);

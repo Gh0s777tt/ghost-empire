@@ -4,7 +4,7 @@
 // this module owns the step CATALOG (order/group/required) + the progress math + the auto-open
 // decision. All pure (no DB/network) → unit-tested.
 
-export type SetupGroup = "platform" | "essential" | "engagement";
+export type SetupGroup = "platform" | "essential" | "engagement" | "activation";
 
 export type SetupStepDef = {
   key: string;
@@ -26,6 +26,13 @@ export const SETUP_STEPS: SetupStepDef[] = [
   { key: "youtube", section: "youtube", optional: true, group: "platform" },
   { key: "moderation", section: "moderation", optional: true, group: "engagement" },
   { key: "ai", section: "integrations", optional: true, group: "engagement" },
+  // Activation funnel (#772) — the "aha-moment" steps: content that makes the portal worth
+  // visiting. Derived from real rows (first shop item / event / payment method / drop), so
+  // they tick themselves the moment the streamer creates the thing anywhere in the panel.
+  { key: "shopItem", section: "shop", optional: true, group: "activation" },
+  { key: "firstEvent", section: "events", optional: true, group: "activation" },
+  { key: "payment", section: "payments", optional: true, group: "activation" },
+  { key: "firstDrop", section: "drops", optional: true, group: "activation" },
 ];
 
 export type SetupStep = SetupStepDef & { ok: boolean };

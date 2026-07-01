@@ -452,6 +452,22 @@
     "setupPillHint": "Dokończ konfigurację portalu",
     "setupStatus": {
       "item": {
+        "shopItem": {
+          "label": "Pierwszy przedmiot w sklepie",
+          "hint": "Dodaj nagrodę za GT w sekcji Sklep — daje widzom powód, by zbierać"
+        },
+        "firstEvent": {
+          "label": "Pierwszy event lub zakład",
+          "hint": "Utwórz event/loterię albo predykcję — pierwsza wspólna aktywność"
+        },
+        "payment": {
+          "label": "Metoda wsparcia na /support",
+          "hint": "Dodaj link/krypto/konto w sekcji Wsparcie / płatności"
+        },
+        "firstDrop": {
+          "label": "Pierwszy drop-code na stream",
+          "hint": "Utwórz kod w sekcji Dropy i ogłoś go na streamie"
+        },
         "ai": {
           "label": "Klucz AI (postać @bot + !imagine)",
           "hint": "Wklej klucz AI w sekcji Integracje"

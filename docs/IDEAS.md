@@ -71,7 +71,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 - **A/B testy komend/alertów** (jest w ROADMAP 3D).
 
 ## 📈 Tor SaaS
-- **Activation checklist + onboarding funnel** → „aha-moment".
+- ✅ **Activation checklist + onboarding funnel** (dowiezione, #772) — kroki aktywacyjne (sklep/event/płatność/drop) w Setup Wizard, derived z realnych danych.
 - **Tygodniowe digesty email** (🔑 dostawca maila) → retencja właścicieli.
 - **Program partnerski + Public API/pluginy** → ekosystem (fosa).
 

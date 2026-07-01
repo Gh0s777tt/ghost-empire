@@ -452,6 +452,22 @@
     "setupPillHint": "Finish setting up your portal",
     "setupStatus": {
       "item": {
+        "shopItem": {
+          "label": "First shop item",
+          "hint": "Add a GT reward in the Shop section — it gives viewers a reason to earn"
+        },
+        "firstEvent": {
+          "label": "First event or prediction",
+          "hint": "Create an event/raffle or a prediction — the first shared activity"
+        },
+        "payment": {
+          "label": "Support method on /support",
+          "hint": "Add a link/crypto/bank method in the Payments section"
+        },
+        "firstDrop": {
+          "label": "First drop code on stream",
+          "hint": "Create a code in the Drops section and announce it on stream"
+        },
         "ai": {
           "label": "AI key (@bot persona + !imagine)",
           "hint": "Paste the AI key in the Integrations section"

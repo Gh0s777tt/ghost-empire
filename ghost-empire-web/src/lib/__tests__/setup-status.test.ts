@@ -36,6 +36,17 @@ describe("computeSetupProgress", () => {
     expect(p.doneAll).toBe(1);
   });
 
+  it("activation-funnel steps (#772) exist, are optional and deep-link to content sections", () => {
+    const activation = SETUP_STEPS.filter((s) => s.group === "activation");
+    expect(activation.map((s) => s.key)).toEqual(["shopItem", "firstEvent", "payment", "firstDrop"]);
+    for (const s of activation) expect(s.optional, s.key).toBe(true); // never block go-live
+    expect(activation.map((s) => s.section)).toEqual(["shop", "events", "payments", "drops"]);
+    // Ticking them moves the percent but the required gate stays honest.
+    const p = computeSetupProgress({ shopItem: true, firstEvent: true, payment: true, firstDrop: true });
+    expect(p.doneAll).toBe(4);
+    expect(p.allRequiredDone).toBe(false);
+  });
+
   it("preserves catalog order and ignores unknown keys", () => {
     const p = computeSetupProgress({ twitch: true, nope: true } as Record<string, boolean>);
     expect(p.steps.map((s) => s.key)).toEqual(SETUP_STEPS.map((s) => s.key));
