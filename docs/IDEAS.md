@@ -72,7 +72,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 
 ## 📈 Tor SaaS
 - ✅ **Activation checklist + onboarding funnel** (dowiezione, #772) — kroki aktywacyjne (sklep/event/płatność/drop) w Setup Wizard, derived z realnych danych.
-- **Tygodniowe digesty email** (🔑 dostawca maila) → retencja właścicieli.
+- ✅ **Tygodniowe digesty email** (dowiezione #773, dormant) — cron pon. 07:00 → raport 7 dni do właścicieli portali; aktywacja = `RESEND_API_KEY`+`EMAIL_FROM` w Vercel.
 - **Program partnerski + Public API/pluginy** → ekosystem (fosa).
 
 ---
