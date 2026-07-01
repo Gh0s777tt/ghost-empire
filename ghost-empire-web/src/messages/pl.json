@@ -581,6 +581,16 @@
       "hide": "Ukryj"
     },
     "analytics": {
+      "chartsTitle": "Wzrost i ekonomia",
+      "chartsIntro": "Ostatnie 30 dni w pigułce: nowi członkowie, GT zarobione vs wydane oraz jak kolejne tygodnie zapisów wracają na portal.",
+      "chartNewUsers": "Nowi członkowie (30 dni)",
+      "chartFlow": "Przepływ GT (30 dni)",
+      "legendEarned": "zarobione",
+      "legendSpent": "wydane",
+      "cohortTitle": "Retencja kohort (8 tygodni)",
+      "cohortIntro": "Każdy wiersz to tydzień zapisu; T+n pokazuje, jaka część tej kohorty była aktywna (dowolna transakcja GT) n tygodni później.",
+      "cohortSize": "userów",
+      "chartsEmpty": "Za mało danych — wykresy pojawią się, gdy społeczność urośnie.",
       "loading": "Ładowanie…",
       "streamTimeTitle": "Czas na streamie",
       "streamIntro": "Sesje nadawania z Twitch EventSub (<code>stream.online</code>/<code>stream.offline</code>). Mierzy czas <b>nadawania streamera</b>, nie czas oglądania per-widz.",

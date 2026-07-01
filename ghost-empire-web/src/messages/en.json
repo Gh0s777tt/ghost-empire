@@ -581,6 +581,16 @@
       "hide": "Hide"
     },
     "analytics": {
+      "chartsTitle": "Growth and economy",
+      "chartsIntro": "Last 30 days at a glance: new members, GT earned vs spent, and how each signup week keeps coming back.",
+      "chartNewUsers": "New members (30 days)",
+      "chartFlow": "GT flow (30 days)",
+      "legendEarned": "earned",
+      "legendSpent": "spent",
+      "cohortTitle": "Cohort retention (8 weeks)",
+      "cohortIntro": "Each row is a signup week; T+n shows what share of that cohort was active (any GT transaction) n weeks later.",
+      "cohortSize": "users",
+      "chartsEmpty": "Not enough data yet — charts appear as the community grows.",
       "loading": "Loading…",
       "streamTimeTitle": "Stream time",
       "streamIntro": "Broadcast sessions from Twitch EventSub (<code>stream.online</code>/<code>stream.offline</code>). Measures the <b>streamer’s broadcast time</b>, not per-viewer watch time.",

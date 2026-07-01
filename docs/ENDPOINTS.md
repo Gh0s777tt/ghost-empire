@@ -148,6 +148,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/support-tickets` | admin | Skrzynka wsparcia — GET lista (filtr open/resolved/all, tenant-scoped), PATCH reply/resolve/reopen + powiadomienie widza (#650) |
 | `…/api/admin/deliver-order` | perm:deliver_orders | Realizacja zamówień sklepu |
 | `…/api/admin/analytics` | admin | Heatmapa aktywności czatu |
+| `…/api/admin/analytics-charts` | admin | Wykresy wzrostu (#769) — nowi/dzień 30d, przepływ GT/dzień, retencja kohort 8 tyg. (read-only, tenant-scoped) |
 | `…/api/admin/alerts` | admin | Ustawienia Stream Alerts + test |
 | `…/api/admin/alert-types` | admin | Typy alertów (włącz/wyłącz + progi per rodzaj) |
 | `…/api/admin/custom-alerts` | admin | CRUD własnych alertów (ręczne wyzwalanie na overlayu) |

@@ -61,7 +61,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 ## 🎨 Tor wyglądu
 - ✅ **Landing page** (dowiezione) — hero + CTA „Załóż własny portal" (#660), sekcja społeczności.
 - ✅ **System motywów** (dowiezione, #521/#532) — presety + edytor (brand-color per tenant).
-- **Piękna analityka** — animowane wykresy, cohort-retention.
+- ✅ **Piękna analityka** (dowiezione, #769) — animowane wykresy (nowi/GT-flow 30d) + cohort-retention 8 tyg. w `/admin#analytics`.
 - **Reaktywne overlaye** — cząsteczki/fizyka, WebGL/WebGPU (masz kości 3D).
 
 ## 🧰 Tor narzędzi twórcy

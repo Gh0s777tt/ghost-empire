@@ -3,11 +3,12 @@
 // Lazily-loaded admin analytics: stream sessions ("czas na streamie") + chat heatmap.
 // Extracted from the AdminClient monolith; rendered via next/dynamic.
 import { useState, useEffect } from "react";
-import { Radio, Loader2, TrendingUp } from "lucide-react";
+import { Radio, Loader2, TrendingUp, LineChart } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { apiGet } from "@/lib/api-client";
+import { linePath, areaPath, type CohortRow } from "@/lib/analytics-series";
 
 type StreamSessionRow = { id: string; startedAt: string; endedAt: string | null; durationSeconds: number | null };
 
@@ -181,9 +182,138 @@ function ChatHeatmap() {
   );
 }
 
+// Growth charts (#769): 30-day new users + GT flow, and 8-week signup-cohort retention.
+// Hand-rolled animated SVG (no chart lib) — keyframes live in globals.css (CSP #735).
+type ChartsData = {
+  days: string[];
+  newUsers: number[];
+  earned: number[];
+  spent: number[];
+  weeks: string[];
+  cohorts: CohortRow[];
+};
+
+function GrowthCharts() {
+  const t = useTranslations("admin.analytics");
+  const nf = useLocale();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<ChartsData | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const d = await apiGet<ChartsData>("/api/admin/analytics-charts");
+        if (!cancelled) setData(d);
+      } catch { /* leave empty */ } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const W = 300, H = 72;
+  const totalNew = data ? data.newUsers.reduce((a, b) => a + b, 0) : 0;
+  const totalEarned = data ? data.earned.reduce((a, b) => a + b, 0) : 0;
+  const totalSpent = data ? data.spent.reduce((a, b) => a + b, 0) : 0;
+  const flowMax = data ? Math.max(1, ...data.earned, ...data.spent) : 1;
+
+  return (
+    <SectionCard title={t("chartsTitle")} icon={LineChart}>
+      <p className="text-zinc-500 text-xs mb-3">{t("chartsIntro")}</p>
+      {loading ? (
+        <div className="text-xs text-zinc-500 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> {t("loading")}</div>
+      ) : !data || (totalNew === 0 && totalEarned === 0 && totalSpent === 0) ? (
+        <div className="text-xs text-zinc-500 text-center py-4 border border-zinc-900 bg-black/20">{t("chartsEmpty")}</div>
+      ) : (
+        <div className="space-y-5">
+          {/* New users — animated line/area */}
+          <div className="border border-zinc-800 bg-black/30 p-3">
+            <div className="flex items-baseline justify-between mb-2">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("chartNewUsers")}</div>
+              <div className="text-sm font-bold text-white tabular-nums">+{totalNew.toLocaleString(nf)}</div>
+            </div>
+            <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-20" preserveAspectRatio="none" aria-hidden>
+              <path d={areaPath(data.newUsers, W, H)} fill="rgba(229,9,20,0.14)" />
+              <path d={linePath(data.newUsers, W, H)} fill="none" stroke="var(--brand)" strokeWidth="2" className="gechart-line" pathLength={600} />
+            </svg>
+            <div className="flex justify-between text-[9px] font-mono text-zinc-600 mt-1">
+              <span>{data.days[0]?.slice(5)}</span><span>{data.days[data.days.length - 1]?.slice(5)}</span>
+            </div>
+          </div>
+
+          {/* GT flow — grouped animated bars */}
+          <div className="border border-zinc-800 bg-black/30 p-3">
+            <div className="flex items-baseline justify-between mb-2">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("chartFlow")}</div>
+              <div className="text-[11px] font-mono tabular-nums">
+                <span className="text-emerald-400">+{totalEarned.toLocaleString(nf)}</span>
+                <span className="text-zinc-600"> / </span>
+                <span className="text-red-400">−{totalSpent.toLocaleString(nf)}</span>
+              </div>
+            </div>
+            <div className="flex items-end gap-[2px] h-20">
+              {data.days.map((d, i) => (
+                <div key={d} className="flex-1 flex items-end gap-[1px] min-w-0" title={`${d} · +${data.earned[i]} / −${data.spent[i]}`}>
+                  <div className="flex-1 bg-emerald-500/80 gebar" style={{ height: `${(data.earned[i] / flowMax) * 100}%`, animationDelay: `${i * 18}ms` }} />
+                  <div className="flex-1 bg-red-500/70 gebar" style={{ height: `${(data.spent[i] / flowMax) * 100}%`, animationDelay: `${i * 18 + 60}ms` }} />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 mt-2 text-[9px] font-mono text-zinc-500">
+              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 bg-emerald-500/80 inline-block" /> {t("legendEarned")}</span>
+              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 bg-red-500/70 inline-block" /> {t("legendSpent")}</span>
+            </div>
+          </div>
+
+          {/* Cohort retention grid */}
+          <div className="border border-zinc-800 bg-black/30 p-3">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{t("cohortTitle")}</div>
+            <p className="text-[10px] text-zinc-600 mb-2">{t("cohortIntro")}</p>
+            {data.cohorts.length === 0 ? (
+              <div className="text-xs text-zinc-500 text-center py-3">{t("chartsEmpty")}</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full">
+                  <div className="flex items-center gap-[2px] mb-[2px]">
+                    <div className="w-14 shrink-0" />
+                    <div className="w-9 shrink-0 text-[8px] font-mono text-zinc-600 text-end pe-1">{t("cohortSize")}</div>
+                    {data.cohorts[0].cells.map((_, i) => (
+                      <div key={i} className="w-9 text-center text-[8px] font-mono text-zinc-600">T+{i}</div>
+                    ))}
+                  </div>
+                  {data.cohorts.map((row) => (
+                    <div key={row.cohort} className="flex items-center gap-[2px] mb-[2px]">
+                      <div className="w-14 shrink-0 text-[9px] font-mono text-zinc-500">{row.cohort.slice(5)}</div>
+                      <div className="w-9 shrink-0 text-[9px] font-mono text-zinc-400 text-end pe-1 tabular-nums">{row.size}</div>
+                      {row.cells.map((c, i) => (
+                        <div
+                          key={i}
+                          title={c ? `${c.users} (${c.pct}%)` : ""}
+                          className="w-9 h-6 rounded-[2px] flex items-center justify-center text-[8px] font-mono tabular-nums"
+                          style={c
+                            ? { background: `rgba(229,9,20,${(0.08 + (c.pct / 100) * 0.8).toFixed(3)})`, color: c.pct > 45 ? "#fff" : "#a1a1aa" }
+                            : { background: "rgba(255,255,255,0.02)" }}
+                        >
+                          {c ? `${c.pct}%` : ""}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
 export function AnalyticsSection() {
   return (
     <div className="space-y-6">
+      <GrowthCharts />
       <StreamSessionsCard />
       <ChatHeatmap />
     </div>
