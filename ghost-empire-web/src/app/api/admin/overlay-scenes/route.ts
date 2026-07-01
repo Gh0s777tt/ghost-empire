@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
 import { parseElements } from "@/lib/overlay-scenes";
+import { sceneTemplate } from "@/lib/scene-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,18 @@ export async function POST(req: Request) {
     const name = String(body.name ?? "").trim().slice(0, 60) || "Scene";
     const created = await prisma.overlayScene.create({ data: { ...(tid ? { tenantId: tid } : {}), name, elements: "[]" } });
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "overlay_scene", targetId: created.id, details: { create: name }, req });
+    return NextResponse.json({ ok: true, scene: { id: created.id, name: created.name, elements: created.elements } });
+  }
+
+  // One-click curated template (#771): create a scene pre-filled with the template's
+  // layout. Elements pass through parseElements like any client payload (defense in depth).
+  if (action === "apply_template") {
+    const tpl = sceneTemplate(body.templateId);
+    if (!tpl) return NextResponse.json({ error: "Nieznany szablon" }, { status: 400 });
+    const name = String(body.name ?? "").trim().slice(0, 60) || tpl.id;
+    const elements = JSON.stringify(parseElements(JSON.stringify(tpl.elements)));
+    const created = await prisma.overlayScene.create({ data: { ...(tid ? { tenantId: tid } : {}), name, elements } });
+    await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "overlay_scene", targetId: created.id, details: { template: tpl.id }, req });
     return NextResponse.json({ ok: true, scene: { id: created.id, name: created.name, elements: created.elements } });
   }
 

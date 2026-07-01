@@ -65,7 +65,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 - ✅ **Reaktywne overlaye** (dowiezione, #770) — particle burst (canvas 2D, fontanna z fizyką) za każdym alertem; strojenie `?particles=`. WebGL świadomie pominięty (koszt kontekstu w OBS bez zysku przy tej liczbie cząstek).
 
 ## 🧰 Tor narzędzi twórcy
-- **Marketplace szablonów** overlayów (UGC = wzrost SaaS).
+- 🟡 **Marketplace szablonów** overlayów — faza 1 DOWIEZIONA (#771): kurowany katalog 6 szablonów scen, 1 klik → edytowalna scena. Faza 2 (UGC + udostępnianie między streamerami) — otwarta.
 - ✅ **Menedżer sponsorów** (dowiezione, #538) — partnerzy + overlay `/overlay/sponsors`; *follow-up:* segmenty, raporty.
 - **Mobilny companion / Stream Deck plugin**.
 - **A/B testy komend/alertów** (jest w ROADMAP 3D).

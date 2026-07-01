@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { SCENE_WIDGETS, sceneWidget, clampElement, type SceneElement } from "@/lib/overlay-scenes";
+import { SCENE_TEMPLATES } from "@/lib/scene-templates";
 
 type Scene = { id: string; name: string; elements: string };
 
@@ -70,6 +71,20 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
     } catch (e) { onToast("err", e instanceof ApiError ? e.message : t("err")); }
     finally { setBusy(false); }
   }
+  // Curated template → a real editable scene in one click (#771).
+  async function applyTemplate(templateId: string) {
+    setBusy(true);
+    try {
+      const d = await apiPost<{ scene?: Scene }>("/api/admin/overlay-scenes", {
+        action: "apply_template",
+        templateId,
+        name: t(`tpl_${templateId}`),
+      });
+      if (d.scene) { setScenes((p) => [...p, d.scene!]); setActiveId(d.scene.id); onToast("ok", t("tplApplied")); }
+    } catch (e) { onToast("err", e instanceof ApiError ? e.message : t("err")); }
+    finally { setBusy(false); }
+  }
+
   async function removeScene(s: Scene) {
     if (!confirm(t("deleteConfirm", { name: s.name }))) return;
     setBusy(true);
@@ -148,6 +163,22 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
             <button onClick={() => void createScene()} disabled={busy} className="px-2.5 py-1 text-xs border border-zinc-800 text-zinc-300 hover:border-red-600 rounded inline-flex items-center gap-1 disabled:opacity-50">
               <Plus className="w-3 h-3" /> {t("newScene")}
             </button>
+          </div>
+
+          {/* Curated templates (#771) — one click creates a ready, editable scene. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600 me-1">{t("tplHeading")}</span>
+            {SCENE_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                onClick={() => void applyTemplate(tpl.id)}
+                disabled={busy}
+                title={t(`tpl_${tpl.id}`)}
+                className="px-2 py-1 text-[11px] border border-zinc-800 text-zinc-400 hover:border-amber-600 hover:text-amber-300 rounded inline-flex items-center gap-1 disabled:opacity-50"
+              >
+                <span aria-hidden>{tpl.icon}</span> {t(`tpl_${tpl.id}`)}
+              </button>
+            ))}
           </div>
 
           {!activeId ? (

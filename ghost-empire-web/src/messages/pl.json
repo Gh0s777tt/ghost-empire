@@ -2100,6 +2100,14 @@
       "filterWord": "filtr"
     },
     "scenes": {
+      "tplHeading": "Szablony:",
+      "tplApplied": "Szablon zastosowany — scena jest Twoja do edycji",
+      "tpl_stream-hud": "HUD streamu",
+      "tpl_community": "Społeczność",
+      "tpl_hype": "Subathon / hype",
+      "tpl_games": "Wieczór gier",
+      "tpl_minimal": "Minimal",
+      "tpl_charity": "Zbiórka",
       "title": "Kreator scen overlay",
       "intro": "Złóż kilka widżetów overlay na jednym płótnie 16:9, a do OBS wrzucasz JEDNO źródło na całą scenę. Przeciągnij, by przesunąć; róg, by zmienić rozmiar.",
       "loading": "Ładowanie…",

@@ -2100,6 +2100,14 @@
       "filterWord": "filter"
     },
     "scenes": {
+      "tplHeading": "Templates:",
+      "tplApplied": "Template applied — the scene is yours to edit",
+      "tpl_stream-hud": "Stream HUD",
+      "tpl_community": "Community",
+      "tpl_hype": "Subathon / hype",
+      "tpl_games": "Games night",
+      "tpl_minimal": "Minimal",
+      "tpl_charity": "Fundraiser",
       "title": "Overlay scene builder",
       "intro": "Compose several overlay widgets on one 16:9 canvas, then drop a SINGLE browser source into OBS for the whole scene. Drag to move, drag the corner to resize.",
       "loading": "Loading…",
