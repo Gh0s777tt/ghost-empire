@@ -67,7 +67,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 ## 🧰 Tor narzędzi twórcy
 - 🟡 **Marketplace szablonów** overlayów — faza 1 DOWIEZIONA (#771): kurowany katalog 6 szablonów scen, 1 klik → edytowalna scena. Faza 2 (UGC + udostępnianie między streamerami) — otwarta.
 - ✅ **Menedżer sponsorów** (dowiezione, #538) — partnerzy + overlay `/overlay/sponsors`; *follow-up:* segmenty, raporty.
-- **Mobilny companion / Stream Deck plugin**.
+- 🟡 **Mobilny companion / Stream Deck plugin** — MVP DOWIEZIONE (#774): strona `/deck` (PWA, wielkie przyciski: alerty/drop/subathon) działa jak companion na telefonie obok OBS. Natywny plugin Elgato — otwarty follow-up.
 - **A/B testy komend/alertów** (jest w ROADMAP 3D).
 
 ## 📈 Tor SaaS

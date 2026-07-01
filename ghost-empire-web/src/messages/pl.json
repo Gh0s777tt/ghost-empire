@@ -1,4 +1,25 @@
 {
+  "deck": {
+    "title": "Deck",
+    "subtitle": "Sterowanie na żywo wielkimi przyciskami — przypnij tę stronę do ekranu telefonu.",
+    "denied": "Ten pulpit jest dla admina/moderatorów portalu. Zaloguj się na konto z uprawnieniami.",
+    "goHome": "Wróć na portal",
+    "openAdmin": "Pełny panel",
+    "alerts": "Alerty",
+    "testAlert": "Testowy alert",
+    "noCustom": "Brak własnych alertów — utwórz je w panelu (sekcja Alerty), a pojawią się tu jako przyciski.",
+    "drop": "Szybki drop (60 min)",
+    "dropCode": "Ogłoś ten kod",
+    "copy": "Kopiuj",
+    "copied": "Skopiowano",
+    "subathon": "Subathon",
+    "subOff": "Subathon nie trwa. Wystartuj go w panelu — sterowanie czasem pojawi się tu, gdy będzie aktywny.",
+    "stop": "Zatrzymaj subathon",
+    "stopConfirm": "Zatrzymać licznik subathonu?",
+    "fired": "Alert poszedł na overlay",
+    "created": "Drop utworzony",
+    "err": "Coś poszło nie tak"
+  },
   "auctions": {
     "title": "Aukcje",
     "subtitle": "Licytuj {sym} o wyjątkowe nagrody — wygrywa najwyższa oferta, gdy upłynie czas.",

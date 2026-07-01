@@ -1,4 +1,25 @@
 {
+  "deck": {
+    "title": "Deck",
+    "subtitle": "Live controls with big buttons — pin this page to your phone home screen.",
+    "denied": "This control pad is for the portal admin/moderators. Sign in on an admin account.",
+    "goHome": "Back to the portal",
+    "openAdmin": "Full panel",
+    "alerts": "Alerts",
+    "testAlert": "Test alert",
+    "noCustom": "No custom alerts yet — create them in the panel (Alerts section) and they appear here as buttons.",
+    "drop": "Quick drop (60 min)",
+    "dropCode": "Announce this code",
+    "copy": "Copy",
+    "copied": "Copied",
+    "subathon": "Subathon",
+    "subOff": "Subathon is not running. Start it from the panel — time controls appear here while it is live.",
+    "stop": "Stop subathon",
+    "stopConfirm": "Stop the subathon timer?",
+    "fired": "Alert sent to the overlay",
+    "created": "Drop created",
+    "err": "Something went wrong"
+  },
   "auctions": {
     "title": "Auctions",
     "subtitle": "Bid your {sym} on exclusive rewards — the highest bid when the clock runs out wins.",
