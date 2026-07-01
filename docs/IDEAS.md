@@ -62,7 +62,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 - ✅ **Landing page** (dowiezione) — hero + CTA „Załóż własny portal" (#660), sekcja społeczności.
 - ✅ **System motywów** (dowiezione, #521/#532) — presety + edytor (brand-color per tenant).
 - ✅ **Piękna analityka** (dowiezione, #769) — animowane wykresy (nowi/GT-flow 30d) + cohort-retention 8 tyg. w `/admin#analytics`.
-- **Reaktywne overlaye** — cząsteczki/fizyka, WebGL/WebGPU (masz kości 3D).
+- ✅ **Reaktywne overlaye** (dowiezione, #770) — particle burst (canvas 2D, fontanna z fizyką) za każdym alertem; strojenie `?particles=`. WebGL świadomie pominięty (koszt kontekstu w OBS bez zysku przy tej liczbie cząstek).
 
 ## 🧰 Tor narzędzi twórcy
 - **Marketplace szablonów** overlayów (UGC = wzrost SaaS).

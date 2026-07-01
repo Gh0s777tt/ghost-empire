@@ -5,6 +5,7 @@
 // polling /api/alerts/queue every ~1.2s — so the overlay never goes dark on air.
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AlertCard } from "@/components/AlertCard";
+import { ParticleBurst } from "./ParticleBurst";
 import {
   resolveAlertAnchorStyle,
   scaleOriginFor,
@@ -76,6 +77,8 @@ export function OverlayClient() {
   const [sizeScale, setSizeScale] = useState(1);
   const [textScale, setTextScale] = useState(1);
   const [textColor, setTextColor] = useState("#d4d4d8");
+  // Reactive particles (#770): URL-tunable per browser source (?particles=0..200, 0 = off).
+  const [particles, setParticles] = useState(90);
 
   const queueRef = useRef<AlertItem[]>([]);
   const seenIdsRef = useRef<Set<string>>(new Set());
@@ -106,6 +109,10 @@ export function OverlayClient() {
         voice: p.get("ttsVoice"),
       };
     }
+
+    // Particle burst intensity (#770): ?particles=0 disables, 1–200 scales the count.
+    const pRaw = parseInt(p.get("particles") ?? "", 10);
+    if (Number.isFinite(pRaw)) setParticles(Math.min(200, Math.max(0, pRaw)));
 
     const t = p.get("token");
     if (!t) {
@@ -334,6 +341,14 @@ export function OverlayClient() {
         zIndex: 999999,
       }}
     >
+      {/* Reactive particle burst (#770) — fires behind each alert, anchored to its slot. */}
+      <ParticleBurst
+        alertId={current?.id ?? null}
+        accent={current?.accent ?? accent}
+        position={pos}
+        type={current?.type}
+        intensity={particles}
+      />
       {/* Alert anchor — outer places it (per-type position), inner animates it. */}
       <div style={outer}>
         <div style={inner}>
