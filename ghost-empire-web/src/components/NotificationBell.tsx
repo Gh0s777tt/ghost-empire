@@ -60,6 +60,17 @@ export function NotificationBell() {
     return () => { clearInterval(iv); document.removeEventListener("visibilitychange", onVisible); };
   }, [fetchNotifications, open]);
 
+  // Badging API (#775): mirror the unread count onto the installed-PWA app icon
+  // (home-screen/taskbar badge). Feature-detected; a no-op everywhere unsupported.
+  useEffect(() => {
+    const nav = navigator as Navigator & {
+      setAppBadge?: (n?: number) => Promise<void>;
+      clearAppBadge?: () => Promise<void>;
+    };
+    if (unread > 0) nav.setAppBadge?.(unread).catch(() => {});
+    else nav.clearAppBadge?.().catch(() => {});
+  }, [unread]);
+
   // Click outside (or Escape) to close
   useEffect(() => {
     if (!open) return;

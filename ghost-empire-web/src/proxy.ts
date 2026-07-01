@@ -18,7 +18,9 @@ const handleI18n = createMiddleware(routing);
 function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    // 'inline-speculation-rules' (#775) allows ONLY inline <script type="speculationrules">
+    // (the Speculation Rules API JSON — no JS execution), keeping script-src otherwise strict.
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'inline-speculation-rules'`,
     // Split style policy (#735): inline <style> ELEMENT blocks were extracted to CSS files
     // (globals.css keyframes + overlay/overlay.css reset) loaded via <link>, so element styles
     // need only 'self'. 'unsafe-inline' is now confined to style-src-ATTR — required because the

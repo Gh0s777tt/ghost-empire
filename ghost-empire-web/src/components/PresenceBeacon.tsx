@@ -25,6 +25,9 @@ export function PresenceBeacon() {
   useEffect(() => {
     let stopped = false;
     const beat = () => {
+      // Prerendering guard (#775): a speculatively prerendered page must not count as a
+      // viewer — beats resume via visibilitychange when the page is actually activated.
+      if ((document as Document & { prerendering?: boolean }).prerendering) return;
       if (stopped || document.visibilityState !== "visible") return;
       void fetch("/api/presence", {
         method: "POST",

@@ -25,6 +25,30 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { routing } from "@/i18n/routing";
 
+// Speculation Rules API (#775): browser-level document prefetch on pointer-down
+// ("conservative" = mousedown/touchstart only — near-zero waste) for viewer pages, so HARD
+// navigations (first hit, back from external, overlay→site) start with warm HTML. Soft navs
+// still go through the Next router (which has its own RSC prefetch). Admin/API/auth/overlay
+// and the deck are excluded. Unknown to a browser = silently ignored; CSP allows exactly
+// this block via 'inline-speculation-rules' (no JS can run through it).
+const SPECULATION_RULES = JSON.stringify({
+  prefetch: [
+    {
+      where: {
+        and: [
+          { href_matches: "/*" },
+          { not: { href_matches: "/admin*" } },
+          { not: { href_matches: "/api/*" } },
+          { not: { href_matches: "/auth/*" } },
+          { not: { href_matches: "/overlay*" } },
+          { not: { href_matches: "/deck*" } },
+        ],
+      },
+      eagerness: "conservative",
+    },
+  ],
+});
+
 const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-inter", display: "swap" });
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin", "cyrillic"],
@@ -134,6 +158,8 @@ export default async function LocaleLayout({
         <RegisterServiceWorker />
         {/* Portal presence heartbeat (#767) — no UI; dormant without Redis. */}
         <PresenceBeacon />
+        {/* Speculation Rules (#775) — pointer-down document prefetch for viewer pages. */}
+        <script type="speculationrules" dangerouslySetInnerHTML={{ __html: SPECULATION_RULES }} />
       </body>
     </html>
   );

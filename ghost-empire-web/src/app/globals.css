@@ -685,6 +685,12 @@
 
 /* ── Animations extracted from inline <style> blocks (#735) so the CSP can drop 'unsafe-inline'
    from style-src-elem. Names are referenced from inline style/className across the app. ── */
+/* Render-perf for long lists (#775): the browser skips layout/paint of off-screen items
+   (content-visibility) while contain-intrinsic-size keeps the scrollbar stable. Apply to
+   REPEATED items (rows/cards), not the container. */
+.cv-row { content-visibility: auto; contain-intrinsic-size: auto 56px; }
+.cv-card { content-visibility: auto; contain-intrinsic-size: auto 320px; }
+
 /* Admin growth charts (#769) — line draw-in + bar grow. */
 @keyframes gechart-draw { to { stroke-dashoffset: 0; } }
 .gechart-line { stroke-dasharray: 600; stroke-dashoffset: 600; animation: gechart-draw 1.2s ease-out forwards; }

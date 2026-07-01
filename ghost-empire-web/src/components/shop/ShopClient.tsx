@@ -220,7 +220,7 @@ export function ShopClient({
               <div
                 key={item.id}
                 className={cn(
-                  "relative border bg-zinc-950/70 backdrop-blur-xs p-5 flex flex-col transition-all",
+                  "cv-card relative border bg-zinc-950/70 backdrop-blur-xs p-5 flex flex-col transition-all",
                   canBuy ? "border-zinc-800 hover:border-red-600/50" : "border-zinc-900",
                 )}
                 style={{

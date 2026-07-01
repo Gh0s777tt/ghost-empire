@@ -131,7 +131,7 @@ export function CollectiblesClient() {
               const rc = RARITY_COLOR[normalizeRarity(c.rarity)];
               const have = c.qty > 0;
               return (
-                <div key={c.id} className={`relative border rounded-xl p-3 flex flex-col items-center text-center transition-opacity ${have ? "bg-black/40" : "bg-black/20 opacity-50"}`} style={{ borderColor: have ? `${rc}88` : "#27272a" }}>
+                <div key={c.id} className={`cv-card relative border rounded-xl p-3 flex flex-col items-center text-center transition-opacity ${have ? "bg-black/40" : "bg-black/20 opacity-50"}`} style={{ borderColor: have ? `${rc}88` : "#27272a", containIntrinsicSize: "auto 140px" }}>
                   {c.qty > 1 && <span className="absolute top-1.5 right-1.5 text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-black/70 text-white border border-zinc-700">×{c.qty}</span>}
                   <div className="text-4xl mb-1.5 h-12 flex items-center justify-center">{have ? (c.imageUrl ? <img src={c.imageUrl} alt="" className="w-12 h-12 object-contain" loading="lazy" decoding="async" /> : c.emoji || "🃏") : "❔"}</div>
                   <div className="text-xs font-semibold text-white truncate w-full">{have ? c.name : "???"}</div>
