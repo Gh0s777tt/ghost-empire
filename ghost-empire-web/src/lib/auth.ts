@@ -190,10 +190,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
-          // youtube.readonly → lets us call the YouTube Data API at sign-in to
-          // fetch the real channel @handle/title (Google's OIDC profile has none).
-          // Adding it means existing users re-consent on next Google login.
-          scope: "openid email profile https://www.googleapis.com/auth/youtube.readonly",
+          // Login requests ONLY non-sensitive scopes so the Google OAuth app can be
+          // PUBLISHED to production without Google's verification review. The sensitive
+          // `youtube.readonly` scope used to live here purely to fetch the channel
+          // @handle/title at sign-in, but it forced the app to stay verification-gated —
+          // in "Testing" that blocks every non-test-user ("only the owner can log in", #780).
+          // The YouTube channel handle is a login-time nicety only; a Google user's username
+          // now falls back to their email local-part (already handled below). Streamers still
+          // grant youtube.readonly through the SEPARATE integration
+          // (api/admin/youtube-streamer-auth → YT_STREAMER_SCOPES) that powers live-chat polling,
+          // so YouTube features are unaffected. The guarded channel fetch below simply no-ops
+          // without the scope.
+          scope: "openid email profile",
         },
       },
     }),
