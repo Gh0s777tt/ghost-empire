@@ -7,6 +7,7 @@
 import { prisma } from "@/lib/prisma";
 import { redis, withLock } from "@/lib/redis";
 import { MIN_BET, MAX_BET } from "@/lib/gt-games";
+import { cryptoRng } from "@/lib/secure-rng";
 import { randomUUID } from "node:crypto";
 
 const TTL_S = 60 * 60;
@@ -71,7 +72,7 @@ export async function hiloStart(userId: string, bet: number): Promise<HiloResult
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
 
-  const s: HiloSession = { bet, mult: 1, card: drawCard(), steps: 0 };
+  const s: HiloSession = { bet, mult: 1, card: drawCard(cryptoRng), steps: 0 };
   const id = randomUUID();
   try {
     await redis.set(sk(userId, id), s, { ex: TTL_S });
@@ -101,7 +102,7 @@ export async function hiloGuess(userId: string, sessionId: string, guess: "hi" |
     const step = hiloStepMultiplier(s.card.rank, guess);
     if (step === 0) return { ok: false, status: 400, error: "Ten kierunek jest niemożliwy" }; // K-hi / A-lo
 
-    const next = drawCard();
+    const next = drawCard(cryptoRng);
     const won = guess === "hi" ? next.rank > s.card.rank : next.rank < s.card.rank;
 
     if (!won) {

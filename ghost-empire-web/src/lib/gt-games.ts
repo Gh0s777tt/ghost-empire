@@ -5,6 +5,7 @@
 import { prisma } from "@/lib/prisma";
 import { pickWeightedIndex } from "@/lib/economy";
 import { redis } from "@/lib/redis";
+import { cryptoRng } from "@/lib/secure-rng";
 
 export const MIN_BET = 10;
 export const MAX_BET = 100_000;
@@ -275,7 +276,7 @@ export async function playGtGame(
   let scratch: { grid: string[]; multiplier: number; sym: string | null } | undefined;
   let jackpotWon = 0; // claimed surplus is refunded if the charge fails below
   if (game === "slots") {
-    const o = spinSlots();
+    const o = spinSlots(cryptoRng);
     reels = o.reels;
     detail = o.reels.join("");
     payout = o.multiplier > 0 ? bet * o.multiplier : 0;
@@ -285,13 +286,13 @@ export async function playGtGame(
       detail += " 💰JACKPOT!";
     }
   } else if (game === "coinflip") {
-    const o = flipCoin();
+    const o = flipCoin(cryptoRng);
     detail = o.win ? "✅ orzeł" : "❌ reszka";
     payout = o.win ? bet * o.multiplier : 0;
   } else if (game === "roulette") {
     const c = normRouletteChoice(choice);
     if (!c) return { ok: false, status: 400, error: "Wybierz: red / black / liczba 0-36" };
-    const o = spinRoulette(c);
+    const o = spinRoulette(c, cryptoRng);
     const emoji = o.color === "red" ? "🔴" : o.color === "black" ? "⚫" : "🟢";
     detail = `${emoji} ${o.n === 37 ? "00" : o.n}`;
     roll = { n: o.n, color: o.color };
@@ -299,24 +300,24 @@ export async function playGtGame(
   } else if (game === "dice") {
     const c = normDiceChoice(choice);
     if (!c) return { ok: false, status: 400, error: `Wybierz under/over + próg ${DICE_MIN_TARGET}-${DICE_MAX_TARGET}` };
-    const o = rollDice(c.dir, c.target);
+    const o = rollDice(c.dir, c.target, cryptoRng);
     detail = `🎲 ${o.roll} ${c.dir === "under" ? "<" : "≥"} ${c.target} → ${o.win ? "✅" : "❌"}`;
     dice = { roll: o.roll, target: c.target, dir: c.dir, win: o.win };
     payout = o.win ? Math.floor(bet * o.multiplier) : 0;
   } else if (game === "crash") {
     const target = normCrashChoice(choice);
     if (target == null) return { ok: false, status: 400, error: `Auto-cashout musi być ${CRASH_MIN_TARGET}-${CRASH_MAX_TARGET}×` };
-    const o = rollCrash(target);
+    const o = rollCrash(target, cryptoRng);
     detail = o.win ? `🚀 ${o.crash.toFixed(2)}× — wypłata @ ${target.toFixed(2)}× ✅` : `💥 crash @ ${o.crash.toFixed(2)}× (cel ${target.toFixed(2)}×) ❌`;
     crash = { crash: o.crash, target, win: o.win };
     payout = o.win ? Math.floor(bet * target) : 0;
   } else if (game === "plinko") {
-    const o = dropPlinko();
+    const o = dropPlinko(cryptoRng);
     detail = `🔵 ${o.multiplier.toFixed(2)}× (przegródka ${o.bucket + 1}/${PLINKO_ROWS + 1})`;
     plinko = { path: o.path, bucket: o.bucket, multiplier: o.multiplier };
     payout = Math.floor(bet * o.multiplier);
   } else if (game === "scratch") {
-    const o = scratchCard();
+    const o = scratchCard(cryptoRng);
     detail = o.sym ? `🎫 3×${o.sym} → ${o.multiplier}×` : "🎫 pusto";
     scratch = o;
     payout = o.multiplier > 0 ? Math.floor(bet * o.multiplier) : 0;

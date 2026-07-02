@@ -8,6 +8,7 @@
 import { prisma } from "@/lib/prisma";
 import { redis, withLock } from "@/lib/redis";
 import { MIN_BET, MAX_BET } from "@/lib/gt-games";
+import { cryptoRng } from "@/lib/secure-rng";
 import { randomUUID } from "node:crypto";
 
 export const MINES_TILES = 25; // 5×5
@@ -63,7 +64,7 @@ export async function minesStart(userId: string, bet: number, bombs: number): Pr
   }
 
   const id = randomUUID();
-  const session: MinesSession = { bet, bombs, bombSet: placeBombs(bombs), revealed: [] };
+  const session: MinesSession = { bet, bombs, bombSet: placeBombs(bombs, cryptoRng), revealed: [] };
   try {
     await redis.set(sk(userId, id), session, { ex: TTL_S });
   } catch {

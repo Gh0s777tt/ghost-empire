@@ -4,10 +4,10 @@
 // collective outcome (odds scale with crew size) and, on success, pays every member
 // WIN_MULT× their stake — all in one transaction. resolveHeist() is idempotent (no-op once
 // resolved), so the bot's timer and the lazy recovery-on-join can both call it safely.
-import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { heistSuccessChance, rollHeist, HEIST_WIN_MULT, HEIST_MAX_CREW } from "@/lib/economy";
 import { MIN_BET, MAX_BET } from "@/lib/gt-games";
+import { cryptoRng } from "@/lib/secure-rng";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("heist");
@@ -15,7 +15,6 @@ const log = createLogger("heist");
 /** Join window — how long the crew has to assemble before the heist resolves. */
 export const HEIST_TTL_MS = 90_000;
 
-const cryptoRng = () => randomInt(0, 1_000_000) / 1_000_000;
 const fmt = (n: number) => n.toLocaleString("pl-PL");
 
 export type HeistJoinResult = { ok: boolean; message: string; resolveInMs?: number; heistId?: string };

@@ -8,6 +8,7 @@
 import { prisma } from "@/lib/prisma";
 import { redis, withLock } from "@/lib/redis";
 import { feedJackpot, MIN_BET, MAX_BET } from "@/lib/gt-games";
+import { cryptoRng } from "@/lib/secure-rng";
 import { randomUUID } from "node:crypto";
 
 const TTL_S = 60 * 60;
@@ -148,7 +149,7 @@ export async function blackjackStart(userId: string, bet: number): Promise<BjRes
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
 
-  const deck = shuffledDeck();
+  const deck = shuffledDeck(cryptoRng);
   const player = [deck.pop() as number, deck.pop() as number];
   const dealer = [deck.pop() as number, deck.pop() as number];
   const s: BjSession = { bet, deck, player, dealer, doubled: false };

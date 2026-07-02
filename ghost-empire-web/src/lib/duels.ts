@@ -3,10 +3,10 @@
 // BOTH stakes and pays the winner inside one $transaction — any failure throws and rolls the
 // whole transfer back, so GT can never be created or lost incorrectly. Chat handles are stored
 // on the duel so result messages can @-mention correctly (handles are public platform usernames).
-import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { duelPayout, pickDuelWinner } from "@/lib/economy";
 import { MIN_BET, MAX_BET } from "@/lib/gt-games";
+import { cryptoRng } from "@/lib/secure-rng";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("duels");
@@ -14,7 +14,6 @@ const log = createLogger("duels");
 /** Unaccepted duels expire after this long. */
 export const DUEL_TTL_MS = 2 * 60_000;
 
-const cryptoRng = () => randomInt(0, 1_000_000) / 1_000_000;
 const fmt = (n: number) => n.toLocaleString("pl-PL");
 
 export type DuelOutcome = { ok: boolean; message: string };
