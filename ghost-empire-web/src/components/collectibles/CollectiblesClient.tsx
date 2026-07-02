@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import { Loader2, Package, Sparkles } from "lucide-react";
-import { apiGet, apiPost } from "@/lib/api-client";
+import { apiGet, apiPost, apiErrorReason } from "@/lib/api-client";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { useToast } from "@/components/ToastProvider";
 import { EmptyState, ErrorState } from "@/components/EmptyState";
@@ -47,8 +47,10 @@ export function CollectiblesClient() {
       } else {
         showErr(t(`err_${r.reason ?? "error"}`));
       }
-    } catch {
-      showErr(t("err_error"));
+    } catch (e) {
+      // 4xx (rate-limited / unauthorized) throws before the else-branch — recover the
+      // route's reason code so the toast is specific, not a generic "something went wrong".
+      showErr(t(`err_${apiErrorReason(e) ?? "error"}`));
     } finally {
       setOpening(false);
     }

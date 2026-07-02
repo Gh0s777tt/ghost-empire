@@ -21,12 +21,31 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   let body: Json = null;
   try { body = await res.json(); } catch { /* empty/non-JSON body */ }
   if (!res.ok) {
-    const msg = body && typeof body === "object" && "error" in body && typeof (body as { error: unknown }).error === "string"
-      ? (body as { error: string }).error
-      : `HTTP ${res.status}`;
+    // Routes reply with either `{ error }` (the documented shape) or `{ ok:false, reason }`
+    // (money-path routes on rate-limit / unauthorized / insufficient with a 4xx status).
+    // Prefer `error`, fall back to `reason`, so the caller's toast is specific either way.
+    const b = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : null;
+    const msg =
+      b && typeof b.error === "string" ? b.error :
+      b && typeof b.reason === "string" ? b.reason :
+      `HTTP ${res.status}`;
     throw new ApiError(msg, res.status, body);
   }
   return body as T;
+}
+
+/**
+ * Pull a machine-readable error code out of a thrown ApiError. Money-path routes reply
+ * `{ ok:false, reason:"rate-limited" }` with a 4xx status, so `request()` throws before the
+ * caller can inspect that body — this recovers the `reason` (or `error`) code for translating
+ * into a user-facing toast (e.g. `t(\`err_${apiErrorReason(e) ?? "error"}\`)`). Null when absent.
+ */
+export function apiErrorReason(e: unknown): string | null {
+  if (!(e instanceof ApiError) || e.body == null || typeof e.body !== "object") return null;
+  const b = e.body as { reason?: unknown; error?: unknown };
+  if (typeof b.reason === "string") return b.reason;
+  if (typeof b.error === "string") return b.error;
+  return null;
 }
 
 /** GET returning parsed JSON (no-store by default — UI data should be fresh). */

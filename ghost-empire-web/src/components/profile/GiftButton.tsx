@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Gift, Loader2, Check } from "lucide-react";
-import { apiPost } from "@/lib/api-client";
+import { apiPost, apiErrorReason } from "@/lib/api-client";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 
 export function GiftButton({ toUsername }: { toUsername: string }) {
@@ -33,8 +33,10 @@ export function GiftButton({ toUsername }: { toUsername: string }) {
       } else {
         setMsg(t(`err_${r.reason ?? "error"}`));
       }
-    } catch {
-      setMsg(t("err_error"));
+    } catch (e) {
+      // 4xx (rate-limited / unauthorized) throws before the else-branch — recover the
+      // route's reason code so the toast is specific, not a generic "something went wrong".
+      setMsg(t(`err_${apiErrorReason(e) ?? "error"}`));
     } finally {
       setBusy(false);
     }

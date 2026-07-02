@@ -8,6 +8,7 @@ import { useTenantBranding } from "@/components/TenantBranding";
 import { SectionCard, FieldInput, FieldTextarea, ListSearch } from "../shared";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { filterByText } from "@/lib/list-filter";
+import { apiPost, apiPatch, ApiError } from "@/lib/api-client";
 import type { ShopItemRow } from "../types";
 
 const CATEGORIES_SHOP = ["games", "skins", "subs", "cosmetic", "experience"] as const;
@@ -35,18 +36,13 @@ export function ShopManager({
   async function toggleActive(item: ShopItemRow) {
     setBusyId(item.id);
     try {
-      const res = await fetch("/api/admin/shop", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: item.id, active: !item.active }),
-      });
-      if (res.ok) {
-        onToast("ok", item.active ? t("deactivated", { name: item.name }) : t("activated", { name: item.name }));
-        onSuccess();
-      } else {
-        const data = await res.json();
-        onToast("err", data.error ?? t("err"));
-      }
+      await apiPatch("/api/admin/shop", { id: item.id, active: !item.active });
+      onToast("ok", item.active ? t("deactivated", { name: item.name }) : t("activated", { name: item.name }));
+      onSuccess();
+    } catch (e) {
+      // api-client throws on network failure / non-JSON body (e.g. a 502 from the proxy),
+      // so an errored action always toasts instead of failing silently.
+      onToast("err", e instanceof ApiError ? e.message : t("err"));
     } finally { setBusyId(null); }
   }
 
@@ -176,18 +172,14 @@ function ShopItemEditor({
       };
       if (!isNew && item) payload.id = item.id;
 
-      const res = await fetch("/api/admin/shop", {
-        method: isNew ? "POST" : "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-      } else {
-        onToast("ok", isNew ? t("created") : t("updated"));
-        onSaved();
-      }
+      if (isNew) await apiPost("/api/admin/shop", payload);
+      else await apiPatch("/api/admin/shop", payload);
+      onToast("ok", isNew ? t("created") : t("updated"));
+      onSaved();
+    } catch (e) {
+      // api-client throws on network failure / non-JSON body (e.g. a 502 from the proxy),
+      // so a failed save always toasts instead of failing silently.
+      onToast("err", e instanceof ApiError ? e.message : t("err"));
     } finally { setBusy(false); }
   }
 

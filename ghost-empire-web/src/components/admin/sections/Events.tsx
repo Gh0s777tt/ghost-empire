@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
 import { SectionCard, FieldInput, FieldTextarea, ListSearch } from "../shared";
 import { filterByText } from "@/lib/list-filter";
-import { apiPost, ApiError } from "@/lib/api-client";
+import { apiPost, apiPatch, ApiError } from "@/lib/api-client";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import type { EventRow } from "../types";
 
@@ -278,18 +278,11 @@ export function EventsManager({
   async function toggleActive(e: EventRow) {
     setBusyId(e.id);
     try {
-      const res = await fetch("/api/admin/events", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: e.id, active: !e.active }),
-      });
-      if (res.ok) {
-        onToast("ok", e.active ? t("deactivated", { name: e.name }) : t("activated", { name: e.name }));
-        onSuccess();
-      } else {
-        const data = await res.json();
-        onToast("err", data.error ?? t("err"));
-      }
+      await apiPatch("/api/admin/events", { id: e.id, active: !e.active });
+      onToast("ok", e.active ? t("deactivated", { name: e.name }) : t("activated", { name: e.name }));
+      onSuccess();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally { setBusyId(null); }
   }
 
@@ -445,18 +438,11 @@ function EventEditor({
       }
       if (extendByMinutes) payload.extendByMinutes = parseInt(extendByMinutes);
 
-      const res = await fetch("/api/admin/events", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onToast("err", data.error ?? t("err"));
-      } else {
-        onToast("ok", t("updated"));
-        onSaved();
-      }
+      await apiPatch("/api/admin/events", payload);
+      onToast("ok", t("updated"));
+      onSaved();
+    } catch (err) {
+      onToast("err", err instanceof ApiError ? err.message : t("err"));
     } finally { setBusy(false); }
   }
 
