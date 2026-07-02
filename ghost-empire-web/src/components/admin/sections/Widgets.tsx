@@ -112,6 +112,9 @@ const WIDGET_META: WidgetMeta[] = [
   { id: "trivia",       path: "/overlay/trivia",      size: "440×320" },
   { id: "social",       path: "/overlay/social",      size: "420×140" },
   { id: "presence",     path: "/overlay/presence",    size: "220×70" },
+  // Headless controller (#672): no visual output — add it as a browser-source so alert/tip
+  // rules can switch OBS scenes / toggle sources & filters. Size label reads "headless".
+  { id: "obs-control",  path: "/overlay/obs-control",  size: "headless" },
 ];
 
 export function WidgetsLibrary({

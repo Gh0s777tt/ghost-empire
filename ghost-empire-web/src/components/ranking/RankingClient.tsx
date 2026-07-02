@@ -187,6 +187,9 @@ export function RankingClient({
                       if (isAdmin) {
                         e.preventDefault();
                         setAdminTarget(u);
+                      } else if (!u.username) {
+                        // No public profile to open — don't let the "#" href scroll to top.
+                        e.preventDefault();
                       }
                     }}
                     className={cn(

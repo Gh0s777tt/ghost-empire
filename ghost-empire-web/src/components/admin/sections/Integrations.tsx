@@ -242,8 +242,8 @@ export function IntegrationsManager({
         <p className="text-[10px] text-zinc-600">{t("igHint")}</p>
       </IntegrationCard>
 
-      {/* Philips Hue (LAN bridge) — store creds here; the actuator browser-source (next slice) runs on the streamer's machine to reach the LAN bridge (#754) */}
-      <IntegrationCard title={t("hueTitle")} configured={hueConfigured} statusLabel={hueConfigured ? t("configured") : undefined}>
+      {/* Philips Hue (LAN bridge) — store creds here; the actuator browser-source (next slice) runs on the streamer's machine to reach the LAN bridge (#754). Status intentionally reads "creds only" (not "configured") since nothing consumes them yet (#776). */}
+      <IntegrationCard title={t("hueTitle")} configured={hueConfigured} statusLabel={hueConfigured ? t("hueCredsOnly") : undefined}>
         <label className="text-[11px] text-zinc-400 block">{t("hueIpLabel")}
           <input value={hueBridgeIp} onChange={(e) => setHueBridgeIp(e.target.value)} placeholder={t("hueIpPh")} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
         </label>

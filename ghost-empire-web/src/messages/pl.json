@@ -1048,6 +1048,7 @@
       "hueKeyLabel": "Klucz API mostka",
       "hueKeyPh": "naciśnij przycisk mostka, potem wygeneruj klucz",
       "hueHint": "Zapisuje creds mostka Hue (szyfrowane). Mostek Hue jest w Twoim LAN, więc actuator świateł działa jako browser-source na Twojej maszynie (jak sterowanie OBS) — ten slice dojdzie wkrótce. Govee już steruje światłami server-side.",
+      "hueCredsOnly": "tylko creds — actuator wkrótce",
       "igTitle": "Instagram",
       "igUserIdLabel": "ID konta IG",
       "igUserIdPh": "17841400000000000",
@@ -1296,6 +1297,10 @@
         "trivia": {
           "name": "Trivia na żywo",
           "desc": "Pokazuje pytanie quizu, które puściłeś na żywo (z /admin#trivia) z paskami odpowiedzi i odliczaniem, odsłaniając poprawną odpowiedź po czasie. Ukryte, gdy żadna runda nie trwa."
+        },
+        "obs-control": {
+          "name": "Kontroler OBS",
+          "desc": "Źródło przeglądarki bez obrazu — na żywo wykonuje Twoje reguły OBS: przełącza sceny oraz źródła / filtry przy pasujących alertach lub napiwkach (ustawisz je w Alerty → reguły OBS). Brak elementu wizualnego; dodaj je do jednej sceny."
         }
       },
       "prevAlertTitle": "Nowy sub!",
@@ -2101,7 +2106,7 @@
     "obsRules": {
       "title": "Sterowanie OBS",
       "intro": "Niech donejt, sub czy inny alert automatycznie przełączy scenę OBS, pokaże/ukryje źródło albo przełączy filtr — na żywo.",
-      "dormantNote": "Reguły są zapisywane, ale nic ich jeszcze nie wykonuje: kontroler w OBS (browser source) przyjdzie w kolejnym kroku. Na razie to tylko konfiguracja.",
+      "dormantNote": "Aby te reguły działały w OBS, dodaj do sceny źródło przeglądarki „Kontroler OBS” (z sekcji Widżety). Działa w tle i na żywo stosuje zmiany scen / źródeł / filtrów.",
       "loading": "Ładowanie…",
       "empty": "Brak reguł. Dodaj pierwszą: zdarzenie → akcja OBS poniżej.",
       "addTitle": "Dodaj regułę",

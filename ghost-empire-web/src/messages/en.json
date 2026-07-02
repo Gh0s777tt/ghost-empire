@@ -1048,6 +1048,7 @@
       "hueKeyLabel": "Bridge API key",
       "hueKeyPh": "press the bridge button, then generate a key",
       "hueHint": "Stores your Hue bridge creds (encrypted). The Hue bridge is on your LAN, so the light actuator runs as a browser-source on your machine (like OBS control) — that slice ships next. Govee already drives lights server-side today.",
+      "hueCredsOnly": "creds only — actuator soon",
       "igTitle": "Instagram",
       "igUserIdLabel": "IG account id",
       "igUserIdPh": "17841400000000000",
@@ -1296,6 +1297,10 @@
         "trivia": {
           "name": "Live Trivia",
           "desc": "Shows the trivia question you put live (from /admin#trivia) with answer bars + a countdown, revealing the correct answer when time's up. Hidden when no round is live."
+        },
+        "obs-control": {
+          "name": "OBS controller",
+          "desc": "Headless browser-source that runs your OBS rules live — switches scenes and toggles sources / filters on matching alerts or tips (set them up under Alerts → OBS rules). No visual output; drop it into any one scene."
         }
       },
       "prevAlertTitle": "New sub!",
@@ -2101,7 +2106,7 @@
     "obsRules": {
       "title": "OBS control",
       "intro": "Make a donation, sub or other alert switch an OBS scene, show/hide a source or toggle a filter — automatically, live.",
-      "dormantNote": "Rules are saved, but nothing acts on them yet: the in-OBS controller (a browser source) ships in a later step. For now this is setup-only.",
+      "dormantNote": "To make these rules act on OBS, add the OBS controller browser-source (from the Widgets section) to a scene. It runs headless and applies your scene / source / filter changes live.",
       "loading": "Loading…",
       "empty": "No rules yet. Add your first event → OBS action below.",
       "addTitle": "Add a rule",
