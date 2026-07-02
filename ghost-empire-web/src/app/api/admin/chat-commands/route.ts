@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
+import { clampInt } from "@/lib/utils";
 
 const TRIGGER_RE = /^![a-z0-9_]{1,49}$/; // "!word" — lowercased; 2-50 chars incl. the "!"
 const MAX_RESPONSE = 500;
@@ -18,14 +19,12 @@ function normalizeTrigger(raw: unknown): string | null {
 }
 
 function clampCooldown(v: unknown): number {
-  if (typeof v !== "number" || !Number.isFinite(v)) return 15;
-  return Math.min(MAX_COOLDOWN, Math.max(0, Math.floor(v)));
+  return clampInt(v, 0, MAX_COOLDOWN, 15);
 }
 
 const MAX_ACTIVE_FROM_MINUTE = 1440; // 24h
 function clampActiveFrom(v: unknown): number {
-  if (typeof v !== "number" || !Number.isFinite(v)) return 0;
-  return Math.min(MAX_ACTIVE_FROM_MINUTE, Math.max(0, Math.floor(v)));
+  return clampInt(v, 0, MAX_ACTIVE_FROM_MINUTE, 0);
 }
 
 type Row = {

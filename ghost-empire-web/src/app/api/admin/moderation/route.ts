@@ -7,12 +7,11 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
+import { clampInt } from "@/lib/utils";
 
 const ACTIONS = ["delete", "timeout", "warn"] as const;
 const MAX_TIMEOUT = 1_209_600; // 14 days (Twitch max)
 
-const clampInt = (v: unknown, min: number, max: number, fb: number) =>
-  typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.floor(v))) : fb;
 const pickAction = (v: unknown, fb: string) =>
   typeof v === "string" && (ACTIONS as readonly string[]).includes(v) ? v : fb;
 const pickBool = (v: unknown, fb: boolean) => (typeof v === "boolean" ? v : fb);

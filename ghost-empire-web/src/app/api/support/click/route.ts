@@ -7,11 +7,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req);
   // failClosed:false — a vanity counter must never block on a limiter outage.
   const rl = await rateLimit(`support-click:${ip}`, 40, 60_000, { failClosed: false });
   if (!rl.allowed) return NextResponse.json({ ok: false }, { status: 429 });

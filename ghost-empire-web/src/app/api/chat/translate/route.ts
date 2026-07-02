@@ -8,6 +8,7 @@ import { aiChat } from "@/lib/ai";
 import { cacheJson } from "@/lib/redis";
 import { rateLimit } from "@/lib/rate-limit";
 import { shouldTranslate, langName, buildTranslatePrompt } from "@/lib/chat-translate";
+import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ const MAX_LEN = 500;
 const CACHE_MS = 10 * 60_000;
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req);
   const rl = await rateLimit(`chat-tr:${ip}`, 300, 60_000, { failClosed: false });
   if (!rl.allowed) return NextResponse.json({ translated: null, reason: "rate-limited" }, { status: 429 });
 

@@ -5,13 +5,12 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
+import { clampInt } from "@/lib/utils";
 import { featureGateResponse } from "@/lib/entitlements";
 
 const POSITIONS = ["top-left", "top-center", "top-right", "center", "bottom-left", "bottom-center", "bottom-right"];
 
 const hex = (v: unknown, fb: string) => (typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb);
-const clampInt = (v: unknown, min: number, max: number, fb: number) =>
-  typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.floor(v))) : fb;
 const pctOrNull = (v: unknown): number | null =>
   typeof v === "number" && Number.isFinite(v) ? Math.min(100, Math.max(0, Math.floor(v))) : null;
 

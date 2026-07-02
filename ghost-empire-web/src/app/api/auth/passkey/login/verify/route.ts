@@ -17,13 +17,14 @@ import type { AuthenticationResponseJSON, AuthenticatorTransportFuture } from "@
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { webauthnContext, AUTH_CHALLENGE_COOKIE, b64url, isSecureContext } from "@/lib/webauthn";
+import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
 const SESSION_DAYS = 30;
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req);
   const rl = await rateLimit(`pk-login:${ip}`, 20, 60_000, { failClosed: false });
   if (!rl.allowed) return NextResponse.json({ error: "rate-limited" }, { status: 429 });
 

@@ -6,6 +6,7 @@ import {
   rankForLevel,
   pluralPL,
   fmt,
+  clampInt,
   timeLeft,
   timeAgo,
   formatDate,
@@ -13,6 +14,22 @@ import {
   verifyBotSecret,
   verifyBotSecretForTenant,
 } from "@/lib/utils";
+
+describe("clampInt", () => {
+  it("clamps into [min, max] and floors", () => {
+    expect(clampInt(5, 0, 10, 99)).toBe(5);
+    expect(clampInt(-3, 0, 10, 99)).toBe(0);
+    expect(clampInt(20, 0, 10, 99)).toBe(10);
+    expect(clampInt(5.9, 0, 10, 99)).toBe(5);
+  });
+  it("returns the fallback for non-numbers / non-finite (JSON strings included)", () => {
+    expect(clampInt("5", 0, 10, 99)).toBe(99); // a string is NOT accepted
+    expect(clampInt(undefined, 0, 10, 99)).toBe(99);
+    expect(clampInt(null, 0, 10, 99)).toBe(99);
+    expect(clampInt(NaN, 0, 10, 99)).toBe(99);
+    expect(clampInt(Infinity, 0, 10, 99)).toBe(99);
+  });
+});
 
 describe("xpForLevel / levelFromXp", () => {
   it("xpForLevel = level * 500", () => {

@@ -11,6 +11,14 @@ export function fmt(n: number, locale: string = "pl"): string {
   return n.toLocaleString(locale);
 }
 
+/** Clamp an unknown to an integer in [min, max]; non-numbers or non-finite → `fallback`.
+ *  Only accepts real numbers (a JSON string like "5" → fallback), matching the admin
+ *  JSON-body validators that previously copy-pasted this per route (cooldowns/intervals/
+ *  sizes). Floors before clamping. */
+export function clampInt(v: unknown, min: number, max: number, fallback: number): number {
+  return typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.floor(v))) : fallback;
+}
+
 // "Event ended" label per locale (the only word in timeLeft; the rest is numeric).
 const ENDED_LABEL: Record<string, string> = {
   pl: "Zakończony", en: "Ended", de: "Beendet", es: "Finalizado", it: "Terminato",

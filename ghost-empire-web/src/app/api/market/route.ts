@@ -11,6 +11,7 @@ import { currentTenantId } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { displayNick } from "@/lib/utils";
 import { clampPrice, sellerProceeds, MAX_ACTIVE_LISTINGS } from "@/lib/market";
+import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ ok: false, reason: "unauthorized" }, { status: 401 });
   const userId = session.user.id;
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req);
   const rl = await rateLimit(`market:${userId}:${ip}`, 40, 60_000, { failClosed: false });
   if (!rl.allowed) return NextResponse.json({ ok: false, reason: "rate-limited" }, { status: 429 });
 

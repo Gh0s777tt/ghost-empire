@@ -1,183 +1,170 @@
-# AUDIT_REPORT.md — Ghost Empire
+# AUDIT_REPORT.md — E-Forge / Ghost Empire
 
-**Tryb:** read-only (bez zmian w kodzie, bez mutacji produkcji). **Data:** 2026-06-28. **Audytor:** senior engineer (Claude).
-**Zakres:** `ghost-empire-phase1/` (głównie `ghost-empire-web/`), stan na commit `6906324` (#730), `main` = `origin/main`.
-**Metoda:** statyczna analiza kodu (5 równoległych przebiegów: jakość kodu · parytet dashboard↔kod · bezpieczeństwo/backend · dokumentacja · własne deterministyczne sprawdzenia), audyt RLS na żywej bazie przez pg-adapter (tylko odczyt), `git`, `npm audit`/`npm outdated`. Wartości sekretów nie są ujawniane — tylko nazwy zmiennych.
+**Tryb:** read-only (bez zmian w kodzie, bez mutacji produkcji). **Data:** 2026-07-02. **Audytor:** senior engineer (Claude).
+**Zakres:** `ghost-empire-phase1/` (głównie `ghost-empire-web/`), stan na commit `44adb6d` (#775), `main` = `origin/main` = zdalny `main`.
+**Metoda:** analiza statyczna (2 równoległe przebiegi agentowe: jakość kodu · parytet UI↔kod) + własne deterministyczne sprawdzenia (git, `npm audit`/`npm outdated`, skan sekretów w HEAD i historii, testy+coverage, RLS/schemat na żywej bazie przez pg — tylko SELECT, sondy produkcji HTTP, przegląd tras w dev-serwerze). Wartości sekretów nie są ujawniane — tylko nazwy zmiennych.
+**Poprzedni audyt:** 2026-06-28 (#730→#731 remediacja) — ten raport go zastępuje; stan tamtych ustaleń odnotowany w §8.
 
----
-
-## 0. Status remediacji (#731 — 2026-06-28)
-
-Po audycie wykonano remediację (commit **#731**, wszystkie bramki zielone, bez zmian schematu / db push):
-
-**✅ Naprawione**
-- Bug i18n `secDesc_goverules` → rename (`en`+`pl`; 12 lokalizacji dziedziczy z EN przez runtime `deepMerge`).
-- **2FA step-up fail-closed** na `reset-database` (Wysoki) — globalny wipe nie pominie 2FA przy dryfcie klucza.
-- **`bot/ai-reply` fail-closed** na rate-limicie (płatna ścieżka AI; parytet z `bot/imagine`).
-- **Rate-limit dodany:** `daily-bonus`, `profile/social-links`, `notifications`, `push/subscribe`.
-- **Asercja `ENCRYPTION_KEY`/`NEXTAUTH_SECRET`** w produkcji (fail-fast zamiast publicznego dev-klucza).
-- `KickEvents` `console.log` zabramkowany za `NODE_ENV!=="production"`.
-- **Coverage (v8)** skonfigurowane — `npm run test:coverage` (pierwszy pomiar ~**42% statements**).
-- **Dryf docs domknięty:** README · ARCHITECTURE · ENDPOINTS · ENV · ROADMAP · RLS.
-
-**🔁 Pozostałe pozycje — rozpatrzone (#732–#733):**
-- ✅ **Podział `KasynoClient.tsx`** (#732) — **ZROBIONE**: 1620 → 593 l. (sub-komponenty plansz + helpery → `kasyno/shared.tsx`) + 5 surowych `fetch` → `apiPost`/`apiGet`. Render `/kasyno` zweryfikowany.
-- ✅/⏸️ **Dekompozycja 6 komponentów 600+ l.** — **AdminClient ZROBIONE** (#736: 936→**878** l., 63 lazy-importy → `admin/lazy-sections.tsx`), reszta **świadomie nie** (potwierdzone empirycznie). Tylko `AdminClient` (lazy-importy = niezależne stałe) i `KasynoClient` (#732, niezależne sub-komponenty) mają czyste szwy. Próba splitu `ProfileClient` dała **56 nieużywanych importów + sprzężenie typu `Props`** (sub-komponenty współdzielą importy/typy głównego) → import-sprawl bez zysku → cofnięte. Pozostałe (Ranking/Home/Events/u-username) są **spójne/stanowe** — podział = prop-drilling/duplikacja importów, bez zysku poprawnościowego. Heurystyka „>600 l." nie wskazuje tu długu.
-- ✅ **~101 ostrzeżeń React Compiler** — **purity/refs/immutability WŁĄCZONE** (#734, na życzenie właściciela), `set-state-in-effect` zostaje OFF (#733). Z 110: **12 niesetstate'owych rozwiązane** (2 fixy strukturalne — use-focus-trap ref→effect, OverlayClient self-ref→ref — + 9 celowych inline-disable na legalnych miejscach: server/handler Date.now, mutacje DOM/nawigacja w handlerach, żywy countdown) → **3 reguły egzekwowane jako `error`**. 98× `set-state-in-effect` zostaje OFF (idiomatyczny client data-fetching; kompilator bailuje; włączenie = 98 disable, zero zysku).
-- ✅ **CSP `style-src 'unsafe-inline'`** — **UTWARDZONE** (#735, na życzenie właściciela): `unsafe-inline` **usunięte ze `style-src`**, ograniczone do **`style-src-attr`**. Wszystkie **30 inline `<style>` wyniesione** do CSS (`<link>`=`'self'`): keyframe'y → `globals.css`, 22 zduplikowane resety OBS → jeden `overlay/overlay.css` (import w layoutcie). Końcowo: `style-src 'self'` (elementy bez unsafe-inline) + `style-src-attr 'unsafe-inline'` (konieczne dla ~638 dynamicznych inline-atrybutów — CSP nonce/hash nie obejmują atrybutów stylu, wartości runtime-dynamiczne). Zweryfikowane na żywo: overlay body transparent, 8/8 keyframe'ów globalnie, 0 `<style>` w HTML, brak „Refused to apply inline style".
-- 👤 **8 branchy dependabot + tag backup** — higiena **GitHub**, akcja właściciela (część to realne update'y bezpieczeństwa — eslint10/esbuild — do przejrzenia przed zamknięciem).
-
-**👤 Akcje właściciela** (niemożliwe z kodu): potwierdź `ENCRYPTION_KEY` w env produkcyjnym Vercela; przejrzyj/zamknij branche dependabot.
-
-> Sekcje 1–8 poniżej opisują stan **sprzed** remediacji (audyt na commit `6906324`).
+> **✅ Status remediacji (2026-07-02, po „zrób wszystko i napraw"):** wszystkie ustalenia w KODZIE domknięte w **#776–#779** — kontrakt błędów API `{error}`/`{reason}` + koniec cichych `try/finally` (§3/§6), crypto-RNG we wszystkich grach kasyna (§3), parytet UI↔kod: `/deck`+`/overlay/obs-control` dostają wejścia, nota ObsRules i status Hue przestają mylić, `/predictions` w NAV, martwy link rankingu (§3/§4), higiena: `clientIp()`/`clampInt()` do lib + `ENDPOINTS.md` uzupełnione + drobiazgi (§3). **733 testy zielone, 0 db push, 0 mutacji prod.** Zostają wyłącznie **owner-actions** (poza kodem): 🔴 rotacja klucza Resend i przegląd `origin/imgbot`; oraz świadomie **odroczone** większe prace (testy integracyjne money-path, podział `kasyno/shared.tsx` + wyniesienie changelogu z `about/page.tsx`, sweep hardcode `pl-PL`, rozszerzenie `check-docs-sync`) — patrz §7.8–7.9.
 
 ---
 
 ## 1. Podsumowanie
 
-Projekt jest **dojrzały i nieoczekiwanie czysty jak na swoją skalę** (~74 100 linii TS/TSX, 102 modele Prisma, 192 trasy API, 62 strony, 61 sekcji panelu, 622 testy jednostkowe). TypeScript działa w trybie `strict`, „furtek" typów jest śladowo (7× `: any`, 4× `as any`, **0×** `@ts-ignore`/`@ts-expect-error`), **0** martwych bloków kodu i **0** realnych `TODO/FIXME`. Bezpieczeństwo to **obrona w głąb**: brak zahardkodowanych sekretów, `.env` nigdy nie trafił do gita, brak wycieku `service_role` do klienta, **wszystkie** trasy admin/internal/bot są bramkowane uwierzytelnieniem, cztery webhooki płatności/eventów weryfikują podpis (`timingSafeEqual`), a sekrety są szyfrowane AES-256-GCM z separacją kluczy HKDF. **RLS jest włączony na wszystkich 102 tabelach** (potwierdzone na żywej bazie) — anon/PostgREST nie odczyta niczego.
+Projekt jest **dojrzały i bliski produkcyjnego — w praktyce już produkcyjny** (działa na `www.empire-forge.com`). Fundament jest solidny: 104/104 tabel z RLS (0 danych bez ochrony), 77/77 tras admina bramkowanych, wszystkie crony/webhooki/internal z guardami, 0 sekretów w kodzie i historii, 0 podatności `npm audit`, 726/726 testów zielonych, komplet dokumentacji z wymuszaną bramką `docs:check`. Nie znaleziono w KODZIE żadnego wpisu Krytycznego ani buga klasy „funkcja realnie zepsuta" (Wysoki) — wszystkie 40 tras widza + panel renderują się bez błędu.
+**Trzy najważniejsze ryzyka:** (1) **proces, nie kod** — do wiadomości zlecającej audyt wkleił się klucz API Resend → do natychmiastowej rotacji; (2) **dwie działające, ale „ukryte" funkcje** (`/deck`, `/overlay/obs-control` bez wejścia w UI) + **atrapa Philips Hue** (formularz credów bez konsumenta) — to rozjazd „obietnica UI vs kod"; (3) **kontrakt błędów API** — kilka tras zwraca `{ok,reason}` zamiast `{error}`, przez co reprodukowalne stany (rate-limit, za mało GT) pokazują generyczny komunikat. Poza tym: dług to głównie duplikacja (IP-extraction, twin cards) i pokrycie testami warstwy integracyjnej (~44%). **Werdykt: produkcyjny; do domknięcia głównie higiena UX/docs + rotacja klucza.**
 
-Trzy najważniejsze ryzyka (wszystkie do utwardzenia, nie luki krytyczne): **(1)** rate-limiter i weryfikacja 2FA step-up **„fail-open"** — przy awarii Redis+DB lub dryfcie klucza szyfrowania ciche wyłączenie limitów/drugiego składnika, w tym na ścieżce globalnego resetu bazy; **(2)** jeden realny bug i18n — sekcja „Govee lighting" rzuca `MISSING_MESSAGE` w opisie (zła wielkość liter klucza); **(3)** dryf dokumentacji — README/ROADMAP/ARCHITECTURE podają nieaktualne liczby (477 vs 622 testy) i opisują dostarczone funkcje jako „w toku", a jedno zdanie README jest wprost nieprawdziwe („`ghost-empire-bot/` usunięty", a katalog istnieje).
+## 2. Zacznij tutaj (gdyby naprawić tylko 3 rzeczy)
 
-**Werdykt:** projekt jest **blisko produkcyjnego** — w istocie już działa na produkcji (Vercel, auto-deploy z `main`), wszystkie 5 bramek lokalnych jest zielonych, a `npm audit` = **0 podatności**. Nie znaleziono **żadnego** wpisu Krytycznego. Do dopięcia pozostają: 1 widoczny bug i18n, kilka utwardzeń fail-closed, porządki w dokumentacji i higiena repo (8 martwych branchy dependabot). Brakująca konfiguracja pokrycia testów (coverage) to jedyna istotna luka w samej infrastrukturze jakości.
+1. **Zrotuj klucz Resend** (wpis Krytyczny w §3, usprawnienie §7.1) — jedyne realne ryzyko bezpieczeństwa; klucz wyciekł do transkryptu, nowy ustaw wyłącznie w Vercel env.
+2. **Ujednolić kontrakt błędów API `{error}`** na trasach z §3/§6 (`gift`, `collectibles/open-pack`, `admin/push`) — usuwa 2 reprodukowalne bugi UX jednym ruchem (§7.2).
+3. **Podpiąć/oznaczyć „ukryte" funkcje** — link do `/deck`, wpis `/overlay/obs-control` w Widgets, poprawić notę ObsRules i kartę Hue (§7.4–7.5); to zamyka wszystkie 4 rozjazdy „UI vs kod" z macierzy.
 
----
+## 3. Tabela ustaleń
 
-## 2. Tabela ustaleń
-
-> Severity: **Krytyczny / Wysoki / Średni / Niski**. **Krytycznych: 0.**
-
-| Severity | Obszar | Problem | Dowód (plik:linia / trasa / tabela) | Rekomendacja |
+| Severity | Obszar | Problem | Dowód | Rekomendacja |
 |---|---|---|---|---|
-| **Wysoki** | Bezpieczeństwo / 2FA | **Step-up 2FA „fail-open" na ścieżce globalnego resetu bazy.** Gdy sekret TOTP admina nie da się odszyfrować (dryf `ENCRYPTION_KEY`), `requireStepUp` zwraca `{ok:true}` i pomija drugi składnik — także dla `reset-database` (globalny wipe) i dużych `grant-tokens`. Główna autoryzacja (`requirePlatformOwner`) nadal trzyma, więc to degradacja obrony w głąb, nie obejście logowania. | `src/lib/admin.ts:174-179`; ścieżka: `src/app/api/admin/reset-database/route.ts` | Dla ścieżki globalnego wipe’u **fail-closed**: przy nieodszyfrowywalnym sekrecie wymuś remediację klucza zamiast pomijać 2FA. Pozostałe akcje mogą zostać przy obecnym zachowaniu (nie blokować właściciela). |
-| Średni | Bezpieczeństwo / rate-limit | **Rate-limiter „fail-open" domyślnie.** Przy awarii Redis+DB limiter zwraca `allowed:true` — anti-abuse na ścieżkach botowych/donacjach/gift/kasynie cicho znika na czas incydentu. | `src/lib/rate-limit.ts:62,134-142` | Akceptowalne dla tras DB-backed (zapis i tak padnie), ale ustaw `failClosed:true` na powierzchniach nie-DB (np. `bot/imagine` — koszt AI), by awaria nie zrobiła z nich wzmacniacza. |
-| Średni | Dashboard / i18n | **Sekcja „Govee lighting" rzuca `MISSING_MESSAGE` w opisie.** Render liczy klucz dynamicznie `t(\`secDesc_${activeSection}\`)`; dla id `goverules` szuka `secDesc_goverules`, a w plikach jest tylko camelCase `secDesc_goveeRules`. Etykieta w nawigacji działa (`secGoveeRules`), psuje się tylko dymek opisu. Ta sama klasa co naprawiony #727. | trigger: `src/components/admin/AdminClient.tsx:354`; brak klucza: `src/messages/en.json:198` (jest `secDesc_goveeRules`, brak `secDesc_goverules`); poprawny wzorzec siostrzany: `en.json:351` (`secDesc_obsrules`) | Dodaj `secDesc_goverules` do **14 lokalizacji** (albo zmień nazwę `secDesc_goveeRules`→`secDesc_goverules`). |
-| Średni | Bezpieczeństwo / rate-limit | **`daily-bonus` POST przyznaje GT bez rate-limitu.** Bezpieczne ekonomicznie (unikalny `externalId` blokuje podwójne odebranie), ale brak throttlingu na powierzchni spamu sesji. | `src/app/api/daily-bonus/route.ts:47` (brak `rateLimit()`); podobnie `profile/social-links`, `push/subscribe`, `notifications` POST | Dodaj per-user `rateLimit()` dla parytetu z resztą tras ekonomii. |
-| Średni | Bezpieczeństwo / CSP | **`style-src 'unsafe-inline'`** w CSP (dla inline-style overlayów/kart) osłabia ochronę przed XSS. `script-src` jest poprawne (per-request nonce + `'strict-dynamic'`, bez `unsafe-inline`). | `src/proxy.ts:22` | Długofalowo: przenieś inline-style overlayów na klasy / nonce’owany `<style>` i usuń `unsafe-inline` ze `style-src`. |
-| Średni | Jakość kodu | **Monster-komponent `KasynoClient.tsx` (1622 linie)** + 6 ręcznie pisanych `fetch(...)` omijających współdzielony `apiPost<T>()` (reszta repo — 56 plików — używa helpera). | `src/components/kasyno/KasynoClient.tsx:1` (rozmiar), handlery: `:1136,1151,1164,1176,1193,1224` | Rozbij na pliki per-gra; przepnij 6 handlerów na `lib/api-client.ts`. |
-| Średni | Dokumentacja | **Liczba testów nieaktualna: „477" w 3 miejscach** vs faktyczne 622. | `README.md:142`, `README.md:193`, `docs/ARCHITECTURE.md:121` | Zaktualizuj do 622 lub zastąp frazą bez liczby (by przestało dryfować). |
-| Średni | Dokumentacja | **Sprzeczność faktograficzna:** README mówi, że katalog `ghost-empire-bot/` „został **usunięty**", a istnieje na dysku; ARCHITECTURE (poprawnie) mówi „zostaje jako referencja". | `README.md:226` vs `docs/ARCHITECTURE.md:14` (+ `ls ghost-empire-bot/`) | Zrównaj README z rzeczywistością: „zdeprecjonowany/wyłączony, katalog pozostaje jako referencja". |
-| Średni | Dokumentacja | **ROADMAP wciąż znakuje dostarczone jako TODO:** OBS WebSocket (#663–#665+#672) i Govee per-tenant (#720–#725) oznaczone 🟡/„NASTĘPNE" w sekcjach strukturalnych. Genuinie pozostaje tylko Philips Hue. | `ROADMAP.md:51,136,143,204,209`; `README.md:179` | Przełóż OBS WebSocket i Govee na ✅ / przekreśl; zostaw Hue jako pending. |
-| Średni | Dokumentacja | **ENDPOINTS.md niedoszacowuje tras (187 vs 193) i pomija ≥4 istniejące:** `watch-streak`, `admin/role-roster`, `admin/subscribers`, `bot/welcome`. | `docs/ENDPOINTS.md:14` (nagłówek); pliki tras istnieją, `grep` w doc = 0 | Dodaj brakujące wiersze, popraw licznik lub usuń twardą liczbę. |
-| Niski | Bezpieczeństwo | **`obs-control/config` zwraca odszyfrowane hasło OBS WebSocket** posiadaczowi tokenu overlayu (bez per-request auth). Zgodne z udokumentowanym modelem zaufania OBS Browser Source (token w URL, konsumowany na maszynie streamera). | `src/app/api/obs-control/config/route.ts:40,61` | Trzymaj tokeny overlayów rotowalne; overlaye są `noindex` (`next.config.ts:52`) — OK. |
-| Niski | Bezpieczeństwo / crypto | **Dev-fallback klucza szyfrowania** (`"ghost-empire-dev-key"`) gdy `ENCRYPTION_KEY` i `NEXTAUTH_SECRET` oba nieustawione. Nieszkodliwe poza przypadkiem braku obu na produkcji. | `src/lib/crypto.ts:15-17` | Asercja na starcie: wymagaj jednego z kluczy w produkcji (fail-fast). |
-| Niski | Bezpieczeństwo | **`bot/config` to publiczny GET bez auth** — zwraca cały `BotConfig`. Model **nie** ma pól sekretnych (tylko inty reward/cooldown/happy-hour), więc to tylko informacja. | `src/app/api/bot/config/route.ts:8`; `prisma/schema.prisma:832-851` | Bez akcji; odnotowane dla kompletności. |
-| Niski | Jakość kodu | **`console.log` debug w kliencie** (2×) — diagnostyka flaky Kick API, ale leci do konsoli przeglądarki. | `src/components/admin/sections/KickEvents.tsx:70,87` | Zamień na `logger`/usuń lub gate’uj env-em dev. |
-| Niski | Jakość kodu / lint | **~101 zduszonych ostrzeżeń React Compiler** (`set-state-in-effect`, `purity`, `immutability`, `refs` wyłączone w configu). Udokumentowane (kompilator bezpiecznie „bailuje"), ale to realny dług ukryty w configu. | `ghost-empire-web/eslint.config.mjs:24-31` | Świadomy przegląd: napraw wzorce setState-in-effect albo zostaw z jawną notą per-plik. |
-| Niski | Testy | **Brak konfiguracji pokrycia (coverage)** w Vitest — zero widoczności na pokrycie linii/gałęzi. | `ghost-empire-web/vitest.config.ts` (brak `coverage`) | Dodaj provider `v8` + próg w CI. |
-| Niski | Higiena repo | **8 martwych branchy `dependabot/*` na origin** (13 dni–3 tyg.) + 1 tag backup (3 tyg.). | `git branch -a` (esbuild, eslint-10, minor-and-patch ×3, upload-artifact); tag `backup-pre-risky-2026-06-05-2043` | Zmerguj/zamknij branche; usuń tag jeśli zbędny. |
-| Niski | Dokumentacja | **README chwali się „0 `as any` w src"** — faktycznie są 4 (wszystkie uzasadnione). Drobny dryf. | `README.md:193` vs sweep (`auth.ts`, `chat-assets.ts:95`, `channels.ts`, `tenant-seed.ts`) | Zmień na „4 uzasadnione `as any`" lub usuń liczbę. |
+| **Krytyczny** | Sekrety / proces | W wiadomości zlecającej audyt (transkrypt czatu) wklejony został ciąg o formacie klucza API Resend (`re_…`, wpleciony w środek słowa — wygląd przypadkowego wklejenia ze schowka). Transkrypt czatu nie jest bezpiecznym magazynem sekretów. | wiadomość właściciela z 2026-07-02 (sekcja „Czego NIE robić") | **Zrotuj klucz w panelu Resend natychmiast**; nowy klucz ustaw wyłącznie w Vercel env (`RESEND_API_KEY`). Klucz z czatu traktuj jako spalony. |
+| Niski | Higiena repo | Osierocony branch zdalny `origin/imgbot` ([ImgBot] Optimize images, commit `b00ecaa`) — 31 commitów za `main`, niezmergowany, wisi bez PR-decyzji. | `git branch -a` → `remotes/origin/imgbot` | Przejrzyj diff ImgBota (kompresja obrazów w `public/`); zmerguj albo usuń branch. |
+| **Średni** | Docs (drift) | `docs/ENDPOINTS.md` nie zawiera dwóch nowych, money-path tras widza: `/api/titles` (#761 — spend GT) i `/api/auctions` (#762 — escrow GT). CHANGELOG/ROADMAP je opisują, ale referencja endpointów drifnęła (bramka `docs:check` pilnuje tylko CHANGELOG, nie ENDPOINTS.md). | `grep "api/auctions\|api/titles" docs/ENDPOINTS.md` = 0; pliki `src/app/api/{auctions,titles}/route.ts` istnieją | Dopisz oba wiersze do `ENDPOINTS.md`; rozważ rozszerzenie `check-docs-sync` o skan nowych `route.ts` bez wpisu. |
+| **Średni** | Testy (pokrycie) | Pokrycie **~44% statements** (1806/4112), 49% funkcji. Testowana jest czysta logika (money-path pure: economy/predictions/auctions/titles/gift/wheel — dobrze), ale trasy API i komponenty (integracja/UI) są w większości nieprzetestowane; konwencja repo: vitest = tylko pure, bez mocków DB/sieci. | `npm run test:coverage` (2026-07-02): 43.92% stmts, 726/726 pass | Utrzymać pure-first, ale dodać cienką warstwę testów integracyjnych na 3–5 najbardziej krytycznych trasach money-path (`vitest.integration.config.ts` już istnieje, ale bez testów). |
+| Niski | Zależności | Drift patch/minor: `next` 16.2.9→16.2.10, `@sentry/nextjs`, `tailwindcss` 4.3.1→4.3.2, `lucide-react` i in.; `eslint` 9.39 przy dostępnym 10.x (major). `next-auth` przypięty do `5.0.0-beta.31` (celowe — v4 „Latest" to downgrade). | `npm outdated` (2026-07-02) | Rutynowy bump patchy przy okazji; eslint 10 jako osobny, świadomy upgrade. |
+| Niski | Docs (drift) | `AUDIT_REPORT.md` (poprzedni) datowany 2026-06-28 na commit #730 — nieaktualny względem #775 (był mylący jako „bieżący" stan). | `head AUDIT_REPORT.md` (przed nadpisaniem) | Ten raport go zastępuje. |
+| **Średni** | Integracja / dead-end | **Philips Hue = „guzik bez akcji": formularz zapisuje creds (`hueBridgeIp`+`hueApiKey`) i pokazuje status „configured", ale ŻADEN kod ich nie konsumuje** — brak `lib/hue`, brak aktuatora (grep 0 poza formularzem/storem). Wprowadza w błąd (użytkownik myśli, że światła zadziałają). Kod sam to przyznaje (komentarz „actuator… next slice #754"). | `src/components/admin/sections/Integrations.tsx:245-250`, `src/app/api/admin/integrations/route.ts:80` | Badge „wkrótce/tylko creds" przy karcie Hue albo dowieźć aktuator (browser-source jak OBS-control). |
+| **Średni** | UI/docs drift | **Sekcja `ObsRules` bezwarunkowo renderuje notę „nic tego jeszcze nie wykonuje — kontroler w OBS przyjdzie w kolejnym kroku", mimo że aktuator OBS ISTNIEJE** (`/overlay/obs-control` — headless, steruje scenami/źródłami/filtrami, #672). Nota myli. | `src/components/admin/sections/ObsRules.tsx:141` + `messages/{en,pl}.json:2104` vs `src/app/overlay/obs-control/page.tsx:2-5` | Zmień notę na instrukcję dodania browser-source `/overlay/obs-control?token=…`. |
+| **Średni** | Akcja bez guzika | **Dwie działające powierzchnie bez punktu wejścia w UI:** (a) `/overlay/obs-control` nie występuje w bibliotece Widgets (23 wpisy) ani w ObsRules/Integrations — admin musi znać URL z kodu; (b) `/deck` (#774) nie ma linku nigdzie (Header, paleta komend, admin) — jedyny ślad to wykluczenie z prefetch. | `src/components/admin/sections/Widgets.tsx:91-114` (brak obs-control), `src/lib/command-palette.ts:8-33` (brak deck), `src/components/Header.tsx` | Dodaj wpis „OBS controller" w Widgets + link „Deck" w menu konta dla admin/mod. |
+| Niski | Nawigacja | `/predictions` nie ma linku w NAV, choć bliźniacze `/polls` i `/trivia` są w grupie „community" — dostęp tylko przez paletę/notyfikacje/link z `/leagues`. Wygląda na przeoczenie (nie świadomą architekturę jak `/quests`,`/seasons`). | `src/components/Header.tsx:46-63` (brak `/predictions`) | Dodaj `/predictions` do grupy community w NAV. |
+| Niski | Martwy link | Wiersz rankingu dla usera bez `username` renderuje `<Link href="#">` → klik przewija do góry zamiast no-op. | `src/components/ranking/RankingClient.tsx:185` | Renderuj `<span>` gdy brak username. |
+| **Średni** | Spójność / hardening (money-adjacent) | **Wszystkie gry kasyna GT (sloty, coinflip, dice, crash, plinko, ruletka, scratch, blackjack, hilo, mines) losują przez `Math.random`**, podczas gdy losowania NAGRÓD używają crypto („Crypto-secure Fisher-Yates"). Ścieżka ma realną wartość (GT kupuje nagrody). **Nie jest to żywy exploit** (klient nie widzi surowego ziarna/outputów — tylko wynik win/loss liczony serwerowo), więc to niespójność standardu/hardening, nie dziura. Parametr `rng` już istnieje, ale nie jest nadpisywany w wywołaniach prod. | `src/lib/gt-games.ts:66,74,108,135,153,190,217`, `lib/gt-blackjack.ts:63`, `lib/gt-mines.ts:33`, `lib/gt-hilo.ts:19` vs `app/api/admin/events/draw/route.ts:12-13` | Wstrzyknąć `rng` z `crypto.randomInt` w wywołaniach serwerowych — parametr gotowy, koszt minimalny. |
+| **Średni** | UX / kontrakt API | **Kilka tras zwraca `{ok:false, reason}` z kodem 4xx zamiast udokumentowanego kształtu `{error}`** — `apiPost` rzuca wtedy `ApiError("HTTP 429")`, a UI pokazuje generyczny komunikat zamiast konkretnego (rate-limited/unauthorized ginie). Reprodukowalny bug UX. | `lib/api-client.ts:3-5,23-27` vs `app/api/gift/route.ts:18,23,26`, `app/api/collectibles/open-pack/route.ts:16,21,52`, `app/api/admin/push/route.ts:26`; zjadające catch: `GiftButton.tsx:36-37`, `CollectiblesClient.tsx:50-51` | Przy 4xx zwracać też klucz `error` (lub nauczyć `api-client` czytać `reason`). |
+| **Średni** | Odporność na błędy | **28 surowych `fetch("/api/…")` w 20 komponentach** (mimo `api-client`); wzorzec `try/finally` **bez `catch`** → awaria sieci lub nie-JSON body (np. 502 z proxy → `res.json()` rzuca) = nieobsłużone odrzucenie i **cichy brak toasta**. | `components/admin/sections/Shop.tsx:34-50`, `Events.tsx:281,448`, `home/HomeClient.tsx:504` (+17 plików) | Zmigrować zwykłe wywołania JSON na `apiGet`/`apiPost` (wyjątki: beacon/keepalive, push, passkey). |
+| Niski | Duplikacja | Ekstrakcja IP klienta `x-forwarded-for…split(",")[0]…\|\|"unknown"` skopiowana w ~12 trasach + osobny parser w audit → zmiana logiki = 13 miejsc. | `api/gift/route.ts:21`, `api/market/route.ts:60`, `api/search/users/route.ts:13`, `lib/audit.ts:86` (+9) | Wydzielić `clientIp(req)` do `lib/http.ts`. |
+| Niski | Duplikacja | Bliźniacze karty overlay `PollOverlayCard` (74 l.) i `PredictionOverlayCard` (75 l.) różnią się tylko nazwami propów/kolorem/etykietami; też duplikaty `clampCooldown`/`clampInterval` w trasach admin. | `components/{PollOverlayCard,PredictionOverlayCard}.tsx`; `api/admin/{faq,chat-commands,chat-timers}/route.ts` | Jeden parametryzowany komponent + `clampInt` w lib. |
+| Niski | i18n / white-label | **`about/page.tsx` (1110 l., największy plik w src) trzyma ~800-liniową POLSKĄ tablicę CHANGELOG renderowaną identycznie dla 14 języków**; dodatkowo 10 plików (w tym overlaye OBS + webhooki) formatuje daty/liczby na sztywno `"pl-PL"` mimo white-label. | `app/[locale]/about/page.tsx:23,1065`; overlaye clan/clan-war, `webhooks/twitch-eventsub`, `bot/gt-game`, `yt/poll-live-chat` | Wynieść changelog do danych + oznaczyć PL-only; locale z tenanta zamiast stałej. |
+| Niski | Jakość | `key={index}` na filtrowanej liście `EmojiPicker` (remount przy każdym znaku); 1 goły `eslint-disable react-hooks` bez uzasadnienia (konwencja repo #733 wymaga nr PR); `kasyno/shared.tsx` (1043 l.) = worek 7 gier — NOWY kandydat do podziału (poza decyzjami #733/#736). | `EmojiPicker.tsx:70,77`; `admin/sections/DatabaseReset.tsx:34`; `components/kasyno/shared.tsx` | `key={e.char}`; dopisać uzasadnienie; rozbić shared na `constants.ts` + moduły per gra. |
 
----
+### Pozytywy (zweryfikowane, nie „pochwały" — dowody)
+- **Bezpieczeństwo tras admina:** **77/77 plików `api/admin/*/route.ts` bramkowane** helperami `lib/admin` (`requirePermission`/`requireAdmin`/`requirePlatformOwner`/`requireStepUp`) — 0 ręcznych/pominiętych (61 grepem + 16 ręcznie).
+- **Crony/webhooki/internal:** 0 bez guarda (`CRON_SECRET` / weryfikacja podpisu / `BOT_SECRET`).
+- **Higiena kodu:** **0** `TODO/FIXME/HACK` w kodzie, **0** `@ts-ignore`/`@ts-expect-error`, **6** realnych `any` (żaden w money-path/billing/webhookach płatności), **2** `console.log` (oba za `NODE_ENV!=="production"`), **0** plików-sierot, **0** zakomentowanych bloków >5 l.
+- **Parytet panelu:** 52 sekcje w rejestrze = 52 bloki renderu = 61 plików (60 przez lazy-sections + 1 statycznie) — **0 sierot w obie strony**.
+- **RLS:** 104/104, **0** tabel z danymi bez RLS.
 
-## 3. Macierz rozbieżności dashboard ↔ kod
+## 4. Macierz rozbieżności dashboard ↔ kod
 
-Parytet jest **bardzo ścisły.** Wszystkie **51 zarejestrowanych sekcji** ma komplet: człon unii `SectionId` + wpis w `SECTIONS` + lazy-import (lub komponent inline) + gałąź renderu + plik `sections/*.tsx` + klucze i18n `secX`/`secDesc_x`, a każdy manager woła realną trasę `/api/admin/**`. **Zero** „guzików bez akcji" (brak `onClick={() => {}}`, brak „coming soon"). **Zero** sierot (każda gałąź renderu mapuje na wpis rejestru i odwrotnie).
+Legenda: „dormant" = zbudowane, uśpione do czasu wklejenia klucza/creds (NIE bug — świadoma architektura). Pełny przebieg pokrył ~45 funkcji; poniżej reprezentatywny wycinek + wszystkie rozbieżności.
 
-| Funkcja (sekcja) | W UI? (rejestr+render) | W kodzie? (komponent+trasa) | Aktualna? | Uwagi |
+| Funkcja | W UI? | W kodzie? | Aktualna? | Uwagi (dowód) |
 |---|---|---|---|---|
-| **goverules** (Govee lighting) | ✅ unia, rejestr `:180`, render `:580` | ✅ `sections/GoveeRules.tsx` → `/api/admin/govee-rules` + `/api/admin/govee-test` | ⚠️ **NIE** | Brak `secDesc_goverules` → dymek opisu rzuca `MISSING_MESSAGE` (patrz §2/§5). Etykieta działa. |
-| *(pozostałe 50 sekcji)* | ✅ | ✅ | ✅ | Pełna spójność: unia + rejestr + import + render + plik + `secX` + `secDesc_x`, każdy woła swoją trasę. |
+| Sklep GT + realizacja zamówień | tak | tak | tak | /shop, api/shop/buy, admin Shop+PendingOrders |
+| Gift GT, Tytuły, Referral, Watch-streak | tak | tak | tak | profile/* → api/{gift,titles,referral,watch-streak} |
+| Aukcje GT (#762) | tak | tak | tak | admin zarządza **inline na stronie** (celowo brak sekcji panelu) |
+| Kasyno GT (10 gier) | tak | tak | tak | KasynoClient; RNG=`Math.random` (§3 Średni) |
+| Koło / Trivia / Ankiety / Companion | tak | tak | tak | strona+overlay+admin+api |
+| Eventy / Predykcje / Bounties / Ligi | tak | tak | tak | Predykcje bez linku NAV (§3 Niski) |
+| Klany + wojny klanów | tak | tak | tak | overlaye clan+clan-war |
+| Kolekcje + market kart | tak | tak | tak | open-pack + giełda |
+| Wrapped, Profil publiczny /u | tak | tak | tak | + opengraph-image |
+| Premium / Stripe | tak | tak | **tak (LIVE)** | webhook aktywuje plan |
+| Panel admina (52 sekcje) | tak | tak | tak | pełna parzystość rejestr↔render↔pliki |
+| **Deck streamera (#774)** | **nie** | tak | tak | strona+client działają, **ZERO linków w UI** (§3 Średni) |
+| **Philips Hue** | tak (formularz) | **nie (brak aktuatora)** | dormant/atrapa | creds zapisywane, nic ich nie czyta (§3 Średni) |
+| **OBS control (aktuator)** | częściowo | tak | dormant | `/overlay/obs-control` istnieje, ale UI mówi „wkrótce" + brak w Widgets (§3 ×2 Średni) |
+| Govee lighting | tak | tak | dormant | pełny aktuator `lib/alerts.ts:93`; klucz+urządzenie |
+| Streamlabs / PayMedia | częściowo | tak | dormant | wymaga OAuth/secret |
+| AI (bot @, !imagine, assistant, chat-translate, search) | tak | tak | dormant | klucz AI w Integracje |
+| X / Meta social | tak | tak | dormant | bez tokenu renderuje null |
+| Push / E-mail digest / Backup S3 / Sentry | częściowo | tak | dormant | VAPID/RESEND/BACKUP_S3/SENTRY_DSN |
+| Presence „online teraz" (#767) | tak | tak | **tak (prod ma Redis)** | bez Redis znika |
+| Bot: komendy/timery/faq/welcome/duel/heist | tak (admin) | tak | tak | 12 tras api/bot dla osobnego runtime bota |
 
-**Niespójność konwencji (nie bug):** 3 sekcje mają etykiety camelCase (`secObsRules`, `secGoveeRules`, `secClipDirector`) odbiegające od lowercase-id — działają, bo etykieta to twarde `t("...")`. Psuje się tylko **dynamiczny** `secDesc_${id}` (powyżej `goverules`).
+**Wniosek macierzy:** brak klasycznych atrap („guzik bez akcji"/„akcja bez guzika") POZA trzema udokumentowanymi w §3 (Hue, deck-bez-linku, obs-control-bez-wejścia). 16 funkcji „dormant by design" — z czego **tylko Hue** nie ma jeszcze kodu wykonawczego (reszta ma pełny aktuator, czeka wyłącznie na klucz).
 
-**Trasy admin bez UI (świadome, nie sieroty):**
-- `…/api/admin/backfill-tenant` — jednorazowy helper migracyjny z devtools (`route.ts:13`), brak guzika z założenia.
-- `…/api/admin/backup` — wołane przez `<a href>` w `sections/DatabaseReset.tsx:51` (download), nie `apiGet` — flagowane tylko dla jasności.
+## 5. Stan usług
 
-**Totale:** 51 zarejestrowanych sekcji · 61 plików `sections/*.tsx` (51 managerów + 10 sub-komponentów: ActiveDrops, CreateDrop, PendingOrders, GrantTokens, DatabaseReset, CodeDrops, CustomAlerts, ChatOverlay, ModViolationStats, RoleRoster, SupportPreview) · 77 tras `route.ts` pod `app/api/admin/**`.
+### Supabase (Postgres) — **czysto**
+- **Schemat ↔ kod:** 104 modele Prisma = **104 tabele** w `public`. Brakujących: 0. Nadmiarowych: 0. (`prisma migrate diff` z poprzedniej sesji: „empty migration" — zero driftu kolumn/indeksów.)
+- **RLS:** **104/104 tabel ma RLS ON.** Wszystkie 104 mają „RLS ON, zero policies" — to **zamierzony i poprawny** posture: rola aplikacji to `postgres` z **`rolbypassrls = true`** (zweryfikowane: `owned tables = 104`), więc aplikacja (Prisma) omija RLS, a publiczne anon-API Supabase (PostgREST) jest **deny-all** na każdej tabeli. Zero tabel z danymi bez RLS. *(Uwaga: luka na `auctions`/`auction_bids` z #762 została domknięta w #766 — potwierdzone teraz na żywo.)*
+- **Klucze:** `service_role`/`DATABASE_URL` **nie występują** w komponentach klienta ani w bundlu (`git grep` w `src/components`/`*.tsx` = 0). `DATABASE_URL` czytany tylko server-side.
 
-> **Uwaga metodyczna:** macierz zbudowana **statycznie** (rejestr ↔ komponenty ↔ trasy ↔ i18n), nie z przeglądarki — patrz §8 „Luki w audycie", weryfikacja wizualna per-trasa nie była wykonana.
+### Vercel
+- Projekt zlinkowany (`.vercel/project.json` → `ghost-empire-web`). **Brak tokenu CLI** → lista env/deployów z konsoli niedostępna (luka audytu). Weryfikacja pośrednia (sondy produkcji `www.empire-forge.com`): core (`DATABASE_URL`/`NEXTAUTH_SECRET`/`BOT_SECRET`) działa, OAuth ×4 (`/api/auth/providers` = twitch,discord,google,kick), VAPID (`/api/push/vapid` zwraca klucz), Stripe (checkout 401 nie 503), `CRON_SECRET` (crony 401 bez bearera) — **ustawione**. `NEXT_PUBLIC_*` = tylko `ROOT_DOMAIN` + `SITE_URL` (nie-sekrety, poprawnie publiczne).
+- **Crony:** wszystkie 9 tras `api/cron/*` mają guard `verifyCronSecret`/`CRON_SECRET` (skan: 0 bez guarda). vercel.json deklaruje 5 harmonogramów (streamlabs/prune/weekly-rewards/backup/weekly-digest).
+- **Webhooki:** wszystkie `api/webhooks/*` weryfikują podpis (`constructEvent`/HMAC/`timingSafeEqual`) — 0 bez weryfikacji.
+
+### Upstash Redis (cache/rate-limit/presence)
+- Klucze **server-only:** `@/lib/redis` (i `@upstash/*`) **nie są importowane** z żadnego `"use client"` (skan: 0 trafień). Presence rozdzielono na `presence-shared.ts` (client-safe) vs `presence.ts` (server, redis+prisma) — poprawnie.
+- **Dormant-safe:** bez `UPSTASH_*` cache spada na in-memory (cap 1000, FIFO), rate-limit i presence degradują się bez crasha. Na produkcji Redis **jest** (presence `/api/presence` = `{"active":true}`).
+- **Rate-limiting:** obecny na money-path i mutacjach (potwierdzone w kodzie tras: gift/titles/auctions/presence/shop-buy…); pełną macierz pokrycia — patrz przebieg jakości kodu (§3).
+
+### Resend (email, #773) — dormant
+- `lib/email.ts` = Resend REST (fetch), aktywne tylko z `RESEND_API_KEY`+`EMAIL_FROM`. **Nieustawione** → cron `weekly-digest` zwraca `{skipped:true}` (dormant by design). **Uwaga bezpieczeństwa: patrz wpis Krytyczny w §3** (klucz Resend wklejony do czatu → do rotacji).
+
+## 6. Bugi do odtworzenia
+
+1. **Rate-limit na gift pokazuje generyczny błąd zamiast „za dużo prób".** Kroki: zaloguj się, na cudzym profilu publicznym kliknij prezent GT >20 razy w 60 s → 21. żądanie dostaje HTTP 429 z body `{ok:false, reason:"rate-limited"}`. Oczekiwane: toast „za dużo prób / odczekaj". Faktyczne: `apiPost` rzuca `ApiError("HTTP 429")` (bo nie ma klucza `error`), `GiftButton.tsx:36-37` łapie i pokazuje generyczny `errGeneric`. Dowód: `api/gift/route.ts:23` + `api-client.ts:23-27`. Severity: Średni.
+2. **Otwieranie paczki przy braku GT / rate-limicie — jak wyżej.** Kroki: na `/collectibles` z saldem < ceny paczki kliknij „otwórz" → 402 `{ok:false, reason:"insufficient"}`; UI pokaże generyk zamiast „za mało GT". Dowód: `api/collectibles/open-pack/route.ts:16,21,52` + `CollectiblesClient.tsx:50-51`. Severity: Średni.
+3. **Cichy brak reakcji przy błędzie sieci/proxy w panelu.** Kroki: w sekcji admina Shop wykonaj akcję, gdy backend zwróci 502 z proxy (nie-JSON body). `res.json()` w gałęzi błędu rzuca, `try/finally` bez `catch` → nieobsłużone odrzucenie, brak toasta (użytkownik nie wie, że akcja padła). Dowód: `components/admin/sections/Shop.tsx:34-50`. Severity: Średni.
+4. **Klik w wiersz rankingu usera bez `username` przewija stronę do góry.** Kroki: na `/ranking` znajdź konto bez ustawionego username → klik wiersza. Faktyczne: nawigacja do `#` (scroll-to-top). Oczekiwane: brak akcji. Dowód: `RankingClient.tsx:185`. Severity: Niski.
+
+**Uwaga:** nie znaleziono bugu klasy Wysoki (funkcja realnie zepsuta) ani Krytyczny w KODZIE. Wszystkie 40 tras widza + panel renderują się (HTTP 200, 0 runtime-error), overlaye z graceful-fallback (`/overlay/scene/nieistniejący` → 200 bez crasha), gate'y auth działają (`/api/notifications` → 401, `/deck` gość → grzeczna odmowa). Jedyny wpis Krytyczny dotyczy PROCESU (klucz Resend w czacie), nie kodu.
+
+## 7. Top usprawnień (posortowane wg korzyść/koszt)
+
+1. **[S] Zrotuj klucz Resend (proces) + ustaw go tylko w Vercel env.** Korzyść: zamknięcie jedynego wpisu Krytycznego. Koszt trywialny (panel Resend + 1 zmienna). Odblokowuje też #773 (digesty).
+2. **[S] Ujednolić kontrakt błędów API `{error}` na ~5 trasach** (`gift`, `collectibles/open-pack`, `admin/push`, …). Korzyść: 2 reprodukowalne bugi UX znikają (rate-limit/402 pokazują konkretny komunikat). Koszt: dodać `error` obok `reason`.
+3. **[S] `crypto.randomInt` jako `rng` w wywołaniach kasyna.** Korzyść: spójny standard losowości na ścieżce o realnej wartości; parametr już istnieje. Koszt: 2 wywołania serwerowe (`gt-games/play`, `bot/gt-game`).
+4. **[S] Dodać wejścia w UI do `/deck` (link w menu konta admin/mod) i `/overlay/obs-control` (wpis w Widgets).** Korzyść: dwie działające funkcje przestają być „ukryte przed userem". Koszt: 1 link + 1 wiersz w rejestrze widgetów.
+5. **[S] Zaktualizować notę „dormant" w `ObsRules` + kartę Hue.** Korzyść: koniec wprowadzania w błąd (OBS-aktuator istnieje; Hue nie ma konsumenta → badge „tylko creds"). Koszt: 2 stringi i18n + 1 badge.
+6. **[S] Dopisać `/api/titles` i `/api/auctions` do `docs/ENDPOINTS.md`** + rozszerzyć `check-docs-sync` o skan nowych `route.ts`. Korzyść: bramka łapie przyszły drift endpointów (dziś pilnuje tylko CHANGELOG). Koszt: 2 wiersze + kilka linii skryptu.
+7. **[M] Wydzielić `clientIp(req)` do `lib/http.ts` i zmigrować 28 surowych `fetch` na `apiGet/apiPost`.** Korzyść: koniec duplikacji IP (13 miejsc) + eliminacja cichych błędów `try/finally`-bez-`catch`. Koszt: mechaniczny sweep, testowalny.
+8. **[M] Cienka warstwa testów integracyjnych na 3–5 trasach money-path** (`vitest.integration.config.ts` już istnieje, ale 0 testów). Korzyść: pokrycie skacze z „44% pure" na realną walidację atomowości spendów. Koszt: setup test-DB + 5 testów.
+9. **[M] Rozbić `components/kasyno/shared.tsx` (1043 l.) na `constants.ts` + moduły per gra** oraz wynieść ~800-liniowy CHANGELOG z `about/page.tsx` do pliku danych. Korzyść: dwa największe realne worki treści-jako-kodu. Koszt: mechaniczny, bez zmiany zachowania.
+10. **[S] Zamknąć `origin/imgbot` + bump patchy (`next`/`tailwind`/`sentry`).** Korzyść: higiena. Koszt: przegląd 1 diffa + `npm update` (świadomie).
+
+*(Pominięto kosmetykę: nazewnictwo, `key={index}` w EmojiPicker, twin overlay cards — są w tabeli §3 jako Niski, ale nie w top-10.)*
+
+## 8. Higiena repo
+
+- **Working tree:** czysty (`git status` — 0 zmian). **HEAD = origin/main = zdalny main** (`44adb6d`, #775) — zero niewypchniętych commitów.
+- **Branche:** lokalnie tylko `main`. Zdalnie: `origin/imgbot` — osierocony (patrz tabela ustaleń). 8 branchy dependabot z poprzedniego audytu **nie istnieje już na origin** (wyczyszczone).
+- **Tagi:** brak (w tym brak tagu `backup` odnotowanego w audycie 2026-06-28 — wyczyszczony).
+- **CHANGELOG:** aktualny — `npm run docs:check` ✅ „all 60 recent shipped PR(s) present, latest #775" (bramka wymuszana lokalnie i w CI; wpisy dla każdego PR od #716+).
+- **Backlog:** `ROADMAP.md` (running log „Świeżo dowiezione" + sekcje faz) i `docs/IDEAS.md` (statusy ✅/🟡 aktualizowane przy dowiezieniu — zweryfikowane wpisy #767–#775). Odzwierciedlają rzeczywistość.
+- **Sekrety w repo/historii:** **czysto.** Trackowane są wyłącznie `.env.example` (web + chat + tenants/example); realny `.env` nigdy nie był trackowany (`git log --all -- ghost-empire-web/.env` = pusto). Trafienia wzorców (`sk_live_`, `whsec_`) w `docs/ENV.md:87-88`, `scripts/check-stripe.ts:36-40`, `src/lib/billing.ts:9-10` to **prefiksy w dokumentacji/walidacji**, nie wartości.
+- **Zależności:** `npm audit` (prod i dev): **0 podatności**. Outdated — patrz tabela ustaleń (Niski).
+
+## 9. Luki w audycie
+
+- **Vercel:** brak tokenu CLI → nie odczytałem 1:1 listy env, statusów deployów ani logów buildów z konsoli. Obecność kluczy zweryfikowana **pośrednio** przez zachowanie produkcji (sondy HTTP) + `docs/ENV.md` — to potwierdza „ustawione/nieustawione", ale nie wartości ani pełnej listy. Rekomendacja właściciela: `vercel env ls` / dashboard dla pełnej weryfikacji.
+- **Weryfikacja wizualna = DOM/tekst, nie zrzuty.** `preview_screenshot` ma na tej aplikacji znany timeout (ciężkie animacje/polling) — sprawdzałem trasy przez status HTTP + `fetch`/DOM-eval (render bez runtime-error), nie przez obrazki. Wygląd pikselowy pojedynczych widoków nieoceniany.
+- **Bugi money-path NIE odtwarzane mutująco.** Audyt read-only — nie wykonywałem realnych spendów/wypłat/mutacji na prod. Bugi z §6 opisane z dowodem w kodzie + ścieżką repro, ale nie „kliknięte" do końca (np. faktyczny 429 na gift), by nie mutować prod.
+- **Bot `ghost-empire-chat`** (osobny runtime) audytowany tylko od strony kontraktu z portalem (trasy `api/bot`/`api/internal` + guardy) — nie uruchamiałem samego bota ani nie audytowałem jego wewnętrznego kodu.
+- **RNG jako exploit:** ocena „nie żywy exploit" (§3 kasyno) oparta na analizie (klient nie widzi surowych outputów Math.random) — nie przeprowadzałem faktycznej próby rekonstrukcji stanu PRNG.
+
+## 10. Metodyka
+
+**Uruchomione komendy / narzędzia (wszystko read-only):**
+- `git status/branch -a/tag/log` — stan repo, branche, tagi, historia (skan `-S` sekretów).
+- `git grep -E "(sk_live_|whsec_|re_…|AKIA…|ghp_…|AIza…)"` w HEAD + `git log --all --diff-filter=A -- "*.env*"` — skan sekretów w kodzie i historii.
+- `npm audit` (prod+dev) i `npm outdated` — podatności i drift zależności.
+- `npm run test:coverage` (vitest v8) — 726/726, 43.92% stmts.
+- **Żywa baza (tylko SELECT/ALTER-free):** własny skrypt pg (`db-audit.cjs`) — porównanie 104 modeli schematu z `pg_class`/`pg_tables`, `relrowsecurity` + `pg_policy` per tabela, `rolbypassrls` roli aplikacji. Filtr wyjścia usuwał connection-string.
+- **Dev-serwer (port 3100 z `.claude/launch.json`) + preview-eval:** `fetch` na wszystkie 40 tras `[locale]` + panel + wybrane overlaye/API — status HTTP + wykrywanie runtime-error w HTML.
+- **Produkcja (sondy HTTP `www.empire-forge.com`):** `/api/auth/providers`, `/api/push/vapid`, `/api/billing/checkout`, `/api/presence`, crony (401 bez bearera) — weryfikacja kluczy przez zachowanie.
+- **Skany strukturalne:** guardy 77 tras admin, 9 cron, 4 webhook, 9 internal; import redis/DATABASE_URL w klientach; trasy vs `ENDPOINTS.md`; rejestr sekcji admina vs pliki.
+- **2 równoległe agenty (read-only):** jakość kodu (`any`/TODO/console/duplikacja/długie pliki/spójność bramek) i parytet UI↔kod (inwentarz tras, macierz, guziki bez akcji).
+
+**Czego realnie NIE zmieniałem:** zero commitów, zero pushy, zero mutacji prod (Vercel/Supabase/Upstash), zero migracji. Jedyny zapis: ten plik `AUDIT_REPORT.md`.
+
+---
+*Raport kompletny — wszystkie fazy 0–6 wykonane; każdy wpis tabeli ma severity + dowód. Zatrzymuję się (read-only) i czekam na decyzję, co naprawić.*
 
 ---
 
-## 4. Stan usług
+## Faza 0 — Rozpoznanie (DONE)
 
-### Supabase (PostgreSQL) — sprawdzone na żywej bazie (read-only)
-- **Tabele vs schema:** **102 tabele publiczne = 102 modele Prisma** — parytet 1:1, **brak tabel nadmiarowych ani brakujących**.
-- **RLS:** **102/102 tabel ma RLS WŁĄCZONY, 0 wyłączonych.** Wszystkie w trybie **deny-all** (0 policy) → role anon/`authenticated` (PostgREST) nie odczytają niczego; aplikacja łączy się rolą **service** (omija RLS). To spójna, bezpieczna postawa dla appki, która **całość** dostępu do danych robi po stronie serwera i **nie** używa klienckiego klucza anon. Brak granularnych policy jest tu akceptowalny (nie ma klienta Supabase w przeglądarce).
-- **Dryf doc:** `docs/RLS.md` deklaruje „97 tabel" — faktycznie 102 (doc **niedoszacowuje**, ale pokrycie jest pełne; nowsze tabele np. `song_request_bans` #729 doszły po #671).
-- **Połączenie:** Supavisor pooler (Prisma 7 + `@prisma/adapter-pg`), pula `max:3`. `service_role`/`SUPABASE_SERVICE_ROLE_KEY` — **0 odwołań** w `src` (brak wycieku do klienta).
-
-### Vercel — NIE zweryfikowane bezpośrednio (patrz §8)
-- Vercel CLI **niezainstalowane** + brak tokenu → nie sprawdzono z konsoli: projektów, env (set/unset), historii deployów, logów buildów.
-- Z repo: nagłówki bezpieczeństwa w `next.config.ts:14-40` + `src/proxy.ts:18-34` (HSTS preload, CSP z nonce, COOP, `X-Frame-Options: SAMEORIGIN`, Permissions-Policy, `poweredByHeader:false`), Vercel Analytics + Speed Insights wpięte, auto-deploy z `main`. Build produkcyjny **przechodzi** (268 tras skompilowanych — bramka z tej sesji zielona).
-- **Akcja właściciela:** potwierdź, że `ENCRYPTION_KEY` jest ustawiony w env produkcyjnym (odsprzęga crypto at-rest od rotacji `NEXTAUTH_SECRET`).
-
-### Upstash / cache / rate-limit
-- **Własny** fixed-window limiter (nie `@upstash/ratelimit`): Upstash Redis (atomowy `INCR`+`PEXPIRE` Lua, `src/lib/rate-limit.ts:21-39`) z fallbackiem DB (`rateLimitBucket`). Klucze po stronie serwera (env). **66 plików tras** woła `rateLimit()`, w tym wszystkie kluczowe powierzchnie publiczne/abuse (auth/passkey, support/click, search, gt-games/*, shop/buy, gift, wheel/spin, predictions/*/wager, bot/*).
-- **Słabość:** fail-open (§2). **Braki:** `daily-bonus`, `profile/social-links`, `push/subscribe`, `notifications` (webhooki bez RL są OK — bramkowane podpisem).
-
-### Inne usługi (z configu/env, nazwy bez wartości)
-- **Stripe** (`webhooks/stripe` — `constructEvent` podpis), **Sentry** (`SENTRY_DSN`), **web-push/VAPID**, **OAuth** Twitch/Kick/Discord/Google→YouTube, **Streamlabs** (polling), **Twitch EventSub** (HMAC + replay protection), **Kick** (RSA verify), **S3-like** przez `aws4fetch`. Sekrety: AES-256-GCM + HKDF (`src/lib/crypto.ts`), IV losowy 12B per-call, tag GCM weryfikowany, HMAC SHA-256 przez `timingSafeEqual`.
-
----
-
-## 5. Bugi do odtworzenia
-
-1. **`MISSING_MESSAGE` w opisie sekcji „Govee lighting".** (Średni — realny, widoczny)
-   - **Kroki:** wejdź na `/admin` → wybierz sekcję **Govee lighting** (id `goverules`).
-   - **Obserwacja:** linia opisu (💡) pod nagłówkiem woła `t("secDesc_goverules")`, którego **nie ma** w żadnej lokalizacji → next-intl zgłasza `MISSING_MESSAGE` (renderuje surowy klucz `admin.secDesc_goverules` / odpala handler błędu).
-   - **Oczekiwane:** zlokalizowany opis, jak ma siostrzana sekcja `obsrules`.
-   - **Dowód:** `src/components/admin/AdminClient.tsx:354` (dynamiczny `secDesc_${activeSection}`) + `src/messages/en.json:198` (jest tylko camelCase `secDesc_goveeRules`).
-   - **Fix:** dodaj `secDesc_goverules` do 14 lokalizacji lub zmień nazwę istniejącego klucza.
-
-2. **Cichy zanik rate-limitów przy awarii Redis+DB.** (Średni — behawioralny)
-   - **Kroki (koncepcyjnie):** zasymuluj niedostępność Redis i DB → wywołaj dowolną trasę z `rateLimit()` bez `failClosed`.
-   - **Obserwacja:** limiter zwraca `allowed:true` (fail-open) — limity anti-abuse nie działają na czas incydentu.
-   - **Oczekiwane:** dla powierzchni nie-DB (np. `bot/imagine`) — odmowa (fail-closed).
-   - **Dowód:** `src/lib/rate-limit.ts:62,134-142`.
-
-3. **Pominięcie 2FA step-up przy dryfcie klucza.** (Wysoki — na ścieżce wipe’u)
-   - **Kroki:** ustaw stan, w którym sekret TOTP admina jest nieodszyfrowywalny (np. `ENCRYPTION_KEY` zmieniony bez re-enkrypcji) → wywołaj akcję wymagającą step-up (`reset-database` / duży `grant-tokens`).
-   - **Obserwacja:** `requireStepUp` zwraca `{ok:true}` — drugi składnik pominięty (główna autoryzacja właściciela nadal obowiązuje).
-   - **Oczekiwane:** dla globalnego resetu — fail-closed + wymuszenie remediacji klucza.
-   - **Dowód:** `src/lib/admin.ts:174-179`.
-
-> Pozostałe pozycje z §2 to utwardzenia/dryfy, nie bugi z odtwarzalnym złym zachowaniem runtime.
-
----
-
-## 6. Top usprawnień (posortowane wg korzyść/koszt)
-
-| # | Usprawnienie | Nakład | Uzasadnienie |
-|---|---|---|---|
-| 1 | **Napraw klucz i18n `secDesc_goverules`** (14 lokalizacji) | **S** | Jedyny widoczny bug w panelu; trywialna poprawka, ta sama klasa co #727. |
-| 2 | **Domknij dryf docs:** README testy 477→622 (×2) + „bot usunięty"→„referencja" + dodaj Rumble + „~46"→51 sekcji + „0 as any"→„4"; ENDPOINTS licznik+braki; ROADMAP OBS/Govee→✅ | **S** | Najwyższy stosunek sygnał/koszt — dokumentacja to wizytówka i kontrakt; teraz wprowadza w błąd. |
-| 3 | **Dodaj coverage do Vitest** (`v8` + próg w CI) | **S** | Zero widoczności pokrycia przy 622 testach; tani wgląd + zapobiega regresjom. |
-| 4 | **Asercja `ENCRYPTION_KEY`/`NEXTAUTH_SECRET` na starcie** (fail-fast) | **S** | Eliminuje cichy dev-fallback klucza w produkcji (`crypto.ts:15-17`). |
-| 5 | **Dodaj `rateLimit()` do `daily-bonus`** (+ `profile/social-links`, `push/subscribe`) | **S** | Parytet anti-abuse; unikalny `externalId` chroni ekonomię, ale nie sesję. |
-| 6 | **Fail-closed na powierzchniach nie-DB** (`bot/imagine`) **i na `reset-database` step-up** | **M** | Zamyka dwa „fail-open" o realnym koszcie (AI/koszt + globalny wipe). |
-| 7 | **Rozbij `KasynoClient.tsx`** (1622 l.) na pliki per-gra + przepnij 6 `fetch` na `apiPost` | **M** | Największy plik repo + jedyny omijający współdzielony helper; łatwiejszy maintainability/testowalność. |
-| 8 | **Posprzątaj repo:** zmerguj/zamknij 8 branchy dependabot, usuń tag backup | **M** | Mniej szumu w origin; aktualizacje bezpieczeństwa (eslint 10, esbuild) podjęte świadomie. |
-| 9 | **Zdekomponuj 6 komponentów 600+ l.** (Profile/Admin/Ranking/Home/Events/u[username]) | **M** | Rozmiar utrudnia review i react-compiler; brak pojedynczych funkcji >150 l. → da się dzielić bezpiecznie. |
-| 10 | **Przegląd ~101 zduszonych ostrzeżeń React Compiler** + migracja inline-style overlayów z CSP `style-src 'unsafe-inline'` | **M** | Zdejmuje ukryty dług i domyka ostatnią słabość CSP. |
-
----
-
-## 7. Higiena repo
-
-- **Git:** drzewo czyste, `main` = `origin/main` (0/0), najnowszy commit `6906324` (#730). Konwencja: bezpośredni push do `main` (brak PR-ów GitHub — `gh` niedostępne), numeracja #NNN prowadzona ręcznie.
-- **Branche do zamknięcia (8, origin):** `dependabot/github_actions/actions/upload-artifact-7`, `dependabot/npm_and_yarn/ghost-empire-{bot,chat,web}/…` (esbuild-0.28.1, eslint-10.4.1, minor-and-patch ×3) — wiek 13 dni–3 tyg. Zmerguj lub zamknij.
-- **Tagi:** 1 — `backup-pre-risky-2026-06-05-2043` (3 tyg.). Usuń jeśli zbędny.
-- **CHANGELOG:** **aktualny i wzorowo prowadzony** — `[Unreleased]` odzwierciedla #727–#730; `docs:check` wymusza sync (zielony, „latest #730"). Bez zastrzeżeń.
-- **ROADMAP:** nota „🆕 Świeżo dowiezione" aktualna, ale **sekcje strukturalne stare** — OBS WebSocket i Govee wciąż jako 🟡/„NASTĘPNE" mimo dostarczenia (patrz §2). Realnie pending: tylko Philips Hue + F4 AI (czeka na klucz).
-- **README:** kilka dryfów (testy 477, „bot usunięty", „~46 sekcji", „0 as any", „11 overlayów" vs 23, brak Rumble) — patrz §2/§6. Instrukcja uruchomienia **poprawna** wzgl. `package.json` (`npm run dev` → :3000; uwaga: lokalny launch używał :3100, ale `.claude/launch.json` **nie istnieje** w repo).
-- **Backlog:** rolę pełnią ROADMAP + `docs/IDEAS.md` — częściowo nieodzwierciedlają stanu (jw.).
-- **Zależności:** `npm audit` = **0 podatności**; `npm outdated` = 2 (eslint 9→10 — świadomie wstrzymane, `eslint-config-next` 16 nie wspiera; next-auth v5 beta — celowo).
-
----
-
-## 8. Luki w audycie
-
-- **Faza 2 — weryfikacja wizualna per-trasa: NIE wykonana.** Uruchomienie dev servera wymagałoby (a) **utworzenia `.claude/launch.json`** (łamie regułę „jedyny tworzony plik to `AUDIT_REPORT.md`" — w repo go nie ma) oraz (b) połączenia z **żywą bazą**. Zamiast tego oparłem integralność tras na **zielonym buildzie produkcyjnym** (kompiluje wszystkie 268 tras) + **statycznym parytecie dashboard↔kod** (51 sekcji wpiętych, 0 no-op, 0 sierot). Render per-trasa (zwłaszcza panel za auth) **pozostaje niezweryfikowany wizualnie** — mogę to zrobić w osobnym, nie-read-only przebiegu, jeśli zechcesz.
-- **Vercel:** brak CLI + tokenu → projekty/env/deploye/logi buildów niedostępne z konsoli. Stan zmiennych w produkcji (zwł. `ENCRYPTION_KEY`) = akcja właściciela.
-- **Pokrycie testów:** niekonfigurowane w Vitest → brak liczby pokrycia linii/gałęzi; podano liczności (79 plików / 622 testy jednostkowe; 5 integracyjnych na realnym Postgresie w CI; 1 e2e Playwright `e2e/smoke.spec.ts`).
-- **Martwy kod / nieużywane eksporty:** pełny sweep wymagałby `ts-prune`/`knip` (nieuruchamiane); spot-checki czyste.
-- **Żywa baza:** tylko odczyt (flagi RLS, lista tabel, weryfikacja 1 kolumny). Nie analizowano danych, kompletu indeksów ani wydajności zapytań. Zapytanie RLS uruchomiono **tymczasowym, natychmiast usuniętym** skryptem read-only (pg-adapter) — bez trwałego artefaktu, bez mutacji.
-- **Sekrety w dashboardach** (Vercel/Supabase/Upstash): odwołano się tylko do **nazw** zmiennych z kodu; faktyczny stan set/unset w produkcji = akcja właściciela.
-- **Integracje zewnętrzne** (Twitch/Kick/YouTube/Stripe/Streamlabs) sprawdzone **statycznie** (weryfikacja podpisów, gating) — nie testowano end-to-end z żywymi callbackami.
-
----
-
-*Raport wygenerowany w trybie read-only. Nie zmieniono kodu, nie wykonano commitów, deployów ani migracji. Jedyny utworzony plik: `AUDIT_REPORT.md`.*
+- **Stack:** Next.js **16.2.9** (App Router, Turbopack build) · React 19 · TypeScript · Prisma **7** (driver adapter pg) · Auth.js **v5 beta.31** (sesje DB) · Tailwind **4** · next-intl (14 locale, PL unprefixed) · Upstash Redis (REST) · Supabase Postgres (pooler 6543 / direct 5432) · Vercel (main auto-deploy). Node **>=22** (engines), menedżer: **npm** (package-lock.json).
+- **Monorepo:** `ghost-empire-web/` (portal+API+admin+overlaye), `ghost-empire-chat/` (bot czatu Twitch/Kick/YT, osobny runtime), docs w rootcie (`CHANGELOG/ROADMAP/docs/*`). Discord = osobne repo E-Bot.
+- **Uruchomienie:** `npm run dev` (dev, port z `.claude/launch.json` = 3100), `npm run build`, testy `npm test` (vitest), `npm run docs:check` (bramka dokumentacji).
+- **Mapa:** routing `src/app/[locale]/*` (widz) + `src/app/overlay/*` (OBS) + `src/app/api/*` (REST); warstwa danych `src/lib/prisma.ts` + `prisma/schema.prisma` (104 modele); integracje `src/lib/*` (twitch/kick/yt/stripe/govee/ai/…); admin jako jedna strona `/admin` z rejestrem sekcji w `components/admin/AdminClient.tsx`; CSP per-request w `src/proxy.ts`.

@@ -6,10 +6,9 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
+import { clampInt } from "@/lib/utils";
 import { featureGateResponse } from "@/lib/entitlements";
 
-const clampInt = (v: unknown, min: number, max: number, fallback: number) =>
-  typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.floor(v))) : fallback;
 
 type Row = {
   active: boolean; endsAt: Date | null; startedAt: Date | null;

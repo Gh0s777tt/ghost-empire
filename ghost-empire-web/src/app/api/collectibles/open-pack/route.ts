@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { PACK_PRICE, pickRarity } from "@/lib/collectibles";
+import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ ok: false, reason: "unauthorized" }, { status: 401 });
   const userId = session.user.id;
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req);
   const rl = await rateLimit(`pack:${userId}:${ip}`, 30, 60_000, { failClosed: false });
   if (!rl.allowed) return NextResponse.json({ ok: false, reason: "rate-limited" }, { status: 429 });
 

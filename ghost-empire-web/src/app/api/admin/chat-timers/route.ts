@@ -6,14 +6,14 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
+import { clampInt } from "@/lib/utils";
 
 const MAX_MESSAGE = 500;
 const MIN_INTERVAL = 60;        // 1 min
 const MAX_INTERVAL = 86_400;    // 24 h
 
 function clampInterval(v: unknown): number {
-  if (typeof v !== "number" || !Number.isFinite(v)) return 900;
-  return Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, Math.floor(v)));
+  return clampInt(v, MIN_INTERVAL, MAX_INTERVAL, 900);
 }
 
 type Row = {

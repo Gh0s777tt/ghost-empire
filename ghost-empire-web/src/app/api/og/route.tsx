@@ -9,6 +9,7 @@ import { ImageResponse } from "next/og";
 import { getCurrentTenant } from "@/lib/tenant";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
   // CPU-heavy Satori render on a public route — cap per-IP so a cache-busting flood
   // can't burn render time. failClosed: unlike DB-backed routes this has no DB op to
   // fail, so a backend outage must not silently disable the limit.
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req);
   const rl = await rateLimit(`og:${ip}`, 30, 60_000, { failClosed: true });
   if (!rl.allowed) return new Response("Too Many Requests", { status: 429 });
 

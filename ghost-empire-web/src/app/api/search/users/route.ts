@@ -6,11 +6,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req);
   const rl = await rateLimit(`usearch:${ip}`, 60, 60_000, { failClosed: false });
   if (!rl.allowed) return NextResponse.json({ users: [] }, { status: 429 });
 

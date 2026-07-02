@@ -16,6 +16,7 @@ import { aiEmbed } from "@/lib/ai";
 import { buildCorpus } from "@/lib/search-corpus";
 import { rankBySimilarity } from "@/lib/semantic";
 import { cacheJson } from "@/lib/redis";
+import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ function hashTexts(texts: string[]): string {
 }
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req);
   const rl = await rateLimit(`semsearch:${ip}`, 30, 60_000, { failClosed: false });
   if (!rl.allowed) return NextResponse.json({ results: [], dormant: false }, { status: 429 });
 

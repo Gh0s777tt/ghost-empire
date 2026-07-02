@@ -67,14 +67,14 @@ export function EmojiPicker({ onPick, title }: { onPick: (emoji: string) => void
             <div className="grid grid-cols-8 gap-0.5">
               {filtered.length === 0 ? (
                 <span className="col-span-8 text-[11px] text-zinc-600 py-2 text-center">{t("empty")}</span>
-              ) : filtered.map((e, i) => <EmojiBtn key={i} e={e} onPick={onPick} />)}
+              ) : filtered.map((e) => <EmojiBtn key={e} e={e} onPick={onPick} />)}
             </div>
           ) : (
             GROUPS.map((g) => (
               <div key={g.label} className="mb-2">
                 <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mb-1">{g.label}</div>
                 <div className="grid grid-cols-8 gap-0.5">
-                  {g.emojis.map((e, i) => <EmojiBtn key={i} e={e} onPick={onPick} />)}
+                  {g.emojis.map((e) => <EmojiBtn key={e} e={e} onPick={onPick} />)}
                 </div>
               </div>
             ))

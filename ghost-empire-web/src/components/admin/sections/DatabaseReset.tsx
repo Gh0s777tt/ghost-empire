@@ -31,7 +31,7 @@ export function DatabaseResetCard({
     apiGet<{ tenants: Portal[] }>("/api/admin/tenants")
       .then((d) => { setPortals(d.tenants); if (d.tenants.length && !tenantId) setTenantId(d.tenants[0].id); })
       .catch(() => { /* not the platform owner / pre-tenant — only the global wipe is available */ });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch the portal list once on mount; `tenantId` is deliberately excluded so picking a portal doesn't refetch (#779)
   }, []);
 
   const selectedPortal = portals.find((p) => p.id === tenantId) ?? null;

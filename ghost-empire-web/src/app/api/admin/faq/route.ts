@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
+import { clampInt } from "@/lib/utils";
 
 const MATCH_TYPES = ["contains", "word"] as const;
 const MAX_KEYWORD = 100;
@@ -13,8 +14,7 @@ const MAX_RESPONSE = 500;
 const MAX_COOLDOWN = 3600;
 
 function clampCooldown(v: unknown): number {
-  if (typeof v !== "number" || !Number.isFinite(v)) return 30;
-  return Math.min(MAX_COOLDOWN, Math.max(0, Math.floor(v)));
+  return clampInt(v, 0, MAX_COOLDOWN, 30);
 }
 
 type Row = {

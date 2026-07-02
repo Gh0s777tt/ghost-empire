@@ -6,13 +6,14 @@
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
+import { clientIp } from "@/lib/http";
 
 const log = createLogger("client-error");
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  const ip = clientIp(req);
   const rl = await rateLimit(`cerr:${ip}`, 10, 60_000);
   if (!rl.allowed) return new NextResponse(null, { status: 429 });
 

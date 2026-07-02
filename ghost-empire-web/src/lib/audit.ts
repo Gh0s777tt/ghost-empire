@@ -5,6 +5,7 @@
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { createLogger } from "@/lib/logger";
+import { clientIpOrNull } from "@/lib/http";
 
 const log = createLogger("audit");
 
@@ -82,12 +83,5 @@ export async function logAdminAction(opts: {
 }
 
 export function extractIp(req: Request): string | null {
-  const headers = req.headers;
-  const xff = headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  const real = headers.get("x-real-ip");
-  if (real) return real;
-  const cf = headers.get("cf-connecting-ip");
-  if (cf) return cf;
-  return null;
+  return clientIpOrNull(req);
 }
