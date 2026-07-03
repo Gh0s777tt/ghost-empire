@@ -21,18 +21,39 @@ export async function GET() {
       logoUrl: true, ownerHandle: true, tokenName: true, tokenSymbol: true,
       companionDefaultName: true, bgImageUrl: true, socialLinks: true, supportAlertMode: true,
       timezone: true, domain: true,
-      plan: true, planExpiresAt: true, createdAt: true,
+      plan: true, planExpiresAt: true, createdAt: true, setupCompletedAt: true,
       _count: { select: { users: true } },
     },
   });
+
+  // Activation signal for the operator dashboard (#787/C3): how many viewers joined each portal
+  // in the last 7 days, so a "stuck" portal (old, few users, setup unfinished) is visible at a
+  // glance. One grouped query across all tenants.
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const newByTenant = await prisma.user.groupBy({
+    by: ["tenantId"],
+    where: { createdAt: { gte: weekAgo } },
+    _count: { _all: true },
+  }).catch(() => [] as { tenantId: string | null; _count: { _all: number } }[]);
+  const newMap = new Map(newByTenant.map((g) => [g.tenantId, g._count._all]));
+
+  const now = Date.now();
   return NextResponse.json({
-    tenants: tenants.map((t) => ({
-      ...t,
-      planExpiresAt: t.planExpiresAt?.toISOString() ?? null,
-      createdAt: t.createdAt.toISOString(),
-      users: t._count.users,
-      _count: undefined,
-    })),
+    tenants: tenants.map((t) => {
+      const ageDays = (now - t.createdAt.getTime()) / 86_400_000;
+      return {
+        ...t,
+        planExpiresAt: t.planExpiresAt?.toISOString() ?? null,
+        createdAt: t.createdAt.toISOString(),
+        setupCompletedAt: t.setupCompletedAt?.toISOString() ?? null,
+        users: t._count.users,
+        newUsers7d: newMap.get(t.id) ?? 0,
+        // "Stuck": a portal older than a week that still hasn't finished setup OR has no real
+        // audience yet — the signal the operator needs to reach out / help provision (#787/C3).
+        stuck: ageDays > 7 && (t.setupCompletedAt == null || t._count.users <= 1),
+        _count: undefined,
+      };
+    }),
   });
 }
 

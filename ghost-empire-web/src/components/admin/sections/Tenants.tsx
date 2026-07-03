@@ -21,6 +21,7 @@ type TenantRow = {
   timezone: string | null;
   domain: string | null;
   plan: string; planExpiresAt: string | null; createdAt: string; users: number;
+  setupCompletedAt: string | null; newUsers7d: number; stuck: boolean;
 };
 
 const PLANS = ["basic", "pro", "elite"] as const;
@@ -188,6 +189,15 @@ function TenantCard({ row, onToast, onSaved, locale }: {
         >
           {editing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
         </button>
+      </div>
+
+      {/* C3 — per-portal activation readout for the operator: age, joins this week, setup status,
+          and a "stuck" flag so a portal that needs a nudge stands out (#787). */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[10px] font-mono text-zinc-500">
+        <span>{t("tntCreated")} {formatDate(new Date(row.createdAt), locale)}</span>
+        {row.newUsers7d > 0 && <span className="text-emerald-400">+{row.newUsers7d} {t("tntNew7d")}</span>}
+        <span className={row.setupCompletedAt ? "text-emerald-500" : "text-amber-400"}>{row.setupCompletedAt ? `✓ ${t("tntSetupOk")}` : `⚠ ${t("tntSetupPending")}`}</span>
+        {row.stuck && <span className="px-1.5 py-0.5 bg-amber-950/40 border border-amber-800/50 text-amber-300 uppercase tracking-widest">{t("tntStuck")}</span>}
       </div>
 
       {editing && (
