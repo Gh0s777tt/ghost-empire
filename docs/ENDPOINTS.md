@@ -115,6 +115,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/onboarding` | POST | Provisioning portalu tenanta przy zakładaniu konta (slug/nazwa/branding) |
 | `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta |
 | `…/api/billing/checkout` | GET/POST | Status billingu (GET `{configured}`) / utworzenie Stripe Checkout (POST `{plan,months,currency}` — wielowaluta przez `currency_options`, trial 14 dni, #744). Gdy Stripe nieskonfigurowany → 503 (trial bez karty) |
+| `…/api/billing/portal` | POST | Stripe Customer Portal dla własnego tenanta — samodzielne faktury/karta/anulowanie. 400 przed pierwszym checkoutem (brak customer), 503 gdy Stripe nieskonfigurowany |
 
 ## Admin
 | Trasa | Auth | Po co |
@@ -145,6 +146,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/welcome` · `chat-commands` · `chat-timers` · `faq` · `song-requests` | admin | Konfiguracja bota czatu |
 | `…/api/admin/schedule` | perm:manage_shop | Harmonogram streamów |
 | `…/api/admin/bot-config` | perm:manage_shop | Config bota Discord |
+| `…/api/admin/bot-status` | perm:manage_shop | Status żywotności bota czatu (online/lastSeen/platformy) z heartbeatu |
 | `…/api/admin/ban-user` | perm:ban_users | Ban/mute |
 | `…/api/admin/merge-users` | admin | Scalanie duplikatów kont |
 | `…/api/admin/support-tickets` | admin | Skrzynka wsparcia — GET lista (filtr open/resolved/all, tenant-scoped), PATCH reply/resolve/reopen + powiadomienie widza (#650) |
@@ -199,6 +201,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/bot/gt-game` | Mini-gra GT (`!slots` / `!coinflip`) — atomowa gra, zwraca gotową wiadomość |
 | `…/api/bot/duel` | Pojedynki PvP (`!duel` / `!accept` / `!decline`) — atomowy transfer puli, zwraca wiadomość |
 | `…/api/bot/heist` | Napad kooperacyjny (`!heist` — join/resolve) — escrow przy dołączeniu + atomowa wypłata, scheduler rozliczenia po stronie bota |
+| `…/api/bot/heartbeat` | Ping żywotności bota (co ~60 s, `{platforms}`) — zapis per tenant w Redis; odczyt: `…/api/admin/bot-status` |
 
 ## Internal (botSecret) — boty wysyłają zdarzenia
 > Trasy `award` + `link-discord` (Discord) woła teraz **E-Bot** (osobne repo `Gh0s777tt/E-Bot`); `chat-award`/`chat-feed`/`song-request`/`mod-violation` — `ghost-empire-chat`. Kontrakt niezmieniony (dawny `ghost-empire-bot` zastąpiony).

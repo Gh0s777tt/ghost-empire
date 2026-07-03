@@ -13,6 +13,7 @@ type MyTenant = {
   slug: string; name: string; shortName: string | null; ownerHandle: string | null;
   tokenName: string; tokenSymbol: string; brandColor: string; logoUrl: string | null;
   plan: string; effectivePlan: string; planExpiresAt: string | null; users: number;
+  hasSubscription: boolean;
 };
 
 const PLANS = ["basic", "pro", "elite"] as const;
@@ -391,6 +392,20 @@ function MyPortalView({ portal, billingReady, onRefresh }: {
     }
   }
 
+  // Stripe Customer Portal — self-serve invoices / card change / cancellation.
+  async function manage() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiPost<{ ok: true; url: string }>("/api/billing/portal", {});
+      window.location.href = res.url;
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t("error"));
+      setBusy(false);
+    }
+  }
+
   const degraded = portal.effectivePlan !== portal.plan;
   const input = "w-full border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-white outline-hidden focus:border-red-600 placeholder:text-zinc-700";
   const label = "text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1";
@@ -469,15 +484,29 @@ function MyPortalView({ portal, billingReady, onRefresh }: {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => void activate()}
-            disabled={busy}
-            className="px-5 py-2.5 bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2 transition-colors"
-          >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-            {t("bActivate")}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void activate()}
+              disabled={busy}
+              className="px-5 py-2.5 bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2 transition-colors"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+              {t("bActivate")}
+            </button>
+            {portal.hasSubscription && (
+              <button
+                type="button"
+                onClick={() => void manage()}
+                disabled={busy}
+                className="px-5 py-2.5 border border-zinc-700 hover:border-zinc-500 disabled:opacity-40 text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2 transition-colors"
+                title={t("bManageHint")}
+              >
+                {t("bManage")}
+              </button>
+            )}
+          </div>
+          {portal.hasSubscription && <p className="text-zinc-600 text-[11px]">{t("bManageHint")}</p>}
         </div>
       )}
     </div>

@@ -237,6 +237,8 @@
     "bCancelled": "Payment cancelled",
     "bActivate": "Activate subscription",
     "bActivateHint": "Want to skip the trial? Activate the subscription right away — pick a billing period:",
+    "bManage": "Manage subscription",
+    "bManageHint": "Invoices, payment method and cancellation — self-serve in the secure Stripe portal.",
     "bMonths": "{n} mo",
     "metaTitle": "Launch your own portal",
     "metaDesc": "Spin up a community portal for your channel — your brand, tokens and colors in minutes.",
@@ -1517,6 +1519,10 @@
       "saveRates": "Save rates"
     },
     "botConfig": {
+      "statusOnline": "Bot online",
+      "statusOffline": "Bot offline",
+      "statusLastSeen": "last seen {date}",
+      "statusNever": "no heartbeat yet — is the bot running and up to date?",
       "happyTitle": "Happy hours (%gt% multiplier)",
       "happyDesc": "During the chosen hours (Polish time) all %gt% rewards from chat and Discord are multiplied. Applied portal-side — the bot needs no changes.",
       "happyStart": "From (0-23)",

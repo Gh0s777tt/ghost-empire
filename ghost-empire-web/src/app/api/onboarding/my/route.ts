@@ -25,6 +25,7 @@ export async function GET() {
       slug: true, name: true, shortName: true, ownerHandle: true,
       tokenName: true, tokenSymbol: true, brandColor: true, logoUrl: true,
       plan: true, planExpiresAt: true, createdAt: true,
+      stripeSubscriptionId: true,
       _count: { select: { users: true } },
     },
   });
@@ -33,6 +34,9 @@ export async function GET() {
     tenant: {
       ...t,
       _count: undefined,
+      // Boolean only — the raw Stripe id stays server-side.
+      stripeSubscriptionId: undefined,
+      hasSubscription: Boolean(t.stripeSubscriptionId),
       users: t._count.users,
       planExpiresAt: t.planExpiresAt?.toISOString() ?? null,
       createdAt: t.createdAt.toISOString(),
