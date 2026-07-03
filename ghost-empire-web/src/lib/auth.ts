@@ -573,6 +573,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Season XP welcome bump
         await awardSeasonXp(user.id, "welcome");
+
+        // first_login achievement — grant HERE (createUser), so it lands on the FIRST login
+        // instead of the 2nd (#782/A4). The signIn callback's `if (dbUser)` block is skipped on
+        // login #1 because the user isn't persisted yet, so its grant only fired on the return
+        // visit; the callback stays as a back-stop and won't double-grant (it checks first). #782
+        const firstLogin = await prisma.achievement.findFirst({
+          where: { code: "first_login", ...(tenantId ? { tenantId } : {}) },
+          select: { id: true },
+        });
+        if (firstLogin) {
+          await prisma.userAchievement
+            .create({ data: { userId: user.id, achievementId: firstLogin.id } })
+            .catch(() => {/* already granted / race — the signIn back-stop covers it */});
+        }
       } catch (e) {
         log.error("Error granting welcome bonus", e);
       }

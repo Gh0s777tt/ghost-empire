@@ -78,10 +78,13 @@ type Props = {
   hotItems: HomeShopItem[];
   activeEvents: HomeEvent[];
   topUsers: HomeTopUser[];
+  // Real per-portal counters for the guest hero (#782/A4) — replaces the hardcoded
+  // "847+ / 12M+" that read identically (and fake) on every white-label portal.
+  portalStats?: { players: number; tokens: number; rewards: number; events: number } | null;
 };
 
 
-export function HomeClient({ session, userData, hotItems, activeEvents, topUsers }: Props) {
+export function HomeClient({ session, userData, hotItems, activeEvents, topUsers, portalStats }: Props) {
   const router = useRouter();
   const t = useTranslations("home");
   const user = userData?.user;
@@ -89,7 +92,7 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
   const achievements = userData?.achievements ?? [];
 
   if (!session) {
-    return <GuestView topUsers={topUsers} />;
+    return <GuestView topUsers={topUsers} stats={portalStats ?? null} />;
   }
 
   return (
@@ -286,16 +289,20 @@ function DailyBonusCard() {
 }
 
 // ---- GUEST VIEW ----
-function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
+function GuestView({ topUsers, stats: portalStats }: { topUsers: HomeTopUser[]; stats: { players: number; tokens: number; rewards: number; events: number } | null }) {
   const t = useTranslations("home");
   const fmt = useLocaleFmt();
   const { brandName, logoUrl, channels, isPlatformBrand } = useTenantBranding();
-  const stats = [
-    { label: t("statPlayers"), value: "847+" },
-    { label: t("statTokens"), value: "12M+" },
-    { label: t("statRewards"), value: "12" },
-    { label: t("statEvents"), value: "34" },
-  ];
+  // Real per-portal numbers (#782/A4). Null (shouldn't happen for guests) → hide the grid
+  // rather than show fabricated figures.
+  const stats = portalStats
+    ? [
+        { label: t("statPlayers"), value: fmt(portalStats.players) },
+        { label: t("statTokens"), value: fmt(portalStats.tokens) },
+        { label: t("statRewards"), value: fmt(portalStats.rewards) },
+        { label: t("statEvents"), value: fmt(portalStats.events) },
+      ]
+    : [];
   return (
     <div className="space-y-12 animate-fade-in">
       {/* Live banner — self-hides when the streamer is offline (guests too) */}
@@ -351,15 +358,17 @@ function GuestView({ topUsers }: { topUsers: HomeTopUser[] }) {
         </div>
       </div>
 
-      {/* Stats teaser */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <div key={s.label} className="border border-zinc-800 bg-zinc-950/60 p-4 text-center clip-corner">
-            <div className="font-display text-3xl text-red-500">{s.value}</div>
-            <div className="font-mono text-[10px] tracking-widest text-zinc-500 mt-1">{s.label}</div>
-          </div>
-        ))}
-      </div>
+      {/* Stats teaser — real per-portal numbers (#782/A4) */}
+      {stats.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {stats.map((s) => (
+            <div key={s.label} className="border border-zinc-800 bg-zinc-950/60 p-4 text-center clip-corner">
+              <div className="font-display text-3xl text-red-500">{s.value}</div>
+              <div className="font-mono text-[10px] tracking-widest text-zinc-500 mt-1">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Top 3 preview */}
       <div>

@@ -11,6 +11,7 @@ import { Link } from "@/i18n/navigation";
 import { apiGet } from "@/lib/api-client";
 
 type Steps = { platform: boolean; daily: boolean; clan: boolean; clip: boolean };
+type Data = { steps: Steps; applicable: Steps };
 
 const STEP_DEFS = [
   { key: "platform", href: "/profile", icon: Link2 },
@@ -21,15 +22,19 @@ const STEP_DEFS = [
 
 export function GettingStarted() {
   const t = useTranslations("home");
-  const [steps, setSteps] = useState<Steps | null>(null);
+  const [data, setData] = useState<Data | null>(null);
 
   useEffect(() => {
-    apiGet<{ steps: Steps }>("/api/getting-started").then((d) => setSteps(d.steps)).catch(() => {});
+    apiGet<Data>("/api/getting-started").then((d) => setData(d)).catch(() => {});
   }, []);
 
-  if (!steps) return null;
-  const done = STEP_DEFS.filter((s) => steps[s.key]).length;
-  if (done === STEP_DEFS.length) return null; // all done → hide
+  if (!data) return null;
+  // Only count steps that CAN be completed on THIS portal (#782/A4) — a fresh portal with no
+  // clans / no Twitch (→ no clip-of-week) must still reach 100% so this card self-hides instead
+  // of hanging at "2/4" forever with two impossible steps.
+  const visible = STEP_DEFS.filter((s) => data.applicable[s.key] !== false);
+  const done = visible.filter((s) => data.steps[s.key]).length;
+  if (visible.length === 0 || done === visible.length) return null; // all applicable done → hide
 
   return (
     <div className="border border-zinc-800 bg-zinc-950/60 rounded-xl p-4">
@@ -38,15 +43,15 @@ export function GettingStarted() {
           <Sparkles className="w-4 h-4 text-amber-400" />
           <h2 className="font-display text-base text-white tracking-wider">{t("gsTitle")}</h2>
         </div>
-        <span className="text-[11px] font-mono text-zinc-500">{t("gsProgress", { done, total: STEP_DEFS.length })}</span>
+        <span className="text-[11px] font-mono text-zinc-500">{t("gsProgress", { done, total: visible.length })}</span>
       </div>
       <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden mb-3">
-        <div className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all" style={{ width: `${(done / STEP_DEFS.length) * 100}%` }} />
+        <div className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all" style={{ width: `${(done / visible.length) * 100}%` }} />
       </div>
       <div className="space-y-1.5">
-        {STEP_DEFS.map((s) => {
+        {visible.map((s) => {
           const Icon = s.icon;
-          const complete = steps[s.key];
+          const complete = data.steps[s.key];
           return (
             <Link
               key={s.key}

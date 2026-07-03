@@ -49,6 +49,21 @@ export default async function HomePage() {
     getCachedTopUsers(3, tid),
   ]);
 
+  // Real per-portal counters for the guest hero (#782/A4) — only computed for guests (only
+  // GuestView shows them), replacing the hardcoded "847+ / 12M+" that was identical & fake on
+  // every white-label portal. Cheap tenant-scoped counts + one sum.
+  let portalStats = null;
+  if (!session?.user?.id) {
+    const scope = tid ? { tenantId: tid } : {};
+    const [players, gt, rewards, eventsCount] = await Promise.all([
+      prisma.user.count({ where: scope }),
+      prisma.user.aggregate({ _sum: { totalEarned: true }, where: scope }),
+      prisma.shopItem.count({ where: { active: true, ...scope } }),
+      prisma.event.count({ where: scope }),
+    ]);
+    portalStats = { players, tokens: gt._sum.totalEarned ?? 0, rewards, events: eventsCount };
+  }
+
   // User-specific data (only if logged in)
   let userData = null;
   if (session?.user?.id) {
@@ -189,6 +204,7 @@ export default async function HomePage() {
             updatedAt: e.updatedAt.toISOString(),
           }))}
           topUsers={topUsers}
+          portalStats={portalStats}
         />
       </main>
     </div>
