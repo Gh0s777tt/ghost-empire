@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szkic C1 — sekcja „Wygląd / Branding" w panelu</title>
+<style>
+  :root { --red:#e50914; --bg:#0a0a0b; --panel:#111113; --line:#232327; --muted:#8a8a90; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:#e7e7ea; font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif; padding:32px; }
+  .wrap { max-width:680px; margin:0 auto; }
+  .note { border-left:3px solid var(--red); background:#1a0d0e; padding:10px 14px; font-size:13px; color:#f0c9cc; margin-bottom:22px; }
+  .note b { color:#fff; }
+  .panel { border:1px solid var(--line); background:var(--panel); }
+  .head { display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line); padding:14px 18px; }
+  .head .cut { width:3px; height:18px; background:var(--red); }
+  .head h2 { font-size:13px; letter-spacing:.18em; text-transform:uppercase; margin:0; }
+  .desc { color:var(--muted); font-size:12px; padding:12px 18px 4px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:14px 18px; }
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field.full { grid-column:1/3; }
+  label { font:10px/1 monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  input { background:#000; border:1px solid var(--line); color:#fff; padding:9px 10px; font-size:13px; border-radius:0; }
+  input:focus { outline:none; border-color:var(--red); }
+  .row { display:flex; gap:10px; align-items:center; }
+  .swatch { width:34px; height:34px; border:1px solid var(--line); background:var(--red); }
+  .elite { grid-column:1/3; border:1px solid #4a3a12; background:#171205; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .elite .lbl { font-size:12px; color:#e9cf8f; }
+  .badge { font:9px/1 monospace; letter-spacing:.12em; padding:4px 8px; border:1px solid #a07a1e; color:#e9cf8f; text-transform:uppercase; }
+  .preview { display:flex; align-items:center; gap:10px; padding:12px 18px; border-top:1px solid var(--line); }
+  .logo { width:30px;height:30px;border-radius:5px;background:#000;border:1px solid var(--red); display:flex;align-items:center;justify-content:center; }
+  .brandname { font-weight:800; letter-spacing:.06em; text-shadow:2px 0 0 rgba(229,9,20,.55); }
+  .save { padding:11px 18px; background:#166534; border:none; color:#fff; font:12px/1 sans-serif; font-weight:700; letter-spacing:.12em; text-transform:uppercase; margin:14px 18px 18px; cursor:pointer; }
+  .cap { font-size:12px; color:var(--muted); margin-top:18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="note"><b>Szkic C1 · low-fi.</b> Problem P2: dziś zwykły streamer-admin <b>nie ma w panelu żadnej</b> sekcji brandingu — edycja żyje tylko w ukrytym <code>/onboarding</code> i jest Elite-gated. Ten szkic przenosi ją do panelu i pokazuje <b>świadomy podział pricingowy</b> (tożsamość darmowa, zaawansowane = Elite).</div>
+
+  <div class="panel">
+    <div class="head"><span class="cut"></span><h2>Wygląd / Branding</h2></div>
+    <p class="desc">Ustaw, jak Twój portal wygląda dla widzów. Zmiany widoczne od razu na całym portalu.</p>
+
+    <div class="grid">
+      <div class="field"><label>Nazwa portalu</label><input value="Empire Forge"></div>
+      <div class="field"><label>Skrót</label><input value="Empire"></div>
+      <div class="field"><label>Nazwa waluty</label><input value="Ghost Tokens"></div>
+      <div class="field"><label>Symbol waluty</label><input value="GT"></div>
+      <div class="field"><label>Kolor marki</label><div class="row"><span class="swatch"></span><input value="#e50914" style="flex:1"></div></div>
+      <div class="field"><label>Logo (URL)</label><input placeholder="https://…"></div>
+
+      <div class="elite">
+        <span class="lbl">🔒 Własna domena i tło portalu</span>
+        <span class="badge">Plan Elite</span>
+      </div>
+    </div>
+
+    <div class="preview">
+      <span style="font:10px monospace;letter-spacing:.12em;color:var(--muted)">PODGLĄD:</span>
+      <span class="logo">👻</span>
+      <span class="brandname">EMPIRE FORGE</span>
+      <span style="color:var(--muted);font-size:13px">· saldo 1 250 GT</span>
+    </div>
+
+    <button class="save">✓ Zapisz branding</button>
+  </div>
+
+  <p class="cap">Decyzja pricingowa do potwierdzenia: tożsamość (nazwa/logo/kolor/waluta) darmowa i self-serve; domena + tło zostają różnicownikiem Elite (żółta plakietka). Koszt M.</p>
+</div>
+</body>
+</html>

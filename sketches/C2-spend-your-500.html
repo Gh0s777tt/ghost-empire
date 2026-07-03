@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szkic C2 — „Wydaj swoje 500 GT" po pierwszym logowaniu</title>
+<style>
+  :root { --red:#e50914; --bg:#0a0a0b; --panel:#111113; --line:#232327; --muted:#8a8a90; --gold:#fbbf24; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:#e7e7ea; font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif; padding:32px; }
+  .wrap { max-width:600px; margin:0 auto; }
+  .note { border-left:3px solid var(--red); background:#1a0d0e; padding:10px 14px; font-size:13px; color:#f0c9cc; margin-bottom:22px; }
+  .note b { color:#fff; }
+  .card { border:1px solid #3a2a5a; background:linear-gradient(180deg,#140f22,#0d0a17); border-radius:4px; padding:22px; position:relative; }
+  .x { position:absolute; top:12px; right:14px; color:var(--muted); cursor:pointer; font-size:18px; }
+  .hi { font-size:20px; font-weight:800; letter-spacing:.03em; margin:0 0 4px; }
+  .hi .gt { color:var(--gold); }
+  .sub { color:#b9b3c9; font-size:13px; margin:0 0 18px; }
+  .tiles { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .tile { border:1px solid var(--line); background:#0b0b0d; border-radius:3px; padding:16px 12px; text-align:center; cursor:pointer; transition:border-color .15s; }
+  .tile:hover { border-color:var(--red); }
+  .tile .emo { font-size:30px; }
+  .tile .t { font-size:13px; font-weight:700; margin:8px 0 2px; }
+  .tile .c { font:11px/1 monospace; letter-spacing:.08em; color:var(--gold); }
+  .tile .d { font-size:11px; color:var(--muted); margin-top:3px; }
+  .foot { display:flex; align-items:center; justify-content:space-between; margin-top:18px; }
+  .dots { display:flex; gap:6px; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#2a2a30; }
+  .dot.on { background:var(--red); }
+  .skip { color:var(--muted); font-size:12px; text-decoration:none; }
+  .cap { font-size:12px; color:var(--muted); margin-top:18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="note"><b>Szkic C2 · low-fi.</b> Dziś nowy widz dostaje 500 GT + alert, ale <b>bez kierunku, co z nimi zrobić</b>. Ta karta (pokazana raz, po pierwszym logowaniu, na home) prowadzi grant powitalny prosto w rdzeń — reużywa istniejących ekranów (paczki/kasyno/sklep).</div>
+
+  <div class="card">
+    <span class="x">✕</span>
+    <p class="hi">Masz <span class="gt">500 👻 GT</span> na start — zrób z nimi coś!</p>
+    <p class="sub">Wybierz pierwszy ruch. Zawsze możesz wrócić do tego z zakładki „Pierwsze kroki".</p>
+
+    <div class="tiles">
+      <div class="tile">
+        <div class="emo">🃏</div>
+        <div class="t">Otwórz paczkę</div>
+        <div class="c">250 GT</div>
+        <div class="d">Zdobądź kartę</div>
+      </div>
+      <div class="tile">
+        <div class="emo">🎰</div>
+        <div class="t">Zagraj</div>
+        <div class="c">od 10 GT</div>
+        <div class="d">10 gier kasyna</div>
+      </div>
+      <div class="tile">
+        <div class="emo">🛒</div>
+        <div class="t">Kup w sklepie</div>
+        <div class="c">nagrody</div>
+        <div class="d">Wydaj z sensem</div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+      <a class="skip" href="#">Później →</a>
+    </div>
+  </div>
+
+  <p class="cap">Pokazywana raz (samoukrywalna jak „Pierwsze kroki"). Kwoty/akcje z realnych funkcji: paczka 250 GT, bet od 10 GT, sklep. Koszt S–M.</p>
+</div>
+</body>
+</html>
