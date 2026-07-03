@@ -69,6 +69,9 @@
   "wrapped": {
     "help": "Wrapped is your personal monthly recap — league standing, bounties, %tokenName% flow, achievements and rank, all on one shareable card. Share your link and the preview shows your own numbers.",
     "metaTitle": "Your Season",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "thisMonth": "This month",
     "metaDesc": "Your month on the portal, wrapped — predictions, bounties, GT and achievements.",
     "publicMetaTitle": "{name}'s Season Wrapped",
     "publicMetaDesc": "{name}'s month on %brandShort% — league, bounties and achievements.",

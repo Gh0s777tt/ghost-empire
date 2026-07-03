@@ -69,6 +69,9 @@
   "wrapped": {
     "help": "Wrapped to Twoje osobiste podsumowanie miesiąca — pozycja w lidze, bounty, przepływ %tokenName%, osiągnięcia i ranga, wszystko na jednej karcie do udostępnienia. Udostępnij swój link, a podgląd pokaże Twoje liczby.",
     "metaTitle": "Twój Sezon",
+    "prevMonth": "Poprzedni miesiąc",
+    "nextMonth": "Następny miesiąc",
+    "thisMonth": "Bieżący miesiąc",
     "metaDesc": "Twój miesiąc na portalu w pigułce — predykcje, bounty, GT i osiągnięcia.",
     "publicMetaTitle": "Podsumowanie sezonu — {name}",
     "publicMetaDesc": "Miesiąc gracza {name} na %brandShort% — liga, bounty i osiągnięcia.",

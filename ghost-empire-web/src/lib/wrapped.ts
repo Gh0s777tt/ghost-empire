@@ -42,8 +42,13 @@ function displayName(c: NameRow | null | undefined): string {
   return c?.displayName || c?.name || c?.username || "Widmo";
 }
 
-export async function getWrapped(userId: string, tenantId: string | null): Promise<WrappedData | null> {
-  const { start, end, number, label } = monthBounds();
+export async function getWrapped(userId: string, tenantId: string | null, monthsBack = 0): Promise<WrappedData | null> {
+  // monthsBack lets the recap show PRIOR months (#788/B2). 0 = current month (default → existing
+  // callers like the OG cards / public page are unchanged). Clamped to the last 12 months.
+  const clamped = Math.max(0, Math.min(11, Math.floor(monthsBack)));
+  const nowD = new Date();
+  const target = new Date(Date.UTC(nowD.getUTCFullYear(), nowD.getUTCMonth() - clamped, 1));
+  const { start, end, number, label } = monthBounds(target);
   const inMonth = { gte: start, lt: end };
 
   const [user, league, bountiesCreated, pledges, gtRows, achSeason, achTotal] = await Promise.all([
@@ -51,7 +56,9 @@ export async function getWrapped(userId: string, tenantId: string | null): Promi
       where: { id: userId },
       select: { name: true, displayName: true, username: true, image: true, level: true, prestige: true, tokens: true },
     }),
-    getMyLeagueStats(userId, tenantId),
+    // The live Prediction League is a CURRENT-month standing; for a past month omit it (a
+    // historical recompute would need a season-scoped query) rather than show stale data.
+    clamped === 0 ? getMyLeagueStats(userId, tenantId) : Promise.resolve(null),
     prisma.bounty.count({ where: { creatorId: userId, createdAt: inMonth, ...(tenantId ? { tenantId } : {}) } }),
     prisma.bountyPledge.findMany({ where: { userId, createdAt: inMonth }, select: { bountyId: true, amount: true } }),
     prisma.transaction.groupBy({ by: ["type"], where: { userId, createdAt: inMonth, type: { in: ["earn", "spend"] } }, _sum: { amount: true } }),
