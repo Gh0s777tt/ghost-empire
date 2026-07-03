@@ -83,10 +83,10 @@ Dziś diagnostyka = logi Vercela. Pod produkcję z realnym ruchem to za mało.
 
 | Propozycja | Pri | Notatki |
 |---|---|---|
-| ~~**Sentry** (error tracking)~~ ✅ | — | **Zrobione (#162)** — `@sentry/nextjs` server + edge przez `instrumentation.ts` + `onRequestError` (bez `withSentryConfig` = zero zmian w `next build`). **No-op bez `SENTRY_DSN`** → ustaw env w Vercel, by aktywować. *(Client SDK + source-maps = opcjonalny kolejny krok.)* |
+| ~~**Sentry** (error tracking)~~ ✅ | — | **Zrobione (#162)** — `@sentry/nextjs` server + edge przez `instrumentation.ts` + `onRequestError` (bez `withSentryConfig` = zero zmian w `next build`). **AKTYWNE na prod od 2026-07-04** — `SENTRY_DSN` ustawiony w Vercel (org `empiredevelopment`, projekt `ghost-empire-web`, region EU), ingest zweryfikowany. **Client SDK też ✅ (#508)** — `instrumentation-client.ts` (errors-only, tracing 0, `NEXT_PUBLIC_SENTRY_DSN`, ingest EU w CSP `connect-src`). *(Source-maps przez `withSentryConfig` = świadomie pominięte — zmieniałyby build.)* |
 | ~~**Vercel Analytics + Speed Insights**~~ ✅ | — | **Zrobione (#155)** — `@vercel/analytics` + `@vercel/speed-insights` w root layout (real-user Core Web Vitals, cookieless, no-op poza Vercel) |
 | ~~**Structured logging**~~ ✅ | — | **Zrobione** — `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty w 3 webhooki (twitch-eventsub / kick-events / paymedia) + crony (`prune` #151, `streamlabs-poll` #160). *(Hot-path `award` świadomie bez logu na wywołanie — byłby szum; błędy łapie boundary.)* |
-| **Uptime / health-check** | 🟡 | ✅ Endpoint `/api/health` istnieje (status DB+Redis, 200/503) + per-IP rate-limit (#486). Zostaje: podpięcie zewnętrznego monitora (cron-job.org / UptimeRobot) — akcja usera |
+| ~~**Uptime / health-check**~~ ✅ | — | Endpoint `/api/health` (status DB+Redis, 200/503) + per-IP rate-limit (#486). **Zewnętrzny monitor AKTYWNY od 2026-07-04**: Sentry Uptime (`empire-forge.com /api/health`, co 5 min z infry Sentry, alert po 3 porażkach → e-mail). Dodatkowo lokalny launchd na Macu właściciela (co 10 min, powiadomienie przy zmianie stanu) |
 | ~~**Alerty na anomalie ekonomii**~~ ✅ | — | **Zrobione (#161)** — `lib/economy-anomaly.ts`: pojedynczy grant ≥100k GT lub ≥500k GT/godz. → powiadomienie wszystkich adminów (link do audit logu) + `log.warn`. Fire-and-forget w `/api/admin/grant-tokens` |
 
 ---

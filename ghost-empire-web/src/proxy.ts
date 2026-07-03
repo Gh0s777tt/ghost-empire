@@ -32,7 +32,9 @@ function buildCsp(nonce: string): string {
     "style-src-attr 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://id.twitch.tv https://discord.com",
+    // *.ingest.de.sentry.io — browser Sentry (instrumentation-client.ts) posts error
+    // envelopes to the EU ingest; without it the client SDK is silently CSP-blocked.
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://id.twitch.tv https://discord.com https://*.ingest.de.sentry.io",
     // 'self' (not 'none') so the admin Payments section can embed its own /support page in a
     // same-origin preview iframe (#702/#728); cross-origin framing (clickjacking) stays blocked.
     "frame-ancestors 'self'",
