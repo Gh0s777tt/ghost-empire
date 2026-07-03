@@ -71,6 +71,7 @@ export const ActiveDropsList = dynamic(() => import("./sections/ActiveDrops").th
 export const PendingOrdersList = dynamic(() => import("./sections/PendingOrders").then((m) => m.PendingOrdersList), { ssr: false, loading: SectionLoading });
 export const StreamAlertsManager = dynamic(() => import("./sections/StreamAlerts").then((m) => m.StreamAlertsManager), { ssr: false, loading: SectionLoading });
 export const TenantsManager = dynamic(() => import("./sections/Tenants").then((m) => m.TenantsManager), { ssr: false, loading: SectionLoading });
+export const AppearanceManager = dynamic(() => import("./sections/Appearance").then((m) => m.AppearanceManager), { ssr: false, loading: SectionLoading });
 export const SupportTicketsManager = dynamic(() => import("./sections/SupportTickets").then((m) => m.SupportTicketsManager), { ssr: false, loading: SectionLoading });
 export const RoleRoster = dynamic(() => import("./sections/RoleRoster").then((m) => m.RoleRoster), { ssr: false, loading: SectionLoading });
 export const SubscribersManager = dynamic(() => import("./sections/Subscribers").then((m) => m.SubscribersManager), { ssr: false, loading: SectionLoading });
