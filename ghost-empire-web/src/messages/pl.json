@@ -39,6 +39,7 @@
     "cancelBtnSmall": "Zamknij",
     "loading": "Ładowanie aukcji…",
     "empty": "Brak aukcji. Zajrzyj wkrótce.",
+    "loadErr": "Nie udało się wczytać aukcji.",
     "liveHeading": "Trwają teraz",
     "pastHeading": "Zakończone",
     "ended": "Zakończona",

@@ -39,6 +39,7 @@
     "cancelBtnSmall": "Close",
     "loading": "Loading auctions…",
     "empty": "No auctions yet. Check back soon.",
+    "loadErr": "Couldn't load auctions.",
     "liveHeading": "Live now",
     "pastHeading": "Ended",
     "ended": "Ended",

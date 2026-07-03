@@ -12,6 +12,7 @@ import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { ErrorState } from "@/components/EmptyState";
 import { displayStatus } from "@/lib/auctions";
 
 type Auction = {
@@ -56,11 +57,13 @@ function timeLeftLabel(endsAt: string, now: number, t: (k: string, v?: Record<st
 
 export function AuctionsClient({ isAuthenticated, canManage }: { isAuthenticated: boolean; canManage: boolean }) {
   const t = useTranslations("auctions");
+  const tc = useTranslations("common");
   const fmt = useLocaleFmt();
   const { tokenSymbol } = useTenantBranding();
   const sym = tokenSymbol || "GT";
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [data, setData] = useState<Data | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -76,8 +79,8 @@ export function AuctionsClient({ isAuthenticated, canManage }: { isAuthenticated
   const [showCreate, setShowCreate] = useState(false);
 
   const load = useCallback(async () => {
-    try { setData(await apiGet<Data>("/api/auctions")); }
-    catch { /* keep current */ }
+    try { setData(await apiGet<Data>("/api/auctions")); setError(false); }
+    catch { setError(true); /* keep any current data (poll failure) */ }
     finally { setLoading(false); }
   }, []);
 
@@ -205,6 +208,10 @@ export function AuctionsClient({ isAuthenticated, canManage }: { isAuthenticated
 
       {loading ? (
         <div className="flex items-center gap-2 text-zinc-500 text-sm py-12 justify-center"><Loader2 className="w-4 h-4 animate-spin" /> {t("loading")}</div>
+      ) : error && auctions.length === 0 ? (
+        // A failed initial load used to fall through to the "empty" message (looked like there
+        // were simply no auctions). Now it's an explicit error with retry (#783/A5).
+        <ErrorState title={tc("errorTitle")} message={t("loadErr")} retryLabel={tc("retry")} onRetry={() => { setLoading(true); void load(); }} />
       ) : auctions.length === 0 ? (
         <div className="text-center text-zinc-500 text-sm py-12 border border-zinc-800/60 bg-black/20">{t("empty")}</div>
       ) : (
