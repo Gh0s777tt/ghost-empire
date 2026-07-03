@@ -29,6 +29,14 @@ function slugify(name: string): string {
     .slice(0, 32);
 }
 
+// The portal lives on its own subdomain once NEXT_PUBLIC_ROOT_DOMAIN is deployed. Build the
+// link so onboarding can hand off straight to the new portal / its admin (#781/A1) instead of
+// leaving the streamer on a dead-end "done" screen. Null (dev / root domain unset) → no link.
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+function portalHref(slug: string): string | null {
+  return ROOT_DOMAIN ? `https://${slug}.${ROOT_DOMAIN}` : null;
+}
+
 export function OnboardingClient() {
   const t = useTranslations("onboarding");
   const [step, setStep] = useState(1);
@@ -137,6 +145,21 @@ export function OnboardingClient() {
           {t("doneBody", { slug: done.slug, days: done.trialDays })}
         </p>
         <p className="text-zinc-500 text-xs max-w-md mx-auto">{t("doneNext")}</p>
+        {/* A1 — exit the dead-end: link straight to the new portal + its admin. */}
+        {portalHref(done.slug) && (
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+            <a href={portalHref(done.slug)!} className="px-5 py-2.5 bg-red-700 hover:bg-red-600 text-white text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2 transition-colors">
+              <Rocket className="w-4 h-4" /> {t("doneOpenPortal")}
+            </a>
+            <a href={`${portalHref(done.slug)}/admin`} className="px-5 py-2.5 border border-zinc-700 hover:border-zinc-500 text-zinc-200 text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2 transition-colors">
+              <Building2 className="w-4 h-4" /> {t("doneOpenAdmin")}
+            </a>
+          </div>
+        )}
+        {/* A2 — the no-card trial grants Pro; say so if they picked Elite (branding etc. is Elite). */}
+        {plan === "elite" && (
+          <p className="text-amber-400/80 text-xs max-w-md mx-auto border border-amber-900/40 bg-amber-950/20 px-3 py-2">{t("doneTrialPlanNote")}</p>
+        )}
         {billingReady && plan !== "basic" && (
           <div className="pt-2 space-y-3">
             <p className="text-zinc-400 text-xs max-w-md mx-auto">{t("bActivateHint")}</p>

@@ -19,9 +19,15 @@ export type SetupStepDef = {
 // are NOT here: they live in i18n (`admin.setupStatus.item.<key>.label`/`.hint`) so the wizard +
 // dashboard card render them per-locale.
 export const SETUP_STEPS: SetupStepDef[] = [
-  { key: "twitch", section: "twitch", optional: false, group: "platform" },
-  { key: "twitchSubs", section: "twitch", optional: false, group: "platform" },
+  // "Connect a streaming platform" — REQUIRED, satisfied by ANY of Twitch / Kick / YouTube
+  // (derived in the route), so a Kick-only or YouTube-only streamer can still reach the
+  // "you're live" gate (#781/A3). The per-platform steps below stay as OPTIONAL guidance —
+  // Twitch's EventSub subscriptions in particular are Twitch-specific and must never block a
+  // non-Twitch streamer's go-live.
+  { key: "platform", section: "twitch", optional: false, group: "platform" },
   { key: "overlay", section: "alerts", optional: false, group: "essential" },
+  { key: "twitch", section: "twitch", optional: true, group: "platform" },
+  { key: "twitchSubs", section: "twitch", optional: true, group: "platform" },
   { key: "kick", section: "kick", optional: true, group: "platform" },
   { key: "youtube", section: "youtube", optional: true, group: "platform" },
   { key: "moderation", section: "moderation", optional: true, group: "engagement" },

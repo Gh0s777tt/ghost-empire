@@ -17,6 +17,7 @@ export const dynamic = "force-dynamic";
 
 // Polish fallback labels/hints (the card prefers i18n `item.<key>.label`/`.hint`, falls back here).
 const LABELS: Record<string, { label: string; hint: string }> = {
+  platform: { label: "Podłączona platforma streamingowa", hint: "Połącz Twitch, Kick albo YouTube — wystarczy jedna, by ruszyć na żywo" },
   twitch: { label: "Twitch połączony (EventSub)", hint: "Połącz konto streamera w sekcji Twitch" },
   twitchSubs: { label: "Subskrypcje EventSub utworzone", hint: "Kliknij Utwórz subskrypcje w sekcji Twitch" },
   overlay: { label: "Token overlayu OBS", hint: "Wejdź w Stream Alerts, by wygenerować token i URL źródła OBS" },
@@ -62,6 +63,8 @@ export async function GET() {
 
   // Derive each step from real config — this is what self-heals the checklist.
   const okByKey: Record<string, boolean> = {
+    // Required "connect a platform" step — ANY of Twitch/Kick/YouTube satisfies it (#781/A3).
+    platform: !!twitch?.broadcasterId || !!kick || !!youtube,
     twitch: !!twitch?.broadcasterId,
     twitchSubs: twitchSubs > 0,
     overlay: !!alertSettings?.overlayToken,

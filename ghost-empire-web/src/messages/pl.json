@@ -258,7 +258,10 @@
     "error": "Coś poszło nie tak",
     "doneTitle": "Portal zarezerwowany!",
     "doneBody": "Twój portal {slug} jest gotowy, a {days}-dniowy okres próbny właśnie ruszył.",
-    "doneNext": "Odezwiemy się z instrukcją podpięcia subdomeny i połączenia kanału. Wszystkie ustawienia zmienisz potem w panelu administracyjnym swojego portalu."
+    "doneNext": "Odezwiemy się z instrukcją podpięcia subdomeny i połączenia kanału. Wszystkie ustawienia zmienisz potem w panelu administracyjnym swojego portalu.",
+    "doneOpenPortal": "Otwórz mój portal",
+    "doneOpenAdmin": "Otwórz panel",
+    "doneTrialPlanNote": "14-dniowy trial działa na planie Pro. Wybrałeś Elite — aktywuj płatność, by odblokować funkcje Elite, np. własny branding."
   },
   "admin": {
     "secDesc_goverules": "Niech alerty (donejty, suby…) sterują lampką Govee: ustawiają kolor, jasność albo włączają/wyłączają. Dodaj klucz API Govee + urządzenie w Integracjach, potem dodaj reguły tu.",
@@ -473,6 +476,10 @@
     "setupPillHint": "Dokończ konfigurację portalu",
     "setupStatus": {
       "item": {
+        "platform": {
+          "label": "Podłączona platforma streamingowa",
+          "hint": "Połącz Twitch, Kick albo YouTube — wystarczy jedna, by ruszyć na żywo."
+        },
         "shopItem": {
           "label": "Pierwszy przedmiot w sklepie",
           "hint": "Dodaj nagrodę za GT w sekcji Sklep — daje widzom powód, by zbierać"

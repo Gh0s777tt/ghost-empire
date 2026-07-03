@@ -258,7 +258,10 @@
     "error": "Something went wrong",
     "doneTitle": "Portal reserved!",
     "doneBody": "Your portal {slug} is ready and its {days}-day trial just started.",
-    "doneNext": "We'll follow up with subdomain setup and channel-connection steps. Everything is editable later in your portal's admin panel."
+    "doneNext": "We'll follow up with subdomain setup and channel-connection steps. Everything is editable later in your portal's admin panel.",
+    "doneOpenPortal": "Open my portal",
+    "doneOpenAdmin": "Open admin panel",
+    "doneTrialPlanNote": "Your 14-day trial runs on the Pro plan. You picked Elite — activate billing to unlock Elite features like custom branding."
   },
   "admin": {
     "secDesc_goverules": "Make alerts (donations, subs…) drive a Govee smart light: set a color, brightness or turn it on/off. Add your Govee API key + device in Integrations, then add rules here.",
@@ -473,6 +476,10 @@
     "setupPillHint": "Finish setting up your portal",
     "setupStatus": {
       "item": {
+        "platform": {
+          "label": "Streaming platform connected",
+          "hint": "Connect Twitch, Kick or YouTube — one is enough to go live."
+        },
         "shopItem": {
           "label": "First shop item",
           "hint": "Add a GT reward in the Shop section — it gives viewers a reason to earn"
