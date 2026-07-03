@@ -115,6 +115,10 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
       {/* Getting started — self-hides once every step is done */}
       <GettingStarted />
 
+      {/* First-spend nudge (#786/C2) — turns the 500 GT welcome grant into the core loop.
+          Self-hides the moment the viewer spends anything (totalSpent > 0), or on dismiss. */}
+      {user && user.totalSpent === 0 && user.tokens > 0 && <SpendYourTokens tokens={user.tokens} />}
+
       {/* Two-column row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Daily tasks */}
@@ -128,7 +132,9 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
           </div>
           <div className="p-4 space-y-3 max-h-[26rem] overflow-y-auto">
             {tasks.length === 0 ? (
-              <p className="text-sm text-zinc-500 text-center py-4">{t("loadingTasks")}</p>
+              // Daily tasks are server-rendered props (never client-loading) — an empty list means
+              // the portal has no active quests, not "loading" (#786 / first-run integrity).
+              <p className="text-sm text-zinc-500 text-center py-4">{t("noTasks")}</p>
             ) : (
               tasks.map((ut) => (
                 <DailyTaskCard key={ut.id} userTask={ut} />
@@ -284,6 +290,45 @@ function DailyBonusCard() {
           {t("bonusClaim", { amount: fmt(st.nextReward) })}
         </button>
       )}
+    </div>
+  );
+}
+
+// ---- FIRST-SPEND NUDGE (#786/C2) ----
+// Shown once to a new viewer who still has their welcome GT and hasn't spent anything, to
+// convert the 500 GT grant into the core loop. Self-hides on first spend (render condition) or
+// on dismiss (localStorage). Reuses real routes/costs — no new API.
+function SpendYourTokens({ tokens }: { tokens: number }) {
+  const t = useTranslations("home");
+  const fmt = useLocaleFmt();
+  const [hidden, setHidden] = useState(true);
+  useEffect(() => {
+    setHidden(typeof window !== "undefined" && localStorage.getItem("ge-spend-dismissed") === "1");
+  }, []);
+  if (hidden) return null;
+  const dismiss = () => {
+    try { localStorage.setItem("ge-spend-dismissed", "1"); } catch { /* private mode — just hide */ }
+    setHidden(true);
+  };
+  const tiles = [
+    { emoji: "🃏", href: "/collectibles", tk: "spendPack" },
+    { emoji: "🎰", href: "/kasyno", tk: "spendPlay" },
+    { emoji: "🛒", href: "/shop", tk: "spendShop" },
+  ] as const;
+  return (
+    <div className="relative border border-violet-800/50 bg-gradient-to-b from-violet-950/25 to-black/10 rounded-xl p-4">
+      <button onClick={dismiss} aria-label={t("spendLater")} className="absolute top-2 end-3 text-zinc-500 hover:text-zinc-300 text-lg leading-none">×</button>
+      <h2 className="font-display text-base text-white tracking-wider pe-6">✨ {t("spendTitle", { amount: fmt(tokens) })}</h2>
+      <p className="text-xs text-zinc-400 mt-1 mb-3">{t("spendSubtitle")}</p>
+      <div className="grid grid-cols-3 gap-2">
+        {tiles.map((x) => (
+          <Link key={x.href} href={x.href} className="border border-zinc-800 bg-black/30 rounded-lg p-3 text-center hover:border-violet-600 transition-colors">
+            <div className="text-2xl">{x.emoji}</div>
+            <div className="text-xs font-semibold text-white mt-1">{t(`${x.tk}Title`)}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">{t(`${x.tk}Desc`)}</div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
