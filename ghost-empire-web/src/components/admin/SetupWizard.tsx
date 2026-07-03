@@ -102,6 +102,11 @@ export function SetupWizard({ onJump, onClose }: { onJump: (section: string) => 
                 {t("obsDone")}
               </button>
             </div>
+            {/* A8 — the wizard only hands the base alerts URL; point streamers at the full overlay
+                library (27 widgets) they'd otherwise never discover. */}
+            <button onClick={() => { onJump("widgets"); onClose(); }} className="mt-2 text-[11px] text-zinc-400 hover:text-white inline-flex items-center gap-1">
+              {t("obsMore")} <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
         )}
       </>

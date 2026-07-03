@@ -573,6 +573,7 @@
       "close": "Zamknij",
       "obsHint": "Wklej jako źródło Browser w OBS (1920×1080, przezroczyste tło).",
       "obsDone": "Mam to",
+      "obsMore": "Zobacz wszystkie overlaye",
       "copy": "Kopiuj",
       "copied": "Skopiowane"
     },
@@ -2685,6 +2686,7 @@
     "wheel": "Koło Fortuny",
     "library": "Biblioteka gier",
     "community": "Społeczność",
+    "activities": "Aktywności",
     "events": "Eventy",
     "polls": "Ankiety",
     "predictions": "Predykcje",

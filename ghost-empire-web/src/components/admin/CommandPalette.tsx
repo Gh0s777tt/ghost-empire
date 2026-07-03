@@ -11,6 +11,31 @@ import type { LucideIcon } from "lucide-react";
 
 const OPEN_EVENT = "ge:command-palette";
 
+// Extra search terms per section (#784/A8) so a query hits sections whose LABEL doesn't literally
+// contain it — e.g. "OBS" → widgets/alerts/obsrules, "branding" → appearance, "money" → economy.
+// EN + PL terms so it works regardless of UI language. Only the high-traffic synonyms; unlisted
+// sections still match by label/group.
+const SECTION_KEYWORDS: Record<string, string> = {
+  widgets: "obs overlay browser source url nakładka przeglądarka źródło",
+  alerts: "obs overlay alert alerty powiadomienia stream",
+  obsrules: "obs websocket scene sceny reguły reguly",
+  goverules: "govee light lights światła swiatla",
+  appearance: "branding brand marka kolor color logo wygląd wyglad nazwa waluty theme motyw",
+  tenants: "branding portal white-label saas domena domain",
+  economy: "gt token tokeny ekonomia waluta money pieniądze analytics",
+  shop: "sklep store nagrody rewards kup buy gt",
+  integrations: "ai key klucz api openai anthropic govee obs hue integracje keys sentry",
+  twitch: "eventsub sub subs streaming platforma platform",
+  kick: "streaming platforma platform",
+  youtube: "streaming platforma platform yt",
+  subscribers: "sub subs subskrypcje subskrybenci",
+  payments: "support wsparcie napiwek napiwki tip donejt donation stripe premium płatności platnosci",
+  bot: "komendy commands czat chat bot",
+  moderation: "mod moderacja ban bany automod",
+  audit: "log historia dziennik audit",
+  drops: "drop kod kody code redeem",
+};
+
 export function openCommandPalette() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(OPEN_EVENT));
 }
@@ -50,7 +75,9 @@ export function CommandPalette<T extends string>({
   }, [open]);
 
   const query = q.trim().toLowerCase();
-  const filtered = query ? sections.filter((s) => s.label.toLowerCase().includes(query) || s.group.includes(query)) : sections;
+  const filtered = query
+    ? sections.filter((s) => s.label.toLowerCase().includes(query) || s.group.includes(query) || (SECTION_KEYWORDS[s.id] ?? "").includes(query))
+    : sections;
 
   useEffect(() => { setIdx(0); }, [q]);
 

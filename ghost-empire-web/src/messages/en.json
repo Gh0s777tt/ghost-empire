@@ -573,6 +573,7 @@
       "close": "Close",
       "obsHint": "Paste as a Browser source in OBS (1920×1080, transparent background).",
       "obsDone": "Got it",
+      "obsMore": "See all overlays",
       "copy": "Copy",
       "copied": "Copied"
     },
@@ -2685,6 +2686,7 @@
     "wheel": "Wheel of Fortune",
     "library": "Game library",
     "community": "Community",
+    "activities": "Activities",
     "events": "Events",
     "polls": "Polls",
     "predictions": "Predictions",
