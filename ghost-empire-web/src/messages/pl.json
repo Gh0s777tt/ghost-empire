@@ -4031,6 +4031,8 @@
     "equipped": "Założony",
     "bought": "Tytuł kupiony!",
     "tooPoor": "Za mało",
+    "lvl": "Poz. {n}",
+    "needLevel": "Wymagany poziom {n}",
     "err": "Nie udało się",
     "rarity_common": "Zwykły",
     "rarity_rare": "Rzadki",

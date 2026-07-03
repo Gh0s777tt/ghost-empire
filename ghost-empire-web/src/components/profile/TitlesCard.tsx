@@ -8,9 +8,9 @@ import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
-import { PROFILE_TITLES, TITLE_RARITY_COLOR } from "@/lib/titles";
+import { PROFILE_TITLES, TITLE_RARITY_COLOR, titleUnlocked } from "@/lib/titles";
 
-type Data = { owned: string[]; equipped: string | null; balance: number };
+type Data = { owned: string[]; equipped: string | null; balance: number; level: number };
 
 export function TitlesCard() {
   const t = useTranslations("titles");
@@ -23,7 +23,7 @@ export function TitlesCard() {
   const load = useCallback(async () => {
     try {
       const d = await apiGet<Data>("/api/titles");
-      setData({ owned: d.owned, equipped: d.equipped, balance: d.balance });
+      setData({ owned: d.owned, equipped: d.equipped, balance: d.balance, level: d.level });
     } catch {
       /* keep current */
     }
@@ -115,6 +115,11 @@ export function TitlesCard() {
                   >
                     {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : t("equip")}
                   </button>
+                ) : !titleUnlocked(def, data.level) ? (
+                  // Rank-locked (#788/B5) — a prestige gate, not just a wallet check.
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-zinc-800 text-zinc-500" title={t("needLevel", { n: def.requiresLevel ?? 0 })}>
+                    <Lock className="w-3 h-3" /> {t("lvl", { n: def.requiresLevel ?? 0 })}
+                  </span>
                 ) : (
                   <button
                     onClick={() => buy(def.id)}

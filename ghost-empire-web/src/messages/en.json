@@ -4031,6 +4031,8 @@
     "equipped": "Equipped",
     "bought": "Title bought!",
     "tooPoor": "Not enough",
+    "lvl": "Lv {n}",
+    "needLevel": "Requires level {n}",
     "err": "Could not complete",
     "rarity_common": "Common",
     "rarity_rare": "Rare",

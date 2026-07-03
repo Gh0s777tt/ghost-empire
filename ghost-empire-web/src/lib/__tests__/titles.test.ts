@@ -1,5 +1,28 @@
 import { describe, it, expect } from "vitest";
-import { PROFILE_TITLES, titleById, isValidTitleId, parseOwnedTitles, TITLE_RARITY_COLOR } from "../titles";
+import { PROFILE_TITLES, titleById, isValidTitleId, parseOwnedTitles, TITLE_RARITY_COLOR, titleUnlocked } from "../titles";
+
+describe("titleUnlocked (rank gate #788/B5)", () => {
+  it("titles with no level req are always unlocked", () => {
+    const rookie = titleById("rookie")!;
+    expect(rookie.requiresLevel).toBeUndefined();
+    expect(titleUnlocked(rookie, 1)).toBe(true);
+  });
+  it("gates a title behind its requiresLevel", () => {
+    const eternal = titleById("eternal")!;
+    expect(eternal.requiresLevel).toBe(60);
+    expect(titleUnlocked(eternal, 59)).toBe(false);
+    expect(titleUnlocked(eternal, 60)).toBe(true);
+    expect(titleUnlocked(eternal, 100)).toBe(true);
+  });
+  it("level gates never decrease as titles get pricier (rank tracks cost)", () => {
+    let prev = 0;
+    for (const t of PROFILE_TITLES) {
+      const req = t.requiresLevel ?? 0;
+      expect(req).toBeGreaterThanOrEqual(prev);
+      prev = req;
+    }
+  });
+});
 
 describe("PROFILE_TITLES catalog integrity", () => {
   it("has unique ids, positive ascending costs, and known rarities", () => {
