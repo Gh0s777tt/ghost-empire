@@ -1,6 +1,6 @@
 "use client";
 // src/components/admin/sections/BotConfig.tsx — lazily-loaded Discord bot reward config.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bot, Loader2, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
@@ -28,6 +28,17 @@ export function BotConfigCard({
   const [hhEnd, setHhEnd] = useState(String(config.happyHourEnd ?? 22));
   const [hhMult, setHhMult] = useState(String(config.happyHourMultiplier ?? 2));
   const [busy, setBusy] = useState(false);
+
+  // Bot liveness (heartbeat) — best-effort badge; a failed fetch simply hides it.
+  const [status, setStatus] = useState<{ online: boolean; lastSeenAt: string | null; platforms: string[] } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/admin/bot-status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (alive && d) setStatus(d); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   async function save() {
     setBusy(true);
@@ -63,6 +74,22 @@ export function BotConfigCard({
       <p className="text-zinc-500 text-xs mb-3">
         {t("intro")}
       </p>
+      {status && (
+        <p className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-mono">
+          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 border uppercase tracking-widest ${status.online ? "border-green-800 bg-green-950/30 text-green-400" : "border-zinc-700 bg-zinc-900/50 text-zinc-400"}`}>
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${status.online ? "bg-green-400" : "bg-zinc-500"}`} />
+            {status.online ? t("statusOnline") : t("statusOffline")}
+          </span>
+          {status.online && status.platforms.length > 0 && (
+            <span className="text-zinc-500">{status.platforms.join(" · ")}</span>
+          )}
+          {!status.online && (
+            <span className="text-zinc-600">
+              {status.lastSeenAt ? t("statusLastSeen", { date: new Date(status.lastSeenAt).toLocaleString() }) : t("statusNever")}
+            </span>
+          )}
+        </p>
+      )}
       <div className="mb-3"><CommandHelp feature="ai" /></div>
 
       <div className="space-y-3">

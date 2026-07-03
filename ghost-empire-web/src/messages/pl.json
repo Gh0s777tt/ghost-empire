@@ -237,6 +237,8 @@
     "bCancelled": "Płatność anulowana",
     "bActivate": "Aktywuj subskrypcję",
     "bActivateHint": "Chcesz pominąć trial? Aktywuj subskrypcję od razu — wybierz okres rozliczenia:",
+    "bManage": "Zarządzaj subskrypcją",
+    "bManageHint": "Faktury, karta i anulowanie — samodzielnie w bezpiecznym portalu Stripe.",
     "bMonths": "{n} mies.",
     "metaTitle": "Załóż własny portal",
     "metaDesc": "Uruchom portal społeczności dla swojego kanału — własna marka, tokeny i kolory w kilka minut.",
@@ -1517,6 +1519,10 @@
       "saveRates": "Zapisz tempo"
     },
     "botConfig": {
+      "statusOnline": "Bot online",
+      "statusOffline": "Bot offline",
+      "statusLastSeen": "ostatnio widziany {date}",
+      "statusNever": "brak heartbeatu — czy bot działa i jest zaktualizowany?",
       "happyTitle": "Happy hours (mnożnik %gt%)",
       "happyDesc": "W wybranych godzinach (czas polski) wszystkie nagrody %gt% z czatu i Discorda są mnożone. Działa po stronie portalu — bot nie wymaga zmian.",
       "happyStart": "Od (0-23)",
