@@ -18,6 +18,11 @@ type MyTenant = {
 const PLANS = ["basic", "pro", "elite"] as const;
 type Plan = (typeof PLANS)[number];
 
+// Curated brand-colour presets (#788/C4) — one click instead of hunting for a hex. Covers a
+// spread of "vibes" (energetic red, chill violet, fresh emerald, warm amber, cool blue, playful
+// pink). The streamer can still fine-tune with the picker; everything is editable later anyway.
+const BRAND_PRESETS = ["#E50914", "#8B5CF6", "#10B981", "#F59E0B", "#3B82F6", "#EC4899"] as const;
+
 function slugify(name: string): string {
   return name
     .toLowerCase()
@@ -254,6 +259,19 @@ export function OnboardingClient() {
               <div className="flex items-center gap-3">
                 <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-10 w-14 bg-transparent border border-zinc-800 cursor-pointer" aria-label={t("color")} />
                 <span className="font-mono text-sm text-zinc-300">{color}</span>
+              </div>
+              {/* #788/C4 — quick brand-colour presets so a streamer doesn't have to pick a hex. */}
+              <div className="flex items-center gap-1.5 mt-2">
+                {BRAND_PRESETS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c)}
+                    aria-label={c}
+                    className={`w-6 h-6 rounded-sm border transition-transform hover:scale-110 ${color.toLowerCase() === c.toLowerCase() ? "border-white" : "border-zinc-700"}`}
+                    style={{ background: c }}
+                  />
+                ))}
               </div>
             </div>
             <p className="text-[11px] text-zinc-600">{t("brandHint")}</p>
