@@ -113,7 +113,7 @@ export default function SignInPage() {
               className="w-20 h-20 overflow-hidden rounded-2xl"
               style={{ border: "2px solid rgba(var(--brand-rgb), 0.4)", boxShadow: "0 0 50px rgba(var(--brand-rgb), 0.35)" }}
             >
-              <img src={logoUrl ?? "/brand/eforge-mark.svg"} alt={brandName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+              <img src={logoUrl ?? "/brand/skull.png"} alt={brandName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
           </div>
           <h1

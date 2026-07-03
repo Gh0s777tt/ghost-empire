@@ -37,7 +37,7 @@ export default function GlobalError({
       <div className="relative z-10 max-w-md w-full text-center">
         <div className="inline-flex items-center justify-center mb-6">
           <div className="w-20 h-20 overflow-hidden rounded-2xl ring-2 ring-red-600/40">
-            <img src="/brand/eforge-mark.svg" alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+            <img src="/brand/skull.png" alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
           </div>
         </div>
 
