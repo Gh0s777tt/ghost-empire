@@ -1,25 +1,31 @@
 // src/app/api/admin/backfill-tenant/route.ts
-// One-shot admin maintenance: attach every NULL-tenantId row to the default tenant.
-// Mirrors scripts/backfill-tenant.ts for when the local→DB connection isn't available
-// (so the CLI script can't run) but the deployed app (Vercel→DB) reaches the database.
-// Idempotent — only touches rows where tenantId IS NULL, so it's safe to run repeatedly.
+// One-shot PLATFORM-OWNER maintenance: attach every NULL-tenantId row to the default
+// (founder) tenant. Mirrors scripts/backfill-tenant.ts for when the local→DB connection
+// isn't available (so the CLI script can't run) but the deployed app (Vercel→DB) reaches
+// the database. Idempotent — only touches rows where tenantId IS NULL, so it's safe to
+// run repeatedly.
 //
 // Primary purpose: users created after the last backfill have tenantId=null and are
 // therefore invisible in tenant-scoped queries (e.g. the ranking/leaderboard, which
 // filters by tenantId). New users are now attached at signup (lib/auth.ts) and existing
 // users self-heal on login; this endpoint fixes everyone at once, including inactive ones.
 //
-// Trigger (as a logged-in admin on the live site): open the URL in the browser (GET below),
+// GATE (#795): requirePlatformOwner, NOT requireAdmin — this claims orphaned rows into the
+// FOUNDER tenant, so it must never be triggerable by a sub-portal admin (a portal creator's
+// action must never mutate the main/base portal). The platform owner is an admin too, so the
+// legitimate operator is unaffected.
+//
+// Trigger (as the platform owner on the live site): open the URL in the browser (GET below),
 //   or from devtools: await fetch("/api/admin/backfill-tenant", { method: "POST" }).then(r => r.json())
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { requirePlatformOwner } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { SITE } from "@/lib/site";
 import { DEFAULT_TENANT_SLUG } from "@/lib/tenant";
 
 async function run(req: Request) {
-  const gate = await requireAdmin();
+  const gate = await requirePlatformOwner();
   if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
   // Ensure the default tenant exists (created during the Phase 1 backfill; upsert = idempotent).
@@ -89,9 +95,9 @@ async function run(req: Request) {
   return NextResponse.json({ ok: true, tenant: tenant.slug, counts });
 }
 
-// POST is the canonical verb; GET is also accepted so an admin can trigger the backfill
-// by simply opening the URL in a logged-in browser (no console/CSP juggling). Safe here:
-// admin-gated (unauthenticated/crawler hits get 403) and fully idempotent.
+// POST is the canonical verb; GET is also accepted so the platform owner can trigger the
+// backfill by simply opening the URL in a logged-in browser (no console/CSP juggling). Safe
+// here: platform-owner-gated (non-owner/crawler hits get 403) and fully idempotent.
 export async function POST(req: Request) {
   return run(req);
 }
