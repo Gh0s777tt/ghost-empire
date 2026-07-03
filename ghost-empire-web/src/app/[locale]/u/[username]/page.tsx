@@ -256,7 +256,7 @@ export default async function PublicProfilePage({
                   />
                 ) : (
                   <img
-                    src="/brand/skull.png"
+                    src="/brand/eforge-mark.svg"
                     alt=""
                     decoding="async"
                     className="w-24 h-24 md:w-32 md:h-32 object-cover border-2 bg-black"

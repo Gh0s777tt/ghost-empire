@@ -21,8 +21,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     lang: "pl",
     categories: ["entertainment", "social", "games"],
     icons: [
-      // Skull brand mark. `any` for the launcher/tab; `maskable` is padded so
-      // Android's circle/squircle mask never clips the skull.
+      // E-Forge brand mark (Ember Hex, #793). `any` for the launcher/tab; `maskable` is
+      // padded (~80% safe zone) so Android's circle/squircle mask never clips the mark.
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: "/icons/maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },

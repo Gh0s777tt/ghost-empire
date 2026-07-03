@@ -19,7 +19,7 @@ export async function SiteFooter() {
           {/* Left — branding */}
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 shrink-0 overflow-hidden rounded-sm ring-1 ring-red-600/40 bg-black">
-              <img src={tenant.logoUrl ?? "/brand/skull.png"} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+              <img src={tenant.logoUrl ?? "/brand/eforge-mark.svg"} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-400">
               {tenant.name} © {SITE.year} · {t("community")}

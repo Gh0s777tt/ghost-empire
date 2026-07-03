@@ -196,7 +196,7 @@ export function ProfileClient({
               />
             ) : (
               <img
-                src="/brand/skull.png"
+                src="/brand/eforge-mark.svg"
                 alt=""
                 decoding="async"
                 className="w-24 h-24 md:w-28 md:h-28 object-cover border-2 bg-black"

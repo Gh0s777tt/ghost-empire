@@ -72,7 +72,7 @@ function RosterRow({ u, t }: { u: RosterUser; t: (k: string) => string }) {
       {u.image ? (
         <img src={u.image} alt="" width={32} height={32} loading="lazy" referrerPolicy="no-referrer" className="w-8 h-8 object-cover border border-zinc-800 shrink-0" />
       ) : (
-        <img src="/brand/skull.png" alt="" width={32} height={32} className="w-8 h-8 object-cover border border-zinc-800 bg-black shrink-0" loading="lazy" decoding="async" />
+        <img src="/brand/eforge-mark.svg" alt="" width={32} height={32} className="w-8 h-8 object-cover border border-zinc-800 bg-black shrink-0" loading="lazy" decoding="async" />
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 flex-wrap">

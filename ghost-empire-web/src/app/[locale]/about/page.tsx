@@ -877,7 +877,7 @@ export default async function AboutPage() {
         <section className="py-12 sm:py-20 text-center">
           <div className="inline-flex items-center justify-center mb-6">
             <div className="w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded-2xl ring-2 ring-red-600/40 shadow-[0_0_50px_rgba(229,9,20,0.35)]">
-              <img src={tenant.logoUrl ?? "/brand/skull.png"} alt={tenant.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+              <img src={tenant.logoUrl ?? "/brand/eforge-mark.svg"} alt={tenant.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
           </div>
 
