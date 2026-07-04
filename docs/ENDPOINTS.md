@@ -85,7 +85,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/auth/passkey/login/options` · `…/verify` | POST | Logowanie passkey (#544 — bez auth; verify tworzy sesję DB + cookie) |
 | `…/api/clans` | GET/POST | Klany/drużyny — mój klan + ranking skarbca (GET); POST = utwórz / dołącz / opuść / wpłać GT (#477) |
 | `…/api/clips` | GET/POST | Klip tygodnia — klipy + liczby głosów + mój głos (GET publiczne); POST = głos (1/tydzień ISO, #502) |
-| `…/api/companion` | GET/PATCH | Ghost Companion usera (create-on-read); PATCH = akcje (karmienie/zmiana nazwy) |
+| `…/api/companion` | GET/PATCH/OPTIONS | Ghost Companion usera (create-on-read); PATCH = zmiana nazwy. **GET** przyjmuje sesję LUB bearer-token companiona (`Authorization: Bearer …`) — rozszerzenie czyta saldo cross-origin; CORS, tylko dane właściciela tokenu |
 | `…/api/presence` | GET/POST | Obecność na portalu (#767) — GET publiczny snapshot (online + próbka userów); POST heartbeat (zalogowany `u:<id>` server-side, gość `a:<anonId>` hex-walidowany). Dormant bez Upstash Redis (`{active:false}`) |
 | `…/api/companion/feed` | POST | Karmienie companiona GT (osobny endpoint akcji) |
 | `…/api/assistant` | session + plan `ai` | Asystent pomocy („?" na każdej stronie) — wymaga zalogowania; degraduje się gdy brak planu/klucza AI |
@@ -251,6 +251,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 |---|---|---|
 | `…/api/health` | GET | Health-check (200 OK / 503 gdy baza nieosiągalna) |
 | `…/api/discover` | GET/OPTIONS | Publiczne odkrywanie kanał→portal dla rozszerzenia-companiona (`?platform=&channel=` → `{found, slug, name, ownerHandle, portalUrl}`; dopasowanie po `ownerHandle`, CORS `*`, rate-limit per IP, read-only, multi-tenant, zero danych wrażliwych) |
+| `…/api/companion/branding` | GET/OPTIONS | Publiczny branding portalu dla rozszerzenia-companiona (`{name, tokenName, tokenSymbol, brandColor, logoUrl}` z Hosta; CORS `*`, rate-limit per IP, read-only) |
+| `…/api/companion/token` | POST/OPTIONS | Mint bezstanowego tokenu companiona (session, same-origin przez portal-bridge rozszerzenia) → `{token, expiresInDays:7}`; HMAC-podpisany `{userId, tenantId}` (bez db), CORS |
 | `…/api/live-status` | GET | Publiczny, cache'owany status „czy streamer jest live?" do bannera home (#500 — Twitch Helix, współdzielony z overlayem widzów) |
 | `…/api/support/click` | POST | Licznik klików metody wsparcia (#541 — beacon z `/support`, rate-limit per IP) |
 | `…/api/og` | GET | Dynamiczny OG-image (per tenant: branding/nazwa) |

@@ -6,13 +6,33 @@ import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
+import { bearerFromRequest, verifyCompanionToken } from "@/lib/companion-token";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+// CORS so the NX Companion extension can read the balance cross-origin (viewer on
+// twitch.tv → portal API). Read-only GET; only the token holder's own data.
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "content-type, authorization",
+};
+
+export function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS });
+}
+
+export async function GET(req: Request) {
+  // Session (same-origin portal UI) OR companion bearer token (extension, cross-origin).
+  // userId is per-tenant (separate User row per portal), so the token can't leak
+  // another portal's data — it only returns its own holder's companion/balance.
   const session = await auth();
-  if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
-  const userId = session.user.id;
+  let userId = session?.user?.id ?? null;
+  if (!userId) {
+    const payload = verifyCompanionToken(bearerFromRequest(req));
+    if (payload) userId = payload.userId;
+  }
+  if (!userId) return jsonError("Musisz być zalogowany", 401);
   // getCurrentTenant is React-cached, so this is the same lookup currentTenantId uses —
   // no extra query. New companions start with the portal's configured default name (#audit3).
   const tenant = await getCurrentTenant();
@@ -31,7 +51,7 @@ export async function GET() {
     xp: companion.xp,
     lastFedAt: companion.lastFedAt?.toISOString() ?? null,
     balance: user?.tokens ?? 0,
-  });
+  }, { headers: CORS });
 }
 
 // PATCH { name } — rename the companion (1–20 chars).
