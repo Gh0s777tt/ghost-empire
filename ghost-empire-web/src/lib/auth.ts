@@ -173,6 +173,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         },
       },
+      // CRITICAL for account linking: allowDangerousEmailAccountLinking only unifies
+      // providers when the profile carries an email. Twitch's OIDC id_token OMITS the
+      // email whenever the account's email is unverified (or the claims aren't honored),
+      // so a Twitch login used to create a SEPARATE null-email User instead of linking
+      // onto the existing Discord/Google/Kick account (same person). We backfill the
+      // email from Helix /users (the user:read:email scope returns it even when the
+      // id_token doesn't), so email-linking works for Twitch exactly like the others.
+      // Guarded — a Helix hiccup never blocks login; it just falls back to no email.
+      async profile(profile: Record<string, unknown>, tokens: { access_token?: string }) {
+        let email = (typeof profile.email === "string" && profile.email) || null;
+        if (!email && tokens.access_token) {
+          try {
+            const res = await fetch("https://api.twitch.tv/helix/users", {
+              headers: {
+                Authorization: `Bearer ${tokens.access_token}`,
+                "Client-Id": process.env.TWITCH_CLIENT_ID ?? "",
+              },
+            });
+            if (res.ok) {
+              const data = (await res.json()) as { data?: { email?: string | null }[] };
+              email = data.data?.[0]?.email ?? null;
+            } else {
+              log.warn("twitch helix email backfill failed", { status: res.status });
+            }
+          } catch (e) {
+            log.error("twitch helix email backfill error", e);
+          }
+        }
+        return {
+          id: String(profile.sub ?? profile.id ?? ""),
+          name: (typeof profile.preferred_username === "string" ? profile.preferred_username : null) as string | null,
+          email,
+          image: (typeof profile.picture === "string" ? profile.picture : null) as string | null,
+        };
+      },
     }),
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,

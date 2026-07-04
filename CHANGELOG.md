@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Fixed
+
+- **Logowanie przez Twitch tworzyło OSOBNE konto (brak e-maila → brak linkowania po e-mailu)** **(#510)** — zgłoszone przez właściciela: „logowanie Twitch/YT/DC tworzy różne konta". Diagnoza na żywych danych prod (read-only): linkowanie po e-mailu (`allowDangerousEmailAccountLinking`) **działa poprawnie** dla Discord/Google/Kick (jeden e-mail = jedno konto z 3 połączonymi providerami), ale **Twitch** tworzył konto z **`email = NULL`** → `getUserByEmail` nie miał czego dopasować → osobny User. Przyczyna: Twitch OIDC **pomija e-mail w `id_token`**, gdy adres jest niezweryfikowany / claims nie są honorowane. Fix: **własny `profile()` providera Twitch dofetchowuje e-mail z Helix `/users`** (scope `user:read:email` zwraca go nawet gdy `id_token` nie) — od teraz login Twitch niesie e-mail i **linkuje się jak pozostali** (nowy user z e-mailem lub dołączenie do istniejącego w tym portalu). Guarded — błąd Helix nie blokuje logowania. **Uwaga:** naprawia PRZYSZŁE logowania; istniejące osierocone konto Twitch (null-email) wymaga jednorazowego scalenia (osobno). Per-portal separacja tożsamości (#508–#512) pozostaje celowa. Bez db push. Zielone: tsc/eslint (build: Vercel).
+
 ### Added
 
 - **Sentry w przeglądarce + monitoring uptime — ROADMAP §2 (observability) domknięta** **(#508)** — dotąd Sentry łapał tylko błędy server/edge (`instrumentation.ts`, aktywne od ustawienia `SENTRY_DSN` w Vercel 2026-07-04); teraz **`instrumentation-client.ts`** raportuje też **błędy w przeglądarkach widzów** — celowo errors-only (tracing 0, bez replay → minimalny narzut na bundle), no-op bez `NEXT_PUBLIC_SENTRY_DSN` (inlinowany w build). Ingest EU (`https://*.ingest.de.sentry.io`) dopisany do CSP `connect-src` — bez tego browser SDK byłby po cichu blokowany polityką. Poza kodem: **Sentry Uptime Monitor** na `https://www.empire-forge.com/api/health` (co 5 min z infry Sentry, alert po 3 kolejnych porażkach) — zewnętrzny monitor 24/7 zamiast „akcja usera: UptimeRobot". ENV.md + ROADMAP zaktualizowane. Bez db push. Zielone: tsc/741 testów/eslint (build: Vercel).
