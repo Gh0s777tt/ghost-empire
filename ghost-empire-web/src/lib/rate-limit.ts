@@ -62,6 +62,11 @@ export async function rateLimit(
   return rateLimitDb(key, maxHits, windowMs, opts?.failClosed ?? false);
 }
 
+/** Prisma unique/primary-key violation — here it means a concurrent request created the bucket. */
+function isUniqueViolation(e: unknown): boolean {
+  return typeof e === "object" && e !== null && "code" in e && (e as { code: unknown }).code === "P2002";
+}
+
 async function rateLimitDb(
   key: string,
   maxHits: number,
@@ -69,77 +74,75 @@ async function rateLimitDb(
   failClosed = false,
 ): Promise<RateLimitResult> {
   const now = new Date();
+  try {
+    return await rateLimitDbOnce(key, maxHits, windowMs, now);
+  } catch (e) {
+    // A racing FIRST hit: two requests both saw no bucket, one `create` won and the other
+    // hit P2002 on the primary key. That is NOT a DB outage — the bucket now exists, so retry
+    // once as an increment. Previously this fell into the fail-open branch below and silently
+    // dropped the hit (returning a bogus remaining=maxHits) — anti-brute-force weakened (#qa D-1).
+    if (isUniqueViolation(e)) {
+      try {
+        return await rateLimitDbOnce(key, maxHits, windowMs, new Date());
+      } catch (e2) {
+        return dbFailure(e2, maxHits, windowMs, now, failClosed);
+      }
+    }
+    return dbFailure(e, maxHits, windowMs, now, failClosed);
+  }
+}
+
+/** One find-or-create-or-increment pass. Throws (incl. P2002) to the retry/fallback wrapper. */
+async function rateLimitDbOnce(
+  key: string,
+  maxHits: number,
+  windowMs: number,
+  now: Date,
+): Promise<RateLimitResult> {
   const windowStart = new Date(now.getTime() - windowMs);
 
-  try {
-    // Find bucket, drop if expired
-    let bucket = await prisma.rateLimitBucket.findUnique({ where: { key } });
-    if (bucket && bucket.windowStart < windowStart) {
-      // Window expired — reset
-      bucket = await prisma.rateLimitBucket.update({
-        where: { key },
-        data: {
-          count: 1,
-          windowStart: now,
-          expiresAt: new Date(now.getTime() + windowMs),
-        },
-      });
-      return {
-        allowed: true,
-        remaining: maxHits - 1,
-        resetAt: bucket.expiresAt,
-      };
-    }
-
-    if (!bucket) {
-      bucket = await prisma.rateLimitBucket.create({
-        data: {
-          key,
-          count: 1,
-          windowStart: now,
-          expiresAt: new Date(now.getTime() + windowMs),
-        },
-      });
-      return {
-        allowed: true,
-        remaining: maxHits - 1,
-        resetAt: bucket.expiresAt,
-      };
-    }
-
-    if (bucket.count >= maxHits) {
-      const retryAfterSeconds = Math.max(
-        1,
-        Math.ceil((bucket.expiresAt.getTime() - now.getTime()) / 1000),
-      );
-      return {
-        allowed: false,
-        remaining: 0,
-        resetAt: bucket.expiresAt,
-        retryAfterSeconds,
-      };
-    }
-
-    const updated = await prisma.rateLimitBucket.update({
+  // Find bucket, drop if expired
+  let bucket = await prisma.rateLimitBucket.findUnique({ where: { key } });
+  if (bucket && bucket.windowStart < windowStart) {
+    // Window expired — reset
+    bucket = await prisma.rateLimitBucket.update({
       where: { key },
-      data: { count: { increment: 1 } },
+      data: { count: 1, windowStart: now, expiresAt: new Date(now.getTime() + windowMs) },
     });
-    return {
-      allowed: true,
-      remaining: Math.max(0, maxHits - updated.count),
-      resetAt: bucket.expiresAt,
-    };
-  } catch (e) {
-    // DB-backed endpoints fail OPEN (the underlying write fails anyway, so bypassing
-    // the limit opens nothing); CPU-heavy non-DB callers (e.g. the OG render) pass
-    // failClosed so an outage can't turn the limiter into an amplifier.
-    log.error(`DB error, ${failClosed ? "blocking" : "allowing"} request`, e);
-    if (failClosed) {
-      const retryAfterSeconds = Math.max(1, Math.ceil(windowMs / 1000));
-      return { allowed: false, remaining: 0, resetAt: new Date(now.getTime() + windowMs), retryAfterSeconds };
-    }
-    return { allowed: true, remaining: maxHits, resetAt: new Date(now.getTime() + windowMs) };
+    return { allowed: true, remaining: maxHits - 1, resetAt: bucket.expiresAt };
   }
+
+  if (!bucket) {
+    // May throw P2002 if a concurrent request created it first — the wrapper retries.
+    bucket = await prisma.rateLimitBucket.create({
+      data: { key, count: 1, windowStart: now, expiresAt: new Date(now.getTime() + windowMs) },
+    });
+    return { allowed: true, remaining: maxHits - 1, resetAt: bucket.expiresAt };
+  }
+
+  if (bucket.count >= maxHits) {
+    const retryAfterSeconds = Math.max(1, Math.ceil((bucket.expiresAt.getTime() - now.getTime()) / 1000));
+    return { allowed: false, remaining: 0, resetAt: bucket.expiresAt, retryAfterSeconds };
+  }
+
+  const updated = await prisma.rateLimitBucket.update({
+    where: { key },
+    data: { count: { increment: 1 } },
+  });
+  return { allowed: true, remaining: Math.max(0, maxHits - updated.count), resetAt: bucket.expiresAt };
+}
+
+/** Terminal DB failure (a genuine outage, not a create race): fail OPEN by default. */
+function dbFailure(e: unknown, maxHits: number, windowMs: number, now: Date, failClosed: boolean): RateLimitResult {
+  // DB-backed endpoints fail OPEN (the underlying write fails anyway, so bypassing
+  // the limit opens nothing); CPU-heavy non-DB callers (e.g. the OG render) pass
+  // failClosed so an outage can't turn the limiter into an amplifier.
+  log.error(`DB error, ${failClosed ? "blocking" : "allowing"} request`, e);
+  if (failClosed) {
+    const retryAfterSeconds = Math.max(1, Math.ceil(windowMs / 1000));
+    return { allowed: false, remaining: 0, resetAt: new Date(now.getTime() + windowMs), retryAfterSeconds };
+  }
+  return { allowed: true, remaining: maxHits, resetAt: new Date(now.getTime() + windowMs) };
 }
 
 /** Cheap helper to add Retry-After header to a 429 response. */

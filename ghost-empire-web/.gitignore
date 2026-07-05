@@ -50,3 +50,6 @@ logs
 
 # Vitest coverage
 /coverage/
+
+# iCloud/Dropbox sync conflict copies ("Foo 2.ts") — never commit, break tsc (#audit)
+*\ 2.*

@@ -23,20 +23,24 @@ export function OPTIONS() {
 }
 
 export async function GET(req: Request) {
+  // getCurrentTenant is React-cached, so this is the same lookup currentTenantId uses —
+  // no extra query. New companions start with the portal's configured default name (#audit3).
+  // Resolved BEFORE auth so a bearer token's tenant scope can be checked against this portal.
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
+
   // Session (same-origin portal UI) OR companion bearer token (extension, cross-origin).
-  // userId is per-tenant (separate User row per portal), so the token can't leak
-  // another portal's data — it only returns its own holder's companion/balance.
+  // userId is per-tenant (separate User row per portal). A companion token carries the
+  // tenantId it was minted on; it MUST equal the tenant this request resolves to from the
+  // Host. Otherwise a token minted on portal A, replayed against portal B, would read/create
+  // a companion under the wrong portal (and with B's default name) — cross-tenant (#qa D-3).
   const session = await auth();
   let userId = session?.user?.id ?? null;
   if (!userId) {
     const payload = verifyCompanionToken(bearerFromRequest(req));
-    if (payload) userId = payload.userId;
+    if (payload && payload.tenantId === tid) userId = payload.userId;
   }
   if (!userId) return jsonError("Musisz być zalogowany", 401);
-  // getCurrentTenant is React-cached, so this is the same lookup currentTenantId uses —
-  // no extra query. New companions start with the portal's configured default name (#audit3).
-  const tenant = await getCurrentTenant();
-  const tid = tenant.id;
 
   const companion = await prisma.companion.upsert({
     where: { userId },
