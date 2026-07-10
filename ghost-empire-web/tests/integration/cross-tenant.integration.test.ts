@@ -7,8 +7,23 @@ import { resetDb } from "./helpers";
 // app relies on — drop a filter somewhere and this turns red. (Audit v6: this isolation
 // was enforced only by convention, with no test.)
 describe("multi-tenant isolation (integration, real DB)", () => {
-  beforeEach(resetDb);
+  // User.tenantId has a FK to Tenant (users_tenantId_fkey — added with the per-tenant
+  // identity work, #508–#512), so the referenced portals must exist before a scoped user
+  // can be created. This test predated the FK and used bare "tenantA"/"tenantB" strings,
+  // which now violate it — the central isolation guard was effectively not running (#qa).
+  // Seed the two portals idempotently (fixed ids; resetDb truncates users, not tenants).
+  beforeEach(async () => {
+    await resetDb();
+    for (const id of ["tenantA", "tenantB"]) {
+      await prisma.tenant.upsert({
+        where: { id },
+        update: {},
+        create: { id, slug: id, name: id },
+      });
+    }
+  });
   afterAll(async () => {
+    await prisma.tenant.deleteMany({ where: { id: { in: ["tenantA", "tenantB"] } } });
     await prisma.$disconnect();
   });
 
