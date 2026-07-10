@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Local pre-push gate — a stand-in while GitHub Actions (ci.yml) is not running.
+# Runs the FAST gates (typecheck · lint · docs:check · unit) so a broken push is
+# caught before it reaches main (which auto-deploys to Vercel). Fast on purpose so
+# it fires on every push; run the FULL suite incl. integration before merging to main:
+#     npm run verify-all
+# Bypass in a pinch:  git push --no-verify
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+cd "$root/ghost-empire-web" 2>/dev/null || exit 0   # nothing to check outside the app
+echo "▶ pre-push gate: verify-all --fast  (full: npm run verify-all · bypass: --no-verify)"
+npm run --silent verify-all:fast

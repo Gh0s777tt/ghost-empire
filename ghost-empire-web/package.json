@@ -25,6 +25,8 @@
     "stripe:check": "tsx scripts/check-stripe.ts",
     "db:backfill:tenant": "tsx scripts/backfill-tenant.ts",
     "docs:check": "node scripts/check-docs-sync.mjs",
+    "verify-all": "bash scripts/verify-all.sh",
+    "verify-all:fast": "bash scripts/verify-all.sh --fast",
     "postinstall": "prisma generate"
   },
   "dependencies": {

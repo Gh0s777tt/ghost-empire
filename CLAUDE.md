@@ -28,6 +28,14 @@ npx next build          # production build
 npm run docs:check      # documentation in sync
 ```
 
+**`npm run verify-all`** runs all of the above locally in one shot — typecheck · lint ·
+docs:check · unit · **integration** (spins up a throwaway local Postgres via `postgresql@16`,
+runs `test:integration`, tears it down) — plus `--build` for `next build`. Use it as the
+pre-merge gate while CI is unavailable. A `pre-push` hook (`scripts/hooks/pre-push`) runs the
+fast subset on every push; install it in a fresh clone with
+`cp ghost-empire-web/scripts/hooks/pre-push "$(git rev-parse --git-path hooks)/pre-push"`.
+Bypass a push in a pinch with `git push --no-verify`.
+
 ## Conventions that matter here
 - **Multi-tenant**: almost everything is scoped per portal. New content/config models get a nullable `tenantId`, tenant-scoped reads/writes (`...(tid ? { tenantId: tid } : {})`), tenant-keyed caches, and per-tenant composite uniques (never a global `@unique` on a `code`/`name`). See `docs/ARCHITECTURE.md` §7 and `principle: everything per-portal`.
 - **Prod DB mutations are gated**: `prisma db push` / seeds touch the live Supabase DB. Ask before each; `--accept-data-loss` only with explicit OK; back up before destructive constraint changes.
