@@ -78,6 +78,7 @@ nav:
       - Smart-lights (Govee): LIGHTING.md
       - Raffle przez czat: RAFFLE-BOT.md
   - Rozwój:
+      - Utrzymanie i operacje (DevOps): MAINTENANCE.md
       - Backlog pomysłów: IDEAS.md
   - FAQ: faq.md
   - Jakość:

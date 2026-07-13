@@ -146,6 +146,7 @@ Stan i plan: **[ROADMAP.md](ROADMAP.md)**. Ekonomia, moderacja, overlaye, multi-
 | [ENV](docs/ENV.md) | wszystkie zmienne środowiskowe |
 | [OWNER-SETUP](docs/OWNER-SETUP.md) / [WHITE-LABEL-SETUP](docs/WHITE-LABEL-SETUP.md) | uruchomienie i konfiguracja portalu |
 | [OBS-CONTROL](docs/OBS-CONTROL.md) | overlaye i sterowanie sceną |
+| [MAINTENANCE](docs/MAINTENANCE.md) | runbook utrzymaniowy: pipeline CI/CD, wydania, security, Renovate |
 | [audyt](docs/audit/) | raport audytu jakości + status remediacji |
 
 ## 🤝 Współpraca
