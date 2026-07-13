@@ -1,7 +1,16 @@
 // prisma/seed.ts
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const prisma = new PrismaClient();
+// Prisma 7 no longer auto-loads .env, and connects through a driver adapter (the URL
+// left the schema — see src/lib/prisma.ts + prisma.config.ts). Load env + build the
+// client the same way, otherwise the bare `new PrismaClient()` throws
+// PrismaClientInitializationError and `npm run db:seed` is dead.
+for (const f of [".env", ".env.local"]) {
+  try { process.loadEnvFile(f); } catch { /* file absent (e.g. Vercel — env already injected) */ }
+}
+const adapter = new PrismaPg({ connectionString: process.env.DIRECT_URL ?? process.env.DATABASE_URL, max: 3 });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("🌱 Seeding database...");
