@@ -1,0 +1,44 @@
+<svg width="1280" height="320" viewBox="0 0 1280 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GHOST EMPIRE — community portal + bot ecosystem for streamers">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b0b0f"/><stop offset="0.55" stop-color="#140407"/><stop offset="1" stop-color="#0b0b0f"/>
+    </linearGradient>
+    <linearGradient id="ember" x1="120" y1="120" x2="1160" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff4d4d"/><stop offset="0.5" stop-color="#e50914"/><stop offset="1" stop-color="#8b0000"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#e50914" stop-opacity="0.28"/><stop offset="1" stop-color="#e50914" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+
+  <rect width="1280" height="320" rx="18" fill="url(#bg)"/>
+  <ellipse cx="215" cy="160" rx="230" ry="180" fill="url(#glow)"/>
+  <rect x="1" y="1" width="1278" height="318" rx="18" fill="none" stroke="#e50914" stroke-opacity="0.22"/>
+
+  <!-- Ghost emblem -->
+  <g transform="translate(120 78)">
+    <path d="M40 0 C17 0 0 18 0 42 V150 l16 -12 16 12 16 -12 16 12 16 -12 16 12 16 -12 V42 C128 18 111 0 88 0 Z"
+          transform="translate(20 8)" fill="url(#ember)"/>
+    <circle cx="52" cy="66" r="11" fill="#0b0b0f"/><circle cx="96" cy="66" r="11" fill="#0b0b0f"/>
+    <circle cx="55" cy="63" r="3.2" fill="#ffd3d3"/><circle cx="99" cy="63" r="3.2" fill="#ffd3d3"/>
+    <path d="M60 96 q14 14 28 0" stroke="#0b0b0f" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="330" y="150" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="82" font-weight="800" letter-spacing="2" fill="#ffffff">GHOST <tspan fill="url(#ember)">EMPIRE</tspan></text>
+  <text x="333" y="196" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="25" font-weight="600" fill="#c9c9d1">Portal społeczności + ekosystem botów dla streamerów</text>
+  <text x="333" y="228" font-family="'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace" font-size="18" font-weight="500" fill="#e50914">Twitch · Kick · YouTube · Discord — jedna ekonomia Ghost Tokens 👻</text>
+
+  <!-- Tech strip -->
+  <g transform="translate(333 262)" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="15" font-weight="600">
+    <g fill="#8a8a93">
+      <text x="0" y="14">Next.js 16</text><text x="112" y="14">·</text>
+      <text x="130" y="14">React 19</text><text x="228" y="14">·</text>
+      <text x="246" y="14">TypeScript</text><text x="360" y="14">·</text>
+      <text x="378" y="14">Prisma 7</text><text x="476" y="14">·</text>
+      <text x="494" y="14">Postgres</text><text x="596" y="14">·</text>
+      <text x="614" y="14">Tailwind 4</text>
+    </g>
+  </g>
+</svg>
