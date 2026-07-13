@@ -7,9 +7,26 @@ import { createLogger } from "@/lib/logger";
 
 const log = createLogger("economy.anomaly");
 
-const SINGLE_GRANT_THRESHOLD = 100_000; // one grant ≥ this is worth a look
-const HOURLY_GRANT_THRESHOLD = 500_000; // cumulative admin_grant in the rolling hour
+export const SINGLE_GRANT_THRESHOLD = 100_000; // one grant ≥ this is worth a look
+export const HOURLY_GRANT_THRESHOLD = 500_000; // cumulative admin_grant in the rolling hour
 const WINDOW_MS = 60 * 60 * 1000;
+
+/**
+ * Pure anomaly decision — which flags fire for a grant of `amount` given the
+ * rolling-hour `hourlyTotal` of admin grants. Extracted from checkGrantAnomaly so
+ * the thresholds/messages are unit-testable without a DB (repo convention: pure
+ * logic gets unit tests). Empty array = nothing anomalous.
+ */
+export function anomalyReasons(amount: number, hourlyTotal: number): string[] {
+  const reasons: string[] = [];
+  if (amount >= SINGLE_GRANT_THRESHOLD) {
+    reasons.push(`pojedynczy grant ${amount.toLocaleString("pl-PL")} GT`);
+  }
+  if (hourlyTotal >= HOURLY_GRANT_THRESHOLD) {
+    reasons.push(`${hourlyTotal.toLocaleString("pl-PL")} GT przyznane w ostatniej godzinie`);
+  }
+  return reasons;
+}
 
 export async function checkGrantAnomaly(opts: {
   adminId: string;
@@ -19,21 +36,14 @@ export async function checkGrantAnomaly(opts: {
   try {
     if (opts.amount <= 0) return; // only positive grants are flagged
 
-    const reasons: string[] = [];
-    if (opts.amount >= SINGLE_GRANT_THRESHOLD) {
-      reasons.push(`pojedynczy grant ${opts.amount.toLocaleString("pl-PL")} GT`);
-    }
-
     const since = new Date(Date.now() - WINDOW_MS);
     const agg = await prisma.transaction.aggregate({
       where: { type: "admin_grant", amount: { gt: 0 }, createdAt: { gte: since } },
       _sum: { amount: true },
     });
     const hourly = agg._sum.amount ?? 0;
-    if (hourly >= HOURLY_GRANT_THRESHOLD) {
-      reasons.push(`${hourly.toLocaleString("pl-PL")} GT przyznane w ostatniej godzinie`);
-    }
 
+    const reasons = anomalyReasons(opts.amount, hourly);
     if (reasons.length === 0) return;
 
     const summary = reasons.join(" · ");

@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { isValidOverlayToken } from "@/lib/alerts";
 import { getCodeConfig } from "@/lib/codes";
+import { cryptoRng } from "@/lib/secure-rng";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
         pool = pool.filter((c) => c.id !== config.currentCodeId);
       }
       if (pool.length > 0) {
-        const pick = pool[Math.floor(Math.random() * pool.length)];
+        const pick = pool[Math.floor(cryptoRng() * pool.length)];
         await prisma.$transaction([
           prisma.codeDropConfig.update({
             where: { id: config.id },

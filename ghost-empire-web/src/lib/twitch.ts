@@ -84,11 +84,6 @@ export async function helixDelete(path: string, token: string): Promise<void> {
 // === User lookup ===
 type TwitchUser = { id: string; login: string; display_name: string };
 
-export async function getUserByLogin(login: string, appToken: string): Promise<TwitchUser | null> {
-  const data = await helixGet<{ data: TwitchUser[] }>(`/users?login=${login}`, appToken);
-  return data.data[0] ?? null;
-}
-
 export async function getUserById(id: string, appToken: string): Promise<TwitchUser | null> {
   const data = await helixGet<{ data: TwitchUser[] }>(`/users?id=${id}`, appToken);
   return data.data[0] ?? null;
