@@ -74,19 +74,21 @@ workflow:
   interruptible: true
 
 # ── Ukryte reguły (referencjonowane przez !reference) ────────────────────────
-# Lekkie bramki jakości: MR + main.
+# Lekkie bramki jakości: MR + main (ale NIE harmonogramy — na schedule nie ma sensu
+# powtarzać lint/test/build; wyklucza to też przypadkowe wydanie z nocnego skanu).
 .rules_mr_main:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
 
 # Skany bezpieczeństwa: MR + main + nocny harmonogram (ale NIE harmonogram renovate).
 # MR łapie regresje przed mergem; nocny schedule łapie nowo ujawnione CVE w
-# niezmienionych zależnościach.
+# niezmienionych zależnościach. Reguła main wyklucza schedule, żeby na nocnym skanie
+# biegły WYŁĄCZNIE skany (trzecia reguła), a nie lint/test/build.
 .rules_scan:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $RENOVATE != "true"'
 
 # Renovate: WYŁĄCZNIE dedykowany harmonogram ze zmienną RENOVATE=true — nie koliduje
@@ -298,7 +300,7 @@ pages:
   image: node:22-bookworm-slim
   needs: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
   cache:
     key: pages-npm
     paths:
@@ -363,7 +365,8 @@ release:
   needs: ["test:unit:web", "test:integration:web", "build:web"]
   allow_failure: true
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    # tylko realny push do main — NIE harmonogramy (żeby nocny skan/renovate nie wydał wersji)
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
   variables:
     GIT_DEPTH: "0"             # semantic-release potrzebuje pełnej historii + tagów
     GIT_STRATEGY: clone
