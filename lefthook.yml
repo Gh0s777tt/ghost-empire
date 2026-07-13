@@ -1,0 +1,53 @@
+# Lefthook — git hooki dla monorepo ghost-empire.
+#
+# Dlaczego lefthook (a nie husky): jeden plik konfiguracyjny, pojedynczy binarny
+# hook, wbudowane filtrowanie plików per-podprojekt (`root:` + `glob:`), brak
+# potrzeby osobnego lint-staged. Repo używa npm — lefthook instalujemy jako
+# devDependency w korzeniowym package.json.
+#
+# CI = GitLab (.gitlab-ci.yml) jest ŹRÓDŁEM PRAWDY. Te hooki to szybka LOKALNA
+# bramka PRZED CI; można je ominąć: `git commit --no-verify` / `git push --no-verify`.
+#
+# Instalacja (odpala się też automatycznie przez `npm install` w korzeniu — skrypt
+# `prepare` w package.json):
+#     npx lefthook install
+#
+# Uwaga: `lefthook install` przejmuje .git/hooks/* (istniejący ręczny
+# .git/hooks/pre-push zostanie zarchiwizowany jako *.old — usuń go po instalacji).
+
+# ── pre-commit: lint + auto-fix TYLKO na zmienionych plikach ──────────────────
+# Bez typecheck — `tsc --noEmit` na Next 16 jest za wolny na każdy commit; pełny
+# typecheck jest w pre-push (verify-all:fast). ghost-empire-chat/ nie ma ESLinta,
+# więc dotyczy to wyłącznie plików web.
+pre-commit:
+  parallel: true
+  commands:
+    web-eslint:
+      root: "ghost-empire-web/"
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx}"
+      run: npx --no-install eslint --fix --no-warn-ignored {staged_files}
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+
+# ── commit-msg: Conventional Commits (commitlint) ─────────────────────────────
+# {1} = ścieżka do pliku z treścią commita (git przekazuje ją hookowi commit-msg).
+commit-msg:
+  commands:
+    commitlint:
+      run: npx --no-install commitlint --edit {1}
+
+# ── pre-push: pełna szybka bramka (WYŁĄCZNIE realne skrypty z repo) ────────────
+# web:  npm run verify-all:fast  → scripts/verify-all.sh --fast
+#        = typecheck · lint · docs:check · unit  (bez integracji/bez DB)
+# chat: npm run typecheck        → tsc --noEmit  (jedyna bramka, jaką chat posiada)
+pre-push:
+  parallel: false
+  commands:
+    web-verify:
+      root: "ghost-empire-web/"
+      run: npm run --silent verify-all:fast
+    chat-typecheck:
+      root: "ghost-empire-chat/"
+      run: npm run --silent typecheck

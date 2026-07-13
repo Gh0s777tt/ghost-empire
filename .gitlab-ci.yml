@@ -2,11 +2,292 @@
 # nie działa; NIE dodawać niczego w .github/workflows/).
 #
 # ETAP 3 (dokumentacja jako kod): build MkDocs Material → GitLab Pages przy każdym
-# mergu do `main`, oraz strażnik świeżości docs na Merge Requestach.
-# ETAP 4 dołoży stage'e: lint · test · build · security (SAST/Secret/Dependency).
+# mergu do `main`, oraz strażnik świeżości docs na Merge Requestach. ZACHOWANE 1:1
+# (jedyna zmiana: `needs: []` na jobach docs — patrz sekcja DOCS).
+# ETAP 4 (ten plik): verify (commitlint) · lint · test · build · security
+# (gitleaks/semgrep/trivy) · docs · release (semantic-release) · renovate.
+# GitLab shared runners (Linux/docker), obrazy publiczne, npm (lockfileVersion 3;
+# ghost-empire-web/.npmrc: legacy-peer-deps=true). Monorepo: kod w podfolderach
+# `ghost-empire-web/` (Next 16) i `ghost-empire-chat/` (bot, tsx — bez kroku build).
+#
+# DECYZJA O SECURITY (świadoma — patrz residualRisks): NIE używamy szablonów
+# Security/*.gitlab-ci.yml. Powód: nadpisywanie ich jobów po nazwie (np.
+# `gemnasium-dependency_scanning`) jest kruche — nazwy analizatorów zmieniają się
+# między wersjami GitLaba, a nadpisanie NIEISTNIEJĄCEGO joba unieważnia CAŁY YAML
+# (job bez `script`) → pipeline w ogóle nie startuje. Dodatkowo joby szablonowe są
+# domyślnie `allow_failure: true` (fałszywy zielony). Zamiast tego: w pełni
+# samodzielne, PRZYPIĘTE wersjami skanery — gitleaks (SEKRETY, twarda bramka),
+# semgrep (SAST, doradcze) i trivy (zależności/CVE, doradcze). Joby doradcze przy
+# findings pokazują w GitLab POMARAŃCZOWE ostrzeżenie (nie zielony) — brak fałszywego
+# zielonego.
 
 stages:
+  - verify
+  - lint
+  - test
+  - build
+  - security
   - docs
+  - release
+
+variables:
+  NPM_FLAGS: "--no-audit --no-fund"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+# ── Zapobieganie podwójnym pipeline'om (MR + branch) ─────────────────────────
+# Pipeline TYLKO dla: MR-ów, gałęzi domyślnej (main) oraz harmonogramu. Push do
+# zwykłej gałęzi feature bez MR nie odpala CI.
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+# ── Ukryte szablony jobów (DRY) ──────────────────────────────────────────────
+# Cache node_modules per-projekt, kluczowany hashem lockfile'a danego projektu.
+.web:
+  image: node:22-bookworm-slim
+  cache:
+    key:
+      files:
+        - ghost-empire-web/package-lock.json
+    paths:
+      - ghost-empire-web/node_modules/
+    policy: pull-push
+  before_script:
+    - cd ghost-empire-web
+    - npm ci $NPM_FLAGS   # postinstall → `prisma generate`; .npmrc wymusza legacy-peer-deps
+  interruptible: true
+
+.chat:
+  image: node:22-bookworm-slim
+  cache:
+    key:
+      files:
+        - ghost-empire-chat/package-lock.json
+    paths:
+      - ghost-empire-chat/node_modules/
+    policy: pull-push
+  before_script:
+    - cd ghost-empire-chat
+    - npm ci $NPM_FLAGS
+  interruptible: true
+
+# ── Ukryte reguły (referencjonowane przez !reference) ────────────────────────
+# Lekkie bramki jakości: MR + main.
+.rules_mr_main:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# Skany bezpieczeństwa: MR + main + nocny harmonogram (ale NIE harmonogram renovate).
+# MR łapie regresje przed mergem; nocny schedule łapie nowo ujawnione CVE w
+# niezmienionych zależnościach.
+.rules_scan:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $RENOVATE != "true"'
+
+# Renovate: WYŁĄCZNIE dedykowany harmonogram ze zmienną RENOVATE=true — nie koliduje
+# z nocnym harmonogramem skanów.
+.rules_renovate:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $RENOVATE == "true"'
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  VERIFY — Conventional Commits (serwerowy odpowiednik hooka commit-msg)
+# ═════════════════════════════════════════════════════════════════════════════
+# Lokalne hooki (lefthook) są omijalne (--no-verify), więc walidacja jest też po
+# stronie serwera. Używamy `npm install --no-save` (a NIE `npm ci`), żeby job był
+# ODPORNY na brak root package-lock.json (bootstrap) — commitlint leci na KAŻDYM MR.
+commitlint:
+  stage: verify
+  image: node:22-bookworm-slim
+  needs: []
+  rules:
+    # commitlint TYLKO na MR: na push do main CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    # jest puste → `git fetch origin ""` by padło i zaczerwieniło main. Na main nie
+    # ma czego walidować (commity już zmergowane).
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git
+    - npm install --no-save @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
+  script:
+    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --depth 100
+    - npx commitlint --from "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --to HEAD --verbose
+  interruptible: true
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  LINT — typecheck + eslint (web) i typecheck (chat)
+# ═════════════════════════════════════════════════════════════════════════════
+lint:web:
+  extends: .web
+  stage: lint
+  needs: []
+  script:
+    - npm run typecheck        # tsc --noEmit
+    - npm run lint             # eslint .
+    - npm run docs:check       # node scripts/check-docs-sync.mjs (bramka anty-drift)
+  rules: !reference [.rules_mr_main, rules]
+
+# ghost-empire-chat ma tylko `typecheck` (brak lint/test/build — tsx odpala TS wprost).
+lint:chat:
+  extends: .chat
+  stage: lint
+  needs: []
+  script:
+    - npm run typecheck        # tsc --noEmit
+  rules: !reference [.rules_mr_main, rules]
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  TEST — jednostkowe (+coverage badge) oraz integracyjne (real Postgres)
+# ═════════════════════════════════════════════════════════════════════════════
+# Jednostkowe: bez bazy (vitest.setup.ts wstrzykuje atrapy DATABASE_URL). Reporter
+# coverage w vitest.config.ts to `text-summary` → drukuje wiersz "Statements : NN%",
+# stąd regex poniżej (NIE 'All files' — tego ten reporter NIE drukuje). Progów brak,
+# więc job nie failuje na spadku pokrycia (zgodnie ze stanem repo).
+test:unit:web:
+  extends: .web
+  stage: test
+  needs: ["lint:web"]
+  script:
+    - npm run test:coverage    # vitest run --coverage
+  coverage: '/Statements\s*:\s*([\d.]+)%/'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - ghost-empire-web/coverage/
+  rules: !reference [.rules_mr_main, rules]
+
+# Integracyjne: WYMAGAJĄ realnego Postgresa → `services: postgres:16`. Jawny wait
+# (pg_isready) usuwa wyścig przy cache-hit node_modules. globalSetup i tak robi
+# `prisma db push`, ale odpalamy go też jawnie (idempotentnie), by schemat na 100%
+# istniał przed testami. Ustawiamy wszystkie warianty URL (db-url.ts →
+# TEST_DATABASE_URL; prisma.config.ts → TEST_DATABASE_URL ?? DIRECT_URL ??
+# DATABASE_URL; vitest.integration.config.ts → TEST_DB_URL).
+test:integration:web:
+  extends: .web
+  stage: test
+  needs: ["lint:web"]
+  services:
+    - name: postgres:16
+      alias: postgres
+  variables:
+    POSTGRES_DB: ghost_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_HOST_AUTH_METHOD: trust
+    TEST_DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/ghost_test"
+    TEST_DB_URL: "postgresql://postgres:postgres@postgres:5432/ghost_test"
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/ghost_test"
+    DIRECT_URL: "postgresql://postgres:postgres@postgres:5432/ghost_test"
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends postgresql-client
+    - cd ghost-empire-web
+    - npm ci $NPM_FLAGS
+    - until pg_isready -h postgres -p 5432 -U postgres; do echo "waiting for postgres..."; sleep 1; done
+  script:
+    - npx prisma db push   # plain: Prisma 7 czyta schema+URL z prisma.config.ts (flagi konfliktują)
+    - npm run test:integration             # vitest run --config vitest.integration.config.ts
+  rules: !reference [.rules_mr_main, rules]
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  BUILD — produkcyjny `next build` (web). Chat nie ma kroku build.
+# ═════════════════════════════════════════════════════════════════════════════
+# Build NIE wymaga bazy (adapter Prisma leniwy; strony z danymi force-dynamic; jedyny
+# generateStaticParams jest DB-free). Nieszkodliwe env-stuby, by nic nie rzuciło na
+# etapie importu/konfiguracji. UWAGA: `next/font/google` pobiera fonty z sieci przy
+# buildzie (shared runnery mają internet — OK). Twarda bramka (bez allow_failure).
+build:web:
+  extends: .web
+  stage: build
+  needs: ["lint:web"]
+  variables:
+    DATABASE_URL: "postgresql://build:build@localhost:5432/build"   # stub, nieużywany
+    NEXTAUTH_SECRET: "dummy-build-time-secret-not-a-real-secret"
+    NEXTAUTH_URL: "http://localhost:3000"
+  script:
+    - npm run build            # next build --turbopack
+  artifacts:
+    when: on_success
+    expire_in: 1 day
+    paths:
+      - ghost-empire-web/.next/
+  rules: !reference [.rules_mr_main, rules]
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  SECURITY — samodzielne skanery (bez szablonów). Obrazy PRZYPIĘTE wersjami.
+# ═════════════════════════════════════════════════════════════════════════════
+# gitleaks — SEKRETY, TWARDA BRAMKA (allow_failure domyślnie false). Skanuje BIEŻĄCE
+# pliki (`--no-git`), nie całą historię — nie utknie na czerwono przez sekret z (już
+# zrotowanej) starej historii, a i tak łapie sekret wprowadzany TERAZ. `.gitleaks.toml`
+# (allowlist) wycisza placeholdery w *.env.example / tenants/*.env.
+gitleaks:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:v8.18.4
+    entrypoint: [""]
+  needs: []
+  script:
+    - gitleaks version
+    - gitleaks detect --source . --no-git --config .gitleaks.toml --redact --verbose --exit-code 1
+  rules: !reference [.rules_scan, rules]
+  interruptible: true
+
+# semgrep — SAST (p/ci + p/typescript). DORADCZE (allow_failure:true): na realnym
+# drzewie Next 16 / React 19 reguły niemal zawsze coś zgłoszą; twarda bramka
+# blokowałaby całą pracę. Findings = POMARAŃCZOWE ostrzeżenie (nie zielony) + raport
+# joba. Aby uczynić bramkę twardą: usuń allow_failure po triażu.
+semgrep:
+  stage: security
+  image:
+    name: semgrep/semgrep:1.85.0
+    entrypoint: [""]
+  needs: []
+  allow_failure: true
+  variables:
+    SEMGREP_SEND_METRICS: "off"
+  script:
+    - semgrep --version
+    - semgrep scan --error --config p/ci --config p/typescript ghost-empire-web ghost-empire-chat
+  rules: !reference [.rules_scan, rules]
+  interruptible: true
+
+# trivy — skan zależności (fs, scanner vuln). DORADCZE (allow_failure:true): duże
+# drzewo npm niemal na pewno ma ≥1 HIGH/CRITICAL CVE; twarda bramka blokowałaby
+# wszystko do ręcznego triażu. Przebieg 1 = informacyjny (LOW/MEDIUM, exit 0);
+# przebieg 2 = HIGH/CRITICAL (exit 1) → job-warning. Aby zablokować realnie: usuń
+# allow_failure i dodaj `.trivyignore` na zaakceptowane CVE.
+trivy:
+  stage: security
+  image:
+    name: aquasec/trivy:0.58.0
+    entrypoint: [""]
+  needs: []
+  allow_failure: true
+  variables:
+    TRIVY_NO_PROGRESS: "true"
+    TRIVY_CACHE_DIR: ".trivycache/"
+  cache:
+    key: trivy-db
+    paths:
+      - .trivycache/
+  script:
+    - trivy --version
+    - trivy fs --scanners vuln --severity UNKNOWN,LOW,MEDIUM --exit-code 0 ghost-empire-web ghost-empire-chat
+    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 ghost-empire-web ghost-empire-chat
+  rules: !reference [.rules_scan, rules]
+  interruptible: true
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  DOCS — ETAP 3, zachowane 1:1 (JEDYNA zmiana: `needs: []`)
+# ═════════════════════════════════════════════════════════════════════════════
+# `needs: []` to WYMAGANA naprawa regresji ETAP 3: bez tego `pages` (stage docs, po
+# `security`) czekałby na stage security — gdyby skan był opóźniony, publikacja
+# GitLab Pages by stanęła. `needs: []` czyni docs NIEZALEŻNYMI od bramek kodu
+# (startują od razu). Logika/skrypty jobów pozostają nietknięte.
 
 # ── Dokumentacja → GitLab Pages ──────────────────────────────────────────────
 # Buduje statyczny serwis MkDocs (Material) i publikuje go na
@@ -15,6 +296,7 @@ stages:
 pages:
   stage: docs
   image: node:22-bookworm-slim
+  needs: []
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   cache:
@@ -40,6 +322,7 @@ pages:
 docs-drift:
   stage: docs
   image: alpine:3.20
+  needs: []
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   before_script:
@@ -59,3 +342,65 @@ docs-drift:
       fi
     - echo "✓ docs w zgodzie ze zmianami API"
   interruptible: true
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  RELEASE — semantic-release (tylko main, po przejściu test/build)
+# ═════════════════════════════════════════════════════════════════════════════
+# REALNA konfiguracja (nie szkielet): root .releaserc.json + root package.json z
+# devDep semantic-release + pluginami. Po mergu do main: analiza Conventional Commits
+# → wersja SemVer → tag vX.Y.Z → Release na GitLab → wpis w CHANGELOG.md (commit
+# zwrotny z [skip ci] — brak pętli).
+#
+# `allow_failure: true` = BOOTSTRAP-GUARD (NIE fałszywy zielony przez brak configu —
+# config jest kompletny). Zapobiega czerwonemu main DOPÓKI user nie wykona
+# jednorazowego setupu: (1) CI/CD var GITLAB_TOKEN (scope api), (2) bazowy tag
+# `v0.1.0` (inaczej pierwsze wydanie = 1.0.0), (3) zacommitowany root
+# package-lock.json. PO pierwszym udanym wydaniu → USUŃ allow_failure, by release
+# stał się autorytatywny. Brak setupu = pomarańczowe ostrzeżenie (widoczne, nie ukryte).
+release:
+  stage: release
+  image: node:22-bookworm-slim
+  needs: ["test:unit:web", "test:integration:web", "build:web"]
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  variables:
+    GIT_DEPTH: "0"             # semantic-release potrzebuje pełnej historii + tagów
+    GIT_STRATEGY: clone
+  cache:
+    key: release-npm
+    paths:
+      - node_modules/
+  before_script:
+    # node:*-slim nie ma gita ani certyfikatów CA — wymagane przez semantic-release.
+    - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
+    - npm ci --ignore-scripts $NPM_FLAGS   # root deps; --ignore-scripts pomija `prepare`(lefthook)
+  script:
+    - npx semantic-release
+  interruptible: false
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  RENOVATE — aktualizacje zależności NATYWNIE w GitLab (dedykowany harmonogram)
+# ═════════════════════════════════════════════════════════════════════════════
+# Dependabot działa tylko na GitHubie (read-only mirror) → jego PR-y nie trafiają do
+# GitLaba (źródło prawdy). Renovate w dedykowanym harmonogramie (zmienna RENOVATE=true)
+# otwiera MR-y bezpośrednio w GitLab. Wymaga CI/CD var RENOVATE_TOKEN (GitLab PAT,
+# scope api + write_repository). allow_failure:true — brak tokenu nie czerwieni
+# dedykowanego pipeline'u renovate (widoczne jako ostrzeżenie).
+renovate:
+  stage: security
+  image:
+    name: renovate/renovate:39
+    entrypoint: [""]
+  needs: []
+  allow_failure: true
+  variables:
+    RENOVATE_PLATFORM: gitlab
+    RENOVATE_ENDPOINT: "https://gitlab.com/api/v4/"
+    RENOVATE_AUTODISCOVER: "false"
+    RENOVATE_REPOSITORIES: "Gh0s777tt/ghost-empire"
+    LOG_LEVEL: info
+  script:
+    - renovate
+  rules: !reference [.rules_renovate, rules]
+  interruptible: false

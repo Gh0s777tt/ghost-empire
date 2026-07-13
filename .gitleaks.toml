@@ -1,0 +1,29 @@
+# gitleaks — konfiguracja dla twardej bramki sekretów w .gitlab-ci.yml (job `gitleaks`).
+# Rozszerza domyślny zestaw reguł gitleaks i dokłada allowlistę na PLIKI-SZABLONY
+# środowiska, które zawierają wyłącznie placeholdery (nie realne sekrety) — inaczej
+# reguła connection-string dawałaby false-positive i czerwieniła nawet MR-y.
+#
+# UWAGA: job skanuje bieżące pliki (`--no-git`), nie całą historię — allowlista
+# `paths` odnosi się do ścieżek plików w drzewie roboczym.
+
+title = "ghost-empire gitleaks config"
+
+[extend]
+# Zacznij od pełnego domyślnego zestawu reguł gitleaks, dołóż tylko allowlistę.
+useDefault = true
+
+[allowlist]
+description = "Placeholdery w szablonach env — brak realnych sekretów"
+paths = [
+  '''ghost-empire-web/\.env\.example$''',
+  '''ghost-empire-chat/tenants/.*\.env$''',
+  '''.*\.env\.example$''',
+]
+# Dodatkowo wycisz typowe wartości-placeholdery, gdyby pojawiły się w innych plikach
+# dokumentacji (np. README/docs z przykładowym connection-string).
+regexes = [
+  '''PROJECT_REF''',
+  '''<[A-Z_]+>''',
+  '''postgres:postgres@''',
+  '''dummy-build-time-secret-not-a-real-secret''',
+]

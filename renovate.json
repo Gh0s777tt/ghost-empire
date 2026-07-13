@@ -1,0 +1,88 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    "group:monorepos",
+    "group:recommended"
+  ],
+  "baseBranches": ["main"],
+  "timezone": "Europe/Warsaw",
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Renovate Dependency Dashboard",
+  "labels": ["dependencies"],
+  "enabledManagers": ["npm", "gitlabci", "dockerfile"],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "docs/api/**",
+    "public/**"
+  ],
+  "npmrc": "legacy-peer-deps=true",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 4,
+  "rangeStrategy": "bump",
+  "rebaseWhen": "conflicted",
+  "separateMajorMinor": true,
+  "separateMultipleMajor": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"],
+    "commitMessageAction": "Refresh lockfile"
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security"],
+    "schedule": ["at any time"],
+    "prPriority": 10
+  },
+  "packageRules": [
+    {
+      "description": "Group all non-major (minor+patch) bumps into a single low-noise PR per project.",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "minor and patch (npm)",
+      "groupSlug": "npm-minor-patch"
+    },
+    {
+      "description": "Majors always land as isolated PRs so they can be reviewed/tested alone.",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    },
+    {
+      "description": "Portal (Next.js app) — tag PRs touching ghost-empire-web.",
+      "matchFileNames": ["ghost-empire-web/**"],
+      "addLabels": ["web"]
+    },
+    {
+      "description": "Chat bot (Twitch/Kick/YouTube) — tag PRs touching ghost-empire-chat.",
+      "matchFileNames": ["ghost-empire-chat/**"],
+      "addLabels": ["chat-bot"]
+    },
+    {
+      "description": "Keep CI/runtime images fresh (node:22-*, alpine) but grouped and CI-labelled.",
+      "matchManagers": ["gitlabci", "dockerfile"],
+      "groupName": "ci and docker images",
+      "groupSlug": "ci-images",
+      "addLabels": ["ci"]
+    },
+    {
+      "description": "Do not push Node past the engines floor (project pins Node 22 in CI + Dockerfiles).",
+      "matchManagers": ["dockerfile", "gitlabci"],
+      "matchPackageNames": ["node"],
+      "allowedVersions": "<23"
+    },
+    {
+      "description": "Prisma pieces move together (client/CLI/adapter must stay in lockstep).",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["prisma", "@prisma/client", "@prisma/adapter-pg"],
+      "groupName": "prisma"
+    }
+  ]
+}
