@@ -1,6 +1,6 @@
 "use client";
 // src/components/events/EventsClient.tsx
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
@@ -15,6 +15,35 @@ import { useToast } from "@/components/ToastProvider";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { apiPost, ApiError } from "@/lib/api-client";
+
+// Shared 1s clock: ONE module-level interval for the whole page. Countdown leaves
+// subscribe via useNow(); the parent list no longer holds ticking state, so it — and
+// every card — stops re-rendering wholesale every second (only the leaves that read the
+// clock update). Behaviour is identical to the old `now` prop, just self-sourced. The
+// interval only runs while something is subscribed (started on first sub, cleared on last).
+let clockNow = Date.now();
+const clockSubs = new Set<() => void>();
+let clockTimer: ReturnType<typeof setInterval> | null = null;
+function subscribeClock(cb: () => void): () => void {
+  clockSubs.add(cb);
+  if (clockTimer === null) {
+    clockTimer = setInterval(() => {
+      clockNow = Date.now();
+      for (const f of clockSubs) f();
+    }, 1000);
+  }
+  return () => {
+    clockSubs.delete(cb);
+    if (clockSubs.size === 0 && clockTimer !== null) {
+      clearInterval(clockTimer);
+      clockTimer = null;
+    }
+  };
+}
+/** Live wall-clock timestamp that re-renders the caller once per second (shared interval). */
+function useNow(): number {
+  return useSyncExternalStore(subscribeClock, () => clockNow, () => clockNow);
+}
 
 type Winner = {
   id: string;
@@ -73,13 +102,9 @@ export function EventsClient({
   const [pending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
   const toast = useToast();
-  const [now, setNow] = useState(() => Date.now());
   const entriesSet = useMemo(() => new Set(userEntries), [userEntries]);
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
+  // `now` no longer lives here — each countdown leaf reads the shared clock via useNow(),
+  // so this coordinator component stops re-rendering (and re-creating every card) each second.
 
   const showToast = toast.show;
 
@@ -153,7 +178,7 @@ export function EventsClient({
       {happyHours.length > 0 && (
         <div className="space-y-3">
           {happyHours.map((e) => (
-            <HappyHourBanner key={e.id} event={e} now={now} />
+            <HappyHourBanner key={e.id} event={e} />
           ))}
         </div>
       )}
@@ -166,7 +191,6 @@ export function EventsClient({
               <GiveawayCard
                 key={e.id}
                 event={e}
-                now={now}
                 isAuthenticated={isAuthenticated}
                 joined={entriesSet.has(e.id)}
                 busy={busyId === e.id || pending}
@@ -185,7 +209,6 @@ export function EventsClient({
               <RaffleCard
                 key={e.id}
                 event={e}
-                now={now}
                 isAuthenticated={isAuthenticated}
                 myTickets={userTickets[e.id] ?? 0}
                 userTokens={userTokens}
@@ -205,7 +228,6 @@ export function EventsClient({
               <ContestCard
                 key={e.id}
                 event={e}
-                now={now}
                 isAuthenticated={isAuthenticated}
                 joined={entriesSet.has(e.id)}
                 busy={busyId === e.id || pending}
@@ -246,8 +268,9 @@ function formatCountdown(target: string | null, now: number, endedLabel: string)
   return `${m}m ${s}s`;
 }
 
-function HappyHourBanner({ event, now }: { event: EventData; now: number }) {
+function HappyHourBanner({ event }: { event: EventData }) {
   const t = useTranslations("events");
+  const now = useNow();
   const startsIn = event.startsAt ? new Date(event.startsAt).getTime() - now : 0;
   const isActive = startsIn <= 0 && (!event.endsAt || new Date(event.endsAt).getTime() > now);
   const countdown = isActive
@@ -382,13 +405,14 @@ function EventBase({
 }
 
 function GiveawayCard({
-  event, now, isAuthenticated, joined, busy, onJoin,
+  event, isAuthenticated, joined, busy, onJoin,
 }: {
-  event: EventData; now: number; isAuthenticated: boolean;
+  event: EventData; isAuthenticated: boolean;
   joined: boolean; busy: boolean; onJoin: () => void;
 }) {
   const t = useTranslations("events");
   const fmt = useLocaleFmt();
+  const now = useNow();
   const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
   const drawn = !!event.drawnAt;
@@ -467,13 +491,14 @@ function GiveawayCard({
 }
 
 function ContestCard({
-  event, now, isAuthenticated, joined, busy, onJoin,
+  event, isAuthenticated, joined, busy, onJoin,
 }: {
-  event: EventData; now: number; isAuthenticated: boolean;
+  event: EventData; isAuthenticated: boolean;
   joined: boolean; busy: boolean; onJoin: () => void;
 }) {
   const t = useTranslations("events");
   const fmt = useLocaleFmt();
+  const now = useNow();
   const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
   const drawn = !!event.drawnAt;
@@ -536,15 +561,16 @@ function ContestCard({
 }
 
 function RaffleCard({
-  event, now, isAuthenticated, myTickets, userTokens, busy, onBuy,
+  event, isAuthenticated, myTickets, userTokens, busy, onBuy,
 }: {
-  event: EventData; now: number; isAuthenticated: boolean;
+  event: EventData; isAuthenticated: boolean;
   myTickets: number; userTokens: number; busy: boolean; onBuy: (count: number) => void;
 }) {
   const t = useTranslations("events");
   const fmt = useLocaleFmt();
   const { tokenSymbol } = useTenantBranding();
   const [qty, setQty] = useState(1);
+  const now = useNow();
   const countdown = formatCountdown(event.endsAt, now, t("ended"));
   const ended = event.endsAt && new Date(event.endsAt).getTime() <= now;
   const price = event.ticketPrice ?? 0;
