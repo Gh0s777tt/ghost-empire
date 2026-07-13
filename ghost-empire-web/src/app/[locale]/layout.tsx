@@ -2,7 +2,7 @@
 // Localized root layout — provides <html lang={locale}>, fonts, Providers, footer
 // and the next-intl client provider. PL is unprefixed ("/"), English under "/en".
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
@@ -71,6 +71,15 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   const messages = await getMessages();
+  // Scope the client i18n bundle per route: the `admin` namespace is ~84 KB (over half
+  // the catalog) and is only ever read by client components under /admin. Ship it there,
+  // and keep it off every viewer page's payload. Server components use getTranslations()
+  // (the full catalog, independent of this), so they are unaffected.
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const isAdminRoute = /(^|\/)admin(\/|$)/.test(pathname);
+  const clientMessages = isAdminRoute
+    ? messages
+    : Object.fromEntries(Object.entries(messages).filter(([ns]) => ns !== "admin"));
   const t = await getTranslations("common");
   // White-label branding for client components ("123 GT" suffixes outside i18n).
   const tenant = await getCurrentTenant();
@@ -132,7 +141,7 @@ export default async function LocaleLayout({
         >
           {t("skipToContent")}
         </a>
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider messages={clientMessages}>
           <TenantBrandingProvider value={branding}>
           <Providers initialViewerPreview={viewerPreview}>
             <TourProvider>

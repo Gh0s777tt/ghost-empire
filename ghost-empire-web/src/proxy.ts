@@ -89,6 +89,9 @@ export function proxy(request: NextRequest) {
   // Never trust a client-sent tenant header: strip it, then set only the host-derived slug.
   requestHeaders.delete(TENANT_HEADER);
   if (tenantSlug) requestHeaders.set(TENANT_HEADER, tenantSlug);
+  // Forward the path so the root layout can scope the i18n client bundle per route
+  // (the ~84 KB `admin` namespace ships only on /admin, not on every viewer page).
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
 
   let response: NextResponse;
   if (isOverlay || isOffline) {
