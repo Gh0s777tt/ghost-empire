@@ -75,7 +75,9 @@ export default async function LocaleLayout({
   // the catalog) and is only ever read by client components under /admin. Ship it there,
   // and keep it off every viewer page's payload. Server components use getTranslations()
   // (the full catalog, independent of this), so they are unaffected.
-  const pathname = (await headers()).get("x-pathname") ?? "";
+  const hdrs = await headers();
+  const pathname = hdrs.get("x-pathname") ?? "";
+  const nonce = hdrs.get("x-nonce") ?? ""; // CSP nonce (set in proxy.ts) for the async-font swap
   const isAdminRoute = /(^|\/)admin(\/|$)/.test(pathname);
   const clientMessages = isAdminRoute
     ? messages
@@ -128,11 +130,22 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={dir} data-theme={theme} className="dark">
       <head>
-        {/* Display fonts (Anton, Bebas Neue, Oswald…) used by widgets/overlays/chat —
-            not in next/font's bundled set, so loaded by literal name via one <link>. */}
+        {/* Display fonts (Anton, Bebas Neue, Oswald…) for widgets/overlays/chat — not in
+            next/font, loaded by literal family name. NON-render-blocking: fetched as
+            media="print" (low priority, doesn't block first paint), then swapped to "all"
+            once loaded via a nonce'd (CSP-safe) inline script. Viewer body text uses
+            next/font Inter, so it never waited on these. <noscript> keeps them with JS off. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href={GOOGLE_FONTS_HREF} rel="stylesheet" />
+        <link id="nx-display-fonts" href={GOOGLE_FONTS_HREF} rel="stylesheet" media="print" />
+        <noscript><link href={GOOGLE_FONTS_HREF} rel="stylesheet" /></noscript>
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html:
+              "var l=document.getElementById('nx-display-fonts');if(l){if(l.sheet){l.media='all'}else{l.onload=function(){l.media='all'}}}",
+          }}
+        />
       </head>
       <body style={brandStyle} className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
         <a
