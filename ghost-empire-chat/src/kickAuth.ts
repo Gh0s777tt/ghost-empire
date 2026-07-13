@@ -20,7 +20,11 @@ function loadStoredRefresh(): string | undefined {
 
 function saveRefresh(token: string): void {
   try {
-    fs.writeFileSync(STORE, JSON.stringify({ refresh_token: token }, null, 2));
+    // 0600 — plik trzyma długożyjący, ROTOWANY refresh token (sekret). Domyślne 0644
+    // odsłoniłoby go innym userom na współdzielonym hoście. mode w writeFileSync działa
+    // tylko przy TWORZENIU; chmodSync docisą uprawnienia także istniejącemu plikowi.
+    fs.writeFileSync(STORE, JSON.stringify({ refresh_token: token }, null, 2), { mode: 0o600 });
+    fs.chmodSync(STORE, 0o600);
   } catch (e) {
     console.warn("[kick] could not persist refresh token:", (e as Error).message);
   }

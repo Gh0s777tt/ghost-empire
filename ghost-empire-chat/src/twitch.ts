@@ -1,4 +1,5 @@
 import tmi from "tmi.js";
+import { startTimestampPrune } from "./pruneMap";
 import { env } from "./env";
 import { matchCommand } from "./commands";
 import { checkRaffleEntry } from "./raffle";
@@ -21,6 +22,7 @@ const AWARD_AMOUNT = 1;
 const AWARD_COOLDOWN_MS = 60_000; // 1 GT per chatter per minute
 const REFRESH_EVERY_MS = 3 * 60 * 60 * 1000; // refresh token every 3h (expires ~4h)
 const lastAward = new Map<string, number>();
+startTimestampPrune(lastAward, AWARD_COOLDOWN_MS); // przeciw wyciekowi pamięci (długi proces)
 
 let client: tmi.Client | null = null;
 // Current raw access token (no "oauth:" prefix) — used by the Helix moderation

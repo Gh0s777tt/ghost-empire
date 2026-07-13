@@ -9,6 +9,11 @@ let enabled = false;
 let template = "Witaj {user}! Miło Cię widzieć 👋";
 let bonusTokens = 0;
 const greeted = new Set<string>(); // `${platform}:${userId}` already welcomed this session
+// Ograniczenie pamięci w długożyjącym procesie (Docker restart:unless-stopped): bez capa
+// zbiór rósłby z każdym UNIKALNYM widzem. Przy przekroczeniu limitu usuwamy najstarszy
+// wpis (Set trzyma kolejność wstawiania) — skrajny przypadek to ponowne powitanie po
+// bardzo długim streamie, akceptowalne wobec nieograniczonego wzrostu RSS.
+const MAX_GREETED = 5000;
 
 export async function refreshWelcome(): Promise<void> {
   try {
@@ -38,6 +43,10 @@ export function welcomeMessage(platform: string, userId: string, username: strin
   if (!enabled) return null;
   const key = `${platform}:${userId}`;
   if (greeted.has(key)) return null;
+  if (greeted.size >= MAX_GREETED) {
+    const oldest = greeted.values().next().value;
+    if (oldest !== undefined) greeted.delete(oldest);
+  }
   greeted.add(key);
   return template.replace(/\{user\}/gi, username || "widzu");
 }

@@ -91,13 +91,19 @@ export function hasDisallowedLink(text: string, whitelist: string[]): boolean {
   const wl = (whitelist ?? []).map((w) => w.toLowerCase().trim()).filter(Boolean);
   return links.some((link) => {
     const host = link.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0].toLowerCase();
-    return !wl.some((w) => host.includes(w));
+    // Dokładny host lub sufiks domeny — includes() przepuszczało 'youtube.com.evil.com'
+    // (whitelisted domena jako prefiks cudzej → bypass automodu linków).
+    return !wl.some((w) => host === w || host.endsWith("." + w));
   });
 }
 export function matchesAnyRegex(text: string, patterns: string[]): boolean {
+  // Ochrona przed ReDoS: wzorce pochodzą z konfiguracji portalu i lecą na KAŻDEJ
+  // wiadomości. Limit długości wzorca + przycięcie testowanego tekstu ogranicza
+  // najgorszy przypadek katastroficznego backtrackingu do stałej długości wejścia.
+  const t = text.length > 1000 ? text.slice(0, 1000) : text;
   for (const p of patterns ?? []) {
     if (!p || p.length > 200) continue;
-    try { if (new RegExp(p, "i").test(text)) return true; } catch { /* invalid */ }
+    try { if (new RegExp(p, "i").test(t)) return true; } catch { /* invalid */ }
   }
   return false;
 }

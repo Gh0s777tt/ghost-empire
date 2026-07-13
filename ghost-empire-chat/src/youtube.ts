@@ -1,4 +1,5 @@
 import { env } from "./env";
+import { startTimestampPrune } from "./pruneMap";
 import { matchCommand } from "./commands";
 import { checkRaffleEntry } from "./raffle";
 import { awardChat } from "./portal";
@@ -33,6 +34,7 @@ let nextPageToken: string | undefined;
 let primed = false; // first poll only captures the page token (skip chat backlog)
 let lastSendAt = 0;
 const lastAward = new Map<string, number>();
+startTimestampPrune(lastAward, AWARD_COOLDOWN_MS); // przeciw wyciekowi pamięci (długi proces)
 
 type BroadcastList = { items?: { snippet?: { liveChatId?: string; channelId?: string } }[] };
 type ChatList = {
@@ -129,11 +131,15 @@ function handleMessage(m: NonNullable<ChatList["items"]>[number]): void {
 
   // Automod — YouTube (force-ssl scope) supports delete + temporary ban. Offending
   // messages skip the feed + GT award. Bot account must be a moderator of the chat.
-  if (channelId && channelId !== ownChannelId) {
+  // Uruchamiamy dla KAŻDEJ wiadomości nie-własnej: brak channelId też NIE jest kontem
+  // bota, więc musi być moderowany (wcześniej `channelId && ...` po cichu przepuszczał
+  // takie wiadomości do feedu). Enforcement (ban) wymaga channelId — bez niego i tak
+  // wykrywamy, logujemy i usuwamy z feedu przez return.
+  if (channelId !== ownChannelId) {
     const verdict = checkMessage(text, { isSub, isVip: false, isMod });
     if (verdict) {
       const v = escalate("youtube", username, verdict);
-      void enforceYouTube(m.id, channelId, username, v);
+      if (channelId) void enforceYouTube(m.id, channelId, username, v);
       logViolation("youtube", username, v.violation, v.action, v.priorCount);
       return;
     }

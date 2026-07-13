@@ -1,4 +1,5 @@
 import { env } from "./env";
+import { startTimestampPrune } from "./pruneMap";
 import { matchCommand } from "./commands";
 import { checkRaffleEntry } from "./raffle";
 import { matchFaq } from "./faq";
@@ -32,6 +33,7 @@ const PING_EVERY_MS = 60_000; // keepalive: Pusher's activity_timeout is 120s �
 const CHAT_EVENT = "App\\Events\\ChatMessageEvent"; // Pusher event name = literal  App\Events\ChatMessageEvent
 
 const lastAward = new Map<string, number>();
+startTimestampPrune(lastAward, AWARD_COOLDOWN_MS); // przeciw wyciekowi pamięci (długi proces)
 let sendToken: string | null = null;
 
 type KickChat = {
