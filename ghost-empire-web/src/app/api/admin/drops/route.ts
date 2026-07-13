@@ -1,15 +1,18 @@
 // src/app/api/admin/drops/route.ts
 import { NextResponse } from "next/server";
+import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
 
 function generateCode(): string {
-  // 6 chars, uppercase alphanumeric (skipping ambiguous 0/O/I/1)
+  // 6 chars, uppercase alphanumeric (skipping ambiguous 0/O/I/1). CSPRNG: codes are
+  // publicly announced and redeemable for GT, so they must not be predictable from a
+  // recovered PRNG state. randomInt is uniform (no modulo bias).
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
-  for (let i = 0; i < 6; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  for (let i = 0; i < 6; i++) out += alphabet[randomInt(0, alphabet.length)];
   return out;
 }
 

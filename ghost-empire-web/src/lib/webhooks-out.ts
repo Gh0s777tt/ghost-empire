@@ -121,7 +121,10 @@ export async function testOutgoingWebhook(id: string): Promise<{ ok: boolean; st
   if (secret) headers["x-ghostempire-signature"] = "sha256=" + createHmac("sha256", secret).update(body).digest("hex");
 
   try {
-    const res = await fetch(h.url, { method: "POST", headers, body, signal: AbortSignal.timeout(TIMEOUT_MS) });
+    // redirect:"manual" — same guard as deliver() (L68): isSafeWebhookUrl only vetted the
+    // original URL, so a public host must not be able to 302 the test into an internal /
+    // cloud-metadata address. A 3xx is a non-ok response, never followed.
+    const res = await fetch(h.url, { method: "POST", headers, body, redirect: "manual", signal: AbortSignal.timeout(TIMEOUT_MS) });
     await prisma.outgoingWebhook.update({
       where: { id },
       data: { lastStatus: res.status, lastFiredAt: new Date(), failCount: res.ok ? 0 : h.failCount + 1 },

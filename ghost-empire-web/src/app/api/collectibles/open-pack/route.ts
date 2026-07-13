@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { PACK_PRICE, pickRarity } from "@/lib/collectibles";
+import { cryptoRng } from "@/lib/secure-rng";
 import { clientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
@@ -28,10 +29,11 @@ export async function POST(req: Request) {
   if (cards.length === 0) return NextResponse.json({ ok: false, reason: "no-cards" });
 
   // Weighted roll: pick a rarity, then a uniform-random card of it (fall back to any).
-  const rarity = pickRarity(Math.random());
+  // CSPRNG — money path (spends PACK_PRICE, grants a card); outcome must be unpredictable.
+  const rarity = pickRarity(cryptoRng());
   const pool = cards.filter((c) => c.rarity === rarity);
   const from = pool.length ? pool : cards;
-  const chosen = from[Math.floor(Math.random() * from.length)];
+  const chosen = from[Math.floor(cryptoRng() * from.length)];
 
   try {
     const res = await prisma.$transaction(async (tx) => {

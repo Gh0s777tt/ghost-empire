@@ -6,6 +6,7 @@
 // reward without charging.
 import { prisma } from "@/lib/prisma";
 import { pickWeightedIndex } from "@/lib/economy";
+import { cryptoRng } from "@/lib/secure-rng";
 import { fireOutgoingWebhooks } from "@/lib/webhooks-out";
 import { currentTenantId } from "@/lib/tenant";
 
@@ -108,7 +109,8 @@ export async function spinWheel(userId: string): Promise<SpinResult> {
   if (!cfg.enabled) throw new WheelError("Koło Fortuny jest aktualnie wyłączone", 403);
   if (cfg.segments.length < 2) throw new WheelError("Koło nie jest skonfigurowane", 409);
 
-  const idx = pickWeightedIndex(cfg.segments.map((s) => s.weight), Math.random());
+  // CSPRNG — money path (grants rewardTokens); result must not be predictable from PRNG state.
+  const idx = pickWeightedIndex(cfg.segments.map((s) => s.weight), cryptoRng());
   const seg = cfg.segments[idx];
   const cost = cfg.costPerSpin;
 

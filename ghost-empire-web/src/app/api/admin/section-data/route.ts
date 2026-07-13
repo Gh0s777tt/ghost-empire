@@ -6,7 +6,7 @@
 // Returns the exact shapes the section manager components expect (mappings moved
 // here verbatim from the old admin/page.tsx server fetch).
 import { NextResponse } from "next/server";
-import { requireAdmin, requirePermission, requireAnyPermission } from "@/lib/admin";
+import { requireAdmin, requirePermission, requireAnyPermission, requirePlatformOwner } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getTwitchStreamerToken, getStreamlabsConnection } from "@/lib/platform-tokens";
 import { currentTenantId, getCurrentTenant, isFounderBrand } from "@/lib/tenant";
@@ -222,10 +222,17 @@ export async function GET(req: Request) {
     }
 
     case "twitch": {
+      // twitchEventSubscription / twitchEvent are singleton models (no tenantId), so their
+      // rows are shared across ALL portals — a sub-portal admin must not read another
+      // portal's subscriptions (type/status) or events (userId, tokensGranted). Gate those
+      // to the platform owner; a tenant admin still gets its own connection status via
+      // getTwitchStreamerToken(). Full per-tenant fix = add tenantId to these models (needs
+      // a gated prod db push) — deferred. Mirrors the 'alerts' scoping above.
+      const isOwner = (await requirePlatformOwner()).ok;
       const [streamer, subs, recent] = await Promise.all([
         getTwitchStreamerToken(),
-        prisma.twitchEventSubscription.findMany({ orderBy: { type: "asc" } }),
-        prisma.twitchEvent.findMany({ orderBy: { receivedAt: "desc" }, take: 10 }),
+        isOwner ? prisma.twitchEventSubscription.findMany({ orderBy: { type: "asc" } }) : [],
+        isOwner ? prisma.twitchEvent.findMany({ orderBy: { receivedAt: "desc" }, take: 10 }) : [],
       ]);
       return NextResponse.json({
         twitchEventSub: {
