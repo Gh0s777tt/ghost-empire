@@ -3,7 +3,7 @@
 Kuracja pomysłów na rozwój Ghost Empire (funkcje · narzędzia · wygląd · nowoczesna platforma), z mini-specami flagowców gotowymi do wdrożenia tym samym przepływem co dotychczasowe PR-y (branch → tsc/lint/test/build → PR). Powstał z sesji brainstormu 2026-06.
 
 > **Legenda dźwigni:** 🤖 czysty kod (zero kluczy) · 🔑 wymaga kluczy/kont · 🎨 wymaga kierunku wizualnego.
-> Powiązane: [ROADMAP](../ROADMAP.md) · [PLAN](../PLAN.md) · [ARCHITECTURE](ARCHITECTURE.md).
+> Powiązane: [ROADMAP](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/ROADMAP.md) · [PLAN](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/PLAN.md) · [ARCHITECTURE](ARCHITECTURE.md).
 
 ---
 

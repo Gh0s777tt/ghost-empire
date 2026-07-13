@@ -50,6 +50,10 @@
 # Coverage
 **/coverage/
 
+# Docs-as-code (generowane) — MkDocs build + TypeDoc API (regenerowane w CI)
+/site/
+/docs/api/
+
 # Backup / temp files
 *.bak
 *.tmp

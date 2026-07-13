@@ -1,0 +1,26 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "plugin": ["typedoc-plugin-markdown"],
+  "entryPoints": [
+    "src/lib/secure-rng.ts",
+    "src/lib/economy.ts",
+    "src/lib/gt-games.ts",
+    "src/lib/wheel.ts",
+    "src/lib/collectibles.ts",
+    "src/lib/economy-anomaly.ts",
+    "src/lib/companion-token.ts",
+    "src/lib/platform-tokens.ts",
+    "src/lib/ssrf-guard.ts",
+    "src/lib/moderation.ts"
+  ],
+  "out": "../docs/api",
+  "readme": "none",
+  "githubPages": false,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "hideBreadcrumbs": true,
+  "hidePageHeader": true,
+  "entryFileName": "index",
+  "fileExtension": ".md"
+}

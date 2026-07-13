@@ -45,7 +45,7 @@ Czysta matematyka ekonomii (payouty predykcji, tier battle passa, konwersja walu
 
 - **Auth.js v5** (next-auth 5, strategia *database*) — login przez Twitch / Discord / Google(→YouTube) / Kick.
 - Jeden `User` może mieć wiele `Connection` (po jednej na platformę). Łączenie kont: signed-cookie „link intent" w callbacku `signIn` (`lib/account-linking.ts`).
-- **Role:** `isAdmin` / `isModerator` (+ `modPermissions[]`) / `isDonator`. Admin po: fladze w DB, `ADMIN_DISCORD_ID`, lub **stałym mailu** (`isPermanentAdminEmail` w `auth.ts` — przeżywa reset bazy). Uprawnienia moda: [PERMISSIONS.md](../PERMISSIONS.md).
+- **Role:** `isAdmin` / `isModerator` (+ `modPermissions[]`) / `isDonator`. Admin po: fladze w DB, `ADMIN_DISCORD_ID`, lub **stałym mailu** (`isPermanentAdminEmail` w `auth.ts` — przeżywa reset bazy). Uprawnienia moda: [PERMISSIONS.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/PERMISSIONS.md).
 - Prywatność: login Google nie wycieka imienia (fallback do local-part maila).
 
 ---
@@ -143,4 +143,4 @@ Schemat (`prisma/schema.prisma`) ma **~100 modeli** (m.in. `ObsRule` — reguły
 
 ## 10. Dokąd dalej
 
-Plany i pomysły: [ROADMAP.md](../ROADMAP.md). Co zrobione: [CHANGELOG.md](../CHANGELOG.md). Zmienne: [ENV.md](ENV.md). API: [ENDPOINTS.md](ENDPOINTS.md). Podsystemy (kasyno/odds, marketplace, crony, rate-limit): [SUBSYSTEMS.md](SUBSYSTEMS.md). Bezpieczeństwo: [SECURITY.md](../SECURITY.md). Uprawnienia: [PERMISSIONS.md](../PERMISSIONS.md). Fazy: [PHASE2.md](../PHASE2.md) / [PHASE3.md](../PHASE3.md).
+Plany i pomysły: [ROADMAP.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/ROADMAP.md). Co zrobione: [CHANGELOG.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/CHANGELOG.md). Zmienne: [ENV.md](ENV.md). API: [ENDPOINTS.md](ENDPOINTS.md). Podsystemy (kasyno/odds, marketplace, crony, rate-limit): [SUBSYSTEMS.md](SUBSYSTEMS.md). Bezpieczeństwo: [SECURITY.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/SECURITY.md). Uprawnienia: [PERMISSIONS.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/PERMISSIONS.md). Fazy: [PHASE2.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/PHASE2.md) / [PHASE3.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/PHASE3.md).

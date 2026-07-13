@@ -260,4 +260,4 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-> Helpery auth: `requireAdmin()`, `requirePermission(p)`, `requirePlatformOwner()` (`@/lib/admin`), `verifyBotSecret()` (`@/lib/utils`), `isValidOverlayToken()` (`@/lib/alerts`). Bramki planu (SaaS): `requireTenantFeature(f)` / `featureGateResponse(f)` (`@/lib/entitlements`) — 403 gdy plan tenanta nie obejmuje funkcji. Uprawnienia moderatora: patrz [PERMISSIONS.md](../PERMISSIONS.md).
+> Helpery auth: `requireAdmin()`, `requirePermission(p)`, `requirePlatformOwner()` (`@/lib/admin`), `verifyBotSecret()` (`@/lib/utils`), `isValidOverlayToken()` (`@/lib/alerts`). Bramki planu (SaaS): `requireTenantFeature(f)` / `featureGateResponse(f)` (`@/lib/entitlements`) — 403 gdy plan tenanta nie obejmuje funkcji. Uprawnienia moderatora: patrz [PERMISSIONS.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/PERMISSIONS.md).

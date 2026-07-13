@@ -14,7 +14,7 @@
 [![License](https://img.shields.io/badge/licencja-proprietary-e50914)](LICENSE)
 [![Live](https://img.shields.io/badge/%F0%9F%8C%90%20live-empire--forge.com-3fcf8e)](https://www.empire-forge.com)
 
-**[🌐 Live](https://www.empire-forge.com)** · **[📚 Dokumentacja](docs/)** · **[🗺️ Roadmapa](ROADMAP.md)** · **[📜 Changelog](CHANGELOG.md)** · **[🔐 Bezpieczeństwo](SECURITY.md)**
+**[🌐 Live](https://www.empire-forge.com)** · **[📚 Dokumentacja](https://gh0s777tt.gitlab.io/ghost-empire/)** · **[🗺️ Roadmapa](ROADMAP.md)** · **[📜 Changelog](CHANGELOG.md)** · **[🔐 Bezpieczeństwo](SECURITY.md)**
 
 </div>
 

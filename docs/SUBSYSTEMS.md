@@ -87,4 +87,4 @@ wszystkich grach losowych. Akcje gry: `session` + `featureGate("casino")`; odczy
 
 ---
 
-> Szczegóły bezpieczeństwa: [../SECURITY.md](../SECURITY.md) · zmienne: [ENV.md](ENV.md) · model danych: [ARCHITECTURE.md](ARCHITECTURE.md) §9.
+> Szczegóły bezpieczeństwa: [https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/SECURITY.md](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/SECURITY.md) · zmienne: [ENV.md](ENV.md) · model danych: [ARCHITECTURE.md](ARCHITECTURE.md) §9.

@@ -1,0 +1,92 @@
+site_name: Ghost Empire — Dokumentacja
+site_description: Portal społeczności + ekosystem botów dla streamerów. Dokumentacja techniczna.
+site_url: https://gh0s777tt.gitlab.io/ghost-empire/
+repo_url: https://gitlab.com/Gh0s777tt/ghost-empire
+repo_name: Gh0s777tt/ghost-empire
+edit_uri: -/edit/main/docs/
+docs_dir: docs
+copyright: © 2026 Damian (Gh0s777tt) — wszelkie prawa zastrzeżone
+
+theme:
+  name: material
+  language: pl
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: red
+      toggle: { icon: material/weather-night, name: Przełącz na jasny }
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: red
+      toggle: { icon: material/weather-sunny, name: Przełącz na ciemny }
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  icon:
+    repo: fontawesome/brands/gitlab
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+plugins:
+  - search
+  - awesome-pages
+
+nav:
+  - Wprowadzenie: index.md
+  - Architektura:
+      - Przegląd: ARCHITECTURE.md
+      - Podsystemy money-critical: SUBSYSTEMS.md
+      - Tożsamość per-tenant: PER-TENANT-IDENTITY.md
+      - Row-Level Security: RLS.md
+  - API portalu (REST): ENDPOINTS.md
+  - Referencja API (lib): api/index.md
+  - Instalacja i konfiguracja:
+      - Zmienne środowiskowe: ENV.md
+      - Setup właściciela: OWNER-SETUP.md
+      - White-label (własna domena): WHITE-LABEL-SETUP.md
+      - Backup off-site: BACKUP.md
+  - Przewodniki:
+      - Sterowanie OBS: OBS-CONTROL.md
+      - Smart-lights (Govee): LIGHTING.md
+      - Raffle przez czat: RAFFLE-BOT.md
+  - Rozwój:
+      - Backlog pomysłów: IDEAS.md
+  - FAQ: faq.md
+  - Jakość:
+      - Raport audytu (2026-07-13): audit/AUDIT-2026-07-13.md
+  - Changelog ↗: https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/CHANGELOG.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/twitch
+      link: https://twitch.tv/gh0s77tt
+    - icon: fontawesome/brands/gitlab
+      link: https://gitlab.com/Gh0s777tt/ghost-empire
