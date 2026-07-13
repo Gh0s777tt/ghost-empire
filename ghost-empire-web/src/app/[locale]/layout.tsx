@@ -18,6 +18,7 @@ import TourProvider from "@/components/tour/SiteTour";
 import { HelpAssistant } from "@/components/HelpAssistant";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ClientErrorReporter } from "@/components/ClientErrorReporter";
+import { FontSwap } from "@/components/FontSwap";
 import { RegisterServiceWorker } from "@/components/pwa/RegisterServiceWorker";
 import { PresenceBeacon } from "@/components/PresenceBeacon";
 import { GOOGLE_FONTS_HREF } from "@/lib/widget-fonts";
@@ -75,9 +76,7 @@ export default async function LocaleLayout({
   // the catalog) and is only ever read by client components under /admin. Ship it there,
   // and keep it off every viewer page's payload. Server components use getTranslations()
   // (the full catalog, independent of this), so they are unaffected.
-  const hdrs = await headers();
-  const pathname = hdrs.get("x-pathname") ?? "";
-  const nonce = hdrs.get("x-nonce") ?? ""; // CSP nonce (set in proxy.ts) for the async-font swap
+  const pathname = (await headers()).get("x-pathname") ?? "";
   const isAdminRoute = /(^|\/)admin(\/|$)/.test(pathname);
   const clientMessages = isAdminRoute
     ? messages
@@ -132,20 +131,14 @@ export default async function LocaleLayout({
       <head>
         {/* Display fonts (Anton, Bebas Neue, Oswald…) for widgets/overlays/chat — not in
             next/font, loaded by literal family name. NON-render-blocking: fetched as
-            media="print" (low priority, doesn't block first paint), then swapped to "all"
-            once loaded via a nonce'd (CSP-safe) inline script. Viewer body text uses
-            next/font Inter, so it never waited on these. <noscript> keeps them with JS off. */}
+            media="print" (low priority, doesn't block first paint); <FontSwap/> (client)
+            flips it to "all" in a useEffect, post-hydration — no inline script / CSP nonce
+            and no hydration mismatch. Viewer body text uses next/font Inter, so it never
+            waited on these. <noscript> keeps them working with JS off. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link id="nx-display-fonts" href={GOOGLE_FONTS_HREF} rel="stylesheet" media="print" />
+        <link id="nx-display-fonts" href={GOOGLE_FONTS_HREF} rel="stylesheet" media="print" suppressHydrationWarning />
         <noscript><link href={GOOGLE_FONTS_HREF} rel="stylesheet" /></noscript>
-        <script
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html:
-              "var l=document.getElementById('nx-display-fonts');if(l){if(l.sheet){l.media='all'}else{l.onload=function(){l.media='all'}}}",
-          }}
-        />
       </head>
       <body style={brandStyle} className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-black text-zinc-200 antialiased min-h-screen flex flex-col`}>
         <a
@@ -176,6 +169,8 @@ export default async function LocaleLayout({
         <SpeedInsights />
         {/* Uncaught client errors → Vercel logs (Sentry-lite, no deps). */}
         <ClientErrorReporter />
+        {/* Non-blocking display-font swap (media print→all) after hydration. */}
+        <FontSwap />
         {/* PWA: register the offline/installable service worker (prod only). */}
         <RegisterServiceWorker />
         {/* Portal presence heartbeat (#767) — no UI; dormant without Redis. */}
