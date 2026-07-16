@@ -14,19 +14,20 @@ export const TRIAL_DAYS = 14;
 export const PREMIUM_MONTHS = [1, 3, 12] as const;
 export type PremiumMonths = (typeof PREMIUM_MONTHS)[number];
 
-/** Presentment currencies. MUST match the Stripe price `currency_options`. */
-export const BILLING_CURRENCIES = ["pln", "eur", "usd"] as const;
+/** Presentment currency. Ceny Elite w Stripe są TYLKO w PLN (decyzja produktowa 2026-07-16
+ *  — nowe ceny 49/129/429 nie mają currency_options EUR/USD), więc oferta jest PLN-only. */
+export const BILLING_CURRENCIES = ["pln"] as const;
 export type BillingCurrency = (typeof BILLING_CURRENCIES)[number];
 
 export function isBillingCurrency(c: unknown): c is BillingCurrency {
-  return c === "pln" || c === "eur" || c === "usd";
+  return c === "pln";
 }
 
-/** Display amounts in MINOR units (grosze/cents). Single source of truth for /premium. */
+/** Display amounts in MINOR units (grosze/cents). Single source of truth for /premium.
+ *  MUSZĄ zgadzać się co do grosza ze Stripe currency_options (checkout pobiera Price ID
+ *  z env STRIPE_PRICE_ELITE_{1,3,12}M) — patrz krok wdrożenia w komentarzu wydania. */
 export const PREMIUM_PRICE: Record<BillingCurrency, Record<PremiumMonths, number>> = {
-  pln: { 1: 1999, 3: 4999, 12: 14999 },
-  eur: { 1: 499, 3: 1199, 12: 3499 },
-  usd: { 1: 499, 3: 1299, 12: 3799 },
+  pln: { 1: 4900, 3: 12900, 12: 42900 }, // 49 / 129 / 429 zł (49,00 → 43,00 → 35,75/mies) — MUSI == Stripe
 };
 
 /** Locale-aware money formatting from minor units (1999 → "19,99 zł" / "PLN 19.99"). */
@@ -51,9 +52,7 @@ export function savingsPercent(currency: BillingCurrency, months: PremiumMonths)
   return Math.max(0, Math.round((1 - effective / monthly) * 100));
 }
 
-/** Default presentment currency for a UI locale. */
-export function currencyForLocale(locale: string): BillingCurrency {
-  if (locale.startsWith("pl")) return "pln";
-  if (locale.startsWith("en")) return "usd";
-  return "eur";
+/** Default presentment currency. Oferta PLN-only (zob. BILLING_CURRENCIES). */
+export function currencyForLocale(_locale: string): BillingCurrency {
+  return "pln";
 }

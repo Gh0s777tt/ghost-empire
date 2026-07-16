@@ -17,7 +17,7 @@ import {
 
 const FREE_FEATURES = ["fEconomy", "fShop", "fRanking", "fEvents", "fProfiles"] as const;
 const PREMIUM_FEATURES = ["pCasino", "pWheel", "pPredictions", "pOverlays", "pSongs", "pAi", "pBranding", "pWebhooks", "pFuture"] as const;
-const CURRENCY_LABEL: Record<BillingCurrency, string> = { pln: "PLN zł", eur: "EUR €", usd: "USD $" };
+const CURRENCY_LABEL: Record<BillingCurrency, string> = { pln: "PLN zł" };
 
 export function PremiumClient() {
   const t = useTranslations("premium");
@@ -56,21 +56,23 @@ export function PremiumClient() {
         <p className="text-zinc-400 text-sm max-w-2xl mx-auto">{t("subtitle")}</p>
       </header>
 
-      {/* Currency switcher */}
-      <div className="flex items-center justify-center gap-2" role="group" aria-label={t("currencyLabel")}>
-        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">{t("currencyLabel")}</span>
-        {BILLING_CURRENCIES.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setCurrency(c)}
-            aria-pressed={currency === c}
-            className={`px-3 py-1.5 border text-xs font-mono uppercase tracking-widest transition-colors ${currency === c ? "border-amber-500 bg-amber-500/15 text-amber-200" : "border-zinc-800 text-zinc-500 hover:text-white"}`}
-          >
-            {CURRENCY_LABEL[c]}
-          </button>
-        ))}
-      </div>
+      {/* Currency switcher — ukryty przy jednej walucie (oferta PLN-only) */}
+      {BILLING_CURRENCIES.length > 1 && (
+        <div className="flex items-center justify-center gap-2" role="group" aria-label={t("currencyLabel")}>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">{t("currencyLabel")}</span>
+          {BILLING_CURRENCIES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCurrency(c)}
+              aria-pressed={currency === c}
+              className={`px-3 py-1.5 border text-xs font-mono uppercase tracking-widest transition-colors ${currency === c ? "border-amber-500 bg-amber-500/15 text-amber-200" : "border-zinc-800 text-zinc-500 hover:text-white"}`}
+            >
+              {CURRENCY_LABEL[c]}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Pricing cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
