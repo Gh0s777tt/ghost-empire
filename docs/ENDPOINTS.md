@@ -88,6 +88,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/companion` | GET/PATCH/OPTIONS | Ghost Companion usera (create-on-read); PATCH = zmiana nazwy. **GET** przyjmuje sesję LUB bearer-token companiona (`Authorization: Bearer …`) — rozszerzenie czyta saldo cross-origin; CORS, tylko dane właściciela tokenu |
 | `…/api/presence` | GET/POST | Obecność na portalu (#767) — GET publiczny snapshot (online + próbka userów); POST heartbeat (zalogowany `u:<id>` server-side, gość `a:<anonId>` hex-walidowany). Dormant bez Upstash Redis (`{active:false}`) |
 | `…/api/companion/feed` | POST | Karmienie companiona GT (osobny endpoint akcji) |
+| `…/api/companion/tasks` | GET/OPTIONS | **Read-only** dzienne questy usera na dziś (`{date, tasks:[{id,text,textEn,target,reward,bonusReward,progress,done,claimed}], claimable}`); sesja LUB bearer-token companiona (== tenant), CORS, **nie tworzy** wierszy UserTask (w przeciwieństwie do strony /quests) |
+| `…/api/companion/season` | GET/OPTIONS | **Read-only** aktywny sezon + postęp usera (`{season:{number,name,totalTiers,xpPerTier,endsAt}\|null, progress:{xp,tier,premium,xpIntoTier,xpToNextTier}}`); sesja LUB bearer-token, CORS, **nie tworzy** sezonu (create-on-read pominięte) |
 | `…/api/assistant` | session + plan `ai` | Asystent pomocy („?" na każdej stronie) — wymaga zalogowania; degraduje się gdy brak planu/klucza AI |
 | `…/api/trivia` | GET/POST | Trivia/quiz (widz, #523) — aktywne pytania + moje odpowiedzi; POST = odpowiedź za GT (poprawna ukryta do czasu) |
 | `…/api/sound-rewards` | GET/POST | GT→dźwięki (widz, #505) — aktywny katalog + saldo; POST = wykup dźwięku (atomowy spend → alert) |

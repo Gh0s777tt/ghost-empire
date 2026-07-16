@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Added
+
+- **Companion: read-only endpointy `/api/companion/tasks` + `/api/companion/season`** — rozszerzenie NX Companion czyta teraz dzienne questy usera (progress/done/claimed na dziś, `claimable`) oraz postęp battle-passa (aktywny sezon + tier/xp/premium + xp do następnego tiera) cross-origin przez bearer-token companiona (LUB sesję same-origin). Multi-tenant (tenant rozwiązany PRZED auth; token musi być zmintowany na tym samym portalu — jak `/api/companion`), CORS `*`, `force-dynamic`. **Czysto read-only** — w przeciwieństwie do strony `/quests` NIE tworzą wierszy `UserTask`, i NIE robią create-on-read sezonu (odpytują aktywny; brak → `{season:null}`). Odblokowuje kafle questów/sezonu w overlayu companiona. Docs: `docs/ENDPOINTS.md`. Bez db push (tylko odczyt istniejących modeli). Zielone: tsc + eslint.
+
 ### Fixed
 
 - **Ceny subskrypcji: nowy cennik PLN 49 / 129 / 429 zł, oferta PLN-only** — env `STRIPE_PRICE_ELITE_{1,3,12}M` wskazywał na stare ceny (19,99 / 49,99 / 149,99 zł); przepięty na nowe Stripe Price ID (49 zł/mies · 129 zł/3 mies · 429 zł/rok — utworzone w Stripe 2026-07-10). `premium.ts` zsynchronizowany do 4900/12900/42900 (grosze). Nowe ceny Elite w Stripe są **tylko w PLN** (bez currency_options EUR/USD) → oferta stała się **PLN-only**: `BILLING_CURRENCIES=["pln"]`, `currencyForLocale`→`pln`, przełącznik walut w `PremiumClient` ukryty przy jednej walucie, `CURRENCY_LABEL` bez EUR/USD. `premium.test.ts` zaktualizowany (perMonth 4900/4300/3575, savings 0/12/27 — zweryfikowane arytmetycznie). Wymaga przepięcia env w Vercel na nowe Price ID (poza kodem). Bez db push. Zielone: tsc + arytmetyka.
