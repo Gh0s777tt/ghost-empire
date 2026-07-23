@@ -105,15 +105,16 @@ export async function POST(req: Request) {
       // Loyalty perk: account level + prestige shave a little off the price.
       const price = discountedPrice(item.price, user.level, user.prestige);
 
+      // Currency-aware: CHIPS items charge the FREE casino chips (never touch GT/totalSpent);
+      // GT items charge Ghost Tokens as before. A CHIPS item must be a cosmetic (no market value) —
+      // this is what keeps the casino's chips from ever buying anything of real value.
+      const isChips = item.currency === "CHIPS";
       const userUpdate = await tx.user.updateMany({
-        where: { id: userId, tokens: { gte: price } },
-        data: {
-          tokens: { decrement: price },
-          totalSpent: { increment: price },
-        },
+        where: isChips ? { id: userId, chips: { gte: price } } : { id: userId, tokens: { gte: price } },
+        data: isChips ? { chips: { decrement: price } } : { tokens: { decrement: price }, totalSpent: { increment: price } },
       });
       if (userUpdate.count === 0) {
-        throw new ShopError("Za mało Ghost Tokens", 402);
+        throw new ShopError(isChips ? "Za mało żetonów" : "Za mało Ghost Tokens", 402);
       }
 
       if (item.stock !== -1) {
@@ -135,6 +136,7 @@ export async function POST(req: Request) {
           type: "spend",
           amount: -price,
           reason: `shop:${item.name}`,
+          currency: isChips ? "CHIPS" : "GT",
           status: isDigital ? "completed" : "pending",
         },
       });
@@ -154,14 +156,15 @@ export async function POST(req: Request) {
 
       const fresh = await tx.user.findUnique({
         where: { id: userId },
-        select: { tokens: true, username: true, displayName: true, image: true },
+        select: { tokens: true, chips: true, username: true, displayName: true, image: true },
       });
 
       return {
         ok: true,
         itemName: item.name,
         spent: price,
-        newBalance: fresh?.tokens ?? 0,
+        currency: isChips ? "CHIPS" : "GT",
+        newBalance: (isChips ? fresh?.chips : fresh?.tokens) ?? 0,
         deliveryPending: !isDigital,
         // Internal-only fields used after the transaction for alert dispatch
         _actor: {

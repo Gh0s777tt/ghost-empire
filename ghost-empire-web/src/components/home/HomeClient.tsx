@@ -369,14 +369,16 @@ function GuestView({ topUsers, stats: portalStats }: { topUsers: HomeTopUser[]; 
         >
           {brandName}
         </h1>
-        <p className="text-zinc-400 text-lg mb-4 max-w-xl mx-auto">
+        <p className="text-zinc-400 text-lg mb-4 max-w-xl mx-auto animate-fade-in-up delay-100">
           {/* Platform brands (E-Forge / founder) are universal — don't name a single
               streamer in the hero; a streamer's own portal keeps the %owner% line (#763). */}
           {t(isPlatformBrand ? "heroSubtitlePlatform" : "heroSubtitle")}
         </p>
         {/* Portal presence (#767) — live "N online now"; hides itself when dormant/empty */}
-        <div className="flex justify-center mb-6"><OnlineNowBadge /></div>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex justify-center mb-6 animate-fade-in-up delay-200"><OnlineNowBadge /></div>
+        {/* Staggered hero entrance (reuses globals.css animate-fade-in-up + delay-* ; LCP logo/h1
+            stay instant; reduced-motion forces delayed els visible). */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center animate-fade-in-up delay-300">
           <button
             onClick={() => signIn()}
             className="px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-bold tracking-widest uppercase transition-all text-sm clip-tag"
@@ -405,7 +407,7 @@ function GuestView({ topUsers, stats: portalStats }: { topUsers: HomeTopUser[]; 
 
       {/* Stats teaser — real per-portal numbers (#782/A4) */}
       {stats.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-fade-in-up delay-400">
           {stats.map((s) => (
             <div key={s.label} className="border border-zinc-800 bg-zinc-950/60 p-4 text-center clip-corner">
               <div className="font-display text-3xl text-red-500">{s.value}</div>

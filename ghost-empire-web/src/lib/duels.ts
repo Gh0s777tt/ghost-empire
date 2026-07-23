@@ -31,17 +31,17 @@ export async function createDuel(opts: {
 }): Promise<DuelOutcome> {
   const { platform, challengerId, challengerName, opponentId, opponentName, bet } = opts;
   if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) {
-    return { ok: false, message: `@${challengerName} stawka musi być ${fmt(MIN_BET)}-${fmt(MAX_BET)} GT.` };
+    return { ok: false, message: `@${challengerName} stawka musi być ${fmt(MIN_BET)}-${fmt(MAX_BET)} żetonów.` };
   }
   if (opponentId && opponentId === challengerId) {
     return { ok: false, message: `@${challengerName} nie pojedynkujesz się sam ze sobą. 🙃` };
   }
   try {
     const now = new Date();
-    const challenger = await prisma.user.findUnique({ where: { id: challengerId }, select: { tokens: true, tenantId: true } });
-    if (!challenger) return { ok: false, message: `@${challengerName} połącz konto przez !portal, by walczyć o GT.` };
-    if (challenger.tokens < bet) {
-      return { ok: false, message: `@${challengerName} masz za mało GT na taką stawkę (${fmt(bet)}).` };
+    const challenger = await prisma.user.findUnique({ where: { id: challengerId }, select: { chips: true, tenantId: true } });
+    if (!challenger) return { ok: false, message: `@${challengerName} połącz konto przez !portal, by walczyć o żetony.` };
+    if (challenger.chips < bet) {
+      return { ok: false, message: `@${challengerName} masz za mało żetonów na taką stawkę (${fmt(bet)}).` };
     }
     // One open challenge per challenger at a time (anti-spam).
     const existing = await prisma.duel.findFirst({
@@ -67,8 +67,8 @@ export async function createDuel(opts: {
     return {
       ok: true,
       message: opponentId
-        ? `⚔️ @${opponentName} — @${challengerName} wyzywa Cię na pojedynek o ${fmt(bet)} GT! Wpisz !accept by stanąć do walki (2 min).`
-        : `⚔️ @${challengerName} szuka pojedynku o ${fmt(bet)} GT! Pierwszy z !accept staje do walki (2 min).`,
+        ? `⚔️ @${opponentName} — @${challengerName} wyzywa Cię na pojedynek o ${fmt(bet)} żetonów! Wpisz !accept by stanąć do walki (2 min).`
+        : `⚔️ @${challengerName} szuka pojedynku o ${fmt(bet)} żetonów! Pierwszy z !accept staje do walki (2 min).`,
     };
   } catch (e) {
     log.error("createDuel failed", e, { challengerId });
@@ -116,16 +116,16 @@ export async function acceptDuel(opts: {
 
       // Charge both stakes — a throw here rolls back any partial charge.
       const chargedChallenger = await tx.user.updateMany({
-        where: { id: fresh.challengerId, tokens: { gte: fresh.bet } },
-        data: { tokens: { decrement: fresh.bet }, totalSpent: { increment: fresh.bet } },
+        where: { id: fresh.challengerId, chips: { gte: fresh.bet } },
+        data: { chips: { decrement: fresh.bet } },
       });
       if (chargedChallenger.count === 0) {
         await tx.duel.update({ where: { id: fresh.id }, data: { status: "cancelled" } });
         throw new DuelError("challenger_broke");
       }
       const chargedAccepter = await tx.user.updateMany({
-        where: { id: accepterId, tokens: { gte: fresh.bet } },
-        data: { tokens: { decrement: fresh.bet }, totalSpent: { increment: fresh.bet } },
+        where: { id: accepterId, chips: { gte: fresh.bet } },
+        data: { chips: { decrement: fresh.bet } },
       });
       if (chargedAccepter.count === 0) throw new DuelError("accepter_broke");
 
@@ -136,13 +136,13 @@ export async function acceptDuel(opts: {
 
       await tx.user.update({
         where: { id: winnerId },
-        data: { tokens: { increment: winnerTakes }, totalEarned: { increment: winnerTakes } },
+        data: { chips: { increment: winnerTakes } },
       });
       await tx.transaction.createMany({
         data: [
-          { userId: fresh.challengerId, type: "spend", amount: -fresh.bet, reason: "duel", status: "completed" },
-          { userId: accepterId, type: "spend", amount: -fresh.bet, reason: "duel", status: "completed" },
-          { userId: winnerId, type: "earn", amount: winnerTakes, reason: "duel:win", status: "completed" },
+          { userId: fresh.challengerId, type: "spend", amount: -fresh.bet, reason: "duel", currency: "CHIPS", status: "completed" },
+          { userId: accepterId, type: "spend", amount: -fresh.bet, reason: "duel", currency: "CHIPS", status: "completed" },
+          { userId: winnerId, type: "earn", amount: winnerTakes, reason: "duel:win", currency: "CHIPS", status: "completed" },
         ],
       });
       await tx.duel.update({
@@ -169,7 +169,7 @@ export async function acceptDuel(opts: {
           userId: result.winnerId,
           type: "system",
           title: "⚔️ Pojedynek wygrany!",
-          message: `Pokonałeś @${loserName} i zgarnąłeś ${fmt(result.winnerTakes)} GT.`,
+          message: `Pokonałeś @${loserName} i zgarnąłeś ${fmt(result.winnerTakes)} żetonów.`,
           icon: "🏆",
           link: "/profile",
         },
@@ -184,14 +184,14 @@ export async function acceptDuel(opts: {
 
     return {
       ok: true,
-      message: `⚔️ @${result.challengerName} vs @${accepterName} o ${fmt(result.bet)} GT → 🏆 wygrywa @${winnerName} i bierze ${fmt(result.winnerTakes)} GT!`,
+      message: `⚔️ @${result.challengerName} vs @${accepterName} o ${fmt(result.bet)} żetonów → 🏆 wygrywa @${winnerName} i bierze ${fmt(result.winnerTakes)} żetonów!`,
     };
   } catch (e) {
     if (e instanceof DuelError) {
       if (e.message === "challenger_broke") {
-        return { ok: false, message: `@${accepterName} wyzywający nie ma już GT na stawkę — pojedynek odwołany.` };
+        return { ok: false, message: `@${accepterName} wyzywający nie ma już żetonów na stawkę — pojedynek odwołany.` };
       }
-      if (e.message === "accepter_broke") return { ok: false, message: `@${accepterName} masz za mało GT na tę stawkę.` };
+      if (e.message === "accepter_broke") return { ok: false, message: `@${accepterName} masz za mało żetonów na tę stawkę.` };
       return { ok: false, message: `@${accepterName} wyzwanie już nieaktualne.` };
     }
     log.error("acceptDuel failed", e, { accepterId });

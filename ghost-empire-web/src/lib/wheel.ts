@@ -20,11 +20,11 @@ export type WheelSegment = {
 // Sensible starter wheel — house-favoured but with a juicy jackpot.
 export const DEFAULT_SEGMENTS: WheelSegment[] = [
   { label: "Pudło", weight: 40, rewardTokens: 0, color: "#3f3f46" },
-  { label: "50 GT", weight: 25, rewardTokens: 50, color: "#6366f1" },
-  { label: "100 GT", weight: 18, rewardTokens: 100, color: "#8b5cf6" },
-  { label: "250 GT", weight: 10, rewardTokens: 250, color: "#ec4899" },
-  { label: "500 GT", weight: 5, rewardTokens: 500, color: "#f59e0b" },
-  { label: "JACKPOT 1000 GT", weight: 2, rewardTokens: 1000, color: "#10b981" },
+  { label: "50 🪙", weight: 25, rewardTokens: 50, color: "#6366f1" },
+  { label: "100 🪙", weight: 18, rewardTokens: 100, color: "#8b5cf6" },
+  { label: "250 🪙", weight: 10, rewardTokens: 250, color: "#ec4899" },
+  { label: "500 🪙", weight: 5, rewardTokens: 500, color: "#f59e0b" },
+  { label: "JACKPOT 1000 🪙", weight: 2, rewardTokens: 1000, color: "#10b981" },
 ];
 
 export class WheelError extends Error {
@@ -117,22 +117,22 @@ export async function spinWheel(userId: string): Promise<SpinResult> {
   const { spinId, balance, actorName, actorImage } = await prisma.$transaction(async (tx) => {
     // Charge atomically — only succeeds if the user can afford the spin.
     const charged = await tx.user.updateMany({
-      where: { id: userId, tokens: { gte: cost } },
-      data: { tokens: { decrement: cost }, totalSpent: { increment: cost } },
+      where: { id: userId, chips: { gte: cost } },
+      data: { chips: { decrement: cost } },
     });
-    if (charged.count === 0) throw new WheelError("Za mało Ghost Tokens na zakręcenie", 402);
+    if (charged.count === 0) throw new WheelError("Za mało żetonów na zakręcenie", 402);
 
     await tx.transaction.create({
-      data: { userId, type: "spend", amount: -cost, reason: "wheel:spin", status: "completed" },
+      data: { userId, type: "spend", amount: -cost, reason: "wheel:spin", currency: "CHIPS", status: "completed" },
     });
 
     if (seg.rewardTokens > 0) {
       await tx.user.update({
         where: { id: userId },
-        data: { tokens: { increment: seg.rewardTokens }, totalEarned: { increment: seg.rewardTokens } },
+        data: { chips: { increment: seg.rewardTokens } },
       });
       await tx.transaction.create({
-        data: { userId, type: "earn", amount: seg.rewardTokens, reason: `wheel:win:${seg.label}`.slice(0, 200), status: "completed" },
+        data: { userId, type: "earn", amount: seg.rewardTokens, reason: `wheel:win:${seg.label}`.slice(0, 200), currency: "CHIPS", status: "completed" },
       });
     }
 
@@ -143,12 +143,12 @@ export async function spinWheel(userId: string): Promise<SpinResult> {
 
     const fresh = await tx.user.findUnique({
       where: { id: userId },
-      select: { tokens: true, username: true, displayName: true, image: true },
+      select: { chips: true, username: true, displayName: true, image: true },
     });
 
     return {
       spinId: spin.id,
-      balance: fresh?.tokens ?? 0,
+      balance: fresh?.chips ?? 0,
       actorName: fresh?.displayName || fresh?.username || "Anon",
       actorImage: fresh?.image ?? null,
     };
@@ -159,10 +159,10 @@ export async function spinWheel(userId: string): Promise<SpinResult> {
     const tid = await currentTenantId();
     fireOutgoingWebhooks("wheel_win", {
       title: "🎡 Wygrana w Kole Fortuny!",
-      message: `${actorName} wygrał ${seg.rewardTokens} GT (${seg.label})`,
+      message: `${actorName} wygrał ${seg.rewardTokens} żetonów (${seg.label})`,
       actorName,
       amount: seg.rewardTokens,
-      amountLabel: "GT",
+      amountLabel: "żetony",
     }, tid);
   }
 

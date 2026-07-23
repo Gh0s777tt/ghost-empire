@@ -35,7 +35,7 @@ export async function gatherRecapData(tenantId: string | null): Promise<RecapDat
 
   const [byType, gt, messages, chatters, supporters] = await Promise.all([
     prisma.streamAlert.groupBy({ by: ["type"], where: { ...win, ...tw(tenantId) }, _count: { _all: true } }).catch(() => []),
-    prisma.transaction.aggregate({ _sum: { amount: true }, where: { type: "earn", createdAt: { gte: start }, ...(tenantId ? { user: { tenantId: tenantId } } : {}) } }).catch(() => ({ _sum: { amount: null } })),
+    prisma.transaction.aggregate({ _sum: { amount: true }, where: { type: "earn", currency: "GT", createdAt: { gte: start }, ...(tenantId ? { user: { tenantId: tenantId } } : {}) } }).catch(() => ({ _sum: { amount: null } })),
     prisma.chatFeedMessage.count({ where: { ...win, ...tw(tenantId) } }).catch(() => 0),
     prisma.chatFeedMessage.groupBy({ by: ["username"], where: { ...win, ...tw(tenantId) }, _count: { _all: true }, orderBy: { _count: { username: "desc" } }, take: 5 }).catch(() => []),
     prisma.streamAlert.groupBy({ by: ["actorName"], where: { type: "donation", ...win, ...tw(tenantId) }, _sum: { amount: true }, orderBy: { _sum: { amount: "desc" } }, take: 5 }).catch(() => []),

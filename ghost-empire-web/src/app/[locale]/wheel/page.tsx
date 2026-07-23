@@ -2,6 +2,7 @@
 import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { WheelPageClient } from "@/components/wheel/WheelPageClient";
+import { GamblingGate } from "@/components/kasyno/GamblingGate";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,9 @@ export default async function WheelPage() {
       <Header />
 
       <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-6">
-        <WheelPageClient isAuthenticated={!!session?.user?.id} />
+        <GamblingGate>
+          <WheelPageClient isAuthenticated={!!session?.user?.id} />
+        </GamblingGate>
       </main>
     </div>
   );

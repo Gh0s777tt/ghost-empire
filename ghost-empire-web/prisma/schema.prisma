@@ -123,6 +123,10 @@ model User {
   tokens      Int @default(0)
   totalEarned Int @default(0)
   totalSpent  Int @default(0)
+  // Casino "Chips" — a SEPARATE, FREE-ONLY, non-purchasable, non-cashable currency for the
+  // casino/wheel/duels/heist. Legally severs chance from real value: chips can't be bought
+  // (no donation/sub path) and can't buy real-value shop items. See docs/CHIPS-CASINO.md.
+  chips       Int @default(0)
 
   // Referrals — own shareable code + who invited this user (set once on claim)
   referralCode String? @unique
@@ -486,6 +490,10 @@ model Transaction {
   reason     String
   multiplier Float  @default(1.0)
 
+  // Which currency moved: "GT" (real-economy) or "CHIPS" (free casino currency). Kept separate so
+  // anomaly-detection / weekly ranking count only real GT, never chips. See docs/CHIPS-CASINO.md.
+  currency   String @default("GT")
+
   // External payment id (e.g. "paymedia:<payment_id>") — unique, so a concurrent
   // webhook retry loses with P2002 instead of double-crediting. NULL for
   // non-payment transactions (Postgres allows many NULLs in a unique column).
@@ -522,6 +530,9 @@ model ShopItem {
   description String  @db.Text
   category    String // "games" | "skins" | "subs" | "cosmetic" | "experience"
   price       Int
+  // Which currency buys this item: "GT" (real-value items — direct purchase, no chance) or
+  // "CHIPS" (casino cosmetics only, no market value). See docs/CHIPS-CASINO.md.
+  currency    String @default("GT")
 
   imageUrl   String?
   imageEmoji String? @default("🎁")

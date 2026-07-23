@@ -7,12 +7,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import HowItWorks from "@/components/HowItWorks";
 import { ErrorState } from "@/components/EmptyState";
-import { emitBalance } from "@/lib/balance-bus";
+// Wheel balance is CHIPS (żetony), NOT the GT shown in the Header — must NOT drive the GT
+// balance-bus. Local no-op keeps existing calls harmless. (docs/CHIPS-CASINO.md — Faza 5)
+const emitBalance = (balance?: number): void => { void balance; };
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { apiGet } from "@/lib/api-client";
 import { Link } from "@/i18n/navigation";
 import { WheelGraphic, rotationForIndex, type WheelSeg } from "@/components/WheelGraphic";
-import { useTenantBranding } from "@/components/TenantBranding";
 
 const SPIN_MS = 5000; // matches WheelGraphic transition
 
@@ -46,7 +47,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
   const [result, setResult] = useState<{ label: string; reward: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const rotationRef = useRef(0);
-  const { tokenSymbol } = useTenantBranding();
+  const chipSymbol = "🪙"; // koło używa żetonów (chips), nie symbolu GT tenanta (docs/CHIPS-CASINO.md)
 
   const load = useCallback(async () => {
     try {
@@ -137,7 +138,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
                   {spinning ? t("spinning") : t("spinCost", { cost: fmt(state.costPerSpin) })}
                 </button>
                 <div className="text-sm text-zinc-400">
-                  {t("balance")} <span className="font-bold text-white">{fmt(state.balance ?? 0)} {tokenSymbol}</span>
+                  {t("balance")} <span className="font-bold text-white">{fmt(state.balance ?? 0)} {chipSymbol}</span>
                   {!canAfford && <span className="text-rose-400 ms-2">{t("cantAfford")}</span>}
                 </div>
               </>
@@ -155,7 +156,7 @@ export function WheelPageClient({ isAuthenticated }: { isAuthenticated: boolean 
                 {state.recentWins.map((w) => (
                   <li key={w.id} className="flex items-center justify-between text-sm rounded-md bg-zinc-950 border border-zinc-900 px-3 py-1.5">
                     <span className="text-zinc-300 font-medium truncate">{w.name}</span>
-                    <span className="text-emerald-400 font-bold">+{fmt(w.reward)} {tokenSymbol}</span>
+                    <span className="text-emerald-400 font-bold">+{fmt(w.reward)} {chipSymbol}</span>
                   </li>
                 ))}
               </ul>

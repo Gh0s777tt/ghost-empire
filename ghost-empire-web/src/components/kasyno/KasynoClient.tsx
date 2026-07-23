@@ -10,10 +10,12 @@ import HowItWorks from "@/components/HowItWorks";
 import { CommandHelp } from "@/components/CommandHelp";
 import InfoTip from "@/components/InfoTip";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
-import { emitBalance } from "@/lib/balance-bus";
+// Casino balance is CHIPS (żetony), NOT the GT shown in the Header — so it must NOT drive the
+// GT balance-bus. Local no-op keeps existing setBalance(...) calls intact without polluting the
+// Header's GT balance. (docs/CHIPS-CASINO.md — Faza 5)
+const emitBalance = (balance?: number): void => { void balance; };
 import { sfxEnabled, sfxToggle, sfxPlay } from "@/lib/sfx";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
-import { useTenantBranding } from "@/components/TenantBranding";
 import { Link } from "@/i18n/navigation";
 import {
   RouletteWheel, SlotReels, CoinFlip, DiceTrack, CrashRocket, PlinkoBoard,
@@ -26,7 +28,7 @@ import {
 export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthenticated: boolean; initialBalance: number | null }) {
   const t = useTranslations("kasyno");
   const fmt = useLocaleFmt();
-  const { tokenSymbol } = useTenantBranding();
+  const chipSymbol = "🪙"; // kasyno używa żetonów (chips), nie symbolu GT tenanta (docs/CHIPS-CASINO.md)
   const gameLabel: Record<string, string> = { slots: t("gameSlots"), coinflip: t("gameCoinflip"), roulette: t("gameRoulette"), dice: t("gameDice"), crash: t("gameCrash"), plinko: t("gamePlinko"), mines: t("gameMines"), blackjack: t("gameBlackjack"), hilo: t("gameHilo"), scratch: t("gameScratch") };
   const [balance, setBalance] = useState<number | null>(initialBalance);
   // Stake as a STRING so the field can be cleared and retyped freely ("" → invalid,
@@ -38,6 +40,22 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
   const [selected, setSelected] = useState<Game | "mines" | "blackjack" | "hilo" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chipsBusy, setChipsBusy] = useState(false);
+  // Claim the FREE daily casino chips (chips only — never bought with money). docs/CHIPS-CASINO.md.
+  const claimDailyChips = useCallback(async () => {
+    if (chipsBusy) return;
+    setChipsBusy(true);
+    setError(null);
+    try {
+      const d = await apiPost<{ ok: true; amount: number; newBalance: number }>("/api/casino/daily-chips", {});
+      setBalance(d.newBalance);
+      sfxPlay("click");
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Nie udało się odebrać żetonów");
+    } finally {
+      setChipsBusy(false);
+    }
+  }, [chipsBusy]);
   const [lb, setLb] = useState<Leaderboard | null>(null);
   const [rouletteNum, setRouletteNum] = useState("");
   const [diceTarget, setDiceTarget] = useState(50);
@@ -243,7 +261,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <div className="w-full rounded-xl border border-amber-700/60 bg-gradient-to-r from-amber-950/50 via-zinc-950 to-zinc-950 px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-display text-lg tracking-wider text-amber-200">💰 {t("jackpot")}</span>
-                <span className="font-mono text-2xl font-black text-amber-300 tabular-nums" style={{ textShadow: "0 0 18px rgba(245,193,66,.45)" }}>{fmt(jackpot)} {tokenSymbol}</span>
+                <span className="font-mono text-2xl font-black text-amber-300 tabular-nums" style={{ textShadow: "0 0 18px rgba(245,193,66,.45)" }}>{fmt(jackpot)} {chipSymbol}</span>
               </div>
               <p className="text-[11px] text-zinc-500 mt-1">{t("jackpotHint")}</p>
             </div>
@@ -332,7 +350,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
                     textShadow: reveal.net > 0 ? "0 0 22px rgba(52,211,153,.45)" : undefined,
                   }}
                 >
-                  {reveal.net > 0 ? `+${fmt(reveal.net)} ${tokenSymbol} 🎉` : reveal.net < 0 ? `−${fmt(-reveal.net)} ${tokenSymbol}` : `±0 ${tokenSymbol}`}
+                  {reveal.net > 0 ? `+${fmt(reveal.net)} ${chipSymbol} 🎉` : reveal.net < 0 ? `−${fmt(-reveal.net)} ${chipSymbol}` : `±0 ${chipSymbol}`}
                 </div>
               </>
             ) : stage ? (
@@ -359,6 +377,12 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
             <button onClick={() => { setBetInput(String(Math.max(10, Math.min(100_000, balance ?? 10)))); sfxPlay("click"); }} disabled={busy || (balance ?? 0) < 10}
               className="px-2.5 py-1 rounded-full text-xs font-extrabold border border-amber-700 bg-amber-900/20 text-amber-400 hover:border-amber-500 transition-all disabled:opacity-40">
               MAX
+            </button>
+            {/* FREE daily chips — the casino's only currency source (chips, never bought). docs/CHIPS-CASINO.md */}
+            <button onClick={() => void claimDailyChips()} disabled={chipsBusy}
+              title="Odbierz darmowe żetony (500/dzień)"
+              className="px-2.5 py-1 rounded-full text-xs font-extrabold border border-emerald-700 bg-emerald-900/20 text-emerald-400 hover:border-emerald-500 transition-all disabled:opacity-40">
+              {chipsBusy ? "…" : "🪙 Darmowe żetony"}
             </button>
             {/* sound toggle (synthesized SFX, persisted) */}
             <button
@@ -504,7 +528,7 @@ export function KasynoClient({ isAuthenticated, initialBalance }: { isAuthentica
           </div>
           )}
 
-          <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} {tokenSymbol}</span></div>
+          <div className="text-sm text-zinc-400">{t("balance")} <span className="font-bold text-white">{fmt(balance ?? 0)} {chipSymbol}</span></div>
         </>
       )}
 

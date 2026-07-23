@@ -99,7 +99,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/getting-started` | GET | Flagi ukończenia checklisty „Pierwsze kroki" na home (#503 — tylko odczyt) |
 
 ## Kasyno GT (`gt-games`) — session, bramka planu `casino`
-> Mini-gry GT na stronie (`/kasyno`). Akcje gry: **session** + `featureGate("casino")` (403 gdy plan tenanta < pro). Odczyty puli/rankingu — **public**.
+> Mini-gry na stronie (`/kasyno`). **Waluta: żetony (`chips`)** — darmowe, niekupowalne (de-ryzykowanie prawne, `docs/CHIPS-CASINO.md`), NIE Ghost Tokens. Akcje gry: **session** + `featureGate("casino")` (403 gdy plan tenanta < pro). Odczyty puli/rankingu — **public**.
 
 | Trasa | Metoda | Po co |
 |---|---|---|
@@ -108,7 +108,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/gt-games/hilo/start` · `guess` · `cashout` | POST | Hi-Lo — start, zgadywanie wyżej/niżej, wypłata mnożnika |
 | `…/api/gt-games/mines/start` · `reveal` · `cashout` | POST | Mines — start, odkrywanie pól, wypłata |
 | `…/api/gt-games/history` | GET | Historia rozgrań usera |
-| `…/api/gt-games/jackpot` | GET | **public** — stan progresywnego jackpota (seed + Redis) |
+| `…/api/gt-games/jackpot` | GET | **public** — stan progresywnego jackpota (seed + Redis, pula żetonowa) |
+| `…/api/casino/daily-chips` | GET/POST | **Darmowe żetony kasyna** — 500/dzień (stan + odbiór, idempotentne per-dzień jak daily-bonus). Źródło waluty `chips` — patrz `docs/CHIPS-CASINO.md` |
 | `…/api/gt-games/leaderboard` | GET | **public** — największe wygrane + top netto (30 dni, scope per tenant) |
 
 ## Onboarding / Billing (SaaS) — session

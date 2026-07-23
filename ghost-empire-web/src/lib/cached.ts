@@ -65,7 +65,9 @@ export const getCachedWeeklyRanking = (tenantId: string | null = null) =>
       const since = new Date(Date.now() - 7 * 86_400_000);
       const grouped = await prisma.transaction.groupBy({
         by: ["userId"],
-        where: { type: "earn", amount: { gt: 0 }, createdAt: { gte: since }, ...(tenantId ? { user: { tenantId } } : {}) },
+        // currency:"GT" ONLY — casino chips earns (currency:"CHIPS") must NOT count toward the real
+        // GT weekly ranking (else winning chips → GT weekly reward → real value; docs/CHIPS-CASINO.md).
+        where: { type: "earn", currency: "GT", amount: { gt: 0 }, createdAt: { gte: since }, ...(tenantId ? { user: { tenantId } } : {}) },
         _sum: { amount: true },
         orderBy: { _sum: { amount: "desc" } },
         take: 100,
