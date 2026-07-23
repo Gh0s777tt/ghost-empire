@@ -15,6 +15,7 @@ a change is not finished until code, tests **and** docs are all green.
 | Changelog | `CHANGELOG.md` | *What shipped, when, and under which PR* | hand-written; gated by `docs:check` |
 | Roadmap | `ROADMAP.md` | *What's planned / in-progress / done* | hand-written |
 | Readme | `README.md` | *The 60-second pitch + entry links* | hand-written |
+| **User-facing & legal copy** | `src/messages/*.json` (**14 locales**) rendered by the `welcome` / `about` / `terms` (regulamin) / `privacy` pages | *The pitch, feature descriptions & legal terms users actually read in-app* | hand-written; **every locale in sync** |
 | Guides & reference (the "wiki") | `docs/*.md` | *Architecture, endpoints, env, runbooks, FAQ* | hand-written |
 | Website (docs site) | `docs/` → **MkDocs Material** (`mkdocs.yml`) | *Published docs at `gh0s777tt.gitlab.io/ghost-empire`* | `mkdocs build` (CI → GitLab Pages) |
 | Code/API reference | `docs/api/**` | *Money-critical `src/lib/*` public API* | `npm run docs:api` (**TypeDoc**, generated — never hand-edit) |
@@ -45,12 +46,24 @@ When you ship a PR `(#NNN)`, walk this checklist and update **every** surface th
 
 Chore/merge/revert commits that genuinely need no changelog line may opt out with `[skip-changelog]` in the commit subject. Use sparingly. Docs-only PRs still get a `CHANGELOG` line by convention.
 
+## 📣 User-facing & legal copy must never drift (mandatory)
+The section above keeps the **developer** docs honest. This one keeps the **product's own pages** honest — the copy real users read. Whenever a change alters *what the product does for a user* (a new/removed feature, a changed economy or currency, a new page, a new price, an age-gate, anything affecting players' rights, money, or data), update these in the **same PR**:
+
+1. **Welcome / landing** (`welcome` namespace) + **About** (`about` namespace) — keep the pitch and feature list truthful: add/rename features, kill stale claims (e.g. don't advertise a "1 PLN = 100 GT" rate that no longer exists).
+2. **Regulamin / Terms** (`terms`) + **Privacy** (`privacy`) — update the legal terms whenever a change touches users' rights, money, data, or age-gating. Example already shipped: the casino runs on a **separate, free, non-purchasable, non-cashable "Żetony/Chips" currency**, is **18+**, and is entertainment — **not** gambling for money (`terms` §3). **Bump `terms.lastUpdated`** in every locale when the regulamin changes.
+3. **FAQ + docs site** (`docs/faq.md`, `docs/index.md`) — answer the new "how does X work?" and reflect the feature in the overview.
+4. **All 14 locales stay in sync** — this copy lives in `src/messages/<locale>.json` (`pl, en, de, es, fr, id, it, ja, ko, pt, ru, uk, zh, ar`). A key a page references **must** exist in **every** locale or the build breaks — add it everywhere. **PL is authoritative** (Polish operator, Polish law governs the regulamin), EN careful, the rest faithful; **flag non-PL/EN legal wording for native/lawyer review**. A one-off script that surgically inserts a key into all 14 files (raw-text, `JSON.stringify` values, idempotent) beats 14 hand-edits — see the pattern used for `terms` §3.
+5. **PDF handbooks** (`public/wiki/*.pdf`) — flag for regen when the product materially changes (see the surfaces table).
+
+Rule of thumb: **if a user would notice the change, a user-facing surface must describe it.** Legal wording that changes users' rights or money should also get a lawyer's eye.
+
 ## Definition of Done (a change is "done" only when all are true)
 - [ ] Code compiles and the feature works (verified against the real flow, not just types).
 - [ ] Tests cover the new/changed behavior and the full verify suite is green (see gates below).
 - [ ] Every **new/changed function, script, endpoint, env var, and dependency/technology** is documented — **what it does and _why_ it exists** — on the right surface above.
 - [ ] Public/exported API and non-obvious logic carry code-level docs (see next section).
 - [ ] `CHANGELOG` / `ROADMAP` / affected `docs/` updated; `docs:check` green; PDF-regen flagged if needed.
+- [ ] **User-facing behavior change?** The product's own pages reflect it — `welcome`/`about`/`terms`/`privacy` (all 14 locales) + `docs/faq.md` (see "User-facing & legal copy" above).
 
 ## Code-level documentation (write for the first-time reader)
 The goal: someone opening a file cold should understand **what this code does and why**, without

@@ -22,6 +22,20 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 const CHANGELOG = [
   {
+    date: "2026-07-23",
+    title: "Kasyno przechodzi na darmowe Żetony 🪙",
+    items: [
+      "Kasyno, koło fortuny, pojedynki i napady grają teraz na osobnej, w pełni DARMOWEJ walucie — Żetonach (🪙). Żetonów nie da się kupić, wpłacić ani wypłacić, nie mają wartości pieniężnej i nie kupią rzeczy o wartości rynkowej (za żetony tylko kosmetyki). Twoje Ghost Tokens (GT) zostają czyste — służą wyłącznie do sklepu i nagród. To rozrywka, nie hazard na pieniądze: wejście wymaga potwierdzenia pełnoletności (18+), a darmowe żetony odbierzesz codziennie w kasynie.",
+    ],
+  },
+  {
+    date: "2026-07-23",
+    title: "Rozszerzenia przeglądarkowe: NX Companion i NX Chat Tools 🧩",
+    items: [
+      "Dwa dodatki do przeglądarki przenoszą portal wprost na streamy: NX Companion pokazuje saldo GT, questy i drop-code'y jako overlay na Twitch/Kick, a NX Chat Tools daje narzędzia moderacji i emotki 7TV/BTTV/FFZ z paletą komend ⌘K. Podgląd i status publikacji w sklepach znajdziesz na stronie /rozszerzenia.",
+    ],
+  },
+  {
     date: "2026-06-11",
     title: "Wersja dla innych streamerów: komplet 🏷️",
     items: [
