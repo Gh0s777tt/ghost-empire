@@ -17,6 +17,7 @@ import { WatchStreakCard } from "@/components/WatchStreakCard";
 import { sfxPlay } from "@/lib/sfx";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { OnlineNowBadge } from "@/components/OnlineNowBadge";
+import { ExtensionsSection } from "@/components/extensions/ExtensionsSection";
 import type { Session } from "next-auth";
 
 // Shapes mirror the prisma selects in app/[locale]/page.tsx (minimal fields the
@@ -222,6 +223,9 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
           </div>
         </div>
       )}
+
+      {/* Browser-extension promo (#extensions) — awareness that NX Companion / NX Chat Tools exist */}
+      <ExtensionsSection compact />
     </div>
   );
 }
@@ -437,6 +441,9 @@ function GuestView({ topUsers, stats: portalStats }: { topUsers: HomeTopUser[]; 
           ))}
         </div>
       </div>
+
+      {/* Browser-extension promo — guests see the ecosystem exists before signing up */}
+      <ExtensionsSection compact />
     </div>
   );
 }
