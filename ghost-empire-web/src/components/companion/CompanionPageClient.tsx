@@ -12,6 +12,7 @@ import { apiGet, apiPost, apiPatch, ApiError } from "@/lib/api-client";
 import { emitBalance } from "@/lib/balance-bus";
 import { companionProgress, COMPANION_STAGES, FEED_MIN, FEED_MAX } from "@/lib/companion";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { ExtensionHint } from "@/components/extensions/ExtensionHint";
 
 type CompanionData = { name: string; xp: number; lastFedAt: string | null; balance: number };
 
@@ -106,6 +107,9 @@ export function CompanionPageClient({ isAuthenticated }: { isAuthenticated: bool
           onCancelEdit={() => setEditing(false)} onNameDraft={setNameDraft}
         />
       )}
+
+      {/* Contextual promo — NX Companion mirrors this page's job as a Twitch/Kick overlay */}
+      <div className="mt-8"><ExtensionHint extId="nx-companion" /></div>
     </div>
   );
 }

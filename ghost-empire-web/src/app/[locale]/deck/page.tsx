@@ -6,6 +6,7 @@
 import { getTranslations } from "next-intl/server";
 import { requireAdminOrModerator } from "@/lib/admin";
 import { DeckClient } from "@/components/deck/DeckClient";
+import { ExtensionHint } from "@/components/extensions/ExtensionHint";
 import { TransitionLink as Link } from "@/components/TransitionLink";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,8 @@ export default async function DeckPage() {
     <div className="min-h-screen bg-black">
       <main className="max-w-xl mx-auto px-4 pb-16 pt-5">
         <DeckClient />
+        {/* NX Chat Tools mirrors the deck's job on the chat side (mod actions + emotes) */}
+        <ExtensionHint extId="nx-chat-tools" className="mt-6" />
       </main>
     </div>
   );
