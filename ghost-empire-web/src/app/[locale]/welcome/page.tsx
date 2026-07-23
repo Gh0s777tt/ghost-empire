@@ -6,7 +6,7 @@ import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { getCurrentTenant, isFounderBrand } from "@/lib/tenant";
-import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Tv, Radio } from "lucide-react";
+import { ArrowRight, Coins, Gift, Trophy, MessageSquare, Puzzle, Tv, Radio } from "lucide-react";
 import { YoutubeIcon } from "@/components/BrandIcons";
 import { SocialLinksRow } from "@/components/SocialLinks";
 
@@ -29,6 +29,7 @@ export default async function WelcomePage() {
     { icon: Gift, color: "#10b981", title: t("hlRewards"), desc: t("hlRewardsDesc") },
     { icon: Trophy, color: "#FFD700", title: t("hlCompete"), desc: t("hlCompeteDesc") },
     { icon: MessageSquare, color: "#8b5cf6", title: t("hlBot"), desc: t("hlBotDesc") },
+    { icon: Puzzle, color: "#f59e0b", title: t("hlExt"), desc: t("hlExtDesc") },
   ];
 
   return (

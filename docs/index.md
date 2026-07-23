@@ -5,6 +5,9 @@ Techniczna dokumentacja **[Ghost Empire](https://gitlab.com/Gh0s777tt/ghost-empi
 !!! tip "Nowy tutaj?"
     Zacznij od **[Architektury](ARCHITECTURE.md)** (jak to działa), a potem **[Instalacji](ENV.md)**. Uruchomienie krok-po-kroku jest w [README repozytorium](https://gitlab.com/Gh0s777tt/ghost-empire#-szybki-start).
 
+!!! note "Dwie waluty i rozszerzenia"
+    Portal ma **dwie rozdzielone waluty**: **Ghost Tokens (GT)** — realna ekonomia (sklep, nagrody) — oraz **Żetony (🪙 Chips)** — darmowa, niekupowalna i niespieniężalna waluta **wyłącznie do gier w kasynie** (18+, rozrywka, nie hazard na pieniądze; runbook: [CHIPS-CASINO](CHIPS-CASINO.md)). Ekosystem uzupełniają dwa **rozszerzenia przeglądarkowe** — **NX Companion** i **NX Chat Tools** (strona [`/rozszerzenia`](https://ghost-empire-web.vercel.app/rozszerzenia)).
+
 ## Mapa dokumentacji
 
 <div class="grid cards" markdown>
