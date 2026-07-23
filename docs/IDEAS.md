@@ -85,7 +85,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 ---
 
 ## 🔌 Ekosystem rozszerzeń + real-time (program 2026-07-19)
-Powiązane: [`PLAN-EKOSYSTEM.md`](../../../PLAN-EKOSYSTEM.md) (master-plan), backlogi rozszerzeń
+Powiązane: [`PLAN-EKOSYSTEM.md`](PLAN-EKOSYSTEM.md) (master-plan), backlogi rozszerzeń
 `nx-companion/IDEAS.md` i `nx-chat-tools/IDEAS.md`. Pozycje portalowe z tego programu:
 
 - **Push zamiast pollingu (Supabase Realtime/SSE)** — 🌐 L — saldo GT, ukończenie questa, tier-up sezonu i „drop live" jako zdarzenia push do `nx-companion` (dziś odpytuje). **Dlaczego:** natychmiastowy UX + eliminacja pętli po stronie klienta. **Bramka:** dotyka prod-Supabase.

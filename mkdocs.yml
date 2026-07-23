@@ -80,6 +80,8 @@ nav:
   - Rozwój:
       - Utrzymanie i operacje (DevOps): MAINTENANCE.md
       - Backlog pomysłów: IDEAS.md
+      - Master-plan ekosystemu: PLAN-EKOSYSTEM.md
+      - Runbook: kasyno na żetonach: CHIPS-CASINO.md
   - FAQ: faq.md
   - Jakość:
       - Raport audytu (2026-07-13): audit/AUDIT-2026-07-13.md
