@@ -6,7 +6,10 @@
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Check, ChevronRight, Puzzle } from "lucide-react";
-import { EXTENSIONS, type Extension, type Bi } from "@/lib/extensions";
+import { EXTENSIONS, fillBranding, type Extension, type Bi } from "@/lib/extensions";
+import { useTenantBranding } from "@/components/TenantBranding";
+
+type Brand = { tokenName: string; tokenSymbol: string };
 
 const COPY = {
   heading: { pl: "Rozszerzenia przeglądarkowe", en: "Browser extensions" },
@@ -93,7 +96,7 @@ function StoreButtons({ ext, locale }: { ext: Extension; locale: string }) {
   );
 }
 
-function ExtensionCard({ ext, locale, index }: { ext: Extension; locale: string; index: number }) {
+function ExtensionCard({ ext, locale, brand, index }: { ext: Extension; locale: string; brand: Brand; index: number }) {
   return (
     <div
       className="group relative border border-zinc-800 bg-zinc-950/60 clip-corner p-5 flex flex-col gap-4
@@ -120,13 +123,13 @@ function ExtensionCard({ ext, locale, index }: { ext: Extension; locale: string;
         </div>
       </div>
 
-      <p className="relative text-sm text-zinc-400 leading-relaxed">{pick(ext.tagline, locale)}</p>
+      <p className="relative text-sm text-zinc-400 leading-relaxed">{fillBranding(pick(ext.tagline, locale), brand)}</p>
 
       <ul className="relative space-y-1.5">
         {ext.features.map((f, i) => (
           <li key={i} className="flex items-start gap-2 text-xs text-zinc-300">
             <Check className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: ext.accent }} />
-            <span>{pick(f, locale)}</span>
+            <span>{fillBranding(pick(f, locale), brand)}</span>
           </li>
         ))}
       </ul>
@@ -146,6 +149,8 @@ type Props = {
 
 export function ExtensionsSection({ compact = false, className = "" }: Props) {
   const locale = useLocale();
+  const { tokenName, tokenSymbol } = useTenantBranding();
+  const brand: Brand = { tokenName, tokenSymbol };
   return (
     <section className={className} aria-label={pick(COPY.heading, locale)}>
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -169,7 +174,7 @@ export function ExtensionsSection({ compact = false, className = "" }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {EXTENSIONS.map((ext, i) => (
-          <ExtensionCard key={ext.id} ext={ext} locale={locale} index={i} />
+          <ExtensionCard key={ext.id} ext={ext} locale={locale} brand={brand} index={i} />
         ))}
       </div>
     </section>

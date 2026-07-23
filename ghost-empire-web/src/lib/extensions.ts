@@ -2,11 +2,22 @@
 // Single source of truth for the browser-extension promo (tiles on /rozszerzenia + home
 // + the companion info panel). Bilingual inline (PL/EN) so it needs NO locale-file changes.
 //
+// WHITE-LABEL: copy must NOT bake in the founder currency. Use the placeholders %token%
+// (full currency name → tenant.tokenName) and %sym% (symbol → tenant.tokenSymbol); the
+// render layer (ExtensionsSection / ExtensionHint / /rozszerzenia) fills them per tenant
+// via useTenantBranding()/getCurrentTenant(). The extension NAMES (NX Companion, NX Chat
+// Tools) are the actual E-Forge product names and stay literal on every portal.
+//
 // Not published to the stores yet (store submission needs the owner's Chrome/AMO accounts):
 // leave chromeUrl/firefoxUrl = null → the card renders a "Wkrótce / Coming soon" badge.
 // When published, just fill the URLs here and the cards activate themselves — no other edits.
 
 export type Bi = { pl: string; en: string };
+
+/** Fill white-label placeholders — `%token%` → tenant currency name, `%sym%` → symbol. */
+export function fillBranding(s: string, b: { tokenName: string; tokenSymbol: string }): string {
+  return s.replaceAll("%token%", b.tokenName).replaceAll("%sym%", b.tokenSymbol);
+}
 
 export type Extension = {
   id: string;
@@ -27,11 +38,11 @@ export const EXTENSIONS: Extension[] = [
     emoji: "🪟",
     name: "NX Companion",
     tagline: {
-      pl: "Twoje Ghost Tokens, questy i drop-code'y podczas oglądania streama.",
-      en: "Your Ghost Tokens, quests and drop-codes while you watch the stream.",
+      pl: "Twoje %token%, questy i drop-code'y podczas oglądania streama.",
+      en: "Your %token%, quests and drop-codes while you watch the stream.",
     },
     features: [
-      { pl: "Saldo GT i kompan jako overlay na Twitchu/Kicku", en: "GT balance & companion overlay on Twitch/Kick" },
+      { pl: "Saldo %sym% i kompan jako overlay na Twitchu/Kicku", en: "%sym% balance & companion overlay on Twitch/Kick" },
       { pl: "Odbiór dziennych questów bez wchodzenia na portal", en: "Claim daily quests without opening the portal" },
       { pl: "Drop-code'y i sezon (battle pass) w locie", en: "Drop-codes and season (battle pass) on the fly" },
     ],

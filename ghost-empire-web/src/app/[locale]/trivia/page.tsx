@@ -2,13 +2,18 @@
 import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { TriviaClient } from "@/components/trivia/TriviaClient";
+import { getCurrentTenant } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Quiz",
-  description: "Odpowiadaj na pytania quizu i zgarniaj Ghost Tokeny za poprawne odpowiedzi.",
-};
+// White-label: trivia rewards this portal's own currency (tenant.tokenName).
+export async function generateMetadata() {
+  const { tokenName } = await getCurrentTenant();
+  return {
+    title: "Quiz",
+    description: `Odpowiadaj na pytania quizu i zgarniaj ${tokenName} za poprawne odpowiedzi.`,
+  };
+}
 
 export default async function TriviaPage() {
   const session = await auth();

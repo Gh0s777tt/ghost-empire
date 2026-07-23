@@ -3,13 +3,16 @@
 import { Header } from "@/components/Header";
 import { WikiView } from "@/components/wiki/WikiView";
 import { localeAlternates } from "@/i18n/metadata";
+import { getCurrentTenant } from "@/lib/tenant";
 
-export function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
-  return params.then(({ locale }) => ({
-    title: "Wiki — Ghost Empire / E-Forge",
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const { name } = await getCurrentTenant();
+  return {
+    title: `Wiki — ${name}`,
     description: "Kompletny przewodnik po platformie: funkcje dla widzów, panel streamera krok po kroku, komendy czatu i dokumentacja dla developerów.",
     alternates: localeAlternates("/wiki", locale),
-  }));
+  };
 }
 
 export default function WikiPage() {

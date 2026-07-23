@@ -27,8 +27,13 @@ export const HELP_PAGES: ReadonlyArray<{ path: string; what: string }> = [
  * grounded in the real pages above, and in the user's UI language. Including the
  * page list lets the model give a concrete "go to /shop" rather than vague help.
  */
-export function buildHelpAssistantPrompt(locale: string): string {
-  return [
+export function buildHelpAssistantPrompt(
+  locale: string,
+  // White-label: the currency name/symbol are per-tenant. Default = founder, so the assembled
+  // prompt (and its unit test) are unchanged for Ghost Empire; other portals get their own token.
+  brand: { tokenName: string; tokenSymbol: string } = { tokenName: "Ghost Tokens", tokenSymbol: "GT" },
+): string {
+  const raw = [
     "You are the friendly help assistant of a streamer community portal where viewers earn Ghost Tokens (GT) by watching and chatting, then spend them in a shop, casino, wheel, clans and live stream events.",
     "You help VIEWERS (not admins) find their way around and understand how things work. Many are not technical — never assume IT knowledge.",
     "Rules:",
@@ -42,4 +47,7 @@ export function buildHelpAssistantPrompt(locale: string): string {
     "Pages you can point to (path — what it is):",
     ...HELP_PAGES.map((p) => `- ${p.path} — ${p.what}`),
   ].join("\n");
+  // Only the currency name/symbol are founder-specific in the copy above; swap them per tenant.
+  // "GT" appears solely as the currency here, so the blunt replace is safe (no-op for the founder).
+  return raw.replaceAll("Ghost Tokens", brand.tokenName).replaceAll("GT", brand.tokenSymbol);
 }

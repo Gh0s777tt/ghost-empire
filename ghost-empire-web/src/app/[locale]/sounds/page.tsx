@@ -2,13 +2,18 @@
 import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { SoundsClient } from "@/components/sounds/SoundsClient";
+import { getCurrentTenant } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Dźwięki na streamie",
-  description: "Wydaj Ghost Tokens, by odpalić dźwięk na żywo na streamie.",
-};
+// White-label: sounds cost this portal's own currency (tenant.tokenName), not the founder's.
+export async function generateMetadata() {
+  const { tokenName } = await getCurrentTenant();
+  return {
+    title: "Dźwięki na streamie",
+    description: `Wydaj ${tokenName}, by odpalić dźwięk na żywo na streamie.`,
+  };
+}
 
 export default async function SoundsPage() {
   const session = await auth();

@@ -6,7 +6,9 @@ import { KasynoClient } from "@/components/kasyno/KasynoClient";
 import { GamblingGate } from "@/components/kasyno/GamblingGate";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Kasyno GT", description: "Sloty i coinflip za Ghost Tokens. Graj rozsądnie." };
+// Casino runs on free "Żetony/Chips" (🪙) — a fixed, non-branded casino currency, same on every
+// portal — so this copy is universal (no tenant token name) and must NOT say "GT/Ghost Tokens".
+export const metadata = { title: "Kasyno", description: "Gry na darmowe żetony 🪙 — sloty, ruletka, blackjack, mines i więcej. 18+, graj rozsądnie." };
 
 export default async function KasynoPage() {
   const session = await auth();

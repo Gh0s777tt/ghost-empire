@@ -9,6 +9,19 @@ a change is not finished until code, tests **and** docs are all green.
 - **Repo root** holds the top-level docs: `CHANGELOG.md`, `ROADMAP.md`, `README.md`, `SECURITY.md`, plus `docs/` (see the map below).
 - Sibling project `ghost-empire-chat` is the bot (separate repo/runtime).
 
+## 🏢 Platform model — E-Forge (base) ⇄ Ghost Empire (founder tenant) (mandatory)
+**E-Forge is the platform** — the white-label base *from which every other portal is created*, so any streamer can spin up and fully brand their own. **Ghost Empire is the founder tenant** — the owner's own portal (`slug: "ghost-empire"`, `isFounderBrand`), running **on** E-Forge with everything unlocked. Both are the **same codebase**; Ghost Empire is just the first, customised tenant. This has hard consequences for every change:
+
+- **Every feature is a *platform* feature, never a "Ghost Empire" feature.** If you add or change something for Ghost Empire, it must work — and be reachable/configurable — for **every** tenant. There is no "just for my portal" path: land it for one ⇒ it lands for all. The same goes for **docs, regulaminy, FAQ and marketing copy** — a change to the product's rules/economy is a change for all portals, so update the shared (placeholder-driven) copy, not a Ghost-Empire-only version. (The one deliberately founder-voiced surface is the `about` page news feed.)
+- **Never hardcode founder-specific values in shared, user-facing surfaces.** Brand name, currency name/symbol, Discord/socials, owner handle, colours, logo, background are **per-tenant config** (`Tenant` model — `name`/`shortName`, `tokenName`/`tokenSymbol`, `brandColor`, `logoUrl`, `socialLinks`, `ownerHandle`, …). Read them through:
+  - `useTenantBranding()` (client → `tokenName`, `tokenSymbol`, `brandName`, `isPlatformBrand`),
+  - `getCurrentTenant()` / `currentTenantId()` (server, `src/lib/tenant.ts`),
+  - the `%tokenName%` / `%gt%` / `%brandShort%` / `%owner%` placeholders in `src/messages/*.json`,
+  - the tenant's `socialLinks` (with the `SOCIALS` array in `SocialLinks.tsx` as the **documented founder fallback**).
+  A literal `"Ghost Tokens"`, `"GT"`, `"Ghost Empire"`, `gh0s77tt`, or `discord.gg/deAPJ9Ym2F` in a **page/component/metadata/OG-image/email/bot output a tenant's viewer can see** is a **white-label leak** — fix it. (Admin-panel `placeholder=` hints, `x || "Ghost Tokens"` fallbacks, and seed data are legit defaults, not leaks.)
+  - **Static `export const metadata` can't be tenant-aware** — when a title/description would otherwise bake in a brand or token name, convert the page to `generateMetadata({ params })` + `getCurrentTenant()`.
+- **When unsure "founder-only or platform?" → it's platform.** Gate genuinely founder-only behaviour behind `isFounderBrand` / `isPlatformBrand`, never behind a slug check sprinkled around the codebase. See `docs/PER-TENANT-IDENTITY.md` and `docs/WHITE-LABEL-SETUP.md`.
+
 ### Documentation surfaces (know where each kind of change lands)
 | Surface | Where | Source of truth for | Regenerate / publish |
 |---|---|---|---|

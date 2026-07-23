@@ -2,13 +2,18 @@
 import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { CompanionPageClient } from "@/components/companion/CompanionPageClient";
+import { getCurrentTenant } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Widmowy Kompan",
-  description: "Karm swojego widmowego kompana Ghost Tokenami i patrz, jak ewoluuje.",
-};
+// White-label: feeding the companion costs this portal's own currency (tenant.tokenName).
+export async function generateMetadata() {
+  const { tokenName } = await getCurrentTenant();
+  return {
+    title: "Widmowy Kompan",
+    description: `Karm swojego widmowego kompana za ${tokenName} i patrz, jak ewoluuje.`,
+  };
+}
 
 export default async function CompanionPage() {
   const session = await auth();
