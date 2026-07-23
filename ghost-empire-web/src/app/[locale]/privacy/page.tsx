@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { Header } from "@/components/Header";
+import { getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import { Shield } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -23,12 +24,23 @@ const S7 = ["s7b1", "s7b2", "s7b3", "s7b4", "s7b5", "s7b6", "s7b7", "s7b8"];
 
 export default async function PrivacyPage() {
   const t = await getTranslations("privacy");
+  // White-label: contact goes to THIS portal's Discord (socialLinks); founder invite only on the
+  // founder brand. The i18n child bakes the founder URL, so we ignore it and render a derived label.
+  const tenant = await getCurrentTenant();
+  const discordUrl =
+    tenant.socialLinks?.find((s) => s.platform === "discord")?.url ??
+    (isFounderBrand(tenant) ? "https://discord.gg/deAPJ9Ym2F" : null);
   const richTags = {
     b: (c: ReactNode) => <strong className="text-white">{c}</strong>,
     em: (c: ReactNode) => <em>{c}</em>,
-    discord: (c: ReactNode) => (
-      <a href="https://discord.gg/deAPJ9Ym2F" target="_blank" rel="noreferrer" className="text-red-400 hover:underline">{c}</a>
-    ),
+    discord: () =>
+      discordUrl ? (
+        <a href={discordUrl} target="_blank" rel="noreferrer" className="text-red-400 hover:underline">
+          {discordUrl.replace(/^https?:\/\//, "")}
+        </a>
+      ) : (
+        <Link href="/support" className="text-red-400 hover:underline">{tenant.name}</Link>
+      ),
   };
   // Dynamic-key helper (messages aren't statically typed here).
   const tr = (key: string): ReactNode =>

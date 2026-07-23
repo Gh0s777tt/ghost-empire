@@ -11,6 +11,7 @@ import { aiChat, type ChatMessage } from "@/lib/ai";
 import { getIntegrationConfig } from "@/lib/integrations";
 import { requireTenantFeature } from "@/lib/entitlements";
 import { buildHelpAssistantPrompt } from "@/lib/help-assistant";
+import { getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -70,7 +71,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "ai-unavailable" }, { status: 503 });
   }
 
-  const system = buildHelpAssistantPrompt(typeof locale === "string" && locale ? locale : "pl");
+  // White-label: feed THIS portal's currency naming into the help prompt, not the founder's.
+  const { tokenName, tokenSymbol } = await getCurrentTenant();
+  const system = buildHelpAssistantPrompt(typeof locale === "string" && locale ? locale : "pl", { tokenName, tokenSymbol });
   const reply = await aiChat([{ role: "system", content: system }, ...history], {
     maxTokens: 500,
     temperature: 0.4,

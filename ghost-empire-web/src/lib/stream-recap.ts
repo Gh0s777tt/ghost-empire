@@ -69,7 +69,7 @@ export function buildRecapPrompt(data: RecapData, locale: string): { system: str
     `New subs: ${data.subs}`,
     `Donations: ${data.donations}`,
     `New follows: ${data.follows}`,
-    `Ghost Tokens earned by viewers: ${data.gtEarned}`,
+    `Tokens earned by viewers: ${data.gtEarned}`,
     `Chat messages: ${data.messages}`,
     `Top chatters: ${data.topChatters.map((c) => `${c.name} (${c.count})`).join(", ") || "—"}`,
     `Top supporters: ${data.topSupporters.map((s) => `${s.name} (${s.amount})`).join(", ") || "—"}`,

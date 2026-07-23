@@ -6,9 +6,10 @@ import { GamblingGate } from "@/components/kasyno/GamblingGate";
 
 export const dynamic = "force-dynamic";
 
+// Wheel runs on free "Żetony/Chips" (🪙) — non-branded casino currency, same on every portal.
 export const metadata = {
   title: "Koło Fortuny",
-  description: "Wydaj Ghost Tokens, zakręć kołem i wygraj nagrody GT.",
+  description: "Zakręć Kołem Fortuny na darmowe żetony 🪙 i wygraj więcej. 18+, graj rozsądnie.",
 };
 
 export default async function WheelPage() {

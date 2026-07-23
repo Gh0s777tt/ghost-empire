@@ -6,7 +6,8 @@
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
-import { EXTENSIONS, type Bi } from "@/lib/extensions";
+import { EXTENSIONS, fillBranding, type Bi } from "@/lib/extensions";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 const COPY = {
   eyebrow: { pl: "Jest na to rozszerzenie", en: "There's an extension for this" },
@@ -21,6 +22,7 @@ function pick(b: Bi, locale: string): string {
 /** `extId` must match an EXTENSIONS[].id; renders nothing if unknown (fail-safe). */
 export function ExtensionHint({ extId, className = "" }: { extId: string; className?: string }) {
   const locale = useLocale();
+  const { tokenName, tokenSymbol } = useTenantBranding();
   const ext = EXTENSIONS.find((e) => e.id === extId);
   if (!ext) return null;
   const unpublished = !ext.chromeUrl && !ext.firefoxUrl;
@@ -39,7 +41,7 @@ export function ExtensionHint({ extId, className = "" }: { extId: string; classN
         </p>
         <p className="text-sm font-bold text-white truncate">{ext.name}</p>
         <p className="text-xs text-zinc-400 truncate">
-          {pick(ext.tagline, locale)}
+          {fillBranding(pick(ext.tagline, locale), { tokenName, tokenSymbol })}
           {unpublished && <span className="ms-1 text-zinc-500">· {pick(COPY.soon, locale)}</span>}
         </p>
       </div>

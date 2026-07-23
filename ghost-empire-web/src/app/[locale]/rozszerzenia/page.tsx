@@ -5,19 +5,25 @@
 import { getLocale } from "next-intl/server";
 import { Header } from "@/components/Header";
 import { ExtensionsSection } from "@/components/extensions/ExtensionsSection";
+import { getCurrentTenant } from "@/lib/tenant";
+import { fillBranding } from "@/lib/extensions";
 import { ShieldCheck, Zap, Puzzle } from "lucide-react";
 
-export const metadata = {
-  title: "Rozszerzenia przeglądarkowe",
-  description: "NX Companion i NX Chat Tools — portal Ghost Empire prosto na streamach Twitch i Kick.",
-};
+// White-label: the description names THIS portal's brand, not the founder's.
+export async function generateMetadata() {
+  const { name } = await getCurrentTenant();
+  return {
+    title: "Rozszerzenia przeglądarkowe",
+    description: `NX Companion i NX Chat Tools — ${name} prosto na streamach Twitch i Kick.`,
+  };
+}
 
 const T = {
   kicker: { pl: "Ekosystem", en: "Ecosystem" },
   title: { pl: "Rozszerzenia przeglądarkowe", en: "Browser extensions" },
   lead: {
-    pl: "Dwa lekkie dodatki do przeglądarki, które przenoszą portal wprost na streamy — saldo GT, questy i narzędzia moderacji bez przełączania kart.",
-    en: "Two lightweight browser add-ons that bring the portal onto the stream itself — GT balance, quests and mod tools without tab-switching.",
+    pl: "Dwa lekkie dodatki do przeglądarki, które przenoszą portal wprost na streamy — saldo %sym%, questy i narzędzia moderacji bez przełączania kart.",
+    en: "Two lightweight browser add-ons that bring the portal onto the stream itself — %sym% balance, quests and mod tools without tab-switching.",
   },
   info: [
     {
@@ -40,8 +46,8 @@ const T = {
       icon: "puzzle",
       title: { pl: "Część ekosystemu", en: "Part of the ecosystem" },
       body: {
-        pl: "Te same konta i te same Ghost Tokens co na portalu — rozszerzenia to nakładka, nie osobny świat.",
-        en: "Same accounts and same Ghost Tokens as the portal — the extensions are a layer, not a separate world.",
+        pl: "Te same konta i te same %token% co na portalu — rozszerzenia to nakładka, nie osobny świat.",
+        en: "Same accounts and same %token% as the portal — the extensions are a layer, not a separate world.",
       },
     },
   ],
@@ -51,7 +57,9 @@ const ICONS = { zap: Zap, shield: ShieldCheck, puzzle: Puzzle } as const;
 
 export default async function ExtensionsPage() {
   const locale = await getLocale();
-  const pick = (b: { pl: string; en: string }) => (locale.startsWith("pl") ? b.pl : b.en);
+  const { tokenName, tokenSymbol } = await getCurrentTenant();
+  const pick = (b: { pl: string; en: string }) =>
+    fillBranding(locale.startsWith("pl") ? b.pl : b.en, { tokenName, tokenSymbol });
 
   return (
     <div className="min-h-screen bg-black">

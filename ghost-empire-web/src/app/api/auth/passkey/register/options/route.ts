@@ -9,6 +9,7 @@ import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { webauthnContext, RP_NAME, REG_CHALLENGE_COOKIE } from "@/lib/webauthn";
+import { getCurrentTenant } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +23,10 @@ export async function POST(req: Request) {
     prisma.passkey.findMany({ where: { userId: session.user.id }, select: { credentialId: true, transports: true } }).catch(() => []),
   ]);
 
+  // White-label: the OS "Save a passkey for …" dialog shows THIS portal's brand, not the founder's.
+  const { name } = await getCurrentTenant();
   const options = await generateRegistrationOptions({
-    rpName: RP_NAME,
+    rpName: name || RP_NAME,
     rpID,
     // v13: userID is a Uint8Array (was a string in v9).
     userID: new TextEncoder().encode(session.user.id),

@@ -3,13 +3,18 @@ import { auth } from "@/lib/auth";
 import { requirePermission } from "@/lib/admin";
 import { Header } from "@/components/Header";
 import { AuctionsClient } from "@/components/auctions/AuctionsClient";
+import { getCurrentTenant } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Aukcje",
-  description: "Licytuj wyjątkowe nagrody za Ghost Tokens — kto da więcej, ten wygrywa.",
-};
+// White-label: auctions are paid in this portal's own currency (tenant.tokenName).
+export async function generateMetadata() {
+  const { tokenName } = await getCurrentTenant();
+  return {
+    title: "Aukcje",
+    description: `Licytuj wyjątkowe nagrody za ${tokenName} — kto da więcej, ten wygrywa.`,
+  };
+}
 
 export default async function AuctionsPage() {
   const session = await auth();

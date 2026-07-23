@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { Header } from "@/components/Header";
+import { getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import { FileText } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -30,13 +31,25 @@ const BULLETS6 = ["s6b1", "s6b2", "s6b3", "s6b4", "s6b5", "s6b6", "s6b7"];
 
 export default async function TermsPage() {
   const t = await getTranslations("terms");
+  // White-label: contact goes to THIS portal's Discord (from socialLinks); the founder invite is
+  // used only on the founder brand. The child text (i18n bakes the founder URL) is intentionally
+  // ignored so it can never leak — we render a label derived from the resolved URL instead.
+  const tenant = await getCurrentTenant();
+  const discordUrl =
+    tenant.socialLinks?.find((s) => s.platform === "discord")?.url ??
+    (isFounderBrand(tenant) ? "https://discord.gg/deAPJ9Ym2F" : null);
   const richTags = {
     b: (c: ReactNode) => <strong className="text-white">{c}</strong>,
     em: (c: ReactNode) => <em>{c}</em>,
     privacy: (c: ReactNode) => <Link href="/privacy" className="text-red-400 hover:underline">{c}</Link>,
-    discord: (c: ReactNode) => (
-      <a href="https://discord.gg/deAPJ9Ym2F" target="_blank" rel="noreferrer" className="text-red-400 hover:underline">{c}</a>
-    ),
+    discord: () =>
+      discordUrl ? (
+        <a href={discordUrl} target="_blank" rel="noreferrer" className="text-red-400 hover:underline">
+          {discordUrl.replace(/^https?:\/\//, "")}
+        </a>
+      ) : (
+        <Link href="/support" className="text-red-400 hover:underline">{tenant.name}</Link>
+      ),
   };
   // Dynamic-key helpers (messages aren't statically typed here).
   const ts = (key: string): string => (t as unknown as (k: string) => string)(key);
