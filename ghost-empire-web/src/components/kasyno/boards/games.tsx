@@ -9,7 +9,6 @@ import type { HiloState, BjState, Phase } from "../logic";
 import { reducedMotion, useFitScale, WinBurst, PlayingCard, Die3D, SlotDefs, SlotSymbol } from "./common";
 import type { MinesGameState } from "./common";
 import { sfxPlay } from "@/lib/sfx";
-import { useTenantBranding } from "@/components/TenantBranding";
 
 // ── Roulette: crisp vector (SVG) wheel; continuous spin → ease-out land on server's number ──
 export function RouletteWheel({ phase, target, onSettle, size = 340 }: { phase: Phase; target: number | null; onSettle: () => void; size?: number }) {
@@ -525,7 +524,7 @@ export function PlinkoBoard({ phase, plinko, onSettle }: { phase: Phase; plinko:
 export function MinesGrid({ game, onReveal, onCashout, busy, fmt, t }: {
   game: MinesGameState; onReveal: (tile: number) => void; onCashout: () => void; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
 }) {
-  const { tokenSymbol } = useTenantBranding();
+  const chipSymbol = "🪙"; // kasyno: żetony (chips), nie symbol GT tenanta (docs/CHIPS-CASINO.md)
   const over = game.status !== "active";
   const revealedSet = new Set(game.revealed);
   const bombSet = new Set(game.bombSet ?? []);
@@ -537,11 +536,11 @@ export function MinesGrid({ game, onReveal, onCashout, busy, fmt, t }: {
         {game.status === "active" ? (
           <button onClick={onCashout} disabled={busy || game.revealed.length === 0}
             className="px-4 py-1.5 rounded-full text-sm font-extrabold text-black bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-300 disabled:opacity-40 transition-all">
-            {t("minesCashout")} {fmt(potential)} {tokenSymbol}
+            {t("minesCashout")} {fmt(potential)} {chipSymbol}
           </button>
         ) : (
           <div className={`text-sm font-extrabold ${game.status === "cashed" ? "text-emerald-300" : "text-rose-400"}`}>
-            {game.status === "cashed" ? `✅ +${fmt((game.payout ?? 0) - game.bet)} ${tokenSymbol}` : `💥 −${fmt(game.bet)} ${tokenSymbol}`}
+            {game.status === "cashed" ? `✅ +${fmt((game.payout ?? 0) - game.bet)} ${chipSymbol}` : `💥 −${fmt(game.bet)} ${chipSymbol}`}
           </div>
         )}
       </div>
@@ -651,7 +650,7 @@ export function HiloTable({ game, busy, fmt, t, onGuess, onCashout }: {
   game: HiloState; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
   onGuess: (g: "hi" | "lo") => void; onCashout: () => void;
 }) {
-  const { tokenSymbol } = useTenantBranding();
+  const chipSymbol = "🪙"; // kasyno: żetony (chips), nie symbol GT tenanta (docs/CHIPS-CASINO.md)
   const code = (c: { rank: number; suit: number }) => c.suit * 13 + (c.rank - 1);
   const pHi = (13 - game.card.rank) / 13;
   const pLo = (game.card.rank - 1) / 13;
@@ -680,7 +679,7 @@ export function HiloTable({ game, busy, fmt, t, onGuess, onCashout }: {
           </button>
           <button onClick={onCashout} disabled={busy || game.steps === 0}
             className="px-5 py-2 rounded-full font-extrabold text-black bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 disabled:opacity-40 transition-all">
-            💰 {t("hiloCash")} {fmt(game.potential)} {tokenSymbol}
+            💰 {t("hiloCash")} {fmt(game.potential)} {chipSymbol}
           </button>
         </div>
       ) : (
@@ -688,7 +687,7 @@ export function HiloTable({ game, busy, fmt, t, onGuess, onCashout }: {
           {game.status === "cashed" && (game.net ?? 0) > 0 && !reducedMotion() && <WinBurst seed={game.steps * 13 + game.card.rank} />}
           <div className={`text-xl font-extrabold ${game.status === "cashed" ? "text-emerald-300" : "text-rose-400"}`}
             style={{ animation: reducedMotion() ? undefined : "gefx-pop 420ms cubic-bezier(.34,1.56,.64,1)" }}>
-            {game.status === "cashed" ? `+${fmt(game.net ?? 0)} ${tokenSymbol} 🎉` : `💥 ${t("hiloBust")}`}
+            {game.status === "cashed" ? `+${fmt(game.net ?? 0)} ${chipSymbol} 🎉` : `💥 ${t("hiloBust")}`}
           </div>
         </div>
       )}
@@ -701,7 +700,7 @@ export function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, b
   game: BjState; busy: boolean; fmt: (n: number) => string; t: (k: string) => string;
   onHit: () => void; onStand: () => void; onDouble: () => void; balance: number | null; bet: number;
 }) {
-  const { tokenSymbol } = useTenantBranding();
+  const chipSymbol = "🪙"; // kasyno: żetony (chips), nie symbol GT tenanta (docs/CHIPS-CASINO.md)
   const active = game.status === "active";
   const r = game.result;
   return (
@@ -739,7 +738,7 @@ export function BlackjackTable({ game, busy, fmt, t, onHit, onStand, onDouble, b
           <div className={`text-xl font-extrabold ${r.net > 0 ? "text-emerald-300" : r.net === 0 ? "text-zinc-300" : "text-rose-400"}`}
             style={{ animation: reducedMotion() ? undefined : "gefx-pop 420ms cubic-bezier(.34,1.56,.64,1)" }}>
             {r.multiplier === 2.5 ? "🃏 BLACKJACK! " : ""}
-            {r.net > 0 ? `+${fmt(r.net)} ${tokenSymbol} 🎉` : r.net === 0 ? `🤝 ${t("bjPush")}` : `−${fmt(-r.net)} ${tokenSymbol}`}
+            {r.net > 0 ? `+${fmt(r.net)} ${chipSymbol} 🎉` : r.net === 0 ? `🤝 ${t("bjPush")}` : `−${fmt(-r.net)} ${chipSymbol}`}
           </div>
         </div>
       ) : null}

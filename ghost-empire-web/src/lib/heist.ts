@@ -48,19 +48,19 @@ export async function resolveHeist(heistId: string): Promise<string | null> {
           totalPayout += payout;
           await tx.user.update({
             where: { id: e.userId },
-            data: { tokens: { increment: payout }, totalEarned: { increment: payout } },
+            data: { chips: { increment: payout } },
           });
           await tx.transaction.create({
-            data: { userId: e.userId, type: "earn", amount: payout, reason: "heist:win", status: "completed" },
+            data: { userId: e.userId, type: "earn", amount: payout, reason: "heist:win", currency: "CHIPS", status: "completed" },
           });
         }
         await tx.heist.update({ where: { id: heist.id }, data: { status: "resolved", success: true, resolvedAt: new Date() } });
-        return `🏦 NAPAD ekipy ${crew} → ✅ UDANY! Łup ${fmt(totalPayout)} GT — każdy bierze ${HEIST_WIN_MULT}× stawki! 💰`;
+        return `🏦 NAPAD ekipy ${crew} → ✅ UDANY! Łup ${fmt(totalPayout)} żetonów — każdy bierze ${HEIST_WIN_MULT}× stawki! 💰`;
       }
 
       const totalLost = heist.entries.reduce((s, e) => s + e.bet, 0);
       await tx.heist.update({ where: { id: heist.id }, data: { status: "resolved", success: false, resolvedAt: new Date() } });
-      return `🚨 NAPAD ekipy ${crew} → ❌ WPADKA! Straż was złapała — ekipa traci ${fmt(totalLost)} GT. 🚔`;
+      return `🚨 NAPAD ekipy ${crew} → ❌ WPADKA! Straż was złapała — ekipa traci ${fmt(totalLost)} żetonów. 🚔`;
     });
   } catch (e) {
     log.error("resolveHeist failed", e, { heistId });
@@ -72,7 +72,7 @@ export async function resolveHeist(heistId: string): Promise<string | null> {
 export async function heistJoin(opts: { platform: string; userId: string; name: string; bet: number }): Promise<HeistJoinResult> {
   const { platform, userId, name, bet } = opts;
   if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) {
-    return { ok: false, message: `@${name} stawka musi być ${fmt(MIN_BET)}-${fmt(MAX_BET)} GT.` };
+    return { ok: false, message: `@${name} stawka musi być ${fmt(MIN_BET)}-${fmt(MAX_BET)} żetonów.` };
   }
   try {
     const now = new Date();
@@ -109,8 +109,8 @@ export async function heistJoin(opts: { platform: string; userId: string; name: 
       }
       const crew = await prisma.$transaction(async (tx) => {
         const charged = await tx.user.updateMany({
-          where: { id: userId, tokens: { gte: bet } },
-          data: { tokens: { decrement: bet }, totalSpent: { increment: bet } },
+          where: { id: userId, chips: { gte: bet } },
+          data: { chips: { decrement: bet } },
         });
         if (charged.count === 0) throw new HeistError("broke");
         const stillOpen = await tx.heist.findFirst({ where: { id: active.id, status: "open", resolvesAt: { gt: now } }, select: { id: true } });
@@ -125,8 +125,8 @@ export async function heistJoin(opts: { platform: string; userId: string; name: 
     // No active heist → open a new one with this user as the first crew member.
     const heistId = await prisma.$transaction(async (tx) => {
       const charged = await tx.user.updateMany({
-        where: { id: userId, tokens: { gte: bet } },
-        data: { tokens: { decrement: bet }, totalSpent: { increment: bet } },
+        where: { id: userId, chips: { gte: bet } },
+        data: { chips: { decrement: bet } },
       });
       if (charged.count === 0) throw new HeistError("broke");
       const heist = await tx.heist.create({
@@ -143,7 +143,7 @@ export async function heistJoin(opts: { platform: string; userId: string; name: 
     };
   } catch (e) {
     if (e instanceof HeistError) {
-      if (e.message === "broke") return { ok: false, message: `@${name} masz za mało GT na taką stawkę (${fmt(bet)}).` };
+      if (e.message === "broke") return { ok: false, message: `@${name} masz za mało żetonów na taką stawkę (${fmt(bet)}).` };
       if (e.message === "closed") return { ok: false, message: `@${name} napad właśnie się zamknął — poczekaj na następny.` };
     }
     log.error("heistJoin failed", e, { userId });

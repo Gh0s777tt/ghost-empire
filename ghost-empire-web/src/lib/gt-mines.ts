@@ -45,21 +45,21 @@ export type MinesStartResult = { ok: true; sessionId: string; bombs: number; til
 
 /** Charge the bet (atomic) and open a session. Refunds if the session store is unavailable. */
 export async function minesStart(userId: string, bet: number, bombs: number): Promise<MinesStartResult> {
-  if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} GT` };
+  if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} żetonów` };
   if (!Number.isInteger(bombs) || bombs < MINES_MIN_BOMBS || bombs > MINES_MAX_BOMBS) return { ok: false, status: 400, error: `Bomby: ${MINES_MIN_BOMBS}-${MINES_MAX_BOMBS}` };
   if (!redis) return { ok: false, status: 503, error: "Gra chwilowo niedostępna" };
 
   let newBalance: number;
   try {
     newBalance = await prisma.$transaction(async (tx) => {
-      const charged = await tx.user.updateMany({ where: { id: userId, tokens: { gte: bet } }, data: { tokens: { decrement: bet }, totalSpent: { increment: bet } } });
+      const charged = await tx.user.updateMany({ where: { id: userId, chips: { gte: bet } }, data: { chips: { decrement: bet } } });
       if (charged.count === 0) throw new Error("INSUFFICIENT");
-      await tx.transaction.create({ data: { userId, type: "spend", amount: -bet, reason: "gtgame:mines", status: "completed" } });
-      const u = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
-      return u?.tokens ?? 0;
+      await tx.transaction.create({ data: { userId, type: "spend", amount: -bet, reason: "gtgame:mines", currency: "CHIPS", status: "completed" } });
+      const u = await tx.user.findUnique({ where: { id: userId }, select: { chips: true } });
+      return u?.chips ?? 0;
     });
   } catch (e) {
-    if (e instanceof Error && e.message === "INSUFFICIENT") return { ok: false, status: 402, error: "Za mało Ghost Tokens" };
+    if (e instanceof Error && e.message === "INSUFFICIENT") return { ok: false, status: 402, error: "Za mało żetonów" };
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
 
@@ -70,8 +70,8 @@ export async function minesStart(userId: string, bet: number, bombs: number): Pr
   } catch {
     // session store failed → refund so the bet is never lost without a game
     await prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: userId }, data: { tokens: { increment: bet }, totalSpent: { decrement: bet } } });
-      await tx.transaction.create({ data: { userId, type: "earn", amount: bet, reason: "gtgame:mines:refund", status: "completed" } });
+      await tx.user.update({ where: { id: userId }, data: { chips: { increment: bet } } });
+      await tx.transaction.create({ data: { userId, type: "earn", amount: bet, reason: "gtgame:mines:refund", currency: "CHIPS", status: "completed" } });
     }).catch(() => { /* refund best-effort */ });
     return { ok: false, status: 503, error: "Gra chwilowo niedostępna" };
   }
@@ -122,12 +122,12 @@ export async function minesCashout(userId: string, sessionId: string): Promise<M
   try {
     newBalance = await prisma.$transaction(async (tx) => {
       if (payout > 0) {
-        await tx.user.update({ where: { id: userId }, data: { tokens: { increment: payout }, totalEarned: { increment: payout } } });
-        await tx.transaction.create({ data: { userId, type: "earn", amount: payout, reason: "gtgame:mines:win", status: "completed" } });
+        await tx.user.update({ where: { id: userId }, data: { chips: { increment: payout } } });
+        await tx.transaction.create({ data: { userId, type: "earn", amount: payout, reason: "gtgame:mines:win", currency: "CHIPS", status: "completed" } });
       }
       await tx.gtGamePlay.create({ data: { userId, game: "mines", bet: session.bet, payout, net: payout - session.bet, detail: `💎 ${mult.toFixed(2)}× (${session.revealed.length} bezp.)`.slice(0, 80) } });
-      const u = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
-      return u?.tokens ?? 0;
+      const u = await tx.user.findUnique({ where: { id: userId }, select: { chips: true } });
+      return u?.chips ?? 0;
     });
   } catch {
     return { ok: false, status: 500, error: "Błąd serwera" };

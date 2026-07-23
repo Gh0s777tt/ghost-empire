@@ -519,7 +519,7 @@ const CHANGELOG = [
     date: "2026-06-06",
     title: "Nowe osiągnięcia 🏆 — prestiż, pojedynki, kasyno",
     items: [
-      "Doszło 7 nowych achievementów (jest ich teraz 60): za zdobycie gwiazdek prestiżu ✦, wygrane pojedynki !duel oraz granie w kasynie GT.",
+      "Doszło 7 nowych achievementów (jest ich teraz 60): za zdobycie gwiazdek prestiżu ✦, wygrane pojedynki !duel oraz granie w kasynie.",
       "Przyznają się automatycznie z nagrodą GT, gdy osiągniesz dany próg.",
     ],
   },
@@ -786,7 +786,7 @@ const CHANGELOG = [
     title: "EventSub + Donacje + Alerty OBS",
     items: [
       "Twitch EventSub — auto-tracking subów, gifted subów i bitów z mapowaniem na GT",
-      "Donacje Streamlabs — auto-match po nicku, 1 PLN = 100 GT, odznaki donatora",
+      "Donacje Streamlabs — auto-match po nicku, podziękowanie w GT za wsparcie, odznaki donatora",
       "Stream Alerts — overlay OBS (Browser Source) z animacjami i dźwiękiem alertów",
       "Łączenie kont z /profile — Twitch/Kick/Discord/Google na jednym koncie",
       "Merge duplikatów w adminie — scalanie starych zdublowanych kont",

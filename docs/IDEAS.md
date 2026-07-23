@@ -27,7 +27,7 @@ Wykrywa szczyt zaangażowania (sentyment/tempo czatu, hype train, gwałtowny wzr
 - **Wysiłek:** L (3–5 PR-ów: detekcja → klip → AI-tytuł → publikacja → panel).
 
 ### 🐾 Ghost Companion — pet idle-game — ✅ MVP DOWIEZIONY
-Widmowy kompan; widzowie karmią go GT (**realny spust!**), ewoluuje przez 6 etapów. **MVP na produkcji:** model `Companion`, `lib/companion.ts` (6 etapów + progres, +5 testów), strona `/companion` (karmienie + zmiana imienia), atomowy spend (wzorzec sklepu), link w nawigacji (grupa GRY), i18n PL/EN. **⚠️ wymaga `db push`.** **Follow-up:** overlay `/overlay/companion`, kafelek na `/profile`, decay/streak, sekcja admina (etapy/koszty).
+Widmowy kompan; widzowie karmią go GT (**realny spust!**), ewoluuje przez 6 etapów. **MVP na produkcji:** model `Companion`, `lib/companion.ts` (6 etapów + progres, +5 testów), strona `/companion` (karmienie + zmiana imienia), atomowy spend (wzorzec sklepu), link w nawigacji (grupa GRY), i18n PL/EN. **⚠️ wymaga `db push`.** **Follow-up:** ✅ overlay `/overlay/companion` + kafelek na `/profile` (dowiezione); **otwarte:** decay/streak, sekcja admina (etapy/koszty).
 - **Modele:** `Companion { id, userId @unique, name, stage, xp, lastFedAt, evolution }`.
 - **Logika (czysta, testowalna):** `companionStage(xp)`, `feedCost(stage)`, decay/bonus za streak; karmienie = atomowy spend GT (wzorzec jak sklep) → realny **spust GT** (synergia z dashboardem ekonomii).
 - **UI:** kafelek na `/profile` + sekcja `/admin` (etapy/koszty) + overlay `/overlay/companion?token=`.
@@ -49,7 +49,7 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 ## 🤖 Tor AI (masz `lib/ai.ts` — czeka na klucz z quotą)
 - ✅ **AI Stream Recap** (dowiezione) — po streamie auto-podsumowanie (highlighty, top widzowie, cytaty, statystyki) → Discord/X.
 - ✅ **Semantyczny search** (dowiezione, #554) — embeddingi (`lib/semantic.ts`, `/search`).
-- **AI tłumacz czatu na żywo** — wielojęzyczny czat (masz 14 lokalizacji). *(niezrobione)*
+- ✅ **AI tłumacz czatu na żywo** (#547) — `api/chat/translate` + `?translate=` w overlay czatu; dormant do klucza AI.
 - ✅ **AI moderacja kontekstowa** (dowiezione) — toksyczność z kontekstem jako rozszerzenie automoda.
 
 ## ⚡ Tor nowoczesnej platformy (jesteś na Vercel Pro)
@@ -81,6 +81,20 @@ Widzowie tworzą drużyny: wspólny skarbiec GT (**realny spust!**) i ranking kl
 - **Zdrowie ekonomii** — dużo kranów GT, mało spustów → ryzyko inflacji. (✅ adresowane dashboardem; kolejne spusty: pet, kosmetyki, aukcje.)
 - **Retencja > akwizycja** — idle/social loops (pet, klany) dają lepszy zwrot niż kolejna gra do kasyna.
 - **AI to Twój wyróżnik** — masz wpiętą infrę; konkurencja (StreamElements/Streamlabs) nie ma dobrego AI Clip Directora.
+
+---
+
+## 🔌 Ekosystem rozszerzeń + real-time (program 2026-07-19)
+Powiązane: [`PLAN-EKOSYSTEM.md`](PLAN-EKOSYSTEM.md) (master-plan), backlogi rozszerzeń
+`nx-companion/IDEAS.md` i `nx-chat-tools/IDEAS.md`. Pozycje portalowe z tego programu:
+
+- **Push zamiast pollingu (Supabase Realtime/SSE)** — 🌐 L — saldo GT, ukończenie questa, tier-up sezonu i „drop live" jako zdarzenia push do `nx-companion` (dziś odpytuje). **Dlaczego:** natychmiastowy UX + eliminacja pętli po stronie klienta. **Bramka:** dotyka prod-Supabase.
+- **Endpoint/pole „aktywny drop" w `/api/discover`** — 🌐 S — żeby companion podświetlił pole kodu w momencie ogłoszenia. Synergia z `nx-companion` „drop-code live".
+- **`clips:edit` + hook detekcji dla „Utnij clip"** — 🔑 M — wspólny sygnał z AI Clip Directorem (wyżej) i `nx-chat-tools`. **Dlaczego:** jeden pipeline detekcji momentu dla portalu i wtyczki.
+- **Edge-cache publicznego `/api/companion/branding`** — 🤖 S — branding jest publiczny i czytany przez overlay często. **Dlaczego:** szybszy first-paint theming, mniej obciążenia.
+- **Sentry (błędy + wydajność)** — 🔑 M — konektor już podłączony; instrumentacja money-critical ścieżek. **Dlaczego:** realna obserwowalność zamiast zgadywania.
+- **Strażniki dokumentacji (jak `docs:check`)** — 🤖 S — route↔`ENDPOINTS.md`, `process.env`↔`ENV.md`, TypeDoc `--treatWarningsAsErrors`. **Dlaczego:** klasa driftu łapana automatem, nie pamięcią.
+- **PDF-handbooki generowane z markdownu** — 🤖 M — `pandoc`/`mkdocs-with-pdf` zamiast ręcznych binarek w `public/wiki/`. **Dlaczego:** znika ręczne utrzymanie i rozjazd PDF↔docs.
 
 ---
 

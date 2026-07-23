@@ -263,7 +263,7 @@ export async function playGtGame(
   choice?: string,
 ): Promise<GtGameResult> {
   if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) {
-    return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} GT` };
+    return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} żetonów` };
   }
 
   let payout = 0;
@@ -327,23 +327,25 @@ export async function playGtGame(
 
   try {
     const result = await prisma.$transaction(async (tx) => {
+      // CHIPS currency (free casino money): decrement/increment `chips`, NOT `tokens`. We do NOT
+      // touch totalSpent/totalEarned — those track the real GT economy; chips must never inflate it.
       const charged = await tx.user.updateMany({
-        where: { id: userId, tokens: { gte: bet } },
-        data: { tokens: { decrement: bet }, totalSpent: { increment: bet } },
+        where: { id: userId, chips: { gte: bet } },
+        data: { chips: { decrement: bet } },
       });
-      if (charged.count === 0) throw new GtGameError("Za mało Ghost Tokens", 402);
+      if (charged.count === 0) throw new GtGameError("Za mało żetonów", 402);
 
-      await tx.transaction.create({ data: { userId, type: "spend", amount: -bet, reason: `gtgame:${game}`, status: "completed" } });
+      await tx.transaction.create({ data: { userId, type: "spend", amount: -bet, reason: `gtgame:${game}`, currency: "CHIPS", status: "completed" } });
 
       if (payout > 0) {
-        await tx.user.update({ where: { id: userId }, data: { tokens: { increment: payout }, totalEarned: { increment: payout } } });
-        await tx.transaction.create({ data: { userId, type: "earn", amount: payout, reason: `gtgame:${game}:win`, status: "completed" } });
+        await tx.user.update({ where: { id: userId }, data: { chips: { increment: payout } } });
+        await tx.transaction.create({ data: { userId, type: "earn", amount: payout, reason: `gtgame:${game}:win`, currency: "CHIPS", status: "completed" } });
       }
 
       await tx.gtGamePlay.create({ data: { userId, game, bet, payout, net: payout - bet, detail: detail.slice(0, 80) } });
 
-      const fresh = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
-      return fresh?.tokens ?? 0;
+      const fresh = await tx.user.findUnique({ where: { id: userId }, select: { chips: true } });
+      return fresh?.chips ?? 0;
     });
 
     // Feed the progressive pool AFTER a successful charge (1% of the bet, best-effort).

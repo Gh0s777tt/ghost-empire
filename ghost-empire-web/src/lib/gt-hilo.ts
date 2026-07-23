@@ -55,20 +55,20 @@ export type HiloResult = { ok: true; state: HiloState } | { ok: false; status: n
 
 /** Charge the bet and deal the first card. */
 export async function hiloStart(userId: string, bet: number): Promise<HiloResult> {
-  if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} GT` };
+  if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} żetonów` };
   if (!redis) return { ok: false, status: 503, error: "Gra chwilowo niedostępna" };
 
   let newBalance: number;
   try {
     newBalance = await prisma.$transaction(async (tx) => {
-      const charged = await tx.user.updateMany({ where: { id: userId, tokens: { gte: bet } }, data: { tokens: { decrement: bet }, totalSpent: { increment: bet } } });
+      const charged = await tx.user.updateMany({ where: { id: userId, chips: { gte: bet } }, data: { chips: { decrement: bet } } });
       if (charged.count === 0) throw new Error("INSUFFICIENT");
-      await tx.transaction.create({ data: { userId, type: "spend", amount: -bet, reason: "gtgame:hilo", status: "completed" } });
-      const u = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
-      return u?.tokens ?? 0;
+      await tx.transaction.create({ data: { userId, type: "spend", amount: -bet, reason: "gtgame:hilo", currency: "CHIPS", status: "completed" } });
+      const u = await tx.user.findUnique({ where: { id: userId }, select: { chips: true } });
+      return u?.chips ?? 0;
     });
   } catch (e) {
-    if (e instanceof Error && e.message === "INSUFFICIENT") return { ok: false, status: 402, error: "Za mało Ghost Tokens" };
+    if (e instanceof Error && e.message === "INSUFFICIENT") return { ok: false, status: 402, error: "Za mało żetonów" };
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
 
@@ -78,8 +78,8 @@ export async function hiloStart(userId: string, bet: number): Promise<HiloResult
     await redis.set(sk(userId, id), s, { ex: TTL_S });
   } catch {
     await prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: userId }, data: { tokens: { increment: bet }, totalSpent: { decrement: bet } } });
-      await tx.transaction.create({ data: { userId, type: "earn", amount: bet, reason: "gtgame:hilo:refund", status: "completed" } });
+      await tx.user.update({ where: { id: userId }, data: { chips: { increment: bet } } });
+      await tx.transaction.create({ data: { userId, type: "earn", amount: bet, reason: "gtgame:hilo:refund", currency: "CHIPS", status: "completed" } });
     }).catch(() => { /* refund best-effort */ });
     return { ok: false, status: 503, error: "Gra chwilowo niedostępna" };
   }
@@ -137,11 +137,11 @@ export async function hiloCashout(userId: string, sessionId: string): Promise<Hi
   let newBalance = 0;
   try {
     newBalance = await prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: userId }, data: { tokens: { increment: payout }, totalEarned: { increment: payout } } });
-      await tx.transaction.create({ data: { userId, type: "earn", amount: payout, reason: "gtgame:hilo:win", status: "completed" } });
+      await tx.user.update({ where: { id: userId }, data: { chips: { increment: payout } } });
+      await tx.transaction.create({ data: { userId, type: "earn", amount: payout, reason: "gtgame:hilo:win", currency: "CHIPS", status: "completed" } });
       await tx.gtGamePlay.create({ data: { userId, game: "hilo", bet: s.bet, payout, net: payout - s.bet, detail: `🃏 ${s.mult.toFixed(2)}× (${s.steps} trafień)`.slice(0, 80) } });
-      const u = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
-      return u?.tokens ?? 0;
+      const u = await tx.user.findUnique({ where: { id: userId }, select: { chips: true } });
+      return u?.chips ?? 0;
     });
   } catch {
     return { ok: false, status: 500, error: "Błąd serwera" };

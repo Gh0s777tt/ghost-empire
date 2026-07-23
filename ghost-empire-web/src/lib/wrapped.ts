@@ -61,7 +61,7 @@ export async function getWrapped(userId: string, tenantId: string | null, months
     clamped === 0 ? getMyLeagueStats(userId, tenantId) : Promise.resolve(null),
     prisma.bounty.count({ where: { creatorId: userId, createdAt: inMonth, ...(tenantId ? { tenantId } : {}) } }),
     prisma.bountyPledge.findMany({ where: { userId, createdAt: inMonth }, select: { bountyId: true, amount: true } }),
-    prisma.transaction.groupBy({ by: ["type"], where: { userId, createdAt: inMonth, type: { in: ["earn", "spend"] } }, _sum: { amount: true } }),
+    prisma.transaction.groupBy({ by: ["type"], where: { userId, createdAt: inMonth, type: { in: ["earn", "spend"] }, currency: "GT" }, _sum: { amount: true } }),
     prisma.userAchievement.count({ where: { userId, earnedAt: inMonth } }),
     prisma.userAchievement.count({ where: { userId } }),
   ]);

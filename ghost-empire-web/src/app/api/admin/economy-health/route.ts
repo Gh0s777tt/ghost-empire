@@ -26,10 +26,12 @@ export async function GET() {
   const tid = await currentTenantId();
   const userWhere = tid ? { tenantId: tid } : undefined;
   const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000);
-  const txWhere = { createdAt: { gte: since }, ...(userWhere ? { user: userWhere } : {}) };
+  // currency:"GT" only — "economy health" reflects the REAL GT economy; casino chips are a
+  // separate closed loop and must not inflate mint/spend/reason stats. (docs/CHIPS-CASINO.md)
+  const txWhere = { currency: "GT", createdAt: { gte: since }, ...(userWhere ? { user: userWhere } : {}) };
 
   const trendSince = new Date(Date.now() - TREND_DAYS * 24 * 60 * 60 * 1000);
-  const trendWhere = { createdAt: { gte: trendSince }, ...(userWhere ? { user: userWhere } : {}) };
+  const trendWhere = { currency: "GT", createdAt: { gte: trendSince }, ...(userWhere ? { user: userWhere } : {}) };
 
   const [circAgg, mintedAgg, burnedAgg, byReason, trendTxs, topEarnRows, topSpendRows] = await Promise.all([
     prisma.user.aggregate({ _sum: { tokens: true }, where: userWhere }),

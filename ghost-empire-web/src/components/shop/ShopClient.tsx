@@ -38,7 +38,7 @@ const CATEGORIES = [
 const TIER_RANK: Record<string, number> = { T1: 1, T2: 2, T3: 3, Prime: 1 };
 
 type BuyResponse =
-  | { ok: true; itemName: string; spent: number; newBalance: number; deliveryPending: boolean }
+  | { ok: true; itemName: string; spent: number; currency: "GT" | "CHIPS"; newBalance: number; deliveryPending: boolean }
   | { error: string };
 
 export function ShopClient({
@@ -108,7 +108,8 @@ export function ShopClient({
     setBusyItem(item.id);
     try {
       const data = await apiPost<Extract<BuyResponse, { ok: true }>>("/api/shop/buy", { itemId: item.id });
-      emitBalance(data.newBalance);
+      // Only GT purchases update the Header's GT balance; CHIPS (casino cosmetics) must not pollute it.
+      if (data.currency !== "CHIPS") emitBalance(data.newBalance);
       toast.ok(
         data.deliveryPending
           ? t("boughtPending", { name: data.itemName })

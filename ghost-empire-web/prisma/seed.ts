@@ -208,6 +208,57 @@ async function main() {
 
   // ---- SHOP ITEMS ----
   const shopItems = [
+    // Kosmetyki „High Roller" za ŻETONY (currency:"CHIPS") — czysty flex BEZ wartości rynkowej.
+    // To sink dla wygranych żetonów: kasyno zostaje atrakcyjne, ale żetony nigdy nie kupią rzeczy
+    // o realnej wartości (patrz docs/CHIPS-CASINO.md). Kategoria "cosmetic" = natychmiastowe.
+    {
+      name: "Odznaka „High Roller” 🃏",
+      description: "Kasynowa odznaka na profil — dla tych, co nie boją się zakręcić kołem.",
+      category: "cosmetic",
+      currency: "CHIPS",
+      price: 5000,
+      imageEmoji: "🃏",
+      stock: -1,
+      totalStock: -1,
+      hot: false,
+      sortOrder: 100,
+    },
+    {
+      name: "Ramka profilu „Złote Kasyno” 🖼️",
+      description: "Złota, kasynowa ramka wokół awatara. Czysty flex za wygrane żetony.",
+      category: "cosmetic",
+      currency: "CHIPS",
+      price: 15000,
+      imageEmoji: "🖼️",
+      stock: -1,
+      totalStock: -1,
+      hot: false,
+      sortOrder: 101,
+    },
+    {
+      name: "Tytuł „Rekin Kasyna” 🦈",
+      description: "Tytuł wyświetlany przy nicku. Pokaż, kto rządzi przy stołach.",
+      category: "cosmetic",
+      currency: "CHIPS",
+      price: 25000,
+      imageEmoji: "🦈",
+      stock: -1,
+      totalStock: -1,
+      hot: true,
+      sortOrder: 102,
+    },
+    {
+      name: "Efekt nicku „Neon” ✨",
+      description: "Animowany, neonowy efekt nicku. Najwyższy poziom kasynowego prestiżu.",
+      category: "cosmetic",
+      currency: "CHIPS",
+      price: 50000,
+      imageEmoji: "✨",
+      stock: -1,
+      totalStock: -1,
+      hot: false,
+      sortOrder: 103,
+    },
     {
       name: "Klucz Steam — Cyberpunk 2077",
       description: "Klucz na Steam. Aktywacja po odbiorze przez ticket Discord. Dostarczamy w ciągu 24h.",

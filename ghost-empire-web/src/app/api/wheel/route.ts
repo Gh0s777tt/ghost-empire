@@ -15,8 +15,8 @@ export async function GET() {
 
   let balance: number | null = null;
   if (session?.user?.id) {
-    const u = await prisma.user.findUnique({ where: { id: session.user.id }, select: { tokens: true } });
-    balance = u?.tokens ?? 0;
+    const u = await prisma.user.findUnique({ where: { id: session.user.id }, select: { chips: true } });
+    balance = u?.chips ?? 0;
   }
 
   // Scope the winners feed to THIS portal (WheelSpin is user-owned → via user.tenantId),

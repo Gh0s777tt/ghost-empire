@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { KasynoClient } from "@/components/kasyno/KasynoClient";
+import { GamblingGate } from "@/components/kasyno/GamblingGate";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Kasyno GT", description: "Sloty i coinflip za Ghost Tokens. Graj rozsądnie." };
@@ -11,8 +12,8 @@ export default async function KasynoPage() {
   const session = await auth();
   let balance: number | null = null;
   if (session?.user?.id) {
-    const u = await prisma.user.findUnique({ where: { id: session.user.id }, select: { tokens: true } });
-    balance = u?.tokens ?? 0;
+    const u = await prisma.user.findUnique({ where: { id: session.user.id }, select: { chips: true } });
+    balance = u?.chips ?? 0;
   }
 
   return (
@@ -23,7 +24,9 @@ export default async function KasynoPage() {
       </div>
       <Header />
       <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-6">
-        <KasynoClient isAuthenticated={!!session?.user?.id} initialBalance={balance} />
+        <GamblingGate>
+          <KasynoClient isAuthenticated={!!session?.user?.id} initialBalance={balance} />
+        </GamblingGate>
       </main>
     </div>
   );
