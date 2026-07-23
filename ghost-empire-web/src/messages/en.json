@@ -367,6 +367,7 @@
     "secBounties": "Bounties",
     "secTenants": "Portals (SaaS)",
     "secAppearance": "Appearance / Branding",
+    "secHub": "Hub — links",
     "secDesc_appearance": "Make this portal yours — name, currency naming, brand colour and logo. Custom branding is an Elite feature.",
     "appearance": {
       "title": "Appearance / Branding",
