@@ -154,3 +154,11 @@ tenant B's users. That is now closed:
 
 Unlike §2's viewer-identity work, this needed **no schema change** (`Tenant.botSecret`
 already exists) and **no `db push`**.
+
+⚠️ **Open gap — provisioning is DB-only.** Nothing writes `Tenant.botSecret` yet: the admin
+tenant PATCH (`/api/admin/tenants/[id]`) uses an explicit field allow-list that excludes it,
+and no other code path sets it. So a streamer cannot self-serve their own bot secret — it has
+to be written straight onto the `tenants` row. That's safe (the isolation above is enforced
+whether or not a tenant has its own secret; without one they simply fall back to the global
+`BOT_SECRET`), but until an owner-scoped admin surface exists — generate + show once + rotate,
+never echoing the stored value back to the client — per-tenant bots stay a manual setup.
