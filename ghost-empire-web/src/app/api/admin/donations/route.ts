@@ -1,11 +1,12 @@
 // src/app/api/admin/donations/route.ts
 // Admin reconciliation — manually match unmatched donations to users.
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { requireAdmin, findManagedUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
 import { gtFromPln } from "@/lib/donation-rate";
+import { sendDonationReceipt } from "@/lib/email-receipts";
 
 // PATCH { donationId, action: "assign", userTarget } | { donationId, action: "skip" }
 export async function PATCH(req: Request) {
@@ -96,6 +97,20 @@ export async function PATCH(req: Request) {
     return true;
   });
   if (!matched) return NextResponse.json({ error: "Już dopasowany" }, { status: 409 });
+
+  // Receipt for the now-credited supporter — off the response path, best-effort (no-op while email
+  // is unconfigured). This is the codeless donor finally getting both their currency and a receipt.
+  // Amount is rendered in the donation's OWN currency (queue rows are often USD/EUR) — never
+  // relabelled as PLN, which would misstate a proof-of-payment document.
+  after(() =>
+    sendDonationReceipt({
+      userId: user.id,
+      tenantId: donation.tenantId ?? tid,
+      amount: amountFloat,
+      currency: donation.currency,
+      tokensGranted,
+    }),
+  );
 
   await logAdminAction({
     adminId: auth.userId,

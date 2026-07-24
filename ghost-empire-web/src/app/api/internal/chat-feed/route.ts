@@ -3,8 +3,8 @@
 // Keeps only a short rolling buffer (prunes old rows opportunistically).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
-import { verifyBotSecret } from "@/lib/utils";
+import { currentTenantId, getCurrentTenantBotAuth } from "@/lib/tenant";
+import { verifyBotSecretForTenant } from "@/lib/utils";
 import { handleChatHype } from "@/lib/clip-director";
 
 const MAX_MESSAGE = 500;
@@ -13,7 +13,8 @@ const KEEP_MS = 10 * 60 * 1000; // overlay only shows recent chat; drop older
 const PLATFORMS = new Set(["twitch", "kick", "youtube"]);
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  const { botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

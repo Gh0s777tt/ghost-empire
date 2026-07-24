@@ -245,12 +245,18 @@ async function handleSuperChat(input: {
   const amountFloat = Number(input.amountMicros) / 1_000_000;
   if (!Number.isFinite(amountFloat) || amountFloat <= 0) return false;
 
-  // Match donor to Ghost Empire user via YouTube Connection.platformId
+  // Match donor to Ghost Empire user via YouTube Connection.platformId — SCOPED to the
+  // streamer's portal so a super chat on one channel can only credit a user who belongs to
+  // that tenant, never another tenant's balance. tenantId null → unscoped (legacy).
   let matchedUserId: string | null = null;
   let tokensGranted: number | null = null;
   if (input.authorChannelId) {
     const connection = await prisma.connection.findFirst({
-      where: { platform: "youtube", platformId: input.authorChannelId },
+      where: {
+        platform: "youtube",
+        platformId: input.authorChannelId,
+        ...(input.tenantId ? { user: { tenantId: input.tenantId } } : {}),
+      },
       select: { userId: true },
     });
     if (connection) {
@@ -406,8 +412,13 @@ async function handleMemberEvent(input: {
   let tokensGranted: number | null = null;
 
   if (input.authorChannelId) {
+    // Scope the member match to the streamer's portal (same isolation as super chats above).
     const connection = await prisma.connection.findFirst({
-      where: { platform: "youtube", platformId: input.authorChannelId },
+      where: {
+        platform: "youtube",
+        platformId: input.authorChannelId,
+        ...(input.tenantId ? { user: { tenantId: input.tenantId } } : {}),
+      },
       select: { userId: true, id: true },
     });
     if (connection) {

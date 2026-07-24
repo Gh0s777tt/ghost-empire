@@ -2,12 +2,15 @@
 // Bot → portal: get an AI persona reply for an @bot chat mention. Bearer BOT_SECRET.
 // The AI key stays server-side (Vercel env / IntegrationConfig) — the bot never sees it.
 import { NextResponse } from "next/server";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { aiChat, DEFAULT_BOT_PERSONA } from "@/lib/ai";
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  // Global BOT_SECRET (first-party) OR this portal's per-tenant secret (Host-resolved).
+  const { botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   let body: { prompt?: string; username?: string };
