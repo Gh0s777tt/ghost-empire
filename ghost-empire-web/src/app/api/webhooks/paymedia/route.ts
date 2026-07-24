@@ -18,13 +18,14 @@
 // Signature header: X-PayMedia-Signature (HMAC-SHA256 of body using webhook secret)
 //
 // Mapping: 1 PLN = 100 Ghost Tokens — via the SHARED rate (lib/donation-rate), same on every rail.
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { extractIp } from "@/lib/audit";
 import { createLogger } from "@/lib/logger";
 import { matchDonationToUser } from "@/lib/streamlabs";
 import { gtFromPln } from "@/lib/donation-rate";
+import { sendDonationReceipt } from "@/lib/email-receipts";
 
 const log = createLogger("paymedia");
 
@@ -218,6 +219,12 @@ export async function POST(req: Request) {
     }
     throw e;
   }
+
+  // Receipt / thank-you — AFTER the mint committed, off the response path (the provider gets its
+  // ack immediately) and best-effort: sendDonationReceipt never throws and no-ops while email is
+  // unconfigured. Repeat-giving driver + the supporter's proof of payment.
+  // (route rejects non-PLN above, so PLN is the truly-charged currency here)
+  after(() => sendDonationReceipt({ userId, tenantId: null, amount: amountPLN, currency: "PLN", tokensGranted }));
 
   return NextResponse.json({
     ok: true,

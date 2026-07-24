@@ -10,6 +10,7 @@ import { httpFetch } from "@/lib/http";
 import { awardSeasonXp } from "@/lib/seasons";
 import { plnFromCurrency } from "@/lib/economy";
 import { gtFromPln } from "@/lib/donation-rate";
+import { sendDonationReceipt } from "@/lib/email-receipts";
 import { extractDonationCode } from "@/lib/donation-code";
 import { getStreamlabsConnection } from "@/lib/platform-tokens";
 
@@ -162,6 +163,9 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
   }
 
   let matched = 0;
+  // Receipts are collected here and flushed once AFTER the loop (see the push site): keeping email
+  // out of the per-donation chain means a slow provider can never cost a donation its side-effects.
+  const receipts: Array<Parameters<typeof sendDonationReceipt>[0]> = [];
   let unmatched = 0;
 
   // Idempotency: ONE batched read of which donation_ids are already stored, instead of a
@@ -256,6 +260,18 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
         amountLabel: d.currency,
       }, conn.tenantId);
 
+      // Queue the receipt — do NOT await here. This sits mid-chain (achievements, season XP, goal
+      // and subathon bumps still follow), and the Donation row is already committed, so a function
+      // timeout while emailing would lose those side-effects PERMANENTLY (the next poll skips the
+      // donation as already processed). Collected and flushed once after the loop instead.
+      receipts.push({
+        userId: match.userId,
+        tenantId: conn.tenantId,
+        amount: amountFloat, // as charged, in d.currency — never the synthetic PLN conversion
+        currency: d.currency,
+        tokensGranted,
+      });
+
       // Achievements — donation count + cumulative PLN
       await checkAndGrantAchievements({ userId: match.userId, triggerType: "donations_count" });
       await checkAndGrantAchievements({ userId: match.userId, triggerType: "donations_amount_pln" });
@@ -304,6 +320,11 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
     await incrementGoals("donations_pln", Math.floor(plnAmount), conn.tenantId);
     void extendSubathon({ pln: Math.floor(plnAmount) }, conn.tenantId).catch(() => {});
   }
+
+  // Flush the queued receipts LAST — after every donation's money + side-effects are durable, and
+  // in parallel (bounded by sendEmail's own timeout) rather than serially per donation. allSettled
+  // + the sender's internal try/catch mean a failing provider can never fail the poll.
+  if (receipts.length) await Promise.allSettled(receipts.map((r) => sendDonationReceipt(r)));
 
   // Update lastSeenDonationId to most recent (donations[0] is newest by default)
   const newest = donations[0]?.donation_id;
