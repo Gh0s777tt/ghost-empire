@@ -4,7 +4,10 @@
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 
 const eslintConfig = [
-  { ignores: [".next/**", "node_modules/**", "next-env.d.ts"] },
+  // Ignore build artifacts + coverage anywhere, and Claude Code's working dir (`.claude/`
+  // holds transient git worktrees from parallel agent sessions, each with its own built
+  // `.next/` — `eslint .` would otherwise choke on those generated files).
+  { ignores: [".next/**", "**/.next/**", "node_modules/**", "next-env.d.ts", "coverage/**", ".claude/**"] },
   ...nextCoreWebVitals,
   {
     rules: {
