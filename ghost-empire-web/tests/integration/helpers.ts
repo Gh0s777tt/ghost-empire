@@ -17,6 +17,8 @@ export async function resetDb(): Promise<void> {
 }
 
 let n = 0;
+
+// GT (`tokens`) is the real economy currency — predictions still charge/pay it.
 export async function createUser(tokens = 0): Promise<{ id: string }> {
   n += 1;
   const u = await prisma.user.create({
@@ -29,4 +31,21 @@ export async function createUser(tokens = 0): Promise<{ id: string }> {
 export async function balanceOf(userId: string): Promise<number> {
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { tokens: true } });
   return u?.tokens ?? -1;
+}
+
+// Chips (`żetony`) are the free, non-purchasable casino currency. Since the "Kasyno
+// na Żetonach" migration, wheel / duels / heist charge and pay `chips`, not `tokens` —
+// so those tests must seed and read chips, not GT. See docs/CHIPS-CASINO.md.
+export async function createUserWithChips(chips = 0): Promise<{ id: string }> {
+  n += 1;
+  const u = await prisma.user.create({
+    data: { chips, username: `itest_${Date.now()}_${n}`, displayName: `Tester ${n}` },
+    select: { id: true },
+  });
+  return u;
+}
+
+export async function chipsOf(userId: string): Promise<number> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { chips: true } });
+  return u?.chips ?? -1;
 }

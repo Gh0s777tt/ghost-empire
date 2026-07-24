@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { spinWheel, WheelError, type WheelSegment } from "@/lib/wheel";
-import { resetDb, createUser, balanceOf } from "./helpers";
+import { resetDb, createUserWithChips, chipsOf } from "./helpers";
 
 const SEGMENTS: WheelSegment[] = [
   { label: "Pudło", weight: 50, rewardTokens: 0, color: "#3f3f46" },
@@ -21,15 +21,16 @@ describe("wheel of fortune (integration, real DB)", () => {
   afterAll(async () => { await prisma.$disconnect(); });
 
   it("charges the cost, applies the landed reward, and records the spin", async () => {
-    const u = await createUser(1000);
+    const u = await createUserWithChips(1000);
     await enableWheel(100);
 
     const r = await spinWheel(u.id);
 
     // Reward is whichever segment was landed on — assert the bookkeeping is consistent.
+    // Wheel spends/pays chips (casino currency), so newBalance is the user's chip balance.
     expect([0, 200]).toContain(r.rewardTokens);
     expect(r.newBalance).toBe(1000 - 100 + r.rewardTokens);
-    expect(await balanceOf(u.id)).toBe(r.newBalance);
+    expect(await chipsOf(u.id)).toBe(r.newBalance);
 
     const spin = await prisma.wheelSpin.findUnique({ where: { id: r.spinId } });
     expect(spin?.rewardTokens).toBe(r.rewardTokens);
@@ -40,14 +41,14 @@ describe("wheel of fortune (integration, real DB)", () => {
   });
 
   it("rejects a spin when the user can't afford the cost", async () => {
-    const u = await createUser(50);
+    const u = await createUserWithChips(50);
     await enableWheel(100);
     await expect(spinWheel(u.id)).rejects.toBeInstanceOf(WheelError);
-    expect(await balanceOf(u.id)).toBe(50); // untouched
+    expect(await chipsOf(u.id)).toBe(50); // untouched
   });
 
   it("rejects a spin when the wheel is disabled", async () => {
-    const u = await createUser(1000);
+    const u = await createUserWithChips(1000);
     await prisma.wheelConfig.upsert({
       where: { id: "default" },
       create: { id: "default", enabled: false, segments: SEGMENTS },
