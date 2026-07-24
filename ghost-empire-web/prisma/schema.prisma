@@ -2035,9 +2035,16 @@ model SupportGoal {
   tenantId  String?  @unique
   title     String // "New streaming PC", "Charity stream", …
   target    Int // goal amount (whole currency units)
-  current   Int      @default(0) // collected so far (manually updated)
+  /** Manual base. With autoTrack OFF this IS the displayed progress (legacy, hand-edited);
+   *  with autoTrack ON it becomes an offset added to real donations (off-platform gifts). */
+  current   Int      @default(0)
   currency  String   @default("PLN")
   active    Boolean  @default(false)
+  /** Derive progress from REAL donations (Donation rows since startedAt) + `current` as offset.
+   *  Default OFF → existing goals keep their hand-edited behaviour until the owner opts in. */
+  autoTrack Boolean  @default(false)
+  /** Window start for the auto-sum, so switching it on doesn't swallow all historical donations. */
+  startedAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("support_goals")
