@@ -2,11 +2,17 @@
 // PATCH — update fields of an existing ShopItem
 // POST  — create new ShopItem
 // DELETE — soft-delete (active=false)
+//
+// Money/legal invariant enforced here (see src/lib/shop-currency.ts + docs/CHIPS-CASINO.md):
+// an item priced in CHIPS (the free casino currency) must stay `category:"cosmetic"`. Both
+// writers below validate the item's RESOLVED state, so neither a create nor a partial update
+// can leave a CHIPS item sitting in a real-value category.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
+import { checkCurrencyCategory, type ShopCurrency } from "@/lib/shop-currency";
 
 const VALID_CATEGORIES = ["games", "skins", "subs", "cosmetic", "experience"];
 const VALID_TIERS = ["T1", "T2", "T3", "Prime", "OG", "DUAL"];
@@ -104,13 +110,47 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Brak pól do aktualizacji" }, { status: 400 });
   }
 
-  // Tenant-guarded update (can't edit another tenant's item).
   const tid = await currentTenantId();
-  const r = await prisma.shopItem.updateMany({
+
+  // Money/legal guard — the CHIPS ⇒ cosmetic invariant, checked against the item's RESOLVED
+  // state rather than just the field that changed. A PATCH that only flips `category` is the
+  // real leak: an existing CHIPS cosmetic moved to "games"/"skins"/"subs"/"experience" would
+  // let free casino chips buy something of real value (docs/CHIPS-CASINO.md). Read from
+  // `data` (not `body`) so the check keeps covering `currency` the day it becomes writable.
+  // Tenant-guarded read — can't inspect (or edit) another tenant's item.
+  const existing = await prisma.shopItem.findFirst({
     where: { id: body.id, ...(tid ? { tenantId: tid } : {}) },
+    select: { currency: true, category: true },
+  });
+  if (!existing) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+
+  const currencyCheck = checkCurrencyCategory(
+    (data.currency as string | undefined) ?? existing.currency,
+    (data.category as string | undefined) ?? existing.category,
+  );
+  if (!currencyCheck.ok) {
+    return NextResponse.json({ error: currencyCheck.error }, { status: 400 });
+  }
+
+  // Tenant-guarded update (can't edit another tenant's item). `currency`/`category` are part
+  // of the WHERE so the row we write is the exact snapshot we just validated — a concurrent
+  // edit of the other half of the pair loses the race instead of slipping past the guard
+  // (same atomic-guard pattern as the stock decrement in `shop/buy`).
+  const r = await prisma.shopItem.updateMany({
+    where: {
+      id: body.id,
+      ...(tid ? { tenantId: tid } : {}),
+      currency: existing.currency,
+      category: existing.category,
+    },
     data,
   });
-  if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+  if (r.count === 0) {
+    return NextResponse.json(
+      { error: "Item zmienił się w międzyczasie — odśwież i spróbuj ponownie" },
+      { status: 409 },
+    );
+  }
   const updated = await prisma.shopItem.findUnique({ where: { id: body.id } });
 
   await logAdminAction({
@@ -166,11 +206,22 @@ export async function POST(req: Request) {
   const stock = body.stock === undefined ? -1 : Math.floor(Number(body.stock));
   const totalStock = body.totalStock === undefined ? stock : Math.floor(Number(body.totalStock));
 
+  // Currency is deliberately NOT client-controlled here: everything created through the admin
+  // panel is a real-value GT item (the schema default). Chips cosmetics currently come from
+  // the seed only — see docs/CHIPS-CASINO.md "Faza 6" for the pending admin CRUD. It is kept
+  // as an explicit local, persisted explicitly and validated below, so that wiring
+  // `body.currency` in later goes THROUGH the guard instead of around it.
+  const currency: ShopCurrency = "GT";
+  const currencyCheck = checkCurrencyCategory(currency, category);
+  if (!currencyCheck.ok) {
+    return NextResponse.json({ error: currencyCheck.error }, { status: 400 });
+  }
+
   const tid = await currentTenantId();
   const created = await prisma.shopItem.create({
     data: {
       ...(tid ? { tenantId: tid } : {}),
-      name, description, category, price,
+      name, description, category, price, currency,
       imageEmoji: body.imageEmoji?.slice(0, 16) || "🎁",
       stock, totalStock,
       hot: !!body.hot,

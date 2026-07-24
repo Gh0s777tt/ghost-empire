@@ -12,7 +12,8 @@
     "src/lib/platform-tokens.ts",
     "src/lib/ssrf-guard.ts",
     "src/lib/moderation.ts",
-    "src/lib/refund.ts"
+    "src/lib/refund.ts",
+    "src/lib/shop-currency.ts"
   ],
   "out": "../docs/api",
   "readme": "none",

@@ -1,6 +1,8 @@
 // prisma/seed.ts
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+// Relative (not "@/…") — this file runs under tsx, outside the Next path-alias resolution.
+import { assertCurrencyCategoryValid } from "../src/lib/shop-currency";
 
 // Prisma 7 no longer auto-loads .env, and connects through a driver adapter (the URL
 // left the schema — see src/lib/prisma.ts + prisma.config.ts). Load env + build the
@@ -393,6 +395,15 @@ async function main() {
       sortOrder: 12,
     },
   ];
+
+  // Money/legal guard before anything is written: an item priced in CHIPS (the free casino
+  // currency) must be a cosmetic, or free chips would buy something of real value and re-close
+  // the loop the chips migration cut (src/lib/shop-currency.ts, docs/CHIPS-CASINO.md). The seed
+  // wipes and rewrites the whole catalog, so a bad row here would land straight in prod —
+  // throw before the delete rather than after.
+  for (const item of shopItems) {
+    assertCurrencyCategoryValid("currency" in item ? item.currency : undefined, item.category);
+  }
 
   await prisma.shopItem.deleteMany();
   await prisma.shopItem.createMany({ data: shopItems });

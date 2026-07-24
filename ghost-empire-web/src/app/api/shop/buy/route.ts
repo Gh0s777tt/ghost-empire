@@ -9,6 +9,7 @@ import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { discountedPrice } from "@/lib/economy";
+import { checkCurrencyCategory, isChipsCurrency } from "@/lib/shop-currency";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("shop-buy");
@@ -49,6 +50,21 @@ export async function POST(req: Request) {
       if (!item) throw new ShopError("Item nie istnieje", 404);
       if (!item.active) throw new ShopError("Item niedostępny", 410);
       if (item.stock === 0) throw new ShopError("Brak na stanie", 409);
+
+      // Fail closed on the CHIPS ⇒ cosmetic invariant. The sale is the exact moment the legal
+      // value loop would close, so if a bad row ever reaches the catalog (manual DB edit, a
+      // future admin `currency` field, a bad seed) we refuse it here rather than quietly charge
+      // free casino chips for something of real value. Same opaque 410 as an inactive item —
+      // the buyer can do nothing about it; the misconfiguration goes to the log instead.
+      const currencyCheck = checkCurrencyCategory(item.currency, item.category);
+      if (!currencyCheck.ok) {
+        log.error("CHIPS item is not a cosmetic — sale refused", undefined, {
+          itemId: item.id,
+          currency: item.currency,
+          category: item.category,
+        });
+        throw new ShopError("Item niedostępny", 410);
+      }
 
       const user = await tx.user.findUnique({
         where: { id: userId },
@@ -106,9 +122,11 @@ export async function POST(req: Request) {
       const price = discountedPrice(item.price, user.level, user.prestige);
 
       // Currency-aware: CHIPS items charge the FREE casino chips (never touch GT/totalSpent);
-      // GT items charge Ghost Tokens as before. A CHIPS item must be a cosmetic (no market value) —
-      // this is what keeps the casino's chips from ever buying anything of real value.
-      const isChips = item.currency === "CHIPS";
+      // GT items charge the tenant's tokens as before. That a CHIPS item is a cosmetic (no
+      // market value) is guaranteed by the guard above — this branch only decides which
+      // balance to debit. Shares the sentinel test with `planRefund` (via `isChipsCurrency`),
+      // so buy and refund can never disagree about what a row's currency means.
+      const isChips = isChipsCurrency(item.currency);
       const userUpdate = await tx.user.updateMany({
         where: isChips ? { id: userId, chips: { gte: price } } : { id: userId, tokens: { gte: price } },
         data: isChips ? { chips: { decrement: price } } : { tokens: { decrement: price }, totalSpent: { increment: price } },

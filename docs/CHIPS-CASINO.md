@@ -20,6 +20,7 @@
 - ✅ **Faza 7 (regulamin, copy)** — `GamblingGate`: „żetony 🪙 — waluta kasyna bez wartości pieniężnej; nie można kupić, wypłacić ani wymienić na nagrody o wartości rynkowej" (PL+EN).
 - ✅ **Faza 0 (framing)** — zdjęty kurs „1 PLN=100 GT" z `about` (→ „podziękowanie w GT za wsparcie"). Mechanizm mintu GT z donacji zostaje.
 - ✅ **Faza 4 (split sklepu — KOMPLETNA):** `shop/buy` currency-aware (itemy `currency:"CHIPS"` obciążają żetony, nie GT/`totalSpent`; guard `emitBalance` w ShopClient) **+ 4 kosmetyki „High Roller" za żetony w `prisma/seed.ts`** (odznaka/ramka/tytuł/efekt nicku — sink, zero wartości rynkowej). Sklep forward-safe. tsc+eslint. *(Opcjonalny follow-up: UI pokazujące cenę/saldo chips w ShopClient + funkcjonalny efekt kosmetyków na profilu.)*
+- ✅ **Faza 4 (domknięcie — 2026-07-24):** inwariant **`CHIPS ⇒ category:"cosmetic"` wymuszony w kodzie**, a nie tylko w komentarzu + dyscyplinie seeda. Nowa czysta `src/lib/shop-currency.ts` (+ **11 testów**, `typedoc.json`) wpięta w `admin/shop` POST+PATCH (400 — walidacja *wynikowego* stanu, więc sam PATCH `category` na itemie CHIPS też jest blokowany; to była realna, klikalna dziura w panelu), w `prisma/seed.ts` (rzut przed `deleteMany`) i **fail-closed w `shop/buy`** (410 zamiast cichej sprzedaży). Szczegóły: sekcja „Inwariant `CHIPS ⇒ category:\"cosmetic\"`" w Fazie 4. Zielone: tsc + eslint + 883 testy + build.
 - ⏳ **Opcjonalnie (nie blokuje legalnie):** kosmetyki za chips (content/admin), admin grant chips (Faza 6), welcome/activity chips, pełna strona ToS.
 - 🚀 **Do deployu zostaje TYLKO: `db push` na prod** (właściciel — dodaje kolumny `chips`/`currency`) + commit/review. Krok 0 równolegle: prawnik.
 - ⚠️ **NIE deployować** przed: `db push` + Faza 3 (źródła) + Faza 5 (UI/salda) — inaczej kasyno pokaże saldo GT, a gra na 0 żetonów = „Za mało żetonów".
@@ -103,6 +104,31 @@ Nowe, **wyłącznie darmowe** krany `chips`:
 3. **`src/app/api/shop/buy/route.ts`** — wybór pola do obciążenia wg `item.currency` (`tokens` vs `chips`),
    walidacja salda odpowiedniej waluty.
 4. **Krytyczne:** żaden item o wartości rynkowej **nie może** być kupiony za `chips`. To jest linia prawna.
+   ✅ **Wymuszone w kodzie** (nie tylko w seedzie) — patrz sekcja niżej.
+
+### Inwariant `CHIPS ⇒ category:"cosmetic"` (wymuszony)
+Reguła: **`ShopItem.currency === "CHIPS"` ⇒ `ShopItem.category === "cosmetic"`.** Item za żetony
+w kategorii o wartości rynkowej (`games` / `skins` / `subs` / `experience`) **domyka z powrotem
+pętlę wartości**, którą cała migracja na żetony przecina — darmowy żeton kupiłby wtedy klucz
+Steam. To jest **allowlista**: kategoria dodana w przyszłości (np. `hardware`) jest dla żetonów
+zabroniona z automatu.
+
+Jedno źródło prawdy: **`src/lib/shop-currency.ts`** (czysta, DB-free, `checkCurrencyCategory` /
+`assertCurrencyCategoryValid` / `isChipsCurrency`; w `typedoc.json` → `docs/api/shop-currency`).
+Trzy miejsca wymuszenia — każdy pisarz **i** ścieżka sprzedaży:
+
+| Gdzie | Zachowanie |
+|---|---|
+| `POST/PATCH /api/admin/shop` | Walidacja **wynikowego** stanu itemu (`data.* ?? istniejący.*`) → **400**. Sam PATCH `category` na istniejącym itemie CHIPS też jest blokowany (to była realna dziura: panel pozwalał przestawić zaseedowaną kosmetykę „High Roller" na `games`). `UPDATE` ma `currency`/`category` w `WHERE` → równoległa edycja drugiej połowy pary przegrywa wyścig (**409**), zamiast obejść guard |
+| `prisma/seed.ts` | `assertCurrencyCategoryValid` w pętli **przed** `deleteMany`/`createMany` — seed wymiata i odtwarza cały katalog (także na prodzie), więc zły wiersz rzuca zanim cokolwiek zostanie skasowane |
+| `POST /api/shop/buy` | **Fail-closed:** zły wiersz (ręczna edycja w DB, przyszłe pole `currency` w adminie) → sprzedaż odmówiona **410** + `log.error` z `itemId`. Sprzedaż to moment, w którym pętla by się domknęła |
+
+Uwaga dla przyszłego admin-CRUD (Faza 6): `currency` **nie jest** dziś polem zapisywalnym
+w `/api/admin/shop` (nowe itemy = `GT`, default schematu). Gdy będzie — musi przejść **przez**
+`checkCurrencyCategory` (guard czyta `data.currency`, więc wpięcie pola jest bezpieczne
+z automatu), a nie obok. Nieznana wartość `currency` (legacy/literówka) jest wszędzie traktowana
+jak `GT` — tak samo jak w `shop/buy` i `planRefund` (`lib/refund.ts`), żeby żadna ścieżka nie
+rozumiała wiersza inaczej niż pozostałe.
 
 ## Faza 5 — UI/UX (atrakcyjność = retencja bez kasy)
 1. **Saldo żetonów** widoczne w kasynie/kole (obok/zamiast GT); `KasynoClient`, `WheelPageClient`, header.

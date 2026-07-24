@@ -47,7 +47,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 ## Akcje użytkownika (session)
 | Trasa | Metoda | Po co |
 |---|---|---|
-| `…/api/shop/buy` | POST | Zakup przedmiotu (sprawdza wymagania: level/sub/mc/osiągnięcie) |
+| `…/api/shop/buy` | POST | Zakup przedmiotu (sprawdza wymagania: level/sub/mc/osiągnięcie). Waluta wg `ShopItem.currency`: `GT` → tokeny + `totalSpent`, `CHIPS` → żetony (darmowe, poza ekonomią GT). **Fail-closed:** item `CHIPS` spoza `category:"cosmetic"` = **410** + log (nie da się kupić rzeczy o wartości rynkowej za żetony) |
 | `…/api/polls/vote` | POST | Głos w ankiecie (1/usera, zmienialny; rate-limit) |
 | `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT (auto-zamykanie po `closesAt`) |
 | `…/api/bounties` · `…/api/bounties/pledge` | GET/POST | Viewer Bounties — lista/otwórz wyzwanie + zrzutka GT do puli (escrow, atomowo) |
@@ -129,7 +129,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/user-roles` | admin | Role: admin / moderator / donator |
 | `…/api/admin/connection-roles` | perm:mark_subs | GET aktualny status (prefill karty) + POST zapis sub/mod/VIP per platforma; GET dodany w #765, by zapis nie nadpisywał nietkniętych flag |
 | `…/api/admin/reset-database` | platform-owner | **Reset bazy** (#741) — `scope: all` (wszystkie portale, fraza „USUŃ WSZYSTKO") lub `scope: tenant`+`tenantId` (jeden portal, fraza = slug portalu). Tylko owner + step-up 2FA (failClosed) |
-| `…/api/admin/shop` | perm:manage_shop | CRUD sklepu |
+| `…/api/admin/shop` | perm:manage_shop | CRUD sklepu. **Inwariant CHIPS ⇒ `category:"cosmetic"`** (`lib/shop-currency.ts`) wymuszany na POST i PATCH — walidowany jest *wynikowy* stan itemu, więc sam PATCH `category` na istniejącym itemie za żetony też dostaje **400**; równoległa edycja drugiej połowy pary → **409** (odśwież). `currency` nie jest polem zapisywalnym (nowe itemy = `GT`) |
 | `…/api/admin/seasons` | admin | Sezony + nagrody Battle Pass |
 | `…/api/admin/achievements` | admin | CRUD osiągnięć + ręczne przyznawanie |
 | `…/api/admin/polls` | admin | CRUD ankiet |
