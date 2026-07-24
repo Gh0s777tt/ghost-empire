@@ -135,17 +135,27 @@ Nowe, **wyłącznie darmowe** krany `chips`:
 ```
 npx tsc --noEmit        # typy
 npx vitest run          # testy jednostkowe (economy/gt-games/wheel — już na chips)
-npm run test:integration # ✅ koło + duele: chips ruszone, ledger GT NIETKNIĘTY (wymaga testowego Postgresa)
+npm run test:integration # ✅ koło + duele + heist: chips ruszone, ledger GT NIETKNIĘTY (wymaga testowego Postgresa)
 npx eslint <changed>
 npx next build
 npm run docs:check && npm run docs:env
 ```
 **Rozdział walut jest pinowany testem, nie konwencją.** `tests/integration/helpers.ts`
-stempluje każdego żetonowego użytkownika niezerowym ledgerem GT (`GT_SEED`), a koło i duele
-asertują po ruchu pieniądza, że `tokens`/`totalEarned`/`totalSpent` są **bez zmian** i że każdy
-wiersz `Transaction` ma `currency: "CHIPS"` — czyli że gra kasynowa nie wraca do metryk realnej
-ekonomii (ranking/wrapped/economy-health liczą wyłącznie `"GT"`). Dokładając nową grę na chips,
-dołóż tę samą parę asercji.
+stempluje każdego żetonowego użytkownika niezerowym ledgerem GT (`GT_SEED`), a koło, duele i
+heist asertują po ruchu pieniądza, że `tokens`/`totalEarned`/`totalSpent` są **bez zmian** i że
+każdy wiersz `Transaction` ma `currency: "CHIPS"` — czyli że gra kasynowa nie wraca do metryk
+realnej ekonomii (ranking/wrapped/economy-health liczą wyłącznie `"GT"`). Dokładając nową grę na
+chips, dołóż tę samą parę asercji.
+
+**Heist ma dwie własne pułapki**, o które potyka się każdy, kto dopisuje tu testy:
+- Wynik napadu to **jeden zbiorowy rzut** o szansie 30–60%, więc „sukces" i „wpadka" są przy
+  prawdziwym CSPRNG rzutem monetą. Test mockuje **wyłącznie `cryptoRng`** z `@/lib/secure-rng`
+  (0 = zawsze sukces, 0.99 = zawsze wpadka) — inaczej żadnej z dwóch ścieżek pieniężnych nie da
+  się asertować bez flake'a.
+- **Stawka jest escrowana przy `!heist` (dołączeniu), ale nie zapisuje wiersza `Transaction`** —
+  jedyne wiersze ledgera, jakie napad produkuje, to wypłaty `heist:win`. Nieudany napad zostawia
+  więc tabelę `Transaction` **pustą**; asercja „każdy wiersz to CHIPS" przeszłaby tam pusto (
+  vacuously), dlatego test sprawdza tam **liczbę wierszy = 0**.
 **⚠️ db push (Faza 1)** — tylko za wyraźną zgodą właściciela, z backupem (patrz `docs/BACKUP.md`).
 
 ## Rollback

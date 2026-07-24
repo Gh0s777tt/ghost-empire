@@ -7,6 +7,11 @@ const TABLES = [
   "wheel_spins", "wheel_config", "prediction_entries", "predictions",
   "transactions", "notifications", "stream_alerts", "chat_feed_messages",
   "twitch_events", "kick_events", "mod_violation_logs", "outgoing_webhooks",
+  // `heists` must be listed EXPLICITLY: its `startedById` is a bare String, not an FK,
+  // so the users CASCADE below never reaches it (only `heist_entries` FKs into users).
+  // A leaked open heist is not inert — heistJoin() looks up "the open heist on this
+  // platform/tenant", so the next test would silently join the previous test's crew.
+  "heists",
   "users",
 ];
 
