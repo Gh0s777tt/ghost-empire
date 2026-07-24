@@ -5,7 +5,7 @@
 // /api/admin/payment-methods.
 import { useState, useEffect, useCallback } from "react";
 import { Wallet, Loader2, Trash2, Plus, Eye, EyeOff, Star, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 import { PaymentLogo } from "@/components/PaymentLogo";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
@@ -20,6 +20,7 @@ const KIND_ICON: Record<Kind, string> = { link: "🔗", crypto: "🪙", bank: "�
 
 export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void }) {
   const t = useTranslations("admin.paymentMethods");
+  const isPl = useLocale().startsWith("pl");
   const [loading, setLoading] = useState(true);
   const [methods, setMethods] = useState<Method[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -36,6 +37,8 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
   const [gCurrent, setGCurrent] = useState("0");
   const [gCurrency, setGCurrency] = useState("PLN");
   const [gActive, setGActive] = useState(false);
+  // Derive the public bar from real donations instead of the hand-typed number (#goal-autotrack).
+  const [gAutoTrack, setGAutoTrack] = useState(false);
   // per-portal /support page copy (#742) — streamer's own words
   const [sHeading, setSHeading] = useState("");
   const [sIntro, setSIntro] = useState("");
@@ -45,11 +48,11 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
     try {
       const d = await apiGet<{
         methods: Method[];
-        goal: { title: string; target: number; current: number; currency: string; active: boolean } | null;
+        goal: { title: string; target: number; current: number; currency: string; active: boolean; autoTrack?: boolean } | null;
         supportText?: { heading: string; intro: string; thanks: string };
       }>("/api/admin/payment-methods");
       setMethods(d.methods);
-      if (d.goal) { setGTitle(d.goal.title); setGTarget(String(d.goal.target)); setGCurrent(String(d.goal.current)); setGCurrency(d.goal.currency); setGActive(d.goal.active); }
+      if (d.goal) { setGTitle(d.goal.title); setGTarget(String(d.goal.target)); setGCurrent(String(d.goal.current)); setGCurrency(d.goal.currency); setGActive(d.goal.active); setGAutoTrack(Boolean(d.goal.autoTrack)); }
       if (d.supportText) { setSHeading(d.supportText.heading); setSIntro(d.supportText.intro); setSThanks(d.supportText.thanks); }
     } catch { /* keep */ } finally { setLoading(false); }
   }, []);
@@ -57,7 +60,7 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
 
   async function saveGoal() {
     setBusy("goal");
-    if (await call("save-goal", { title: gTitle.trim(), target: +gTarget || 0, current: +gCurrent || 0, currency: gCurrency.trim(), active: gActive })) onToast("ok", t("goalSaved"));
+    if (await call("save-goal", { title: gTitle.trim(), target: +gTarget || 0, current: +gCurrent || 0, currency: gCurrency.trim(), active: gActive, autoTrack: gAutoTrack })) onToast("ok", t("goalSaved"));
     setBusy(null);
   }
 
@@ -132,6 +135,19 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
             <input value={gCurrency} maxLength={8} onChange={(e) => setGCurrency(e.target.value.toUpperCase())} className="w-16 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white text-center uppercase outline-hidden focus:border-red-600" />
           </div>
         </div>
+        {/* Auto-track: the bar is derived from real donations; the "current" field above then acts
+            as a manual offset for off-platform gifts. Inline PL/EN — one toggle, no locale churn. */}
+        <label className="flex items-start gap-2 mb-2 cursor-pointer">
+          <input type="checkbox" checked={gAutoTrack} onChange={(e) => setGAutoTrack(e.target.checked)} className="accent-emerald-500 mt-0.5" />
+          <span className="text-[11px] text-zinc-400 leading-snug">
+            {isPl ? "Licz automatycznie z realnych wpłat" : "Track automatically from real donations"}
+            <span className="block text-[10px] text-zinc-600">
+              {isPl
+                ? "Pasek liczy się z zaksięgowanych donacji; pole „zebrano” działa wtedy jako ręczna dopłata (wpłaty spoza portalu)."
+                : "The bar sums credited donations; the “collected” field then acts as a manual offset (off-platform gifts)."}
+            </span>
+          </span>
+        </label>
         <button onClick={() => void saveGoal()} disabled={busy === "goal"} className="px-3 py-1.5 border border-zinc-700 text-zinc-200 hover:border-red-600 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 inline-flex items-center gap-1.5">
           {busy === "goal" ? <Loader2 className="w-3 h-3 animate-spin" /> : null} {t("goalSave")}
         </button>

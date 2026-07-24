@@ -55,13 +55,16 @@ export async function POST(req: Request) {
     const current = Math.max(0, Math.floor(Number(body.current ?? 0)));
     const currency = (String(body.currency ?? "PLN").trim().slice(0, 8) || "PLN").toUpperCase();
     const active = !!body.active;
+    // Auto-track: derive the public bar from real donations instead of this hand-typed number
+    // (`current` then acts as an offset for off-platform gifts). Absent key → leave as-is.
+    const autoTrack = typeof body.autoTrack === "boolean" ? body.autoTrack : undefined;
     if (active && (!title || target < 1)) return NextResponse.json({ error: "Tytuł i cel (≥1) wymagane" }, { status: 400 });
     // Previous collected amount, to detect crossing the target on this save (#535).
     const prev = await (tid
       ? prisma.supportGoal.findUnique({ where: { tenantId: tid }, select: { current: true } })
       : prisma.supportGoal.findFirst({ select: { current: true } })
     ).catch(() => null);
-    const data = { title, target, current, currency, active };
+    const data = { title, target, current, currency, active, ...(autoTrack === undefined ? {} : { autoTrack }) };
     await prisma.supportGoal.upsert({
       where: { tenantId: tid ?? "__none__" },
       create: { ...(tid ? { tenantId: tid } : {}), ...data },
