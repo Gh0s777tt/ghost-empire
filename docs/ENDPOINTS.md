@@ -258,6 +258,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/companion/token` | POST/OPTIONS | Mint bezstanowego tokenu companiona (session, same-origin przez portal-bridge rozszerzenia) → `{token, expiresInDays:7}`; HMAC-podpisany `{userId, tenantId}` (bez db), CORS |
 | `…/api/live-status` | GET | Publiczny, cache'owany status „czy streamer jest live?" do bannera home (#500 — Twitch Helix, współdzielony z overlayem widzów) |
 | `…/api/support/click` | POST | Licznik klików metody wsparcia (#541 — beacon z `/support`, rate-limit per IP) |
+| `…/api/support/claim` | POST | Zgłoszenie widza „wpłaciłem bez kodu" (#self-claim) — zapisuje **asercję** (kwota/waluta/data/dowód) do `DonationClaim`. **Nic nie kredytuje i nie dopasowuje** (dopasowanie jest po stronie admina); odpowiedź **zawsze identyczna**, żeby nie być oracle'em istnienia cudzych wpłat. Auth + rate-limit 5/h `failClosed` + limit 3 otwartych zgłoszeń; fail-closed przy nierozwiązanym tenancie |
 | `…/api/og` | GET | Dynamiczny OG-image (per tenant: branding/nazwa) |
 | `…/api/telemetry/client-error` | POST | Sink błędów klienta (Sentry-lite, rate-limit per IP, nic nie zapisuje w DB) |
 

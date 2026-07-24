@@ -1499,6 +1499,40 @@ model Donation {
   @@map("donations")
 }
 
+/// A viewer's ASSERTION that an uncredited payment was theirs ("I tipped without the code").
+///
+/// A donation sent without the GE-code credits nothing and sits in the admin reconciliation queue
+/// until the streamer digs it out by hand. This lets the supporter describe their payment so the
+/// streamer can match it — but it NEVER credits: the existing admin assign action is still the only
+/// thing that mints, and donor facts are guessable, so approval stays human (#audit3).
+///
+/// DELIBERATELY NOT LINKED TO A DONATION AT SUBMIT TIME. The public /support wall prints exact
+/// donation amounts, so "amount + currency + date" is not a secret: if the endpoint answered
+/// "matched / not matched" it would be an existence oracle for other people's payments, and a
+/// first-come claim could silently occupy the only slot the admin sees. Instead we store the raw
+/// assertion, always answer the same thing, and do the matching SERVER-SIDE in the admin queue,
+/// where every competing assertion is shown side by side with the real donor name.
+model DonationClaim {
+  id           String    @id @default(cuid())
+  tenantId     String? // portal the claim was filed on (null = legacy/founder)
+  userId       String // the claimant
+  /// What they assert they paid — matched against queue rows only in the admin view.
+  amountGrosze Int
+  currency     String    @default("PLN")
+  donatedOn    DateTime
+  /// Free-text proof they offer (provider reference, the email/nick they paid under…).
+  evidence     String?   @db.Text
+  status       String    @default("pending") // "pending" | "approved" | "rejected"
+  /// Set only when an admin resolves the claim against a concrete donation.
+  donationId   String?
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  @@index([tenantId, status])
+  @@index([userId])
+  @@map("donation_claims")
+}
+
 model DiscordLinkCode {
   code      String   @id
   userId    String

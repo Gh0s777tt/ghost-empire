@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { getTwitchStreamerToken, getStreamlabsConnection } from "@/lib/platform-tokens";
 import { currentTenantId, getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import { getSettings as getAlertSettings } from "@/lib/alerts";
+import { claimsForDonation, type StoredClaim } from "@/lib/donation-claim";
 import { getCodeConfig } from "@/lib/codes";
 import { displayNick } from "@/lib/utils";
 import type { ModPermission } from "@/lib/permissions";
@@ -206,6 +207,33 @@ export async function GET(req: Request) {
           take: 30,
         }),
       ]);
+      // Viewer self-claims on those donations (#self-claim) — shown as a SUGGESTION next to each
+      // row so the admin can approve with one click instead of hunting the donor down. A claim
+      // never credits on its own; the existing assign action still does the minting.
+      // Viewer self-claims (#self-claim) are matched HERE, admin-side — never at submit time (see
+      // lib/donation-claim.ts for why). EVERY plausible claim is attached to its row, so competing
+      // claims are visible to the streamer instead of one silently winning.
+      const claims = unmatched.length
+        ? await prisma.donationClaim
+            .findMany({
+              where: { status: "pending", ...(tid ? { tenantId: tid } : {}) },
+              orderBy: { createdAt: "asc" },
+              select: { id: true, userId: true, amountGrosze: true, currency: true, donatedOn: true, evidence: true },
+              take: 200,
+            })
+            .catch(() => [] as StoredClaim[])
+        : [];
+      // Claimant handles for the admin's assign field (DonationClaim is a standalone record by
+      // design — no relation). Tenant-scoped so a foreign portal's identity never renders here.
+      const claimUsers = claims.length
+        ? await prisma.user
+            .findMany({
+              where: { id: { in: [...new Set(claims.map((c) => c.userId))] }, ...(tid ? { tenantId: tid } : {}) },
+              select: { id: true, username: true, displayName: true },
+            })
+            .catch(() => [] as { id: string; username: string | null; displayName: string | null }[])
+        : [];
+
       return NextResponse.json({
         streamlabsConnection: conn ? {
           connected: true,
@@ -217,6 +245,15 @@ export async function GET(req: Request) {
         unmatchedDonations: unmatched.map((d) => ({
           id: d.id, externalId: d.externalId, donorName: d.donorName, message: d.message,
           amountGrosze: d.amountGrosze, currency: d.currency, donatedAt: d.donatedAt.toISOString(),
+          claims: claimsForDonation(d, claims).map((c) => {
+            const who = claimUsers.find((u) => u.id === c.userId);
+            return {
+              id: c.id,
+              userId: c.userId,
+              name: who?.displayName || who?.username || c.userId,
+              evidence: c.evidence,
+            };
+          }),
         })),
       });
     }
