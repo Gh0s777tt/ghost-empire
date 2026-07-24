@@ -16,6 +16,7 @@ import { cookies } from "next/headers";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { displayNick } from "@/lib/utils";
 import { LINK_COOKIE_NAME, verifyLinkToken, executeAccountLink } from "@/lib/account-linking";
+import { linkableEmail, asVerifiedFlag } from "@/lib/oauth-email";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { createLogger } from "@/lib/logger";
@@ -133,7 +134,16 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
         id,
         // Kick returns the handle in `name`; keep username/slug as defensive fallbacks.
         name: profile.name ?? profile.username ?? profile.slug ?? null,
-        email: profile.email ?? null,
+        // ACCOUNT-LINKING SECURITY — Kick's /public/v1/users exposes NO email-verification
+        // flag (see KickProfile: no `email_verified`), so we cannot confirm ownership per
+        // login. We deliberately TRUST Kick's signup-time email verification (Kick sends a
+        // confirmation email at registration) and let the email auto-link — hence
+        // trustWhenUnsignalled=true. RESIDUAL RISK (documented for the audit): if Kick ever
+        // lets an unverified-email account complete OAuth, this is an account-takeover path;
+        // the mitigation is ready — flip the last arg to `false` to require manual linking.
+        // The other three providers gate on a real verification signal instead. See
+        // lib/oauth-email.ts + docs/ARCHITECTURE.md §auth.
+        email: linkableEmail(profile.email, undefined, true),
         image: profile.profile_picture ?? null,
       };
     },
@@ -153,10 +163,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
 
   providers: [
-    // allowDangerousEmailAccountLinking: true on every OAuth provider —
-    // safe because all 4 providers verify email ownership themselves.
-    // Without this NextAuth blocks login when an existing user has the same
-    // email via different provider (OAuthAccountNotLinked error).
+    // allowDangerousEmailAccountLinking: true on every OAuth provider. Without it,
+    // NextAuth hard-fails login (OAuthAccountNotLinked) whenever an existing user has
+    // the same email via a different provider — so we keep it ON to preserve seamless
+    // cross-provider sign-in. The flag's DANGER (auto-merging onto any same-email account)
+    // is neutralized ONE layer down instead: each provider's profile() returns an `email`
+    // ONLY when the provider VERIFIED it (see lib/oauth-email.ts). An unverified/absent
+    // email becomes null → NextAuth creates a SEPARATE account rather than auto-linking,
+    // closing the account-takeover vector a payments/security audit flagged (MEDIUM). Never
+    // set profile.email from a source that returns the address regardless of verification
+    // (e.g. Twitch Helix /users) — that is exactly the hole this fix closed.
     TwitchProvider({
       clientId: process.env.TWITCH_CLIENT_ID!,
       clientSecret: process.env.TWITCH_CLIENT_SECRET!,
@@ -173,38 +189,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         },
       },
-      // CRITICAL for account linking: allowDangerousEmailAccountLinking only unifies
-      // providers when the profile carries an email. Twitch's OIDC id_token OMITS the
-      // email whenever the account's email is unverified (or the claims aren't honored),
-      // so a Twitch login used to create a SEPARATE null-email User instead of linking
-      // onto the existing Discord/Google/Kick account (same person). We backfill the
-      // email from Helix /users (the user:read:email scope returns it even when the
-      // id_token doesn't), so email-linking works for Twitch exactly like the others.
-      // Guarded — a Helix hiccup never blocks login; it just falls back to no email.
-      async profile(profile: Record<string, unknown>, tokens: { access_token?: string }) {
-        let email = (typeof profile.email === "string" && profile.email) || null;
-        if (!email && tokens.access_token) {
-          try {
-            const res = await fetch("https://api.twitch.tv/helix/users", {
-              headers: {
-                Authorization: `Bearer ${tokens.access_token}`,
-                "Client-Id": process.env.TWITCH_CLIENT_ID ?? "",
-              },
-            });
-            if (res.ok) {
-              const data = (await res.json()) as { data?: { email?: string | null }[] };
-              email = data.data?.[0]?.email ?? null;
-            } else {
-              log.warn("twitch helix email backfill failed", { status: res.status });
-            }
-          } catch (e) {
-            log.error("twitch helix email backfill error", e);
-          }
-        }
+      // ACCOUNT-LINKING SECURITY (audit fix): the ONLY trustworthy verification signal for
+      // Twitch is the OIDC id_token itself — Twitch omits the `email` claim when the account
+      // email is UNVERIFIED (and may include `email_verified` when present). Helix /users, by
+      // contrast, returns the email regardless of verification, so the previous Helix backfill
+      // let an attacker link a Twitch account carrying a VICTIM's unverified email onto the
+      // victim's existing Google/Discord/Kick account → takeover. We therefore use the id_token
+      // email ONLY, gated on verification (present ⇒ verified unless email_verified===false),
+      // and NEVER Helix. Tradeoff: a genuinely-verified user whose id_token omits the email
+      // (rare — "claims not honored") won't AUTO-link; login still succeeds as a separate
+      // account and they can link manually via the authenticated /profile connections flow.
+      // The `tokens` arg (Helix bearer) is intentionally gone — nothing here needs it.
+      profile(profile: Record<string, unknown>) {
+        const idTokenEmail = (typeof profile.email === "string" && profile.email) || null;
+        // Present-in-id_token ⇒ verified, unless Twitch explicitly says email_verified===false.
+        const verified = idTokenEmail ? (asVerifiedFlag(profile.email_verified) ?? true) : undefined;
         return {
           id: String(profile.sub ?? profile.id ?? ""),
           name: (typeof profile.preferred_username === "string" ? profile.preferred_username : null) as string | null,
-          email,
+          email: linkableEmail(idTokenEmail, verified),
           image: (typeof profile.picture === "string" ? profile.picture : null) as string | null,
         };
       },
@@ -218,11 +221,59 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           scope: "identify email guilds",
         },
       },
+      // Custom profile so we can gate the email on Discord's `verified` flag (an
+      // UNVERIFIED Discord email must not auto-link — same takeover class as Twitch).
+      // The avatar/name mapping mirrors @auth/core's built-in Discord profile() 1:1
+      // (it isn't exported for reuse, so it's replicated here — keep in sync on upgrades).
+      profile(profile: Record<string, unknown>) {
+        const id = String(profile.id ?? "");
+        const avatar = profile.avatar;
+        let image_url: string;
+        if (avatar == null) {
+          const discriminator = String(profile.discriminator ?? "");
+          const defaultAvatarNumber =
+            discriminator === "0"
+              ? Number(BigInt(id) >> BigInt(22)) % 6
+              : parseInt(discriminator) % 5;
+          image_url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+        } else {
+          const format = String(avatar).startsWith("a_") ? "gif" : "png";
+          image_url = `https://cdn.discordapp.com/avatars/${id}/${String(avatar)}.${format}`;
+        }
+        return {
+          id,
+          name: (profile.global_name as string) ?? (profile.username as string) ?? null,
+          // trustWhenUnsignalled=true: block only when Discord says verified===false; if the
+          // flag is ever absent (it's present with the `email` scope), don't break login.
+          email: linkableEmail(
+            typeof profile.email === "string" ? profile.email : null,
+            asVerifiedFlag(profile.verified),
+            true,
+          ),
+          image: image_url,
+        };
+      },
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       allowDangerousEmailAccountLinking: true,
+      // Custom profile so the linking key honors Google's `email_verified` (defense-in-depth
+      // — consumer Google emails are effectively always verified, but we never trust an
+      // email Google flags email_verified===false). Every non-email field mirrors @auth/core's
+      // built-in OIDC defaultProfile 1:1 so ONLY the email gating changes behavior.
+      profile(profile: Record<string, unknown>) {
+        return {
+          id: String(profile.sub ?? profile.id ?? ""),
+          name: (profile.name ?? profile.nickname ?? profile.preferred_username ?? null) as string | null,
+          email: linkableEmail(
+            typeof profile.email === "string" ? profile.email : null,
+            asVerifiedFlag(profile.email_verified),
+            true,
+          ),
+          image: (profile.picture ?? null) as string | null,
+        };
+      },
       authorization: {
         params: {
           // Login requests ONLY non-sensitive scopes so the Google OAuth app can be
