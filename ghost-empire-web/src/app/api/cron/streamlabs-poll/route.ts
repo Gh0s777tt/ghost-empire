@@ -25,7 +25,20 @@ export async function GET(req: Request) {
   const results: Array<{ tenantId: string | null; ok: boolean; fetched: number; matched: number; unmatched: number; error?: string }> = [];
   for (const c of conns) {
     try {
-      results.push({ tenantId: c.tenantId, ...(await pollAndProcessDonations(c.tenantId)) });
+      const r = await pollAndProcessDonations(c.tenantId);
+      results.push({ tenantId: c.tenantId, ...r });
+      // A RETURNED ok:false is a fetch failure (pollAndProcessDonations swallows its own fetch
+      // errors and returns instead of throwing), so it never hits the catch below. Surface it to
+      // Sentry too — otherwise a sustained Streamlabs outage stalls income while only nudging the
+      // failed-count, invisible to alerting.
+      if (!r.ok) {
+        log.error("portal poll failed (fetch)", { tenantId: c.tenantId, error: r.error });
+        Sentry.captureMessage("streamlabs-poll: portal fetch failed", {
+          level: "error",
+          tags: { cron: "streamlabs-poll" },
+          extra: { tenantId: c.tenantId, error: r.error },
+        });
+      }
     } catch (e) {
       // Isolate portals: pollAndProcessDonations only try/catches its fetch — a throw in the
       // mint transaction / achievements / goals would otherwise abort the loop and starve every
