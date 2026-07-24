@@ -11,7 +11,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { getStripe, periodEndToExpiry } from "@/lib/billing";
+import { getStripe, subscriptionUpdateData } from "@/lib/billing";
 import { normalizePlan } from "@/lib/entitlements";
 import { createLogger } from "@/lib/logger";
 
@@ -84,14 +84,12 @@ export async function POST(req: Request) {
         const tenantId = await tenantIdForSubscription(sub);
         if (!tenantId) { log.warn("subscription without tenant", { sub: sub.id }); break; }
         const periodEnd = subPeriodEnd(sub);
-        const active = sub.status === "active" || sub.status === "trialing" || sub.status === "past_due";
-        const plan = normalizePlan(sub.metadata?.plan);
         await prisma.tenant.updateMany({
           where: { id: tenantId },
           data: {
             stripeSubscriptionId: sub.id,
-            ...(active && plan !== "basic" ? { plan } : {}),
-            ...(periodEnd ? { planExpiresAt: periodEndToExpiry(periodEnd) } : {}),
+            // Pure, unit-tested decision (billing.subscriptionUpdateData) — same absolute-set result.
+            ...subscriptionUpdateData(sub.status, sub.metadata?.plan, periodEnd),
           },
         });
         log.info("subscription updated", { tenantId, status: sub.status, periodEnd });

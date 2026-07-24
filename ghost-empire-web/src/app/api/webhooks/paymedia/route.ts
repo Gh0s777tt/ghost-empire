@@ -99,7 +99,35 @@ export async function POST(req: Request) {
     .join(" ");
   const match = await matchDonationToUser(searchText, null); // donationCode is globally unique = the verification
   if (!match) {
-    log.warn("payment — no valid donation code (manual queue)", { paymentId: payload.payment_id, amountPLN });
+    // Persist the codeless donation to the admin reconciliation queue (like Streamlabs) instead of
+    // dropping it — real PLN was received; the streamer can credit the donor later. Idempotent via
+    // the unique externalId (a webhook retry loses with P2002, which we swallow). Best-effort: never
+    // fail the webhook on a persistence hiccup. tenantId=null → founder queue (per-tenant PayMedia
+    // config is a separate follow-up; PayMedia is founder-scoped today).
+    if (payload.payment_id) {
+      await prisma.donation
+        .create({
+          data: {
+            tenantId: null,
+            externalId: `paymedia:${payload.payment_id}`,
+            source: "paymedia",
+            donorName: String(payload.metadata?.username ?? "Anon").slice(0, 200),
+            message: typeof payload.metadata?.message === "string" ? payload.metadata.message.slice(0, 2000) : null,
+            amountGrosze: Math.round(amountPLN * 100),
+            currency: "PLN",
+            donatedAt: new Date(),
+            userId: null,
+            matchedAt: null,
+            matchType: null,
+            tokensGranted: 0,
+          },
+        })
+        .catch((e: unknown) => {
+          const code = typeof e === "object" && e !== null && "code" in e ? (e as { code: string }).code : "";
+          if (code !== "P2002") log.error("failed to persist unmatched paymedia donation", { paymentId: payload.payment_id, error: e instanceof Error ? e.message : String(e) });
+        });
+    }
+    log.warn("payment — no valid donation code (queued for manual reconciliation)", { paymentId: payload.payment_id, amountPLN });
     return NextResponse.json({
       ok: true,
       warning: "user_not_matched",
@@ -159,6 +187,30 @@ export async function POST(req: Request) {
           link: "/profile",
         },
       }),
+      // Ledger row (parity with Streamlabs) — makes PayMedia income visible in the reconciliation
+      // queue, top-supporters and economy views. Only when a payment_id exists (Donation.externalId
+      // is required + unique → idempotent; P2002 rolls back alongside the Transaction). No id → skip
+      // just the ledger row; the mint above still happens.
+      ...(payload.payment_id
+        ? [
+            prisma.donation.create({
+              data: {
+                tenantId: null,
+                externalId: `paymedia:${payload.payment_id}`,
+                source: "paymedia",
+                donorName: (payload.metadata?.username ?? "Anon").slice(0, 200),
+                message: payload.metadata?.message?.slice(0, 2000) ?? null,
+                amountGrosze: donationGrosze,
+                currency: "PLN",
+                donatedAt: new Date(),
+                userId,
+                matchedAt: new Date(),
+                matchType: match.matchType,
+                tokensGranted,
+              },
+            }),
+          ]
+        : []),
     ]);
   } catch (e: unknown) {
     if (typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2002") {

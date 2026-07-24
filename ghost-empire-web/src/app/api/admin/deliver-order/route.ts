@@ -4,6 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { currentTenantId } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
+import { planRefund } from "@/lib/refund";
+
+/**
+ * Thrown inside the refund `$transaction` when the atomic status flip matches no
+ * `pending` row — a concurrent refund (double-click / two admins) already won the
+ * race. Caught below to return 409 so we never credit the same order twice.
+ */
+class RefundNotPending extends Error {}
 
 export async function POST(req: Request) {
   const auth = await requirePermission("deliver_orders");
@@ -69,59 +77,77 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, status: "delivered" });
   }
 
-  // Refund: restore tokens, restore stock, mark refunded
+  // Refund: restore the SAME currency that was spent, restore stock, mark refunded.
   const refundAmount = Math.abs(tx.amount);
+  // Money-critical branch: a CHIPS order must credit free chips, never mint real GT
+  // (and must not touch totalSpent). See planRefund / docs/CHIPS-CASINO.md.
+  const plan = planRefund(tx.currency, refundAmount);
 
-  await prisma.$transaction([
-    prisma.transaction.update({
-      where: { id: transactionId },
-      data: { status: "refunded", note },
-    }),
-    prisma.user.update({
-      where: { id: tx.userId },
-      data: {
-        tokens: { increment: refundAmount },
-        totalSpent: { decrement: refundAmount },
-      },
-    }),
-    prisma.transaction.create({
-      data: {
-        userId: tx.userId,
-        type: "refund",
-        amount: refundAmount,
-        reason: `refund:${tx.reason}`,
-        shopItemId: tx.shopItemId,
-        status: "completed",
-        note,
-      },
-    }),
-    ...(tx.shopItemId && tx.shopItem && tx.shopItem.stock !== -1
-      ? [
-          prisma.shopItem.update({
-            where: { id: tx.shopItemId },
-            data: { stock: { increment: 1 } },
-          }),
-        ]
-      : []),
-    prisma.notification.create({
-      data: {
-        userId: tx.userId,
-        type: "system",
-        title: "Zwrot środków",
-        message: `Otrzymałeś ${refundAmount} GT z powrotem za "${tx.shopItem?.name ?? tx.reason}".${note ? ` ${note}` : ""}`,
-        icon: "💰",
-      },
-    }),
-  ]);
+  // Run as an interactive transaction so the status flip is an atomic guard: only
+  // the first refund of a still-`pending` order wins. The earlier `tx.status`
+  // check is a non-atomic read — two concurrent requests can both pass it, so the
+  // updateMany below (count===0 ⇒ abort) is the real double-credit backstop, same
+  // pattern as shop/buy stock and grant-tokens balance.
+  try {
+    await prisma.$transaction(async (dbtx) => {
+      const flip = await dbtx.transaction.updateMany({
+        where: { id: transactionId, status: "pending" },
+        data: { status: "refunded", note },
+      });
+      if (flip.count === 0) throw new RefundNotPending();
+
+      await dbtx.user.update({
+        where: { id: tx.userId },
+        data: plan.isChips
+          ? { chips: { increment: plan.chipsDelta } }
+          : { tokens: { increment: plan.tokensDelta }, totalSpent: { decrement: plan.totalSpentDelta } },
+      });
+
+      await dbtx.transaction.create({
+        data: {
+          userId: tx.userId,
+          type: "refund",
+          amount: refundAmount,
+          reason: `refund:${tx.reason}`,
+          shopItemId: tx.shopItemId,
+          currency: plan.refundCurrency,
+          status: "completed",
+          note,
+        },
+      });
+
+      if (tx.shopItemId && tx.shopItem && tx.shopItem.stock !== -1) {
+        await dbtx.shopItem.update({
+          where: { id: tx.shopItemId },
+          data: { stock: { increment: 1 } },
+        });
+      }
+
+      await dbtx.notification.create({
+        data: {
+          userId: tx.userId,
+          type: "system",
+          title: "Zwrot środków",
+          message: `Otrzymałeś ${refundAmount} ${plan.isChips ? "żetonów" : "GT"} z powrotem za "${tx.shopItem?.name ?? tx.reason}".${note ? ` ${note}` : ""}`,
+          icon: "💰",
+        },
+      });
+    });
+  } catch (e) {
+    if (e instanceof RefundNotPending) {
+      return NextResponse.json({ error: "Zamówienie nie jest już w statusie pending" }, { status: 409 });
+    }
+    throw e;
+  }
 
   await logAdminAction({
     adminId: auth.userId,
     action: "refund_order",
     targetType: "transaction",
     targetId: transactionId,
-    details: { userId: tx.userId, item: tx.shopItem?.name, refunded: refundAmount, note },
+    details: { userId: tx.userId, item: tx.shopItem?.name, refunded: refundAmount, currency: plan.refundCurrency, note },
     req,
   });
 
-  return NextResponse.json({ ok: true, status: "refunded", refunded: refundAmount });
+  return NextResponse.json({ ok: true, status: "refunded", refunded: refundAmount, currency: plan.refundCurrency });
 }
