@@ -32,6 +32,9 @@ export default async function ShopPage() {
           where: { id: session.user.id },
           select: {
             tokens: true,
+            // Chips fund the CHIPS half of the catalog (casino cosmetics) — the client needs
+            // both balances or a chips item would be priced against the wrong wallet.
+            chips: true,
             level: true,
             prestige: true,
             connections: {
@@ -46,11 +49,12 @@ export default async function ShopPage() {
   ]);
 
   let userContext:
-    | { tokens: number; level: number; prestige: number; subTiers: string[]; maxSubMonths: number; achievements: string[] }
+    | { tokens: number; chips: number; level: number; prestige: number; subTiers: string[]; maxSubMonths: number; achievements: string[] }
     | null = null;
   if (user) {
     userContext = {
       tokens: user.tokens,
+      chips: user.chips,
       level: user.level,
       prestige: user.prestige,
       subTiers: user.connections.map((c) => c.subTier ?? "").filter(Boolean),

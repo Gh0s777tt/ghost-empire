@@ -119,16 +119,14 @@ Trzy miejsca wymuszenia — każdy pisarz **i** ścieżka sprzedaży:
 
 | Gdzie | Zachowanie |
 |---|---|
-| `POST/PATCH /api/admin/shop` | Walidacja **wynikowego** stanu itemu (`data.* ?? istniejący.*`) → **400**. Sam PATCH `category` na istniejącym itemie CHIPS też jest blokowany (to była realna dziura: panel pozwalał przestawić zaseedowaną kosmetykę „High Roller" na `games`). `UPDATE` ma `currency`/`category` w `WHERE` → równoległa edycja drugiej połowy pary przegrywa wyścig (**409**), zamiast obejść guard |
+| `POST/PATCH /api/admin/shop` | Walidacja **wynikowego** stanu itemu (`data.* ?? istniejący.*`) → **400**; dotyczy obu pól pary, bo `currency` i `category` są zapisywalne (Faza 6). Sam PATCH `category` na istniejącym itemie CHIPS też jest blokowany (to była realna dziura: panel pozwalał przestawić zaseedowaną kosmetykę „High Roller" na `games`). `UPDATE` ma `currency`/`category` w `WHERE` → równoległa edycja drugiej połowy pary przegrywa wyścig (**409**), zamiast obejść guard |
 | `prisma/seed.ts` | `assertCurrencyCategoryValid` w pętli **przed** `deleteMany`/`createMany` — seed wymiata i odtwarza cały katalog (także na prodzie), więc zły wiersz rzuca zanim cokolwiek zostanie skasowane |
 | `POST /api/shop/buy` | **Fail-closed:** zły wiersz (ręczna edycja w DB, przyszłe pole `currency` w adminie) → sprzedaż odmówiona **410** + `log.error` z `itemId`. Sprzedaż to moment, w którym pętla by się domknęła |
 
-Uwaga dla przyszłego admin-CRUD (Faza 6): `currency` **nie jest** dziś polem zapisywalnym
-w `/api/admin/shop` (nowe itemy = `GT`, default schematu). Gdy będzie — musi przejść **przez**
-`checkCurrencyCategory` (guard czyta `data.currency`, więc wpięcie pola jest bezpieczne
-z automatu), a nie obok. Nieznana wartość `currency` (legacy/literówka) jest wszędzie traktowana
-jak `GT` — tak samo jak w `shop/buy` i `planRefund` (`lib/refund.ts`), żeby żadna ścieżka nie
-rozumiała wiersza inaczej niż pozostałe.
+Nieznana wartość `currency` (legacy/literówka) jest przy **odczycie** wszędzie traktowana jak
+`GT` — tak samo jak w `shop/buy` i `planRefund` (`lib/refund.ts`), żeby żadna ścieżka nie
+rozumiała wiersza inaczej niż pozostałe. Przy **zapisie** jest odwrotnie: `/api/admin/shop`
+odrzuca nieznaną walutę (**400**), zamiast po cichu wpisać śmieć do kolumny.
 
 ## Faza 5 — UI/UX (atrakcyjność = retencja bez kasy)
 1. **Saldo żetonów** widoczne w kasynie/kole (obok/zamiast GT); `KasynoClient`, `WheelPageClient`, header.
@@ -140,9 +138,29 @@ rozumiała wiersza inaczej niż pozostałe.
 6. Zdjąć z UI wszelkie sugestie „kup GT/żetony za kasę".
 
 ## Faza 6 — admin
-1. **Grant żetonów** (jak `api/admin/grant-tokens`, ale `chips`).
-2. **CRUD casino-shopu** (kosmetyki za chips) + konfiguracja dziennego grantu.
-3. Panel ekonomii: **osobne** metryki GT vs chips (chips nie liczą się do „realnej" ekonomii).
+1. **Grant żetonów** (jak `api/admin/grant-tokens`, ale `chips`). ⏳
+2. ✅ **CRUD casino-shopu (kosmetyki za chips)** — `currency` jest polem zapisywalnym w
+   `POST`/`PATCH /api/admin/shop` (nieznana wartość = **400**, domyślna = `GT`, więc każdy
+   istniejący klient tworzy dokładnie to co wcześniej). W panelu (sekcja „Sklep") doszedł
+   **przełącznik waluty**: wybór `🪙 CHIPS` **wymusza** `category:"cosmetic"` i blokuje
+   pozostałe kategorie, etykieta ceny zmienia się na „Cena (żetony 🪙)", a na liście item
+   dostaje plakietkę `🪙 CHIPS` i cenę w swojej walucie. Inwariant i tak jest sprawdzany
+   serwerowo — UI tylko nie pozwala złożyć żądania, które i tak dostałoby 400.
+   *Konfiguracja dziennego grantu — nadal ⏳.*
+   **Dlaczego to była luka platformowa:** kasyno na żetonach działa na **każdym** portalu,
+   ale sink na wygrane żetony istniał tylko u założyciela (4 kosmetyki z `prisma/seed.ts`),
+   a jedyną drogą dołożenia kolejnych był destrukcyjny re-seed (`deleteMany` całego katalogu).
+3. Panel ekonomii: **osobne** metryki GT vs chips (chips nie liczą się do „realnej" ekonomii). ⏳
+
+### Sklep widziany przez widza (waluta per item)
+`ShopClient` rozwiązuje cenę **per item**, nie globalnie: item `CHIPS` pokazuje cenę w 🪙,
+liczy „stać/nie stać" wobec salda **żetonów** (a nie GT), a modal potwierdzenia pokazuje saldo
+i „po zakupie" w tej samej walucie. Saldo żetonów (osobny, bursztynowy kafelek) i zdanie
+`shop.helpChips` („kosmetyka bez wartości rynkowej; żetonów nie można kupić ani wypłacić")
+pojawiają się **tylko** gdy katalog portalu faktycznie ma itemy za żetony. `/shop` dociąga w tym
+celu `User.chips` obok `tokens`. Wcześniej wszystko było renderowane symbolem GT — na portalu
+założyciela zaseedowane kosmetyki „High Roller" pokazywały się jako cena w GT i „za mało GT",
+mimo że `shop/buy` obciążał żetony.
 
 ## Faza 7 — komunikaty / regulamin
 1. Donacje: „**podziękowanie**", nie „kup walutę"; zdjąć kurs PLN→GT (Faza 0).

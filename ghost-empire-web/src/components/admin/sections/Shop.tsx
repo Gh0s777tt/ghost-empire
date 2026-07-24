@@ -9,6 +9,7 @@ import { SectionCard, FieldInput, FieldTextarea, ListSearch } from "../shared";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { filterByText } from "@/lib/list-filter";
 import { apiPost, apiPatch, ApiError } from "@/lib/api-client";
+import { CHIPS_ONLY_CATEGORY, CHIP_SYMBOL, SHOP_CURRENCIES, isChipsCurrency } from "@/lib/shop-currency";
 import type { ShopItemRow } from "../types";
 
 const CATEGORIES_SHOP = ["games", "skins", "subs", "cosmetic", "experience"] as const;
@@ -75,6 +76,11 @@ export function ShopManager({
                 <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-zinc-700 text-zinc-400">
                   {item.category}
                 </span>
+                {isChipsCurrency(item.currency) && (
+                  <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-amber-700 text-amber-300">
+                    {CHIP_SYMBOL} CHIPS
+                  </span>
+                )}
                 {item.hot && (
                   <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 bg-red-600 text-white">HOT</span>
                 )}
@@ -85,7 +91,9 @@ export function ShopManager({
                 )}
               </div>
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                {fmt(item.price, locale)} {tokenSymbol}
+                {/* Price carries the item's OWN currency — a chips cosmetic labelled with the
+                    tenant's token symbol would misrepresent what the viewer actually pays. */}
+                {fmt(item.price, locale)} {isChipsCurrency(item.currency) ? CHIP_SYMBOL : tokenSymbol}
                 {item.stock !== -1 && ` · stock ${item.stock}/${item.totalStock}`}
                 {item.stock === -1 && " · unlimited"}
               </div>
@@ -140,6 +148,7 @@ function ShopItemEditor({
   const [name, setName] = useState(item?.name ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [category, setCategory] = useState(item?.category ?? "cosmetic");
+  const [currency, setCurrency] = useState(item?.currency ?? "GT");
   const [price, setPrice] = useState(item?.price.toString() ?? "1000");
   const [imageEmoji, setImageEmoji] = useState(item?.imageEmoji ?? "🎁");
   const [stock, setStock] = useState(item?.stock.toString() ?? "-1");
@@ -154,12 +163,16 @@ function ShopItemEditor({
   const [busy, setBusy] = useState(false);
   const t = useTranslations("admin.shop");
   const tc = useTranslations("common");
+  const { tokenSymbol } = useTenantBranding();
+  // CHIPS items are cosmetics-only (the casino's value loop stays cut) — the picker below
+  // keeps the two fields consistent so the admin can't compose a payload the API 400s.
+  const chips = isChipsCurrency(currency);
 
   async function save() {
     setBusy(true);
     try {
       const payload: Record<string, unknown> = {
-        name, description, category, price: parseInt(price),
+        name, description, category, currency, price: parseInt(price),
         imageEmoji: imageEmoji || "🎁",
         imageUrl: imageUrl.trim() || null,
         stock: parseInt(stock),
@@ -212,7 +225,9 @@ function ShopItemEditor({
           <FieldTextarea label={t("descLabel")} value={description} onChange={setDescription} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <FieldInput label={t("emojiLabel")} value={imageEmoji} onChange={setImageEmoji} placeholder="🎁" />
-            <FieldInput label={t("priceLabel")} value={price} onChange={setPrice} type="number" />
+            {/* The price label names the actual unit — a number with the wrong currency next
+                to it is exactly the kind of ambiguity that gets an item mispriced. */}
+            <FieldInput label={chips ? t("priceLabelChips") : t("priceLabel")} value={price} onChange={setPrice} type="number" />
             <FieldInput label={t("stockLabel")} value={stock} onChange={setStock} type="number" />
             <FieldInput label={t("totalStockLabel")} value={totalStock} onChange={setTotalStock} type="number" />
           </div>
@@ -223,18 +238,49 @@ function ShopItemEditor({
           )}
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("categoryLabel")}</label>
-            <div className="grid grid-cols-5 gap-1">
-              {CATEGORIES_SHOP.map((c) => (
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("currencyLabel")}</label>
+            <div className="grid grid-cols-2 gap-1">
+              {SHOP_CURRENCIES.map((c) => (
                 <button
                   key={c}
-                  onClick={() => setCategory(c)}
+                  onClick={() => {
+                    setCurrency(c);
+                    // Switching to chips forces the only category chips may ever have, so the
+                    // editor can't leave the pair in a state the server has to reject.
+                    if (isChipsCurrency(c)) setCategory(CHIPS_ONLY_CATEGORY);
+                  }}
                   className={cn(
                     "px-1 py-1.5 border text-[10px] font-bold tracking-widest uppercase",
-                    category === c ? "border-red-500 bg-red-600/15 text-red-300" : "border-zinc-800 bg-zinc-950 text-zinc-500",
+                    currency === c
+                      ? (isChipsCurrency(c) ? "border-amber-500 bg-amber-600/15 text-amber-300" : "border-red-500 bg-red-600/15 text-red-300")
+                      : "border-zinc-800 bg-zinc-950 text-zinc-500",
                   )}
-                >{c}</button>
+                >{isChipsCurrency(c) ? `${CHIP_SYMBOL} ${c}` : tokenSymbol}</button>
               ))}
+            </div>
+            {chips && <p className="text-[10px] text-amber-400/80 mt-1 leading-snug">{t("currencyHintChips")}</p>}
+          </div>
+
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("categoryLabel")}</label>
+            <div className="grid grid-cols-5 gap-1">
+              {CATEGORIES_SHOP.map((c) => {
+                // Real-value categories are unreachable while the item is priced in chips.
+                const blocked = chips && c !== CHIPS_ONLY_CATEGORY;
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setCategory(c)}
+                    disabled={blocked}
+                    title={blocked ? t("currencyHintChips") : undefined}
+                    className={cn(
+                      "px-1 py-1.5 border text-[10px] font-bold tracking-widest uppercase",
+                      category === c ? "border-red-500 bg-red-600/15 text-red-300" : "border-zinc-800 bg-zinc-950 text-zinc-500",
+                      blocked && "opacity-30 cursor-not-allowed",
+                    )}
+                  >{c}</button>
+                );
+              })}
             </div>
           </div>
 

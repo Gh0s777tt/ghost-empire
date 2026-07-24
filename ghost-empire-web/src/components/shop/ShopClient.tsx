@@ -13,12 +13,15 @@ import { useToast } from "@/components/ToastProvider";
 import { useLocaleFmt } from "@/lib/use-locale-fmt";
 import { shopDiscountFraction, discountedPrice } from "@/lib/economy";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { CHIP_SYMBOL, isChipsCurrency } from "@/lib/shop-currency";
 import { apiPost, ApiError } from "@/lib/api-client";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import type { ShopItem } from "@prisma/client";
 
 type UserContext = {
   tokens: number;
+  /** Free casino chips — the wallet that pays for CHIPS items (docs/CHIPS-CASINO.md). */
+  chips: number;
   level: number;
   prestige: number;
   subTiers: string[];
@@ -70,7 +73,16 @@ export function ShopClient({
     [items, category],
   );
 
+  // Two wallets, two halves of the catalog: GT items are paid from `tokens`, CHIPS items
+  // (casino cosmetics) from the free `chips`. Everything price-related below is resolved
+  // PER ITEM — showing a chips cosmetic against the GT balance would both misprice it in
+  // the UI and mislabel a currency the viewer can't buy (docs/CHIPS-CASINO.md).
   const balance = userContext?.tokens ?? 0;
+  const chipBalance = userContext?.chips ?? 0;
+  const balanceFor = (item: ShopItem) => (isChipsCurrency(item.currency) ? chipBalance : balance);
+  const symbolFor = (item: ShopItem) => (isChipsCurrency(item.currency) ? CHIP_SYMBOL : tokenSymbol);
+  // The chips wallet is only worth showing on portals whose catalog actually has chips items.
+  const hasChipsItems = useMemo(() => items.some((i) => isChipsCurrency(i.currency)), [items]);
 
   // Loyalty perk: account level + prestige discount shop prices. The server (shop/buy)
   // charges discountedPrice — we mirror it here so displayed prices match what's charged.
@@ -142,7 +154,11 @@ export function ShopClient({
           <p className="text-zinc-500 text-sm">
             {t("subtitle")}
           </p>
-          <HowItWorks>{t("help")}</HowItWorks>
+          <HowItWorks>
+            {t("help")}
+            {/* Legal copy: chips are free, non-purchasable and buy cosmetics only (terms §3). */}
+            {hasChipsItems && ` ${t("helpChips")}`}
+          </HowItWorks>
         </div>
 
         {isAuthenticated && userContext && (
@@ -171,6 +187,19 @@ export function ShopClient({
                 </div>
               </div>
             </div>
+            {hasChipsItems && (
+              <div className="flex items-center gap-3 border border-amber-900/60 bg-amber-950/20 px-4 py-2.5">
+                <span className="text-xl">{CHIP_SYMBOL}</span>
+                <div className="leading-tight">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-amber-500/80">
+                    {t("balanceChips")}
+                  </div>
+                  <div className="font-mono text-xl font-bold text-amber-200 tabular-nums">
+                    {fmt(chipBalance)} <span className="text-amber-500/70 text-xs">{CHIP_SYMBOL}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -212,7 +241,8 @@ export function ShopClient({
             const req = meetsRequirements(item);
             const price = priceFor(item);
             const discounted = price < item.price;
-            const affordable = balance >= price;
+            const isChipsItem = isChipsCurrency(item.currency);
+            const affordable = balanceFor(item) >= price;
             const inStock = item.stock !== 0;
             const canBuy = isAuthenticated && req.ok && affordable && inStock;
             const isBusy = busyItem === item.id || pending;
@@ -310,8 +340,11 @@ export function ShopClient({
                       {discounted && (
                         <span className="text-zinc-600 text-xs line-through font-normal">{fmt(item.price)}</span>
                       )}
-                      <span className={discounted ? "text-emerald-300" : undefined}>
-                        {fmt(price)} <span className="text-zinc-500 text-xs">{tokenSymbol}</span>
+                      <span className={cn(discounted && "text-emerald-300", isChipsItem && !discounted && "text-amber-200")}>
+                        {fmt(price)}{" "}
+                        <span className={cn("text-xs", isChipsItem ? "text-amber-500/70" : "text-zinc-500")}>
+                          {symbolFor(item)}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -343,7 +376,7 @@ export function ShopClient({
                       disabled
                       className="px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-500 text-[10px] font-bold tracking-widest uppercase cursor-not-allowed"
                     >
-                      {t("notEnough")}
+                      {isChipsItem ? t("notEnoughChips") : t("notEnough")}
                     </button>
                   ) : (
                     <button
@@ -399,7 +432,7 @@ export function ShopClient({
                     <span className="text-zinc-600 line-through me-2">{fmt(confirmItem.price)}</span>
                   )}
                   <span className={priceFor(confirmItem) < confirmItem.price ? "text-emerald-300" : undefined}>
-                    {fmt(priceFor(confirmItem))} {tokenSymbol}
+                    {fmt(priceFor(confirmItem))} {symbolFor(confirmItem)}
                   </span>
                 </span>
               </div>
@@ -409,14 +442,18 @@ export function ShopClient({
                   <span className="text-emerald-300">−{discountPct}%</span>
                 </div>
               )}
+              {/* Balance + "after purchase" follow the item's own wallet, so the modal always
+                  shows the number that will actually move. */}
               <div className="flex justify-between">
-                <span className="text-zinc-500">{t("mBalance")}</span>
-                <span className="text-white">{fmt(balance)} {tokenSymbol}</span>
+                <span className="text-zinc-500">
+                  {isChipsCurrency(confirmItem.currency) ? t("balanceChips") : t("mBalance")}
+                </span>
+                <span className="text-white">{fmt(balanceFor(confirmItem))} {symbolFor(confirmItem)}</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-zinc-800">
                 <span className="text-zinc-500">{t("mAfter")}</span>
                 <span className="text-red-400 font-bold">
-                  {fmt(Math.max(0, balance - priceFor(confirmItem)))} {tokenSymbol}
+                  {fmt(Math.max(0, balanceFor(confirmItem) - priceFor(confirmItem)))} {symbolFor(confirmItem)}
                 </span>
               </div>
             </div>

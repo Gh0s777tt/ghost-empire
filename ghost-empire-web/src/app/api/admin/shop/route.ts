@@ -12,7 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
-import { checkCurrencyCategory, type ShopCurrency } from "@/lib/shop-currency";
+import { SHOP_CURRENCIES, checkCurrencyCategory, type ShopCurrency } from "@/lib/shop-currency";
 
 const VALID_CATEGORIES = ["games", "skins", "subs", "cosmetic", "experience"];
 const VALID_TIERS = ["T1", "T2", "T3", "Prime", "OG", "DUAL"];
@@ -38,6 +38,7 @@ export async function PATCH(req: Request) {
     requiresMinMonths?: number | null;
     imageUrl?: string | null;
     requiresAchievement?: string | null;
+    currency?: string;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -105,6 +106,14 @@ export async function PATCH(req: Request) {
   if (body.requiresAchievement !== undefined) {
     data.requiresAchievement = body.requiresAchievement ? String(body.requiresAchievement).slice(0, 100) : null;
   }
+  if (body.currency !== undefined) {
+    // Reject unknown strings outright instead of coercing: on a WRITE we'd rather 400 than
+    // silently store garbage that every reader then has to interpret as GT.
+    if (!SHOP_CURRENCIES.includes(body.currency as ShopCurrency)) {
+      return NextResponse.json({ error: `Currency: ${SHOP_CURRENCIES.join("|")}` }, { status: 400 });
+    }
+    data.currency = body.currency;
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "Brak pól do aktualizacji" }, { status: 400 });
@@ -115,8 +124,9 @@ export async function PATCH(req: Request) {
   // Money/legal guard — the CHIPS ⇒ cosmetic invariant, checked against the item's RESOLVED
   // state rather than just the field that changed. A PATCH that only flips `category` is the
   // real leak: an existing CHIPS cosmetic moved to "games"/"skins"/"subs"/"experience" would
-  // let free casino chips buy something of real value (docs/CHIPS-CASINO.md). Read from
-  // `data` (not `body`) so the check keeps covering `currency` the day it becomes writable.
+  // let free casino chips buy something of real value (docs/CHIPS-CASINO.md). Both halves of
+  // the pair are writable, and a PATCH may carry either one alone — hence `data.X ?? stored.X`
+  // rather than checking only what the request happened to send.
   // Tenant-guarded read — can't inspect (or edit) another tenant's item.
   const existing = await prisma.shopItem.findFirst({
     where: { id: body.id, ...(tid ? { tenantId: tid } : {}) },
@@ -184,6 +194,7 @@ export async function POST(req: Request) {
     requiresMinMonths?: number | null;
     imageUrl?: string | null;
     requiresAchievement?: string | null;
+    currency?: string;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -206,12 +217,15 @@ export async function POST(req: Request) {
   const stock = body.stock === undefined ? -1 : Math.floor(Number(body.stock));
   const totalStock = body.totalStock === undefined ? stock : Math.floor(Number(body.totalStock));
 
-  // Currency is deliberately NOT client-controlled here: everything created through the admin
-  // panel is a real-value GT item (the schema default). Chips cosmetics currently come from
-  // the seed only — see docs/CHIPS-CASINO.md "Faza 6" for the pending admin CRUD. It is kept
-  // as an explicit local, persisted explicitly and validated below, so that wiring
-  // `body.currency` in later goes THROUGH the guard instead of around it.
-  const currency: ShopCurrency = "GT";
+  // Currency defaults to GT (real-value catalog) when the client omits it — that keeps every
+  // existing caller creating exactly what it created before. An explicit unknown value is a
+  // 400 rather than a silent coercion: we don't want garbage in the column that readers then
+  // have to interpret. The pair is validated below, so a CHIPS item can only ever be created
+  // as a cosmetic.
+  const currency: ShopCurrency = (body.currency ?? "GT") as ShopCurrency;
+  if (!SHOP_CURRENCIES.includes(currency)) {
+    return NextResponse.json({ error: `Currency: ${SHOP_CURRENCIES.join("|")}` }, { status: 400 });
+  }
   const currencyCheck = checkCurrencyCategory(currency, category);
   if (!currencyCheck.ok) {
     return NextResponse.json({ error: currencyCheck.error }, { status: 400 });
@@ -240,7 +254,8 @@ export async function POST(req: Request) {
     action: "create_shop_item",
     targetType: "shop_item",
     targetId: created.id,
-    details: { name, category, price },
+    // `currency` is money-critical — keep it in the audit trail (PATCH logs it via `values`).
+    details: { name, category, price, currency },
     req,
   });
 

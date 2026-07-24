@@ -63,7 +63,7 @@ export async function GET(req: Request) {
       return NextResponse.json({
         allShopItems: items.map((s) => ({
           id: s.id, name: s.name, description: s.description, category: s.category,
-          price: s.price, imageEmoji: s.imageEmoji, imageUrl: s.imageUrl, stock: s.stock, totalStock: s.totalStock,
+          price: s.price, currency: s.currency, imageEmoji: s.imageEmoji, imageUrl: s.imageUrl, stock: s.stock, totalStock: s.totalStock,
           hot: s.hot, active: s.active, featured: s.featured,
           requiresSubTier: s.requiresSubTier, requiresMinLevel: s.requiresMinLevel,
           requiresMinMonths: s.requiresMinMonths, requiresAchievement: s.requiresAchievement,

@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   CHIPS_ONLY_CATEGORY,
+  CHIP_SYMBOL,
+  SHOP_CURRENCIES,
   ShopCurrencyError,
   assertCurrencyCategoryValid,
   checkCurrencyCategory,
@@ -27,6 +29,31 @@ describe("normalizeShopCurrency / isChipsCurrency — sentinel parsing", () => {
       expect(normalizeShopCurrency(raw)).toBe("GT");
       expect(isChipsCurrency(raw)).toBe(false);
     }
+  });
+});
+
+describe("SHOP_CURRENCIES / CHIP_SYMBOL — the admin picker's source of truth", () => {
+  it("every offered currency round-trips through normalizeShopCurrency", () => {
+    // The admin picker writes these values straight into the DB, so a currency listed here
+    // but not understood by the parser would be stored and then silently read back as GT.
+    expect([...SHOP_CURRENCIES]).toEqual(["GT", "CHIPS"]);
+    for (const c of SHOP_CURRENCIES) expect(normalizeShopCurrency(c)).toBe(c);
+  });
+
+  it("every offered currency has a legal category to be created with", () => {
+    // Adding a third currency without extending the invariant would make it unusable (or,
+    // worse, unrestricted) — this fails the moment SHOP_CURRENCIES grows unreviewed.
+    for (const c of SHOP_CURRENCIES) {
+      const allowed = ["games", "skins", "subs", "experience", CHIPS_ONLY_CATEGORY]
+        .filter((cat) => checkCurrencyCategory(c, cat).ok);
+      expect(allowed.length, `${c} must accept at least one category`).toBeGreaterThan(0);
+    }
+    // …and chips accept exactly one.
+    expect(REAL_VALUE_CATEGORIES.every((cat) => !checkCurrencyCategory("CHIPS", cat).ok)).toBe(true);
+  });
+
+  it("the chips symbol is the universal 🪙 (not a white-labelled token symbol)", () => {
+    expect(CHIP_SYMBOL).toBe("🪙");
   });
 });
 

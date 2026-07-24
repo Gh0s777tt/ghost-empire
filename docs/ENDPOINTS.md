@@ -129,7 +129,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/user-roles` | admin | Role: admin / moderator / donator |
 | `…/api/admin/connection-roles` | perm:mark_subs | GET aktualny status (prefill karty) + POST zapis sub/mod/VIP per platforma; GET dodany w #765, by zapis nie nadpisywał nietkniętych flag |
 | `…/api/admin/reset-database` | platform-owner | **Reset bazy** (#741) — `scope: all` (wszystkie portale, fraza „USUŃ WSZYSTKO") lub `scope: tenant`+`tenantId` (jeden portal, fraza = slug portalu). Tylko owner + step-up 2FA (failClosed) |
-| `…/api/admin/shop` | perm:manage_shop | CRUD sklepu. **Inwariant CHIPS ⇒ `category:"cosmetic"`** (`lib/shop-currency.ts`) wymuszany na POST i PATCH — walidowany jest *wynikowy* stan itemu, więc sam PATCH `category` na istniejącym itemie za żetony też dostaje **400**; równoległa edycja drugiej połowy pary → **409** (odśwież). `currency` nie jest polem zapisywalnym (nowe itemy = `GT`) |
+| `…/api/admin/shop` | perm:manage_shop | CRUD sklepu. `currency` zapisywalne (`GT` \| `CHIPS`, domyślnie `GT`; nieznana wartość → **400**). **Inwariant CHIPS ⇒ `category:"cosmetic"`** (`lib/shop-currency.ts`) wymuszany na POST i PATCH — walidowany jest *wynikowy* stan itemu, więc sam PATCH `category` na istniejącym itemie za żetony też dostaje **400**; równoległa edycja drugiej połowy pary → **409** (odśwież) |
 | `…/api/admin/seasons` | admin | Sezony + nagrody Battle Pass |
 | `…/api/admin/achievements` | admin | CRUD osiągnięć + ręczne przyznawanie |
 | `…/api/admin/polls` | admin | CRUD ankiet |

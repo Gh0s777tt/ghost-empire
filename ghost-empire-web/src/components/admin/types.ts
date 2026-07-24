@@ -158,6 +158,8 @@ export type ShopItemRow = {
   description: string;
   category: string;
   price: number;
+  /** "GT" (real-value catalog) or "CHIPS" (free casino currency — cosmetics only). */
+  currency: string;
   imageEmoji: string | null;
   imageUrl: string | null;
   stock: number;
