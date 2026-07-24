@@ -18,6 +18,7 @@ import {
   getLiveChatMessages,
 } from "@/lib/youtube";
 import { getYouTubeStreamerToken } from "@/lib/platform-tokens";
+import { gtFromPln } from "@/lib/donation-rate";
 import { currentTenantId } from "@/lib/tenant";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
@@ -28,7 +29,6 @@ import { createLogger } from "@/lib/logger";
 
 const log = createLogger("yt-poll");
 
-const YT_SUPERCHAT_GT_PER_PLN = 100;  // matches DONATION_GT_PER_PLN default
 const YT_MEMBER_REWARD = 5000;        // new sponsor / member milestone
 
 export const dynamic = "force-dynamic";
@@ -263,7 +263,7 @@ async function handleSuperChat(input: {
         BRL: 0.7, MXN: 0.2, INR: 0.048,
       };
       const pln = amountFloat * (PLN_PER[input.currency.toUpperCase()] ?? 4.0);
-      tokensGranted = Math.round(pln * YT_SUPERCHAT_GT_PER_PLN);
+      tokensGranted = gtFromPln(pln); // shared rate + cap (was uncapped)
 
       const amountGrosze = Math.round(pln * 100);
       try {

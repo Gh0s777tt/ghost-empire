@@ -81,7 +81,8 @@ export async function createBounty(opts: {
         where: { id: opts.userId, tokens: { gte: vp.amount } },
         data: { tokens: { decrement: vp.amount } },
       });
-      if (charged.count === 0) return { ok: false, status: 402, error: "Za mało Ghost Tokens" } as const;
+      // %tokenName% → tenant currency at the API boundary (jsonError); never leak "Ghost Tokens".
+      if (charged.count === 0) return { ok: false, status: 402, error: "Za mało %tokenName%" } as const;
 
       const bounty = await tx.bounty.create({
         data: { tenantId: tid, creatorId: opts.userId, title: vt.title, description: desc, pooledGt: vp.amount, status: "open", expiresAt },
@@ -120,7 +121,8 @@ export async function pledgeToBounty(opts: { userId: string; bountyId: string; a
         where: { id: opts.userId, tokens: { gte: vp.amount } },
         data: { tokens: { decrement: vp.amount } },
       });
-      if (charged.count === 0) return { ok: false, status: 402, error: "Za mało Ghost Tokens" } as const;
+      // %tokenName% → tenant currency at the API boundary (jsonError); never leak "Ghost Tokens".
+      if (charged.count === 0) return { ok: false, status: 402, error: "Za mało %tokenName%" } as const;
 
       await tx.bountyPledge.create({ data: { bountyId: b.id, userId: opts.userId, amount: vp.amount } });
       const updated = await tx.bounty.update({ where: { id: b.id }, data: { pooledGt: { increment: vp.amount } }, select: { pooledGt: true } });

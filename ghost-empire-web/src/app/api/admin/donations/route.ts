@@ -5,8 +5,7 @@ import { requireAdmin, findManagedUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
-
-const GT_PER_PLN = parseInt(process.env.DONATION_GT_PER_PLN ?? "100", 10);
+import { gtFromPln } from "@/lib/donation-rate";
 
 // PATCH { donationId, action: "assign", userTarget } | { donationId, action: "skip" }
 export async function PATCH(req: Request) {
@@ -50,7 +49,7 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: `User "${target}" nie znaleziony` }, { status: 404 });
 
   const amountFloat = donation.amountGrosze / 100;
-  const tokensGranted = Math.round(amountFloat * GT_PER_PLN);
+  const tokensGranted = gtFromPln(amountFloat); // shared rate + cap — this manual-match path is a mint rail too
 
   const matched = await prisma.$transaction(async (tx) => {
     // Atomically claim the donation ONLY if still unmatched — two concurrent "assign"

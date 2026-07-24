@@ -12,10 +12,19 @@
 // `Wymagany Level 5`) falls back to the original Polish — never an error, just
 // untranslated. The Discord bot / cron callers have no cookie -> always Polish.
 //
+// White-label: a currency-name error must show the TENANT's token name, never the
+// founder's literal "Ghost Tokens". Such messages carry the `%tokenName%` marker
+// (same convention as the message catalogs, see i18n-branding.ts) on BOTH sides of
+// the dictionary; the marker is resolved to `getCurrentTenant().tokenName` at the
+// boundary. Keying the dictionary on the stable marker keeps PL->EN matching intact
+// while the viewer still sees their portal's currency. (The casino's free "Żetony"
+// are a universal, non-white-label currency — those stay literal.)
+//
 // Deliberately NOT covered (separate follow-up): admin/bot/webhook/internal
 // endpoints, and interpolated messages.
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { getCurrentTenant } from "@/lib/tenant";
 
 const EN: Record<string, string> = {
   // Shared
@@ -25,13 +34,16 @@ const EN: Record<string, string> = {
   "Za szybko. Spróbuj za chwilę.": "Too fast. Try again in a moment.",
   "Zbyt wiele żądań. Spróbuj ponownie za chwilę.": "Too many requests. Try again in a moment.",
   "Za dużo prób. Poczekaj chwilę.": "Too many attempts. Please wait a moment.",
-  "Za mało Ghost Tokens": "Not enough Ghost Tokens",
+  // %tokenName% → the tenant's currency name at the boundary (white-label).
+  "Za mało %tokenName%": "Not enough %tokenName%",
 
   // Shop
   "Brak itemId": "Missing item id",
   "Item nie istnieje": "Item does not exist",
   "Item niedostępny": "Item unavailable",
   "Brak na stanie": "Out of stock",
+  // Casino chips (free, universal currency — not white-labeled, stays literal).
+  "Za mało żetonów": "Not enough chips",
   "Brak usera": "User not found",
   "Wymagany Dual Supporter (sub na 2 platformach)": "Dual Supporter required (sub on 2 platforms)",
 
@@ -80,16 +92,38 @@ const EN: Record<string, string> = {
   "Ta nagroda wymaga Premium Pass": "This reward requires the Premium Pass",
   "Już odebrane": "Already claimed",
 
-  // Wheel of Fortune
+  // Wheel of Fortune (spins run on the free casino chips, not GT — universal currency).
   "Koło Fortuny jest aktualnie wyłączone": "The Wheel of Fortune is currently disabled",
   "Koło nie jest skonfigurowane": "The wheel is not configured",
-  "Za mało Ghost Tokens na zakręcenie": "Not enough Ghost Tokens to spin",
+  "Za mało żetonów na zakręcenie": "Not enough chips to spin",
 };
+
+/**
+ * Pure translation + white-label substitution (no I/O — unit-tested).
+ *
+ * 1. When `locale === "en"`, map the Polish message to English via the EN dict;
+ *    unknown/interpolated messages fall through untranslated (by design).
+ * 2. Replace the `%tokenName%` marker with the tenant's currency name, so a viewer
+ *    never sees the founder's literal "Ghost Tokens". The marker lives on both the
+ *    PL key and its EN value, so this one substitution covers either locale.
+ *
+ * @param message  the raw Polish message (or a `%tokenName%`-marked one)
+ * @param opts.locale     "en" to translate, anything else keeps Polish
+ * @param opts.tokenName  the active tenant's currency name (substituted for the marker)
+ */
+export function resolveErrorMessage(message: string, opts: { locale: string; tokenName: string }): string {
+  const translated = opts.locale === "en" ? (EN[message] ?? message) : message;
+  return translated.includes("%tokenName%") ? translated.replaceAll("%tokenName%", opts.tokenName) : translated;
+}
 
 async function localizeError(message: string): Promise<string> {
   const store = await cookies();
-  if (store.get("NEXT_LOCALE")?.value !== "en") return message;
-  return EN[message] ?? message;
+  const locale = store.get("NEXT_LOCALE")?.value === "en" ? "en" : "pl";
+  // Resolve the tenant only when the message actually carries the marker — keeps the
+  // common error path a plain cookie read (getCurrentTenant is React-cached per
+  // request anyway, so callers that already resolved the tenant pay nothing extra).
+  const tokenName = message.includes("%tokenName%") ? (await getCurrentTenant()).tokenName : "";
+  return resolveErrorMessage(message, { locale, tokenName });
 }
 
 /**

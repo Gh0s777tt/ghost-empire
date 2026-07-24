@@ -114,7 +114,8 @@ export async function POST(req: Request) {
         data: isChips ? { chips: { decrement: price } } : { tokens: { decrement: price }, totalSpent: { increment: price } },
       });
       if (userUpdate.count === 0) {
-        throw new ShopError(isChips ? "Za mało żetonów" : "Za mało Ghost Tokens", 402);
+        // CHIPS → universal "żetony"; GT → %tokenName% resolved to the tenant currency at the boundary.
+        throw new ShopError(isChips ? "Za mało żetonów" : "Za mało %tokenName%", 402);
       }
 
       if (item.stock !== -1) {

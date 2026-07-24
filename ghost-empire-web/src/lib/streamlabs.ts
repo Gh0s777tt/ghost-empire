@@ -9,6 +9,7 @@ import { checkAndGrantAchievements } from "@/lib/achievements";
 import { httpFetch } from "@/lib/http";
 import { awardSeasonXp } from "@/lib/seasons";
 import { plnFromCurrency } from "@/lib/economy";
+import { gtFromPln } from "@/lib/donation-rate";
 import { extractDonationCode } from "@/lib/donation-code";
 import { getStreamlabsConnection } from "@/lib/platform-tokens";
 
@@ -162,10 +163,6 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
 
   let matched = 0;
   let unmatched = 0;
-  const GT_PER_PLN = parseInt(process.env.DONATION_GT_PER_PLN ?? "100", 10);
-  // Cap a single donation's GT at ~100k PLN-equivalent so a malformed/huge upstream
-  // amount (or a high-nominal currency) can't mint an absurd amount into the economy.
-  const MAX_DONATION_GT = GT_PER_PLN * 100_000;
 
   // Idempotency: ONE batched read of which donation_ids are already stored, instead of a
   // findUnique per donation against the small (max:3) pool (#748). externalId is @unique.
@@ -192,7 +189,7 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
     if (match) {
       // Currency-aware (convert to PLN first) + capped, so non-PLN or malformed amounts
       // don't mint GT 1:1 as if PLN. #audit3 MED-2
-      const tokensGranted = Math.min(Math.round(plnFromCurrency(amountFloat, d.currency) * GT_PER_PLN), MAX_DONATION_GT);
+      const tokensGranted = gtFromPln(plnFromCurrency(amountFloat, d.currency)); // shared rate + cap (lib/donation-rate)
       await prisma.$transaction([
         prisma.donation.create({
           data: {

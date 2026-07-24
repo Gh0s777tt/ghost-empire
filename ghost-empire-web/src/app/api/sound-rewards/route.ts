@@ -59,7 +59,7 @@ export async function POST(req: Request) {
         where: { id: userId, tokens: { gte: reward.cost } },
         data: { tokens: { decrement: reward.cost }, totalSpent: { increment: reward.cost } },
       });
-      if (dec.count === 0) throw new RedeemError("Za mało Ghost Tokens", 402);
+      if (dec.count === 0) throw new RedeemError("Za mało %tokenName%", 402); // %tokenName% → tenant currency (jsonError)
 
       await tx.transaction.create({ data: { userId, type: "spend", amount: -reward.cost, reason: "sound_redeem", status: "completed" } });
 
