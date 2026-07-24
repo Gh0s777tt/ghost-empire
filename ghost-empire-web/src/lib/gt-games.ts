@@ -3,6 +3,7 @@
 // atomic play() that charges the bet, pays winnings and logs the play — all in one
 // transaction so GT can never be created or lost incorrectly.
 import { prisma } from "@/lib/prisma";
+import { after } from "next/server";
 import { pickWeightedIndex } from "@/lib/economy";
 import { redis } from "@/lib/redis";
 import { cryptoRng } from "@/lib/secure-rng";
@@ -351,9 +352,13 @@ export async function playGtGame(
     // Feed the progressive pool AFTER a successful charge (1% of the bet, best-effort).
     void feedJackpot(bet);
 
-    // Casino achievements (best-effort; helper swallows its own errors, never throws).
-    const { checkAndGrantAchievements } = await import("@/lib/achievements");
-    await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
+    // Casino achievements — deferred via after() so the player gets their balance immediately.
+    // This is the hottest money loop; the multi-query grant runs off the response path (and
+    // after() guarantees it completes before the serverless function freezes).
+    after(async () => {
+      const { checkAndGrantAchievements } = await import("@/lib/achievements");
+      await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
+    });
 
     return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash, plinko, scratch };
   } catch (e) {

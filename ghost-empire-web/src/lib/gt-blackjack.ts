@@ -6,6 +6,7 @@
 // player blackjack pays 3:2 (2.5× total), win 2×, push 1×, no splits, double on
 // the first two cards (one card, auto-stand). House edge ≈ 1-2% (GT sink).
 import { prisma } from "@/lib/prisma";
+import { after } from "next/server";
 import { redis, withLock } from "@/lib/redis";
 import { feedJackpot, MIN_BET, MAX_BET } from "@/lib/gt-games";
 import { cryptoRng } from "@/lib/secure-rng";
@@ -103,7 +104,7 @@ async function settle(userId: string, s: BjSession, dealerFinal: number[]): Prom
     const u = await tx.user.findUnique({ where: { id: userId }, select: { chips: true } });
     return u?.chips ?? 0;
   });
-  void grantCasino(userId);
+  after(() => grantCasino(userId));
   return { payout, net: payout - s.bet, newBalance, multiplier };
 }
 
