@@ -11,7 +11,8 @@
     "src/lib/companion-token.ts",
     "src/lib/platform-tokens.ts",
     "src/lib/ssrf-guard.ts",
-    "src/lib/moderation.ts"
+    "src/lib/moderation.ts",
+    "src/lib/refund.ts"
   ],
   "out": "../docs/api",
   "readme": "none",
