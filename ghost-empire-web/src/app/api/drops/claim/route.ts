@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -138,7 +138,9 @@ export async function POST(req: Request) {
         actorName: result._actor.name,
         actorImage: result._actor.image ?? undefined,
         amount: result.totalReward,
-        amountLabel: "GT",
+        // Tenant's own currency symbol — a literal "GT" would put the founder's token on
+        // every other portal's overlay (white-label leak).
+        amountLabel: (await getCurrentTenant()).tokenSymbol,
       });
     }
 

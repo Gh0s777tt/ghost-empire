@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { displayNick } from "@/lib/utils";
@@ -50,6 +50,9 @@ export async function POST(req: Request) {
 
   const tid = await currentTenantId();
   const actor = displayNick(session.user.name, session.user.username);
+  // Resolved before the transaction (React-cached, so it's free after the tenant lookup above)
+  // — the overlay must show THIS portal's currency symbol, not the founder's literal "GT".
+  const { tokenSymbol } = await getCurrentTenant();
   try {
     const result = await prisma.$transaction(async (tx) => {
       const reward = await tx.soundReward.findFirst({ where: { id: rewardId, active: true, ...(tid ? { tenantId: tid } : {}) } });
@@ -73,7 +76,7 @@ export async function POST(req: Request) {
           icon: reward.emoji ?? "🔊",
           actorName: actor,
           amount: reward.cost,
-          amountLabel: "GT",
+          amountLabel: tokenSymbol,
           meta: JSON.stringify({ soundUrl: reward.soundUrl }),
         },
       });

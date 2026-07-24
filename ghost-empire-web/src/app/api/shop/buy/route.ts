@@ -3,13 +3,13 @@ import { NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { discountedPrice } from "@/lib/economy";
-import { checkCurrencyCategory, isChipsCurrency } from "@/lib/shop-currency";
+import { CHIP_SYMBOL, checkCurrencyCategory, isChipsCurrency } from "@/lib/shop-currency";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("shop-buy");
@@ -198,7 +198,11 @@ export async function POST(req: Request) {
       };
     });
 
-    // Fire-and-forget stream alert (after commit so failures don't roll back the purchase)
+    // Fire-and-forget stream alert (after commit so failures don't roll back the purchase).
+    // The label follows the currency that was actually charged: the tenant's own token symbol
+    // for GT, the universal 🪙 for chips. A literal "GT" here would show the founder's currency
+    // on every other portal's overlay AND misname a chips purchase as real tokens.
+    const brand = await getCurrentTenant();
     await dispatchAlertSafe({
       type: "shop_purchase",
       title: "🛒 Nowy zakup w sklepie!",
@@ -207,7 +211,7 @@ export async function POST(req: Request) {
       actorName: result._actor.name,
       actorImage: result._actor.image ?? undefined,
       amount: result._item.price,
-      amountLabel: "GT",
+      amountLabel: result.currency === "CHIPS" ? CHIP_SYMBOL : brand.tokenSymbol,
     });
 
     // Deferred via after() — the buyer gets their new balance immediately; the milestone checks

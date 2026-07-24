@@ -152,6 +152,13 @@ odrzuca nieznaną walutę (**400**), zamiast po cichu wpisać śmieć do kolumny
    a jedyną drogą dołożenia kolejnych był destrukcyjny re-seed (`deleteMany` całego katalogu).
 3. Panel ekonomii: **osobne** metryki GT vs chips (chips nie liczą się do „realnej" ekonomii). ⏳
 
+### Alert na overlayu (waluta per zakup)
+Alert `shop_purchase` etykietuje kwotę walutą, którą **faktycznie obciążono**: `🪙` dla zakupu za
+żetony, `tenant.tokenSymbol` dla GT. Wcześniej był tam literał `"GT"` — czyli zakup za darmowe
+żetony ogłaszał się na streamie jako realna waluta (a na obcym portalu jako waluta założyciela).
+Ta sama poprawka objęła pozostałe alerty z zaszytym „GT" (`drops/claim`, `sound-rewards`,
+`admin/alerts`, `lib/auth` — powitanie).
+
 ### Sklep widziany przez widza (waluta per item)
 `ShopClient` rozwiązuje cenę **per item**, nie globalnie: item `CHIPS` pokazuje cenę w 🪙,
 liczy „stać/nie stać" wobec salda **żetonów** (a nie GT), a modal potwierdzenia pokazuje saldo

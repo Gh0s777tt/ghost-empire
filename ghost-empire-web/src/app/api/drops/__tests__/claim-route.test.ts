@@ -32,7 +32,12 @@ vi.mock("@/lib/api-i18n", () => ({
   jsonError: (msg: string, status: number, headers?: Record<string, string>) =>
     NextResponse.json({ error: msg }, { status, headers }),
 }));
-vi.mock("@/lib/tenant", () => ({ currentTenantId: async () => h.tid }));
+// The bonus alert labels its amount with the portal's own currency symbol (no hardcoded "GT"),
+// so the route resolves the tenant brand too — stub both entry points.
+vi.mock("@/lib/tenant", () => ({
+  currentTenantId: async () => h.tid,
+  getCurrentTenant: async () => ({ id: h.tid, tokenSymbol: "TT" }),
+}));
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: async () => (h.rateAllowed
     ? { allowed: true, remaining: 29, resetAt: new Date() }
@@ -174,6 +179,9 @@ describe("POST /api/drops/claim — nagroda + bonus (atomowy ordinal)", () => {
     expect(body.totalReward).toBe(150); // 100 + 50
     expect(body.bonusSlotsLeft).toBe(1); // 3 - 2
     expect(h.dispatchAlert).toHaveBeenCalledOnce();
+    // White-label: the overlay label must be THIS portal's currency symbol, never a
+    // hardcoded "GT" (that was a real leak — the founder's token on every tenant's stream).
+    expect(h.dispatchAlert).toHaveBeenCalledWith(expect.objectContaining({ amountLabel: "TT" }));
   });
 
   it("BONUS boundary: the ordinal EQUAL to bonusSlots still gets the bonus (<=)", async () => {
