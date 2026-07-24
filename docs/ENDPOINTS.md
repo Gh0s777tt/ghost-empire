@@ -243,7 +243,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/webhooks/paymedia` | Webhook płatności PayMedia (sekret) |
 | `…/api/webhooks/stripe` | Webhook Stripe (podpis `STRIPE_WEBHOOK_SECRET`) — aktywacja/odnowienie/wygaśnięcie planu tenanta |
 | `…/api/yt/poll-live-chat` | Polling YouTube Live Chat (super chaty / membery) |
-| `…/api/cron/streamlabs-poll` | Cron (Vercel) — polling donacji Streamlabs (`CRON_SECRET`) |
+| `…/api/cron/streamlabs-poll` | Cron (Vercel, co 15 min) — polling donacji Streamlabs, **per portal** (`CRON_SECRET`). **Tylko produkcja:** na deployu `VERCEL_ENV=preview`/`development` zwraca 200 `{skipped:"non-production-deployment"}` bez pollingu i bez Sentry (fail-open: brak `VERCEL_ENV` = produkcja, patrz [ENV.md](ENV.md)). Awaria któregokolwiek portalu → HTTP 500 + `Sentry.captureMessage` (alert na zastój wpływu) |
 | `…/api/cron/prune` | Cron (Vercel, 04:00) — czyszczenie starych rekordów transientowych + **auto-wygasanie bounty ze zwrotem** (#681); `CRON_SECRET` |
 | `…/api/cron/weekly-rewards` | Cron (Vercel, pon.) — tygodniowe nagrody GT + **miesięczne rozliczenie Ligi Typerów** (idempotentne, #682); `CRON_SECRET` |
 | `…/api/cron/backup` | Cron (Vercel, 05:00) — off-site backup JSON → bucket S3-compatible (R2/B2/S3); **dormant** bez `BACKUP_S3_*` (`CRON_SECRET`, #677) |

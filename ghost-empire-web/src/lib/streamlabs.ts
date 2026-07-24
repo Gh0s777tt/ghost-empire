@@ -6,7 +6,7 @@ import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
 import { extendSubathon } from "@/lib/subathon";
 import { checkAndGrantAchievements } from "@/lib/achievements";
-import { httpFetch } from "@/lib/http";
+import { httpFetch, jsonOrThrow, parseJsonBody } from "@/lib/http";
 import { awardSeasonXp } from "@/lib/seasons";
 import { plnFromCurrency } from "@/lib/economy";
 import { gtFromPln } from "@/lib/donation-rate";
@@ -60,7 +60,14 @@ export async function exchangeCode(code: string): Promise<TokenResponse> {
   if (!res.ok) {
     throw new Error(`Streamlabs token exchange failed (${res.status}): ${text.slice(0, 300)}`);
   }
-  return JSON.parse(text);
+  // Even a 2xx can carry an HTML page (interstitial / login redirect that fetch followed) —
+  // parseJsonBody says which upstream and what it actually sent instead of `Unexpected token '<'`.
+  return parseJsonBody<TokenResponse>({
+    label: "Streamlabs token exchange",
+    status: res.status,
+    contentType: res.headers.get("content-type"),
+    body: text,
+  });
 }
 
 type StreamlabsUser = {
@@ -73,7 +80,7 @@ export async function fetchUserInfo(accessToken: string): Promise<StreamlabsUser
   if (!res.ok) {
     throw new Error(`Streamlabs user info fetch failed (${res.status})`);
   }
-  return res.json();
+  return jsonOrThrow<StreamlabsUser>(res, "Streamlabs user info");
 }
 
 type StreamlabsDonation = {
@@ -105,7 +112,10 @@ export async function fetchDonations(opts: {
     const text = await res.text();
     throw new Error(`Streamlabs donations fetch failed (${res.status}): ${text.slice(0, 200)}`);
   }
-  const data = await res.json();
+  // NOT `res.json()`: a 2xx whose body is HTML (expired/revoked token redirected to the login
+  // page, or a CDN interstitial) used to surface as the bare `Unexpected token '<', "<!DOCTYPE "…`
+  // in the cron's Sentry alert — an unreadable message on the money-in rail. #GHOST-EMPIRE-WEB-5
+  const data = await jsonOrThrow<{ data?: StreamlabsDonation[] }>(res, "Streamlabs donations");
   return Array.isArray(data?.data) ? data.data : [];
 }
 
@@ -145,10 +155,19 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
   const conn = await getStreamlabsConnection(tenantId);
   if (!conn) return { ok: false, fetched: 0, matched: 0, unmatched: 0, error: "not_connected" };
 
+  // Fail fast on an unusable token instead of calling Streamlabs with `access_token=`: an empty
+  // token gets an HTML login page back, so the operator would read a parse/auth error where the
+  // real cause is a decrypt failure (rotated `ENCRYPTION_KEY`, corrupted row). Same outage,
+  // actionable name. Previously this was `?? ""` and went straight out to the API.
+  const accessToken = decryptSecret(conn.accessToken);
+  if (!accessToken) {
+    return { ok: false, fetched: 0, matched: 0, unmatched: 0, error: "token_decrypt_failed" };
+  }
+
   let donations: StreamlabsDonation[];
   try {
     donations = await fetchDonations({
-      accessToken: decryptSecret(conn.accessToken) ?? "",
+      accessToken,
       afterDonationId: conn.lastSeenDonationId ?? undefined,
       limit: 50,
     });
