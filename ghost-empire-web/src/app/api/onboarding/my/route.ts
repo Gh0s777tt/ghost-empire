@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { effectivePlan, planHasFeature } from "@/lib/entitlements";
 import { safeMediaUrl } from "@/lib/url-safe";
+import { parseHubLinks, sanitizeHubBio } from "@/lib/hub";
 import { logAdminAction } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export async function GET() {
     select: {
       slug: true, name: true, shortName: true, ownerHandle: true,
       tokenName: true, tokenSymbol: true, brandColor: true, logoUrl: true,
+      hubEnabled: true, hubBio: true, hubLinks: true,
       plan: true, planExpiresAt: true, createdAt: true,
       stripeSubscriptionId: true,
       _count: { select: { users: true } },
@@ -34,6 +36,7 @@ export async function GET() {
     tenant: {
       ...t,
       _count: undefined,
+      hubLinks: parseHubLinks(t.hubLinks), // defensive: never hand the client a malformed blob
       // Boolean only — the raw Stripe id stays server-side.
       stripeSubscriptionId: undefined,
       hasSubscription: Boolean(t.stripeSubscriptionId),
@@ -88,6 +91,11 @@ export async function PATCH(req: Request) {
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }
+  // Link-in-bio Hub config (#hub). hubLinks/hubBio are re-validated here (never trust the client
+  // blob), so the /hub page can render them raw. Present-but-absent keys are simply skipped.
+  if (typeof body.hubEnabled === "boolean") data.hubEnabled = body.hubEnabled;
+  if ("hubBio" in body) data.hubBio = sanitizeHubBio(body.hubBio);
+  if (Array.isArray(body.hubLinks)) data.hubLinks = parseHubLinks(body.hubLinks);
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "Brak zmian" }, { status: 400 });
   }

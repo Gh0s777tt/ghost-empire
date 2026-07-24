@@ -34,6 +34,10 @@ model Tenant {
   // Portal's own social links (#audit3): JSON array of { platform, url } shown in the
   // footer/about — per-portal so each streamer shows THEIR channels (not the founder's).
   socialLinks          Json? // [{ platform: "twitch"|"kick"|…, url }]; null → founder default (SOCIALS)
+  // Link-in-bio "Hub" (Linktree-style) — a shareable public /hub page per portal, fully owner-editable.
+  hubEnabled           Boolean   @default(false) // owner toggles the public /hub page on
+  hubBio               String?   @db.Text // short bio/tagline shown under the brand header on /hub
+  hubLinks             Json? // ordered [{ id, label, url, icon? }] the owner curates; null = none yet
   // Support-engagement alerts (#audit3): notify the streamer when a viewer opens/copies a
   // payment method on /support. "none" | "bell" (in-app notification) | "overlay" (OBS) | "both".
   // A click is an intent signal, not a confirmed payment — throttled server-side.
