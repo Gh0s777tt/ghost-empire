@@ -2,12 +2,15 @@
 // Bot → portal: generate an image for !imagine. Bearer BOT_SECRET. Tightly
 // rate-limited because image generation costs real money.
 import { NextResponse } from "next/server";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { aiImage } from "@/lib/ai";
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  // Global BOT_SECRET (first-party) OR this portal's per-tenant secret (Host-resolved).
+  const { botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   let body: { prompt?: string; username?: string };

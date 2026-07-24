@@ -4,8 +4,8 @@
 // the admin panel can show "bot online/offline" instead of guessing. Read
 // side: /api/admin/bot-status.
 import { NextResponse } from "next/server";
-import { verifyBotSecret } from "@/lib/utils";
-import { currentTenantId } from "@/lib/tenant";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { recordHeartbeat } from "@/lib/bot-heartbeat";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,10 @@ export const dynamic = "force-dynamic";
 const KNOWN = new Set(["twitch", "kick", "youtube"]);
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  // Resolve the tenant (Host-based) once: its secret authenticates a per-tenant bot (global
+  // BOT_SECRET still accepted for the first-party bot) and its id scopes the heartbeat row.
+  const { id: tid, botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -27,7 +30,6 @@ export async function POST(req: Request) {
     /* body is optional — a bare beat still counts */
   }
 
-  const tid = await currentTenantId();
   await recordHeartbeat(tid, platforms);
   return NextResponse.json({ ok: true });
 }

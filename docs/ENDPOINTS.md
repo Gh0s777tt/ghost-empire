@@ -5,7 +5,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 - **session** — wymaga zalogowanego usera (NextAuth)
 - **admin** — `requireAdmin()` (pełny admin)
 - **perm:X** — `requirePermission("X")` (admin LUB moderator z uprawnieniem X)
-- **botSecret** — `Authorization: Bearer <BOT_SECRET>` (boty)
+- **botSecret** — `Authorization: Bearer <sekret>` (boty). Akceptowany **globalny `BOT_SECRET`** (bot first-party, back-compat) **LUB** per-portalowy `Tenant.botSecret` (`verifyBotSecretForTenant`). Tenant jest rozwiązywany z **Hosta** requestu (`getCurrentTenantBotAuth`, nigdy z podrabialnego `x-tenant-slug`), a lookup `User`/`Connection` na trasach money/tożsamości jest **scope'owany do tego tenanta** — bot portalu może ruszać tylko własnych widzów. Wyjątek: `yt/poll-live-chat` to platformowy cron omiatający wszystkie portale → auth pozostaje globalny, ale match darczyńcy YT jest scope'owany do portalu strumienia. Bot = jeden proces/portal (`BOT_SECRET` per-instancja), więc tenant odpala własnego bota ustawiając `BOT_SECRET=<Tenant.botSecret>` — bez zmian w kodzie bota.
 - **overlayToken** — `?token=<OVERLAY_TOKEN>` (źródła OBS, tylko odczyt)
 - **public** — bez auth (lub własny podpis/sekret)
 

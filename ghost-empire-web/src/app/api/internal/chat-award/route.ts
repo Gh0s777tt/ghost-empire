@@ -4,10 +4,14 @@
 // stable platformId, or username as fallback). Called by ghost-empire-chat.
 //
 // Mirrors /api/internal/award (Discord) but keyed on a streaming platform instead
-// of discordId. Bearer BOT_SECRET + layered rate limits (defense in depth).
+// of discordId. Auth: the global BOT_SECRET (first-party bot) OR this portal's own
+// per-tenant secret (verifyBotSecretForTenant). The chatter's Connection is matched
+// SCOPED to the request's tenant, so a portal's bot can only award its own viewers.
+// Layered rate limits on top (defense in depth).
 import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
 import { levelGtMultiplier, prestigeGtMultiplier } from "@/lib/economy";
@@ -36,7 +40,11 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  // Bot secret auth — global BOT_SECRET (first-party) OR this portal's per-tenant secret.
+  // Tenant resolved from the request Host (never a forgeable header); `tenantId` also scopes
+  // the Connection lookup below so the bot can't award a different portal's viewer.
+  const { id: tenantId, botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -72,14 +80,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Multiplier 0.1-10" }, { status: 400 });
   }
 
-  // Match the chatter to a linked account — prefer the stable platformId.
+  // Match the chatter to a linked account — prefer the stable platformId — SCOPED to this
+  // portal's users so a tenant's bot can only award its own viewers. [platform, platformId]
+  // is globally unique, so findFirst + the tenant relation filter returns that single row
+  // only when it belongs here. tenantId null (pre-backfill / no request scope) → unscoped
+  // (legacy single-tenant behaviour).
+  const scopeToTenant = tenantId ? { user: { tenantId } } : {};
   const connection = platformUserId
-    ? await prisma.connection.findUnique({
-        where: { platform_platformId: { platform, platformId: String(platformUserId) } },
+    ? await prisma.connection.findFirst({
+        where: { platform, platformId: String(platformUserId), ...scopeToTenant },
         select: { userId: true, user: { select: { level: true, prestige: true, tenantId: true } } },
       })
     : await prisma.connection.findFirst({
-        where: { platform, username: { equals: username!, mode: "insensitive" } },
+        where: { platform, username: { equals: username!, mode: "insensitive" }, ...scopeToTenant },
         select: { userId: true, user: { select: { level: true, prestige: true, tenantId: true } } },
       });
 
