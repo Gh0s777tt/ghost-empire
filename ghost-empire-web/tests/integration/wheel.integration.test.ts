@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { spinWheel, WheelError, type WheelSegment } from "@/lib/wheel";
-import { resetDb, createUserWithChips, chipsOf } from "./helpers";
+import { resetDb, createUserWithChips, chipsOf, gtLedgerOf, GT_SEED } from "./helpers";
 
 const SEGMENTS: WheelSegment[] = [
   { label: "Pudło", weight: 50, rewardTokens: 0, color: "#3f3f46" },
@@ -38,6 +38,16 @@ describe("wheel of fortune (integration, real DB)", () => {
 
     const spend = await prisma.transaction.findFirst({ where: { userId: u.id, reason: "wheel:spin" } });
     expect(spend?.amount).toBe(-100);
+    // Ledger rows must be stamped CHIPS — ranking / wrapped / economy-health only
+    // count `currency: "GT"`, so a mislabelled row would drag casino play back into
+    // the real-economy metrics (the leak Faza 8 of the migration closed).
+    expect(spend?.currency).toBe("CHIPS");
+    const rows = await prisma.transaction.findMany({ where: { userId: u.id } });
+    expect(rows.every((t) => t.currency === "CHIPS")).toBe(true);
+
+    // The whole point of the chips migration: a spin moves chips and NOTHING else.
+    // GT balance and both lifetime metrics stay exactly as seeded.
+    expect(await gtLedgerOf(u.id)).toEqual(GT_SEED);
   });
 
   it("rejects a spin when the user can't afford the cost", async () => {

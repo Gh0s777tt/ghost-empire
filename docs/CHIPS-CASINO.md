@@ -134,11 +134,18 @@ Nowe, **wyłącznie darmowe** krany `chips`:
 ## Weryfikacja (per faza, z `ghost-empire-web/`)
 ```
 npx tsc --noEmit        # typy
-npx vitest run          # testy (economy/gt-games/wheel mają testy — zaktualizować na chips)
+npx vitest run          # testy jednostkowe (economy/gt-games/wheel — już na chips)
+npm run test:integration # ✅ koło + duele: chips ruszone, ledger GT NIETKNIĘTY (wymaga testowego Postgresa)
 npx eslint <changed>
 npx next build
 npm run docs:check && npm run docs:env
 ```
+**Rozdział walut jest pinowany testem, nie konwencją.** `tests/integration/helpers.ts`
+stempluje każdego żetonowego użytkownika niezerowym ledgerem GT (`GT_SEED`), a koło i duele
+asertują po ruchu pieniądza, że `tokens`/`totalEarned`/`totalSpent` są **bez zmian** i że każdy
+wiersz `Transaction` ma `currency: "CHIPS"` — czyli że gra kasynowa nie wraca do metryk realnej
+ekonomii (ranking/wrapped/economy-health liczą wyłącznie `"GT"`). Dokładając nową grę na chips,
+dołóż tę samą parę asercji.
 **⚠️ db push (Faza 1)** — tylko za wyraźną zgodą właściciela, z backupem (patrz `docs/BACKUP.md`).
 
 ## Rollback
