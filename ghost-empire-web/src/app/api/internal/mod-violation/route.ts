@@ -3,15 +3,16 @@
 // top-offenders view. Bearer BOT_SECRET. Fire-and-forget from the bot's side.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
-import { currentTenantId } from "@/lib/tenant";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { currentTenantId, getCurrentTenantBotAuth } from "@/lib/tenant";
 
 const PLATFORMS = new Set(["twitch", "kick", "youtube"]);
 const VIOLATIONS = new Set(["profanity", "caps", "length", "repeat", "zalgo"]);
 const ACTIONS = new Set(["delete", "timeout", "warn"]);
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  const { botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

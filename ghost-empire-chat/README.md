@@ -25,8 +25,11 @@ Każda wiadomość przechodzi jeden pipeline per platforma: sygnał aktywności 
 
 - **Self-contained:** the bot holds its own platform OAuth tokens in `.env` and
   connects outbound to each chat (Twitch IRC, Kick websocket, YouTube polling).
-- **Economy:** calls the portal `POST /api/internal/chat-award` with the shared
-  `BOT_SECRET` (same pattern as the Discord bot) to grant GT for chat activity.
+- **Economy:** calls the portal `POST /api/internal/chat-award` with `BOT_SECRET`
+  (same pattern as the Discord bot) to grant GT for chat activity. The portal accepts
+  either the platform-wide secret **or** this portal's own `Tenant.botSecret`, and
+  scopes every user/GT lookup to the tenant that owns the secret + the request Host —
+  so one portal's bot can never award another portal's viewer (see **Multi-tenant**).
 - **Portal-managed:** commands / FAQ / timers / welcome / song-requests live in the DB and
   are fetched from `/api/bot/*` every ~2 min; the bot keeps minimal hardcoded fallbacks.
 - **12-factor / portable:** all config via env vars, no hardcoded paths. Moving
@@ -69,7 +72,8 @@ ENV_FILE=tenants/neo-zone.env npm start              # instancja klienta
 npm start                                            # bez ENV_FILE = klasyczne .env (founder)
 ```
 
-- `PORTAL_URL` instancji wskazuje **subdomenę tenanta** (`https://neo-zone.twoja-domena.com`) — portal rozpoznaje tenanta po Hoście, więc wszystkie nagrody/komendy/FAQ/timery lądują w danych właściwego portalu. Ten sam `BOT_SECRET` co w deploymencie portalu.
+- `PORTAL_URL` instancji wskazuje **subdomenę tenanta** (`https://neo-zone.twoja-domena.com`) — portal rozpoznaje tenanta po Hoście, więc wszystkie nagrody/komendy/FAQ/timery lądują w danych właściwego portalu.
+- `BOT_SECRET` instancji: **najlepiej własny sekret portalu** (`Tenant.botSecret` danego tenanta) — portal **scope'uje wtedy każdy lookup usera/GT do tenanta, do którego należy sekret**, więc instancja może ruszać wyłącznie SWOICH widzów. Globalny `BOT_SECRET` deploymentu portalu też jest akceptowany (kompatybilność wsteczna — tak działa bot założyciela), ale to klucz first-party: **nie dawaj go obcemu streamerowi**. Zero zmian w kodzie bota — to ta sama zmienna, tylko inna wartość.
 - Każda instancja ma własny kanał Twitch/Kick/YT i własne (lub współdzielone konto bota) poświadczenia.
 - Izolacja per proces = cache'e modułów (komendy/FAQ/timery/moderacja) naturalnie per portal. Docker: `--env-file tenants/neo-zone.env` + osobny wolumen tokenów Kick per instancja.
 - Multipleksowanie wielu portali w jednym procesie ma sens dopiero przy dużej flocie (dziesiątki+) — wymaga przebudowy modułów na instancje; świadomie odłożone.
@@ -79,3 +83,13 @@ npm start                                            # bez ENV_FILE = klasyczne 
 - `.env` holds live secrets and is **gitignored** (root `**/.env`). Never commit it.
 - The bot uses the **bot accounts'** OAuth apps; the streamer's main-account apps
   live in the portal (Vercel) and are not duplicated here.
+- **Give a third-party streamer their portal's own `Tenant.botSecret`, never the
+  platform-wide `BOT_SECRET`.** The portal accepts both, but a per-tenant secret confines
+  that instance to its own portal's viewers (the portal scopes every user/GT lookup to the
+  tenant owning the secret + the request Host), while the platform key is the first-party
+  founder credential.
+- ⚠️ **Provisioning `Tenant.botSecret` is DB-only today** — there is no admin UI/API for it
+  yet (the tenant PATCH endpoint's field allow-list doesn't include it, deliberately: it's a
+  server secret). Set/rotate the column directly on the `tenants` row, then put the new value
+  in that instance's env file and restart it. Until it's set, the instance must use the
+  platform-wide `BOT_SECRET` (which still works — that's the back-compat path).

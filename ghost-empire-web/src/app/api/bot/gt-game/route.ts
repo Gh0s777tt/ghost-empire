@@ -1,15 +1,20 @@
 // src/app/api/bot/gt-game/route.ts
-// Bot → portal: play a GT mini-game (slots/coinflip) for a chatter. Bearer BOT_SECRET.
-// Resolves the chatter to a Ghost Empire user via their linked Connection (like
-// chat-award), then plays atomically and returns a ready-to-post message.
+// Bot → portal: play a GT mini-game (slots/coinflip) for a chatter. Auth: the global
+// BOT_SECRET (first-party) OR this portal's per-tenant secret (verifyBotSecretForTenant).
+// Resolves the chatter to a Ghost Empire user via their linked Connection SCOPED to the
+// request's tenant (like chat-award), then plays atomically and returns a ready-to-post message.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { playGtGame } from "@/lib/gt-games";
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  // Auth + tenant scope from the request Host: a portal's bot can only resolve/play for its
+  // own viewers. tenantId null (no request scope) → unscoped (legacy single-tenant behaviour).
+  const { id: tenantId, botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   let body: { platform?: string; platformUserId?: string; username?: string; game?: string; bet?: number; choice?: string };
@@ -25,14 +30,15 @@ export async function POST(req: Request) {
   const bet = Math.floor(Number(body.bet ?? 0));
   if (!game) return NextResponse.json({ message: null });
 
+  const scopeToTenant = tenantId ? { user: { tenantId } } : {};
   const connection = body.platformUserId
-    ? await prisma.connection.findUnique({
-        where: { platform_platformId: { platform, platformId: String(body.platformUserId) } },
+    ? await prisma.connection.findFirst({
+        where: { platform, platformId: String(body.platformUserId), ...scopeToTenant },
         select: { userId: true },
       })
     : body.username
       ? await prisma.connection.findFirst({
-          where: { platform, username: { equals: body.username, mode: "insensitive" } },
+          where: { platform, username: { equals: body.username, mode: "insensitive" }, ...scopeToTenant },
           select: { userId: true },
         })
       : null;

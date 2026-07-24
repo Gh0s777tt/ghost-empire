@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { extractIp } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 
 export async function GET(req: Request) {
   const ip = extractIp(req) ?? "unknown";
@@ -17,7 +18,10 @@ export async function GET(req: Request) {
     );
   }
 
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  // Auth: global BOT_SECRET (first-party) OR this portal's per-tenant secret. tenantId also
+  // scopes the lookup so a bot can't read another portal's user (balance/handle) by discordId.
+  const { id: tenantId, botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,8 +30,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Invalid discordId" }, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { discordId },
+  const user = await prisma.user.findFirst({
+    where: { discordId, ...(tenantId ? { tenantId } : {}) },
     select: { name: true, discordUsername: true, tokens: true },
   });
 

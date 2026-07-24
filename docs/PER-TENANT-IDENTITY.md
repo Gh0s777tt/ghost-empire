@@ -124,3 +124,41 @@ Per-portal balances mean a viewer's GT on portal A is separate from portal B. Co
 that's intended (vs. one wallet spanning portals). If a shared wallet is wanted, this
 whole refactor is unnecessary — the #508 shared-identity hub already delivers
 "switch between favorite streamers".
+
+## 9. Related isolation surface: bot-facing endpoints (shipped)
+
+Viewer identity (§2–7) is one half of per-tenant isolation; the **bot-facing money
+and identity endpoints** are the other. Those endpoints authenticated with a single
+global `BOT_SECRET` and matched the target `User`/`Connection` **globally** — so once
+a streamer runs their own bot (the platform model), tenant A's bot could grant/farm/read
+tenant B's users. That is now closed:
+
+- **Auth** — `verifyBotSecretForTenant(auth, tenant.botSecret)` accepts the global
+  `BOT_SECRET` (first-party bot, back-compat) **or** the portal's own `Tenant.botSecret`.
+  The tenant is resolved from the request **Host** via `getCurrentTenantBotAuth()`
+  (`lib/tenant.ts`) — the same Host-only rule as `currentTenantId()`, never the forgeable
+  `x-tenant-slug`. `botSecret` is deliberately kept **out of** `TenantBrand` (server secret).
+- **Scoping** — the target lookup is scoped with the same `...(tid ? { tenantId: tid } : {})`
+  idiom used everywhere else: `internal/award` (by `discordId`), `internal/chat-award` +
+  `bot/gt-game`/`heist`/`duel` (Connection via the `user.tenantId` relation — `Connection`
+  has no `tenantId` of its own), `internal/link-status`, and the YouTube donor match in
+  `yt/poll-live-chat` (scoped to the streamed portal; its auth stays global because that
+  route is a platform cron sweeping every portal). `tid = null` (pre-backfill / outside a
+  request scope) falls back to the legacy unscoped lookup, so the founder is unaffected.
+- **Cross-repo, zero-break** — the bot is one process per portal and already sends a
+  per-instance `BOT_SECRET` (`ghost-empire-chat/src/env.ts`). A tenant runs its own bot by
+  setting `BOT_SECRET=<its Tenant.botSecret>`; the founder keeps the global secret. **No bot
+  code change**, and nothing breaks on deploy. `link-discord`'s dupe-check stays global on
+  purpose — `discordId` is globally `@unique`, so a scoped check would let a P2002 slip past
+  the friendly 409.
+
+Unlike §2's viewer-identity work, this needed **no schema change** (`Tenant.botSecret`
+already exists) and **no `db push`**.
+
+⚠️ **Open gap — provisioning is DB-only.** Nothing writes `Tenant.botSecret` yet: the admin
+tenant PATCH (`/api/admin/tenants/[id]`) uses an explicit field allow-list that excludes it,
+and no other code path sets it. So a streamer cannot self-serve their own bot secret — it has
+to be written straight onto the `tenants` row. That's safe (the isolation above is enforced
+whether or not a tenant has its own secret; without one they simply fall back to the global
+`BOT_SECRET`), but until an owner-scoped admin surface exists — generate + show once + rotate,
+never echoing the stored value back to the client — per-tenant bots stay a manual setup.

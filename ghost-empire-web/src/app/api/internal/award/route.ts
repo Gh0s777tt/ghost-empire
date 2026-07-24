@@ -1,9 +1,13 @@
 // src/app/api/internal/award/route.ts
 // Used by Discord bot to award tokens for activity (messages, voice).
-// Protected by Bearer BOT_SECRET + rate limit per user (defense in depth if secret leaks).
+// Auth: Bearer secret — the global BOT_SECRET (first-party bot) OR this portal's own
+// per-tenant secret (a streamer running their own bot); see verifyBotSecretForTenant.
+// The target user is matched by discordId SCOPED to the request's tenant, so a portal's
+// bot can only award its own users. Rate limit per user (defense in depth if secret leaks).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
 import { updateDailyTaskProgress } from "@/lib/daily-tasks";
@@ -32,8 +36,11 @@ export async function POST(req: Request) {
     );
   }
 
-  // Layer 2: Bot secret auth
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  // Layer 2: Bot secret auth — accept the global BOT_SECRET (first-party bot, back-compat)
+  // OR this portal's own per-tenant secret. Tenant is resolved from the request Host, never
+  // a forgeable header. `tenantId` also scopes the user lookup below.
+  const { id: tenantId, botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -76,9 +83,12 @@ export async function POST(req: Request) {
     );
   }
 
-  // Find user by Discord ID
-  const user = await prisma.user.findUnique({
-    where: { discordId },
+  // Find user by Discord ID — SCOPED to the request's tenant so a portal's bot can only
+  // award ITS OWN users, never another tenant's. discordId is globally unique, so findFirst
+  // with the extra tenant filter returns the row only when it belongs here. tenantId null
+  // (pre-backfill / outside a request scope) → unscoped, preserving legacy single-tenant behaviour.
+  const user = await prisma.user.findFirst({
+    where: { discordId, ...(tenantId ? { tenantId } : {}) },
     select: { id: true, tokens: true },
   });
 

@@ -1,13 +1,17 @@
 // src/app/api/internal/link-discord/route.ts
 // Two-step Discord linking flow:
 //   PUT  — user (authenticated) requests a 6-char code valid 10 minutes
-//   POST — bot (authenticated by BOT_SECRET) consumes the code, links Discord ID
+//   POST — bot (global BOT_SECRET or this portal's per-tenant secret) consumes the code,
+//          links Discord ID. The target user is the code's owner (pending.userId), so it is
+//          inherently the code-issuing portal's user; the dupe-check stays GLOBAL because
+//          discordId is globally @unique (a scoped check would let a P2002 slip through).
 // Codes persisted in DB (serverless-safe across function instances).
 import { NextResponse } from "next/server";
 import { randomInt } from "node:crypto";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
 
@@ -75,7 +79,8 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  const { botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

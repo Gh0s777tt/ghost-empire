@@ -2,9 +2,9 @@
 // Bot → portal: enqueue a viewer's song request. Bearer BOT_SECRET (mirrors chat-award).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
 import { featureGateResponse } from "@/lib/entitlements";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenantBotAuth } from "@/lib/tenant";
 import { fetchSongTitle, normalizeRequester } from "@/lib/song-requests";
 
 const MAX_QUERY = 200;
@@ -13,7 +13,8 @@ const MAX_QUEUE = 200; // reject if the queue is already huge
 const PLATFORMS = new Set(["twitch", "kick", "youtube"]);
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  const { botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   // Plan gate (pro+) — the bot relays the 403 message to the viewer in chat.
