@@ -10,7 +10,7 @@ import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers";
 import { cookies } from "next/headers";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -559,7 +559,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // welcome bonus. Without a tenantId the user is invisible in tenant-scoped queries
         // like the ranking/leaderboard. Single-tenant → default tenant; multi-tenant →
         // the signup host's tenant. [audit fix]
-        const tenantId = await currentTenantId();
+        // One request-cached tenant read: `id` scopes the new account, `tokenSymbol` labels
+        // the welcome alert with THIS portal's currency (never a hardcoded "GT").
+        const tenant = await getCurrentTenant();
+        const tenantId = tenant.id;
         // Public nick at signup so a new account is never shown as "Anonim". user.name for
         // a Google login is the real full name — only use it as a nick when it's a single
         // token (a real handle); otherwise fall back to the email local-part. signIn()
@@ -603,7 +606,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           actorName: displayNick(user.name, user.email?.split("@")[0]),
           actorImage: user.image ?? undefined,
           amount: 500,
-          amountLabel: "GT",
+          amountLabel: tenant.tokenSymbol,
         }, tenantId);
 
         // Season XP welcome bump
