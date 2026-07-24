@@ -2177,7 +2177,8 @@
         "update_alert_settings": "إعدادات التنبيهات",
         "merge_users": "دمج حسابات",
         "update_moderation": "الإشراف (تلقائي)",
-        "update_integrations": "التكاملات / المفاتيح"
+        "update_integrations": "التكاملات / المفاتيح",
+        "rotate_bot_secret": "سر البوت"
       }
     },
     "mergeUsers": {

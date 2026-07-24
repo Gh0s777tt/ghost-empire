@@ -2177,7 +2177,8 @@
         "update_alert_settings": "提醒设置",
         "merge_users": "合并账户",
         "update_moderation": "管理（自动）",
-        "update_integrations": "集成 / 密钥"
+        "update_integrations": "集成 / 密钥",
+        "rotate_bot_secret": "机器人密钥"
       }
     },
     "mergeUsers": {

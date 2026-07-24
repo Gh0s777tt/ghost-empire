@@ -69,7 +69,8 @@ ENV_FILE=tenants/neo-zone.env npm start              # instancja klienta
 npm start                                            # bez ENV_FILE = klasyczne .env (founder)
 ```
 
-- `PORTAL_URL` instancji wskazuje **subdomenę tenanta** (`https://neo-zone.twoja-domena.com`) — portal rozpoznaje tenanta po Hoście, więc wszystkie nagrody/komendy/FAQ/timery lądują w danych właściwego portalu. Ten sam `BOT_SECRET` co w deploymencie portalu.
+- `PORTAL_URL` instancji wskazuje **subdomenę tenanta** (`https://neo-zone.twoja-domena.com`) — portal rozpoznaje tenanta po Hoście, więc wszystkie nagrody/komendy/FAQ/timery lądują w danych właściwego portalu.
+- `BOT_SECRET` instancji to **albo** globalny sekret deploymentu portalu, **albo** własny sekret tego portalu — patrz „Sekret bota per portal” w [Security](#security).
 - Każda instancja ma własny kanał Twitch/Kick/YT i własne (lub współdzielone konto bota) poświadczenia.
 - Izolacja per proces = cache'e modułów (komendy/FAQ/timery/moderacja) naturalnie per portal. Docker: `--env-file tenants/neo-zone.env` + osobny wolumen tokenów Kick per instancja.
 - Multipleksowanie wielu portali w jednym procesie ma sens dopiero przy dużej flocie (dziesiątki+) — wymaga przebudowy modułów na instancje; świadomie odłożone.
@@ -79,3 +80,23 @@ npm start                                            # bez ENV_FILE = klasyczne 
 - `.env` holds live secrets and is **gitignored** (root `**/.env`). Never commit it.
 - The bot uses the **bot accounts'** OAuth apps; the streamer's main-account apps
   live in the portal (Vercel) and are not duplicated here.
+
+### Sekret bota per portal (`BOT_SECRET`)
+
+Portal przyjmuje **dwa** rodzaje sekretu na trasach `/api/bot/*` i `/api/internal/*`
+(`verifyBotSecretForTenant`, porównanie w stałym czasie):
+
+1. **globalny `BOT_SECRET`** deploymentu portalu — działa dla każdego portalu (fallback,
+   zawsze akceptowany);
+2. **własny sekret portalu** (`Tenant.botSecret`) — dla instancji obsługującej ten jeden portal.
+
+**Własny sekret generuje się w panelu portalu: `/admin#bot` → „Sekret bota portalu”**
+(`POST /api/admin/bot-secret`). Wcześniej dało się go ustawić tylko wpisem prosto do bazy —
+ten wyjątek już nie obowiązuje.
+
+- Wartość pokazywana jest **dokładnie raz**, przy generowaniu. Panel nigdy jej potem nie
+  odda (tylko „ustawiony” + 4 ostatnie znaki) — skopiuj ją od razu do `tenants/<slug>.env`.
+- **Rotacja to twarde przecięcie**: stary sekret przestaje działać natychmiast, więc podmień
+  env i zrestartuj proces bota. Zgubiony sekret = wygeneruj nowy, nie da się go odzyskać.
+- „Usuń sekret” w panelu cofa portal do globalnego `BOT_SECRET`.
+- Rotacja trafia do dziennika audytu portalu (bez wartości sekretu).

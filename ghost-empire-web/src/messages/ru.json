@@ -2177,7 +2177,8 @@
         "update_alert_settings": "Настройки оповещений",
         "merge_users": "Объединение аккаунтов",
         "update_moderation": "Модерация (авто)",
-        "update_integrations": "Интеграции / ключи"
+        "update_integrations": "Интеграции / ключи",
+        "rotate_bot_secret": "Секрет бота"
       }
     },
     "mergeUsers": {

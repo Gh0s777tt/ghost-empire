@@ -150,6 +150,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/schedule` | perm:manage_shop | Harmonogram streamów |
 | `…/api/admin/bot-config` | perm:manage_shop | Config bota Discord |
 | `…/api/admin/bot-status` | perm:manage_shop | Status żywotności bota czatu (online/lastSeen/platformy) z heartbeatu |
+| `…/api/admin/bot-secret` | admin (owner portalu) | Własny sekret bota portalu (`Tenant.botSecret`) — GET `{configured, hint, slug, name, globalFallback}` (**nigdy sama wartość**; `hint` = 4 ostatnie znaki), POST `{action:"rotate"}` → mintuje `randomToken(32)` i **pokazuje go dokładnie raz**, POST `{action:"clear"}` → powrót do globalnego `BOT_SECRET`. Bramka `canManageTenantBotSecret` (właściciel portalu / admin tego portalu / właściciel platformy — **nie** admin z `tenantId=NULL`), step-up 2FA, limit 10/5min, audit `rotate_bot_secret` bez wartości. Szczegóły: [PER-TENANT-IDENTITY §9](PER-TENANT-IDENTITY.md#9-per-tenant-bot-identity-tenantbotsecret) |
 | `…/api/admin/ban-user` | perm:ban_users | Ban/mute |
 | `…/api/admin/merge-users` | admin | Scalanie duplikatów kont |
 | `…/api/admin/support-tickets` | admin | Skrzynka wsparcia — GET lista (filtr open/resolved/all, tenant-scoped), PATCH reply/resolve/reopen + powiadomienie widza (#650) |

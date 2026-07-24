@@ -2177,7 +2177,8 @@
         "update_alert_settings": "Paramètres d'alertes",
         "merge_users": "Fusion de comptes",
         "update_moderation": "Modération (auto)",
-        "update_integrations": "Intégrations / clés"
+        "update_integrations": "Intégrations / clés",
+        "rotate_bot_secret": "Secret du bot"
       }
     },
     "mergeUsers": {

@@ -30,6 +30,7 @@ const ACTION_META: Record<string, { emoji: string; color: string }> = {
   merge_users:         { emoji: "🔀", color: "#a855f7" },
   update_moderation:   { emoji: "🛡️", color: "#3b82f6" },
   update_integrations: { emoji: "🔌", color: "#10b981" },
+  rotate_bot_secret:   { emoji: "🔐", color: "#ef4444" },
 };
 
 export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {

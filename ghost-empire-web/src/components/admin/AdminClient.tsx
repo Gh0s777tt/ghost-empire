@@ -31,7 +31,7 @@ import {
   AchievementsManager, PredictionsManager, BountiesManager, WelcomeManager, FaqManager, ChatTimersManager,
   ChatCommandsManager, SongQueueManager, SubathonManager, GrantTokensCard, CreateDropCard, DatabaseResetCard,
   CustomAlertsCard, ChatOverlayCard, StreamGoalsManager, KickEventsManager, YouTubeLiveManager, RumbleManager,
-  SeasonsManager, MergeUsersSection, BotConfigCard, ScheduleManager, TwitchEventSubManager, StreamlabsManager,
+  SeasonsManager, MergeUsersSection, BotConfigCard, BotSecretCard, ScheduleManager, TwitchEventSubManager, StreamlabsManager,
   UserRolesCard, ConnectionRolesCard, ShopManager, CodeDropsCard, HolidayEventsCard, CreateEventCard,
   EventsManager, ActiveDropsList, PendingOrdersList, StreamAlertsManager, TenantsManager, AppearanceManager, HubManager, SupportTicketsManager,
   RoleRoster, SubscribersManager, SupportPreview,
@@ -469,9 +469,14 @@ export function AdminClient({
           )}
 
           {activeSection === "bot" && can("manage_shop") && (
-            <LazySection<{ botConfig: BotConfigData }> s="bot">
-              {(d) => <BotConfigCard config={d.botConfig} {...sharedProps} />}
-            </LazySection>
+            <div className="space-y-6">
+              <LazySection<{ botConfig: BotConfigData }> s="bot">
+                {(d) => <BotConfigCard config={d.botConfig} {...sharedProps} />}
+              </LazySection>
+              {/* Provisioning the portal's bot credential is admin-only — a moderator with
+                  manage_shop may configure the bot, but not mint what authenticates it. */}
+              {isAdmin && <BotSecretCard onToast={showToast} />}
+            </div>
           )}
 
           {activeSection === "donations" && isAdmin && (

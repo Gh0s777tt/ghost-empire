@@ -2177,7 +2177,8 @@
         "update_alert_settings": "알림 설정",
         "merge_users": "계정 병합",
         "update_moderation": "모더레이션(자동)",
-        "update_integrations": "연동 / 키"
+        "update_integrations": "연동 / 키",
+        "rotate_bot_secret": "봇 시크릿"
       }
     },
     "mergeUsers": {

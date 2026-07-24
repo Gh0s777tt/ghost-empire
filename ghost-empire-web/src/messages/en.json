@@ -926,7 +926,8 @@
         "update_alert_settings": "Alert settings",
         "merge_users": "Merge accounts",
         "update_moderation": "Moderation (auto)",
-        "update_integrations": "Integrations / keys"
+        "update_integrations": "Integrations / keys",
+        "rotate_bot_secret": "Bot secret"
       }
     },
     "modViolations": {
@@ -2333,6 +2334,29 @@
     "secModeration": "Moderation",
     "secAudit": "Audit log",
     "secTwofactor": "2FA (admin)",
+    "botSecret": {
+      "title": "Portal bot secret",
+      "intro": "This portal's own secret ({portal}) — what its bot instance authenticates with. Without one, the bot uses the shared global BOT_SECRET.",
+      "loading": "Loading…",
+      "notOwner": "This section is for the portal's owner/admin.",
+      "statusOn": "Secret set",
+      "statusOffGlobal": "This portal has no secret of its own — its bot authenticates with the shared global BOT_SECRET.",
+      "statusOffNone": "This portal has no secret of its own and no global BOT_SECRET is set — the bot cannot authenticate at all.",
+      "generateBtn": "Generate secret",
+      "rotateBtn": "Rotate secret",
+      "clearBtn": "Remove secret",
+      "rotateConfirm": "Generate a new secret? The old one stops working immediately — the bot stays disconnected until you paste the new one in.",
+      "clearConfirm": "Remove this portal's own secret? The bot goes back to the shared global BOT_SECRET.",
+      "clearConfirmNoGlobal": "Remove this portal's own secret? WARNING: no global BOT_SECRET is set, so the bot will lose access to this portal's API.",
+      "revealWarn": "Save it now — this is the only time it is shown.",
+      "revealHint": "Paste it into your bot instance's .env (tenants/<slug>.env) and restart the bot.",
+      "copyBtn": "Copy",
+      "doneBtn": "Saved it",
+      "generatedMsg": "New bot secret generated",
+      "clearedMsg": "Bot secret removed — the portal falls back to the global BOT_SECRET",
+      "err": "Could not save",
+      "fallbackNote": "Verification always accepts the global BOT_SECRET too, so the current shared bot keeps working. Rotations go to the audit log (never the value)."
+    },
     "twoFactor": {
       "title": "Two-factor authentication (2FA)",
       "intro": "Protect your admin account with a time-based code (TOTP). Once enabled it can be required for sensitive actions. Use Google Authenticator, Authy or any compatible app.",
