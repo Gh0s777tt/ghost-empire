@@ -1,5 +1,5 @@
 // src/app/api/shop/buy/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
@@ -192,9 +192,12 @@ export async function POST(req: Request) {
       amountLabel: "GT",
     });
 
-    // Achievement check — shop purchase milestones + season XP
-    await checkAndGrantAchievements({ userId, triggerType: "shop_purchases" });
-    await awardSeasonXp(userId, "shop_purchase");
+    // Deferred via after() — the buyer gets their new balance immediately; the milestone checks
+    // + season XP (several queries) run off the response path and are guaranteed to complete.
+    after(async () => {
+      await checkAndGrantAchievements({ userId, triggerType: "shop_purchases" });
+      await awardSeasonXp(userId, "shop_purchase");
+    });
 
     // Strip internal-only fields from the response
     const { _actor, _item, ...publicResult } = result;
