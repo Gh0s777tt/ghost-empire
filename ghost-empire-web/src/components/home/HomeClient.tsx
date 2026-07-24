@@ -18,6 +18,8 @@ import { sfxPlay } from "@/lib/sfx";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { OnlineNowBadge } from "@/components/OnlineNowBadge";
 import { ExtensionsSection } from "@/components/extensions/ExtensionsSection";
+import { PushToggle } from "@/components/push/PushToggle";
+import { ReferralCard } from "@/components/profile/ReferralCard";
 import type { Session } from "next-auth";
 
 // Shapes mirror the prisma selects in app/[locale]/page.tsx (minimal fields the
@@ -115,6 +117,10 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
 
       {/* Getting started — self-hides once every step is done */}
       <GettingStarted />
+
+      {/* Enable-push nudge — self-hides unless enabling is actionable (best re-engagement loop,
+          previously reachable only from /profile which most viewers never open) */}
+      <PushToggle nudge />
 
       {/* First-spend nudge (#786/C2) — turns the 500 GT welcome grant into the core loop.
           Self-hides the moment the viewer spends anything (totalSpent > 0), or on dismiss. */}
@@ -223,6 +229,10 @@ export function HomeClient({ session, userData, hotItems, activeEvents, topUsers
           </div>
         </div>
       )}
+
+      {/* Invite-a-friend — the cheapest growth loop, previously buried three clicks deep on /profile.
+          Both inviter and invitee earn GT; the component self-contains its share/copy UI. */}
+      <ReferralCard />
 
       {/* Browser-extension promo (#extensions) — awareness that NX Companion / NX Chat Tools exist */}
       <ExtensionsSection compact />

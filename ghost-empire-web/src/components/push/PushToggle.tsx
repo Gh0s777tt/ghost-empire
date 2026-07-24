@@ -20,7 +20,9 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 
 type State = "loading" | "unavailable" | "off" | "on" | "denied" | "working";
 
-export function PushToggle() {
+/** `nudge`: home-dashboard mode — render ONLY when enabling push is actionable (state "off"),
+ *  so it's a self-hiding prompt, not a settings row (the profile page mounts it without `nudge`). */
+export function PushToggle({ nudge = false }: { nudge?: boolean } = {}) {
   const t = useTranslations("push");
   const [state, setState] = useState<State>("loading");
   const [vapid, setVapid] = useState<string | null>(null);
@@ -90,6 +92,7 @@ export function PushToggle() {
   }
 
   if (state === "loading" || state === "unavailable") return null;
+  if (nudge && state !== "off") return null; // home nudge: only prompt when enabling is actionable
 
   return (
     <div className="border border-zinc-800 bg-black/30 rounded-xl p-4 flex items-center gap-3">
