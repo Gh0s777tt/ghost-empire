@@ -1,6 +1,6 @@
 // src/lib/__tests__/billing.test.ts
 import { describe, it, expect, afterEach } from "vitest";
-import { isBillingMonths, priceIdFor, periodEndToExpiry, billingConfigured } from "../billing";
+import { isBillingMonths, priceIdFor, periodEndToExpiry, billingConfigured, isActiveSubStatus, subscriptionUpdateData } from "../billing";
 
 describe("isBillingMonths", () => {
   it("accepts only the offered durations", () => {
@@ -36,5 +36,40 @@ describe("periodEndToExpiry", () => {
     const d = periodEndToExpiry(end);
     expect(d.getTime()).toBe(end * 1000 + 24 * 60 * 60 * 1000);
     expect(periodEndToExpiry(end, 0).getTime()).toBe(end * 1000);
+  });
+});
+
+describe("isActiveSubStatus", () => {
+  it("only active / trialing / past_due entitle the paid plan", () => {
+    for (const s of ["active", "trialing", "past_due"]) expect(isActiveSubStatus(s)).toBe(true);
+    for (const s of ["canceled", "incomplete", "incomplete_expired", "unpaid", "paused", ""]) expect(isActiveSubStatus(s)).toBe(false);
+  });
+});
+
+describe("subscriptionUpdateData (Stripe subscription.updated → tenant fields)", () => {
+  const END = 1_800_000_000;
+  const expiry = periodEndToExpiry(END);
+
+  it("active + non-basic sets BOTH plan and expiry", () => {
+    expect(subscriptionUpdateData("active", "elite", END)).toEqual({ plan: "elite", planExpiresAt: expiry });
+    expect(subscriptionUpdateData("trialing", "pro", END).plan).toBe("pro");
+    expect(subscriptionUpdateData("past_due", "elite", END).plan).toBe("elite");
+  });
+
+  it("basic / garbage / null plan is NEVER set — but expiry still refreshes", () => {
+    expect(subscriptionUpdateData("active", "basic", END)).toEqual({ planExpiresAt: expiry });
+    expect(subscriptionUpdateData("active", "nonsense", END).plan).toBeUndefined();
+    expect(subscriptionUpdateData("active", null, END).plan).toBeUndefined();
+  });
+
+  it("inactive sub does NOT set the plan (the .deleted event expires it) but still updates expiry", () => {
+    const r = subscriptionUpdateData("canceled", "elite", END);
+    expect(r.plan).toBeUndefined();
+    expect(r.planExpiresAt).toEqual(expiry);
+  });
+
+  it("no period-end → no expiry field (absolute-set stays minimal)", () => {
+    expect(subscriptionUpdateData("active", "elite", null)).toEqual({ plan: "elite" });
+    expect(subscriptionUpdateData("canceled", "basic", null)).toEqual({});
   });
 });

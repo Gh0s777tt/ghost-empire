@@ -11,7 +11,7 @@
 //   STRIPE_PRICE_<PLAN>_<MONTHS>M — 12 price ids (PRO|ELITE|BASIC × 1|3|6|12),
 //     e.g. STRIPE_PRICE_PRO_3M=price_123. Unset combos are simply not offered.
 import Stripe from "stripe";
-import type { Plan } from "@/lib/entitlements";
+import { normalizePlan, type Plan } from "@/lib/entitlements";
 
 let client: Stripe | null | undefined;
 
@@ -49,4 +49,29 @@ export function priceIdFor(plan: Plan, months: BillingMonths): string | null {
  */
 export function periodEndToExpiry(unixSeconds: number, graceHours = 24): Date {
   return new Date(unixSeconds * 1000 + graceHours * 60 * 60 * 1000);
+}
+
+/** Stripe statuses that still ENTITLE the paid plan (trialing/past_due keep access). */
+export function isActiveSubStatus(status: string): boolean {
+  return status === "active" || status === "trialing" || status === "past_due";
+}
+
+/**
+ * Pure decision for a `customer.subscription.updated` event: the tenant fields to SET, given the
+ * raw subscription status, the plan carried in the sub metadata, and the current period-end (unix
+ * seconds). Absolute-set semantics → idempotent under Stripe replays. An active, non-basic sub sets
+ * the plan; a period-end sets the expiry; a canceled/incomplete sub leaves the plan untouched here
+ * (the `.deleted` event expires it). Extracted from the webhook so the money-in decision is
+ * unit-tested without a Stripe/DB round-trip. @remarks unit-tested in billing.test.ts.
+ */
+export function subscriptionUpdateData(
+  status: string,
+  planMeta: string | null | undefined,
+  periodEnd: number | null,
+): { plan?: Plan; planExpiresAt?: Date } {
+  const out: { plan?: Plan; planExpiresAt?: Date } = {};
+  const plan = normalizePlan(planMeta);
+  if (isActiveSubStatus(status) && plan !== "basic") out.plan = plan;
+  if (periodEnd) out.planExpiresAt = periodEndToExpiry(periodEnd);
+  return out;
 }
