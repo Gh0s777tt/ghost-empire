@@ -45,7 +45,9 @@ export function buildIcs(e: CalEvent & { uid: string }): string {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Ghost Empire//Schedule//EN",
+    // PRODID names the generating platform (E-Forge), not any single tenant — a
+    // downloaded .ics served from a white-label portal must not carry the founder brand.
+    "PRODID:-//E-Forge//Schedule//EN",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
     `UID:${e.uid}`,

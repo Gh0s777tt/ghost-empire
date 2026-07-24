@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         where: { id: userId, tokens: { gte: amount } },
         data: { tokens: { decrement: amount }, totalSpent: { increment: amount } },
       });
-      if (dec.count === 0) throw new FeedError("Za mało Ghost Tokens", 402);
+      if (dec.count === 0) throw new FeedError("Za mało %tokenName%", 402); // %tokenName% → tenant currency (jsonError)
 
       const companion = await tx.companion.upsert({
         where: { userId },

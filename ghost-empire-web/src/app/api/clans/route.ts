@@ -141,7 +141,7 @@ async function createClan(userId: string, tid: string | null, body: { name?: str
       where: { id: userId, tokens: { gte: CLAN_CREATE_COST } },
       data: { tokens: { decrement: CLAN_CREATE_COST }, totalSpent: { increment: CLAN_CREATE_COST } },
     });
-    if (dec.count === 0) throw new ClanError("Za mało Ghost Tokens", 402);
+    if (dec.count === 0) throw new ClanError("Za mało %tokenName%", 402); // %tokenName% → tenant currency (jsonError)
 
     const clan = await tx.clan.create({ data: { name, tag, ownerUserId: userId, treasury: CLAN_CREATE_COST, ...(tid ? { tenantId: tid } : {}) } });
     await tx.user.update({ where: { id: userId }, data: { clanId: clan.id, clanRole: "owner" } });
@@ -191,7 +191,7 @@ async function contribute(userId: string, tid: string | null, body: { amount?: n
       where: { id: userId, tokens: { gte: amount } },
       data: { tokens: { decrement: amount }, totalSpent: { increment: amount } },
     });
-    if (dec.count === 0) throw new ClanError("Za mało Ghost Tokens", 402);
+    if (dec.count === 0) throw new ClanError("Za mało %tokenName%", 402); // %tokenName% → tenant currency (jsonError)
     // Clan-war scoring: a LIVE war also earns the clan war points for this contribution.
     const war = await tx.clanWar.findFirst({ where: { status: "active", ...(tid ? { tenantId: tid } : {}) }, select: { status: true, endsAt: true } });
     const warLive = war != null && isWarLive(war, Date.now());

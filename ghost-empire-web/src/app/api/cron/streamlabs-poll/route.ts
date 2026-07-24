@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { pollAndProcessDonations } from "@/lib/streamlabs";
 import { createLogger } from "@/lib/logger";
 import { verifyCronSecret } from "@/lib/utils";
+import * as Sentry from "@sentry/nextjs";
 
 const log = createLogger("cron.streamlabs-poll");
 
@@ -23,13 +24,30 @@ export async function GET(req: Request) {
   // work across every portal at once.
   const results: Array<{ tenantId: string | null; ok: boolean; fetched: number; matched: number; unmatched: number; error?: string }> = [];
   for (const c of conns) {
-    results.push({ tenantId: c.tenantId, ...(await pollAndProcessDonations(c.tenantId)) });
+    try {
+      results.push({ tenantId: c.tenantId, ...(await pollAndProcessDonations(c.tenantId)) });
+    } catch (e) {
+      // Isolate portals: pollAndProcessDonations only try/catches its fetch — a throw in the
+      // mint transaction / achievements / goals would otherwise abort the loop and starve every
+      // portal ordered AFTER this one (their real-money donations never ingested this cycle).
+      const error = e instanceof Error ? e.message : "poll_failed";
+      log.error("portal poll threw", { tenantId: c.tenantId, error });
+      Sentry.captureException(e, { tags: { cron: "streamlabs-poll" }, extra: { tenantId: c.tenantId } });
+      results.push({ tenantId: c.tenantId, ok: false, fetched: 0, matched: 0, unmatched: 0, error });
+    }
   }
 
   const totals = results.reduce(
     (a, r) => ({ fetched: a.fetched + r.fetched, matched: a.matched + r.matched, unmatched: a.unmatched + r.unmatched }),
     { fetched: 0, matched: 0, unmatched: 0 },
   );
-  log.info("polled donations", { portals: results.length, ...totals });
-  return NextResponse.json({ ok: true, portals: results.length, totals, results });
+  const failed = results.filter((r) => !r.ok).length;
+  log.info("polled donations", { portals: results.length, failed, ...totals });
+  // Always-200 makes a stalled income rail look identical to a quiet period. Return non-200 when
+  // any portal failed so the Vercel cron run is flagged and uptime/Sentry can alert; the other
+  // portals were still polled above.
+  return NextResponse.json(
+    { ok: failed === 0, portals: results.length, failed, totals, results },
+    { status: failed > 0 ? 500 : 200 },
+  );
 }

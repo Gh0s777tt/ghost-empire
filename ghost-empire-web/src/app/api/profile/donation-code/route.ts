@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { generateDonationCode } from "@/lib/donation-code";
+import { cryptoRng } from "@/lib/secure-rng";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export async function GET() {
   if (me?.donationCode) return NextResponse.json({ code: me.donationCode });
 
   for (let i = 0; i < 6; i++) {
-    const candidate = generateDonationCode();
+    const candidate = generateDonationCode(cryptoRng); // CSPRNG — this code binds real money→GT (secure-rng policy)
     try {
       await prisma.user.update({ where: { id: userId }, data: { donationCode: candidate } });
       return NextResponse.json({ code: candidate });

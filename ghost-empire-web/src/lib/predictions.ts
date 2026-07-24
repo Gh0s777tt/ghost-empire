@@ -93,7 +93,8 @@ export async function placeWager(opts: {
         data: { tokens: { decrement: tokensWagered } },
       });
       if (userUpdate.count === 0) {
-        return { ok: false, status: 402, error: "Za mało Ghost Tokens" } as const;
+        // %tokenName% → tenant currency at the API boundary (jsonError); never leak "Ghost Tokens".
+        return { ok: false, status: 402, error: "Za mało %tokenName%" } as const;
       }
 
       // Unique constraint catches second wager attempt

@@ -80,7 +80,8 @@ export async function POST(req: Request) {
         },
       });
       if (userUpdate.count === 0) {
-        throw new HttpError(`Za mało Ghost Tokens (potrzeba ${totalCost})`, 402);
+        // %tokenName% → tenant currency at the boundary; interpolated, so EN stays PL (by design).
+        throw new HttpError(`Za mało %tokenName% (potrzeba ${totalCost})`, 402);
       }
 
       const lastTicket = await tx.raffleTicket.findFirst({

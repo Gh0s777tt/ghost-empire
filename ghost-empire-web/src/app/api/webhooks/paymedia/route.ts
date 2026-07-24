@@ -17,17 +17,16 @@
 //
 // Signature header: X-PayMedia-Signature (HMAC-SHA256 of body using webhook secret)
 //
-// Mapping: 1 PLN = 100 Ghost Tokens (configurable via PAYMEDIA_GT_PER_PLN env var)
+// Mapping: 1 PLN = 100 Ghost Tokens — via the SHARED rate (lib/donation-rate), same on every rail.
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { extractIp } from "@/lib/audit";
 import { createLogger } from "@/lib/logger";
 import { matchDonationToUser } from "@/lib/streamlabs";
+import { gtFromPln } from "@/lib/donation-rate";
 
 const log = createLogger("paymedia");
-
-const GT_PER_PLN = parseInt(process.env.PAYMEDIA_GT_PER_PLN ?? "100", 10);
 
 function verifySignature(body: string, signature: string | null, secret: string): boolean {
   if (!signature) return false;
@@ -121,8 +120,8 @@ export async function POST(req: Request) {
     }
   }
 
-  // Mint tokens
-  const tokensGranted = Math.round(amountPLN * GT_PER_PLN);
+  // Mint tokens — shared rate + cap so a malformed upstream amount can't mint absurd GT (was uncapped).
+  const tokensGranted = gtFromPln(amountPLN);
   const donationGrosze = Math.round(amountPLN * 100); // store in grosze for precision
 
   // Idempotency LOCK — the unique `externalId` makes a concurrent retry of the
