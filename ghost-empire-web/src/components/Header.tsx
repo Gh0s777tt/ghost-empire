@@ -194,6 +194,13 @@ export function Header() {
             <LocaleSwitcher />
             {session ? (
               <>
+                {/* Compact GT balance — MOBILE only (the desktop chip below is sm:flex); tap → shop.
+                    Without this, phone users can never see their core currency without opening a page. */}
+                <Link href="/shop" className="sm:hidden flex items-center gap-1 px-2 py-1 border border-zinc-800 bg-zinc-950">
+                  <span className="text-xs">👻</span>
+                  <span className="font-mono text-xs font-bold text-white">{fmt(liveBalance ?? session.user.tokens)}</span>
+                </Link>
+
                 {/* Token balance */}
                 <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-zinc-800 bg-zinc-950" data-tour="tokens">
                   <span className="text-sm">👻</span>
