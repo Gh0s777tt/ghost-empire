@@ -44,6 +44,8 @@ type KickProfile = {
   username?: string;
   name?: string; // Kick's /public/v1/users returns the handle in `name`
   slug?: string; // defensive fallback
+  // Never a linking key: Kick documents no email-verification flag anywhere in its API
+  // (see the security note in profile() below), so this email can't prove ownership.
   email?: string | null;
   profile_picture?: string | null;
   agreed_to_terms?: boolean;
@@ -134,16 +136,27 @@ function KickProvider(opts: OAuthUserConfig<KickProfile>): OAuthConfig<KickProfi
         id,
         // Kick returns the handle in `name`; keep username/slug as defensive fallbacks.
         name: profile.name ?? profile.username ?? profile.slug ?? null,
-        // ACCOUNT-LINKING SECURITY — Kick's /public/v1/users exposes NO email-verification
-        // flag (see KickProfile: no `email_verified`), so we cannot confirm ownership per
-        // login. We deliberately TRUST Kick's signup-time email verification (Kick sends a
-        // confirmation email at registration) and let the email auto-link — hence
-        // trustWhenUnsignalled=true. RESIDUAL RISK (documented for the audit): if Kick ever
-        // lets an unverified-email account complete OAuth, this is an account-takeover path;
-        // the mitigation is ready — flip the last arg to `false` to require manual linking.
-        // The other three providers gate on a real verification signal instead. See
-        // lib/oauth-email.ts + docs/ARCHITECTURE.md §auth.
-        email: linkableEmail(profile.email, undefined, true),
+        // ACCOUNT-LINKING SECURITY — Kick's email is NEVER a linking key (fail closed).
+        // The earlier revision trusted Kick's signup-time verification; that residual risk
+        // was chased down against Kick's official docs (2026-07-24) and could NOT be closed:
+        //   • Kick is OAuth 2.1 only, NOT OpenID Connect — no id_token, no `openid` scope,
+        //     no userinfo claims (id.kick.com/.well-known/openid-configuration → 404).
+        //   • GET /public/v1/users returns exactly user_id, name, email, profile_picture —
+        //     no email_verified/verified field (see KickProfile).
+        //   • None of the 11 documented scopes exposes verification, and token introspect
+        //     returns only active/client_id/scope/token_type/exp.
+        //   • Kick's help pages gate STREAMING and CHAT on a verified email and describe an
+        //     unverified account as merely "limited" — the OAuth authorization itself is
+        //     never listed as gated, so an unverified account plausibly completes it.
+        // With no per-login proof of ownership and no documented guarantee, trusting the
+        // signup would let an attacker register a Kick account on a victim's address and
+        // auto-merge onto their existing Google/Discord/Twitch account (takeover).
+        // trustWhenUnsignalled=false → email is null → NextAuth creates a SEPARATE account.
+        // LOGIN IS UNAFFECTED; users join the accounts themselves through the authenticated
+        // /profile connections flow. If Kick ever ships a verification flag: add it to
+        // KickProfile and pass asVerifiedFlag(profile.<flag>) instead of `undefined`.
+        // See lib/oauth-email.ts + docs/ARCHITECTURE.md §3.
+        email: linkableEmail(profile.email, undefined, false),
         image: profile.profile_picture ?? null,
       };
     },

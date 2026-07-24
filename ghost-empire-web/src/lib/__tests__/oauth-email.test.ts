@@ -115,18 +115,33 @@ describe("Google profile email (gated on `email_verified`)", () => {
   });
 });
 
-describe("Kick profile email (no verification signal — trust signup verification)", () => {
-  // Deliberate product decision: Kick's API exposes no email_verified, so we trust Kick's
-  // signup-time verification and auto-link (trustWhenUnsignalled=true). See auth.ts comment.
+describe("Kick profile email (no verification signal — NEVER a linking key)", () => {
+  // Kick's docs were checked (2026-07-24) and give us nothing to gate on: it is OAuth 2.1
+  // and not OIDC (no id_token/`openid` scope/userinfo claims), /public/v1/users returns only
+  // user_id+name+email+profile_picture, no scope exposes verification, and verification gates
+  // streaming/chat rather than the OAuth authorization. So we fail closed
+  // (trustWhenUnsignalled=false) — a Kick login gets a SEPARATE account and users link it
+  // themselves via the authenticated /profile flow. See auth.ts comment.
   const kickEmail = (p: Record<string, unknown>) =>
-    linkableEmail(typeof p.email === "string" ? p.email : null, undefined, true);
+    linkableEmail(typeof p.email === "string" ? p.email : null, undefined, false);
 
-  it("links a Kick email (trusted at source)", () => {
-    expect(kickEmail({ email: "k@x.com" })).toBe("k@x.com");
+  it("does NOT link a Kick email — no verification signal means no auto-merge", () => {
+    // The takeover this blocks: an attacker registers a Kick account on the victim's
+    // address and it silently merges onto the victim's Google/Discord/Twitch account.
+    expect(kickEmail({ email: "k@x.com" })).toBeNull();
   });
 
   it("returns null when Kick supplies no email", () => {
     expect(kickEmail({})).toBeNull();
     expect(kickEmail({ email: null })).toBeNull();
+  });
+
+  it("would link again the day Kick ships a verification flag (no code change but the flag)", () => {
+    // Forward-compat pin for the documented upgrade path: feed asVerifiedFlag(...) in place
+    // of `undefined` and the same call links verified addresses and rejects unverified ones.
+    const future = (p: Record<string, unknown>) =>
+      linkableEmail(typeof p.email === "string" ? p.email : null, asVerifiedFlag(p.email_verified), false);
+    expect(future({ email: "k@x.com", email_verified: true })).toBe("k@x.com");
+    expect(future({ email: "k@x.com", email_verified: false })).toBeNull();
   });
 });
