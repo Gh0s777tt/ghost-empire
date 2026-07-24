@@ -417,7 +417,7 @@
     "tntPlan": "Plan",
     "tntExpiry": "Expires",
     "tntUntil": "until",
-    "tntCreated": "Created",
+    "tntCreatedAt": "Created",
     "tntNew7d": "this week",
     "tntSetupOk": "set up",
     "tntSetupPending": "setup incomplete",

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # scripts/verify-all.sh — local stand-in for CI while GitHub Actions is down.
 #
-# Runs the same gates CI runs (typecheck · lint · docs:check · unit tests ·
-# integration tests) plus an optional production build. The integration step
+# Runs the same gates CI runs (typecheck · lint · docs:check · docs:env ·
+# docs:i18n · unit tests · integration tests) plus an optional production build.
+# The integration step
 # needs a real Postgres; this script spins up a THROWAWAY local cluster
 # (postgresql@16 via Homebrew), points the tests at it, and tears it down on
 # exit. Nothing touches prod — a fresh empty DB on a random free port.
@@ -90,6 +91,7 @@ gate "typecheck (tsc)"   npm run --silent typecheck
 gate "lint (eslint)"     npm run --silent lint
 gate "docs:check"        npm run --silent docs:check
 gate "docs:env"          npm run --silent docs:env
+gate "docs:i18n"         npm run --silent docs:i18n
 gate "unit tests"        npm run --silent test
 
 if [[ "$RUN_DB" == 1 ]]; then

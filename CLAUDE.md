@@ -65,7 +65,7 @@ The section above keeps the **developer** docs honest. This one keeps the **prod
 1. **Welcome / landing** (`welcome` namespace) + **About** (`about` namespace) — keep the pitch and feature list truthful: add/rename features, kill stale claims (e.g. don't advertise a "1 PLN = 100 GT" rate that no longer exists).
 2. **Regulamin / Terms** (`terms`) + **Privacy** (`privacy`) — update the legal terms whenever a change touches users' rights, money, data, or age-gating. Example already shipped: the casino runs on a **separate, free, non-purchasable, non-cashable "Żetony/Chips" currency**, is **18+**, and is entertainment — **not** gambling for money (`terms` §3). **Bump `terms.lastUpdated`** in every locale when the regulamin changes.
 3. **FAQ + docs site** (`docs/faq.md`, `docs/index.md`) — answer the new "how does X work?" and reflect the feature in the overview.
-4. **All 14 locales stay in sync** — this copy lives in `src/messages/<locale>.json` (`pl, en, de, es, fr, id, it, ja, ko, pt, ru, uk, zh, ar`). A key a page references **must** exist in **every** locale or the build breaks — add it everywhere. **PL is authoritative** (Polish operator, Polish law governs the regulamin), EN careful, the rest faithful; **flag non-PL/EN legal wording for native/lawyer review**. A one-off script that surgically inserts a key into all 14 files (raw-text, `JSON.stringify` values, idempotent) beats 14 hand-edits — see the pattern used for `terms` §3.
+4. **All 14 locales stay in sync** — this copy lives in `src/messages/<locale>.json` (`pl, en, de, es, fr, id, it, ja, ko, pt, ru, uk, zh, ar`). A key a page references **must** exist in **every** locale or the build breaks — add it everywhere. **PL is authoritative** (Polish operator, Polish law governs the regulamin), EN careful, the rest faithful; **flag non-PL/EN legal wording for native/lawyer review**. A one-off script that surgically inserts a key into all 14 files (raw-text, `JSON.stringify` values, idempotent) beats 14 hand-edits — see the pattern used for `terms` §3. **Never round-trip a catalog through `JSON.parse` → `JSON.stringify`** — it silently drops one of every duplicate-key pair and reformats the whole file; edit raw text. **Never reuse a key name that's already taken in the same object**: `JSON.parse` keeps only the LAST one, so the earlier value becomes dead code and the surviving string renders in a place it was never written for (`npm run docs:i18n` enforces this — see `admin.tntCreated`, #801).
 5. **PDF handbooks** (`public/wiki/*.pdf`) — flag for regen when the product materially changes (see the surfaces table).
 
 Rule of thumb: **if a user would notice the change, a user-facing surface must describe it.** Legal wording that changes users' rights or money should also get a lawyer's eye.
@@ -105,6 +105,7 @@ npx eslint <changed>    # lint
 npx next build          # production build
 npm run docs:check      # CHANGELOG references every shipped PR
 npm run docs:env        # every process.env.X is documented in docs/ENV.md
+npm run docs:i18n       # no duplicate keys in src/messages/*.json (JSON.parse hides them)
 ```
 
 **`npm run verify-all`** runs all of the above locally in one shot — typecheck · lint ·
