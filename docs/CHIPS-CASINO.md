@@ -138,7 +138,21 @@ odrzuca nieznaną walutę (**400**), zamiast po cichu wpisać śmieć do kolumny
 6. Zdjąć z UI wszelkie sugestie „kup GT/żetony za kasę".
 
 ## Faza 6 — admin
-1. **Grant żetonów** (jak `api/admin/grant-tokens`, ale `chips`). ⏳
+1. ✅ **Grant żetonów** — `POST /api/admin/grant-tokens` przyjmuje `currency` (`GT` domyślnie |
+   `CHIPS`), zamiast osobnej trasy: jedna ścieżka, jedno uprawnienie (`grant_tokens`), jeden
+   wpis audytowy. **Rozdział walut jest twardy:** `CHIPS` rusza wyłącznie kolumnę `chips` —
+   **nie** `totalEarned`/`totalSpent` (to metryki realnej ekonomii GT) — stempluje wiersz
+   ledgera `currency:"CHIPS"` i **nie** karmi detektora anomalii. Odjęcie strażowane
+   `chips: { gte }` (jak GT-owe `tokens: { gte }`), komunikaty i powiadomienie mówią
+   „żetony 🪙". Step-up 2FA od ±10 000 **dla obu walut** — żetony nie mają wartości rynkowej,
+   ale przejęta sesja admina mass-mintująca je i tak zaburzyłaby leaderboardy kasyna.
+   **+12 testów trasy** (mock prisma/admin/anomaly — zero DB).
+   ⚠️ **Przy okazji domknięta realna dziura Fazy 8:** `economy-anomaly.ts` agregowało
+   `type:"admin_grant"` **bez filtra waluty**, mimo że komentarz w `schema.prisma` obiecywał
+   „anomaly-detection liczy tylko realne GT". Bez poprawki pierwszy grant żetonów na evencie
+   odpaliłby alarm „ktoś mintuje GT" — i znieczulił ten, który ma znaczenie. Teraz
+   `where: { type:"admin_grant", currency:"GT", … }` (bezpieczne dla starych wierszy: kolumna
+   jest NOT NULL z defaultem `"GT"`).
 2. ✅ **CRUD casino-shopu (kosmetyki za chips)** — `currency` jest polem zapisywalnym w
    `POST`/`PATCH /api/admin/shop` (nieznana wartość = **400**, domyślna = `GT`, więc każdy
    istniejący klient tworzy dokładnie to co wcześniej). W panelu (sekcja „Sklep") doszedł

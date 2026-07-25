@@ -123,7 +123,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 ## Admin
 | Trasa | Auth | Po co |
 |---|---|---|
-| `…/api/admin/grant-tokens` | perm:grant_tokens | +/- tokeny userowi |
+| `…/api/admin/grant-tokens` | perm:grant_tokens | +/- saldo userowi w wybranej walucie: `currency: "GT"` (domyślnie — rusza `tokens` + `totalEarned`/`totalSpent`, karmi detektor anomalii) albo `"CHIPS"` (**tylko** `chips` — zero liczników GT, zero anomaly-checka; darmowa waluta kasyna). Nieznana waluta → **400**. Step-up 2FA od ±10 000 dla obu walut |
 | `…/api/admin/push` | admin | GET licznik subskrybentów + status; POST broadcast web push do subskrybentów portalu (#537) |
 | `…/api/admin/sponsors` | admin | CRUD sponsorów/partnerów portalu (pasek na `/support`, #538) |
 | `…/api/admin/user-roles` | admin | Role: admin / moderator / donator |

@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Coins, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput } from "../shared";
+import { cn } from "@/lib/utils";
+import { useTenantBranding } from "@/components/TenantBranding";
+import { CHIP_SYMBOL, SHOP_CURRENCIES, isChipsCurrency } from "@/lib/shop-currency";
 import { apiPostStepUp, ApiError } from "@/lib/api-client";
 
 export function GrantTokensCard({
@@ -14,9 +17,11 @@ export function GrantTokensCard({
   pending: boolean;
 }) {
   const t = useTranslations("admin.grantTokens");
+  const { tokenSymbol } = useTenantBranding();
   const [target, setTarget] = useState("");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [currency, setCurrency] = useState<string>("GT");
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -24,9 +29,12 @@ export function GrantTokensCard({
     try {
       const data = await apiPostStepUp<{ amount: number; user: { username: string | null; id: string }; newBalance: number }>(
         "/api/admin/grant-tokens",
-        { target, amount: parseInt(amount), reason },
+        { target, amount: parseInt(amount), reason, currency },
       );
-      onToast("ok", t("granted", { delta: `${data.amount > 0 ? "+" : ""}${data.amount}`, user: data.user.username ?? data.user.id, balance: data.newBalance }));
+      // The toast names the currency that actually moved (%gt% resolves to the portal's
+      // token symbol; the chips variant is the same sentence with 🪙).
+      const vars = { delta: `${data.amount > 0 ? "+" : ""}${data.amount}`, user: data.user.username ?? data.user.id, balance: data.newBalance };
+      onToast("ok", isChipsCurrency(currency) ? t("grantedChips", vars) : t("granted", vars));
       setAmount(""); setReason("");
       onSuccess();
     } catch (err) {
@@ -45,6 +53,26 @@ export function GrantTokensCard({
           onChange={setTarget}
           placeholder="gh0s77tt / 1500923809522258000 / cmpq74…"
         />
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("lblCurrency")}</label>
+          <div className="grid grid-cols-2 gap-1">
+            {SHOP_CURRENCIES.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCurrency(c)}
+                className={cn(
+                  "px-1 py-1.5 border text-[10px] font-bold tracking-widest uppercase",
+                  currency === c
+                    ? (isChipsCurrency(c) ? "border-amber-500 bg-amber-600/15 text-amber-300" : "border-red-500 bg-red-600/15 text-red-300")
+                    : "border-zinc-800 bg-zinc-950 text-zinc-500",
+                )}
+              >{isChipsCurrency(c) ? `${CHIP_SYMBOL} ${c}` : tokenSymbol}</button>
+            ))}
+          </div>
+          {/* Chips are the free casino currency — say so, so nobody hands them out thinking
+              they moved the portal's real economy (they don't count to ranking/metrics). */}
+          {isChipsCurrency(currency) && <p className="text-[10px] text-amber-400/80 mt-1 leading-snug">{t("currencyHintChips")}</p>}
+        </div>
         <FieldInput
           label={t("lblAmount")}
           value={amount}

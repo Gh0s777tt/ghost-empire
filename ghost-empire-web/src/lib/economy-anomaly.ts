@@ -28,6 +28,23 @@ export function anomalyReasons(amount: number, hourlyTotal: number): string[] {
   return reasons;
 }
 
+/**
+ * Flag an admin grant that looks abusive and notify every admin. Fire-and-forget: it
+ * swallows its own errors so a failed check can never break (or roll back) the grant.
+ *
+ * @param opts.adminId - Admin who issued the grant (logged, not notified separately).
+ * @param opts.amount - Signed grant amount; anything ≤ 0 returns immediately (deductions
+ *   can't inflate the economy).
+ * @param opts.targetUsername - Recipient, quoted in the alert so admins can jump to the
+ *   audit log.
+ *
+ * @remarks
+ * **Real GT only.** Callers must not invoke this for `CHIPS` grants, and the rolling-hour
+ * aggregate below filters `currency: "GT"` — chips are the free, value-less casino currency,
+ * so a legitimate chips giveaway would otherwise trip a "someone is minting GT" alarm and,
+ * worse, desensitise the alarm that actually matters. Same GT-only rule as the weekly ranking
+ * and the economy-health dashboard (docs/CHIPS-CASINO.md, Faza 8).
+ */
 export async function checkGrantAnomaly(opts: {
   adminId: string;
   amount: number;
@@ -38,7 +55,9 @@ export async function checkGrantAnomaly(opts: {
 
     const since = new Date(Date.now() - WINDOW_MS);
     const agg = await prisma.transaction.aggregate({
-      where: { type: "admin_grant", amount: { gt: 0 }, createdAt: { gte: since } },
+      // `currency: "GT"` is safe for legacy rows: the column is non-nullable with a "GT"
+      // default, so everything written before the chips split already reads as GT.
+      where: { type: "admin_grant", currency: "GT", amount: { gt: 0 }, createdAt: { gte: since } },
       _sum: { amount: true },
     });
     const hourly = agg._sum.amount ?? 0;
