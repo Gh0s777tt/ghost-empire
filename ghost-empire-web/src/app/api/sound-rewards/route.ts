@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { displayNick } from "@/lib/utils";
@@ -48,7 +48,10 @@ export async function POST(req: Request) {
   const rewardId = String(body.rewardId ?? "");
   if (!rewardId) return jsonError("Brak rewardId", 400);
 
-  const tid = await currentTenantId();
+  // One request-cached tenant read: `id` scopes the catalog, `tokenSymbol` labels the alert
+  // with THIS portal's currency (sound redemptions always spend the real-economy token).
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
   const actor = displayNick(session.user.name, session.user.username);
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -73,7 +76,7 @@ export async function POST(req: Request) {
           icon: reward.emoji ?? "🔊",
           actorName: actor,
           amount: reward.cost,
-          amountLabel: "GT",
+          amountLabel: tenant.tokenSymbol,
           meta: JSON.stringify({ soundUrl: reward.soundUrl }),
         },
       });

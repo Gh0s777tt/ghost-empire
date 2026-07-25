@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { getCurrentTenant } from "@/lib/tenant";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -40,7 +40,11 @@ export async function POST(req: Request) {
     return jsonError("Za dużo prób. Poczekaj chwilę.", 429, rateLimitHeaders(rl));
   }
 
-  const tid = await currentTenantId();
+  // One request-cached tenant read (getCurrentTenant is cache()d, and currentTenantId only
+  // wraps it): `id` scopes the drop/quest lookups, `tokenSymbol` labels the bonus alert below
+  // with THIS portal's currency instead of the founder's hardcoded "GT".
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
   const drop = await prisma.streamDrop.findFirst({ where: { code, ...(tid ? { tenantId: tid } : {}) } });
   if (!drop) return jsonError("Kod nie istnieje", 404);
   if (!drop.active) return jsonError("Kod nieaktywny", 410);
@@ -138,7 +142,8 @@ export async function POST(req: Request) {
         actorName: result._actor.name,
         actorImage: result._actor.image ?? undefined,
         amount: result.totalReward,
-        amountLabel: "GT",
+        // Drops always pay the real-economy token → this portal's own symbol.
+        amountLabel: tenant.tokenSymbol,
       });
     }
 

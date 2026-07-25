@@ -3,8 +3,9 @@ import { NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { amountLabelFor, type Currency } from "@/lib/chips";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
@@ -41,7 +42,10 @@ export async function POST(req: Request) {
     return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
   }
 
-  const tid = await currentTenantId();
+  // One request-cached tenant read serves both needs: `id` scopes the catalog, `tokenSymbol`
+  // labels the stream alert below with THIS portal's currency (never a hardcoded "GT").
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Tenant-guard: only this tenant's catalog item is buyable.
@@ -109,6 +113,9 @@ export async function POST(req: Request) {
       // GT items charge Ghost Tokens as before. A CHIPS item must be a cosmetic (no market value) —
       // this is what keeps the casino's chips from ever buying anything of real value.
       const isChips = item.currency === "CHIPS";
+      // Widened to `Currency` once here so the ledger row, the response and the alert label
+      // can never disagree about which currency this purchase actually moved.
+      const currency: Currency = isChips ? "CHIPS" : "GT";
       const userUpdate = await tx.user.updateMany({
         where: isChips ? { id: userId, chips: { gte: price } } : { id: userId, tokens: { gte: price } },
         data: isChips ? { chips: { decrement: price } } : { tokens: { decrement: price }, totalSpent: { increment: price } },
@@ -137,7 +144,7 @@ export async function POST(req: Request) {
           type: "spend",
           amount: -price,
           reason: `shop:${item.name}`,
-          currency: isChips ? "CHIPS" : "GT",
+          currency,
           status: isDigital ? "completed" : "pending",
         },
       });
@@ -164,7 +171,7 @@ export async function POST(req: Request) {
         ok: true,
         itemName: item.name,
         spent: price,
-        currency: isChips ? "CHIPS" : "GT",
+        currency,
         newBalance: (isChips ? fresh?.chips : fresh?.tokens) ?? 0,
         deliveryPending: !isDigital,
         // Internal-only fields used after the transaction for alert dispatch
@@ -189,7 +196,9 @@ export async function POST(req: Request) {
       actorName: result._actor.name,
       actorImage: result._actor.image ?? undefined,
       amount: result._item.price,
-      amountLabel: "GT",
+      // Label the amount in the currency actually charged: a CHIPS item spent free casino
+      // chips (🪙 everywhere), a GT item spent this tenant's token (its own symbol).
+      amountLabel: amountLabelFor(result.currency, tenant.tokenSymbol),
     });
 
     // Deferred via after() — the buyer gets their new balance immediately; the milestone checks

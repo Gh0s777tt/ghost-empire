@@ -13,7 +13,8 @@
     "src/lib/ssrf-guard.ts",
     "src/lib/moderation.ts",
     "src/lib/refund.ts",
-    "src/lib/oauth-email.ts"
+    "src/lib/oauth-email.ts",
+    "src/lib/chips.ts"
   ],
   "out": "../docs/api",
   "readme": "none",
