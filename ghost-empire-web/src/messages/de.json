@@ -2508,7 +2508,8 @@
         "update_alert_settings": "Benachrichtigungseinst.",
         "merge_users": "Konten zusammenführen",
         "update_moderation": "Moderation (auto)",
-        "update_integrations": "Integrationen / Schlüssel"
+        "update_integrations": "Integrationen / Schlüssel",
+        "rotate_bot_secret": "Bot-Secret"
       },
       "secTitle": "Audit-Log"
     },

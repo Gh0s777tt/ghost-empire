@@ -2508,7 +2508,8 @@
         "update_alert_settings": "Налаштування сповіщень",
         "merge_users": "Об'єднання акаунтів",
         "update_moderation": "Модерація (авто)",
-        "update_integrations": "Інтеграції / ключі"
+        "update_integrations": "Інтеграції / ключі",
+        "rotate_bot_secret": "Секрет бота"
       },
       "secTitle": "Журнал аудиту"
     },

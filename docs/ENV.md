@@ -17,7 +17,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `NEXTAUTH_URL` / `AUTH_URL` | ⚠️ **Przy WIELU portalach (własne domeny/subdomeny) ZOSTAW NIEUSTAWIONE.** Gdy ustawione, Auth.js przypina WSZYSTKIE callbacki OAuth do tej jednej domeny — więc logowanie zaczęte na `empire-forge.com` wraca na nią → ciasteczka `state`/PKCE nie pasują (są na domenie startowej) → logowanie pada wszędzie poza portalem głównym (#659). Z `trustHost: true` (ustawione w `auth.ts`) Auth.js sam wyprowadza callback z hosta żądania → każdy portal loguje na swojej domenie i jako swój tenant. Pozostałe użycia (sitemap/robots/admin streamer-auth/webhooki/passkeys) mają twardy fallback do `https://ghost-empire-web.vercel.app`, więc brak tej zmiennej ich nie psuje. **Ustaw tylko dla deploymentu single-domain.** | (puste przy multi-portal) |
 | `DATABASE_URL` | Postgres (Supabase, **transaction pooler 6543**, `connection_limit=3`) | Supabase → Database → Connection string |
 | `DIRECT_URL` | Postgres bezpośredni (port 5432) — migracje / `db push` | Supabase (Session) |
-| `BOT_SECRET` | Bearer dla `/api/internal/*` i `/api/bot/*` — **ten sam** w obu botach | `openssl rand -hex 32` |
+| `BOT_SECRET` | Bearer dla `/api/internal/*` i `/api/bot/*` — **ten sam** w obu botach. To **globalny fallback**: akceptowany dla **każdego** portalu. Portal może dodatkowo mieć **własny** sekret (`Tenant.botSecret`) generowany w `/admin#bot` — wtedy jego instancja bota używa tamtego, a ten dalej działa. Zob. [PER-TENANT-IDENTITY §9](PER-TENANT-IDENTITY.md#10-per-tenant-bot-identity-tenantbotsecret) | `openssl rand -hex 32` |
 | `ENCRYPTION_KEY` (O) | Klucz do szyfrowania sekretów at-rest (AES-256-GCM): klucze API + tokeny OAuth w bazie. **Opcjonalny** — gdy brak, używany jest `NEXTAUTH_SECRET`. W prod warto ustawić dedykowany, by odpiąć szyfrowanie od auth. ⚠️ Po zmianie klucza stare zaszyfrowane wartości stają się nieczytelne (klucze API → wklej ponownie w `/admin#integrations`, tokeny → ponowna autoryzacja). | `openssl rand -hex 32` |
 
 ### Logowanie (OAuth) — R dla danego dostawcy
@@ -98,7 +98,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | Zmienna | Po co |
 |---|---|
 | `PORTAL_URL` (R) | URL portalu (API ekonomii) |
-| `BOT_SECRET` (R) | **Ten sam** co w portalu |
+| `BOT_SECRET` (R) | **Ten sam** co w portalu — **albo** własny sekret tego portalu wygenerowany w `/admin#bot` („Sekret bota portalu"). Instancja per portal (`ENV_FILE=tenants/<slug>.env`) powinna używać własnego |
 | `TWITCH_BOT_USERNAME` / `TWITCH_CHANNEL` / `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` / `TWITCH_BOT_OAUTH` | Bot Twitch (`TWITCH_BOT_OAUTH` ← `npm run auth:twitch`) |
 | `KICK_CHANNEL` / `KICK_CHATROOM_ID` / `KICK_BROADCASTER_ID` / `KICK_CLIENT_ID` / `KICK_CLIENT_SECRET` / `KICK_BOT_TOKEN` / `KICK_BOT_REFRESH` | Bot Kick (`KICK_BOT_*` ← `npm run auth:kick`, refresh rotowany do `.kick-tokens.json`) |
 | `KICK_PUSHER_KEY` (O) | Nadpisanie publicznego klucza Pushera Kicka, gdyby się zmienił |
@@ -146,7 +146,8 @@ Gdy sekret wycieknie lub planowo go zmieniasz — kolejność i skutki:
 
 | Sekret | Jak zrotować | Skutek / co zrobić po |
 |---|---|---|
-| `BOT_SECRET` | Wygeneruj nowy (`openssl rand -hex 32`), ustaw **ten sam** w Vercel **oraz** w obu botach (`.env`), redeploy + restart botów | Do czasu zsynchronizowania `/api/internal/*` i `/api/bot/*` zwracają 401 — rób w jednym oknie czasowym |
+| `BOT_SECRET` (globalny) | Wygeneruj nowy (`openssl rand -hex 32`), ustaw **ten sam** w Vercel **oraz** w obu botach (`.env`), redeploy + restart botów | Do czasu zsynchronizowania `/api/internal/*` i `/api/bot/*` zwracają 401 — rób w jednym oknie czasowym. Portale z **własnym** sekretem (niżej) tej przerwy **nie odczują** |
+| Sekret bota portalu (`Tenant.botSecret`) | `/admin#bot` → „Sekret bota portalu" → **Rotuj sekret**. Wklej pokazaną wartość do `tenants/<slug>.env` i zrestartuj tę instancję bota | **Wartość widać dokładnie raz** — nie da się jej odczytać później (panel pokazuje tylko „ustawiony" + 4 ostatnie znaki); zgubiona = rotuj ponownie. Rotacja tnie natychmiast: stary sekret pada, zanim podmienisz env. „Usuń sekret" cofa portal do globalnego `BOT_SECRET` — a gdy globalnego nie ma, bot traci dostęp (panel ostrzega). Wpis w audycie: `rotate_bot_secret`, bez wartości |
 | `NEXTAUTH_SECRET` | Nowy (`openssl rand -base64 32`) w Vercel, redeploy | **Wylogowuje wszystkich** (sesje podpisane starym). ⚠️ Jeśli **nie** masz `ENCRYPTION_KEY`, to ten sekret szyfruje też sekrety at-rest → po zmianie **klucze API trzeba wkleić ponownie** w `/admin#integrations`, a tokeny OAuth/streamer **ponownie autoryzować**. Dlatego w prod ustaw osobny `ENCRYPTION_KEY`. |
 | `ENCRYPTION_KEY` | Nowy w Vercel, redeploy | Stare zaszyfrowane wartości stają się nieczytelne → wklej ponownie klucze API (`/admin#integrations`) i zrób re-auth streamera (Twitch/Kick/YouTube/Streamlabs). Logowanie userów **nietknięte**. |
 | Klucze OAuth logowania (Twitch/Kick/Discord/Google `*_CLIENT_SECRET`) | „New secret" w konsoli dostawcy → zaktualizuj w Vercel → **redeploy** | Stary sekret przestaje działać natychmiast → bez redeployu logowanie pada (`OAuthCallback`) |

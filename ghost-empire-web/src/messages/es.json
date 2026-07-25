@@ -2508,7 +2508,8 @@
         "update_alert_settings": "Ajustes de alertas",
         "merge_users": "Fusionar cuentas",
         "update_moderation": "Moderación (auto)",
-        "update_integrations": "Integraciones / claves"
+        "update_integrations": "Integraciones / claves",
+        "rotate_bot_secret": "Secreto del bot"
       },
       "secTitle": "Registro de auditoría"
     },

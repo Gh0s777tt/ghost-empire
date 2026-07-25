@@ -2508,7 +2508,8 @@
         "update_alert_settings": "Pengaturan alert",
         "merge_users": "Gabung akun",
         "update_moderation": "Moderasi (otomatis)",
-        "update_integrations": "Integrasi / kunci"
+        "update_integrations": "Integrasi / kunci",
+        "rotate_bot_secret": "Rahasia bot"
       },
       "secTitle": "Log audit"
     },

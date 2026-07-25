@@ -155,10 +155,50 @@ tenant B's users. That is now closed:
 Unlike §2's viewer-identity work, this needed **no schema change** (`Tenant.botSecret`
 already exists) and **no `db push`**.
 
-⚠️ **Open gap — provisioning is DB-only.** Nothing writes `Tenant.botSecret` yet: the admin
-tenant PATCH (`/api/admin/tenants/[id]`) uses an explicit field allow-list that excludes it,
-and no other code path sets it. So a streamer cannot self-serve their own bot secret — it has
-to be written straight onto the `tenants` row. That's safe (the isolation above is enforced
-whether or not a tenant has its own secret; without one they simply fall back to the global
-`BOT_SECRET`), but until an owner-scoped admin surface exists — generate + show once + rotate,
-never echoing the stored value back to the client — per-tenant bots stay a manual setup.
+✅ **Provisioning is self-serve** — see §10: the portal owner generates, reveals once and
+rotates their own bot secret from `/admin#bot`. Without one, a portal still falls back to the
+global `BOT_SECRET`, so the isolation above holds either way.
+
+## 10. Per-tenant bot identity (`Tenant.botSecret`)
+
+Viewer identity is only half of "one portal = one world". The other half is the **bot**:
+each portal runs its own `ghost-empire-chat` process (`ENV_FILE=tenants/<slug>.env`), and
+that process authenticates to the portal's internal endpoints with a bearer secret.
+
+**Status: ✅ self-serve.** `Tenant.botSecret` (nullable, added in #599) holds a portal's own
+credential. `verifyBotSecretForTenant` (`src/lib/utils.ts`) accepts **either** it **or** the
+global `BOT_SECRET`, in constant time — so the fallback is always live and a portal without
+its own secret keeps working on the shared one.
+
+### Provisioning it
+
+Generate and rotate it from the admin panel: **`/admin#bot` → "Sekret bota portalu"**, backed
+by `POST /api/admin/bot-secret` (`{action:"rotate"|"clear"}`). *(Until this shipped there was
+no writer at all — the platform-owner tenant editor's field allow-list excludes `botSecret`,
+so the column had to be edited straight in the DB. That caveat is gone.)*
+
+Rules the surface enforces, and why:
+
+| Rule | Why |
+|---|---|
+| Minted with `randomToken(32)` (`src/lib/secure-rng.ts`) — 256 bits, base64url | Same CSPRNG policy as every money-path draw; a guessable bot secret is an auth bypass, not a bad roll. Never `Math.random`. |
+| Returned **exactly once**, in the response that mints it | There is no read-back path. `GET` answers `{configured, hint}` where `hint` is a 4-char tail (`…Xk7q`) — enough to match against the bot's `.env`, useless to an attacker. |
+| Never enters `TenantBrand` / `getCurrentTenant()` | Branding is rendered into pages, OG images and client payloads. The column is deliberately absent from `toBrand()` — keep it that way. |
+| Gated by `canManageTenantBotSecret` (`src/lib/tenants.ts`), not `requireAdmin()` alone | `requireAdmin()` lets a legacy NULL-`tenantId` account administer *any* host portal. Fine for content; not for a credential that posts awards into another streamer's economy. Owner ✔ from any host, admin ✔ only on their own portal, platform owner ✔ everywhere. |
+| Step-up 2FA (`requireStepUp`) + rate limit 10 / 5 min | Same bar as granting an admin role. No-op unless the acting admin enabled 2FA. |
+| Audit-logged as `rotate_bot_secret` (`{slug, op, replaced}`) | The audit log is readable by every admin of the portal — so it records *that* it rotated, never the value. |
+| Stored plaintext (like `IntegrationConfig.overlayToken`) | The verifier compares the incoming Bearer against the column directly. Wrapping it in `encryptSecret()` would make every future verifier responsible for decrypting, and would take bot auth down on `ENCRYPTION_KEY` drift — a bad trade for a rotatable token that is never read back. |
+
+### Rotating without downtime
+
+Rotation is a hard cutover: the old value stops working the moment the new one is stored.
+Copy the revealed secret into `tenants/<slug>.env` and restart that bot process. While a
+global `BOT_SECRET` exists, "clear" is a safe escape hatch — the portal falls back to it.
+With no global secret set, clearing locks that portal's bot out (the panel warns before it).
+
+### Still open
+
+**Enforcement** — `verifyBotSecretForTenant` still accepts the global secret unconditionally,
+so a per-portal secret is defence-in-depth, not isolation. Making it strict requires every
+portal to run its own bot instance with its own secret first, coordinated with the
+`ghost-empire-chat` repo. Provisioning (this section) is the prerequisite that was missing.

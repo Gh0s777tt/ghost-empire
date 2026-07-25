@@ -49,7 +49,10 @@ type AdminActionType =
   | "delete_bounty"
   | "create_auction"
   | "cancel_auction"
-  | "backfill_tenant";
+  | "backfill_tenant"
+  // Per-tenant bot credential provisioned/rotated/cleared. The details NEVER carry the
+  // secret itself — only which portal and which way it moved.
+  | "rotate_bot_secret";
 
 export async function logAdminAction(opts: {
   adminId: string;

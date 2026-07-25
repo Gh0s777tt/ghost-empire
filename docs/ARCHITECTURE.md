@@ -13,7 +13,7 @@ Przegląd architektury ekosystemu Ghost Empire: 3 pakiety, jeden wspólny model 
 | **E-Bot** (osobne repo `Gh0s777tt/E-Bot`) | Bot Discord — ekonomia GT (wiadomości/voice) + linkowanie kont. **Zastępuje `ghost-empire-bot`** | Node (discord.js v14, natywne `.mts`) | lokalnie / VPS |
 | ~~`ghost-empire-bot`~~ *(deprecated)* | Dawny bot Discord w monorepo — **wyłączony**, przejęty przez E-Bot. Katalog zostaje jako referencja | Node (discord.js) | — |
 
-Baza danych: **PostgreSQL (Supabase)**, jeden schemat dla portalu. Boty **nie** łączą się z bazą bezpośrednio — rozmawiają z portalem przez HTTP API (`BOT_SECRET`). **Podział ról:** `ghost-empire-chat` = streaming (Twitch/Kick/YT/Rumble), **E-Bot** = Discord + społeczność.
+Baza danych: **PostgreSQL (Supabase)**, jeden schemat dla portalu. Boty **nie** łączą się z bazą bezpośrednio — rozmawiają z portalem przez HTTP API (`BOT_SECRET`, a per portal opcjonalnie własny `Tenant.botSecret` — [PER-TENANT-IDENTITY §9](PER-TENANT-IDENTITY.md#10-per-tenant-bot-identity-tenantbotsecret)). **Podział ról:** `ghost-empire-chat` = streaming (Twitch/Kick/YT/Rumble), **E-Bot** = Discord + społeczność.
 
 ---
 

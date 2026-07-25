@@ -21,6 +21,13 @@ Ten sam kod obsługuje wiele portali (marka „E-Forge"). Każdy tenant ma włas
 ### Gdzie jest bot czatu?
 `ghost-empire-chat` to **osobny runtime** (Node + tmi.js, zwykle w Dockerze). Łączy się z API portalu Bearerem `BOT_SECRET`. Bot Discorda (`E-Bot`) to osobne repo.
 
+### Czy mój portal może mieć własny sekret bota (zamiast wspólnego)?
+Tak. W `/admin#bot` → **„Sekret bota portalu"** wygenerujesz własny sekret tylko dla swojego
+portalu i wkleisz go do `.env` swojej instancji bota. Globalny `BOT_SECRET` dalej działa jako
+fallback, więc nic nie musisz zmieniać, jeśli korzystasz ze wspólnego bota. **Wartość widać
+dokładnie raz** — potem panel pokazuje już tylko „ustawiony" i 4 ostatnie znaki, więc skopiuj ją
+od razu. Szczegóły: [Per-tenant identity §10](PER-TENANT-IDENTITY.md#10-per-tenant-bot-identity-tenantbotsecret).
+
 ### Jak działa moderacja (automod)?
 Bot filtruje czat wg konfiguracji z portalu: linki (whitelista domen), słowa/regexy, fale spamu, eskalacja kar. Ustawienia są w panelu `/admin`. Zob. [SUBSYSTEMS](SUBSYSTEMS.md).
 

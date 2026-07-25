@@ -2508,7 +2508,8 @@
         "update_alert_settings": "アラート設定",
         "merge_users": "アカウント統合",
         "update_moderation": "モデレーション（自動）",
-        "update_integrations": "連携 / キー"
+        "update_integrations": "連携 / キー",
+        "rotate_bot_secret": "ボットシークレット"
       },
       "secTitle": "監査ログ"
     },

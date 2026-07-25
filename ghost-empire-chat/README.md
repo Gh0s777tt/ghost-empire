@@ -73,7 +73,7 @@ npm start                                            # bez ENV_FILE = klasyczne 
 ```
 
 - `PORTAL_URL` instancji wskazuje **subdomenę tenanta** (`https://neo-zone.twoja-domena.com`) — portal rozpoznaje tenanta po Hoście, więc wszystkie nagrody/komendy/FAQ/timery lądują w danych właściwego portalu.
-- `BOT_SECRET` instancji: **najlepiej własny sekret portalu** (`Tenant.botSecret` danego tenanta) — portal **scope'uje wtedy każdy lookup usera/GT do tenanta, do którego należy sekret**, więc instancja może ruszać wyłącznie SWOICH widzów. Globalny `BOT_SECRET` deploymentu portalu też jest akceptowany (kompatybilność wsteczna — tak działa bot założyciela), ale to klucz first-party: **nie dawaj go obcemu streamerowi**. Zero zmian w kodzie bota — to ta sama zmienna, tylko inna wartość.
+- `BOT_SECRET` instancji: **najlepiej własny sekret portalu** (`Tenant.botSecret` danego tenanta) — portal **scope'uje wtedy każdy lookup usera/GT do tenanta, do którego należy sekret**, więc instancja może ruszać wyłącznie SWOICH widzów. Globalny `BOT_SECRET` deploymentu portalu też jest akceptowany (kompatybilność wsteczna — tak działa bot założyciela), ale to klucz first-party: **nie dawaj go obcemu streamerowi**. Zero zmian w kodzie bota — to ta sama zmienna, tylko inna wartość. Skąd go wziąć: panel portalu `/admin#bot` → „Sekret bota portalu” (pokazywany **raz**, bez odczytu wstecz; rotacja unieważnia poprzedni natychmiast).
 - Każda instancja ma własny kanał Twitch/Kick/YT i własne (lub współdzielone konto bota) poświadczenia.
 - Izolacja per proces = cache'e modułów (komendy/FAQ/timery/moderacja) naturalnie per portal. Docker: `--env-file tenants/neo-zone.env` + osobny wolumen tokenów Kick per instancja.
 - Multipleksowanie wielu portali w jednym procesie ma sens dopiero przy dużej flocie (dziesiątki+) — wymaga przebudowy modułów na instancje; świadomie odłożone.
@@ -88,8 +88,23 @@ npm start                                            # bez ENV_FILE = klasyczne 
   that instance to its own portal's viewers (the portal scopes every user/GT lookup to the
   tenant owning the secret + the request Host), while the platform key is the first-party
   founder credential.
-- ⚠️ **Provisioning `Tenant.botSecret` is DB-only today** — there is no admin UI/API for it
-  yet (the tenant PATCH endpoint's field allow-list doesn't include it, deliberately: it's a
-  server secret). Set/rotate the column directly on the `tenants` row, then put the new value
-  in that instance's env file and restart it. Until it's set, the instance must use the
-  platform-wide `BOT_SECRET` (which still works — that's the back-compat path).
+
+### Sekret bota per portal (`BOT_SECRET`)
+
+Portal przyjmuje **dwa** rodzaje sekretu na trasach `/api/bot/*` i `/api/internal/*`
+(`verifyBotSecretForTenant`, porównanie w stałym czasie):
+
+1. **globalny `BOT_SECRET`** deploymentu portalu — działa dla każdego portalu (fallback,
+   zawsze akceptowany);
+2. **własny sekret portalu** (`Tenant.botSecret`) — dla instancji obsługującej ten jeden portal.
+
+**Własny sekret generuje się w panelu portalu: `/admin#bot` → „Sekret bota portalu”**
+(`POST /api/admin/bot-secret`). Wcześniej dało się go ustawić tylko wpisem prosto do bazy —
+ten wyjątek już nie obowiązuje.
+
+- Wartość pokazywana jest **dokładnie raz**, przy generowaniu. Panel nigdy jej potem nie
+  odda (tylko „ustawiony” + 4 ostatnie znaki) — skopiuj ją od razu do `tenants/<slug>.env`.
+- **Rotacja to twarde przecięcie**: stary sekret przestaje działać natychmiast, więc podmień
+  env i zrestartuj proces bota. Zgubiony sekret = wygeneruj nowy, nie da się go odzyskać.
+- „Usuń sekret” w panelu cofa portal do globalnego `BOT_SECRET`.
+- Rotacja trafia do dziennika audytu portalu (bez wartości sekretu).
