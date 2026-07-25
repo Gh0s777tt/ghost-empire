@@ -188,6 +188,26 @@ export function ObsControlClient() {
       } catch {
         /* transient network — keep polling */
       }
+      // Penalties come on their own channel: the alert feed applies per-type display thresholds, and
+      // a penalty somebody PAID for must not be swallowed by one. Same loop, so every effect — rule
+      // or penalty — still runs serialised through actuate() and the revert ledger.
+      try {
+        const pres = await fetch(`/api/obs-control/penalties?token=${encodeURIComponent(token!)}`, { cache: "no-store" });
+        if (pres.ok) {
+          const pdata = (await pres.json()) as { penalties: { drawId: string; label: string; intensity: number; action: ObsAction }[] };
+          for (const p of pdata.penalties) {
+            try {
+              await actuate(p.action);
+              setLastAction(`kara: ${p.label} (siła ${p.intensity}/5)`);
+            } catch (e) {
+              setLastAction(`kara nieudana: ${(e as Error).message}`);
+            }
+          }
+        }
+      } catch {
+        /* transient — the next tick retries, and delivery is at-most-once by design */
+      }
+
       if (!stopped) pollTimer = setTimeout(() => void poll(), POLL_MS);
     }
 
