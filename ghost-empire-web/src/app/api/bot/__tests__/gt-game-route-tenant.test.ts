@@ -8,11 +8,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const state = vi.hoisted(() => ({
   botAuth: { id: "tenant-B", botSecret: "tenantB-secret" } as { id: string | null; botSecret: string | null },
+  brand: { tokenName: "Neo Coins", tokenSymbol: "NC" },
   connFindFirst: vi.fn(),
   playGtGame: vi.fn(),
 }));
 
-vi.mock("@/lib/tenant", () => ({ getCurrentTenantBotAuth: async () => state.botAuth }));
+vi.mock("@/lib/tenant", () => ({
+  getCurrentTenantBotAuth: async () => state.botAuth,
+  // The route also reads the tenant's currency naming — the returned `message` is posted
+  // verbatim to this portal's chat, so it must never carry a hardcoded "GT".
+  getCurrentTenant: async () => state.brand,
+}));
 vi.mock("@/lib/prisma", () => ({ prisma: { connection: { findFirst: state.connFindFirst } } }));
 vi.mock("@/lib/rate-limit", () => ({ rateLimit: async () => ({ allowed: true }) }));
 vi.mock("@/lib/gt-games", () => ({ playGtGame: state.playGtGame }));
@@ -29,6 +35,7 @@ const req = (secret: string | null, body: object = { platform: "twitch", platfor
 beforeEach(() => {
   vi.stubEnv("BOT_SECRET", "global-secret");
   state.botAuth = { id: "tenant-B", botSecret: "tenantB-secret" };
+  state.brand = { tokenName: "Neo Coins", tokenSymbol: "NC" };
   state.connFindFirst.mockReset().mockResolvedValue({ userId: "user-1" });
   state.playGtGame.mockReset().mockResolvedValue({ ok: true, payout: 0, bet: 100, detail: "🍒🍋🔔", newBalance: 50 });
 });
@@ -71,5 +78,39 @@ describe("/api/bot/gt-game — tenant-scoped Connection match", () => {
     expect(state.connFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { platform: "twitch", platformId: "p1" } }),
     );
+  });
+});
+
+// WHITE-LABEL: this route's `message` is posted VERBATIM to the portal's Twitch/Kick/YouTube
+// chat, so a hardcoded "GT" here leaks the founder's currency to a sub-portal's viewers just
+// as a literal in the bot would. Symbol goes next to an amount, full name when merely named.
+describe("/api/bot/gt-game — chat message names THIS tenant's currency", () => {
+  const msg = async (res: Response) => (await res.json()).message as string;
+
+  it("uses the tenant's symbol in a win message, not GT", async () => {
+    state.playGtGame.mockResolvedValue({ ok: true, payout: 250, bet: 100, detail: "🍒🍒🍒", newBalance: 350 });
+    const m = await msg(await POST(req("global-secret")));
+    expect(m).toContain("250 NC!");
+    expect(m).not.toMatch(/\bGT\b/);
+  });
+
+  it("uses the tenant's symbol in a loss message, not GT", async () => {
+    state.playGtGame.mockResolvedValue({ ok: true, payout: 0, bet: 100, detail: "🍋🔔🍒", newBalance: 50 });
+    const m = await msg(await POST(req("global-secret")));
+    expect(m).toContain("-100 NC");
+    expect(m).not.toMatch(/\bGT\b/);
+  });
+
+  it("uses the tenant's full currency NAME in the link-your-account prompt", async () => {
+    state.connFindFirst.mockResolvedValue(null);
+    const m = await msg(await POST(req("global-secret", { platform: "twitch", username: "widz", game: "slots", bet: 100 })));
+    expect(m).toContain("by grać za Neo Coins.");
+    expect(m).not.toMatch(/\bGT\b/);
+  });
+
+  it("still says Ghost Tokens/GT for the founder portal — its own currency", async () => {
+    state.brand = { tokenName: "Ghost Tokens", tokenSymbol: "GT" };
+    state.playGtGame.mockResolvedValue({ ok: true, payout: 250, bet: 100, detail: "🍒🍒🍒", newBalance: 350 });
+    expect(await msg(await POST(req("global-secret")))).toContain("250 GT!");
   });
 });

@@ -7,7 +7,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecretForTenant } from "@/lib/utils";
-import { getCurrentTenantBotAuth } from "@/lib/tenant";
+import { getCurrentTenantBotAuth, getCurrentTenant } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { createDuel, acceptDuel, declineDuel } from "@/lib/duels";
 
@@ -67,7 +67,11 @@ export async function POST(req: Request) {
 
   const selfId = await resolveUserId(tenantId, platform, body.platformUserId, username);
   if (!selfId) {
-    return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o GT.` });
+    // Posted VERBATIM to this portal's chat → must name THIS tenant's currency, never a
+    // literal "GT" (that leaks the founder brand to a sub-portal's viewers). getCurrentTenant()
+    // is cache()d and reuses the row getCurrentTenantBotAuth() already resolved.
+    const { tokenName } = await getCurrentTenant();
+    return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o ${tokenName}.` });
   }
 
   // Per-user rate limit shared across duel actions (anti-spam / double-fire).
