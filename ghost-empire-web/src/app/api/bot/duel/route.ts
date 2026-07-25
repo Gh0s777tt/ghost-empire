@@ -2,12 +2,17 @@
 // Bot → portal: PvP duels. Auth: the global BOT_SECRET (first-party) OR this portal's
 // per-tenant secret (verifyBotSecretForTenant). Resolves the chatter (and, for a targeted
 // challenge, the opponent handle) to Ghost Empire users via their linked Connection SCOPED to
-// the request's tenant, then delegates to lib/duels (all GT math + atomicity live there) and
+// the request's tenant, then delegates to lib/duels (all chip math + atomicity live there) and
 // returns a chat message.
+//
+// The returned `message` is posted verbatim into a tenant's Twitch/Kick/YouTube chat, so its
+// wording is white-label surface: duels stake the FREE casino chips (lib/duels moves `chips`),
+// a platform-wide currency separate from the tenant-named %gt% per terms §3 — hence "żetony",
+// never "GT". The portal's own NAME, in contrast, IS per-tenant → read from getCurrentTenant().
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecretForTenant } from "@/lib/utils";
-import { getCurrentTenantBotAuth } from "@/lib/tenant";
+import { getCurrentTenant, getCurrentTenantBotAuth } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { createDuel, acceptDuel, declineDuel } from "@/lib/duels";
 
@@ -67,7 +72,7 @@ export async function POST(req: Request) {
 
   const selfId = await resolveUserId(tenantId, platform, body.platformUserId, username);
   if (!selfId) {
-    return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o GT.` });
+    return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o żetony.` });
   }
 
   // Per-user rate limit shared across duel actions (anti-spam / double-fire).
@@ -92,8 +97,11 @@ export async function POST(req: Request) {
     opponentName = target;
     opponentId = await resolveUserId(tenantId, platform, undefined, target);
     if (!opponentId) {
+      // THIS portal's name, not the founder's — same cached tenant row as the bot-auth
+      // resolve above, so no extra query.
+      const { name: brandName } = await getCurrentTenant();
       return NextResponse.json({
-        message: `@${u} @${target} nie ma konta Ghost Empire na ${platform}. Spróbuj otwartego wyzwania: !duel ${bet || 100}.`,
+        message: `@${u} @${target} nie ma konta ${brandName} na ${platform}. Spróbuj otwartego wyzwania: !duel ${bet || 100}.`,
       });
     }
   }

@@ -1,6 +1,7 @@
-// Co-op heist on GT: !heist <bet> opens or joins a crew; after a ~90s window the heist
-// resolves (collective roll, odds scale with crew size). The bot only parses + calls the
-// portal (Bearer BOT_SECRET); all GT escrow/payout + atomicity are server-side in lib/heist.ts.
+// Co-op heist on the free casino CHIPS (żetony — not the portal's %gt%): !heist <bet> opens
+// or joins a crew; after a ~90s window the heist resolves (collective roll, odds scale with
+// crew size). The bot only parses + calls the portal (Bearer BOT_SECRET); all chip
+// escrow/payout + atomicity are server-side in lib/heist.ts.
 // When THIS bot opens a heist, the portal returns resolveInMs + heistId and the bot schedules
 // the resolution call, posting the result back to the same platform's chat.
 import { env } from "./env";
@@ -34,8 +35,11 @@ export async function handleHeist(
   const u = username ?? "widz";
   const m = message.trim().match(/^!heist\s+(\d+)/i);
   if (!m) {
+    // "żetony", NOT the portal's token name: heists escrow the FREE casino chips
+    // (lib/heist.ts moves `chips`), and per terms §3 chips are a separate, platform-wide
+    // currency from the tenant-named %gt% — so this word is brand-neutral by design.
     return /^!heist\b/i.test(message.trim())
-      ? `@${u} napad na GT: wpisz !heist 100 — im większa ekipa, tym większa szansa na łup! 🦝`
+      ? `@${u} napad na żetony: wpisz !heist 100 — im większa ekipa, tym większa szansa na łup! 🦝`
       : null;
   }
   const bet = parseInt(m[1], 10);

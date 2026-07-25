@@ -1,8 +1,13 @@
 // src/app/api/bot/gt-game/route.ts
-// Bot → portal: play a GT mini-game (slots/coinflip) for a chatter. Auth: the global
+// Bot → portal: play a casino mini-game (slots/coinflip/roulette) for a chatter. Auth: the global
 // BOT_SECRET (first-party) OR this portal's per-tenant secret (verifyBotSecretForTenant).
 // Resolves the chatter to a Ghost Empire user via their linked Connection SCOPED to the
 // request's tenant (like chat-award), then plays atomically and returns a ready-to-post message.
+//
+// The returned `message` is posted verbatim into a tenant's Twitch/Kick/YouTube chat, so its
+// wording is white-label surface: these games stake the FREE casino chips (playGtGame moves
+// `chips`), which per terms §3 are a platform-wide currency separate from the tenant-named
+// %gt% — hence "żetony" here, never "GT"/"Ghost Tokens" and never the tenant's tokenName.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecretForTenant } from "@/lib/utils";
@@ -44,7 +49,7 @@ export async function POST(req: Request) {
       : null;
 
   if (!connection) {
-    return NextResponse.json({ message: `@${body.username ?? "widz"} połącz konto na ${platform} przez !portal, by grać za GT.` });
+    return NextResponse.json({ message: `@${body.username ?? "widz"} połącz konto na ${platform} przez !portal, by grać za żetony.` });
   }
 
   const rl = await rateLimit(`gtgame:${connection.userId}`, 10, 60_000);
@@ -57,8 +62,8 @@ export async function POST(req: Request) {
   const emoji = game === "slots" ? "🎰" : game === "roulette" ? "🎡" : "🪙";
   const bal = result.newBalance.toLocaleString("pl-PL");
   const message = result.payout > 0
-    ? `@${u} ${result.detail} — WYGRANA ${result.payout.toLocaleString("pl-PL")} GT! ${emoji} (saldo ${bal})`
-    : `@${u} ${result.detail} — pudło, -${result.bet.toLocaleString("pl-PL")} GT (saldo ${bal})`;
+    ? `@${u} ${result.detail} — WYGRANA ${result.payout.toLocaleString("pl-PL")} żetonów! ${emoji} (saldo ${bal})`
+    : `@${u} ${result.detail} — pudło, -${result.bet.toLocaleString("pl-PL")} żetonów (saldo ${bal})`;
 
   return NextResponse.json({ message, ok: true });
 }

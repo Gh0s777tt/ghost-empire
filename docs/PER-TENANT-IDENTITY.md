@@ -162,3 +162,81 @@ to be written straight onto the `tenants` row. That's safe (the isolation above 
 whether or not a tenant has its own secret; without one they simply fall back to the global
 `BOT_SECRET`), but until an owner-scoped admin surface exists — generate + show once + rotate,
 never echoing the stored value back to the client — per-tenant bots stay a manual setup.
+
+## 10. Related white-label surface: the bot's viewer-facing chat copy (shipped)
+
+§9 closed the bot's **data** isolation; its **wording** was still the founder's. The bot wrote
+`Ghost Tokens` / `GT` straight into sentences that every portal's viewers read in
+Twitch/Kick/YouTube chat (`!portal`, `!sklep`, the open-bet auto-announce), which is the same
+white-label leak class CLAUDE.md forbids in pages and emails — just in a different runtime.
+
+**How the bot learns the currency: it asks the portal, and never stores it.**
+`ghost-empire-chat/src/branding.ts` TTL-caches `GET /api/companion/branding` (5 min) and
+exposes `getBranding()` / `applyBranding()`; `index.ts` warms it at boot. One process per
+portal means `env.portalUrl` **is** that tenant's Host, and the endpoint is public +
+Host-resolved + rate-limited, so no new credential and no new env var are involved.
+
+Why not `TOKEN_NAME`/`TOKEN_SYMBOL` env vars — rejected deliberately:
+
+- the value already lives in the `Tenant` row, so an env copy **silently drifts**: renaming
+  the currency in `/admin` would leave the bot announcing the old name until somebody
+  hand-edits an env file and restarts. The TTL'd read propagates a rename **without a restart**;
+- `env.ts`'s `req()` throws on a missing var, so new *required* vars break every existing
+  deployment, and *optional* ones force a founder-literal default (`?? "GT"`) back into the bot;
+- one process per portal means every future `tenants/*.env` would carry the extra lines forever.
+
+**Degradation rule (important):** a failed, slow, or half-filled branding fetch falls back to
+**brand-neutral Polish** (`tokeny` / `tokenów`), never to `GT`. Generic wording is a cosmetic
+miss; a wrong currency name is the leak. Failures back off (60 s) so a down portal cannot make
+every chat message pay a round-trip, and the fetch never throws into the chat path (same
+best-effort contract as `portal.ts awardChat()`).
+
+⚠️ **`/api/companion/branding` is therefore no longer extension-only.** The bot has no session
+and no user, so it can only read this while the route stays **public and unauthenticated**.
+Adding auth or an extension-origin allow-list would silently send every portal's chat back to
+the neutral fallback. The route header says so too.
+
+**Chips are not white-label.** Casino wording is a separate axis: duels, heists and the chat
+mini-games stake the **free `chips`** (`lib/duels.ts` / `lib/heist.ts` / `lib/gt-games.ts` all
+move `chips`, never `tokens`), and per `terms` §3 chips are a **platform-wide** currency
+distinct from the tenant-named `%gt%`. So their copy correctly says **`żetony`** — substituting
+a tenant's `tokenName` there would be a *new* bug (advertising a chip game as costing the
+portal's real currency). The bot said "napad na GT" / "pojedynek na GT" and
+`bot/gt-game`+`bot/duel` answered "grać za GT" / "WYGRANA … GT"; all now say `żetony`.
+
+**Tested behaviour.** `branding.ts` is covered by `ghost-empire-chat/src/__tests__/branding.test.ts`
+(20 cases, CI job `test:chat`) using Node's built-in `node:test` runner via tsx — deliberately
+**no vitest**, since the bot's whole dev tooling is tsx + tsc. The tests pin the *failure*
+behaviour, which is the load-bearing part: neutral fallback and never `GT`, half-filled payload
+refused, last-known-good surviving an outage, one request per burst, back-off instead of a
+round-trip per message, no throw into the chat path. Validated by mutation testing — swapping the
+fallback to `Ghost Tokens`/`GT` fails 7 cases, deleting the back-off fails 1.
+
+**Guarded against regression: `npm run lint:brand`** (`ghost-empire-chat/scripts/check-white-label.ts`,
+wired into the CI job `lint:chat`). The tests above pin `branding.ts`'s behaviour; this stops a
+*new* founder literal being typed into any other chat string. It walks the **TypeScript AST** and
+flags founder naming (`Ghost Tokens`, `GT`, `Ghost Empire`, owner handle, founder Discord) inside
+string/template literals.
+
+Why an AST and not grep — grep fails in **both** directions on this package:
+
+- **False positives:** most raw `GT` matches in `src/` are comments and file headers, which are
+  legitimate (`// 1 GT per chatter per minute`). The parser treats comments as trivia, so they
+  drop out for free — no comment-stripping heuristics to maintain.
+- **False negatives:** the bot's viewer text is a **call argument** or a returned template
+  (`broadcast(\`…\`)`, `return \`@${u} …\``, `response: \`…\``), not a `field: "literal"`. A matcher
+  written for `field: "literal"` / JSX attributes — the shape web-side brand linting assumes —
+  reports a misleading **zero** on this package. Node-walking catches every position a literal can
+  occupy, whatever syntax wraps it. Verified against a fixture: all three shapes above are caught,
+  while comments, `console.*` diagnostics, the lowercase `%gt%` placeholder, the hyphenated
+  `ghost-empire-chat` log prefix and regex literals are correctly ignored.
+
+Deliberate exclusions: `console.*` arguments (operator logs, no viewer sees them),
+`src/**/__tests__/**` (a test must be able to write `GT` to assert its absence), and any line
+carrying a trailing `// wl-ok: <reason>` escape hatch. The currency-symbol pattern is
+**case-sensitive** so the shared `%gt%` placeholder passes.
+
+⚠️ **Still uncovered: the portal side.** `lint:brand` scans `ghost-empire-chat/src` only. The
+`/api/bot/*` routes build chat messages too (that is how `WYGRANA … GT` reached chat), and no
+equivalent guard exists in `ghost-empire-web`. Extending the same AST approach there — flagging
+founder literals in any `NextResponse.json({ message: … })` — is the obvious follow-up.

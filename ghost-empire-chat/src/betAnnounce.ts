@@ -4,6 +4,7 @@
 // it never shouts into an empty/offline chat.
 import { env } from "./env";
 import { broadcast, recentlyActive } from "./broadcast";
+import { getBranding } from "./branding";
 
 const POLL_MS = 60_000; // check for an open prediction every 60s
 const ANNOUNCE_INTERVAL_MS = 5 * 60_000; // re-announce every 5 min while it stays open
@@ -31,8 +32,10 @@ async function tick(): Promise<void> {
 
     lastAnnouncedId = d.id;
     lastAnnouncedAt = Date.now();
-    const pot = typeof d.totalPot === "number" && d.totalPot > 0 ? ` Pula: ${d.totalPot} GT.` : "";
-    await broadcast(`🎲 OTWARTY ZAKŁAD: ${d.question} — obstawiaj Ghost Tokens na ${env.portalUrl}/predictions${pot}`);
+    // Per-portal currency naming — resolved only once we know we're actually announcing.
+    const { tokenName, tokenSymbol } = await getBranding();
+    const pot = typeof d.totalPot === "number" && d.totalPot > 0 ? ` Pula: ${d.totalPot} ${tokenSymbol}.` : "";
+    await broadcast(`🎲 OTWARTY ZAKŁAD: ${d.question} — obstawiaj ${tokenName} na ${env.portalUrl}/predictions${pot}`);
   } catch {
     /* ignore — retry next tick */
   }
