@@ -3,7 +3,7 @@
 // atomic play() that charges the bet, pays winnings and logs the play — all in one
 // transaction so GT can never be created or lost incorrectly.
 import { prisma } from "@/lib/prisma";
-import { after } from "next/server";
+import { safeAfter } from "@/lib/after-safe";
 import { pickWeightedIndex } from "@/lib/economy";
 import { redis } from "@/lib/redis";
 import { cryptoRng } from "@/lib/secure-rng";
@@ -350,8 +350,13 @@ export async function playGtGame(
     return { ok: false, status: 400, error: "Nieznana gra" };
   }
 
+  // ── ONLY the money transaction is guarded. Everything after it runs post-commit, where a
+  //    throw must not be able to reach this catch: the bet is charged and the payout (jackpot
+  //    included) is paid, so a "failure" there would hand the player a 500 for a play they were
+  //    already paid for AND put the jackpot surplus back in the pool — paying it out twice.
+  let newBalance: number;
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    newBalance = await prisma.$transaction(async (tx) => {
       // CHIPS currency (free casino money): decrement/increment `chips`, NOT `tokens`. We do NOT
       // touch totalSpent/totalEarned — those track the real GT economy; chips must never inflate it.
       const charged = await tx.user.updateMany({
@@ -372,23 +377,29 @@ export async function playGtGame(
       const fresh = await tx.user.findUnique({ where: { id: userId }, select: { chips: true } });
       return fresh?.chips ?? 0;
     });
-
-    // Feed the progressive pool AFTER a successful charge (1% of the bet, best-effort).
-    void feedJackpot(bet, tenantId);
-
-    // Casino achievements — deferred via after() so the player gets their balance immediately.
-    // This is the hottest money loop; the multi-query grant runs off the response path (and
-    // after() guarantees it completes before the serverless function freezes).
-    after(async () => {
-      const { checkAndGrantAchievements } = await import("@/lib/achievements");
-      await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
-    });
-
-    return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash, plinko, scratch };
   } catch (e) {
-    // The pot was grabbed before the charge — put the surplus back on failure.
+    // The pot was grabbed before the charge — put the surplus back on failure. Only a FAILED
+    // transaction may reach this: nothing was paid, so the surplus is the pool's again.
+    // The pool is per portal, so the refund must go back to the SAME portal's key.
     if (jackpotWon > JACKPOT_SEED) void refundJackpotSurplus(jackpotWon - JACKPOT_SEED, tenantId);
     if (e instanceof GtGameError) return { ok: false, status: e.status, error: e.message };
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
+
+  // ── Committed. Best-effort side effects only, and the result is returned no matter what.
+
+  // Feed the progressive pool AFTER a successful charge (1% of the bet; never rejects).
+  // Per portal — one shared key would let bets on one portal grow a pool another portal claims.
+  void feedJackpot(bet, tenantId);
+
+  // Casino achievements — deferred via after() so the player gets their balance immediately.
+  // This is the hottest money loop; the multi-query grant runs off the response path (and
+  // after() guarantees it completes before the serverless function freezes). safeAfter()
+  // keeps a missing request scope (bot script, cron, test) from touching the paid result.
+  safeAfter(async () => {
+    const { checkAndGrantAchievements } = await import("@/lib/achievements");
+    await checkAndGrantAchievements({ userId, triggerType: "casino_plays" });
+  });
+
+  return { ok: true, game, bet, payout, net: payout - bet, newBalance, detail, reels, roll, dice, crash, plinko, scratch };
 }

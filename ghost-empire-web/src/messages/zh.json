@@ -1220,6 +1220,7 @@
     "tntPlan": "套餐",
     "tntExpiry": "到期",
     "tntUntil": "至",
+    "tntCreatedAt": "创建于",
     "tntCreateBtn": "创建门户",
     "tntCreated": "已创建门户 {slug}",
     "tntSaved": "已保存 {slug}",
@@ -2508,7 +2509,8 @@
         "update_alert_settings": "提醒设置",
         "merge_users": "合并账户",
         "update_moderation": "管理（自动）",
-        "update_integrations": "集成 / 密钥"
+        "update_integrations": "集成 / 密钥",
+        "rotate_bot_secret": "机器人密钥"
       },
       "secTitle": "审计日志"
     },

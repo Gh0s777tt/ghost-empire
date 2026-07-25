@@ -1220,6 +1220,7 @@
     "tntPlan": "الخطة",
     "tntExpiry": "تنتهي",
     "tntUntil": "حتى",
+    "tntCreatedAt": "أُنشئ في",
     "tntCreateBtn": "إنشاء بوابة",
     "tntCreated": "تم إنشاء بوابة {slug}",
     "tntSaved": "تم حفظ {slug}",
@@ -2508,7 +2509,8 @@
         "update_alert_settings": "إعدادات التنبيهات",
         "merge_users": "دمج حسابات",
         "update_moderation": "الإشراف (تلقائي)",
-        "update_integrations": "التكاملات / المفاتيح"
+        "update_integrations": "التكاملات / المفاتيح",
+        "rotate_bot_secret": "سر البوت"
       },
       "secTitle": "سجلّ التدقيق"
     },

@@ -10,12 +10,14 @@
     "src/lib/economy-anomaly.ts",
     "src/lib/companion-token.ts",
     "src/lib/platform-tokens.ts",
+    "src/lib/oauth-refresh.ts",
     "src/lib/ssrf-guard.ts",
     "src/lib/moderation.ts",
     "src/lib/refund.ts",
     "src/lib/oauth-email.ts",
     "src/lib/chips.ts",
-    "src/lib/shop-currency.ts"
+    "src/lib/shop-currency.ts",
+    "src/lib/after-safe.ts"
   ],
   "out": "../docs/api",
   "readme": "none",

@@ -419,6 +419,7 @@
     "tntExpiry": "Wygasa",
     "tntUntil": "do",
     "tntCreated": "Portal {slug} utworzony",
+    "tntCreatedAt": "Utworzony",
     "tntNew7d": "w tym tygodniu",
     "tntSetupOk": "skonfigurowany",
     "tntSetupPending": "setup niedokończony",
@@ -926,7 +927,8 @@
         "update_alert_settings": "Ustaw. alertów",
         "merge_users": "Scalenie kont",
         "update_moderation": "Moderacja (auto)",
-        "update_integrations": "Integracje / klucze"
+        "update_integrations": "Integracje / klucze",
+        "rotate_bot_secret": "Sekret bota"
       }
     },
     "modViolations": {
@@ -2350,6 +2352,29 @@
     "secModeration": "Moderacja",
     "secAudit": "Audit log",
     "secTwofactor": "2FA (admin)",
+    "botSecret": {
+      "title": "Sekret bota portalu",
+      "intro": "Własny sekret, którym instancja bota tego portalu ({portal}) uwierzytelnia się w API. Bez niego bot korzysta ze wspólnego, globalnego BOT_SECRET.",
+      "loading": "Ładowanie…",
+      "notOwner": "Ta sekcja jest dostępna dla właściciela/admina portalu.",
+      "statusOn": "Sekret ustawiony",
+      "statusOffGlobal": "Ten portal nie ma własnego sekretu — bot uwierzytelnia się wspólnym, globalnym BOT_SECRET.",
+      "statusOffNone": "Ten portal nie ma własnego sekretu, a globalny BOT_SECRET nie jest ustawiony — bot nie uwierzytelni się w ogóle.",
+      "generateBtn": "Wygeneruj sekret",
+      "rotateBtn": "Rotuj sekret",
+      "clearBtn": "Usuń sekret",
+      "rotateConfirm": "Wygenerować nowy sekret? Stary natychmiast przestanie działać — bot będzie rozłączony, dopóki nie wkleisz nowego.",
+      "clearConfirm": "Usunąć własny sekret portalu? Bot wróci do wspólnego, globalnego BOT_SECRET.",
+      "clearConfirmNoGlobal": "Usunąć własny sekret? UWAGA: globalny BOT_SECRET nie jest ustawiony, więc bot straci dostęp do API tego portalu.",
+      "revealWarn": "Zapisz go teraz — pokazujemy go tylko ten jeden raz.",
+      "revealHint": "Wklej do pliku .env instancji bota (tenants/<slug>.env) i zrestartuj bota.",
+      "copyBtn": "Kopiuj",
+      "doneBtn": "Zapisałem",
+      "generatedMsg": "Nowy sekret bota wygenerowany",
+      "clearedMsg": "Sekret bota usunięty — portal wraca do globalnego BOT_SECRET",
+      "err": "Nie udało się zapisać",
+      "fallbackNote": "Weryfikacja zawsze akceptuje też globalny BOT_SECRET, więc obecny wspólny bot działa bez zmian. Rotacja trafia do dziennika audytu (bez wartości sekretu)."
+    },
     "twoFactor": {
       "title": "Uwierzytelnianie dwuskładnikowe (2FA)",
       "intro": "Zabezpiecz konto admina kodem czasowym (TOTP). Po włączeniu może być wymagany przy wrażliwych akcjach. Użyj Google Authenticator, Authy lub dowolnej kompatybilnej aplikacji.",

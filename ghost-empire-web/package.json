@@ -27,6 +27,7 @@
     "docs:check": "node scripts/check-docs-sync.mjs",
     "docs:env": "node scripts/check-env-docs.mjs",
     "docs:i18n": "node scripts/check-i18n-legal.mjs",
+    "docs:i18n:dup": "node scripts/check-i18n-duplicates.mjs",
     "docs:api": "typedoc",
     "verify-all": "bash scripts/verify-all.sh",
     "verify-all:fast": "bash scripts/verify-all.sh --fast",

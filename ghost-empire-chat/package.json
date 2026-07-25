@@ -9,7 +9,9 @@
     "auth:twitch": "tsx scripts/auth-twitch.ts",
     "auth:kick": "tsx scripts/auth-kick.ts",
     "auth:youtube": "tsx scripts/auth-youtube.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/__tests__/*.test.ts",
+    "lint:brand": "tsx scripts/check-white-label.ts"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

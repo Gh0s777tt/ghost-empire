@@ -249,12 +249,48 @@ mimo że `shop/buy` obciążał żetony.
 ## Weryfikacja (per faza, z `ghost-empire-web/`)
 ```
 npx tsc --noEmit        # typy
-npx vitest run          # testy (economy/gt-games/wheel mają testy — zaktualizować na chips)
+npx vitest run          # testy jednostkowe (economy/gt-games/wheel — już na chips)
+npm run test:integration # ✅ koło + duele + heist + 7 gier (playGtGame): chips ruszone, ledger GT NIETKNIĘTY (wymaga testowego Postgresa)
 npx eslint <changed>
 npx next build
 npm run docs:check && npm run docs:env
 ```
+**Rozdział walut jest pinowany testem, nie konwencją.** `tests/integration/helpers.ts`
+stempluje każdego żetonowego użytkownika niezerowym ledgerem GT (`GT_SEED`), a koło, duele i
+heist asertują po ruchu pieniądza, że `tokens`/`totalEarned`/`totalSpent` są **bez zmian** i że
+każdy wiersz `Transaction` ma `currency: "CHIPS"` — czyli że gra kasynowa nie wraca do metryk
+realnej ekonomii (ranking/wrapped/economy-health liczą wyłącznie `"GT"`). Dokładając nową grę na
+chips, dołóż tę samą parę asercji.
+
+**Heist ma dwie własne pułapki**, o które potyka się każdy, kto dopisuje tu testy:
+- Wynik napadu to **jeden zbiorowy rzut** o szansie 30–60%, więc „sukces" i „wpadka" są przy
+  prawdziwym CSPRNG rzutem monetą. Test mockuje **wyłącznie `cryptoRng`** z `@/lib/secure-rng`
+  (0 = zawsze sukces, 0.99 = zawsze wpadka) — inaczej żadnej z dwóch ścieżek pieniężnych nie da
+  się asertować bez flake'a.
+- **Stawka jest escrowana przy `!heist` (dołączeniu), ale nie zapisuje wiersza `Transaction`** —
+  jedyne wiersze ledgera, jakie napad produkuje, to wypłaty `heist:win`. Nieudany napad zostawia
+  więc tabelę `Transaction` **pustą**; asercja „każdy wiersz to CHIPS" przeszłaby tam pusto (
+  vacuously), dlatego test sprawdza tam **liczbę wierszy = 0**.
 **⚠️ db push (Faza 1)** — tylko za wyraźną zgodą właściciela, z backupem (patrz `docs/BACKUP.md`).
+
+### Zasada: po commicie pieniędzy nic już nie może zmienić wyniku
+Każda gra kasynowa odkłada nadanie osiągnięć **po** transakcji pieniężnej (`after()` z
+`next/server`, żeby gracz dostał saldo od razu). `after()` **rzuca synchronicznie poza request
+scope** (skrypt, cron, test), więc taki post-commit hook potrafił wywrócić grę, która była już
+**opłacona** — w `playGtGame` siedział wręcz **wewnątrz** `try` od pieniędzy, więc udana gra
+wracała jako złapane `500`, a przy jackpocie `catch` **oddawał do puli nadwyżkę już wypłaconą
+graczowi** (podwójne naliczenie). Dlatego:
+
+- wszystkie cztery biblioteki (`gt-games`, `gt-blackjack`, `gt-mines`, `gt-hilo`) wołają hooki
+  przez **`safeAfter()`** (`src/lib/after-safe.ts`), które połyka i rzut `after()`, i odrzucenie
+  samego zadania — nigdy nie wraca do wołającego;
+- w `playGtGame` **tylko `$transaction` jest w `try`**; `feedJackpot`, `safeAfter` i `return`
+  stoją za `catch`, więc zwrot nadwyżki jackpota jest osiągalny **wyłącznie z nieudanej
+  transakcji** (nic nie zostało wypłacone).
+
+Dokładając grę albo kolejny efekt poboczny po wypłacie: **`safeAfter`, nigdy goły `after()`**, i
+poza `try` od pieniędzy. Pinowane testami — `after-safe.test.ts` (jednostkowe) oraz przypadek
+„post-commit hook rzuca" w `casino-games.integration.test.ts` (realna baza).
 
 ## Rollback
 - Kod: rewers commitów (kasyno wraca na `tokens`).

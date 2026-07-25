@@ -6,7 +6,7 @@
 // (another $transaction) but ONLY after an atomic Redis GETDEL claims the session, so a session can
 // never be cashed out twice. Hitting a bomb ends the session with the bet already lost.
 import { prisma } from "@/lib/prisma";
-import { after } from "next/server";
+import { safeAfter } from "@/lib/after-safe";
 import { redis, withLock } from "@/lib/redis";
 import { MIN_BET, MAX_BET } from "@/lib/gt-games";
 import { cryptoRng } from "@/lib/secure-rng";
@@ -98,7 +98,7 @@ export async function minesReveal(userId: string, sessionId: string, tile: numbe
     if (session.bombSet.includes(tile)) {
       await r.del(k); // end the session
       await prisma.gtGamePlay.create({ data: { userId, game: "mines", bet: session.bet, payout: 0, net: -session.bet, detail: `💣 bomba (${session.revealed.length} bezp., ${session.bombs} bomb)`.slice(0, 80) } }).catch(() => {});
-      after(() => grantCasino(userId)); // deferred + guaranteed to finish (was fire-and-forget)
+      safeAfter(() => grantCasino(userId)); // deferred + guaranteed to finish (was fire-and-forget)
       return { ok: true, bomb: true, tile, revealed: session.revealed, multiplier: 0, bombSet: session.bombSet };
     }
 
@@ -133,6 +133,7 @@ export async function minesCashout(userId: string, sessionId: string): Promise<M
   } catch {
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
-  after(() => grantCasino(userId));
+  // Post-commit: the cash-out is paid, so the grant must not be able to throw it away.
+  safeAfter(() => grantCasino(userId));
   return { ok: true, payout, multiplier: mult, net: payout - session.bet, newBalance, bombSet: session.bombSet };
 }

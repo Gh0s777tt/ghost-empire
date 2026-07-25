@@ -12,19 +12,24 @@
 //    the admin panel, instead of a silent stall that looks like "no tips today";
 //  - the response is non-200 when any portal failed, so a stalled income rail is visible to uptime
 //    monitoring rather than indistinguishable from a quiet period;
-//  - a non-JSON body is reported as such. Tipply's endpoint is undocumented and unauthenticated, so
-//    an HTML interstitial (Cloudflare, maintenance, a moved route) is a LIKELY response — and
-//    `res.json()` on HTML throws the useless `Unexpected token '<'`. This is the exact error that
-//    showed up in Sentry for the Streamlabs cron;
-//  - it does not run outside production. The handler is reachable on every preview/dev deploy with
-//    the same database and the same CRON_SECRET, so it would poll the SAME live integrations and
-//    duplicate both queue rows and Sentry noise. Fail-OPEN: only Vercel's explicit signal counts as
-//    non-production, so a self-hosted portal without that variable keeps polling.
+//  - a non-JSON body is reported as such via the shared `jsonOrThrow()`. Tipply's endpoint is
+//    undocumented and unauthenticated, so an HTML interstitial (Cloudflare, maintenance, a moved
+//    route) is a LIKELY response — and `res.json()` on HTML throws the useless
+//    `Unexpected token '<'`. This is the exact error that showed up in Sentry for the Streamlabs cron;
+//  - it does not run outside production, via the shared `isProductionDeployment()`. The handler is
+//    reachable on every preview/dev deploy with the same database and the same CRON_SECRET, so it
+//    would poll the SAME live integrations and duplicate both queue rows and Sentry noise.
+//    Fail-OPEN: only Vercel's explicit signal counts as non-production, so a self-hosted portal
+//    without that variable keeps polling.
+//
+// Both guards deliberately reuse the Streamlabs helpers rather than re-implementing them here —
+// two copies of a fail-open environment gate is exactly how the four donation pipelines drifted.
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/prisma";
 import { verifyCronSecret } from "@/lib/utils";
-import { httpFetch } from "@/lib/http";
+import { httpFetch, jsonOrThrow } from "@/lib/http";
+import { deploymentEnv, isProductionDeployment } from "@/lib/deployment";
 import { ingestDonation } from "@/lib/donations/ingest";
 import { parseTipplyFeed, tipplyFeedUrl, tipplySince, selectFreshTips } from "@/lib/donations/tipply";
 import { createLogger } from "@/lib/logger";
@@ -40,9 +45,10 @@ export async function GET(req: Request) {
 
   // Fail-open environment gate — see the header. Vercel only SCHEDULES crons on production, but the
   // route itself answers on every preview deploy.
-  const vercelEnv = process.env.VERCEL_ENV;
-  if (vercelEnv === "preview" || vercelEnv === "development") {
-    return NextResponse.json({ ok: true, skipped: "non-production-deployment" });
+  if (!isProductionDeployment()) {
+    const env = deploymentEnv();
+    log.info("skipped — non-production deployment", { env });
+    return NextResponse.json({ ok: true, skipped: "non-production-deployment", env }, { status: 200 });
   }
 
   const integrations = await prisma.donationIntegration
@@ -63,17 +69,9 @@ export async function GET(req: Request) {
       }
       const res = await httpFetch(tipplyFeedUrl(it.externalRef), { headers: { accept: "application/json" } });
       if (!res.ok) throw new Error(`tipply_http_${res.status}`);
-
-      // Read as text and parse ourselves: res.json() on an HTML interstitial throws
-      // `Unexpected token '<'`, which tells the streamer (and us) nothing about what happened.
-      const body = await res.text();
-      let payload: unknown;
-      try {
-        payload = JSON.parse(body);
-      } catch {
-        const kind = res.headers.get("content-type")?.split(";")[0] ?? "unknown";
-        throw new Error(`tipply_non_json_response (content-type: ${kind})`);
-      }
+      // jsonOrThrow names the upstream and reports what it actually sent, instead of the bare
+      // `Unexpected token '<'` an HTML body would produce.
+      const payload = await jsonOrThrow<unknown>(res, "tipply last-tips");
       // The endpoint always returns the most recent ~25 tips, so without a cutoff the first poll
       // would replay history as live donations. See tipplySince() for the exact rule.
       const since = tipplySince(it.createdAt, it.lastEventAt, new Date());

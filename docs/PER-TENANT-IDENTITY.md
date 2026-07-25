@@ -155,10 +155,128 @@ tenant B's users. That is now closed:
 Unlike §2's viewer-identity work, this needed **no schema change** (`Tenant.botSecret`
 already exists) and **no `db push`**.
 
-⚠️ **Open gap — provisioning is DB-only.** Nothing writes `Tenant.botSecret` yet: the admin
-tenant PATCH (`/api/admin/tenants/[id]`) uses an explicit field allow-list that excludes it,
-and no other code path sets it. So a streamer cannot self-serve their own bot secret — it has
-to be written straight onto the `tenants` row. That's safe (the isolation above is enforced
-whether or not a tenant has its own secret; without one they simply fall back to the global
-`BOT_SECRET`), but until an owner-scoped admin surface exists — generate + show once + rotate,
-never echoing the stored value back to the client — per-tenant bots stay a manual setup.
+✅ **Provisioning is self-serve** — see §10: the portal owner generates, reveals once and
+rotates their own bot secret from `/admin#bot`. Without one, a portal still falls back to the
+global `BOT_SECRET`, so the isolation above holds either way.
+
+## 10. Per-tenant bot identity (`Tenant.botSecret`)
+
+Viewer identity is only half of "one portal = one world". The other half is the **bot**:
+each portal runs its own `ghost-empire-chat` process (`ENV_FILE=tenants/<slug>.env`), and
+that process authenticates to the portal's internal endpoints with a bearer secret.
+
+**Status: ✅ self-serve.** `Tenant.botSecret` (nullable, added in #599) holds a portal's own
+credential. `verifyBotSecretForTenant` (`src/lib/utils.ts`) accepts **either** it **or** the
+global `BOT_SECRET`, in constant time — so the fallback is always live and a portal without
+its own secret keeps working on the shared one.
+
+### Provisioning it
+
+Generate and rotate it from the admin panel: **`/admin#bot` → "Sekret bota portalu"**, backed
+by `POST /api/admin/bot-secret` (`{action:"rotate"|"clear"}`). *(Until this shipped there was
+no writer at all — the platform-owner tenant editor's field allow-list excludes `botSecret`,
+so the column had to be edited straight in the DB. That caveat is gone.)*
+
+Rules the surface enforces, and why:
+
+| Rule | Why |
+|---|---|
+| Minted with `randomToken(32)` (`src/lib/secure-rng.ts`) — 256 bits, base64url | Same CSPRNG policy as every money-path draw; a guessable bot secret is an auth bypass, not a bad roll. Never `Math.random`. |
+| Returned **exactly once**, in the response that mints it | There is no read-back path. `GET` answers `{configured, hint}` where `hint` is a 4-char tail (`…Xk7q`) — enough to match against the bot's `.env`, useless to an attacker. |
+| Never enters `TenantBrand` / `getCurrentTenant()` | Branding is rendered into pages, OG images and client payloads. The column is deliberately absent from `toBrand()` — keep it that way. |
+| Gated by `canManageTenantBotSecret` (`src/lib/tenants.ts`), not `requireAdmin()` alone | `requireAdmin()` lets a legacy NULL-`tenantId` account administer *any* host portal. Fine for content; not for a credential that posts awards into another streamer's economy. Owner ✔ from any host, admin ✔ only on their own portal, platform owner ✔ everywhere. |
+| Step-up 2FA (`requireStepUp`) + rate limit 10 / 5 min | Same bar as granting an admin role. No-op unless the acting admin enabled 2FA. |
+| Audit-logged as `rotate_bot_secret` (`{slug, op, replaced}`) | The audit log is readable by every admin of the portal — so it records *that* it rotated, never the value. |
+| Stored plaintext (like `IntegrationConfig.overlayToken`) | The verifier compares the incoming Bearer against the column directly. Wrapping it in `encryptSecret()` would make every future verifier responsible for decrypting, and would take bot auth down on `ENCRYPTION_KEY` drift — a bad trade for a rotatable token that is never read back. |
+
+### Rotating without downtime
+
+Rotation is a hard cutover: the old value stops working the moment the new one is stored.
+Copy the revealed secret into `tenants/<slug>.env` and restart that bot process. While a
+global `BOT_SECRET` exists, "clear" is a safe escape hatch — the portal falls back to it.
+With no global secret set, clearing locks that portal's bot out (the panel warns before it).
+
+### Still open
+
+**Enforcement** — `verifyBotSecretForTenant` still accepts the global secret unconditionally,
+so a per-portal secret is defence-in-depth, not isolation. Making it strict requires every
+portal to run its own bot instance with its own secret first, coordinated with the
+`ghost-empire-chat` repo. Provisioning (this section) is the prerequisite that was missing.
+
+## 11. Related white-label surface: the bot's viewer-facing chat copy (shipped)
+
+§9 closed the bot's **data** isolation (and §10 made its secret self-serve); its **wording** was still the founder's. The bot wrote
+`Ghost Tokens` / `GT` straight into sentences that every portal's viewers read in
+Twitch/Kick/YouTube chat (`!portal`, `!sklep`, the open-bet auto-announce), which is the same
+white-label leak class CLAUDE.md forbids in pages and emails — just in a different runtime.
+
+**How the bot learns the currency: it asks the portal, and never stores it.**
+`ghost-empire-chat/src/branding.ts` TTL-caches `GET /api/companion/branding` (5 min) and
+exposes `getBranding()` / `applyBranding()`; `index.ts` warms it at boot. One process per
+portal means `env.portalUrl` **is** that tenant's Host, and the endpoint is public +
+Host-resolved + rate-limited, so no new credential and no new env var are involved.
+
+Why not `TOKEN_NAME`/`TOKEN_SYMBOL` env vars — rejected deliberately:
+
+- the value already lives in the `Tenant` row, so an env copy **silently drifts**: renaming
+  the currency in `/admin` would leave the bot announcing the old name until somebody
+  hand-edits an env file and restarts. The TTL'd read propagates a rename **without a restart**;
+- `env.ts`'s `req()` throws on a missing var, so new *required* vars break every existing
+  deployment, and *optional* ones force a founder-literal default (`?? "GT"`) back into the bot;
+- one process per portal means every future `tenants/*.env` would carry the extra lines forever.
+
+**Degradation rule (important):** a failed, slow, or half-filled branding fetch falls back to
+**brand-neutral Polish** (`tokeny` / `tokenów`), never to `GT`. Generic wording is a cosmetic
+miss; a wrong currency name is the leak. Failures back off (60 s) so a down portal cannot make
+every chat message pay a round-trip, and the fetch never throws into the chat path (same
+best-effort contract as `portal.ts awardChat()`).
+
+⚠️ **`/api/companion/branding` is therefore no longer extension-only.** The bot has no session
+and no user, so it can only read this while the route stays **public and unauthenticated**.
+Adding auth or an extension-origin allow-list would silently send every portal's chat back to
+the neutral fallback. The route header says so too.
+
+**Chips are not white-label.** Casino wording is a separate axis: duels, heists and the chat
+mini-games stake the **free `chips`** (`lib/duels.ts` / `lib/heist.ts` / `lib/gt-games.ts` all
+move `chips`, never `tokens`), and per `terms` §3 chips are a **platform-wide** currency
+distinct from the tenant-named `%gt%`. So their copy correctly says **`żetony`** — substituting
+a tenant's `tokenName` there would be a *new* bug (advertising a chip game as costing the
+portal's real currency). The bot said "napad na GT" / "pojedynek na GT" and
+`bot/gt-game`+`bot/duel` answered "grać za GT" / "WYGRANA … GT"; all now say `żetony`.
+
+**Tested behaviour.** `branding.ts` is covered by `ghost-empire-chat/src/__tests__/branding.test.ts`
+(20 cases, CI job `test:chat`) using Node's built-in `node:test` runner via tsx — deliberately
+**no vitest**, since the bot's whole dev tooling is tsx + tsc. The tests pin the *failure*
+behaviour, which is the load-bearing part: neutral fallback and never `GT`, half-filled payload
+refused, last-known-good surviving an outage, one request per burst, back-off instead of a
+round-trip per message, no throw into the chat path. Validated by mutation testing — swapping the
+fallback to `Ghost Tokens`/`GT` fails 7 cases, deleting the back-off fails 1.
+
+**Guarded against regression: `npm run lint:brand`** (`ghost-empire-chat/scripts/check-white-label.ts`,
+wired into the CI job `lint:chat`). The tests above pin `branding.ts`'s behaviour; this stops a
+*new* founder literal being typed into any other chat string. It walks the **TypeScript AST** and
+flags founder naming (`Ghost Tokens`, `GT`, `Ghost Empire`, owner handle, founder Discord) inside
+string/template literals.
+
+Why an AST and not grep — grep fails in **both** directions on this package:
+
+- **False positives:** most raw `GT` matches in `src/` are comments and file headers, which are
+  legitimate (`// 1 GT per chatter per minute`). The parser treats comments as trivia, so they
+  drop out for free — no comment-stripping heuristics to maintain.
+- **False negatives:** the bot's viewer text is a **call argument** or a returned template
+  (`broadcast(\`…\`)`, `return \`@${u} …\``, `response: \`…\``), not a `field: "literal"`. A matcher
+  written for `field: "literal"` / JSX attributes — the shape web-side brand linting assumes —
+  reports a misleading **zero** on this package. Node-walking catches every position a literal can
+  occupy, whatever syntax wraps it. Verified against a fixture: all three shapes above are caught,
+  while comments, `console.*` diagnostics, the lowercase `%gt%` placeholder, the hyphenated
+  `ghost-empire-chat` log prefix and regex literals are correctly ignored.
+
+Deliberate exclusions: `console.*` arguments (operator logs, no viewer sees them),
+`src/**/__tests__/**` (a test must be able to write `GT` to assert its absence), and any line
+carrying a trailing `// wl-ok: <reason>` escape hatch. The currency-symbol pattern is
+**case-sensitive** so the shared `%gt%` placeholder passes.
+
+⚠️ **Still uncovered: the portal side.** `lint:brand` scans `ghost-empire-chat/src` only. The
+`/api/bot/*` routes build chat messages too (that is how `WYGRANA … GT` reached chat), and no
+equivalent guard exists in `ghost-empire-web`. Extending the same AST approach there — flagging
+founder literals in any `NextResponse.json({ message: … })` — is the obvious follow-up.

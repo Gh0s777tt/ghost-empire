@@ -1220,6 +1220,7 @@
     "tntPlan": "Plan",
     "tntExpiry": "Expira",
     "tntUntil": "hasta",
+    "tntCreatedAt": "Creado",
     "tntCreateBtn": "Crear portal",
     "tntCreated": "Portal {slug} creado",
     "tntSaved": "{slug} guardado",
@@ -2508,7 +2509,8 @@
         "update_alert_settings": "Ajustes de alertas",
         "merge_users": "Fusionar cuentas",
         "update_moderation": "Moderación (auto)",
-        "update_integrations": "Integraciones / claves"
+        "update_integrations": "Integraciones / claves",
+        "rotate_bot_secret": "Secreto del bot"
       },
       "secTitle": "Registro de auditoría"
     },

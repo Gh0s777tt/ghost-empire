@@ -1220,6 +1220,7 @@
     "tntPlan": "플랜",
     "tntExpiry": "만료",
     "tntUntil": "까지",
+    "tntCreatedAt": "생성일",
     "tntCreateBtn": "포털 만들기",
     "tntCreated": "포털 {slug} 생성됨",
     "tntSaved": "{slug} 저장됨",
@@ -2508,7 +2509,8 @@
         "update_alert_settings": "알림 설정",
         "merge_users": "계정 병합",
         "update_moderation": "모더레이션(자동)",
-        "update_integrations": "연동 / 키"
+        "update_integrations": "연동 / 키",
+        "rotate_bot_secret": "봇 시크릿"
       },
       "secTitle": "감사 로그"
     },

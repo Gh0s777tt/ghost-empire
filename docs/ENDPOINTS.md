@@ -150,6 +150,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/schedule` | perm:manage_shop | Harmonogram streamów |
 | `…/api/admin/bot-config` | perm:manage_shop | Config bota Discord |
 | `…/api/admin/bot-status` | perm:manage_shop | Status żywotności bota czatu (online/lastSeen/platformy) z heartbeatu |
+| `…/api/admin/bot-secret` | admin (owner portalu) | Własny sekret bota portalu (`Tenant.botSecret`) — GET `{configured, hint, slug, name, globalFallback}` (**nigdy sama wartość**; `hint` = 4 ostatnie znaki), POST `{action:"rotate"}` → mintuje `randomToken(32)` i **pokazuje go dokładnie raz**, POST `{action:"clear"}` → powrót do globalnego `BOT_SECRET`. Bramka `canManageTenantBotSecret` (właściciel portalu / admin tego portalu / właściciel platformy — **nie** admin z `tenantId=NULL`), step-up 2FA, limit 10/5min, audit `rotate_bot_secret` bez wartości. Szczegóły: [PER-TENANT-IDENTITY §9](PER-TENANT-IDENTITY.md#10-per-tenant-bot-identity-tenantbotsecret) |
 | `…/api/admin/ban-user` | perm:ban_users | Ban/mute |
 | `…/api/admin/merge-users` | admin | Scalanie duplikatów kont |
 | `…/api/admin/support-tickets` | admin | Skrzynka wsparcia — GET lista (filtr open/resolved/all, tenant-scoped), PATCH reply/resolve/reopen + powiadomienie widza (#650) |
@@ -178,8 +179,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/recap` | admin + plan `ai` | AI Stream Recap — generuje podsumowanie streamu i opcjonalnie wysyła na Discord (#516) |
 | `…/api/admin/clip-director` | admin | AI Clip Director — konfiguracja auto-klipów z hype'u czatu + ostatnie klipy (#517) |
 | `…/api/admin/section-data` | admin/perm | Lazy-dane sekcji panelu (`?s=<sekcja>`) |
-| `…/api/admin/twitch-streamer-auth` (+callback) · `twitch-eventsub` | admin | Autoryzacja streamera Twitch + subskrypcje EventSub |
-| `…/api/admin/kick-streamer-auth` (+callback) · `kick-events` | admin | Autoryzacja streamera Kick + eventy |
+| `…/api/admin/twitch-streamer-auth` (+callback) · `twitch-eventsub` | admin | Autoryzacja streamera Twitch + subskrypcje EventSub (**EventSub chodzi na tokenie *aplikacji*** — wiersz streamera daje tam tylko `broadcasterId`) |
+| `…/api/admin/kick-streamer-auth` (+callback) · `kick-events` | admin | Autoryzacja streamera Kick + eventy. `kick-events` wymaga tokenu **streamera** (Kick nie pozwala zakładać/kasować subskrypcji tokenem aplikacji), więc odświeża go sam przez `getValidKickAccessToken`; gdy się nie da → `400` + `authCode` (`reauth_required` = przeklikaj „Autoryzuj Kick", `refresh_failed` = przejściowe) |
 | `…/api/admin/youtube-streamer-auth` (+callback) | admin | Autoryzacja konta YouTube |
 | `…/api/admin/rumble` | admin | Per-portal Rumble (#730) — GET status na żywo + `hasUrl`, POST zapis/wyczyść `rumbleApiUrl` (szyfrowany), tenant-scoped, audit-logged |
 | `…/api/admin/role-roster` | admin | Lista posiadaczy ról/rang portalu (#700) — odczyt do panelu Role |
@@ -244,7 +245,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/webhooks/paymedia` | Webhook płatności PayMedia (sekret) |
 | `…/api/webhooks/stripe` | Webhook Stripe (podpis `STRIPE_WEBHOOK_SECRET`) — aktywacja/odnowienie/wygaśnięcie planu tenanta |
 | `…/api/yt/poll-live-chat` | Polling YouTube Live Chat (super chaty / membery) |
-| `…/api/cron/streamlabs-poll` | Cron (Vercel) — polling donacji Streamlabs (`CRON_SECRET`) |
+| `…/api/cron/streamlabs-poll` | Cron (Vercel, co 15 min) — polling donacji Streamlabs, **per portal** (`CRON_SECRET`). **Tylko produkcja:** na deployu `VERCEL_ENV=preview`/`development` zwraca 200 `{skipped:"non-production-deployment"}` bez pollingu i bez Sentry (fail-open: brak `VERCEL_ENV` = produkcja, patrz [ENV.md](ENV.md)). Awaria któregokolwiek portalu → HTTP 500 + `Sentry.captureMessage` (alert na zastój wpływu) |
 | `…/api/cron/tipply-poll` | Cron (Vercel, `*/15`) — polling wpłat **Tipply** dla każdego portalu, który podłączył widget (`CRON_SECRET`). Tipply nie ma API ani webhooka, więc odpytujemy publiczny endpoint widgetu streamera. Każdy portal w osobnym `try/catch` (jedna zepsuta integracja nie blokuje reszty), błąd ląduje w `lastError` na wierszu integracji **i** w Sentry, a odpowiedź jest **niezerowa (500)**, gdy którykolwiek portal padł — zatrzymana szyna wpłat nie może wyglądać jak „cichy dzień”. Wpłaty są **zawsze `unverified`** → kolejka rekoncyliacji, nigdy automatyczny mint |
 | `…/api/cron/prune` | Cron (Vercel, 04:00) — czyszczenie starych rekordów transientowych + **auto-wygasanie bounty ze zwrotem** (#681); `CRON_SECRET` |
 | `…/api/cron/weekly-rewards` | Cron (Vercel, pon.) — tygodniowe nagrody GT + **miesięczne rozliczenie Ligi Typerów** (idempotentne, #682); `CRON_SECRET` |
@@ -256,7 +257,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 |---|---|---|
 | `…/api/health` | GET | Health-check (200 OK / 503 gdy baza nieosiągalna) |
 | `…/api/discover` | GET/OPTIONS | Publiczne odkrywanie kanał→portal dla rozszerzenia-companiona (`?platform=&channel=` → `{found, slug, name, ownerHandle, portalUrl}`; dopasowanie po `ownerHandle`, CORS `*`, rate-limit per IP, read-only, multi-tenant, zero danych wrażliwych) |
-| `…/api/companion/branding` | GET/OPTIONS | Publiczny branding portalu dla rozszerzenia-companiona (`{name, tokenName, tokenSymbol, brandColor, logoUrl}` z Hosta; CORS `*`, rate-limit per IP, read-only) |
+| `…/api/companion/branding` | GET/OPTIONS | Publiczny branding portalu (`{name, tokenName, tokenSymbol, brandColor, logoUrl}` z Hosta; CORS `*`, rate-limit 120/min/IP, read-only). **Dwóch konsumentów:** rozszerzenie-companion **oraz bot czatu** (`ghost-empire-chat/src/branding.ts` cache'uje to z TTL 5 min, by nazwać walutę w wiadomościach na czacie) — **musi zostać publiczny**, bot nie ma sesji; dołożenie auth cichaczem zrzuci czat każdego portalu na neutralne „tokeny" |
 | `…/api/companion/token` | POST/OPTIONS | Mint bezstanowego tokenu companiona (session, same-origin przez portal-bridge rozszerzenia) → `{token, expiresInDays:7}`; HMAC-podpisany `{userId, tenantId}` (bez db), CORS |
 | `…/api/live-status` | GET | Publiczny, cache'owany status „czy streamer jest live?" do bannera home (#500 — Twitch Helix, współdzielony z overlayem widzów) |
 | `…/api/support/click` | POST | Licznik klików metody wsparcia (#541 — beacon z `/support`, rate-limit per IP) |

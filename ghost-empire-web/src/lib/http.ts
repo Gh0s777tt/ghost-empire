@@ -10,6 +10,86 @@ export function httpFetch(input: string | URL | Request, init: RequestInit = {})
   return fetch(input, { ...init, signal: init.signal ?? AbortSignal.timeout(EXTERNAL_TIMEOUT_MS) });
 }
 
+// ── Defensive JSON parsing of third-party responses ────────────────────────────────────
+//
+// WHY: `res.json()` on a body that isn't JSON throws the platform's own message —
+// `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`. That message names neither the
+// upstream, nor the status, nor the content-type, so when it surfaces in an alert (it did:
+// Sentry GHOST-EMPIRE-WEB-5, the Streamlabs donation cron) nobody can tell WHY money stopped
+// flowing. An upstream answering `200 text/html` is the classic signature of an expired /
+// revoked OAuth token or a CDN interstitial — a REAL money-in outage that must stay loud, just
+// diagnosable. So we never silence it; we only make it say what happened.
+
+/** How much of a non-JSON upstream body is echoed into the error. Enough to identify the page,
+ *  short enough not to dump a full HTML document into Sentry. */
+const BODY_SNIPPET_CHARS = 200;
+
+/**
+ * Parse a third-party API body as JSON, failing with a DIAGNOSABLE message.
+ *
+ * @param opts.label - Which upstream call this is, e.g. `"Streamlabs donations"` — it leads the error.
+ * @param opts.status - HTTP status of the response (context for the reader).
+ * @param opts.contentType - Raw `content-type` header, or `null` when absent.
+ * @param opts.body - The response body, already read as text.
+ * @returns The parsed value.
+ * @throws {Error} When the body isn't valid JSON — message names the upstream, status,
+ *   content-type and a short body snippet.
+ *
+ * @remarks
+ * Parse FIRST, diagnose second: any body that parses today keeps working byte-for-byte, including
+ * upstreams that serve valid JSON under a sloppy `text/plain`. The content-type is only ever used
+ * to explain a failure, never to reject a success — this must not change what production accepts.
+ */
+export function parseJsonBody<T = unknown>(opts: {
+  label: string;
+  status: number;
+  contentType: string | null;
+  body: string;
+}): T {
+  try {
+    return JSON.parse(opts.body) as T;
+  } catch {
+    throw new Error(describeNonJsonBody(opts));
+  }
+}
+
+/** Build the human-readable diagnosis for a body that failed `JSON.parse`. */
+function describeNonJsonBody(opts: {
+  label: string;
+  status: number;
+  contentType: string | null;
+  body: string;
+}): string {
+  const { label, status, body } = opts;
+  const contentType = opts.contentType?.split(";")[0]?.trim() || "(none)";
+  const head = `${label} returned non-JSON (HTTP ${status}, content-type ${contentType})`;
+
+  if (!body.trim()) return `${head}: empty body`;
+
+  // An HTML body from a JSON API is almost always a login page, a consent/SSO interstitial or a
+  // CDN error page — i.e. the request never reached the API. Say so, it's the actionable part.
+  const looksHtml = /^\s*(<!doctype|<html)/i.test(body);
+  const hint = looksHtml ? " — upstream served an HTML page (login/interstitial/error), not the API" : "";
+  return `${head}${hint}: ${body.slice(0, BODY_SNIPPET_CHARS)}`;
+}
+
+/**
+ * `res.json()` replacement for third-party calls — reads the body once and delegates to
+ * {@link parseJsonBody}, so a non-JSON answer produces a diagnosable error instead of
+ * `Unexpected token '<'`.
+ *
+ * @param res - The response to read (its body is consumed).
+ * @param label - Which upstream call this is, e.g. `"Streamlabs donations"`.
+ */
+export async function jsonOrThrow<T = unknown>(res: Response, label: string): Promise<T> {
+  return parseJsonBody<T>({
+    label,
+    status: res.status,
+    contentType: res.headers.get("content-type"),
+    body: await res.text(),
+  });
+}
+
 // ── Client-IP extraction from proxy headers — one source of truth (previously
 //    duplicated across ~13 rate-limit routes plus a richer variant in audit.ts).
 //
