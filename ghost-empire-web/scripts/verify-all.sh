@@ -90,6 +90,7 @@ gate "typecheck (tsc)"   npm run --silent typecheck
 gate "lint (eslint)"     npm run --silent lint
 gate "docs:check"        npm run --silent docs:check
 gate "docs:env"          npm run --silent docs:env
+gate "docs:i18n"         npm run --silent docs:i18n
 gate "unit tests"        npm run --silent test
 
 if [[ "$RUN_DB" == 1 ]]; then
