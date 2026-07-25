@@ -33,7 +33,7 @@ import {
   CustomAlertsCard, ChatOverlayCard, StreamGoalsManager, KickEventsManager, YouTubeLiveManager, RumbleManager,
   SeasonsManager, MergeUsersSection, BotConfigCard, ScheduleManager, TwitchEventSubManager, StreamlabsManager,
   UserRolesCard, ConnectionRolesCard, ShopManager, CodeDropsCard, HolidayEventsCard, CreateEventCard,
-  EventsManager, ActiveDropsList, PendingOrdersList, StreamAlertsManager, TenantsManager, AppearanceManager, HubManager, SupportTicketsManager,
+  EventsManager, ActiveDropsList, PendingOrdersList, StreamAlertsManager, TenantsManager, AppearanceManager, HubManager, DonationIntegrationsManager, SupportTicketsManager,
   RoleRoster, SubscribersManager, SupportPreview,
 } from "./lazy-sections";
 
@@ -95,7 +95,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub" | "donationIntegrations";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -113,6 +113,7 @@ export function AdminClient({
     // "make it mine" immediately (the API is owner-scoped + Elite-gated, so it's safe for any admin).
     { id: "appearance", label: t("secAppearance"),  icon: Palette,        group: "main",       level: 1, permission: () => isAdmin },
     { id: "hub",       label: t("secHub"),          icon: Link2,          group: "main",       level: 1, permission: () => isAdmin },
+    { id: "donationIntegrations", label: t("secDonationIntegrations"), icon: Webhook, group: "main", level: 2, permission: () => isAdmin },
     { id: "analytics", label: t("secAnalytics"),    icon: TrendingUp,     group: "main",       level: 2, permission: () => isAdmin },
     { id: "recap",     label: t("secRecap"),        icon: Sparkles,       group: "main",       level: 3, permission: () => isAdmin },
     { id: "clipdirector", label: t("secClipDirector"), icon: Clapperboard, group: "main",       level: 3, permission: () => isAdmin },
@@ -418,6 +419,9 @@ export function AdminClient({
           )}
           {activeSection === "hub" && isAdmin && (
             <HubManager {...sharedProps} />
+          )}
+          {activeSection === "donationIntegrations" && isAdmin && (
+            <DonationIntegrationsManager {...sharedProps} />
           )}
 
           {activeSection === "events" && (

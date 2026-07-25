@@ -5,11 +5,12 @@
 // One entry per user per raffle — repeat hits are ignored (the bot should also dedupe).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
-import { currentTenantId } from "@/lib/tenant";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { currentTenantId, getCurrentTenantBotAuth } from "@/lib/tenant";
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  const { botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

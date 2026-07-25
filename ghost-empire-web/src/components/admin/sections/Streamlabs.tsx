@@ -18,6 +18,7 @@ export function StreamlabsManager({
 }) {
   const t = useTranslations("admin.streamlabs");
   const nf = useLocale();
+  const isPl = nf.startsWith("pl");
   const [busy, setBusy] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Record<string, string>>({});
 
@@ -147,6 +148,34 @@ export function StreamlabsManager({
                   </div>
                   {d.message && (
                     <div className="text-xs text-zinc-400 italic mb-2">"{d.message}"</div>
+                  )}
+                  {/* Viewer self-claims (#self-claim). Deliberately styled as a WARNING, not an
+                      endorsement: amounts are public on /support, so anyone can assert any figure.
+                      Verify against your provider's dashboard (donor name above) before assigning. */}
+                  {!!d.claims?.length && (
+                    <div className="mb-2 border border-amber-900/60 bg-amber-950/20 p-2">
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-amber-400 mb-1">
+                        {d.claims.length > 1
+                          ? (isPl ? `⚠ ${d.claims.length} osoby zgłaszają tę wpłatę` : `⚠ ${d.claims.length} people claim this payment`)
+                          : (isPl ? "Zgłoszenie widza (niezweryfikowane)" : "Viewer claim (unverified)")}
+                      </div>
+                      {d.claims.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setAssignTarget((s) => ({ ...s, [d.id]: c.userId }))}
+                          className="w-full text-left px-1.5 py-1 hover:bg-amber-900/20 transition-colors"
+                        >
+                          <span className="text-xs text-white font-medium">{c.name}</span>
+                          {c.evidence && <span className="block text-[11px] text-zinc-400 truncate">„{c.evidence}”</span>}
+                        </button>
+                      ))}
+                      <p className="text-[10px] text-zinc-500 mt-1 leading-snug">
+                        {isPl
+                          ? "Kwota i data są publiczne — to NIE jest dowód. Porównaj z panelem dostawcy płatności (imię darczyńcy wyżej), zanim przypiszesz."
+                          : "Amount and date are public — this is NOT proof. Check your payment provider (donor name above) before assigning."}
+                      </p>
+                    </div>
                   )}
                   <div className="flex gap-1.5">
                     <input

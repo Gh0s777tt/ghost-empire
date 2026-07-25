@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { cacheJson } from "@/lib/redis";
 import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { cryptoUri, sepaQrPayload } from "@/lib/payment-methods";
+import { goalProgress } from "@/lib/support-goal";
 import { Header } from "@/components/Header";
 import { SupportClient } from "@/components/support/SupportClient";
 import { SponsorStrip } from "@/components/support/SponsorStrip";
@@ -90,8 +91,29 @@ async function loadSupport(tid: string | null, brandName: string) {
         .catch(() => [] as { name: string; url: string; logoUrl: string | null; note: string | null; tier: string | null; featured: boolean }[]),
     ]);
 
+    // Auto-tracked goals DERIVE their progress from committed Donation rows in the goal window
+    // (+ `current` as a manual offset for off-platform gifts), so the public bar reflects real
+    // money instead of a hand-typed number. Recomputed from rows → replay-safe, can't drift.
+    // Legacy goals (autoTrack off) keep the hand-edited `current` untouched. One cheap groupBy,
+    // inside the same 60s cache as the rest of the page.
+    let goalCurrent = goalRow?.current ?? 0;
+    if (goalRow?.active && goalRow.autoTrack) {
+      const sums = await prisma.donation
+        .groupBy({
+          by: ["currency"],
+          where: { donatedAt: { gte: goalRow.startedAt }, ...(tid ? { tenantId: tid } : {}) },
+          _sum: { amountGrosze: true },
+        })
+        .catch(() => [] as { currency: string; _sum: { amountGrosze: number | null } }[]);
+      goalCurrent = goalProgress(
+        goalRow.current,
+        sums.map((s) => ({ currency: s.currency, amountGrosze: s._sum.amountGrosze ?? 0 })),
+        goalRow.currency,
+      );
+    }
+
     const goal = goalRow?.active && goalRow.target > 0
-      ? { title: goalRow.title, target: goalRow.target, current: goalRow.current, currency: goalRow.currency }
+      ? { title: goalRow.title, target: goalRow.target, current: goalCurrent, currency: goalRow.currency }
       : null;
     const supporters = supporterRows.map((r) => ({ name: firstName(r.actorName), amount: r.amount, amountLabel: r.amountLabel }));
     const tipCurrency = supporterRows.find((r) => r.amountLabel)?.amountLabel ?? null;

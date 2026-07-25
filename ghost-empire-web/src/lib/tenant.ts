@@ -92,18 +92,6 @@ export const FALLBACK_TENANT: TenantBrand = {
   dailyChipsAmount: DAILY_CHIPS_DEFAULT,
 };
 
-/**
- * Resolve the active tenant's brand for the current request. Derives the tenant slug
- * from the request Host (subdomain) — never from the forgeable `x-tenant-slug` header
- * (see resolveTenantSlug). Falls back to the default tenant when there's no subdomain.
- * Looks the slug up in the DB; before the table exists, or outside a request scope,
- * returns the SITE-derived fallback.
- *
- * Wrapped in React `cache()` so the ~6 calls per page render (root layout
- * metadata+viewport, [locale] layout, i18n request config, SiteFooter, the page
- * itself) collapse to ONE `tenant.findUnique` per request. Per-request only —
- * no cross-request TTL, so an owner's branding edit still shows instantly.
- */
 /** Map a Tenant row to the request-facing brand (shared by every resolution path). */
 function toBrand(t: Tenant): TenantBrand {
   return {
@@ -134,7 +122,27 @@ function toBrand(t: Tenant): TenantBrand {
   };
 }
 
-export const getCurrentTenant = cache(async function getCurrentTenant(): Promise<TenantBrand> {
+/**
+ * Resolve the Tenant ROW for the current request from its Host. Never trusts the
+ * forgeable `x-tenant-slug` header (see resolveTenantSlug) — resolution is Host-only:
+ *   1) a real tenant subdomain (<slug>.<root>) resolves by slug,
+ *   2) otherwise (apex / www / a fully custom domain like empire-forge.com) a tenant whose
+ *      `domain` matches the request host wins over the default (#653 — white-label apex),
+ *   3) otherwise the default (founder) tenant.
+ * Returns null outside a request scope (no headers()) or before the tenants table exists
+ * (pre-`prisma db push`), so both callers below degrade gracefully.
+ *
+ * Wrapped in React `cache()` so the many calls per request (root layout metadata+viewport,
+ * [locale] layout, i18n request config, SiteFooter, the page itself — plus the bot-auth
+ * helper) collapse to ONE `tenant.findUnique`. Per-request only — no cross-request TTL,
+ * so an owner's branding edit still shows instantly.
+ *
+ * PRIVATE on purpose: the row carries server-only secrets (`botSecret`) that must never
+ * reach a client. Expose it only through the narrow helpers below — `getCurrentTenant()`
+ * maps it through `toBrand` (which drops the secret) for client branding, and
+ * `getCurrentTenantBotAuth()` returns just the id + secret for server-side bot auth.
+ */
+const resolveCurrentTenantRow = cache(async function resolveCurrentTenantRow(): Promise<Tenant | null> {
   let host: string | null = null;
   let subSlug: string | null = null;
   try {
@@ -145,10 +153,6 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
     // headers() unavailable outside a request scope — fall through to the default tenant.
   }
   try {
-    // 1) A real tenant subdomain (<slug>.<root>) resolves by slug.
-    // 2) Otherwise (apex / www / a fully custom domain like empire-forge.com) a tenant whose
-    //    `domain` matches the request host wins over the default (#653 — white-label apex).
-    // 3) Otherwise the default (founder) tenant.
     let t: Tenant | null = null;
     if (subSlug) {
       t = await prisma.tenant.findUnique({ where: { slug: subSlug } });
@@ -157,12 +161,38 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
       if (domain) t = await prisma.tenant.findUnique({ where: { domain } });
     }
     if (!t) t = await prisma.tenant.findUnique({ where: { slug: DEFAULT_TENANT_SLUG } });
-    if (t) return toBrand(t);
+    return t;
   } catch {
-    // Tenant table not migrated yet (before `prisma db push`) — fall back gracefully.
+    // Tenant table not migrated yet (before `prisma db push`) — resolve to null.
+    return null;
   }
-  return FALLBACK_TENANT;
 });
+
+/**
+ * Resolve the active tenant's BRAND for the current request (client-safe). Falls back to
+ * the SITE-derived brand outside a request scope or before the tenant row exists. Cached
+ * (shares `resolveCurrentTenantRow`'s single lookup).
+ */
+export const getCurrentTenant = cache(async function getCurrentTenant(): Promise<TenantBrand> {
+  const t = await resolveCurrentTenantRow();
+  return t ? toBrand(t) : FALLBACK_TENANT;
+});
+
+/**
+ * Server-only bot-auth context for the current request: the tenant's row `id` (to SCOPE
+ * bot-facing user/connection lookups to this portal) and its optional per-tenant `botSecret`
+ * (to AUTHENTICATE a tenant running its own bot instance). Resolved by the SAME Host logic as
+ * `getCurrentTenant()` — never the forgeable `x-tenant-slug` header.
+ *
+ * Kept deliberately OUT of `TenantBrand`: `botSecret` is a server secret and must never enter
+ * the client branding payload. Returns `{ id: null, botSecret: null }` outside a request scope
+ * or before the tenant row exists — callers then accept ONLY the global BOT_SECRET (the
+ * backward-compatible floor; see `verifyBotSecretForTenant`). #saas-botsecret
+ */
+export async function getCurrentTenantBotAuth(): Promise<{ id: string | null; botSecret: string | null }> {
+  const t = await resolveCurrentTenantRow();
+  return { id: t?.id ?? null, botSecret: t?.botSecret ?? null };
+}
 
 /**
  * Convenience: the active tenant's row id, or null before the tenant row exists

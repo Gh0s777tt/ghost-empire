@@ -65,6 +65,13 @@ https://empire-forge.com/api/auth/callback/kick
 ---
 
 ## Uwagi i bezpieczeństwo
+- **Pierwsze logowanie właściciela portalu: użyj Google / Discord / Twitcha, nie Kicka.**
+  Admina nadaje dopasowanie e-maila konta do `Tenant.ownerEmail`, a `User.email` ustawiamy
+  **wyłącznie z e-maila zweryfikowanego przez providera** (`lib/oauth-email.ts`). Kick nie
+  udostępnia żadnego sygnału weryfikacji, więc login przez Kicka ma `email = null` i **nie
+  odpali bootstrapu admina**. To celowe: gdyby odpalał, założenie konta na cudzy
+  `ownerEmail` u providera bez weryfikacji dawałoby admina cudzego portalu. Kicka dopnij
+  po fakcie w `/profile` → połączenia. Szczegóły: `docs/ARCHITECTURE.md` §3.
 - **Per-portal = osobne konta i GT widzów** — z założenia. Jeśli chcesz jeden wspólny
   portfel między portalami, ten model jest niepotrzebny.
 - **Nie ustawiaj** wspólnej domeny ciasteczek — sesje są host-only (per domena/subdomena),

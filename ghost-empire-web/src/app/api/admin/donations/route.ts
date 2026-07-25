@@ -1,11 +1,43 @@
 // src/app/api/admin/donations/route.ts
 // Admin reconciliation — manually match unmatched donations to users.
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { requireAdmin, findManagedUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
 import { gtFromPln } from "@/lib/donation-rate";
+import { sendDonationReceipt } from "@/lib/email-receipts";
+import { claimsForDonation, type QueueDonation } from "@/lib/donation-claim";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("admin.donations");
+
+/**
+ * Close the viewer self-claims that referred to a now-resolved donation (#self-claim).
+ * `creditedUserId` (assign) is approved; every other matching pending claim is rejected. On a skip
+ * pass null — all matching claims are rejected, so they don't linger invisibly once the row leaves
+ * the queue. Best-effort by design: never fails the admin action, but logs so it can't rot silently.
+ */
+async function resolveClaimsFor(donation: QueueDonation, creditedUserId: string | null): Promise<void> {
+  try {
+    const pending = await prisma.donationClaim.findMany({
+      where: { status: "pending" },
+      select: { id: true, userId: true, amountGrosze: true, currency: true, donatedOn: true, evidence: true },
+      take: 500,
+    });
+    const hits = claimsForDonation(donation, pending);
+    if (!hits.length) return;
+    for (const c of hits) {
+      const approved = creditedUserId !== null && c.userId === creditedUserId;
+      await prisma.donationClaim.update({
+        where: { id: c.id },
+        data: { status: approved ? "approved" : "rejected", resolvedAt: new Date(), donationId: donation.id },
+      });
+    }
+  } catch (e) {
+    log.warn("failed to resolve donation claims", { donationId: donation.id, error: e instanceof Error ? e.message : String(e) });
+  }
+}
 
 // PATCH { donationId, action: "assign", userTarget } | { donationId, action: "skip" }
 export async function PATCH(req: Request) {
@@ -32,6 +64,8 @@ export async function PATCH(req: Request) {
       where: { id: body.donationId },
       data: { matchType: "manual_skip", matchedAt: new Date() },
     });
+    // A skipped row leaves the queue — reject any claims on it so they don't linger unseen.
+    after(() => resolveClaimsFor(donation, null));
     return NextResponse.json({ ok: true, action: "skipped" });
   }
 
@@ -96,6 +130,26 @@ export async function PATCH(req: Request) {
     return true;
   });
   if (!matched) return NextResponse.json({ error: "Już dopasowany" }, { status: 409 });
+
+  // Close the viewer self-claims that referred to this donation (#self-claim): the claimant who
+  // actually got the credit is approved; other pending claims MATCHING THIS ROW are rejected.
+  // Off the response path and best-effort — the money above is already committed, and claim
+  // bookkeeping must never fail an admin's assign.
+  after(() => resolveClaimsFor(donation, user.id));
+
+  // Receipt for the now-credited supporter — off the response path, best-effort (no-op while email
+  // is unconfigured). This is the codeless donor finally getting both their currency and a receipt.
+  // Amount is rendered in the donation's OWN currency (queue rows are often USD/EUR) — never
+  // relabelled as PLN, which would misstate a proof-of-payment document.
+  after(() =>
+    sendDonationReceipt({
+      userId: user.id,
+      tenantId: donation.tenantId ?? tid,
+      amount: amountFloat,
+      currency: donation.currency,
+      tokensGranted,
+    }),
+  );
 
   await logAdminAction({
     adminId: auth.userId,

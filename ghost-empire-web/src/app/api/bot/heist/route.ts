@@ -1,27 +1,34 @@
 // src/app/api/bot/heist/route.ts
-// Bot → portal: co-op heist. Bearer BOT_SECRET. action="join" starts/joins the active heist
-// for the chatter (resolved via their linked Connection); action="resolve" closes a heist by
-// id (the bot fires this after the join window, or on lazy recovery). All GT escrow/payout +
-// atomicity live in lib/heist.ts.
+// Bot → portal: co-op heist. Auth: the global BOT_SECRET (first-party) OR this portal's
+// per-tenant secret (verifyBotSecretForTenant). action="join" starts/joins the active heist
+// for the chatter (resolved via their linked Connection, SCOPED to the request's tenant);
+// action="resolve" closes a heist by id (the bot fires this after the join window, or on lazy
+// recovery). All GT escrow/payout + atomicity live in lib/heist.ts.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { heistJoin, resolveHeist } from "@/lib/heist";
 
 const PLATFORMS = new Set(["twitch", "kick", "youtube"]);
 
-async function resolveUserId(platform: string, platformUserId?: string, username?: string): Promise<string | null> {
+// Resolve a chatter to their Ghost Empire userId via a linked Connection, SCOPED to the
+// caller's tenant (tid) so a portal's bot can't pull in another tenant's viewer. tid null
+// (no request scope) → unscoped (legacy). [platform, platformId] is globally unique, so
+// findFirst + the tenant relation filter returns the single row only when it belongs here.
+async function resolveUserId(tid: string | null, platform: string, platformUserId?: string, username?: string): Promise<string | null> {
+  const scopeToTenant = tid ? { user: { tenantId: tid } } : {};
   if (platformUserId) {
-    const c = await prisma.connection.findUnique({
-      where: { platform_platformId: { platform, platformId: String(platformUserId) } },
+    const c = await prisma.connection.findFirst({
+      where: { platform, platformId: String(platformUserId), ...scopeToTenant },
       select: { userId: true },
     });
     if (c) return c.userId;
   }
   if (username) {
     const c = await prisma.connection.findFirst({
-      where: { platform, username: { equals: username, mode: "insensitive" } },
+      where: { platform, username: { equals: username, mode: "insensitive" }, ...scopeToTenant },
       select: { userId: true },
     });
     if (c) return c.userId;
@@ -30,7 +37,8 @@ async function resolveUserId(platform: string, platformUserId?: string, username
 }
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  const { id: tenantId, botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   let body: {
@@ -63,7 +71,7 @@ export async function POST(req: Request) {
   // join
   const username = body.username ? String(body.username) : undefined;
   const u = username ?? "widz";
-  const selfId = await resolveUserId(platform, body.platformUserId, username);
+  const selfId = await resolveUserId(tenantId, platform, body.platformUserId, username);
   if (!selfId) {
     return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by dołączyć do napadu.` });
   }

@@ -47,15 +47,27 @@ export async function POST(req: Request) {
   if (tx.type !== "spend") {
     return NextResponse.json({ error: "Tylko zakupy można oznaczyć" }, { status: 400 });
   }
+  // NOTE: this is a NON-atomic read-check — it only produces a nice error message.
+  // Both branches below re-assert `status: "pending"` inside their write, which is
+  // the guard that actually holds under concurrency.
   if (tx.status !== "pending") {
     return NextResponse.json({ error: `Status już ${tx.status}` }, { status: 409 });
   }
 
   if (action === "deliver") {
-    await prisma.transaction.update({
-      where: { id: transactionId },
+    // Same atomic guard as the refund branch: an unconditional update() here would
+    // let a concurrent deliver+refund pair BOTH win — refund credits the money back
+    // and then deliver overwrites the row to "delivered", hiding the refund and
+    // telling the admin to ship goods that were already paid back. Re-asserting
+    // `status: "pending"` makes the two mutually exclusive: first writer wins, the
+    // loser gets 409. It also collapses a double-click into one notification.
+    const flip = await prisma.transaction.updateMany({
+      where: { id: transactionId, status: "pending" },
       data: { status: "delivered", note },
     });
+    if (flip.count === 0) {
+      return NextResponse.json({ error: "Zamówienie nie jest już w statusie pending" }, { status: 409 });
+    }
     await prisma.notification.create({
       data: {
         userId: tx.userId,

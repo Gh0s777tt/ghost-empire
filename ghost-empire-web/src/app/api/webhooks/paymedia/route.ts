@@ -18,13 +18,14 @@
 // Signature header: X-PayMedia-Signature (HMAC-SHA256 of body using webhook secret)
 //
 // Mapping: 1 PLN = 100 Ghost Tokens — via the SHARED rate (lib/donation-rate), same on every rail.
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { extractIp } from "@/lib/audit";
 import { createLogger } from "@/lib/logger";
 import { matchDonationToUser } from "@/lib/streamlabs";
 import { gtFromPln } from "@/lib/donation-rate";
+import { sendDonationReceipt } from "@/lib/email-receipts";
 
 const log = createLogger("paymedia");
 
@@ -141,7 +142,10 @@ export async function POST(req: Request) {
   // `externalId` existed (legacy rows carry the payment_id only in `reason`).
   if (payload.payment_id) {
     const existing = await prisma.transaction.findFirst({
-      where: { reason: { contains: payload.payment_id } },
+      // ANCHORED to the paymedia prefix. This used to be an unanchored `contains`, which now that the
+      // donation layer writes provider-controlled text into `reason` could match an unrelated row —
+      // and a false positive here silently DROPS a real payment (neither credited nor queued).
+      where: { OR: [{ externalId: `paymedia:${payload.payment_id}` }, { reason: `paymedia:${payload.payment_id}` }] },
     });
     if (existing) {
       return NextResponse.json({ ok: true, ignored: "already processed", paymentId: payload.payment_id });
@@ -218,6 +222,12 @@ export async function POST(req: Request) {
     }
     throw e;
   }
+
+  // Receipt / thank-you — AFTER the mint committed, off the response path (the provider gets its
+  // ack immediately) and best-effort: sendDonationReceipt never throws and no-ops while email is
+  // unconfigured. Repeat-giving driver + the supporter's proof of payment.
+  // (route rejects non-PLN above, so PLN is the truly-charged currency here)
+  after(() => sendDonationReceipt({ userId, tenantId: null, amount: amountPLN, currency: "PLN", tokensGranted }));
 
   return NextResponse.json({
     ok: true,

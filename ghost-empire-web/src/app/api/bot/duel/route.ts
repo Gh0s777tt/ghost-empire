@@ -1,32 +1,36 @@
 // src/app/api/bot/duel/route.ts
-// Bot → portal: PvP duels. Bearer BOT_SECRET. Resolves the chatter (and, for a targeted
-// challenge, the opponent handle) to portal users via their linked Connection, then delegates
-// to lib/duels (all chips math + atomicity live there) and returns a chat message.
-//
-// These strings are posted VERBATIM into a streamer's chat — nothing downstream resolves
-// `%gt%`-style markers — so anything tenant-specific must be resolved here, and the stake is
-// named in the universal żetony 🪙 (duels run on chips, see docs/CHIPS-CASINO.md).
+// Bot → portal: PvP duels. Auth: the global BOT_SECRET (first-party) OR this portal's
+// per-tenant secret (verifyBotSecretForTenant). Resolves the chatter (and, for a targeted
+// challenge, the opponent handle) to Ghost Empire users via their linked Connection SCOPED to
+// the request's tenant, then delegates to lib/duels (all GT math + atomicity live there) and
+// returns a chat message.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyBotSecret } from "@/lib/utils";
-import { getCurrentTenant } from "@/lib/tenant";
+import { verifyBotSecretForTenant } from "@/lib/utils";
+import { getCurrentTenantBotAuth, getCurrentTenant } from "@/lib/tenant";
+import { CHIP_SYMBOL } from "@/lib/chips";
 import { rateLimit } from "@/lib/rate-limit";
-import { CHIP_SYMBOL } from "@/lib/shop-currency";
 import { createDuel, acceptDuel, declineDuel } from "@/lib/duels";
 
 const PLATFORMS = new Set(["twitch", "kick", "youtube"]);
 
-async function resolveUserId(platform: string, platformUserId?: string, username?: string): Promise<string | null> {
+// Resolve a chatter/opponent to their Ghost Empire userId via a linked Connection, SCOPED to
+// the caller's tenant (tid) so a portal's bot can only duel its own viewers against each other
+// — never pull a different tenant's user into a wager. tid null (no request scope) → unscoped
+// (legacy). [platform, platformId] is globally unique, so findFirst + the tenant relation
+// filter returns the single row only when it belongs here.
+async function resolveUserId(tid: string | null, platform: string, platformUserId?: string, username?: string): Promise<string | null> {
+  const scopeToTenant = tid ? { user: { tenantId: tid } } : {};
   if (platformUserId) {
-    const c = await prisma.connection.findUnique({
-      where: { platform_platformId: { platform, platformId: String(platformUserId) } },
+    const c = await prisma.connection.findFirst({
+      where: { platform, platformId: String(platformUserId), ...scopeToTenant },
       select: { userId: true },
     });
     if (c) return c.userId;
   }
   if (username) {
     const c = await prisma.connection.findFirst({
-      where: { platform, username: { equals: username, mode: "insensitive" } },
+      where: { platform, username: { equals: username, mode: "insensitive" }, ...scopeToTenant },
       select: { userId: true },
     });
     if (c) return c.userId;
@@ -35,9 +39,16 @@ async function resolveUserId(platform: string, platformUserId?: string, username
 }
 
 export async function POST(req: Request) {
-  if (!verifyBotSecret(req.headers.get("authorization"))) {
+  const { id: tenantId, botSecret } = await getCurrentTenantBotAuth();
+  if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // The messages below are posted VERBATIM in the streamer's chat, so they must carry THIS
+  // portal's brand, never the founder's "Ghost Empire". The STAKE is named in żetony 🪙:
+  // duels are settled in chips (lib/duels), so a token symbol would be the wrong currency. Free: getCurrentTenant()
+  // shares the same cache()d tenant row that getCurrentTenantBotAuth() just resolved (botSecret
+  // is deliberately kept out of TenantBrand, hence two calls rather than one helper).
+  const { shortName } = await getCurrentTenant();
   let body: {
     platform?: string;
     platformUserId?: string;
@@ -61,10 +72,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: null });
   }
 
-  const selfId = await resolveUserId(platform, body.platformUserId, username);
+  const selfId = await resolveUserId(tenantId, platform, body.platformUserId, username);
   if (!selfId) {
-    // Duels are staked in CHIPS (docs/CHIPS-CASINO.md) — same wording as lib/duels.ts, and
-    // chips are universal, so nothing tenant-specific belongs in a chat reply.
     return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o żetony ${CHIP_SYMBOL}.` });
   }
 
@@ -88,14 +97,10 @@ export async function POST(req: Request) {
   const target = body.target ? String(body.target).replace(/^@/, "").trim() : "";
   if (target) {
     opponentName = target;
-    opponentId = await resolveUserId(platform, undefined, target);
+    opponentId = await resolveUserId(tenantId, platform, undefined, target);
     if (!opponentId) {
-      // Brand comes from the portal the bot is calling, never the founder's literal name —
-      // this line lands in someone else's chat. Bot routes resolve the tenant like the rest
-      // of /api/bot (chat-commands, config, faq).
-      const brand = (await getCurrentTenant()).name;
       return NextResponse.json({
-        message: `@${u} @${target} nie ma konta ${brand} na ${platform}. Spróbuj otwartego wyzwania: !duel ${bet || 100}.`,
+        message: `@${u} @${target} nie ma konta ${shortName} na ${platform}. Spróbuj otwartego wyzwania: !duel ${bet || 100}.`,
       });
     }
   }

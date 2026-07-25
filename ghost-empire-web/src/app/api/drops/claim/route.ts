@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
+import { getCurrentTenant } from "@/lib/tenant";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -40,7 +40,11 @@ export async function POST(req: Request) {
     return jsonError("Za dużo prób. Poczekaj chwilę.", 429, rateLimitHeaders(rl));
   }
 
-  const tid = await currentTenantId();
+  // One request-cached tenant read (getCurrentTenant is cache()d, and currentTenantId only
+  // wraps it): `id` scopes the drop/quest lookups, `tokenSymbol` labels the bonus alert below
+  // with THIS portal's currency instead of the founder's hardcoded "GT".
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
   const drop = await prisma.streamDrop.findFirst({ where: { code, ...(tid ? { tenantId: tid } : {}) } });
   if (!drop) return jsonError("Kod nie istnieje", 404);
   if (!drop.active) return jsonError("Kod nieaktywny", 410);
@@ -104,10 +108,9 @@ export async function POST(req: Request) {
           userId,
           type: "task_reward",
           title: getsBonus ? "Drop claimed (BONUS)!" : "Drop claimed!",
-          // %gt% → the portal's own currency symbol when the bell renders this row.
           message: getsBonus
-            ? `Pierwsi ${drop.bonusSlots} łapie bonus! +${totalReward} %gt% za kod ${drop.code}.`
-            : `+${totalReward} %gt% za kod ${drop.code}.`,
+            ? `Pierwsi ${drop.bonusSlots} łapie bonus! +${totalReward} GT za kod ${drop.code}.`
+            : `+${totalReward} GT za kod ${drop.code}.`,
           icon: getsBonus ? "🌟" : "🎁",
           link: "/profile",
         },
@@ -139,9 +142,8 @@ export async function POST(req: Request) {
         actorName: result._actor.name,
         actorImage: result._actor.image ?? undefined,
         amount: result.totalReward,
-        // Tenant's own currency symbol — a literal "GT" would put the founder's token on
-        // every other portal's overlay (white-label leak).
-        amountLabel: (await getCurrentTenant()).tokenSymbol,
+        // Drops always pay the real-economy token → this portal's own symbol.
+        amountLabel: tenant.tokenSymbol,
       });
     }
 

@@ -5,11 +5,12 @@ import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { amountLabelFor, type Currency } from "@/lib/chips";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { awardSeasonXp } from "@/lib/seasons";
 import { discountedPrice } from "@/lib/economy";
-import { CHIP_SYMBOL, checkCurrencyCategory, isChipsCurrency } from "@/lib/shop-currency";
+import { checkCurrencyCategory, isChipsCurrency } from "@/lib/shop-currency";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("shop-buy");
@@ -42,7 +43,10 @@ export async function POST(req: Request) {
     return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
   }
 
-  const tid = await currentTenantId();
+  // One request-cached tenant read serves both needs: `id` scopes the catalog, `tokenSymbol`
+  // labels the stream alert below with THIS portal's currency (never a hardcoded "GT").
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Tenant-guard: only this tenant's catalog item is buyable.
@@ -123,10 +127,13 @@ export async function POST(req: Request) {
 
       // Currency-aware: CHIPS items charge the FREE casino chips (never touch GT/totalSpent);
       // GT items charge the tenant's tokens as before. That a CHIPS item is a cosmetic (no
-      // market value) is guaranteed by the guard above — this branch only decides which
-      // balance to debit. Shares the sentinel test with `planRefund` (via `isChipsCurrency`),
-      // so buy and refund can never disagree about what a row's currency means.
+      // market value) is guaranteed by the fail-closed guard above — this branch only decides
+      // which balance to debit. The sentinel test is shared with `planRefund` (via
+      // `isChipsCurrency`), so buy and refund can never disagree about what a row means.
       const isChips = isChipsCurrency(item.currency);
+      // Widened to `Currency` once here so the ledger row, the response and the alert label
+      // can never disagree about which currency this purchase actually moved.
+      const currency: Currency = isChips ? "CHIPS" : "GT";
       const userUpdate = await tx.user.updateMany({
         where: isChips ? { id: userId, chips: { gte: price } } : { id: userId, tokens: { gte: price } },
         data: isChips ? { chips: { decrement: price } } : { tokens: { decrement: price }, totalSpent: { increment: price } },
@@ -155,7 +162,7 @@ export async function POST(req: Request) {
           type: "spend",
           amount: -price,
           reason: `shop:${item.name}`,
-          currency: isChips ? "CHIPS" : "GT",
+          currency,
           status: isDigital ? "completed" : "pending",
         },
       });
@@ -182,7 +189,7 @@ export async function POST(req: Request) {
         ok: true,
         itemName: item.name,
         spent: price,
-        currency: isChips ? "CHIPS" : "GT",
+        currency,
         newBalance: (isChips ? fresh?.chips : fresh?.tokens) ?? 0,
         deliveryPending: !isDigital,
         // Internal-only fields used after the transaction for alert dispatch
@@ -202,7 +209,6 @@ export async function POST(req: Request) {
     // The label follows the currency that was actually charged: the tenant's own token symbol
     // for GT, the universal 🪙 for chips. A literal "GT" here would show the founder's currency
     // on every other portal's overlay AND misname a chips purchase as real tokens.
-    const brand = await getCurrentTenant();
     await dispatchAlertSafe({
       type: "shop_purchase",
       title: "🛒 Nowy zakup w sklepie!",
@@ -211,7 +217,9 @@ export async function POST(req: Request) {
       actorName: result._actor.name,
       actorImage: result._actor.image ?? undefined,
       amount: result._item.price,
-      amountLabel: result.currency === "CHIPS" ? CHIP_SYMBOL : brand.tokenSymbol,
+      // Label the amount in the currency actually charged: a CHIPS item spent free casino
+      // chips (🪙 everywhere), a GT item spent this tenant's token (its own symbol).
+      amountLabel: amountLabelFor(result.currency, tenant.tokenSymbol),
     });
 
     // Deferred via after() — the buyer gets their new balance immediately; the milestone checks

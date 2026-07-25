@@ -84,6 +84,9 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "test") {
+    // The test alert previews the REAL thing, so it must wear this portal's own currency
+    // symbol — an admin styling their overlay shouldn't see the founder tenant's "GT".
+    const tenant = await getCurrentTenant();
     const alert = await dispatchAlert({
       type: "test",
       title: "🧪 Test alert",
@@ -91,9 +94,7 @@ export async function POST(req: Request) {
       icon: "🧪",
       actorName: "Admin Test",
       amount: 1337,
-      // The test alert renders on the real overlay, so it must preview the portal's own
-      // currency — otherwise the owner tests with a symbol their viewers never see.
-      amountLabel: (await getCurrentTenant()).tokenSymbol,
+      amountLabel: tenant.tokenSymbol,
     });
     await logAdminAction({
       adminId: auth.userId,

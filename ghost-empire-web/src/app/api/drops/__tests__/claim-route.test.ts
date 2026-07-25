@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 const h = vi.hoisted(() => ({
   session: { user: { id: "user-1" } } as null | { user: { id: string } },
   tid: "tenant-A" as string | null,
+  tokenSymbol: "NEO",
   rateAllowed: true,
   drop: null as null | Record<string, unknown>,
   // sterowanie tx
@@ -32,11 +33,10 @@ vi.mock("@/lib/api-i18n", () => ({
   jsonError: (msg: string, status: number, headers?: Record<string, string>) =>
     NextResponse.json({ error: msg }, { status, headers }),
 }));
-// The bonus alert labels its amount with the portal's own currency symbol (no hardcoded "GT"),
-// so the route resolves the tenant brand too — stub both entry points.
+// Route czyta CAŁY brand (jeden cache'owany odczyt): `id` skopuje zapytania, `tokenSymbol`
+// podpisuje alert walutą TEGO portalu (nie zahardkodowanym "GT" — leak white-label).
 vi.mock("@/lib/tenant", () => ({
-  currentTenantId: async () => h.tid,
-  getCurrentTenant: async () => ({ id: h.tid, tokenSymbol: "TT" }),
+  getCurrentTenant: async () => ({ id: h.tid, tokenSymbol: h.tokenSymbol }),
 }));
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: async () => (h.rateAllowed
@@ -76,6 +76,7 @@ const req = (body: unknown) =>
 beforeEach(() => {
   h.session = { user: { id: "user-1" } };
   h.tid = "tenant-A";
+  h.tokenSymbol = "NEO";
   h.rateAllowed = true;
   h.drop = { id: "drop-1", code: "SUMMER", active: true, expiresAt: null, reward: 100, bonusReward: 50, bonusSlots: 3 };
   h.findFirst.mockReset().mockImplementation(async () => h.drop);
@@ -179,9 +180,14 @@ describe("POST /api/drops/claim — nagroda + bonus (atomowy ordinal)", () => {
     expect(body.totalReward).toBe(150); // 100 + 50
     expect(body.bonusSlotsLeft).toBe(1); // 3 - 2
     expect(h.dispatchAlert).toHaveBeenCalledOnce();
-    // White-label: the overlay label must be THIS portal's currency symbol, never a
-    // hardcoded "GT" (that was a real leak — the founder's token on every tenant's stream).
-    expect(h.dispatchAlert).toHaveBeenCalledWith(expect.objectContaining({ amountLabel: "TT" }));
+  });
+
+  it("BONUS alert wears THIS tenant's token symbol, never a hardcoded 'GT'", async () => {
+    h.dropUpdate.mockResolvedValue({ claimCount: 1 });
+    await POST(req({ code: "SUMMER" }));
+    expect(h.dispatchAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: 150, amountLabel: "NEO" }),
+    );
   });
 
   it("BONUS boundary: the ordinal EQUAL to bonusSlots still gets the bonus (<=)", async () => {

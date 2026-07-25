@@ -9,6 +9,7 @@ import { PushToggle } from "@/components/push/PushToggle";
 import { PasskeyManager } from "@/components/profile/PasskeyManager";
 import { ShippingProfileCard } from "@/components/profile/ShippingProfileCard";
 import { DonationCodeCard } from "@/components/profile/DonationCodeCard";
+import { DonationClaimCard } from "@/components/profile/DonationClaimCard";
 import { DataExportCard } from "@/components/profile/DataExportCard";
 import { SupportTicketCard } from "@/components/profile/SupportTicketCard";
 import { companionStage } from "@/lib/companion";
@@ -146,6 +147,9 @@ export default async function ProfilePage() {
           <PushToggle />
           <PasskeyManager />
           <DonationCodeCard />
+          {/* Recovery path for a tip sent without the code (#self-claim) — sits right below the
+              code so both halves of the donation→credit story live in one place. */}
+          <DonationClaimCard />
           <ShippingProfileCard />
           <DataExportCard />
           <SupportTicketCard />

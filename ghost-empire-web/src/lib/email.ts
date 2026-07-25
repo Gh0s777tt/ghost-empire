@@ -26,6 +26,10 @@ export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
       body: JSON.stringify({ from, to, subject, html }),
+      // Hard timeout — email is best-effort, but a hanging provider must never stall a caller.
+      // The donation-poll cron sends receipts inside its per-donation loop, so an unbounded fetch
+      // here would delay real-money ingestion for every later donation and portal.
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {
       log.warn("resend rejected an email", { status: res.status, to: to.replace(/(.{2}).*(@.*)/, "$1***$2") });

@@ -30,16 +30,10 @@ export type ShopCurrency = "GT" | "CHIPS";
 /** Both currencies, in UI order (real-value first). Drives the admin picker. */
 export const SHOP_CURRENCIES: readonly ShopCurrency[] = ["GT", "CHIPS"];
 
-/**
- * Display symbol for the free casino chips.
- *
- * @remarks
- * Deliberately **not** white-labelled. A tenant renames its own token
- * (`tokenName`/`tokenSymbol`), but chips are the platform-wide, value-less casino currency —
- * every portal's chips are the same thing, and the legal copy (`terms` §3, `GamblingGate`)
- * talks about "żetony 🪙" universally. Same literal the casino and wheel clients use.
- */
-export const CHIP_SYMBOL = "🪙";
+// `CHIP_SYMBOL` deliberately lives in `lib/chips.ts` (the label module) and is re-exported
+// here so shop code has one import for "everything currency". Two definitions of the chip
+// symbol is exactly the drift this module exists to prevent.
+export { CHIP_SYMBOL } from "@/lib/chips";
 
 /**
  * The only `ShopItem.category` a CHIPS item may carry.

@@ -48,11 +48,11 @@ export async function POST(req: Request) {
   const rewardId = String(body.rewardId ?? "");
   if (!rewardId) return jsonError("Brak rewardId", 400);
 
-  const tid = await currentTenantId();
+  // One request-cached tenant read: `id` scopes the catalog, `tokenSymbol` labels the alert
+  // with THIS portal's currency (sound redemptions always spend the real-economy token).
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
   const actor = displayNick(session.user.name, session.user.username);
-  // Resolved before the transaction (React-cached, so it's free after the tenant lookup above)
-  // — the overlay must show THIS portal's currency symbol, not the founder's literal "GT".
-  const { tokenSymbol } = await getCurrentTenant();
   try {
     const result = await prisma.$transaction(async (tx) => {
       const reward = await tx.soundReward.findFirst({ where: { id: rewardId, active: true, ...(tid ? { tenantId: tid } : {}) } });
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
           icon: reward.emoji ?? "🔊",
           actorName: actor,
           amount: reward.cost,
-          amountLabel: tokenSymbol,
+          amountLabel: tenant.tokenSymbol,
           meta: JSON.stringify({ soundUrl: reward.soundUrl }),
         },
       });

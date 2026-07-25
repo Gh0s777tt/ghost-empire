@@ -13,6 +13,7 @@
 // Fire-and-forget — never throws to caller. Designed to be safe inside any
 // $transaction (helper runs OUTSIDE the transaction, dispatched after commit).
 import { prisma } from "@/lib/prisma";
+import { plnFromMinor } from "@/lib/donations/fx";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { createLogger, errContext } from "@/lib/logger";
 
@@ -171,8 +172,18 @@ async function computeCurrentValue(userId: string, triggerType: AchievementTrigg
       return prisma.donation.count({ where: { userId } });
 
     case "donations_amount_pln": {
-      const agg = await prisma.donation.aggregate({ where: { userId }, _sum: { amountGrosze: true } });
-      return Math.floor((agg._sum.amountGrosze ?? 0) / 100);
+      // Group by CURRENCY and convert each subtotal — `amountGrosze` holds the amount as CHARGED,
+      // so a flat "/100 as if PLN" over-counted every foreign donation (a $50 tip counted as 50 PLN
+      // is wrong in one direction; a ¥5000 tip counted as 50 PLN in the other). Harmless while every
+      // rail was PLN-only, but the donation layer ingests multi-currency providers (Ko-fi), so this
+      // achievement would mis-trigger. Unknown currencies contribute 0 rather than a guess.
+      const rows = await prisma.donation.groupBy({
+        by: ["currency"],
+        where: { userId },
+        _sum: { amountGrosze: true },
+      });
+      const totalPln = rows.reduce((sum, r) => sum + (plnFromMinor(r._sum.amountGrosze ?? 0, r.currency) ?? 0), 0);
+      return Math.floor(totalPln);
     }
 
     case "twitch_sub_received":

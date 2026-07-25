@@ -79,6 +79,9 @@ export type UnmatchedDonation = {
   amountGrosze: number;
   currency: string;
   donatedAt: string;
+  /** Viewer self-claims matching this row (#self-claim) — UNVERIFIED assertions, never proof.
+   *  All competing claims are listed so contention is visible; assigning is what credits. */
+  claims?: { id: string; userId: string; name: string; evidence: string | null }[];
 };
 
 export type CodeRow = { id: string; code: string; label: string | null; active: boolean; shownCount: number; lastShownAt: string | null };
