@@ -123,6 +123,13 @@ Trzy miejsca wymuszenia — każdy pisarz **i** ścieżka sprzedaży:
 | `prisma/seed.ts` | `assertCurrencyCategoryValid` w pętli **przed** `deleteMany`/`createMany` — seed wymiata i odtwarza cały katalog (także na prodzie), więc zły wiersz rzuca zanim cokolwiek zostanie skasowane |
 | `POST /api/shop/buy` | **Fail-closed:** zły wiersz (ręczna edycja w DB, przyszłe pole `currency` w adminie) → sprzedaż odmówiona **410** + `log.error` z `itemId`. Sprzedaż to moment, w którym pętla by się domknęła |
 
+**Pokrycie:** czysta logika ma testy jednostkowe, ale sama **ścieżka zapisu** jest broniona
+dopiero przez `tests/integration/shop-chips.integration.test.ts` (prawdziwy Postgres): obciążenie
+właściwej kolumny, nietknięte `totalSpent`, waluta na wierszu ledgera, 410 dla złego wiersza
+wstawionego wprost do bazy, 402 bez częściowego zapisu, `stock` nietknięty przy nieudanym zakupie.
+Sprawdzone kanarkiem: z wyłączonym guardem **914 testów jednostkowych dalej przechodzi** —
+bez tego pliku sprzedaż nie miała w suicie żadnego strażnika.
+
 Nieznana wartość `currency` (legacy/literówka) jest przy **odczycie** wszędzie traktowana jak
 `GT` — tak samo jak w `shop/buy` i `planRefund` (`lib/refund.ts`), żeby żadna ścieżka nie
 rozumiała wiersza inaczej niż pozostałe. Przy **zapisie** jest odwrotnie: `/api/admin/shop`
