@@ -298,6 +298,7 @@ mają w regule `&& $CI_PIPELINE_SOURCE != "schedule"`, więc żaden scheduled pi
 | **Złe wydanie trafiło na `main`** | `git revert` wadliwych commitów → merge → semantic-release wyda kolejny patch naprawczy (nie przepisuj historii). Błędny tag/Release można usunąć/oznaczyć w GitLab (wymaga `GITLAB_TOKEN` roli Maintainer). |
 | **Bot nie odpowiada na czacie** | `ghost-empire-chat` to **osobny runtime** (`tsx src/index.ts`) hostowany poza tym repo — restart i logi po stronie hostingu bota; sekret `BOT_SECRET`. To repo obejmuje bota tylko w CI (`lint:chat`). |
 | **`commitlint` czerwieni MR** | Komunikat nie trzyma Conventional Commits — popraw (`git commit --amend`) lub zrób rebase. Dozwolone typy: `commitlint.config.js`. |
+| **Pula jackpota spadła do ziarna po deployu** | Oczekiwane raz: jackpot przeszedł z jednego, WSPÓLNEGO klucza Redis na pulę **per portal** (`jackpot:surplus:<tenantId>`), więc historyczna nadwyżka została pod starym kluczem. Żetony nie mają wartości rynkowej, więc nic nie przepada. Jeśli chcesz oddać ją portalowi: `npx tsx scripts/migrate-jackpot-pool.ts` (dry run) → `--apply` (domyślnie tenant `ghost-empire`, `--tenant <id>` dla innego). Skrypt robi `GETDEL` na starym kluczu, więc jest idempotentny. |
 | **Coverage badge pusty** | Reporter `text-summary` + regex `Statements : NN%` w jobie `test:unit:web`. Zmiana reportera vitest wymaga aktualizacji regexu. |
 
 ---

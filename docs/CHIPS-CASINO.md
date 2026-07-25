@@ -238,6 +238,10 @@ mimo że `shop/buy` obciążał żetony.
    trasy kasyna (+ bot). **Jednorazowy efekt wdrożenia:** dotychczasowa wspólna nadwyżka
    zostaje osierocona pod starym kluczem — pule startują od ziarna (5 000). Żetony nie mają
    wartości rynkowej, więc nikomu nic nie przepada, ale warto o tym wiedzieć przed deployem.
+   Jeśli nie chcesz tego widocznego spadku: `npx tsx scripts/migrate-jackpot-pool.ts` (dry run)
+   → `--apply` przenosi historyczną nadwyżkę do puli wskazanego portalu (domyślnie założyciela).
+   Idempotentny (`GETDEL` na starym kluczu); przy błędzie po zabraniu wypisuje kwotę do ręcznego
+   przywrócenia. Nierobienie nic też jest poprawną decyzją — pule odbudują się z 1% stawek.
 3. ✅ Dashboard „zdrowie ekonomii" — dwa obiegi (GT vs chips) osobno (patrz Faza 6 §3).
 
 ---
@@ -276,6 +280,13 @@ Każda faza: kod + testy + dokumentacja (`CHANGELOG`/`ENDPOINTS`/`ENV` wg `CLAUD
    obiecywał tę regułę od 23.07.2026; zmiany z tej serii ją *egzekwują*, nie zmieniają praw
    użytkownika. Do potwierdzenia przez native speakerów (zwł. ja/ko/zh/ar) i prawnika — PL jest
    autorytatywne, reszta ma być wierna.
+   **Znalezione i naprawione (2026-07-25):** włoski UI mówił „fiche", a wiążący regulamin
+   (`terms.s3` / `s3i7` / `s3i8` / `s3i9` / `s3i11`) konsekwentnie „gettoni" — dwa różne słowa
+   na tę samą walutę w jednym języku, w tym w tekście o skutkach prawnych. Sześć kluczy
+   (`shop.helpChips`/`balanceChips`/`notEnoughChips`, `admin.shop.priceLabelChips`/
+   `currencyHintChips`, `admin.grantTokens.currencyHintChips`) przestawionych na **gettoni**.
+   Pozostałe 13 języków: termin z regulaminu i z UI ten sam (`chips`/`Chips`, `fichas`,
+   `jetons`, `фишки`, `фішки`, `筹码`, `チップ`, `칩`, `رقائق`, `żetony`).
 
 ## Powiązane
 `docs/ENDPOINTS.md` (gt-games/wheel), `docs/ENV.md`, `prisma/schema.prisma`, `src/components/kasyno/GamblingGate.tsx`,
