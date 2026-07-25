@@ -6,9 +6,18 @@
 // sources/filters, with optional auto-revert. Pure client-side (obs-websocket-js runs in
 // the browser, same machine as OBS, so it can reach localhost). Dormant until the
 // streamer adds this source AND sets OBS WS creds + rules in /admin.
+//
+// REVERTS ARE LEDGERED, NOT FIRE-AND-FORGET (#806). Two timed effects on the same target used to
+// corrupt each other: the "previous" state was re-read while a revert was still pending (so a revert
+// could restore ANOTHER effect's state — permanently, for scenes), and the bare setTimeout handles
+// were discarded, so nothing could cancel or clean them up. Now every target has at most ONE pending
+// revert: the first effect records the real baseline, later effects only push the deadline out, and
+// unmounting restores everything instead of leaving the streamer with a blurred scene. The decision
+// logic is pure and tested in lib/obs-revert.ts; this file only owns the timers and the OBS calls.
 import { useEffect, useRef, useState } from "react";
 import OBSWebSocket from "obs-websocket-js";
 import { obsActionsForAlert, type ObsRule, type ObsAction } from "@/lib/obs-rules";
+import { revertTargetKey, mergeRevert, revertDelayMs, type PendingRevert, type RestoreSpec } from "@/lib/obs-revert";
 
 type Config = { obsUrl: string | null; obsPassword: string | null; rules: ObsRule[] };
 type Status = "connecting" | "connected" | "no-config" | "no-token" | "bad-token" | "error";
@@ -36,32 +45,86 @@ export function ObsControlClient() {
     const seen = new Set<string>();
     let since = new Date(Date.now() - 5000).toISOString();
 
+    /** One pending revert per target, with its live timer so it can be cancelled. */
+    const pendingReverts = new Map<string, { revert: PendingRevert; timer: ReturnType<typeof setTimeout> }>();
+
+    /** Apply a restore. Best-effort: OBS may be gone, and a failed revert must not throw into polling. */
+    async function applyRestore(r: RestoreSpec): Promise<void> {
+      try {
+        if (r.kind === "scene") {
+          await obs.call("SetCurrentProgramScene", { sceneName: r.sceneName });
+        } else if (r.kind === "source") {
+          await obs.call("SetSceneItemEnabled", { sceneName: r.sceneName, sceneItemId: r.sceneItemId, sceneItemEnabled: r.enabled });
+        } else {
+          await obs.call("SetSourceFilterEnabled", { sourceName: r.sourceName, filterName: r.filterName, filterEnabled: r.enabled });
+        }
+      } catch {
+        /* the scene may have been deleted or OBS closed — nothing useful to do here */
+      }
+    }
+
+    /**
+     * Schedule the revert for `key`, collapsing it with whatever is already pending.
+     * `readBaseline` is only called when this effect owns the baseline, so we never re-read a state
+     * that another effect has already modified.
+     */
+    async function scheduleRevert(key: string, delayMs: number, readBaseline: () => Promise<RestoreSpec>) {
+      const existing = pendingReverts.get(key);
+      // Read the baseline ONLY when nothing is pending. While a revert is queued, its stored baseline
+      // is the one true "before" state — re-reading now would capture the running effect instead.
+      const restore = existing ? existing.revert.restore : await readBaseline();
+      const plan = mergeRevert(existing?.revert, { key, dueAt: Date.now() + delayMs, restore });
+      if (plan.cancelPrevious && existing) clearTimeout(existing.timer);
+
+      const timer = setTimeout(() => {
+        pendingReverts.delete(key);
+        void applyRestore(plan.pending.restore);
+      }, revertDelayMs(plan.pending, Date.now()));
+      pendingReverts.set(key, { revert: plan.pending, timer });
+    }
+
     async function actuate(a: ObsAction) {
+      const key = revertTargetKey(a);
+
       if (a.kind === "switch_scene") {
-        let prev: string | null = null;
+        // Read the baseline BEFORE switching, but only when this effect owns it — see the header.
         if (a.revertAfterMs) {
-          const cur = await obs.call("GetCurrentProgramScene");
-          prev = (cur as { currentProgramSceneName?: string }).currentProgramSceneName ?? null;
+          await scheduleRevert(key, a.revertAfterMs, async () => {
+            const cur = await obs.call("GetCurrentProgramScene");
+            return { kind: "scene", sceneName: (cur as { currentProgramSceneName?: string }).currentProgramSceneName ?? a.scene };
+          });
         }
         await obs.call("SetCurrentProgramScene", { sceneName: a.scene });
         setLastAction(`scene → "${a.scene}"`);
-        if (a.revertAfterMs && prev) {
-          const back = prev;
-          setTimeout(() => void obs.call("SetCurrentProgramScene", { sceneName: back }).catch(() => {}), a.revertAfterMs);
-        }
       } else if (a.kind === "toggle_source") {
         const { sceneItemId } = await obs.call("GetSceneItemId", { sceneName: a.scene, sourceName: a.source });
+        if (a.revertAfterMs) {
+          await scheduleRevert(key, a.revertAfterMs, async () => {
+            // The REAL previous visibility, not `!a.visible`: reverting a source that was already
+            // hidden by flipping the target state would SHOW it — the opposite of restoring.
+            let was = !a.visible;
+            try {
+              const cur = await obs.call("GetSceneItemEnabled", { sceneName: a.scene, sceneItemId });
+              was = (cur as { sceneItemEnabled?: boolean }).sceneItemEnabled ?? was;
+            } catch { /* older OBS or missing item — fall back to the flip */ }
+            return { kind: "source", sceneName: a.scene, sceneItemId, enabled: was };
+          });
+        }
         await obs.call("SetSceneItemEnabled", { sceneName: a.scene, sceneItemId, sceneItemEnabled: a.visible });
         setLastAction(`${a.visible ? "show" : "hide"} "${a.source}"`);
-        if (a.revertAfterMs) {
-          setTimeout(() => void obs.call("SetSceneItemEnabled", { sceneName: a.scene, sceneItemId, sceneItemEnabled: !a.visible }).catch(() => {}), a.revertAfterMs);
-        }
       } else {
+        if (a.revertAfterMs) {
+          await scheduleRevert(key, a.revertAfterMs, async () => {
+            let was = !a.enabled;
+            try {
+              const cur = await obs.call("GetSourceFilter", { sourceName: a.source, filterName: a.filter });
+              was = (cur as { filterEnabled?: boolean }).filterEnabled ?? was;
+            } catch { /* filter may not exist yet — fall back to the flip */ }
+            return { kind: "filter", sourceName: a.source, filterName: a.filter, enabled: was };
+          });
+        }
         await obs.call("SetSourceFilterEnabled", { sourceName: a.source, filterName: a.filter, filterEnabled: a.enabled });
         setLastAction(`filter "${a.filter}" ${a.enabled ? "on" : "off"}`);
-        if (a.revertAfterMs) {
-          setTimeout(() => void obs.call("SetSourceFilterEnabled", { sourceName: a.source, filterName: a.filter, filterEnabled: !a.enabled }).catch(() => {}), a.revertAfterMs);
-        }
       }
       setActionCount((c) => c + 1);
     }
@@ -130,7 +193,16 @@ export function ObsControlClient() {
     return () => {
       stopped = true;
       if (pollTimer) clearTimeout(pollTimer);
-      void obs.disconnect().catch(() => {});
+      // Restore everything still pending BEFORE dropping the connection: otherwise removing or
+      // refreshing the browser source leaves the streamer's scene stuck mid-effect with no timer
+      // left to undo it. Sequential and best-effort, then disconnect regardless.
+      const outstanding = [...pendingReverts.values()];
+      pendingReverts.clear();
+      for (const { timer } of outstanding) clearTimeout(timer);
+      void (async () => {
+        for (const { revert } of outstanding) await applyRestore(revert.restore);
+        await obs.disconnect().catch(() => {});
+      })();
     };
   }, []);
 

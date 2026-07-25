@@ -27,6 +27,17 @@ Niech donejty / suby / inne alerty **automatycznie** przełączają sceny, pokaz
 
 Każda z opcjonalnym **auto-revertem** (`revertAfterMs`, 0.1–10 s) — np. błyśnij sceną na 5 s i wróć.
 
+### Nakładające się efekty — jedna przywrotka na cel (#806)
+Dwa efekty z revertem na **tym samym celu** (ta sama para źródło+filtr, ten sam element sceny, albo dwie zmiany scen — OBS ma jedną scenę programową, więc te kolidują **zawsze**) nie psują się już wzajemnie. Zasada: **pierwszy efekt zapisuje stan bazowy, kolejne tylko przesuwają termin**, a na cel przypada dokładnie jedna zaplanowana przywrotka.
+
+Dwa błędy, które to naprawia — utajone przy rzadkich, deterministycznych regułach, ale rutynowe przy modułe kar, gdzie wiele losowych efektów nachodzi na siebie z założenia:
+- **przywrotka przywracała zły stan, trwale.** „Poprzednia" scena była odczytywana w momencie akcji, więc druga zmiana scen w trakcie zaległej przywrotki zapisywała jako bazową **scenę pierwszego efektu** — jej revert przełączał stream na scenę kary i tam zostawiał;
+- **timery nadpisywały się i nie dawały się anulować.** Blur na 30 s i blur na 5 s: revert krótszego gasił filtr po 5 s, a revert dłuższego **włączał go ponownie** po 30 s i nie miał go już co zgasić.
+
+Dodatkowo stan bazowy jest teraz **odczytywany z OBS**, a nie zakładany jako przeciwieństwo docelowego: revert źródła, które i tak było ukryte, wcześniej by je **pokazał**. A zamknięcie lub odświeżenie źródła przeglądarkowego **przywraca wszystko, co zostało zaległe**, zamiast zostawiać scenę w połowie efektu.
+
+Logika decyzyjna jest czysta i otestowana w `lib/obs-revert.ts` (11 testów); komponent w OBS trzyma tylko timery i wywołania OBS.
+
 ## Bezpieczeństwo
 Hasło OBS jest Twoje, lokalne, i trafia **wyłącznie do posiadacza overlay-tokena**, konsumowane na Twojej maszynie (źródło w OBS). Trasy `/overlay/*` i `/api/obs-control/config` są `noindex` / `no-store`. **Rotacja tokena** w `/admin#alerts` unieważnia stare URL-e źródeł. Aktuator jest **dormant** dopóki nie dodasz źródła i nie ustawisz creds — zero wpływu na resztę portalu.
 
