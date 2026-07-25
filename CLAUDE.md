@@ -121,6 +121,7 @@ Bypass a push in a pinch with `git push --no-verify`.
 ## Conventions that matter here
 - **Multi-tenant**: almost everything is scoped per portal. New content/config models get a nullable `tenantId`, tenant-scoped reads/writes (`...(tid ? { tenantId: tid } : {})`), tenant-keyed caches, and per-tenant composite uniques (never a global `@unique` on a `code`/`name`). See `docs/ARCHITECTURE.md` §7 and `principle: everything per-portal`.
 - **Prod DB mutations are gated**: `prisma db push` / seeds touch the live Supabase DB. Ask before each; `--accept-data-loss` only with explicit OK; back up before destructive constraint changes.
+- **A new table is not finished until RLS is ON.** Postgres creates tables with RLS **off**, and Supabase auto-exposes every `public` table over PostgREST to the `anon` key — so a fresh table is readable/writable with the public key until you enable it. After ANY migration that adds a table run `ALTER TABLE "<t>" ENABLE ROW LEVEL SECURITY;` and **add no policy**: the app is Prisma-only and connects as the table owner (`rolbypassrls = true`), so RLS never applies to it, and enabling with no policy is default-deny for anon. Verify with `select count(*) … where not relrowsecurity` = 0. Runbook: `docs/RLS.md`. *(This was missed for all six tables added since #731 — `donation_integrations` was sitting there with `secretEnc`/`tokenEnc` exposed to the anon role.)*
 - **Secrets** never go in code or chat — Vercel env / gitignored `.env*`. Rotate anything exposed.
 - Branch off `main` for work; `main` auto-deploys to Vercel on push.
 
