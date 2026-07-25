@@ -419,6 +419,7 @@
     "tntExpiry": "Wygasa",
     "tntUntil": "do",
     "tntCreated": "Portal {slug} utworzony",
+    "tntCreatedAt": "Utworzony",
     "tntNew7d": "w tym tygodniu",
     "tntSetupOk": "skonfigurowany",
     "tntSetupPending": "setup niedokończony",

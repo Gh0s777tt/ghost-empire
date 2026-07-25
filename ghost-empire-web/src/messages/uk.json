@@ -1220,6 +1220,7 @@
     "tntPlan": "План",
     "tntExpiry": "Спливає",
     "tntUntil": "до",
+    "tntCreatedAt": "Створено",
     "tntCreateBtn": "Створити портал",
     "tntCreated": "Портал {slug} створено",
     "tntSaved": "{slug} збережено",

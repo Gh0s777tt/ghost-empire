@@ -1220,6 +1220,7 @@
     "tntPlan": "套餐",
     "tntExpiry": "到期",
     "tntUntil": "至",
+    "tntCreatedAt": "创建于",
     "tntCreateBtn": "创建门户",
     "tntCreated": "已创建门户 {slug}",
     "tntSaved": "已保存 {slug}",

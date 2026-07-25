@@ -1220,6 +1220,7 @@
     "tntPlan": "Plan",
     "tntExpiry": "Läuft ab",
     "tntUntil": "bis",
+    "tntCreatedAt": "Erstellt",
     "tntCreateBtn": "Portal anlegen",
     "tntCreated": "Portal {slug} angelegt",
     "tntSaved": "{slug} gespeichert",

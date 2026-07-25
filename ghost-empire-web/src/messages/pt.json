@@ -1220,6 +1220,7 @@
     "tntPlan": "Plano",
     "tntExpiry": "Expira",
     "tntUntil": "até",
+    "tntCreatedAt": "Criado",
     "tntCreateBtn": "Criar portal",
     "tntCreated": "Portal {slug} criado",
     "tntSaved": "{slug} salvo",

@@ -1220,6 +1220,7 @@
     "tntPlan": "План",
     "tntExpiry": "Истекает",
     "tntUntil": "до",
+    "tntCreatedAt": "Создан",
     "tntCreateBtn": "Создать портал",
     "tntCreated": "Портал {slug} создан",
     "tntSaved": "{slug} сохранён",

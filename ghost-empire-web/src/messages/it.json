@@ -1220,6 +1220,7 @@
     "tntPlan": "Piano",
     "tntExpiry": "Scade",
     "tntUntil": "fino al",
+    "tntCreatedAt": "Creato",
     "tntCreateBtn": "Crea portale",
     "tntCreated": "Portale {slug} creato",
     "tntSaved": "{slug} salvato",

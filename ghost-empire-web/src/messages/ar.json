@@ -1220,6 +1220,7 @@
     "tntPlan": "الخطة",
     "tntExpiry": "تنتهي",
     "tntUntil": "حتى",
+    "tntCreatedAt": "أُنشئ في",
     "tntCreateBtn": "إنشاء بوابة",
     "tntCreated": "تم إنشاء بوابة {slug}",
     "tntSaved": "تم حفظ {slug}",

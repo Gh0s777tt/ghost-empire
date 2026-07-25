@@ -419,6 +419,7 @@
     "tntExpiry": "Expires",
     "tntUntil": "until",
     "tntCreated": "Portal {slug} created",
+    "tntCreatedAt": "Created",
     "tntNew7d": "this week",
     "tntSetupOk": "set up",
     "tntSetupPending": "setup incomplete",

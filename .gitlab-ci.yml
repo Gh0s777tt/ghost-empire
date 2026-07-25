@@ -132,7 +132,8 @@ lint:web:
     - npm run lint             # eslint .
     - npm run docs:check       # node scripts/check-docs-sync.mjs (bramka anty-drift)
     - npm run docs:env         # node scripts/check-env-docs.mjs (każdy process.env.X udokumentowany w ENV.md)
-    - npm run docs:i18n        # node scripts/check-i18n-legal.mjs (copy prawne obecne w KAŻDYM locale)
+    - npm run docs:i18n        # scripts/check-i18n-legal.mjs (copy prawne obecne w KAŻDYM locale)
+    - npm run docs:i18n:dup    # scripts/check-i18n-duplicates.mjs (zero zduplikowanych kluczy w src/messages/*.json)
   rules: !reference [.rules_mr_main, rules]
 
 # ghost-empire-chat ma tylko `typecheck` (brak lint/test/build — tsx odpala TS wprost).

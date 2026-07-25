@@ -1220,6 +1220,7 @@
     "tntPlan": "Plan",
     "tntExpiry": "Expire",
     "tntUntil": "jusqu'au",
+    "tntCreatedAt": "Créé le",
     "tntCreateBtn": "Créer le portail",
     "tntCreated": "Portail {slug} créé",
     "tntSaved": "{slug} enregistré",

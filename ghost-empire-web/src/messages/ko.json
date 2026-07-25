@@ -1220,6 +1220,7 @@
     "tntPlan": "플랜",
     "tntExpiry": "만료",
     "tntUntil": "까지",
+    "tntCreatedAt": "생성일",
     "tntCreateBtn": "포털 만들기",
     "tntCreated": "포털 {slug} 생성됨",
     "tntSaved": "{slug} 저장됨",

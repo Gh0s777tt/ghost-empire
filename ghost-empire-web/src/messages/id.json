@@ -1220,6 +1220,7 @@
     "tntPlan": "Paket",
     "tntExpiry": "Kedaluwarsa",
     "tntUntil": "hingga",
+    "tntCreatedAt": "Dibuat",
     "tntCreateBtn": "Buat portal",
     "tntCreated": "Portal {slug} dibuat",
     "tntSaved": "{slug} disimpan",

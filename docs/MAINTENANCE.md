@@ -73,7 +73,7 @@ mają `needs: []` — startują równolegle. \* `commitlint` biegnie **wyłączn
 | Job | Stage | Bramka | Kiedy biegnie | Co robi |
 |---|---|---|---|---|
 | `commitlint` | verify | 🔴 twarda | **MR** | Waliduje komunikaty commitów (Conventional Commits). |
-| `lint:web` | lint | 🔴 twarda | MR + main | `typecheck` · `lint` (eslint) · `docs:check`. |
+| `lint:web` | lint | 🔴 twarda | MR + main | `typecheck` · `lint` (eslint) · `docs:check` · `docs:env` · `docs:i18n`. |
 | `lint:chat` | lint | 🔴 twarda | MR + main | `typecheck` (bot). |
 | `test:unit:web` | test | 🔴 twarda | MR + main | `test:coverage` (vitest, bez bazy). Badge coverage. |
 | `test:integration:web` | test | 🔴 twarda | MR + main | Realny **Postgres 16** (service) + `prisma db push` + testy integracyjne. |
@@ -111,7 +111,7 @@ CI bezpośrednim pushem do `main`.
 
 ```bash
 cd ghost-empire-web
-npm run verify-all         # typecheck · lint · docs:check · testy unit + integracyjne (stawia jednorazowy Postgres)
+npm run verify-all         # typecheck · lint · docs:check · docs:env · docs:i18n · testy unit + integracyjne (stawia jednorazowy Postgres)
 npm run verify-all -- --fast   # to samo bez integracji/bazy (szybkie, jak pre-push)
 ```
 
