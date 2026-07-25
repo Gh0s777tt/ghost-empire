@@ -643,6 +643,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // in on a tenant's subdomain with the owner's email becomes that portal's
         // admin. Tenant-scoped by definition — isWrongTenant (#418) keeps this
         // admin out of every other tenant's panel.
+        // SECURITY: this grants ADMIN off an email, so it leans on the same gate as
+        // account linking — user.email is only ever set from linkableEmail(), i.e. an
+        // email the provider VERIFIED. Were an unverified one to reach it, registering
+        // an account on the streamer's ownerEmail would hand over their portal's admin
+        // (privilege escalation, strictly worse than the account merge). Consequence:
+        // a Kick-only first login never bootstraps admin (Kick signals no verification)
+        // — the owner signs in once with Google/Discord/Twitch. See lib/oauth-email.ts.
         let ownerAdmin = false;
         if (tenantId && user.email) {
           try {
