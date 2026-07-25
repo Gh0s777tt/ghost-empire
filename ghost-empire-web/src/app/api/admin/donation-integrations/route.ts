@@ -15,6 +15,7 @@ import { requireAdmin } from "@/lib/admin";
 import { currentTenantId } from "@/lib/tenant";
 import { encryptSecret } from "@/lib/crypto";
 import { logAdminAction } from "@/lib/audit";
+import { parseTipplyWidgetId } from "@/lib/donations/tipply";
 
 export const dynamic = "force-dynamic";
 
@@ -26,18 +27,28 @@ export const dynamic = "force-dynamic";
  * "unverified" and can only ever land in the review queue. This table is the authority; the client
  * cannot influence it.
  */
-const PROVIDERS: Record<string, { label: string; maxTrust: "verified" | "unverified"; kind: "inbound"; help: string }> = {
+/** `needs` tells the panel WHICH field to ask for: a provider token/secret, or a public id we poll. */
+const PROVIDERS: Record<string, { label: string; maxTrust: "verified" | "unverified"; kind: "inbound" | "poll"; needs: "secret" | "widgetId"; help: string }> = {
   kofi: {
     label: "Ko-fi",
     maxTrust: "verified",
     kind: "inbound",
+    needs: "secret",
     help: "W Ko-fi: Settings → API (ko-fi.com/manage/webhooks) → wklej Webhook URL poniżej i skopiuj tutaj Verification Token.",
   },
   custom: {
     label: "Dowolne narzędzie (webhook / Zapier / Make / n8n)",
     maxTrust: "unverified",
     kind: "inbound",
+    needs: "secret",
     help: "Wyślij POST na URL poniżej z nagłówkiem Authorization: Bearer <sekret> i ciałem {\"amount\":25,\"currency\":\"PLN\",\"donorName\":\"...\",\"message\":\"...\"}. Wpłaty z tego źródła zawsze wymagają Twojego zatwierdzenia.",
+  },
+  tipply: {
+    label: "Tipply",
+    maxTrust: "unverified",
+    kind: "poll",
+    needs: "widgetId",
+    help: "Tipply nie ma oficjalnego API. W Tipply: Konfigurator → powiadomienie o wiadomości → skopiuj link widgetu (TIP_ALERT) i wklej go tutaj. Odpytujemy publiczny endpoint tego widgetu; wpłaty zawsze wymagają Twojego zatwierdzenia.",
   },
 };
 
@@ -60,7 +71,7 @@ export async function GET() {
     .catch(() => []);
 
   return NextResponse.json({
-    providers: Object.entries(PROVIDERS).map(([key, p]) => ({ key, label: p.label, help: p.help, maxTrust: p.maxTrust })),
+    providers: Object.entries(PROVIDERS).map(([key, p]) => ({ key, label: p.label, help: p.help, maxTrust: p.maxTrust, needs: p.needs })),
     integrations: rows.map((r) => ({
       id: r.id,
       provider: r.provider,
@@ -82,7 +93,7 @@ export async function POST(req: Request) {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const tid = await currentTenantId();
 
-  let body: { action?: string; provider?: string; secret?: unknown; enabled?: unknown };
+  let body: { action?: string; provider?: string; secret?: unknown; externalRef?: unknown; enabled?: unknown };
   try { body = (await req.json()) as typeof body; } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
@@ -95,7 +106,7 @@ export async function POST(req: Request) {
   // Postgres treats NULLs as distinct, so a compound unique cannot address the tenantId=null
   // (legacy/founder) row at all. findFirst handles both cases uniformly.
   const current = await prisma.donationIntegration
-    .findFirst({ where: { tenantId: tid ?? null, provider }, select: { id: true, secretEnc: true } })
+    .findFirst({ where: { tenantId: tid ?? null, provider }, select: { id: true, secretEnc: true, externalRef: true } })
     .catch(() => null);
 
   if (body.action === "delete") {
@@ -125,9 +136,27 @@ export async function POST(req: Request) {
   const secret = typeof body.secret === "string" ? body.secret.trim() : "";
   const enabled = body.enabled === true;
 
-  // Refuse to enable an integration with no secret — that would be an unauthenticated money-in URL.
-  if (enabled && !secret && !current?.secretEnc) {
+  // Poll-based providers identify the streamer by a PUBLIC id, not a secret. Validate its shape so a
+  // typo is rejected here instead of turning into a cron that silently polls nothing forever.
+  let externalRef: string | undefined;
+  if (typeof body.externalRef === "string" && body.externalRef.trim()) {
+    if (provider === "tipply") {
+      const uuid = parseTipplyWidgetId(body.externalRef);
+      if (!uuid) return NextResponse.json({ error: "Wklej link widgetu TIP_ALERT z Tipply (albo jego UUID)" }, { status: 400 });
+      externalRef = uuid;
+    } else {
+      externalRef = body.externalRef.trim().slice(0, 200);
+    }
+  }
+
+  // Refuse to enable an integration that has nothing to authenticate/identify it: for an inbound
+  // webhook that would be an unauthenticated money-in URL; for a poll provider it would be a cron
+  // with no target.
+  if (meta.needs === "secret" && enabled && !secret && !current?.secretEnc) {
     return NextResponse.json({ error: "Najpierw zapisz token/sekret — bez niego nie można włączyć integracji" }, { status: 400 });
+  }
+  if (meta.needs === "widgetId" && enabled && !externalRef && !current?.externalRef) {
+    return NextResponse.json({ error: "Najpierw wklej link widgetu — bez niego nie ma czego odpytywać" }, { status: 400 });
   }
 
   const row = current
@@ -137,6 +166,7 @@ export async function POST(req: Request) {
           enabled,
           trust: meta.maxTrust, // server-assigned; a client can never raise it
           ...(secret ? { secretEnc: encryptSecret(secret) } : {}),
+          ...(externalRef ? { externalRef } : {}),
           lastError: null,
         },
         select: { id: true },
@@ -148,6 +178,7 @@ export async function POST(req: Request) {
           enabled,
           trust: meta.maxTrust,
           ...(secret ? { secretEnc: encryptSecret(secret) } : {}),
+          ...(externalRef ? { externalRef } : {}),
         },
         select: { id: true },
       });

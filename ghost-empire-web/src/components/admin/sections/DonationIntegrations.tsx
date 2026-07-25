@@ -13,10 +13,10 @@ import { Webhook, Loader2, Check, Copy, Trash2, RefreshCw, ShieldCheck, ShieldAl
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { SectionCard } from "../shared";
 
-type Provider = { key: string; label: string; help: string; maxTrust: "verified" | "unverified" };
+type Provider = { key: string; label: string; help: string; maxTrust: "verified" | "unverified"; needs: "secret" | "widgetId" };
 type Integration = {
   id: string; provider: string; enabled: boolean; trust: string; hasSecret: boolean;
-  webhookPath: string | null; lastEventAt: string | null; lastError: string | null;
+  webhookPath: string | null; externalRef: string | null; lastEventAt: string | null; lastError: string | null;
 };
 
 const T = {
@@ -25,6 +25,7 @@ const T = {
     intro: "Podłącz swoje narzędzie do donacji. Każda wpłata trafi do portalu: doda widzowi walutę, odpali alert i podbije cele.",
     url: "Twój adres webhooka", copy: "Kopiuj", copied: "Skopiowano ✓",
     token: "Token / sekret od dostawcy", tokenSet: "zapisany", tokenNone: "brak",
+    widget: "Link widgetu (TIP_ALERT)", widgetSet: "zapisany",
     save: "Zapisz", enable: "Włączona", generate: "Wygeneruj sekret", rotate: "Nowy sekret", del: "Usuń",
     verified: "Może naliczać walutę automatycznie", unverified: "Zawsze wymaga Twojego zatwierdzenia w kolejce donacji",
     lastEvent: "Ostatnia wpłata", never: "jeszcze nic nie przyszło",
@@ -37,6 +38,7 @@ const T = {
     intro: "Connect your donation tool. Every tip reaches the portal: it credits the viewer, fires an alert and moves your goals.",
     url: "Your webhook URL", copy: "Copy", copied: "Copied ✓",
     token: "Token / secret from the provider", tokenSet: "saved", tokenNone: "none",
+    widget: "Widget link (TIP_ALERT)", widgetSet: "saved",
     save: "Save", enable: "Enabled", generate: "Generate secret", rotate: "New secret", del: "Remove",
     verified: "May credit currency automatically", unverified: "Always needs your approval in the donation queue",
     lastEvent: "Last tip", never: "nothing received yet",
@@ -118,7 +120,7 @@ export function DonationIntegrationsManager({ onToast }: { onToast: (k: "ok" | "
                     type="checkbox"
                     checked={!!row?.enabled}
                     disabled={busy === p.key}
-                    onChange={(e) => void act(p.key, "save", { enabled: e.target.checked, secret: secretDraft[p.key] || undefined })}
+                    onChange={(e) => void act(p.key, "save", { enabled: e.target.checked, ...(p.needs === "widgetId" ? { externalRef: secretDraft[p.key] || undefined } : { secret: secretDraft[p.key] || undefined }) })}
                     className="accent-emerald-500"
                   />
                   {t.enable}
@@ -149,7 +151,20 @@ export function DonationIntegrationsManager({ onToast }: { onToast: (k: "ok" | "
               )}
 
               <div className="flex flex-wrap items-center gap-1.5">
-                {p.key === "custom" ? (
+                {p.needs === "widgetId" ? (
+                  <>
+                    <input
+                      value={secretDraft[p.key] ?? ""}
+                      onChange={(e) => setSecretDraft((s) => ({ ...s, [p.key]: e.target.value }))}
+                      placeholder={`${t.widget}${row?.externalRef ? ` (${t.widgetSet})` : ""}`}
+                      className="flex-1 min-w-[14rem] bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500 placeholder:text-zinc-700"
+                    />
+                    <button onClick={() => void act(p.key, "save", { externalRef: secretDraft[p.key], enabled: !!row?.enabled })} disabled={busy === p.key || !secretDraft[p.key]}
+                      className="px-2.5 py-1.5 border border-zinc-700 text-zinc-200 hover:border-emerald-600 text-[10px] font-bold tracking-widest uppercase disabled:opacity-40">
+                      {t.save}
+                    </button>
+                  </>
+                ) : p.key === "custom" ? (
                   <button onClick={() => void act(p.key, "rotate")} disabled={busy === p.key}
                     className="px-2.5 py-1.5 border border-zinc-700 text-zinc-200 hover:border-emerald-600 text-[10px] font-bold tracking-widest uppercase inline-flex items-center gap-1 disabled:opacity-50">
                     <RefreshCw className="w-3 h-3" /> {row?.hasSecret ? t.rotate : t.generate}
