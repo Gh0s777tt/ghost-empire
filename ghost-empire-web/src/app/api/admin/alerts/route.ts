@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { dispatchAlert, getSettings, regenerateOverlayToken, type AlertType } from "@/lib/alerts";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
 
 const ALL_TYPES: AlertType[] = [
@@ -84,6 +84,9 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "test") {
+    // The test alert previews the REAL thing, so it must wear this portal's own currency
+    // symbol — an admin styling their overlay shouldn't see the founder tenant's "GT".
+    const tenant = await getCurrentTenant();
     const alert = await dispatchAlert({
       type: "test",
       title: "🧪 Test alert",
@@ -91,7 +94,7 @@ export async function POST(req: Request) {
       icon: "🧪",
       actorName: "Admin Test",
       amount: 1337,
-      amountLabel: "GT",
+      amountLabel: tenant.tokenSymbol,
     });
     await logAdminAction({
       adminId: auth.userId,
