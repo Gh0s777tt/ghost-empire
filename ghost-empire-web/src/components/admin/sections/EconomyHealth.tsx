@@ -8,6 +8,7 @@ import { Coins, Loader2, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useTenantBranding } from "@/components/TenantBranding";
+import { CHIP_SYMBOL } from "@/lib/shop-currency";
 import { SectionCard } from "../shared";
 import { apiGet } from "@/lib/api-client";
 
@@ -15,6 +16,17 @@ type Health = { burnRatio: number; status: "inflating" | "healthy" | "contractin
 type ReasonRow = { reason: string; total: number; count: number };
 type DayRow = { date: string; earned: number; spent: number };
 type UserRow = { name: string; image: string | null; amount: number };
+/** The chips loop: same shape as the GT block minus the trend / top-user lists. */
+type ChipsData = {
+  circulating: number;
+  minted: number;
+  burned: number;
+  net: number;
+  txCount: number;
+  health: Health;
+  sources: ReasonRow[];
+  sinks: ReasonRow[];
+};
 type EconomyData = {
   windowDays: number;
   circulating: number;
@@ -29,6 +41,8 @@ type EconomyData = {
   daily: DayRow[];
   topEarners: UserRow[];
   topSpenders: UserRow[];
+  /** Absent on responses from an older deploy — the block simply doesn't render. */
+  chips?: ChipsData;
 };
 
 const STATUS_STYLE: Record<Health["status"], string> = {
@@ -198,6 +212,49 @@ export function EconomyHealthSection() {
             <TopUsers rows={data.topEarners ?? []} label={t("topEarners")} sym={sym} />
             <TopUsers rows={data.topSpenders ?? []} label={t("topSpenders")} sym={sym} />
           </div>
+
+          {/* The second loop. Rendered only when the portal actually uses chips, so a
+              GT-only portal's dashboard looks exactly as it did before. */}
+          {data.chips && (data.chips.circulating > 0 || data.chips.txCount > 0) && (
+            <div className="mt-5 pt-4 border-t border-zinc-800">
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-sm font-bold text-amber-200">{CHIP_SYMBOL} {t("chipsTitle")}</span>
+              </div>
+              <p className="text-zinc-500 text-xs mb-3">{t("chipsIntro")}</p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                <div className="border border-amber-900/40 bg-amber-950/10 p-3">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-amber-500/70 mb-1">{t("chipsCirculating")}</div>
+                  <div className="text-sm font-bold text-amber-100 tabular-nums">{data.chips.circulating.toLocaleString(nf)} {CHIP_SYMBOL}</div>
+                </div>
+                <div className="border border-amber-900/40 bg-amber-950/10 p-3">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-amber-500/70 mb-1">{t("minted", { days: data.windowDays })}</div>
+                  <div className="text-sm font-bold text-red-300 tabular-nums">+{data.chips.minted.toLocaleString(nf)}</div>
+                </div>
+                <div className="border border-amber-900/40 bg-amber-950/10 p-3">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-amber-500/70 mb-1">{t("burned", { days: data.windowDays })}</div>
+                  <div className="text-sm font-bold text-emerald-300 tabular-nums">−{data.chips.burned.toLocaleString(nf)}</div>
+                </div>
+                <div className="border border-amber-900/40 bg-amber-950/10 p-3">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-amber-500/70 mb-1">{t("net")}</div>
+                  <div className={cn("text-sm font-bold tabular-nums", data.chips.net > 0 ? "text-amber-300" : "text-emerald-300")}>
+                    {data.chips.net > 0 ? "+" : ""}{data.chips.net.toLocaleString(nf)}
+                  </div>
+                </div>
+              </div>
+
+              <div className={cn("border px-3 py-2 mb-3 text-xs", STATUS_STYLE[data.chips.health.status])}>
+                <span className="font-bold">{t(`status_${data.chips.health.status}`)}</span>
+                <span className="text-zinc-400"> · {t("burnRatio", { pct: Math.round(Math.min(data.chips.health.burnRatio, 9.99) * 100) })}</span>
+                <span className="block text-zinc-500 mt-0.5">{t("chipsHint")}</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <FlowList rows={data.chips.sources} tone="source" label={t("chipsSourcesTitle")} icon={<ArrowUpRight className="w-3 h-3" />} />
+                <FlowList rows={data.chips.sinks} tone="sink" label={t("chipsSinksTitle")} icon={<ArrowDownRight className="w-3 h-3" />} />
+              </div>
+            </div>
+          )}
 
           <p className="text-[10px] text-zinc-600 mt-2">{t("windowNote", { days: data.windowDays, count: data.txCount.toLocaleString(nf) })}</p>
         </>

@@ -2245,11 +2245,11 @@
       "err": "Something went wrong"
     },
     "economyHealth": {
-      "title": "GT economy health",
+      "title": "%gt% economy health",
       "intro": "Circulating supply plus the last 30 days of GT minted (faucets) vs burned (sinks). If faucets keep outpacing sinks, GT slowly inflate and lose value.",
       "loading": "Loading…",
       "empty": "No economy data yet.",
-      "circulating": "GT in circulation",
+      "circulating": "%gt% in circulation",
       "minted": "Minted ({days}d)",
       "burned": "Burned ({days}d)",
       "net": "Net supply change",
@@ -2260,14 +2260,20 @@
       "hint_healthy": "Mint and burn are roughly balanced — GT hold their value.",
       "hint_contracting": "Sinks outpace faucets; the supply is shrinking. Fine short-term, just watch it doesn't dry up rewards.",
       "burnRatio": "burn/mint {pct}%",
-      "sourcesTitle": "Top GT sources",
-      "sinksTitle": "Top GT sinks",
+      "sourcesTitle": "Top %gt% sources",
+      "sinksTitle": "Top %gt% sinks",
       "trendTitle": "Earned vs spent — last {days} days",
       "earned": "Earned",
       "spent": "Spent",
       "topEarners": "Top earners",
       "topSpenders": "Top spenders",
-      "windowNote": "Last {days} days · {count} transactions"
+      "windowNote": "Last {days} days · {count} transactions",
+      "chipsSinksTitle": "Top chips sinks",
+      "chipsSourcesTitle": "Top chips sources",
+      "chipsHint": "Chips are given away for free — inflation costs no real value, but when faucets keep winning, the casino and the cosmetics stop being a challenge. Tune cosmetic prices and casino stakes.",
+      "chipsCirculating": "Chips in circulation",
+      "chipsIntro": "A second, fully separate loop: chips are free and carry no market value, so they do NOT count toward the %gt% economy above. This section shows whether the sinks (casino, cosmetics) keep up with the faucets (daily bonus, grants).",
+      "chipsTitle": "Chips loop (separate)"
     },
     "secCommunity": "Community",
     "community": {

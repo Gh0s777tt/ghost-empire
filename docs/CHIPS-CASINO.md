@@ -14,7 +14,7 @@
 - ✅ **Faza 2 (silnik) KOMPLETNA** — 5 gier kasyna (`gt-games`, `gt-blackjack`, `gt-mines`, `gt-hilo`) + `wheel` + **duele (`duels`) + heist (`heist`)** na `chips` + `currency:"CHIPS"` + komunikaty „żetony". Zielone: tsc + 110 testów.
 - ✅ **Faza 3 (źródła) — daily grant:** `POST /api/casino/daily-chips` (500 żetonów/dzień, idempotentne, `currency:"CHIPS"`) + przycisk „🪙 Darmowe żetony" w kasynie. Opcjonalnie później: drop za aktywność + welcome grant.
 - 🟡 **Faza 5 (UI) — rdzeń funkcjonalny gotowy:** strona kasyna i koło ładują saldo `chips`; **`emitBalance` w kasynie/kole → no-op** (żetony nie zanieczyszczają salda GT w Headerze — realny bug naprawiony). Zielone: tsc + eslint. **Do zrobienia (polish):** etykiety `tokenSymbol`/„GT"→„żetony" w KasynoClient/WheelPageClient + etykiety segmentów koła.
-- ✅ **Faza 8 (ekonomia/korektność)** — chips odcięte od metryk GT: weekly-ranking (`cached.ts` — **był realny leak: chips→nagroda GT tygodniowa**), stream-recap, wrapped (year-in-review), economy-health dashboard filtrują `currency:"GT"`. economy-anomaly (tylko `admin_grant`) i gift (reason `gift_sent`) — już bezpieczne. Zielone: tsc + 101 testów.
+- ✅ **Faza 8 (ekonomia/korektność)** — chips odcięte od metryk GT: weekly-ranking (`cached.ts` — **był realny leak: chips→nagroda GT tygodniowa**), stream-recap, wrapped (year-in-review), economy-health dashboard filtrują `currency:"GT"`. gift (reason `gift_sent`) — już bezpieczne. Zielone: tsc + 101 testów. ⚠️ **Korekta (2026-07-25):** zapisane tu „economy-anomaly (tylko `admin_grant`) — już bezpieczne" **było nieprawdą** — detektor agregował `admin_grant` bez filtra waluty i pierwszy grant żetonów odpaliłby fałszywy alarm; naprawione przy grancie żetonów (Faza 6 §1).
 - 🎯 **PĘTLA WARTOŚCI PRZECIĘTA:** kasyno=chips (darmowe, niekupowalne) · sklep=GT (chips nie kupią rzeczy o wartości) · chips nie liczą się do rankingu/nagród/ekonomii GT. Substancjalny fix prawny **zrobiony**.
 - ✅ **Faza 5 (etykiety)** — `tokenSymbol`→`chipSymbol` (🪙) w KasynoClient/WheelPageClient (import `useTenantBranding` usunięty), etykiety segmentów koła → 🪙. tsc+eslint.
 - ✅ **Faza 7 (regulamin, copy)** — `GamblingGate`: „żetony 🪙 — waluta kasyna bez wartości pieniężnej; nie można kupić, wypłacić ani wymienić na nagrody o wartości rynkowej" (PL+EN).
@@ -164,7 +164,18 @@ odrzuca nieznaną walutę (**400**), zamiast po cichu wpisać śmieć do kolumny
    **Dlaczego to była luka platformowa:** kasyno na żetonach działa na **każdym** portalu,
    ale sink na wygrane żetony istniał tylko u założyciela (4 kosmetyki z `prisma/seed.ts`),
    a jedyną drogą dołożenia kolejnych był destrukcyjny re-seed (`deleteMany` całego katalogu).
-3. Panel ekonomii: **osobne** metryki GT vs chips (chips nie liczą się do „realnej" ekonomii). ⏳
+3. ✅ **Panel ekonomii: osobne metryki GT vs chips** — `/admin#economy` pokazuje **dwa obiegi**:
+   blok główny (realne GT, bez zmian) i nowy blok „Obieg żetonów (osobny)" — żetony w obiegu,
+   mint/burn w oknie 30 dni, status zdrowia i top źródła/spusty żetonów. **Nie kosztuje ani
+   jednego zapytania więcej:** `currency` przeszło z *filtra* na **klucz `groupBy`**, więc obie
+   waluty wychodzą z tego samego odczytu (a `user.aggregate` sumuje `tokens` i `chips` naraz).
+   Trend dzienny i top-userzy zostają **GT-only** — „najszczęśliwszy gracz kasyna" to nie jest
+   sygnał o zdrowiu ekonomii. Blok chips renderuje się **tylko** gdy portal ma jakikolwiek ruch
+   żetonów, więc dashboard portalu bez kasyna wygląda dokładnie jak wcześniej. Logika podziału
+   wyciągnięta do czystych, testowanych `flowForCurrency` / `splitSourcesSinks`
+   (`lib/economy-health.ts`, **+8 testów**; nieznana/legacy waluta liczy się jako GT — tak samo
+   jak czytają ją `shop/buy` i `planRefund`). Przy okazji etykiety sekcji przestały mówić
+   „GT" na sztywno (`%gt%` → symbol waluty portalu).
 
 ### Alert na overlayu (waluta per zakup)
 Alert `shop_purchase` etykietuje kwotę walutą, którą **faktycznie obciążono**: `🪙` dla zakupu za
@@ -190,9 +201,10 @@ mimo że `shop/buy` obciążał żetony.
 3. `GamblingGate` — zaktualizować copy (żetony, nie GT).
 
 ## Faza 8 — ekonomia / anomalie / jackpot
-1. **`src/lib/economy-anomaly.ts`** i weekly-ranking — liczyć realną ekonomię po `currency: "GT"`; chips osobno.
-2. **Jackpot** (`gt-games.ts` Redis) — pula **żetonowa**, bez wartości (komunikat „jackpot w żetonach").
-3. Dashboard „zdrowie ekonomii" — dwa obiegi (GT vs chips) osobno.
+1. ✅ **`src/lib/economy-anomaly.ts`** i weekly-ranking liczą realną ekonomię po `currency: "GT"`
+   (anomaly domknięte przy grancie żetonów — patrz Faza 6 §1; weekly-ranking już wcześniej).
+2. **Jackpot** (`gt-games.ts` Redis) — pula **żetonowa**, bez wartości (komunikat „jackpot w żetonach"). ⏳
+3. ✅ Dashboard „zdrowie ekonomii" — dwa obiegi (GT vs chips) osobno (patrz Faza 6 §3).
 
 ---
 

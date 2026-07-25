@@ -2245,11 +2245,11 @@
       "err": "Coś poszło nie tak"
     },
     "economyHealth": {
-      "title": "Zdrowie ekonomii GT",
+      "title": "Zdrowie ekonomii %gt%",
       "intro": "Saldo w obiegu plus ostatnie 30 dni: GT wytworzone (krany) kontra spalone (spusty). Jeśli krany stale przeważają nad spustami, GT powoli się inflacjonują i tracą wartość.",
       "loading": "Wczytywanie…",
       "empty": "Brak danych o ekonomii.",
-      "circulating": "GT w obiegu",
+      "circulating": "%gt% w obiegu",
       "minted": "Wytworzone ({days}d)",
       "burned": "Spalone ({days}d)",
       "net": "Zmiana podaży netto",
@@ -2260,14 +2260,20 @@
       "hint_healthy": "Wytwarzanie i spalanie są mniej więcej w równowadze — GT trzymają wartość.",
       "hint_contracting": "Spusty przeważają nad kranami; podaż się kurczy. Krótkoterminowo OK, pilnuj tylko, by nagrody nie wyschły.",
       "burnRatio": "spalanie/wytwarzanie {pct}%",
-      "sourcesTitle": "Top źródła GT",
-      "sinksTitle": "Top spusty GT",
+      "sourcesTitle": "Top źródła %gt%",
+      "sinksTitle": "Top spusty %gt%",
       "trendTitle": "Zdobyte vs wydane — ostatnie {days} dni",
       "earned": "Zdobyte",
       "spent": "Wydane",
       "topEarners": "Top zarabiający",
       "topSpenders": "Top wydający",
-      "windowNote": "Ostatnie {days} dni · {count} transakcji"
+      "windowNote": "Ostatnie {days} dni · {count} transakcji",
+      "chipsSinksTitle": "Top spusty żetonów",
+      "chipsSourcesTitle": "Top źródła żetonów",
+      "chipsHint": "Żetony rozdajesz za darmo — inflacja nie kosztuje realnej wartości, ale gdy krany stale przeważają, kasyno i kosmetyki przestają być wyzwaniem. Reguluj cenami kosmetyk i stawkami w kasynie.",
+      "chipsCirculating": "Żetony w obiegu",
+      "chipsIntro": "Drugi, całkowicie oddzielny obieg: żetony są darmowe i nie mają wartości rynkowej, więc NIE liczą się do ekonomii %gt% powyżej. Ta sekcja pokazuje, czy spusty (kasyno, kosmetyki) nadążają za kranami (dzienny bonus, granty).",
+      "chipsTitle": "Obieg żetonów (osobny)"
     },
     "secCommunity": "Społeczność",
     "community": {
