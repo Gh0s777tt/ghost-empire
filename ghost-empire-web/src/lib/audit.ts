@@ -42,6 +42,7 @@ type AdminActionType =
   | "update_govee_rule"
   | "delete_govee_rule"
   | "update_wheel"
+  | "update_casino_config" // per-portal casino economy knobs (free daily chips grant)
   | "push_broadcast"
   | "respond_ticket"
   | "resolve_bounty"

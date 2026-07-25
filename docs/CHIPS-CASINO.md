@@ -167,7 +167,15 @@ odrzuca nieznaną walutę (**400**), zamiast po cichu wpisać śmieć do kolumny
    pozostałe kategorie, etykieta ceny zmienia się na „Cena (żetony 🪙)", a na liście item
    dostaje plakietkę `🪙 CHIPS` i cenę w swojej walucie. Inwariant i tak jest sprawdzany
    serwerowo — UI tylko nie pozwala złożyć żądania, które i tak dostałoby 400.
-   *Konfiguracja dziennego grantu — nadal ⏳.*
+   ✅ **Konfiguracja dziennego grantu:** `Tenant.dailyChipsAmount` (default 500) + admin
+   `GET/PATCH /api/admin/casino-config`, a kontrolka siedzi **w bloku żetonowym panelu
+   ekonomii** — czyli dokładnie obok metryk, które mówią, czy kran trzeba przykręcić.
+   Widełki 50–100 000 (`lib/daily-chips.ts`, czyste + testy): `0` zabiłoby jedyny darmowy
+   kran portalu, a wartość bez górnego ogranicznika utopiłaby sink kosmetyk w jeden dzień.
+   Śmieć (`null`, `""`, `"abc"`) → **DEFAULT**, nie brzeg widełek — `Number(null)` to `0`,
+   więc sam `Number.isFinite` czytałby „brak wartości" jako „ustaw kran na minimum" (realny
+   błąd, złapany przez test przed wdrożeniem). ⚠️ **Wymaga `db push`** (kolumna addytywna
+   z defaultem).
    **Dlaczego to była luka platformowa:** kasyno na żetonach działa na **każdym** portalu,
    ale sink na wygrane żetony istniał tylko u założyciela (4 kosmetyki z `prisma/seed.ts`),
    a jedyną drogą dołożenia kolejnych był destrukcyjny re-seed (`deleteMany` całego katalogu).
@@ -257,6 +265,16 @@ Każda faza: kod + testy + dokumentacja (`CHANGELOG`/`ENDPOINTS`/`ENV` wg `CLAUD
 3. **Kwota dziennego grantu żetonów** + czy „welcome grant" jednorazowy.
 4. **Duele/heist** — potwierdzić przeniesienie na chips (rekomendowane — to też stawka+losowość).
 5. **Prawnik od prawa hazardowego** — krok równoległy; docelowo decyzja MF (art. 2 ust. 6).
+6. **Przegląd native/prawny copy `shop.helpChips`** (14 locale) — ⏳ **otwarte**.
+   *Stan na 2026-07-25 (przegląd własny, nie zastępuje prawnika):* wszystkie 14 wersji niosą
+   **te same trzy twierdzenia** co PL (waluta darmowa · wyłącznie kosmetyka bez wartości
+   rynkowej · nie można kupić ani wypłacić) — żadna nie dodaje ani nie osłabia gwarancji,
+   sprawdzone zdanie po zdaniu. Zgodne z wiążącym regulaminem: `terms.s3i7` (nie można kupić,
+   wpłacić, wypłacić ani wymienić), `s3i8` (brak ścieżki zakupu), `s3i11` (za żetony wyłącznie
+   kosmetyki bez wartości rynkowej). **`terms.lastUpdated` celowo NIE ruszone** — regulamin
+   obiecywał tę regułę od 23.07.2026; zmiany z tej serii ją *egzekwują*, nie zmieniają praw
+   użytkownika. Do potwierdzenia przez native speakerów (zwł. ja/ko/zh/ar) i prawnika — PL jest
+   autorytatywne, reszta ma być wierna.
 
 ## Powiązane
 `docs/ENDPOINTS.md` (gt-games/wheel), `docs/ENV.md`, `prisma/schema.prisma`, `src/components/kasyno/GamblingGate.tsx`,

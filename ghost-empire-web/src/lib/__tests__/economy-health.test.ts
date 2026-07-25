@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { flowKind, economyHealth, flowForCurrency, splitSourcesSinks } from "@/lib/economy-health";
+import { normalizeDailyChips, DAILY_CHIPS_DEFAULT, DAILY_CHIPS_MIN, DAILY_CHIPS_MAX } from "@/lib/daily-chips";
 
 describe("flowKind", () => {
   it("treats positive (and zero) amounts as faucets, negative as sinks", () => {
@@ -109,5 +110,29 @@ describe("splitSourcesSinks — krany vs spusty", () => {
     const input = [{ reason: "shop", total: -10, count: 1 }];
     splitSourcesSinks(input, 8);
     expect(input[0].total).toBe(-10);
+  });
+});
+
+describe("normalizeDailyChips — kran kasyna w widełkach", () => {
+  it("przepuszcza sensowną kwotę bez zmian", () => {
+    expect(normalizeDailyChips(1_200)).toBe(1_200);
+    expect(normalizeDailyChips("2000")).toBe(2_000);
+  });
+
+  it("przycina do widełek zamiast wyłączyć kran albo zalać sklep", () => {
+    expect(normalizeDailyChips(1)).toBe(DAILY_CHIPS_MIN);
+    expect(normalizeDailyChips(0)).toBe(DAILY_CHIPS_MIN);
+    expect(normalizeDailyChips(-9_999)).toBe(DAILY_CHIPS_MIN);
+    expect(normalizeDailyChips(9_999_999)).toBe(DAILY_CHIPS_MAX);
+  });
+
+  it("śmieć → DEFAULT, nie brzeg widełek (zły zapis nie przestawia ekonomii na skrajność)", () => {
+    for (const bad of [undefined, null, "", "abc", NaN, {}]) {
+      expect(normalizeDailyChips(bad)).toBe(DAILY_CHIPS_DEFAULT);
+    }
+  });
+
+  it("ucina część ułamkową (grant to całe żetony)", () => {
+    expect(normalizeDailyChips(750.9)).toBe(750);
   });
 });

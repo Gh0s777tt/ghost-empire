@@ -14,6 +14,7 @@ import { SITE } from "@/lib/site";
 import { resolveTenantSlug, customDomainFromHost } from "@/lib/tenant-host";
 import { safeMediaUrl } from "@/lib/url-safe";
 import { resolveBgPresetCss } from "@/lib/bg-presets";
+import { normalizeDailyChips, DAILY_CHIPS_DEFAULT } from "@/lib/daily-chips";
 
 /** Slug (and future subdomain) of the original single-streamer tenant. */
 export const DEFAULT_TENANT_SLUG = "ghost-empire";
@@ -50,6 +51,8 @@ export type TenantBrand = {
   supportHeading: string | null;
   supportIntro: string | null;
   supportThanks: string | null;
+  /** Size of the free daily casino-chips grant on this portal (docs/CHIPS-CASINO.md). */
+  dailyChipsAmount: number;
 };
 
 /** Safely parse the Tenant.socialLinks JSON into a validated list (defensive on read). */
@@ -86,6 +89,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   supportHeading: null,
   supportIntro: null,
   supportThanks: null,
+  dailyChipsAmount: DAILY_CHIPS_DEFAULT,
 };
 
 /**
@@ -124,6 +128,9 @@ function toBrand(t: Tenant): TenantBrand {
     supportHeading: t.supportHeading,
     supportIntro: t.supportIntro,
     supportThanks: t.supportThanks,
+    // Re-clamped on read: a value written before the bounds existed (or edited straight in
+    // the DB) must not hand out an extreme grant.
+    dailyChipsAmount: normalizeDailyChips(t.dailyChipsAmount),
   };
 }
 

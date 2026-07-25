@@ -1,5 +1,6 @@
 // src/app/api/casino/daily-chips/route.ts
-// FREE daily casino-chips grant: 500 chips once per UTC day. Chips are the casino's
+// FREE daily casino-chips grant: `Tenant.dailyChipsAmount` chips once per UTC day (500 by
+// default, owner-tunable — it is the casino's main faucet). Chips are the casino's
 // closed-loop currency (see docs/CHIPS-CASINO.md) — they can ONLY be earned free (this
 // route + activity) and can NEVER be bought with money. This is the primary chips source.
 //
@@ -10,11 +11,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const DAILY = 500; // free chips per day (docs/CHIPS-CASINO.md — Faza 3)
+// How many chips a claim hands out is per portal (`Tenant.dailyChipsAmount`) — it is the
+// casino's main faucet, so the owner tunes it against their sinks. Read per request; the
+// value is clamped on read in `toBrand`, so nothing here has to re-validate it.
+const dailyFor = async () => (await getCurrentTenant()).dailyChipsAmount;
 const REASON = "chips:daily";
 const DAY = 86_400_000;
 
@@ -29,7 +34,7 @@ async function getStatus(userId: string) {
     }),
     prisma.user.findUnique({ where: { id: userId }, select: { chips: true } }),
   ]);
-  return { claimedToday: !!claim, amount: DAILY, chips: user?.chips ?? 0 };
+  return { claimedToday: !!claim, amount: await dailyFor(), chips: user?.chips ?? 0 };
 }
 
 export async function GET() {
@@ -50,6 +55,7 @@ export async function POST() {
 
   const dayKey = dayStartUtc(new Date());
   const externalId = `${REASON}:${userId}:${dayKey}`;
+  const daily = await dailyFor();
 
   try {
     const newBalance = await prisma.$transaction(async (tx) => {
@@ -60,14 +66,14 @@ export async function POST() {
       });
       if (dup) throw new Error("DUP");
       // Chips only — do NOT touch tokens/totalEarned (real GT economy stays untouched).
-      await tx.user.update({ where: { id: userId }, data: { chips: { increment: DAILY } } });
+      await tx.user.update({ where: { id: userId }, data: { chips: { increment: daily } } });
       // Unique `externalId` is the HARD double-claim guard: a concurrent claim past the
       // fast-path loses here with P2002.
-      await tx.transaction.create({ data: { userId, type: "earn", amount: DAILY, reason: REASON, currency: "CHIPS", externalId, status: "completed" } });
+      await tx.transaction.create({ data: { userId, type: "earn", amount: daily, reason: REASON, currency: "CHIPS", externalId, status: "completed" } });
       const u = await tx.user.findUnique({ where: { id: userId }, select: { chips: true } });
       return u?.chips ?? 0;
     });
-    return NextResponse.json({ ok: true, amount: DAILY, newBalance });
+    return NextResponse.json({ ok: true, amount: daily, newBalance });
   } catch (e) {
     if (e instanceof Error && e.message === "DUP") {
       return NextResponse.json({ error: "Darmowe żetony już odebrane — wróć jutro!" }, { status: 409 });

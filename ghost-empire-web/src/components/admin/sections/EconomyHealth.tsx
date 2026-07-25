@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { CHIP_SYMBOL } from "@/lib/shop-currency";
 import { SectionCard } from "../shared";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
 
 type Health = { burnRatio: number; status: "inflating" | "healthy" | "contracting" };
 type ReasonRow = { reason: string; total: number; count: number };
@@ -139,6 +139,73 @@ function TopUsers({ rows, label, sym }: { rows: UserRow[]; label: string; sym: s
   );
 }
 
+/**
+ * Owner control for the casino's free daily chips grant (`Tenant.dailyChipsAmount`).
+ * Loads its own state so the read-only dashboard above stays a pure fetch — and so a portal
+ * on a pre-migration deploy simply shows nothing instead of breaking the whole section.
+ */
+function DailyChipsControl() {
+  const t = useTranslations("admin.economyHealth");
+  const [value, setValue] = useState<string | null>(null);
+  const [bounds, setBounds] = useState<{ min: number; max: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const d = await apiGet<{ dailyChipsAmount: number; min: number; max: number }>("/api/admin/casino-config");
+        if (!cancelled) { setValue(String(d.dailyChipsAmount)); setBounds({ min: d.min, max: d.max }); }
+      } catch { /* nie blokuj dashboardu — kontrolka po prostu się nie pokaże */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (value === null || !bounds) return null;
+
+  async function save() {
+    setBusy(true); setErr(null); setSaved(false);
+    try {
+      const d = await apiPatch<{ dailyChipsAmount: number }>("/api/admin/casino-config", { dailyChipsAmount: Number(value) });
+      setValue(String(d.dailyChipsAmount)); // serwer mógł przyciąć do widełek — pokaż, co zapisał
+      setSaved(true);
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : t("dailyChipsErr"));
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="border border-amber-900/40 bg-amber-950/10 p-3 mt-2">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-amber-500/70 mb-1">
+        {t("dailyChipsLabel", { min: bounds.min, max: bounds.max })}
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          value={value}
+          min={bounds.min}
+          max={bounds.max}
+          onChange={(e) => { setValue(e.target.value); setSaved(false); }}
+          className="w-32 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white focus:border-amber-500 outline-hidden tabular-nums"
+        />
+        <span className="text-amber-300">{CHIP_SYMBOL}</span>
+        <button
+          onClick={save}
+          disabled={busy}
+          className="px-3 py-1.5 border border-amber-700 text-amber-300 bg-amber-950/30 hover:bg-amber-950/50 text-[10px] font-bold tracking-widest uppercase disabled:opacity-50 flex items-center gap-1.5"
+        >
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}{t("dailyChipsSave")}
+        </button>
+        {saved && <span className="text-[10px] text-emerald-400">{t("dailyChipsSaved")}</span>}
+        {err && <span className="text-[10px] text-red-400">{err}</span>}
+      </div>
+      <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{t("dailyChipsHint")}</p>
+    </div>
+  );
+}
+
 export function EconomyHealthSection() {
   const t = useTranslations("admin.economyHealth");
   const nf = useLocale();
@@ -253,6 +320,10 @@ export function EconomyHealthSection() {
                 <FlowList rows={data.chips.sources} tone="source" label={t("chipsSourcesTitle")} icon={<ArrowUpRight className="w-3 h-3" />} />
                 <FlowList rows={data.chips.sinks} tone="sink" label={t("chipsSinksTitle")} icon={<ArrowDownRight className="w-3 h-3" />} />
               </div>
+
+              {/* The one knob that moves the numbers above: the casino's main faucet. Sitting
+                  next to the loop it feeds is the point — you tune it against what you see. */}
+              <DailyChipsControl />
             </div>
           )}
 

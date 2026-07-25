@@ -172,6 +172,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/sound-rewards` | admin | CRUD katalogu GT-dźwięków (widz wykupuje na `/sounds`, #505) |
 | `…/api/admin/trivia` | admin | CRUD pytań trivia + runda live na overlayu (#523/#524) |
 | `…/api/admin/clan-wars` | admin | Wojny klanów — start/koniec/punkty/pula (#477) |
+| `…/api/admin/casino-config` | admin | GET/PATCH ekonomii kasyna dla portalu — dziś `dailyChipsAmount` (darmowy dzienny grant żetonów, widełki 50–100 000; nieliczbowa wartość → **400**, poza widełkami → przycięcie). Audytowane (`update_casino_config`) |
 | `…/api/admin/economy-health` | admin | Analityka ekonomii — mint/burn wg powodu + trend dzienny + top earners/spenders (#525). **Dwa obiegi osobno:** blok główny = realne GT, blok `chips` = żetony (obieg/mint/burn/health + top źródła i spusty). `currency` jest **kluczem `groupBy`**, nie filtrem, więc druga waluta nie kosztuje ani jednego zapytania więcej; trend i top-userzy zostają GT-only |
 | `…/api/admin/community` | admin | Statystyki społeczności (top Ghost Companions itd., tylko odczyt) |
 | `…/api/admin/recap` | admin + plan `ai` | AI Stream Recap — generuje podsumowanie streamu i opcjonalnie wysyła na Discord (#516) |
