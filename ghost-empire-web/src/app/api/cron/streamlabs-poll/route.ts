@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { pollAndProcessDonations } from "@/lib/streamlabs";
 import { createLogger } from "@/lib/logger";
 import { verifyCronSecret } from "@/lib/utils";
+import { deploymentEnv, isProductionDeployment } from "@/lib/deployment";
 import * as Sentry from "@sentry/nextjs";
 
 const log = createLogger("cron.streamlabs-poll");
@@ -13,6 +14,19 @@ const log = createLogger("cron.streamlabs-poll");
 export async function GET(req: Request) {
   if (!verifyCronSecret(req.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Production-only. Vercel schedules crons on the production deployment, but the handler is
+  // reachable on every preview/dev build too (same code, same DB, same CRON_SECRET) — and there it
+  // would poll the SAME live Streamlabs connections and, on any hiccup, fire the money-in alert
+  // below. A false "donation income stalled" page teaches the operator to ignore the real one, so
+  // a non-production run stops here: no poll, no Sentry, HTTP 200 (a 500 would just move the noise
+  // to uptime monitoring). `isProductionDeployment()` is fail-open — a self-hosted portal with no
+  // VERCEL_ENV still polls and still alerts exactly as before.
+  if (!isProductionDeployment()) {
+    const env = deploymentEnv();
+    log.info("skipped — non-production deployment", { env });
+    return NextResponse.json({ ok: true, skipped: "non-production-deployment", env }, { status: 200 });
   }
 
   // Poll EVERY portal's Streamlabs connection, not just the founder's. Each connection

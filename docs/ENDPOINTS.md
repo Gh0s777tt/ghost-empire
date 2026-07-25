@@ -244,7 +244,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/webhooks/paymedia` | Webhook płatności PayMedia (sekret) |
 | `…/api/webhooks/stripe` | Webhook Stripe (podpis `STRIPE_WEBHOOK_SECRET`) — aktywacja/odnowienie/wygaśnięcie planu tenanta |
 | `…/api/yt/poll-live-chat` | Polling YouTube Live Chat (super chaty / membery) |
-| `…/api/cron/streamlabs-poll` | Cron (Vercel) — polling donacji Streamlabs (`CRON_SECRET`) |
+| `…/api/cron/streamlabs-poll` | Cron (Vercel, co 15 min) — polling donacji Streamlabs, **per portal** (`CRON_SECRET`). **Tylko produkcja:** na deployu `VERCEL_ENV=preview`/`development` zwraca 200 `{skipped:"non-production-deployment"}` bez pollingu i bez Sentry (fail-open: brak `VERCEL_ENV` = produkcja, patrz [ENV.md](ENV.md)). Awaria któregokolwiek portalu → HTTP 500 + `Sentry.captureMessage` (alert na zastój wpływu) |
 | `…/api/cron/tipply-poll` | Cron (Vercel, `*/15`) — polling wpłat **Tipply** dla każdego portalu, który podłączył widget (`CRON_SECRET`). Tipply nie ma API ani webhooka, więc odpytujemy publiczny endpoint widgetu streamera. Każdy portal w osobnym `try/catch` (jedna zepsuta integracja nie blokuje reszty), błąd ląduje w `lastError` na wierszu integracji **i** w Sentry, a odpowiedź jest **niezerowa (500)**, gdy którykolwiek portal padł — zatrzymana szyna wpłat nie może wyglądać jak „cichy dzień”. Wpłaty są **zawsze `unverified`** → kolejka rekoncyliacji, nigdy automatyczny mint |
 | `…/api/cron/prune` | Cron (Vercel, 04:00) — czyszczenie starych rekordów transientowych + **auto-wygasanie bounty ze zwrotem** (#681); `CRON_SECRET` |
 | `…/api/cron/weekly-rewards` | Cron (Vercel, pon.) — tygodniowe nagrody GT + **miesięczne rozliczenie Ligi Typerów** (idempotentne, #682); `CRON_SECRET` |
