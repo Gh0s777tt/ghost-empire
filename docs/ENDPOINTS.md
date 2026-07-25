@@ -178,8 +178,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/recap` | admin + plan `ai` | AI Stream Recap — generuje podsumowanie streamu i opcjonalnie wysyła na Discord (#516) |
 | `…/api/admin/clip-director` | admin | AI Clip Director — konfiguracja auto-klipów z hype'u czatu + ostatnie klipy (#517) |
 | `…/api/admin/section-data` | admin/perm | Lazy-dane sekcji panelu (`?s=<sekcja>`) |
-| `…/api/admin/twitch-streamer-auth` (+callback) · `twitch-eventsub` | admin | Autoryzacja streamera Twitch + subskrypcje EventSub |
-| `…/api/admin/kick-streamer-auth` (+callback) · `kick-events` | admin | Autoryzacja streamera Kick + eventy |
+| `…/api/admin/twitch-streamer-auth` (+callback) · `twitch-eventsub` | admin | Autoryzacja streamera Twitch + subskrypcje EventSub (**EventSub chodzi na tokenie *aplikacji*** — wiersz streamera daje tam tylko `broadcasterId`) |
+| `…/api/admin/kick-streamer-auth` (+callback) · `kick-events` | admin | Autoryzacja streamera Kick + eventy. `kick-events` wymaga tokenu **streamera** (Kick nie pozwala zakładać/kasować subskrypcji tokenem aplikacji), więc odświeża go sam przez `getValidKickAccessToken`; gdy się nie da → `400` + `authCode` (`reauth_required` = przeklikaj „Autoryzuj Kick", `refresh_failed` = przejściowe) |
 | `…/api/admin/youtube-streamer-auth` (+callback) | admin | Autoryzacja konta YouTube |
 | `…/api/admin/rumble` | admin | Per-portal Rumble (#730) — GET status na żywo + `hasUrl`, POST zapis/wyczyść `rumbleApiUrl` (szyfrowany), tenant-scoped, audit-logged |
 | `…/api/admin/role-roster` | admin | Lista posiadaczy ról/rang portalu (#700) — odczyt do panelu Role |

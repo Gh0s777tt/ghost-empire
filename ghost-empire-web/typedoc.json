@@ -10,6 +10,7 @@
     "src/lib/economy-anomaly.ts",
     "src/lib/companion-token.ts",
     "src/lib/platform-tokens.ts",
+    "src/lib/oauth-refresh.ts",
     "src/lib/ssrf-guard.ts",
     "src/lib/moderation.ts",
     "src/lib/refund.ts",

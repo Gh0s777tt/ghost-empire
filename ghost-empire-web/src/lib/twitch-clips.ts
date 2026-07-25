@@ -4,8 +4,11 @@
 // same pattern as live-status. Empty list when no Twitch broadcaster is set up.
 import { cacheJson } from "@/lib/redis";
 import { getAppAccessToken, helixGet, helixPost } from "@/lib/twitch";
-import { getTwitchStreamerToken } from "@/lib/platform-tokens";
-import { decryptSecret } from "@/lib/crypto";
+import { getTwitchStreamerToken, getValidTwitchAccessToken } from "@/lib/platform-tokens";
+import { OAuthTokenError } from "@/lib/oauth-refresh";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("twitch-clips");
 
 const CLIPS_CACHE_MS = 5 * 60_000;
 const CLIPS_WINDOW_DAYS = 7;
@@ -67,13 +70,27 @@ export function getRecentClips(tid: string | null): Promise<Clip[]> {
  * streamer's USER token WITH the `clips:edit` scope — returns null gracefully if the
  * scope isn't granted, no token, the channel isn't live, or Helix rejects the call.
  * Returns the clip id + edit URL (the clip itself takes a few seconds to finish).
+ *
+ * @remarks The token comes from `getValidTwitchAccessToken`, which refreshes it first — a Twitch
+ * user token lives ~4 h, and this function's own "never throw to the caller" contract means an
+ * expired one showed up as *nothing happening*, forever, with no error anywhere. That is why the
+ * auth failure below is logged rather than swallowed silently: dormant-by-design (no `clips:edit`)
+ * and dead-credential must not look the same in the logs.
  */
 export async function createTwitchClip(tenantId: string | null): Promise<{ id: string; editUrl: string } | null> {
   const s = await getTwitchStreamerToken(tenantId);
   if (!s?.broadcasterId) return null;
   if (!s.scope?.split(/\s+/).includes("clips:edit")) return null; // scope not granted → dormant
-  const token = decryptSecret(s.accessToken);
-  if (!token) return null;
+  let token: string;
+  try {
+    token = await getValidTwitchAccessToken(tenantId);
+  } catch (e) {
+    if (e instanceof OAuthTokenError) {
+      log.warn("clip skipped — Twitch credentials unusable", { tenantId, code: e.code });
+      return null;
+    }
+    throw e;
+  }
   try {
     const res = await helixPost<{ data?: { id: string; edit_url: string }[] }>(
       `/clips?broadcaster_id=${s.broadcasterId}`,
