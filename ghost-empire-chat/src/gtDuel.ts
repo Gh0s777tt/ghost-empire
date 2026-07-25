@@ -1,6 +1,6 @@
-// PvP duels on GT: !duel <bet> (open) | !duel @user <bet> (targeted) | !accept | !decline.
-// The bot only parses + calls the portal (Bearer BOT_SECRET); all GT math + atomicity are
-// server-side in lib/duels.ts.
+// PvP duels on the free casino CHIPS (żetony — not the portal's %gt%): !duel <bet> (open) |
+// !duel @user <bet> (targeted) | !accept | !decline. The bot only parses + calls the portal
+// (Bearer BOT_SECRET); all chip math + atomicity are server-side in lib/duels.ts.
 import { env } from "./env";
 
 export function isDuelTrigger(message: string): boolean {
@@ -41,7 +41,10 @@ export async function handleDuel(
   const parsed = parse(message);
   if (!parsed) return null;
   if (parsed.action === "usage") {
-    return `@${u} pojedynek na GT: !duel 100 (otwarty, każdy może !accept) albo !duel @nick 100, a przeciwnik wpisuje !accept.`;
+    // "żetony", NOT the portal's token name: duels wager the FREE casino chips
+    // (lib/duels.ts moves `chips`, and its own copy already says "żetonów"). Per terms §3
+    // chips are a separate, platform-wide currency from the tenant-named %gt%.
+    return `@${u} pojedynek na żetony: !duel 100 (otwarty, każdy może !accept) albo !duel @nick 100, a przeciwnik wpisuje !accept.`;
   }
 
   const payload: Record<string, unknown> = { platform, platformUserId, username, action: parsed.action };

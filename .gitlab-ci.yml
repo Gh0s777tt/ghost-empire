@@ -136,13 +136,14 @@ lint:web:
     - npm run docs:i18n:dup    # scripts/check-i18n-duplicates.mjs (zero zduplikowanych kluczy w src/messages/*.json)
   rules: !reference [.rules_mr_main, rules]
 
-# ghost-empire-chat ma tylko `typecheck` (brak lint/test/build — tsx odpala TS wprost).
+# ghost-empire-chat: `typecheck` + `lint:brand` + `test` (brak eslint/build — tsx odpala TS wprost).
 lint:chat:
   extends: .chat
   stage: lint
   needs: []
   script:
     - npm run typecheck        # tsc --noEmit
+    - npm run lint:brand       # tsx scripts/check-white-label.ts (AST: brak founderowych literałów w copy na czat)
   rules: !reference [.rules_mr_main, rules]
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -152,6 +153,18 @@ lint:chat:
 # coverage w vitest.config.ts to `text-summary` → drukuje wiersz "Statements : NN%",
 # stąd regex poniżej (NIE 'All files' — tego ten reporter NIE drukuje). Progów brak,
 # więc job nie failuje na spadku pokrycia (zgodnie ze stanem repo).
+# Bot: wbudowany test runner Node (`node:test`) odpalany przez tsx — świadomie BEZ vitesta,
+# bo jedyne dev-tooling bota to tsx + tsc i nie chcemy tam nowej zależności. Pilnuje
+# inwariantów `src/branding.ts`: awaria portalu schodzi na neutralne „tokeny" (NIGDY na „GT"),
+# back-off zamiast round-tripu na wiadomość, brak rzutu w ścieżkę czatu.
+test:chat:
+  extends: .chat
+  stage: test
+  needs: ["lint:chat"]
+  script:
+    - npm test                 # tsx --test src/__tests__/*.test.ts
+  rules: !reference [.rules_mr_main, rules]
+
 test:unit:web:
   extends: .web
   stage: test

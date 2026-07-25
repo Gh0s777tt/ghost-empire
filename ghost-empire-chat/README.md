@@ -18,6 +18,7 @@ FAQ / timers / welcomes / song requests, and awards Ghost Tokens via the portal'
 - **Powitania** — wita pierwszą wiadomość widza w sesji (`/admin#welcome`).
 - **Song requests** — `!sr <link>` → kolejka w portalu (`/admin#songs`).
 - **Chat overlay** — forwarduje wiadomości do portalu pod OBS source `/overlay/chat`.
+- **Branding waluty (white-label)** — nazwa waluty w wiadomościach na czacie pochodzi z portalu (`GET /api/companion/branding`, cache z TTL 5 min), nie z env-ów. Zmiana `tokenName` w panelu wchodzi **bez restartu bota**; przy nieosiągalnym portalu bot mówi neutralnie („tokeny"), nigdy „GT".
 
 Każda wiadomość przechodzi jeden pipeline per platforma: sygnał aktywności → `!sr` / komenda / FAQ → powitanie → naliczenie GT → feed do overlaya. Listy (komendy/FAQ/timery) i config (powitania) bot pobiera z portalu co ~2 min — zmiany w panelu wchodzą bez restartu.
 
@@ -47,6 +48,34 @@ npm run auth:youtube     # one-time
 npm run dev              # connect + listen
 ```
 
+## Bramki (uruchamiane z `ghost-empire-chat/`)
+
+```bash
+npm run typecheck    # tsc --noEmit
+npm run lint:brand   # bramka white-label (AST) — zero founderowych literałów w copy na czat
+npm test             # tsx --test src/__tests__/*.test.ts
+```
+
+Wszystkie trzy biegną w CI (`lint:chat` → typecheck + lint:brand, `test:chat` → test).
+
+**`lint:brand`** (`scripts/check-white-label.ts`) chodzi po **AST TypeScripta** i failuje, gdy
+founderowy literał („Ghost Tokens", „GT", „Ghost Empire", handle/Discord właściciela) trafi do
+stringa albo templata, który może wyjść na czat widza. Świadomie pomija: komentarze (są trivią dla
+parsera — `// 1 GT per chatter per minute` jest OK), argumenty `console.*` (logi operatora),
+`src/__tests__/**` (test musi móc napisać „GT", żeby sprawdzić jego BRAK) oraz linie z
+`// wl-ok: <powód>`. Wzorzec symbolu jest **case-sensitive**, więc współdzielony z portalem
+placeholder `%gt%` przechodzi. Grep by tu nie wystarczył w obie strony: większość surowych trafień
+w `src/` to komentarze, a copy dla widza jest **argumentem wywołania** (`broadcast(\`…\`)`) lub
+zwracanym templatem — nie `field: "literal"`. Testy używają **wbudowanego runnera Node
+(`node:test` + `node:assert`)** odpalanego przez `tsx` — **świadomie bez vitesta**: dev-tooling
+bota to tylko `tsx` + `tsc`, a `node:test` pokrywa te przypadki bez dokładania zależności do
+runtime'u, który chodzi 24/7 (nowa zależność = koszt utrzymania; patrz CLAUDE.md). Testy
+`src/__tests__/branding.test.ts` pilnują tego, co naprawdę nośne w `src/branding.ts` — **nie**
+„czy fetch działa", ale zachowanie przy AWARII: portal down → neutralne „tokeny" (nigdy „GT"),
+niekompletny payload odrzucony (żadnego „obstawiaj undefined" na czacie), back-off zamiast
+round-tripu na każdą wiadomość, brak rzutu w ścieżkę czatu. Zwalidowane mutation-testingiem:
+podmiana fallbacku na `Ghost Tokens`/`GT` wywala 7 testów, usunięcie back-offu — 1.
+
 ## Hosting (24/7)
 
 Na PC bot pada, gdy komputer śpi. Pod całodobowe działanie jest **`Dockerfile`** (outbound-only, brak portów do wystawienia):
@@ -72,6 +101,7 @@ ENV_FILE=tenants/neo-zone.env npm start              # instancja klienta
 npm start                                            # bez ENV_FILE = klasyczne .env (founder)
 ```
 
+- **Nazwa waluty NIE jest env-em.** `src/branding.ts` czyta ją z portalu (`GET /api/companion/branding` — publiczny, rozpoznaje tenanta po Hoście, rate-limit 120/min/IP) i cache'uje z TTL 5 min, więc: (a) nowy portal nie wymaga dodatkowych linii w `tenants/*.env`, (b) zmiana nazwy waluty w panelu propaguje się **bez restartu**, (c) nic nie może się rozjechać z wierszem `Tenant`. Portal nieosiągalny → wiadomości mówią neutralnie „tokeny/tokenów" (back-off 60 s), **nigdy** „GT". Kasyno (`!duel`, `!heist`, `!slots`) to osobna, platformowa waluta — **żetony** — i tam branding się nie stosuje (regulamin §3).
 - `PORTAL_URL` instancji wskazuje **subdomenę tenanta** (`https://neo-zone.twoja-domena.com`) — portal rozpoznaje tenanta po Hoście, więc wszystkie nagrody/komendy/FAQ/timery lądują w danych właściwego portalu.
 - `BOT_SECRET` instancji: **najlepiej własny sekret portalu** (`Tenant.botSecret` danego tenanta) — portal **scope'uje wtedy każdy lookup usera/GT do tenanta, do którego należy sekret**, więc instancja może ruszać wyłącznie SWOICH widzów. Globalny `BOT_SECRET` deploymentu portalu też jest akceptowany (kompatybilność wsteczna — tak działa bot założyciela), ale to klucz first-party: **nie dawaj go obcemu streamerowi**. Zero zmian w kodzie bota — to ta sama zmienna, tylko inna wartość. Skąd go wziąć: panel portalu `/admin#bot` → „Sekret bota portalu” (pokazywany **raz**, bez odczytu wstecz; rotacja unieważnia poprzedni natychmiast).
 - Każda instancja ma własny kanał Twitch/Kick/YT i własne (lub współdzielone konto bota) poświadczenia.

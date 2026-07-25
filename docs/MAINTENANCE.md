@@ -73,8 +73,9 @@ mają `needs: []` — startują równolegle. \* `commitlint` biegnie **wyłączn
 | Job | Stage | Bramka | Kiedy biegnie | Co robi |
 |---|---|---|---|---|
 | `commitlint` | verify | 🔴 twarda | **MR** | Waliduje komunikaty commitów (Conventional Commits). |
-| `lint:web` | lint | 🔴 twarda | MR + main | `typecheck` · `lint` (eslint) · `docs:check` · `docs:env` · `docs:i18n`. |
-| `lint:chat` | lint | 🔴 twarda | MR + main | `typecheck` (bot). |
+| `lint:web` | lint | 🔴 twarda | MR + main | `typecheck` · `lint` (eslint) · `docs:check` · `docs:env` · `docs:i18n` · `docs:i18n:dup`. |
+| `lint:chat` | lint | 🔴 twarda | MR + main | `typecheck` · **`lint:brand`** (bot) — bramka white-label: chodzi po **AST TypeScripta** i failuje, gdy founderowy literał („Ghost Tokens", „GT", „Ghost Empire", handle/Discord właściciela) trafi do stringa/templata, który może wyjść na czat. Komentarze, `console.*`, placeholder `%gt%` i `__tests__` są świadomie pomijane; wyjątek przez `// wl-ok: <powód>`. **Grep by tu nie wystarczył** — większość surowych trafień w `src/` to komentarze, a copy dla widza jest **argumentem wywołania** (`broadcast(…)`), nie `field: "literal"`. |
+| `test:chat` | test | 🔴 twarda | MR + main | `npm test` (bot) — wbudowany runner **`node:test`** przez tsx, **bez vitesta** (dev-tooling bota to tylko tsx + tsc, nie dokładamy tam zależności). Pilnuje inwariantów `src/branding.ts`: awaria portalu → neutralne „tokeny", **nigdy** „GT". |
 | `test:unit:web` | test | 🔴 twarda | MR + main | `test:coverage` (vitest, bez bazy). Badge coverage. |
 | `test:integration:web` | test | 🔴 twarda | MR + main | Realny **Postgres 16** (service) + `prisma db push` + testy integracyjne. |
 | `build:web` | build | 🔴 twarda | MR + main | `next build` (env-stuby; build nie sięga bazy). |

@@ -257,7 +257,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 |---|---|---|
 | `…/api/health` | GET | Health-check (200 OK / 503 gdy baza nieosiągalna) |
 | `…/api/discover` | GET/OPTIONS | Publiczne odkrywanie kanał→portal dla rozszerzenia-companiona (`?platform=&channel=` → `{found, slug, name, ownerHandle, portalUrl}`; dopasowanie po `ownerHandle`, CORS `*`, rate-limit per IP, read-only, multi-tenant, zero danych wrażliwych) |
-| `…/api/companion/branding` | GET/OPTIONS | Publiczny branding portalu dla rozszerzenia-companiona (`{name, tokenName, tokenSymbol, brandColor, logoUrl}` z Hosta; CORS `*`, rate-limit per IP, read-only) |
+| `…/api/companion/branding` | GET/OPTIONS | Publiczny branding portalu (`{name, tokenName, tokenSymbol, brandColor, logoUrl}` z Hosta; CORS `*`, rate-limit 120/min/IP, read-only). **Dwóch konsumentów:** rozszerzenie-companion **oraz bot czatu** (`ghost-empire-chat/src/branding.ts` cache'uje to z TTL 5 min, by nazwać walutę w wiadomościach na czacie) — **musi zostać publiczny**, bot nie ma sesji; dołożenie auth cichaczem zrzuci czat każdego portalu na neutralne „tokeny" |
 | `…/api/companion/token` | POST/OPTIONS | Mint bezstanowego tokenu companiona (session, same-origin przez portal-bridge rozszerzenia) → `{token, expiresInDays:7}`; HMAC-podpisany `{userId, tenantId}` (bez db), CORS |
 | `…/api/live-status` | GET | Publiczny, cache'owany status „czy streamer jest live?" do bannera home (#500 — Twitch Helix, współdzielony z overlayem widzów) |
 | `…/api/support/click` | POST | Licznik klików metody wsparcia (#541 — beacon z `/support`, rate-limit per IP) |

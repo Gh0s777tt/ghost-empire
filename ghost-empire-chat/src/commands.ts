@@ -3,6 +3,7 @@
 // few minutes (cached). The list below is only a FALLBACK used when the very first
 // fetch fails (offline / portal down) so the bot is never command-less on boot.
 import { env } from "./env";
+import { applyBranding } from "./branding";
 import { setRaffleKeywords } from "./raffle";
 
 type Command = {
@@ -15,10 +16,14 @@ type Command = {
 
 const REFRESH_EVERY_MS = 2 * 60 * 1000;
 
+// The currency is per-tenant and unknown at module load, so fallback copy carries the
+// %tokenName% placeholder and is resolved at match time from the cached branding
+// (see applyBranding in matchCommand). A literal "Ghost Tokens"/"GT" here would be the
+// founder's currency in every portal's chat.
 const FALLBACK: Command[] = [
-  { trigger: "!portal", response: `Zgarniaj Ghost Tokens: ${env.portalUrl}`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
+  { trigger: "!portal", response: `Zgarniaj %tokenName%: ${env.portalUrl}`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
   { trigger: "!ranking", response: `Ranking widzów: ${env.portalUrl}/ranking`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
-  { trigger: "!sklep", response: `Wydaj GT w sklepie: ${env.portalUrl}/shop`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
+  { trigger: "!sklep", response: `Wydaj %tokenName% w sklepie: ${env.portalUrl}/shop`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
   { trigger: "!questy", response: `Dzienne questy: ${env.portalUrl}/quests`, cooldownSec: 15, requiresLive: false, activeFromMinute: 0 },
 ];
 
@@ -91,7 +96,9 @@ export function matchCommand(message: string): string | null {
   const now = Date.now();
   if (now - (lastUsed.get(trigger) ?? 0) < cmd.cooldownSec * 1000) return null;
   lastUsed.set(trigger, now);
-  return cmd.response;
+  // Only the built-in fallback copy carries placeholders; portal-managed responses are the
+  // tenant admin's own text and go out verbatim.
+  return everLoaded ? cmd.response : applyBranding(cmd.response);
 }
 
 // Exposed for tests / diagnostics.
