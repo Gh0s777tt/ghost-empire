@@ -177,6 +177,15 @@ odrzuca nieznaną walutę (**400**), zamiast po cichu wpisać śmieć do kolumny
    jak czytają ją `shop/buy` i `planRefund`). Przy okazji etykiety sekcji przestały mówić
    „GT" na sztywno (`%gt%` → symbol waluty portalu).
 
+### Bot na czacie (waluta i marka)
+Wrappery botowe (`api/bot/gt-game`, `api/bot/duel`) zostały przy Fazie 2 nietknięte i dalej
+mówiły „GT", choć `playGtGame`/`duels` liczą **żetony** — czyli bot ogłaszał wygraną w realnej
+walucie portalu za pieniądze, które realne nie są. Teraz wszędzie `CHIP_SYMBOL` (🪙), spójnie
+z `lib/duels.ts`/`lib/heist.ts`; marka w odpowiedzi `bot/duel` idzie z `getCurrentTenant()`.
+**Uwaga na przyszłość:** odpowiedzi bota trafiają na czat **werbatim** — markery `%gt%`
+nie mają tam kto rozwiązać, więc waluta kasyna zostaje dosłowna (uniwersalna), a marka jest
+rozwiązywana w kodzie. Pilnuje tego `src/app/api/bot/__tests__/chat-reply-branding.test.ts`.
+
 ### Alert na overlayu (waluta per zakup)
 Alert `shop_purchase` etykietuje kwotę walutą, którą **faktycznie obciążono**: `🪙` dla zakupu za
 żetony, `tenant.tokenSymbol` dla GT. Wcześniej był tam literał `"GT"` — czyli zakup za darmowe

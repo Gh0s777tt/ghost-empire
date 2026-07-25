@@ -1,11 +1,17 @@
 // src/app/api/bot/duel/route.ts
 // Bot → portal: PvP duels. Bearer BOT_SECRET. Resolves the chatter (and, for a targeted
-// challenge, the opponent handle) to Ghost Empire users via their linked Connection, then
-// delegates to lib/duels (all GT math + atomicity live there) and returns a chat message.
+// challenge, the opponent handle) to portal users via their linked Connection, then delegates
+// to lib/duels (all chips math + atomicity live there) and returns a chat message.
+//
+// These strings are posted VERBATIM into a streamer's chat — nothing downstream resolves
+// `%gt%`-style markers — so anything tenant-specific must be resolved here, and the stake is
+// named in the universal żetony 🪙 (duels run on chips, see docs/CHIPS-CASINO.md).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
+import { getCurrentTenant } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
+import { CHIP_SYMBOL } from "@/lib/shop-currency";
 import { createDuel, acceptDuel, declineDuel } from "@/lib/duels";
 
 const PLATFORMS = new Set(["twitch", "kick", "youtube"]);
@@ -57,7 +63,9 @@ export async function POST(req: Request) {
 
   const selfId = await resolveUserId(platform, body.platformUserId, username);
   if (!selfId) {
-    return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o GT.` });
+    // Duels are staked in CHIPS (docs/CHIPS-CASINO.md) — same wording as lib/duels.ts, and
+    // chips are universal, so nothing tenant-specific belongs in a chat reply.
+    return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o żetony ${CHIP_SYMBOL}.` });
   }
 
   // Per-user rate limit shared across duel actions (anti-spam / double-fire).
@@ -82,8 +90,12 @@ export async function POST(req: Request) {
     opponentName = target;
     opponentId = await resolveUserId(platform, undefined, target);
     if (!opponentId) {
+      // Brand comes from the portal the bot is calling, never the founder's literal name —
+      // this line lands in someone else's chat. Bot routes resolve the tenant like the rest
+      // of /api/bot (chat-commands, config, faq).
+      const brand = (await getCurrentTenant()).name;
       return NextResponse.json({
-        message: `@${u} @${target} nie ma konta Ghost Empire na ${platform}. Spróbuj otwartego wyzwania: !duel ${bet || 100}.`,
+        message: `@${u} @${target} nie ma konta ${brand} na ${platform}. Spróbuj otwartego wyzwania: !duel ${bet || 100}.`,
       });
     }
   }

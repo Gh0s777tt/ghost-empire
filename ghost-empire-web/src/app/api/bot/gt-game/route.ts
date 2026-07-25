@@ -1,12 +1,20 @@
 // src/app/api/bot/gt-game/route.ts
-// Bot → portal: play a GT mini-game (slots/coinflip) for a chatter. Bearer BOT_SECRET.
-// Resolves the chatter to a Ghost Empire user via their linked Connection (like
+// Bot → portal: play a casino mini-game (slots/coinflip/roulette) for a chatter. Bearer
+// BOT_SECRET. Resolves the chatter to a portal user via their linked Connection (like
 // chat-award), then plays atomically and returns a ready-to-post message.
+//
+// Currency: these games run on CHIPS — the free, non-purchasable casino currency
+// (docs/CHIPS-CASINO.md) — so every message here names żetony 🪙. Saying "GT" would announce
+// a win in the portal's REAL currency for money that was never real, and would print the
+// founder's token symbol into other streamers' chats. Chips are universal, so no tenant
+// lookup is needed; the marker convention (%gt%) must NOT be used here — chat replies are
+// posted verbatim, with nothing to resolve them.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit } from "@/lib/rate-limit";
 import { playGtGame } from "@/lib/gt-games";
+import { CHIP_SYMBOL } from "@/lib/shop-currency";
 
 export async function POST(req: Request) {
   if (!verifyBotSecret(req.headers.get("authorization"))) {
@@ -38,7 +46,7 @@ export async function POST(req: Request) {
       : null;
 
   if (!connection) {
-    return NextResponse.json({ message: `@${body.username ?? "widz"} połącz konto na ${platform} przez !portal, by grać za GT.` });
+    return NextResponse.json({ message: `@${body.username ?? "widz"} połącz konto na ${platform} przez !portal, by grać za żetony ${CHIP_SYMBOL}.` });
   }
 
   const rl = await rateLimit(`gtgame:${connection.userId}`, 10, 60_000);
@@ -51,8 +59,8 @@ export async function POST(req: Request) {
   const emoji = game === "slots" ? "🎰" : game === "roulette" ? "🎡" : "🪙";
   const bal = result.newBalance.toLocaleString("pl-PL");
   const message = result.payout > 0
-    ? `@${u} ${result.detail} — WYGRANA ${result.payout.toLocaleString("pl-PL")} GT! ${emoji} (saldo ${bal})`
-    : `@${u} ${result.detail} — pudło, -${result.bet.toLocaleString("pl-PL")} GT (saldo ${bal})`;
+    ? `@${u} ${result.detail} — WYGRANA ${result.payout.toLocaleString("pl-PL")} ${CHIP_SYMBOL}! ${emoji} (saldo ${bal})`
+    : `@${u} ${result.detail} — pudło, -${result.bet.toLocaleString("pl-PL")} ${CHIP_SYMBOL} (saldo ${bal})`;
 
   return NextResponse.json({ message, ok: true });
 }
