@@ -5,7 +5,7 @@
 // loses everything; cash out any time. Cards are drawn rank-uniform (infinite deck) so
 // the odds are exactly P(higher)=(13−r)/13, P(lower)=(r−1)/13 — clean and provable.
 import { prisma } from "@/lib/prisma";
-import { after } from "next/server";
+import { safeAfter } from "@/lib/after-safe";
 import { redis, withLock } from "@/lib/redis";
 import { MIN_BET, MAX_BET } from "@/lib/gt-games";
 import { cryptoRng } from "@/lib/secure-rng";
@@ -109,7 +109,7 @@ export async function hiloGuess(userId: string, sessionId: string, guess: "hi" |
     if (!won) {
       await r.del(k);
       await prisma.gtGamePlay.create({ data: { userId, game: "hilo", bet: s.bet, payout: 0, net: -s.bet, detail: `🂠 bust po ${s.steps} trafieniach (${HILO_RANKS[s.card.rank - 1]}→${HILO_RANKS[next.rank - 1]})`.slice(0, 80) } }).catch(() => {});
-      after(() => grantCasino(userId));
+      safeAfter(() => grantCasino(userId));
       return { ok: true, state: { sessionId, card: next, prevCard: s.card, multiplier: 0, steps: s.steps, potential: 0, status: "busted" } };
     }
 
@@ -147,6 +147,7 @@ export async function hiloCashout(userId: string, sessionId: string): Promise<Hi
   } catch {
     return { ok: false, status: 500, error: "Błąd serwera" };
   }
-  after(() => grantCasino(userId));
+  // Post-commit: the cash-out is paid, so the grant must not be able to throw it away.
+  safeAfter(() => grantCasino(userId));
   return { ok: true, state: { sessionId, card: s.card, multiplier: s.mult, steps: s.steps, potential: payout, status: "cashed", payout, net: payout - s.bet, newBalance } };
 }

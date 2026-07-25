@@ -16,7 +16,8 @@
     "src/lib/refund.ts",
     "src/lib/oauth-email.ts",
     "src/lib/chips.ts",
-    "src/lib/shop-currency.ts"
+    "src/lib/shop-currency.ts",
+    "src/lib/after-safe.ts"
   ],
   "out": "../docs/api",
   "readme": "none",

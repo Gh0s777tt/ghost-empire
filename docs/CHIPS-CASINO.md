@@ -246,7 +246,7 @@ mimo że `shop/buy` obciążał żetony.
 ```
 npx tsc --noEmit        # typy
 npx vitest run          # testy jednostkowe (economy/gt-games/wheel — już na chips)
-npm run test:integration # ✅ koło + duele + heist: chips ruszone, ledger GT NIETKNIĘTY (wymaga testowego Postgresa)
+npm run test:integration # ✅ koło + duele + heist + 7 gier (playGtGame): chips ruszone, ledger GT NIETKNIĘTY (wymaga testowego Postgresa)
 npx eslint <changed>
 npx next build
 npm run docs:check && npm run docs:env
@@ -268,6 +268,25 @@ chips, dołóż tę samą parę asercji.
   więc tabelę `Transaction` **pustą**; asercja „każdy wiersz to CHIPS" przeszłaby tam pusto (
   vacuously), dlatego test sprawdza tam **liczbę wierszy = 0**.
 **⚠️ db push (Faza 1)** — tylko za wyraźną zgodą właściciela, z backupem (patrz `docs/BACKUP.md`).
+
+### Zasada: po commicie pieniędzy nic już nie może zmienić wyniku
+Każda gra kasynowa odkłada nadanie osiągnięć **po** transakcji pieniężnej (`after()` z
+`next/server`, żeby gracz dostał saldo od razu). `after()` **rzuca synchronicznie poza request
+scope** (skrypt, cron, test), więc taki post-commit hook potrafił wywrócić grę, która była już
+**opłacona** — w `playGtGame` siedział wręcz **wewnątrz** `try` od pieniędzy, więc udana gra
+wracała jako złapane `500`, a przy jackpocie `catch` **oddawał do puli nadwyżkę już wypłaconą
+graczowi** (podwójne naliczenie). Dlatego:
+
+- wszystkie cztery biblioteki (`gt-games`, `gt-blackjack`, `gt-mines`, `gt-hilo`) wołają hooki
+  przez **`safeAfter()`** (`src/lib/after-safe.ts`), które połyka i rzut `after()`, i odrzucenie
+  samego zadania — nigdy nie wraca do wołającego;
+- w `playGtGame` **tylko `$transaction` jest w `try`**; `feedJackpot`, `safeAfter` i `return`
+  stoją za `catch`, więc zwrot nadwyżki jackpota jest osiągalny **wyłącznie z nieudanej
+  transakcji** (nic nie zostało wypłacone).
+
+Dokładając grę albo kolejny efekt poboczny po wypłacie: **`safeAfter`, nigdy goły `after()`**, i
+poza `try` od pieniędzy. Pinowane testami — `after-safe.test.ts` (jednostkowe) oraz przypadek
+„post-commit hook rzuca" w `casino-games.integration.test.ts` (realna baza).
 
 ## Rollback
 - Kod: rewers commitów (kasyno wraca na `tokens`).
