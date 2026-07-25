@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash, dropPlinko, PLINKO_MULTS, PLINKO_ROWS, isJackpotHit, scratchCard, SCRATCH_TIERS } from "@/lib/gt-games";
+import { jackpotKey, JACKPOT_KEY, spinSlots, flipCoin, SLOT_SYMBOLS, rouletteColor, spinRoulette, normRouletteChoice, normDiceChoice, rollDice, diceWinChance, diceMultiplier, normCrashChoice, rollCrash, dropPlinko, PLINKO_MULTS, PLINKO_ROWS, isJackpotHit, scratchCard, SCRATCH_TIERS } from "@/lib/gt-games";
 import { minesMultiplier, MINES_TILES, MINES_MAX_MULT } from "@/lib/gt-mines";
 
 describe("scratch cards", () => {
@@ -313,5 +313,21 @@ describe("roulette", () => {
     const rtp = returned / N;
     expect(rtp).toBeGreaterThan(0.92);
     expect(rtp).toBeLessThan(0.97);
+  });
+});
+
+describe("jackpotKey — pula jackpota jest PER PORTAL", () => {
+  it("dwa portale nigdy nie dzielą jednego klucza (inaczej zakłady jednego karmią jackpot drugiego)", () => {
+    expect(jackpotKey("tenant-A")).not.toBe(jackpotKey("tenant-B"));
+    expect(jackpotKey("tenant-A")).toContain("tenant-A");
+  });
+
+  it("null = deployment bez tenantów → oryginalny, nieprzyrostkowany klucz (konwencja: null tid = legacy)", () => {
+    expect(jackpotKey(null)).toBe(JACKPOT_KEY);
+    expect(jackpotKey("t1")).toBe(`${JACKPOT_KEY}:t1`);
+  });
+
+  it("jest deterministyczny — ten sam portal zawsze trafia w tę samą pulę", () => {
+    expect(jackpotKey("t1")).toBe(jackpotKey("t1"));
   });
 });

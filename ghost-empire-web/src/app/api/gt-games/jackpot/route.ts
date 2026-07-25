@@ -2,6 +2,7 @@
 // Public read of the progressive jackpot pool (seed + Redis surplus) for the casino UI.
 import { NextResponse } from "next/server";
 import { jackpotPool } from "@/lib/gt-games";
+import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
 
@@ -14,5 +15,6 @@ export async function GET(req: Request) {
   const rl = await rateLimit(`jackpot:ip:${ip}`, 120, 60_000);
   if (!rl.allowed) return NextResponse.json({ error: "Za dużo zapytań" }, { status: 429, headers: rateLimitHeaders(rl) });
 
-  return NextResponse.json({ pool: await jackpotPool() });
+  // Per-portal pool — a viewer must see THIS portal's jackpot, not a shared one.
+  return NextResponse.json({ pool: await jackpotPool(await currentTenantId()) });
 }

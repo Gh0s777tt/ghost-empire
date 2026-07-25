@@ -51,8 +51,8 @@ export const VIEWER_GROUPS: WikiGroup[] = [
     title: "Gry i zakłady",
     intro: "Rozrywka za GT. Wszystkie wyniki rozstrzyga serwer (uczciwe, bez manipulacji po stronie klienta).",
     items: [
-      { title: "Kasyno — 10 gier", route: "/kasyno", desc: "Sloty, Moneta, Ruletka, Kości, Crash (rakieta), Plinko, Mines, Blackjack, Hi‑Lo i Zdrapki. Ustawiasz zakład (10–100 000 GT), grasz wg zasad danej gry, wygrane dolicza się od razu. Jest leaderboard, historia i progresywny jackpot.", steps: ["Wybierz grę w lobby", "Ustaw zakład", "Graj zgodnie z instrukcją gry (obstaw / zakręć / cash‑out)"], shot: "pub-kasyno" },
-      { title: "Koło Fortuny", route: "/wheel", desc: "Zakręć kołem o segmenty z nagrodami (GT lub kosmetyki). Każdy spin kosztuje GT; segmenty i koszt ustawia streamer.", shot: "pub-wheel" },
+      { title: "Kasyno — 10 gier", route: "/kasyno", desc: "Sloty, Moneta, Ruletka, Kości, Crash (rakieta), Plinko, Mines, Blackjack, Hi‑Lo i Zdrapki. Ustawiasz zakład (10–100 000 żetonów 🪙 — darmowej waluty kasyna, odciętej od waluty portalu), grasz wg zasad danej gry, wygrane dolicza się od razu. Jest leaderboard, historia i progresywny jackpot.", steps: ["Wybierz grę w lobby", "Ustaw zakład", "Graj zgodnie z instrukcją gry (obstaw / zakręć / cash‑out)"], shot: "pub-kasyno" },
+      { title: "Koło Fortuny", route: "/wheel", desc: "Zakręć kołem o segmenty z nagrodami (żetony 🪙 lub kosmetyki). Każdy spin kosztuje żetony; segmenty i koszt ustawia streamer.", shot: "pub-wheel" },
       { title: "Predykcje", route: "/predictions", desc: "Obstawiaj GT na wynik (np. „Czy wygrasz next mapę?”). Otwarte → przyjmują zakłady, zablokowane → czekają na rozstrzygnięcie, rozstrzygnięte → pokazują wypłaty. Widać Twój bilans typera.", shot: "pub-predictions" },
       { title: "Trivia / Quiz", route: "/trivia", desc: "Odpowiadaj na pytania i zgarniaj GT za poprawne. Pytania zmienia streamer; trackowany jest Twój wynik i seria.", shot: "pub-trivia" },
       { title: "Ankiety", route: "/polls", desc: "Darmowe głosowania społeczności (bez GT) — wybór gry, decyzje streamowe, sondy. Wyniki na żywo.", shot: "pub-polls" },
@@ -185,7 +185,7 @@ export const COMMAND_GROUPS: CommandGroup[] = [
   {
     title: "Gry i kasyno",
     items: [
-      { cmd: "!slots <kwota>", desc: "Zakręć slotami o GT.", who: "Wszyscy" },
+      { cmd: "!slots <kwota>", desc: "Zakręć slotami o żetony 🪙.", who: "Wszyscy" },
       { cmd: "!coinflip <kwota>", desc: "Rzut monetą — podwój albo strać (alias !gamble).", who: "Wszyscy" },
       { cmd: "!roulette <kwota> <red|black|0-36>", desc: "Ruletka: kolor (2×) lub liczba (36×). Alias !roleta.", who: "Wszyscy" },
     ],
@@ -193,7 +193,7 @@ export const COMMAND_GROUPS: CommandGroup[] = [
   {
     title: "PvP i kooperacja",
     items: [
-      { cmd: "!duel <kwota> / !duel @nick <kwota>", desc: "Otwarty albo imienny pojedynek o GT (escrow do akceptacji).", who: "Wszyscy" },
+      { cmd: "!duel <kwota> / !duel @nick <kwota>", desc: "Otwarty albo imienny pojedynek o żetony 🪙 (escrow do akceptacji).", who: "Wszyscy" },
       { cmd: "!accept / !decline", desc: "Przyjmij lub odrzuć pojedynek; zwycięzca bierze pulę.", who: "Wszyscy" },
       { cmd: "!heist <kwota>", desc: "Napad kooperacyjny — większa ekipa = lepsze szanse; rozliczenie ~90 s po starcie.", who: "Wszyscy" },
     ],

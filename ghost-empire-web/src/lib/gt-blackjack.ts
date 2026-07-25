@@ -225,7 +225,7 @@ export async function blackjackStand(userId: string, sessionId: string): Promise
 }
 
 /** Double: only on the first two cards — charges another bet, draws ONE card, auto-stands. */
-export async function blackjackDouble(userId: string, sessionId: string): Promise<BjResult> {
+export async function blackjackDouble(userId: string, sessionId: string, tenantId: string | null = null): Promise<BjResult> {
   const rc = redis;
   if (!rc) return { ok: false, status: 503, error: "Gra niedostępna" };
   const k = sk(userId, sessionId);
@@ -246,7 +246,7 @@ export async function blackjackDouble(userId: string, sessionId: string): Promis
       if (e instanceof Error && e.message === "INSUFFICIENT") return { ok: false, status: 402, error: "Za mało żetonów na podwojenie" };
       return { ok: false, status: 500, error: "Błąd serwera" };
     }
-    void feedJackpot(s.bet).catch(() => {}); // the doubled portion feeds the pool too
+    void feedJackpot(s.bet, tenantId).catch(() => {}); // the doubled portion feeds THIS portal's pool too
 
     s.bet *= 2;
     s.doubled = true;

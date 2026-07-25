@@ -13,6 +13,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecret } from "@/lib/utils";
 import { rateLimit } from "@/lib/rate-limit";
+import { currentTenantId } from "@/lib/tenant";
 import { playGtGame } from "@/lib/gt-games";
 import { CHIP_SYMBOL } from "@/lib/shop-currency";
 
@@ -52,7 +53,8 @@ export async function POST(req: Request) {
   const rl = await rateLimit(`gtgame:${connection.userId}`, 10, 60_000);
   if (!rl.allowed) return NextResponse.json({ message: `@${body.username ?? "widz"} za szybko — chwila przerwy.` });
 
-  const result = await playGtGame(connection.userId, game, bet, typeof body.choice === "string" ? body.choice : undefined);
+  // Jackpot pool is per portal — the bot plays on behalf of THIS portal's chatter.
+  const result = await playGtGame(connection.userId, game, bet, typeof body.choice === "string" ? body.choice : undefined, await currentTenantId());
   const u = body.username ?? "widz";
   if (!result.ok) return NextResponse.json({ message: `@${u} ${result.error}` });
 

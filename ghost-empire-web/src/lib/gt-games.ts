@@ -11,42 +11,59 @@ import { cryptoRng } from "@/lib/secure-rng";
 export const MIN_BET = 10;
 export const MAX_BET = 100_000;
 
-// ── Progressive jackpot: 1% of EVERY casino bet feeds a shared Redis pool; hitting
-//    7️⃣7️⃣7️⃣ on slots wins seed + surplus and the pool resets to the seed. The Redis
-//    key stores only the SURPLUS (display/claim add the seed), so no init is needed.
-//    Without Redis the jackpot quietly shows the seed and never grows (best-effort).
+// ── Progressive jackpot: 1% of EVERY casino bet feeds a Redis pool; hitting 7️⃣7️⃣7️⃣ on
+//    slots wins seed + surplus and the pool resets to the seed. The Redis key stores only
+//    the SURPLUS (display/claim add the seed), so no init is needed. Without Redis the
+//    jackpot quietly shows the seed and never grows (best-effort).
+//
+//    The pool is **per portal** (`jackpotKey`): one shared key would let bets placed on one
+//    streamer's portal grow — and a win on another portal drain — everyone else's jackpot,
+//    which breaks the per-portal model and makes the displayed number meaningless. Chips
+//    carry no market value, so nothing is owed when a pool resets, but the number still has
+//    to describe THIS portal's play.
 export const JACKPOT_KEY = "jackpot:surplus";
 export const JACKPOT_SEED = 5_000;
 export const JACKPOT_CUT = 0.01;
+
+/**
+ * Redis key holding one portal's jackpot surplus.
+ *
+ * @param tenantId - The portal, from `currentTenantId()`. `null` means an unscoped/legacy
+ *   deployment (single-tenant, or rows predating the tenant split) and keeps the original
+ *   un-suffixed key — the same "null tid = legacy/unscoped" convention the DB reads use.
+ */
+export function jackpotKey(tenantId: string | null): string {
+  return tenantId ? `${JACKPOT_KEY}:${tenantId}` : JACKPOT_KEY;
+}
 
 export function isJackpotHit(reels: string[]): boolean {
   return reels.length === 3 && reels.every((r) => r === "7️⃣");
 }
 
-/** Feed 1% of a bet into the pool (fire-and-forget; jackpot is best-effort). */
-export async function feedJackpot(bet: number): Promise<void> {
+/** Feed 1% of a bet into this portal's pool (fire-and-forget; jackpot is best-effort). */
+export async function feedJackpot(bet: number, tenantId: string | null): Promise<void> {
   if (!redis) return;
   const cut = Math.floor(bet * JACKPOT_CUT);
   if (cut <= 0) return;
-  try { await redis.incrby(JACKPOT_KEY, cut); } catch { /* ignore */ }
+  try { await redis.incrby(jackpotKey(tenantId), cut); } catch { /* ignore */ }
 }
 
-/** Current pool for display (seed + surplus). */
-export async function jackpotPool(): Promise<number> {
+/** This portal's current pool for display (seed + surplus). */
+export async function jackpotPool(tenantId: string | null): Promise<number> {
   if (!redis) return JACKPOT_SEED;
-  try { return JACKPOT_SEED + (Number(await redis.get(JACKPOT_KEY)) || 0); } catch { return JACKPOT_SEED; }
+  try { return JACKPOT_SEED + (Number(await redis.get(jackpotKey(tenantId))) || 0); } catch { return JACKPOT_SEED; }
 }
 
-/** Atomically claim the pool (GETDEL surplus) — returns seed + surplus. */
-async function claimJackpot(): Promise<number> {
+/** Atomically claim this portal's pool (GETDEL surplus) — returns seed + surplus. */
+async function claimJackpot(tenantId: string | null): Promise<number> {
   if (!redis) return JACKPOT_SEED;
-  try { return JACKPOT_SEED + (Number(await redis.getdel(JACKPOT_KEY)) || 0); } catch { return JACKPOT_SEED; }
+  try { return JACKPOT_SEED + (Number(await redis.getdel(jackpotKey(tenantId))) || 0); } catch { return JACKPOT_SEED; }
 }
 
 /** Put a claimed surplus back (only used when the charge fails after a claim). */
-async function refundJackpotSurplus(surplus: number): Promise<void> {
+async function refundJackpotSurplus(surplus: number, tenantId: string | null): Promise<void> {
   if (!redis || surplus <= 0) return;
-  try { await redis.incrby(JACKPOT_KEY, surplus); } catch { /* ignore */ }
+  try { await redis.incrby(jackpotKey(tenantId), surplus); } catch { /* ignore */ }
 }
 
 // Slots: 3 reels. Only a 3-of-a-kind pays, with the symbol's multiplier. House edge
@@ -255,13 +272,20 @@ export class GtGameError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
-/** Charge `bet`, resolve the game, pay winnings and log it — atomically. `choice` is only
- *  used by roulette (red/black or a number 0-36). */
+/**
+ * Charge `bet`, resolve the game, pay winnings and log it — atomically.
+ *
+ * @param choice - Only used by roulette (red/black or a number 0-36) and dice/crash.
+ * @param tenantId - The portal whose jackpot pool this play feeds and can claim
+ *   (`currentTenantId()`). Omitting it falls back to the unscoped legacy pool, so pass it
+ *   from every request path — a missing tenant silently pools portals together.
+ */
 export async function playGtGame(
   userId: string,
   game: "slots" | "coinflip" | "roulette" | "dice" | "crash" | "plinko" | "scratch",
   bet: number,
   choice?: string,
+  tenantId: string | null = null,
 ): Promise<GtGameResult> {
   if (!Number.isInteger(bet) || bet < MIN_BET || bet > MAX_BET) {
     return { ok: false, status: 400, error: `Stawka musi być ${MIN_BET}-${MAX_BET} żetonów` };
@@ -282,7 +306,7 @@ export async function playGtGame(
     detail = o.reels.join("");
     payout = o.multiplier > 0 ? bet * o.multiplier : 0;
     if (isJackpotHit(o.reels)) {
-      jackpotWon = await claimJackpot();
+      jackpotWon = await claimJackpot(tenantId);
       payout += jackpotWon;
       detail += " 💰JACKPOT!";
     }
@@ -350,7 +374,7 @@ export async function playGtGame(
     });
 
     // Feed the progressive pool AFTER a successful charge (1% of the bet, best-effort).
-    void feedJackpot(bet);
+    void feedJackpot(bet, tenantId);
 
     // Casino achievements — deferred via after() so the player gets their balance immediately.
     // This is the hottest money loop; the multi-query grant runs off the response path (and
@@ -363,7 +387,7 @@ export async function playGtGame(
     return { ok: true, game, bet, payout, net: payout - bet, newBalance: result, detail, reels, roll, dice, crash, plinko, scratch };
   } catch (e) {
     // The pot was grabbed before the charge — put the surplus back on failure.
-    if (jackpotWon > JACKPOT_SEED) void refundJackpotSurplus(jackpotWon - JACKPOT_SEED);
+    if (jackpotWon > JACKPOT_SEED) void refundJackpotSurplus(jackpotWon - JACKPOT_SEED, tenantId);
     if (e instanceof GtGameError) return { ok: false, status: e.status, error: e.message };
     return { ok: false, status: 500, error: "Błąd serwera" };
   }

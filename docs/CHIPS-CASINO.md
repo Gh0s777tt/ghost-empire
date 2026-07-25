@@ -212,7 +212,16 @@ mimo że `shop/buy` obciążał żetony.
 ## Faza 8 — ekonomia / anomalie / jackpot
 1. ✅ **`src/lib/economy-anomaly.ts`** i weekly-ranking liczą realną ekonomię po `currency: "GT"`
    (anomaly domknięte przy grancie żetonów — patrz Faza 6 §1; weekly-ranking już wcześniej).
-2. **Jackpot** (`gt-games.ts` Redis) — pula **żetonowa**, bez wartości (komunikat „jackpot w żetonach"). ⏳
+2. ✅ **Jackpot** (`gt-games.ts` Redis) — pula jest **żetonowa** (gry liczą `chips`, kasyno pokazuje
+   ją z 🪙) **i od teraz per portal**. Wcześniej klucz `jackpot:surplus` był **jeden, globalny**:
+   zakłady widzów jednego streamera podbijały jackpot wszystkim, a trafienie 7️⃣7️⃣7️⃣ na jednym
+   portalu **drenowało pulę** zbudowaną przez inne. Teraz `jackpotKey(tenantId)` →
+   `jackpot:surplus:<tenantId>` (a `null` = deployment bez tenantów zostaje na starym,
+   nieprzyrostkowanym kluczu — ta sama konwencja co odczyty z DB). Tenant przewleczony przez
+   `feedJackpot` / `jackpotPool` / `claimJackpot` / `playGtGame` / `blackjackDouble` i wszystkie
+   trasy kasyna (+ bot). **Jednorazowy efekt wdrożenia:** dotychczasowa wspólna nadwyżka
+   zostaje osierocona pod starym kluczem — pule startują od ziarna (5 000). Żetony nie mają
+   wartości rynkowej, więc nikomu nic nie przepada, ale warto o tym wiedzieć przed deployem.
 3. ✅ Dashboard „zdrowie ekonomii" — dwa obiegi (GT vs chips) osobno (patrz Faza 6 §3).
 
 ---
