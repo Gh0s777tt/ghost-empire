@@ -7,7 +7,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecretForTenant } from "@/lib/utils";
-import { getCurrentTenantBotAuth } from "@/lib/tenant";
+import { getCurrentTenantBotAuth, getCurrentTenant } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { createDuel, acceptDuel, declineDuel } from "@/lib/duels";
 
@@ -42,6 +42,11 @@ export async function POST(req: Request) {
   if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // The messages below are posted VERBATIM in the streamer's chat, so they must carry THIS
+  // portal's brand + currency, never the founder's "Ghost Empire"/"GT". Free: getCurrentTenant()
+  // shares the same cache()d tenant row that getCurrentTenantBotAuth() just resolved (botSecret
+  // is deliberately kept out of TenantBrand, hence two calls rather than one helper).
+  const { shortName, tokenSymbol } = await getCurrentTenant();
   let body: {
     platform?: string;
     platformUserId?: string;
@@ -67,7 +72,7 @@ export async function POST(req: Request) {
 
   const selfId = await resolveUserId(tenantId, platform, body.platformUserId, username);
   if (!selfId) {
-    return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o GT.` });
+    return NextResponse.json({ message: `@${u} połącz konto na ${platform} przez !portal, by walczyć o ${tokenSymbol}.` });
   }
 
   // Per-user rate limit shared across duel actions (anti-spam / double-fire).
@@ -93,7 +98,7 @@ export async function POST(req: Request) {
     opponentId = await resolveUserId(tenantId, platform, undefined, target);
     if (!opponentId) {
       return NextResponse.json({
-        message: `@${u} @${target} nie ma konta Ghost Empire na ${platform}. Spróbuj otwartego wyzwania: !duel ${bet || 100}.`,
+        message: `@${u} @${target} nie ma konta ${shortName} na ${platform}. Spróbuj otwartego wyzwania: !duel ${bet || 100}.`,
       });
     }
   }
