@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
-import { decryptSecret } from "@/lib/crypto";
 import {
   getAppAccessToken,
   listEventSubscriptions,
@@ -12,10 +11,29 @@ import {
   deleteEventSubscription,
   KICK_EVENT_TYPES_TO_SUBSCRIBE,
 } from "@/lib/kick";
-import { getKickStreamerToken } from "@/lib/platform-tokens";
+import { getKickStreamerToken, getValidKickAccessToken } from "@/lib/platform-tokens";
+import { OAuthTokenError } from "@/lib/oauth-refresh";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("kick-events");
+
+/**
+ * Turn an {@link OAuthTokenError} into the message the admin sees.
+ *
+ * Kick needs the *streamer's* token to create/delete subscriptions, and that token expires in about
+ * an hour — so before the refresh flow existed this route failed on a dead credential nearly every
+ * time it was used, with only Kick's raw `401` body to explain it. Splitting `reauth_required`
+ * (click Connect again) from `refresh_failed` (Kick is unhappy, try later) is the difference
+ * between a fixable error and a mystery.
+ *
+ * @remarks The re-auth wording stays generic on purpose: `reauth_required` covers both "never
+ * connected" and "the grant died", and the admin's next step is the same button either way.
+ */
+function kickAuthMessage(e: OAuthTokenError): string {
+  return e.code === "refresh_failed"
+    ? "Kick chwilowo nie odświeżył tokenu streamera — spróbuj ponownie za chwilę."
+    : "Połączenie z Kickiem wymaga ponownej autoryzacji — kliknij 'Autoryzuj Kick'.";
+}
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -90,13 +108,26 @@ export async function POST(req: Request) {
       });
     }
 
+    // Refresh-on-read: the stored access token is ~1 h old at best by the time an admin clicks
+    // this, so resolve a fresh one instead of decrypting a likely-dead credential.
+    let userToken: string;
+    try {
+      userToken = await getValidKickAccessToken();
+    } catch (e) {
+      if (e instanceof OAuthTokenError) {
+        log.warn("setup blocked — Kick credentials unusable", { code: e.code });
+        return NextResponse.json({ error: kickAuthMessage(e), authCode: e.code }, { status: 400 });
+      }
+      throw e;
+    }
+
     const results: Array<{ type: string; ok: boolean; id?: string; error?: string }> = [];
     let kickStatus = 0;
     let kickRaw = "";
     try {
       const resp = await createEventSubscriptions(
         toCreate.map((t) => ({ name: t.name, version: t.version })),
-        decryptSecret(streamerToken.accessToken) ?? "",
+        userToken,
       );
       kickStatus = resp.status;
       kickRaw = resp.rawBody.slice(0, 800);
@@ -147,12 +178,18 @@ export async function POST(req: Request) {
 
   if (body.action === "delete") {
     if (!body.id) return NextResponse.json({ error: "Brak id" }, { status: 400 });
-    const streamerToken = await getKickStreamerToken();
-    if (!streamerToken) {
-      return NextResponse.json({ error: "Brak Kick streamer tokenu" }, { status: 400 });
+    let userToken: string;
+    try {
+      userToken = await getValidKickAccessToken();
+    } catch (e) {
+      if (e instanceof OAuthTokenError) {
+        log.warn("delete blocked — Kick credentials unusable", { code: e.code });
+        return NextResponse.json({ error: kickAuthMessage(e), authCode: e.code }, { status: 400 });
+      }
+      throw e;
     }
     try {
-      await deleteEventSubscription(body.id, decryptSecret(streamerToken.accessToken) ?? "");
+      await deleteEventSubscription(body.id, userToken);
       await prisma.kickEventSubscription.delete({ where: { id: body.id } }).catch(() => {});
       return NextResponse.json({ ok: true });
     } catch (e) {

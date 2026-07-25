@@ -85,6 +85,8 @@ Jeden wspólny `OVERLAY_TOKEN` (auto-generowany w bazie, rotowalny w `/admin#ale
 
 > **🔐 Sekrety at-rest:** klucze API (`IntegrationConfig`) i tokeny OAuth/streamer (`Connection`, `TwitchStreamerToken`, `KickStreamerToken`, `YouTubeStreamerToken`, `StreamlabsConnection`) są szyfrowane AES-256-GCM przez `lib/crypto.ts` (klucz z `ENCRYPTION_KEY`/`NEXTAUTH_SECRET`). Odczyt deszyfruje transparentnie; legacy plaintext działa i szyfruje się przy następnym zapisie.
 
+> **🔄 Tokeny streamera wygasają — odczytuj je przez `getValid*AccessToken`.** Token użytkownika Twitcha żyje ~4 h, Kicka ~1 h, więc `decryptSecret(row.accessToken)` prawie zawsze zwraca **martwe** poświadczenie. `lib/platform-tokens.ts` daje dwa rodzaje akcesorów: `get*StreamerToken` (surowy wiersz — `broadcasterId`, status połączenia, bezpieczne do wyświetlenia) i **`getValidTwitchAccessToken` / `getValidKickAccessToken`**, które przed zwróceniem odświeżają token zapisanym `refreshToken` i utrwalają go (compare-and-swap po dotychczasowym ciphertekście, bo oba serwisy rotują refresh token; zapis przypięty do `row.id`, więc nigdy nie dotyka innego portalu). Wspólna mechanika — progi wygaśnięcia, klasyfikacja odmowy, typowany `OAuthTokenError` z kodem `reauth_required`/`refresh_failed`/`token_unreadable` — siedzi w `lib/oauth-refresh.ts`. **Każde wywołanie API w imieniu streamera musi iść przez `getValid*`.** Wyjątek: rzeczy publiczne (lista klipów, live-status, odznaki czatu) i **subskrypcje EventSub Twitcha** chodzą na *tokenie aplikacji* (`getAppAccessToken`) i wygaśnięcie tokenu streamera ich nie dotyczy. YouTube ma własne `getValidAccessToken` w `lib/youtube.ts`, Streamlabs własne w `lib/streamlabs.ts` — docelowo do przepięcia na wspólny helper.
+
 ---
 
 ## 5. Panel admina (`/admin`)
