@@ -24,8 +24,25 @@ Niech donejty / suby / inne alerty **automatycznie** przełączają sceny, pokaz
 | `switch_scene` | przełącza scenę programową | `SetCurrentProgramScene` |
 | `toggle_source` | pokaż/ukryj źródło w scenie | `GetSceneItemId` + `SetSceneItemEnabled` |
 | `toggle_filter` | włącz/wyłącz filtr źródła | `SetSourceFilterEnabled` |
+| `set_filter_intensity` | ustaw **siłę** filtra (1–5 → zakres liczbowy) | `SetSourceFilterSettings` (+ `SetSourceFilterEnabled`) |
 
 Każda z opcjonalnym **auto-revertem** (`revertAfterMs`, 0.1–10 s) — np. błyśnij sceną na 5 s i wróć.
+
+### Siła efektu — `set_filter_intensity` (#806)
+Pierwsza akcja z **wielkością**, a nie z włącz/wyłącz. Wcześniej filtr dawało się tylko zapalić albo
+zgasić, więc wylosowane „nasilenie" nie miało jak dojść do OBS.
+
+Nazwę ustawienia i jego zakres podaje **streamer** (np. `Filter.Blur.Size`, 1–40), bo te klucze należą
+do konkretnej wtyczki filtra i nie wolno ich zgadywać. Nasilenie 1–5 jest **liniowo** mapowane na ten
+zakres, z trafieniem w oba końce dokładnie (kto ustawi 1–40, przy maksimum dostaje 40, nie 39,2).
+**Odwrócony zakres jest wspierany** (`min > max`) — w części ustawień mniejsza liczba to mocniejszy
+efekt. Filtr jest przy okazji **włączany**, bo ustawiona siła przy zgaszonym filtrze nic nie robi, a
+przywrotka odtwarza **cały** obiekt ustawień, nie samo jedno pole.
+
+⚠️ **Ta akcja NIE jest zapisywalna jako `ObsRule`** — model nie ma kolumn na nazwę ustawienia ani
+zakres, więc `validateObsAction` ją odrzuca (osobny `validateIntensityAction` obsługuje formularz kar).
+Powstaje w momencie losowania kary i leci prosto do aktuatora. `toggle_filter` i `set_filter_intensity`
+na tym samym filtrze dzielą **jeden cel przywrotki**, więc ich reverty się zwijają, a nie biją.
 
 ### Nakładające się efekty — jedna przywrotka na cel (#806)
 Dwa efekty z revertem na **tym samym celu** (ta sama para źródło+filtr, ten sam element sceny, albo dwie zmiany scen — OBS ma jedną scenę programową, więc te kolidują **zawsze**) nie psują się już wzajemnie. Zasada: **pierwszy efekt zapisuje stan bazowy, kolejne tylko przesuwają termin**, a na cel przypada dokładnie jedna zaplanowana przywrotka.

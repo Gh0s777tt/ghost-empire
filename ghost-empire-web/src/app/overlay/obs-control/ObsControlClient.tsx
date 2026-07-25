@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import OBSWebSocket from "obs-websocket-js";
 import { obsActionsForAlert, type ObsRule, type ObsAction } from "@/lib/obs-rules";
 import { revertTargetKey, mergeRevert, revertDelayMs, type PendingRevert, type RestoreSpec } from "@/lib/obs-revert";
+import { intensityValue } from "@/lib/obs-rules";
 
 type Config = { obsUrl: string | null; obsPassword: string | null; rules: ObsRule[] };
 type Status = "connecting" | "connected" | "no-config" | "no-token" | "bad-token" | "error";
@@ -55,8 +56,19 @@ export function ObsControlClient() {
           await obs.call("SetCurrentProgramScene", { sceneName: r.sceneName });
         } else if (r.kind === "source") {
           await obs.call("SetSceneItemEnabled", { sceneName: r.sceneName, sceneItemId: r.sceneItemId, sceneItemEnabled: r.enabled });
-        } else {
+        } else if (r.kind === "filter") {
           await obs.call("SetSourceFilterEnabled", { sourceName: r.sourceName, filterName: r.filterName, filterEnabled: r.enabled });
+        } else {
+          // Restore the WHOLE settings object we captured, so an intensity change cannot leave a
+          // half-overwritten filter config behind.
+          await obs.call("SetSourceFilterSettings", {
+            sourceName: r.sourceName,
+            filterName: r.filterName,
+            // Captured straight off the OBS WebSocket, so it IS JSON — the cast is the boundary
+            // between our own RestoreSpec type and obs-websocket-js's stricter JsonObject.
+            filterSettings: r.settings as Record<string, never>,
+            overlay: false,
+          });
         }
       } catch {
         /* the scene may have been deleted or OBS closed — nothing useful to do here */
@@ -112,6 +124,30 @@ export function ObsControlClient() {
         }
         await obs.call("SetSceneItemEnabled", { sceneName: a.scene, sceneItemId, sceneItemEnabled: a.visible });
         setLastAction(`${a.visible ? "show" : "hide"} "${a.source}"`);
+      } else if (a.kind === "set_filter_intensity") {
+        // The first action with a MAGNITUDE. Until this existed a filter could only be switched on or
+        // off, so a drawn "intensity" had nowhere to go. The setting name and its range come from the
+        // streamer because those keys belong to each filter plugin and must not be guessed.
+        const value = intensityValue(a.min, a.max, a.intensity);
+        if (a.revertAfterMs) {
+          await scheduleRevert(key, a.revertAfterMs, async () => {
+            let settings: Record<string, unknown> = {};
+            try {
+              const cur = await obs.call("GetSourceFilter", { sourceName: a.source, filterName: a.filter });
+              settings = ((cur as { filterSettings?: Record<string, unknown> }).filterSettings ?? {});
+            } catch { /* filter missing — an empty object restores plugin defaults, which is the best we can do */ }
+            return { kind: "filterSettings", sourceName: a.source, filterName: a.filter, settings };
+          });
+        }
+        await obs.call("SetSourceFilterSettings", {
+          sourceName: a.source,
+          filterName: a.filter,
+          filterSettings: { [a.setting]: value },
+          overlay: true, // merge with the filter's other settings instead of replacing them
+        });
+        // A filter set to a strength but left disabled would do nothing visible.
+        await obs.call("SetSourceFilterEnabled", { sourceName: a.source, filterName: a.filter, filterEnabled: true }).catch(() => {});
+        setLastAction(`filter "${a.filter}" ${a.setting}=${value} (siła ${a.intensity}/5)`);
       } else {
         if (a.revertAfterMs) {
           await scheduleRevert(key, a.revertAfterMs, async () => {

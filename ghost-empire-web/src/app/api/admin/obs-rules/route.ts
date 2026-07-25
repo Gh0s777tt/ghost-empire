@@ -34,6 +34,11 @@ function actionToColumns(a: ObsAction) {
   if (a.kind === "toggle_source") {
     return { actionKind: a.kind, scene: a.scene, source: a.source, filter: null, targetState: a.visible, revertAfterMs: a.revertAfterMs ?? null };
   }
+  if (a.kind === "set_filter_intensity") {
+    // Unreachable by construction: validateObsAction rejects this kind precisely because ObsRule has
+    // no columns for its setting name and range. Fail loudly rather than silently store a broken row.
+    throw new Error("set_filter_intensity cannot be stored as an ObsRule");
+  }
   return { actionKind: a.kind, scene: null, source: a.source, filter: a.filter, targetState: a.enabled, revertAfterMs: a.revertAfterMs ?? null };
 }
 

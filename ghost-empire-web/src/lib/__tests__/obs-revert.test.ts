@@ -1,7 +1,7 @@
 // src/lib/__tests__/obs-revert.test.ts
 import { describe, it, expect } from "vitest";
 import { revertTargetKey, mergeRevert, revertDelayMs, type PendingRevert, type RestoreSpec } from "@/lib/obs-revert";
-import type { ObsAction } from "@/lib/obs-rules";
+import { intensityValue, validateIntensityAction, validateObsAction, INTENSITY_SCALE_MAX, type ObsAction } from "@/lib/obs-rules";
 
 const NOW = 1_700_000_000_000;
 
@@ -93,5 +93,75 @@ describe("revertDelayMs", () => {
     // A stalled tab or a clock jump must not swallow the revert: a skipped one leaves the scene
     // modified with nothing left to fix it.
     expect(revertDelayMs(pending("k", NOW - 60_000, filterRestore(false)), NOW)).toBe(0);
+  });
+});
+
+describe("intensityValue — the first OBS action with a magnitude (#806)", () => {
+  it("hits both ends of the streamer's range exactly", () => {
+    // A streamer who configures 1–40 must see 40 at full strength, not 39.2.
+    expect(intensityValue(1, 40, 1)).toBe(1);
+    expect(intensityValue(1, 40, INTENSITY_SCALE_MAX)).toBe(40);
+  });
+
+  it("is linear in between", () => {
+    expect(intensityValue(0, 100, 2)).toBe(25);
+    expect(intensityValue(0, 100, 3)).toBe(50);
+    expect(intensityValue(0, 100, 4)).toBe(75);
+  });
+
+  it("supports an INVERTED range — some filter settings read backwards", () => {
+    // e.g. a "sharpness" where a smaller number is the stronger effect.
+    expect(intensityValue(40, 1, 1)).toBe(40);
+    expect(intensityValue(40, 1, INTENSITY_SCALE_MAX)).toBe(1);
+  });
+
+  it("clamps a nonsense intensity instead of extrapolating past the range", () => {
+    expect(intensityValue(1, 40, 99)).toBe(40);
+    expect(intensityValue(1, 40, -7)).toBe(1);
+    expect(intensityValue(1, 40, NaN)).toBe(1);
+  });
+
+  it("survives a non-finite range without producing NaN", () => {
+    expect(Number.isFinite(intensityValue(NaN, 10, 3))).toBe(true);
+    expect(Number.isFinite(intensityValue(1, Infinity, 3))).toBe(true);
+  });
+});
+
+describe("an intensity action is NOT storable as a rule", () => {
+  const intensity = {
+    kind: "set_filter_intensity", source: "Kamera", filter: "Blur",
+    setting: "Filter.Blur.Size", min: 1, max: 40, intensity: 3, revertAfterMs: 5_000,
+  };
+
+  it("validateObsAction rejects it — ObsRule has no columns for its setting and range", () => {
+    const r = validateObsAction(intensity);
+    expect(r.ok).toBe(false);
+  });
+
+  it("validateIntensityAction accepts and normalises it", () => {
+    const r = validateIntensityAction({ ...intensity, source: "  Kamera  ", intensity: 9 });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.source).toBe("Kamera");
+      expect(r.value.intensity).toBe(INTENSITY_SCALE_MAX); // clamped, not rejected
+    }
+  });
+
+  it("refuses a missing setting name or a non-numeric range", () => {
+    expect(validateIntensityAction({ ...intensity, setting: "  " }).ok).toBe(false);
+    expect(validateIntensityAction({ ...intensity, min: "1" }).ok).toBe(false);
+    expect(validateIntensityAction({ ...intensity, max: null }).ok).toBe(false);
+    expect(validateIntensityAction(null).ok).toBe(false);
+  });
+});
+
+describe("a filter toggle and an intensity change on the SAME filter collide", () => {
+  it("shares one revert target, so their reverts collapse instead of fighting", () => {
+    const toggle: ObsAction = { kind: "toggle_filter", source: "Kamera", filter: "Blur", enabled: true, revertAfterMs: 5_000 };
+    const magnitude: ObsAction = {
+      kind: "set_filter_intensity", source: "Kamera", filter: "Blur",
+      setting: "Filter.Blur.Size", min: 1, max: 40, intensity: 4, revertAfterMs: 5_000,
+    };
+    expect(revertTargetKey(toggle)).toBe(revertTargetKey(magnitude));
   });
 });

@@ -127,6 +127,9 @@ export function ObsRulesManager({ onToast }: { onToast: (k: "ok" | "err", m: str
     if (!a) return "—";
     if (a.kind === "switch_scene") return `${t("kindScene")} → "${a.scene}"`;
     if (a.kind === "toggle_source") return `${a.visible ? t("show") : t("hide")} "${a.source}" (${a.scene})`;
+    // A rule can never hold `set_filter_intensity` (it has no ObsRule columns — see obs-rules.ts), so
+    // narrow explicitly rather than letting `else` silently cover a kind this label cannot describe.
+    if (a.kind === "set_filter_intensity") return `${a.setting}=${a.min}–${a.max} "${a.filter}" → "${a.source}"`;
     return `${a.enabled ? t("on") : t("off")} ${t("filterWord")} "${a.filter}" → "${a.source}"`;
   }
 

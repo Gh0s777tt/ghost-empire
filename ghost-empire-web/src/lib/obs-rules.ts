@@ -9,6 +9,12 @@
 //   • switch_scene  -> SetCurrentProgramScene { sceneName }
 //   • toggle_source -> GetSceneItemId + SetSceneItemEnabled { sceneName, sceneItemId, sceneItemEnabled }
 //   • toggle_filter -> SetSourceFilterEnabled { sourceName, filterName, filterEnabled }
+//   • set_filter_intensity -> SetSourceFilterSettings { sourceName, filterName, filterSettings }
+//     (#806) The first action with a MAGNITUDE rather than an on/off. Until it existed a filter could
+//     only be switched on or off, so a drawn "intensity" had no way to reach OBS at all. The streamer
+//     names the setting and its range (e.g. `Filter.Blur.Size`, 1–40) because those keys are specific
+//     to each filter plugin and we must not guess them; the 1–5 intensity is interpolated onto that
+//     range by `intensityValue()`.
 // `revertAfterMs` (optional) tells the controller to undo the action after N ms
 // (e.g. flash a "BIG DONO" scene for 5s, then return). Undo logic lives in the
 // controller; here we only describe the desired action + revert window.
@@ -30,6 +36,13 @@ export const ALERT_TRIGGER_TYPES = [
 export const ANY_TRIGGER = "*";
 
 /** The OBS action kinds the controller knows how to actuate. */
+/**
+ * The action kinds an ObsRule can STORE (they map 1:1 onto its flattened columns).
+ *
+ * `set_filter_intensity` is deliberately NOT here: it carries a setting name and a numeric range, has
+ * no columns on `ObsRule`, and is produced at draw time by the penalties module rather than configured
+ * as a rule. The actuator understands it; rule validation and persistence must keep rejecting it.
+ */
 export const OBS_ACTION_KINDS = ["switch_scene", "toggle_source", "toggle_filter"] as const;
 export type ObsActionKind = (typeof OBS_ACTION_KINDS)[number];
 
@@ -40,7 +53,45 @@ export const REVERT_MAX_MS = 600_000;
 export type ObsAction =
   | { kind: "switch_scene"; scene: string; revertAfterMs?: number | null }
   | { kind: "toggle_source"; scene: string; source: string; visible: boolean; revertAfterMs?: number | null }
-  | { kind: "toggle_filter"; source: string; filter: string; enabled: boolean; revertAfterMs?: number | null };
+  | { kind: "toggle_filter"; source: string; filter: string; enabled: boolean; revertAfterMs?: number | null }
+  | {
+      kind: "set_filter_intensity";
+      source: string;
+      filter: string;
+      /** The filter-plugin setting to drive, e.g. `Filter.Blur.Size`. Plugin-specific, so never guessed. */
+      setting: string;
+      /** Value at intensity 1 and at INTENSITY_SCALE_MAX. `min > max` is allowed — some settings invert. */
+      min: number;
+      max: number;
+      /** 1–5, normally drawn by lib/penalties. */
+      intensity: number;
+      revertAfterMs?: number | null;
+    };
+
+/** The top of the intensity scale. Matches INTENSITY_MAX in lib/penalties.ts. */
+export const INTENSITY_SCALE_MAX = 5;
+
+/**
+ * Map a 1–{@link INTENSITY_SCALE_MAX} intensity onto a filter setting's numeric range.
+ *
+ * @param min - The value at intensity 1.
+ * @param max - The value at the top of the scale.
+ * @param intensity - The drawn intensity; clamped into the scale.
+ * @returns The value to send to OBS, rounded to 3 decimals.
+ *
+ * @remarks
+ * Linear and inclusive at both ends: intensity 1 gives exactly `min`, the top gives exactly `max`, so
+ * a streamer who configures 1–40 sees 40 at maximum rather than 39.2. `min > max` is supported because
+ * some filter settings read backwards (a *smaller* value is a *stronger* effect).
+ */
+export function intensityValue(min: number, max: number, intensity: number): number {
+  const lo = Number.isFinite(min) ? min : 0;
+  const hi = Number.isFinite(max) ? max : lo;
+  const clamped = Math.min(Math.max(Math.round(intensity) || 1, 1), INTENSITY_SCALE_MAX);
+  // The scale has a fixed span (1..INTENSITY_SCALE_MAX), so the divisor can never be zero.
+  const t = (clamped - 1) / (INTENSITY_SCALE_MAX - 1);
+  return Math.round((lo + (hi - lo) * t) * 1000) / 1000;
+}
 
 /** A streamer-defined rule: when an alert of `triggerType` (and ≥ `minAmount`) fires, run `action`. */
 export type ObsRule = {
@@ -115,6 +166,40 @@ export function validateObsAction(input: unknown): Result<ObsAction> {
   if (!nonEmpty(a.filter)) return { ok: false, error: "toggle_filter requires a non-empty filter" };
   if (typeof a.enabled !== "boolean") return { ok: false, error: "toggle_filter requires a boolean enabled" };
   return { ok: true, value: { kind, source: a.source.trim(), filter: a.filter.trim(), enabled: a.enabled, revertAfterMs } };
+}
+
+/**
+ * Validate + normalize an untrusted `set_filter_intensity` action (the penalties admin form).
+ *
+ * @remarks
+ * Separate from {@link validateObsAction} on purpose: this kind is not storable as an `ObsRule`, so
+ * letting it through that validator would mean it could be persisted into columns that cannot hold it.
+ */
+export function validateIntensityAction(input: unknown): Result<Extract<ObsAction, { kind: "set_filter_intensity" }>> {
+  if (typeof input !== "object" || input === null) return { ok: false, error: "action must be an object" };
+  const a = input as Record<string, unknown>;
+  if (!nonEmpty(a.source)) return { ok: false, error: "set_filter_intensity requires a non-empty source" };
+  if (!nonEmpty(a.filter)) return { ok: false, error: "set_filter_intensity requires a non-empty filter" };
+  if (!nonEmpty(a.setting)) return { ok: false, error: "set_filter_intensity requires a non-empty setting name" };
+  if (typeof a.min !== "number" || !Number.isFinite(a.min)) return { ok: false, error: "set_filter_intensity requires a finite min" };
+  if (typeof a.max !== "number" || !Number.isFinite(a.max)) return { ok: false, error: "set_filter_intensity requires a finite max" };
+  if (!validRevert(a.revertAfterMs)) {
+    return { ok: false, error: `revertAfterMs must be an integer in [${REVERT_MIN_MS}, ${REVERT_MAX_MS}] or null` };
+  }
+  const intensity = Math.min(Math.max(Math.round(Number(a.intensity)) || 1, 1), INTENSITY_SCALE_MAX);
+  return {
+    ok: true,
+    value: {
+      kind: "set_filter_intensity",
+      source: a.source.trim(),
+      filter: a.filter.trim(),
+      setting: a.setting.trim(),
+      min: a.min,
+      max: a.max,
+      intensity,
+      revertAfterMs: (a.revertAfterMs ?? null) as number | null,
+    },
+  };
 }
 
 /**
