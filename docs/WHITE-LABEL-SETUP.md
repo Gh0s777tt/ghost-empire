@@ -1,9 +1,12 @@
-# White-label: podpięcie własnej domeny do portalu
+# White-label: własna domena + własna marka portalu
 
 **Status: ✅ kod gotowy (#653).** Mapowanie `Tenant.domain` → portal działa w
 `getCurrentTenant` (`lib/tenant.ts`). To, czego brakuje, to **konfiguracja po stronie
 właściciela** (DNS, Vercel, OAuth) — bez zmian w kodzie. Runbook na przykładzie
 `empire-forge.com` (marka „E-Forge").
+
+> Kroki 1–5 podpinają **domenę**. Krok 6 domyka markę tam, gdzie łatwo o niej zapomnieć:
+> w **tekście bota na czacie**, który widzą widzowie tak samo jak strony portalu.
 
 > Model: **jedna aplikacja na Vercel obsługuje wiele portali**, rozpoznawanych z `Host`.
 > Apex/`www`/pełna własna domena → portal, którego pole `domain` pasuje; subdomena
@@ -61,6 +64,32 @@ https://empire-forge.com/api/auth/callback/kick
 2. Zaloguj się każdym dostawcą na tej domenie.
 3. Potwierdź izolację (`docs/PER-TENANT-IDENTITY.md §6`): to samo konto Twitch na E-Forge i
    na portalu GH0ST EMPIRE = **dwa osobne konta widza** (osobne GT/poziom).
+
+---
+
+## Krok 6 — bot czatu mówi Twoją walutą
+
+Bot (`ghost-empire-chat`) pisze na czacie Twitch/Kick/YouTube, więc jego wiadomości to
+**powierzchnia white-label tak samo jak strony portalu**. Nazwa waluty **nie jest**
+zmienną env bota — instancja pobiera ją z Twojego portalu:
+
+```
+GET <PORTAL_URL>/api/companion/branding   →  { tokenName, tokenSymbol, … }
+```
+
+przy starcie (awaited, timeout 5 s) i odświeża co 30 min (`src/branding.ts`).
+
+1. Ustaw walutę w `/admin` (pola `tokenName` / `tokenSymbol` tenanta, np. „Neo Coins" / „NC").
+2. W env instancji bota wystarczy `PORTAL_URL` wskazujący Twój portal — **nic o walucie
+   nie dopisujesz** (`tenants/<slug>.env`).
+3. Weryfikacja: na czacie wpisz `!duel` (bez stawki) — bot powinien odpowiedzieć
+   „pojedynek na **Neo Coins**", a nie walutą portalu-założyciela.
+
+> **Dlaczego pobieranie, a nie `TOKEN_NAME` w env:** waluta żyje w wierszu `Tenant` i jest
+> edytowalna z panelu. Kopia w env bota rozjechałaby się przy pierwszej zmianie nazwy z
+> `/admin` — a rozjazd na czacie zobaczą widzowie. Przy nieosiągalnym portalu bot używa
+> neutralnego „tokeny"/„pkt", **nigdy** waluty foundera. Zmiana nazwy waluty wchodzi na
+> czat sama, bez restartu bota.
 
 ---
 

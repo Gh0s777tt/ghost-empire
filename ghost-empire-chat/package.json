@@ -9,16 +9,19 @@
     "auth:twitch": "tsx scripts/auth-twitch.ts",
     "auth:kick": "tsx scripts/auth-kick.ts",
     "auth:youtube": "tsx scripts/auth-youtube.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint:brand": "node scripts/check-white-label.mjs"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
-    "tmi.js": "^1.8.5"
+    "tmi.js": "^1.8.5",
+    "tsx": "^4.22.4"
   },
   "devDependencies": {
     "@types/node": "^26",
     "@types/tmi.js": "^1.8.6",
-    "tsx": "^4.22.4",
-    "typescript": "^6"
+    "typescript": "^6",
+    "vitest": "^4.1.10"
   }
 }

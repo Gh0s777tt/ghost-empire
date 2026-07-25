@@ -2,6 +2,7 @@
 // The bot only parses + calls the portal (Bearer BOT_SECRET); all GT math + atomicity are
 // server-side in lib/duels.ts.
 import { env } from "./env";
+import { tokenName } from "./branding";
 
 export function isDuelTrigger(message: string): boolean {
   return /^!(duel|accept|decline)\b/i.test(message.trim());
@@ -41,7 +42,7 @@ export async function handleDuel(
   const parsed = parse(message);
   if (!parsed) return null;
   if (parsed.action === "usage") {
-    return `@${u} pojedynek na GT: !duel 100 (otwarty, każdy może !accept) albo !duel @nick 100, a przeciwnik wpisuje !accept.`;
+    return `@${u} pojedynek na ${tokenName()}: !duel 100 (otwarty, każdy może !accept) albo !duel @nick 100, a przeciwnik wpisuje !accept.`;
   }
 
   const payload: Record<string, unknown> = { platform, platformUserId, username, action: parsed.action };

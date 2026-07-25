@@ -4,6 +4,7 @@
 // When THIS bot opens a heist, the portal returns resolveInMs + heistId and the bot schedules
 // the resolution call, posting the result back to the same platform's chat.
 import { env } from "./env";
+import { tokenName } from "./branding";
 import { sendTo } from "./broadcast";
 
 export function isHeistTrigger(message: string): boolean {
@@ -35,7 +36,7 @@ export async function handleHeist(
   const m = message.trim().match(/^!heist\s+(\d+)/i);
   if (!m) {
     return /^!heist\b/i.test(message.trim())
-      ? `@${u} napad na GT: wpisz !heist 100 — im większa ekipa, tym większa szansa na łup! 🦝`
+      ? `@${u} napad na ${tokenName()}: wpisz !heist 100 — im większa ekipa, tym większa szansa na łup! 🦝`
       : null;
   }
   const bet = parseInt(m[1], 10);

@@ -3,6 +3,7 @@
 // immediately when a new bet opens) so it stays visible — gated on chat activity so
 // it never shouts into an empty/offline chat.
 import { env } from "./env";
+import { tokenName, tokenSymbol } from "./branding";
 import { broadcast, recentlyActive } from "./broadcast";
 
 const POLL_MS = 60_000; // check for an open prediction every 60s
@@ -31,8 +32,9 @@ async function tick(): Promise<void> {
 
     lastAnnouncedId = d.id;
     lastAnnouncedAt = Date.now();
-    const pot = typeof d.totalPot === "number" && d.totalPot > 0 ? ` Pula: ${d.totalPot} GT.` : "";
-    await broadcast(`🎲 OTWARTY ZAKŁAD: ${d.question} — obstawiaj Ghost Tokens na ${env.portalUrl}/predictions${pot}`);
+    // Symbol next to the amount, full name where the currency is merely named.
+    const pot = typeof d.totalPot === "number" && d.totalPot > 0 ? ` Pula: ${d.totalPot} ${tokenSymbol()}.` : "";
+    await broadcast(`🎲 OTWARTY ZAKŁAD: ${d.question} — obstawiaj ${tokenName()} na ${env.portalUrl}/predictions${pot}`);
   } catch {
     /* ignore — retry next tick */
   }

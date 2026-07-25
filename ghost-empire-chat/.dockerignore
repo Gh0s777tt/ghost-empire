@@ -7,3 +7,10 @@ tokens
 *.log
 dist
 .git
+# Testy i ich config nie są nigdy importowane przez runtime (index.ts), a ciągną
+# vitest — którego obraz produkcyjny (npm ci --omit=dev) celowo nie instaluje.
+# UWAGA: .dockerignore to filepath.Match, NIE .gitignore — wzorzec bez `**` dopasowuje
+# się tylko na jednym poziomie, więc samo `*.test.ts` NIE złapałoby src/__tests__/*.
+src/__tests__
+**/*.test.ts
+vitest.config.ts

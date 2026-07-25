@@ -10,10 +10,13 @@ FROM node:22-slim
 
 WORKDIR /app
 
-# Deps first for layer caching. tsx (devDep) runs the TS directly — no build step,
-# so we install all deps (not --omit=dev).
+# Deps first for layer caching. `tsx` runs the TS directly (no build step), więc jest
+# w "dependencies" — NIE w devDependencies — i obraz może pominąć resztę devów.
+# --omit=dev trzyma poza obrazem toolchain testowy/typowy (vitest + jego drzewo
+# vite/rolldown/lightningcss, typescript, @types) — kilkadziesiąt MB, których runtime
+# bota nigdy nie dotyka.
 COPY package.json package-lock.json* ./
-RUN npm ci || npm install
+RUN npm ci --omit=dev || npm install --omit=dev
 
 # App source.
 COPY tsconfig.json ./

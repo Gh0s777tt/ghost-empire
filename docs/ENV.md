@@ -105,6 +105,14 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `YOUTUBE_BOT_REFRESH_TOKEN` | Bot YouTube (Option C — autoryzacja konta kanału, `npm run auth:youtube`) |
 | `KICK_TOKEN_STORE` (O) | Ścieżka pliku tokenów Kicka — ustaw na zamontowany wolumen, by refresh przeżył redeploy (Docker 24/7) |
 
+> 💡 **Nazwy waluty NIE ma na tej liście — celowo.** Waluta pokazywana widzom na czacie
+> (`tokenName`/`tokenSymbol`) jest pobierana z portalu (`GET <PORTAL_URL>/api/companion/branding`,
+> tenant z Hosta) przy starcie i odświeżana co 30 min — patrz `ghost-empire-chat/src/branding.ts`.
+> Jedynym źródłem prawdy jest wiersz `Tenant` edytowalny w `/admin`; zmienna env byłaby jego
+> kopią, która rozjeżdża się przy pierwszej zmianie nazwy z panelu (a rozjazd widać na czacie).
+> Nowy portal potrzebuje więc tylko `PORTAL_URL`. Fallback przy nieosiągalnym portalu jest
+> **neutralny** („tokeny"/„pkt"), nigdy waluta portalu-założyciela.
+
 ---
 
 ## 3. Bot Discord — **E-Bot** (osobne repo `Gh0s777tt/E-Bot`)

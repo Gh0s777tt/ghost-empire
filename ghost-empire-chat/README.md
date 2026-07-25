@@ -78,6 +78,37 @@ npm start                                            # bez ENV_FILE = klasyczne 
 - Izolacja per proces = cache'e modułów (komendy/FAQ/timery/moderacja) naturalnie per portal. Docker: `--env-file tenants/neo-zone.env` + osobny wolumen tokenów Kick per instancja.
 - Multipleksowanie wielu portali w jednym procesie ma sens dopiero przy dużej flocie (dziesiątki+) — wymaga przebudowy modułów na instancje; świadomie odłożone.
 
+### White-label: bot mówi walutą SWOJEGO portalu
+
+Tekst, który bot pisze na czacie, widzą widzowie **każdego** portalu — więc nie może
+zawierać waluty portalu-założyciela („Ghost Tokens" / „GT"). Nazwa waluty **nie jest**
+zmienną env: bot pobiera ją z portalu przy starcie i odświeża co 30 min
+(`src/branding.ts` → `GET <PORTAL_URL>/api/companion/branding` → `tokenName`/`tokenSymbol`).
+
+- **Jedno źródło prawdy.** Waluta żyje w wierszu `Tenant` portalu i jest edytowalna w
+  `/admin`. Duplikat w env bota rozjechałby się w chwili, gdy streamer zmieni nazwę w
+  panelu — tutaj zmiana wchodzi sama, bez restartu i bez edycji pliku env.
+- **Zero konfiguracji dla nowego portalu.** Wystarczy `PORTAL_URL` — waluta dojeżdża sama.
+- **Fallback bez marki.** Gdy portal jest nieosiągalny, bot używa neutralnego
+  „tokeny"/„pkt" — **nigdy** waluty foundera (to byłby dokładnie ten wyciek).
+  Start czeka na branding, ale z timeoutem 5 s, więc martwy portal nie blokuje bootu.
+- W kodzie: `tokenName()` gdy walutę **nazywamy** („napad na Neo Coins"), `tokenSymbol()`
+  wyłącznie **tuż po kwocie** („Pula: 100 NC"). Nigdy literałem.
+
+Pilnuje tego bramka `npm run lint:brand` (`scripts/check-white-label.mjs`, w CI w jobie
+`lint:chat`): tokenizuje źródła i sprawdza **wyłącznie literały stringów** — łącznie z
+argumentami wywołań typu `broadcast(\`…\`)`, pomijając komentarze (to one są większością
+trafień surowego grepa) i `console.*` (stdout operatora, nie czat). Świadomy wyjątek:
+komentarz `white-label-ok` w tej samej linii.
+
+## Testy i bramki
+
+```bash
+npm run typecheck    # tsc --noEmit
+npm test             # vitest run — czysta logika, bez sieci (fetch stubowany)
+npm run lint:brand   # bramka white-label na tekście dla widza
+```
+
 ## Security
 
 - `.env` holds live secrets and is **gitignored** (root `**/.env`). Never commit it.

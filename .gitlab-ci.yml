@@ -134,13 +134,18 @@ lint:web:
     - npm run docs:env         # node scripts/check-env-docs.mjs (każdy process.env.X udokumentowany w ENV.md)
   rules: !reference [.rules_mr_main, rules]
 
-# ghost-empire-chat ma tylko `typecheck` (brak lint/test/build — tsx odpala TS wprost).
+# ghost-empire-chat nie ma eslinta ani builda (tsx odpala TS wprost) — zostaje
+# `typecheck` plus bramka white-label: bot pisze na czacie KAŻDEGO portalu, więc
+# wpisana literałem waluta foundera („Ghost Tokens”/„GT”) to wyciek marki do czatu
+# sub-portalu. Skaner patrzy tylko na literały stringów (w tym argumenty wywołań
+# typu broadcast(...)), pomijając komentarze — patrz scripts/check-white-label.mjs.
 lint:chat:
   extends: .chat
   stage: lint
   needs: []
   script:
     - npm run typecheck        # tsc --noEmit
+    - npm run lint:brand       # node scripts/check-white-label.mjs (bramka white-label)
   rules: !reference [.rules_mr_main, rules]
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -162,6 +167,17 @@ test:unit:web:
     expire_in: 1 week
     paths:
       - ghost-empire-web/coverage/
+  rules: !reference [.rules_mr_main, rules]
+
+# Bot: czysta logika, bez bazy i bez sieci (fetch stubowany przez vi.stubGlobal).
+# Pokrywa branding portalu w tekście dla widza ORAZ sam matcher bramki white-label —
+# zielony skaner z zepsutym matcherem jest gorszy niż brak skanera.
+test:unit:chat:
+  extends: .chat
+  stage: test
+  needs: ["lint:chat"]
+  script:
+    - npm test                 # vitest run
   rules: !reference [.rules_mr_main, rules]
 
 # Integracyjne: WYMAGAJĄ realnego Postgresa → `services: postgres:16`. Jawny wait

@@ -101,6 +101,7 @@ Jeden duży klient (`components/admin/AdminClient.tsx`) z nawigacją sekcji. Dan
 - Konfiguracja (komendy / timery / FAQ / powitania / nagrody / **moderacja**) pobierana z portalu (`/api/bot/*`, cache ~2 min) — bez restartu przy zmianach z panelu.
 - Każda wiadomość: `markActivity` → **automod** (`moderation.ts` → delete/timeout/warn, pomija sub/VIP/mod) → `@bot`/`!imagine` → gry GT (`!slots`/`!coinflip`) / pojedynki PvP (`!duel`/`!accept`) / napad (`!heist`) → `!sr` → komenda/FAQ → powitanie → GT (`/api/internal/chat-award`) → feed do overlaya czatu (+ emotki/odznaki) → `emojiCombo.ts` (detekcja kombosów).
 - **Auto-pin zakładów** (`betAnnounce.ts`): bot przypomina o otwartym zakładzie co 5 min na czacie (Twitch/Kick brak API pin → emulacja). Detektory automoda są **lustrem** `web/src/lib/moderation.ts`.
+- **White-label waluty** (`branding.ts`): tekst pisany na czacie widzą widzowie **każdego** portalu, więc nazwa waluty nie może być literałem. Bot pobiera `tokenName`/`tokenSymbol` z `GET /api/companion/branding` (tenant z Hosta — ten sam, co dla `/api/bot/*`) przy starcie (awaited, timeout 5 s) i odświeża co 30 min; nazwa waluty **nie jest** zmienną env, żeby nie dublować stanu z wiersza `Tenant`. Przy nieosiągalnym portalu fallback jest **neutralny** („tokeny"/„pkt"), nigdy waluta foundera. Bramka: `lint:brand` w jobie `lint:chat`.
 - ⚠️ **Egzekucja moderacji wymaga, by konto bota było moderatorem** na danej platformie. Zmiany w bocie → **restart** (`npm start` / Docker).
 
 ---
@@ -114,7 +115,7 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 - **Plany i bramki:** trzy plany (drabina Botrix-style) — **basic** (rdzeń społeczności: ekonomia/sklep/ranking/eventy/questy) → **pro** (+ kasyno, koło, predykcje, overlaye, subathon, kolejka utworów) → **elite** (+ AI-asystent/persona bota, webhooki wychodzące, custom branding). Wygasły plan płatny **degraduje się do basic** (społeczność działa dalej, premium pauzuje). Bramka request-time: `requireTenantFeature(f)` / `featureGateResponse(f)` (`lib/entitlements.ts`) → 403; przy awarii DB **fail-open** (billing nigdy nie kładzie portalu).
 - **Branding per tenant:** nazwa/skrót/kolor/logo/nazwa+symbol tokenu/owner-handle z modelu `Tenant`; kolor marki idzie do CSS-var `--brand-rgb` (`hexToRgbTriplet`), OG-image generowany per tenant (`/api/og`).
 - **Onboarding + billing (dry-wired):** zakładanie portalu przez `/api/onboarding` (+ `/my` do edycji), płatności przez Stripe (`lib/billing.ts`) — checkout `/api/billing/checkout`, webhook `/api/webhooks/stripe`. Provisioning/zarządzanie tenantami = **właściciel platformy** (`requirePlatformOwner`, `/api/admin/tenants`). Bez sekretów Stripe (`STRIPE_*`) i `NEXT_PUBLIC_ROOT_DOMAIN` całość jest no-opem (trial bez karty, jeden tenant) — aktywacja **bez zmian w kodzie**.
-- **Overlaye + bot per tenant:** token overlaya i instancje bota są per tenant, więc każdy portal ma własne źródła OBS i własnego bota czatu.
+- **Overlaye + bot per tenant:** token overlaya i instancje bota są per tenant, więc każdy portal ma własne źródła OBS i własnego bota czatu. Bot **czyta branding z portalu** (`/api/companion/branding`), więc jego wiadomości na czacie nazywają walutę danego tenanta — bez duplikowania `tokenName`/`tokenSymbol` w env instancji (patrz §6).
 
 ---
 

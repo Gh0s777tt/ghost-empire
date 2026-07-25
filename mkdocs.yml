@@ -71,7 +71,7 @@ nav:
   - Instalacja i konfiguracja:
       - Zmienne środowiskowe: ENV.md
       - Setup właściciela: OWNER-SETUP.md
-      - White-label (własna domena): WHITE-LABEL-SETUP.md
+      - White-label (domena + marka): WHITE-LABEL-SETUP.md
       - Backup off-site: BACKUP.md
   - Przewodniki:
       - Sterowanie OBS: OBS-CONTROL.md
