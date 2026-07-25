@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecretForTenant } from "@/lib/utils";
-import { getCurrentTenantBotAuth } from "@/lib/tenant";
+import { getCurrentTenantBotAuth, getCurrentTenant } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { playGtGame } from "@/lib/gt-games";
 
@@ -17,6 +17,11 @@ export async function POST(req: Request) {
   if (!verifyBotSecretForTenant(req.headers.get("authorization"), botSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // Every message below is posted VERBATIM in the streamer's chat, so it must name THIS
+  // portal's currency, never the founder's "GT". Free: getCurrentTenant() shares the same
+  // cache()d tenant row that getCurrentTenantBotAuth() just resolved — botSecret is kept out
+  // of TenantBrand on purpose, which is why this is a second call and not one helper.
+  const { tokenSymbol } = await getCurrentTenant();
   let body: { platform?: string; platformUserId?: string; username?: string; game?: string; bet?: number; choice?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
@@ -44,7 +49,7 @@ export async function POST(req: Request) {
       : null;
 
   if (!connection) {
-    return NextResponse.json({ message: `@${body.username ?? "widz"} połącz konto na ${platform} przez !portal, by grać za GT.` });
+    return NextResponse.json({ message: `@${body.username ?? "widz"} połącz konto na ${platform} przez !portal, by grać za ${tokenSymbol}.` });
   }
 
   const rl = await rateLimit(`gtgame:${connection.userId}`, 10, 60_000);
@@ -57,8 +62,8 @@ export async function POST(req: Request) {
   const emoji = game === "slots" ? "🎰" : game === "roulette" ? "🎡" : "🪙";
   const bal = result.newBalance.toLocaleString("pl-PL");
   const message = result.payout > 0
-    ? `@${u} ${result.detail} — WYGRANA ${result.payout.toLocaleString("pl-PL")} GT! ${emoji} (saldo ${bal})`
-    : `@${u} ${result.detail} — pudło, -${result.bet.toLocaleString("pl-PL")} GT (saldo ${bal})`;
+    ? `@${u} ${result.detail} — WYGRANA ${result.payout.toLocaleString("pl-PL")} ${tokenSymbol}! ${emoji} (saldo ${bal})`
+    : `@${u} ${result.detail} — pudło, -${result.bet.toLocaleString("pl-PL")} ${tokenSymbol} (saldo ${bal})`;
 
   return NextResponse.json({ message, ok: true });
 }
