@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, findManagedUser, requireStepUp } from "@/lib/admin";
+import { getCurrentTenant } from "@/lib/tenant";
 import { logAdminAction } from "@/lib/audit";
 import { checkGrantAnomaly } from "@/lib/economy-anomaly";
 import { CHIP_SYMBOL, SHOP_CURRENCIES, isChipsCurrency, type ShopCurrency } from "@/lib/shop-currency";
@@ -33,8 +34,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Currency: ${SHOP_CURRENCIES.join("|")}` }, { status: 400 });
   }
   const isChips = isChipsCurrency(currency);
-  // Every user-facing amount in this route is named in the currency it actually moved.
-  const unit = isChips ? `żetonów ${CHIP_SYMBOL}` : "GT";
+  // Every user-facing amount in this route is named in the currency it actually moved, and
+  // the two forms differ by LIFETIME: the notification row persists, so it stores the `%gt%`
+  // marker that `/api/notifications` resolves against the portal at read time (a currency
+  // rename then fixes old rows too); the admin-facing errors below are ephemeral, so they get
+  // the value resolved right now. Chips are universal — same literal either way.
+  const unitStored = isChips ? `żetonów ${CHIP_SYMBOL}` : "%gt%";
+  const unitLive = isChips ? `żetonów ${CHIP_SYMBOL}` : (await getCurrentTenant()).tokenSymbol;
 
   if (!target) return NextResponse.json({ error: "Brak target (username / Discord ID / ID konta)" }, { status: 400 });
   if (!Number.isFinite(amount) || amount === 0) {
@@ -64,7 +70,7 @@ export async function POST(req: Request) {
   const currentBalance = isChips ? user.chips : user.tokens;
   if (amount < 0 && currentBalance + amount < 0) {
     return NextResponse.json(
-      { error: `User ma tylko ${currentBalance} ${unit}, nie można odjąć ${Math.abs(amount)}` },
+      { error: `User ma tylko ${currentBalance} ${unitLive}, nie można odjąć ${Math.abs(amount)}` },
       { status: 400 },
     );
   }
@@ -105,7 +111,7 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     if (e instanceof Error && e.message === "INSUFFICIENT") {
-      return NextResponse.json({ error: `User ma za mało ${unit}, nie można odjąć ${Math.abs(amount)}` }, { status: 400 });
+      return NextResponse.json({ error: `User ma za mało ${unitLive}, nie można odjąć ${Math.abs(amount)}` }, { status: 400 });
     }
     return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
   }
@@ -120,8 +126,8 @@ export async function POST(req: Request) {
           ? (isChips ? "Otrzymałeś żetony" : "Otrzymałeś tokeny")
           : (isChips ? "Żetony odjęte" : "Tokeny odjęte"),
         message: isGrant
-          ? `Admin przyznał Ci ${amount} ${unit} (${reason})`
-          : `Admin odjął ${Math.abs(amount)} ${unit} (${reason})`,
+          ? `Admin przyznał Ci ${amount} ${unitStored} (${reason})`
+          : `Admin odjął ${Math.abs(amount)} ${unitStored} (${reason})`,
         icon: isGrant ? "🎁" : "⚠️",
       },
     }),

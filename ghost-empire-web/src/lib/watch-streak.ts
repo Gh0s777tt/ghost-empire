@@ -138,7 +138,7 @@ export async function claimWatchDay(userId: string): Promise<ClaimResult> {
             userId,
             type: "system",
             title: "🔥 Loyalty milestone!",
-            message: `Seria ${newStreak} dni oglądania — odebrano ${reward.toLocaleString("pl-PL")} GT.`,
+            message: `Seria ${newStreak} dni oglądania — odebrano ${reward.toLocaleString("pl-PL")} %gt%.`,
             icon: "🔥",
             link: "/",
           },

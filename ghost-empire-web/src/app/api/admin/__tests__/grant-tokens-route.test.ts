@@ -25,6 +25,9 @@ vi.mock("@/lib/admin", () => ({
   requireStepUp: async () => h.stepUp,
 }));
 vi.mock("@/lib/audit", () => ({ logAdminAction: h.audit }));
+// Admin-facing errors name the portal's own currency (resolved now); the notification stores
+// the %gt% marker instead (resolved when /api/notifications renders it).
+vi.mock("@/lib/tenant", () => ({ getCurrentTenant: async () => ({ tokenSymbol: "TT", tokenName: "Test Tokens" }) }));
 vi.mock("@/lib/economy-anomaly", () => ({ checkGrantAnomaly: h.anomaly }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -145,6 +148,26 @@ describe("POST /api/admin/grant-tokens — CHIPS (darmowa waluta kasyna)", () =>
     expect(notif.title).toContain("żeton");
     expect(notif.message).toContain("🪙");
     expect(notif.message).not.toContain("GT");
+  });
+});
+
+describe("POST /api/admin/grant-tokens — white-label: marker w tym, co trwałe", () => {
+  it("notyfikacja GT zapisuje MARKER %gt%, nie symbol założyciela ani rozwiązaną wartość", async () => {
+    // Wiersz notyfikacji żyje w bazie — gdyby zapisać tu rozwiązany symbol, portal po
+    // zmianie nazwy waluty miałby w historii starą, a inne portale symbol założyciela.
+    await POST(req({ target: "widz", amount: 500, reason: "konkurs" }));
+    const notif = h.notifCreate.mock.calls[0][0].data as { message: string };
+    expect(notif.message).toContain("%gt%");
+    expect(notif.message).not.toContain("TT");
+  });
+
+  it("błąd dla admina jest efemeryczny → symbol rozwiązany OD RAZU (marker by przeciekł)", async () => {
+    h.user = { id: "u-1", username: "widz", displayName: "Widz", tokens: 100, chips: 0 };
+    const res = await POST(req({ target: "widz", amount: -500 }));
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("TT");     // symbol waluty portalu z mocka tenanta
+    expect(body.error).not.toContain("%gt%"); // NextResponse.json nie rozwiązuje markerów
   });
 });
 

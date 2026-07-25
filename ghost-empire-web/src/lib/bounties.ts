@@ -178,7 +178,7 @@ export async function resolveBounty(opts: { bountyId: string; outcome: "complete
               userId,
               type: "system",
               title,
-              message: `Zwrócono ${amount.toLocaleString("pl-PL")} GT za „${b.title.slice(0, 60)}".`,
+              message: `Zwrócono ${amount.toLocaleString("pl-PL")} %gt% za „${b.title.slice(0, 60)}".`,
               icon: "↩️",
               link: "/bounties",
             })),

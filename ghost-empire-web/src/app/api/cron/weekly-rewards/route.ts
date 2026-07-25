@@ -64,7 +64,7 @@ export async function GET(req: Request) {
                 userId: w.id,
                 type: "event_win",
                 title: "🏆 Nagroda tygodnia!",
-                message: `Zająłeś ${i + 1}. miejsce w rankingu tygodnia i zdobywasz ${reward} GT! Gratulacje!`,
+                message: `Zająłeś ${i + 1}. miejsce w rankingu tygodnia i zdobywasz ${reward} %gt%! Gratulacje!`,
                 icon: "🏆",
                 link: "/ranking?sort=weekly",
               },

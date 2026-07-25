@@ -182,7 +182,7 @@ export async function POST(req: Request) {
           userId: userId,
           type: "system",
           title: `Dzięki za donację ${amountPLN.toFixed(2)} PLN!`,
-          message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT. Jesteś teraz oficjalnie Donatorem.`,
+          message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} %gt%. Jesteś teraz oficjalnie Donatorem.`,
           icon: "❤️",
           link: "/profile",
         },

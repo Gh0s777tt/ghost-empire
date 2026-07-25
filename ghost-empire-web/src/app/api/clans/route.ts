@@ -183,7 +183,8 @@ async function leaveClan(userId: string): Promise<NextResponse> {
 
 async function contribute(userId: string, tid: string | null, body: { amount?: number }): Promise<NextResponse> {
   const amount = Math.floor(Number(body.amount));
-  if (!isValidContribution(amount)) throw new ClanError("Nieprawidłowa ilość GT", 400);
+  // %tokenName% → tenant currency at the jsonError boundary (same as the throw below).
+  if (!isValidContribution(amount)) throw new ClanError("Nieprawidłowa ilość %tokenName%", 400);
   const result = await prisma.$transaction(async (tx) => {
     const me = await tx.user.findUnique({ where: { id: userId }, select: { clanId: true } });
     if (!me?.clanId) throw new ClanError("Nie jesteś w klanie", 409);

@@ -79,12 +79,12 @@ export async function awardAccountXp(userId: string, amount: number): Promise<vo
       const notif = prestigedUp
         ? {
             title: `✦ Prestiż ${newPrestige}!`,
-            message: `Wzniosłeś się na prestiż ${newPrestige} i zgarnąłeś ${bonus.toLocaleString("pl-PL")} GT.`,
+            message: `Wzniosłeś się na prestiż ${newPrestige} i zgarnąłeś ${bonus.toLocaleString("pl-PL")} %gt%.`,
             icon: "✦",
           }
         : {
             title: `⬆️ Level ${newLevel}!`,
-            message: `Awansowałeś na poziom ${newLevel} i dostałeś ${bonus.toLocaleString("pl-PL")} GT bonusu.`,
+            message: `Awansowałeś na poziom ${newLevel} i dostałeś ${bonus.toLocaleString("pl-PL")} %gt% bonusu.`,
             icon: "⭐",
           };
 
@@ -153,7 +153,7 @@ export async function awardAccountXp(userId: string, amount: number): Promise<vo
           await tx.transaction.create({ data: { userId: referrerId, type: "earn", amount: cut, reason: `referral_bonus:${userId}`, status: "completed" } });
         });
         await prisma.notification.create({
-          data: { userId: referrerId, type: "system", title: "🤝 Bonus z polecenia", message: `Twój zaproszony gracz awansował — +${cut.toLocaleString("pl-PL")} GT.`, icon: "🤝", link: "/profile" },
+          data: { userId: referrerId, type: "system", title: "🤝 Bonus z polecenia", message: `Twój zaproszony gracz awansował — +${cut.toLocaleString("pl-PL")} %gt%.`, icon: "🤝", link: "/profile" },
         }).catch(() => {});
       } catch (e) {
         log.error("referral bonus credit failed", e, { referrerId });

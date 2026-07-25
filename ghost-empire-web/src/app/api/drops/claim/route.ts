@@ -104,9 +104,10 @@ export async function POST(req: Request) {
           userId,
           type: "task_reward",
           title: getsBonus ? "Drop claimed (BONUS)!" : "Drop claimed!",
+          // %gt% → the portal's own currency symbol when the bell renders this row.
           message: getsBonus
-            ? `Pierwsi ${drop.bonusSlots} łapie bonus! +${totalReward} GT za kod ${drop.code}.`
-            : `+${totalReward} GT za kod ${drop.code}.`,
+            ? `Pierwsi ${drop.bonusSlots} łapie bonus! +${totalReward} %gt% za kod ${drop.code}.`
+            : `+${totalReward} %gt% za kod ${drop.code}.`,
           icon: getsBonus ? "🌟" : "🎁",
           link: "/profile",
         },

@@ -1,7 +1,15 @@
 // src/app/api/notifications/route.ts
+//
+// White-label: notification rows PERSIST their rendered text, so writers store the
+// `%tokenName%` / `%gt%` markers (same convention as the message catalogs) instead of a
+// literal currency, and this reader — the only one of the table — resolves them against the
+// portal the viewer is actually on. Resolving at write time would freeze the founder's "GT"
+// into every other portal's history and leave old rows stale after a currency rename.
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCurrentTenant } from "@/lib/tenant";
+import { applyTokenBranding } from "@/lib/i18n-branding";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -10,7 +18,7 @@ export async function GET() {
     return NextResponse.json({ error: "Musisz być zalogowany" }, { status: 401 });
   }
 
-  const [items, unreadCount] = await Promise.all([
+  const [items, unreadCount, tenant] = await Promise.all([
     prisma.notification.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
@@ -19,14 +27,19 @@ export async function GET() {
     prisma.notification.count({
       where: { userId: session.user.id, read: false },
     }),
+    getCurrentTenant(),
   ]);
+
+  // Marker → this portal's currency naming. Cheap: `applyTokenBranding` short-circuits on
+  // strings without a "%", which is the overwhelming majority of rows.
+  const branding = { tokenName: tenant.tokenName, tokenSymbol: tenant.tokenSymbol, brandName: tenant.name, brandShort: tenant.shortName, owner: tenant.ownerHandle };
 
   return NextResponse.json({
     items: items.map((n) => ({
       id: n.id,
       type: n.type,
-      title: n.title,
-      message: n.message,
+      title: applyTokenBranding(n.title, branding),
+      message: applyTokenBranding(n.message, branding),
       icon: n.icon,
       link: n.link,
       read: n.read,

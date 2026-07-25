@@ -59,7 +59,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/drops/claim` | POST | Odbiór drop-code z czatu |
 | `…/api/seasons/claim` | POST | Odbiór nagrody Battle Pass |
 | `…/api/tasks/claim` | POST | Odbiór nagrody za daily questa |
-| `…/api/notifications` | GET/POST | Lista / oznaczanie powiadomień |
+| `…/api/notifications` | GET/POST | Lista / oznaczanie powiadomień. **Jedyny czytnik tabeli `Notification`** — rozwiązuje markery `%gt%`/`%tokenName%` z zapisanego tekstu na walutę portalu (`applyTokenBranding`). Pisarze powiadomień **muszą** zapisywać marker, nie literał: wiersz trwa w bazie, więc rozwiązanie przy zapisie zamroziłoby walutę założyciela w historii obcych portali |
 | `…/api/profile/social-links` | GET/POST | Linki społecznościowe profilu |
 | `…/api/profile/discord-link-code` | POST | Kod do powiązania konta Discord |
 | `…/api/profile/connections/unlink` · `…/link/[provider]` | POST | Odłączanie / łączenie platform |

@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
     const senderName = session.user.username || "Someone";
     await prisma.notification
-      .create({ data: { userId: recipient.id, type: "system", title: "💸 GT gift", message: `${senderName} sent you ${amount} GT`, icon: "💸", link: "/profile" } })
+      .create({ data: { userId: recipient.id, type: "system", title: "💸 %gt% gift", message: `${senderName} sent you ${amount} %gt%`, icon: "💸", link: "/profile" } })
       .catch(() => {});
 
     return NextResponse.json({ ok: true, balance: res.balance });

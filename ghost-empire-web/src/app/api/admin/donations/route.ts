@@ -88,7 +88,7 @@ export async function PATCH(req: Request) {
         userId: user.id,
         type: "system",
         title: `Dzięki za donację ${amountFloat.toFixed(2)} ${donation.currency}!`,
-        message: `Admin dopasował Twoją donację. Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT.`,
+        message: `Admin dopasował Twoją donację. Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} %gt%.`,
         icon: "❤️",
         link: "/profile",
       },

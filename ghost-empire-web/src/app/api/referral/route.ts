@@ -82,7 +82,7 @@ export async function POST(req: Request) {
       await tx.user.update({ where: { id: referrer.id }, data: { tokens: { increment: REFERRAL_REWARD }, totalEarned: { increment: REFERRAL_REWARD } } });
       await tx.transaction.create({ data: { userId, type: "earn", amount: REFERRAL_REWARD, reason: "referral_claim", status: "completed" } });
       await tx.transaction.create({ data: { userId: referrer.id, type: "earn", amount: REFERRAL_REWARD, reason: "referral_bonus", status: "completed" } });
-      await tx.notification.create({ data: { userId: referrer.id, type: "system", title: "🎉 Ktoś użył Twojego kodu!", message: `+${REFERRAL_REWARD} GT za polecenie znajomego.`, icon: "🎉", link: "/profile" } });
+      await tx.notification.create({ data: { userId: referrer.id, type: "system", title: "🎉 Ktoś użył Twojego kodu!", message: `+${REFERRAL_REWARD} %gt% za polecenie znajomego.`, icon: "🎉", link: "/profile" } });
     });
     const fresh = await prisma.user.findUnique({ where: { id: userId }, select: { tokens: true } });
     return NextResponse.json({ ok: true, reward: REFERRAL_REWARD, newBalance: fresh?.tokens ?? 0 });

@@ -128,7 +128,7 @@ export async function POST(req: Request) {
           userId: tx.userId,
           type: "system",
           title: "Zwrot środków",
-          message: `Otrzymałeś ${refundAmount} ${plan.isChips ? "żetonów" : "GT"} z powrotem za "${tx.shopItem?.name ?? tx.reason}".${note ? ` ${note}` : ""}`,
+          message: `Otrzymałeś ${refundAmount} ${plan.isChips ? "żetonów" : "%gt%"} z powrotem za "${tx.shopItem?.name ?? tx.reason}".${note ? ` ${note}` : ""}`,
           icon: "💰",
         },
       });

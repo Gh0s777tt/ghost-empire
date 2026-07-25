@@ -231,7 +231,7 @@ export async function pollAndProcessDonations(tenantId?: string | null): Promise
             userId: match.userId,
             type: "system",
             title: `Dzięki za donację ${amountFloat.toFixed(2)} ${d.currency}!`,
-            message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} GT. Jesteś teraz Donatorem.`,
+            message: `Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} %gt%. Jesteś teraz Donatorem.`,
             icon: "❤️",
             link: "/profile",
           },

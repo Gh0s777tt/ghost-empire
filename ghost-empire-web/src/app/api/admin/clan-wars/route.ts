@@ -101,7 +101,7 @@ export async function POST(req: Request) {
         if (members.length > 0) {
           const pts = (winner.warPoints ?? 0).toLocaleString("pl-PL");
           const message = war.prizePool > 0
-            ? `[${winner.tag}] zwycięża z ${pts} pkt — +${war.prizePool.toLocaleString("pl-PL")} GT do skarbca klanu!`
+            ? `[${winner.tag}] zwycięża z ${pts} pkt — +${war.prizePool.toLocaleString("pl-PL")} %gt% do skarbca klanu!`
             : `[${winner.tag}] zwycięża z ${pts} pkt!`;
           await prisma.notification.createMany({
             data: members.map((m) => ({
