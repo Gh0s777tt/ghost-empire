@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { createDuel, acceptDuel } from "@/lib/duels";
 import { duelPayout } from "@/lib/economy";
 import { MIN_BET } from "@/lib/gt-games";
-import { resetDb, createUserWithChips, chipsOf } from "./helpers";
+import { resetDb, createUserWithChips, chipsOf, gtLedgerOf, GT_SEED } from "./helpers";
 
 // Covers the duel DB orchestration (escrow + atomic transfer + double-resolve guard) —
 // the payout MATH is already unit-tested in economy.test.ts, but the money-moving DB path
 // had no coverage (audit v6 HIGH gap). Since the "Kasyno na Żetonach" migration duels charge
-// and pay CHIPS (the free casino currency), not GT — so users are seeded/read in chips.
+// and pay CHIPS (the free casino currency), not GT — so users are seeded/read in chips, and the
+// resolve path additionally asserts the GT ledger (tokens + totalEarned/totalSpent) is UNTOUCHED.
 // Assertions use invariants (chip conservation), not the random winner, so they're deterministic.
 describe("duels (integration, real DB)", () => {
   beforeEach(resetDb);
@@ -53,6 +54,18 @@ describe("duels (integration, real DB)", () => {
     );
     const d = await prisma.duel.findFirst({ where: { challengerId: a.id } });
     expect(d?.status).toBe("resolved");
+
+    // Chips moved; the real GT economy did not. Neither stake nor payout may touch
+    // `tokens`, `totalEarned` or `totalSpent` — that separation is what makes the
+    // casino legally free of the value loop, so it's asserted, not assumed.
+    expect(await gtLedgerOf(a.id)).toEqual(GT_SEED);
+    expect(await gtLedgerOf(b.id)).toEqual(GT_SEED);
+
+    // Both stakes + the winner's payout are booked as CHIPS, so GT-only consumers
+    // (weekly ranking, anomaly scan, economy-health) never see duel volume.
+    const rows = await prisma.transaction.findMany({ where: { userId: { in: [a.id, b.id] } } });
+    expect(rows).toHaveLength(3);
+    expect(rows.every((t) => t.currency === "CHIPS")).toBe(true);
   });
 
   it("a second accept finds no pending duel — no double payout", async () => {
