@@ -40,8 +40,9 @@ export async function POST(req: Request) {
     return jsonError("Za dużo prób. Poczekaj chwilę.", 429, rateLimitHeaders(rl));
   }
 
-  // One request-cached tenant read: `id` scopes the drop/quest lookups, `tokenSymbol` labels
-  // the bonus stream alert with THIS portal's currency (never a hardcoded "GT").
+  // One request-cached tenant read (getCurrentTenant is cache()d, and currentTenantId only
+  // wraps it): `id` scopes the drop/quest lookups, `tokenSymbol` labels the bonus alert below
+  // with THIS portal's currency instead of the founder's hardcoded "GT".
   const tenant = await getCurrentTenant();
   const tid = tenant.id;
   const drop = await prisma.streamDrop.findFirst({ where: { code, ...(tid ? { tenantId: tid } : {}) } });

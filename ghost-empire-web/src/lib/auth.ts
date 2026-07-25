@@ -559,8 +559,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // welcome bonus. Without a tenantId the user is invisible in tenant-scoped queries
         // like the ranking/leaderboard. Single-tenant → default tenant; multi-tenant →
         // the signup host's tenant. [audit fix]
-        // One request-cached tenant read: `id` scopes the new account, `tokenSymbol` labels
-        // the welcome alert with THIS portal's currency (never a hardcoded "GT").
+        // One request-cached read of the WHOLE brand instead of just the id: `id` scopes the
+        // new account (as before), `tokenSymbol` labels the welcome alert below with THIS
+        // portal's currency. Same resolution as the previous currentTenantId() — that helper
+        // is literally `(await getCurrentTenant()).id` — so scope behaviour is unchanged:
+        // createUser fires inside the NextAuth route handler (headers() available), and if it
+        // ever ran outside a request scope both fall back together (id null + symbol "GT").
         const tenant = await getCurrentTenant();
         const tenantId = tenant.id;
         // Public nick at signup so a new account is never shown as "Anonim". user.name for
