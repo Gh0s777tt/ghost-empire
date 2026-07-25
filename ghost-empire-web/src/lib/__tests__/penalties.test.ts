@@ -11,6 +11,7 @@ import {
   MAX_QUEUE_DEPTH,
   type PenaltySpec,
 } from "@/lib/penalties";
+import { penaltyAction } from "@/lib/penalties-run";
 
 const spec = (over: Partial<PenaltySpec> = {}): PenaltySpec => ({
   id: "blur",
@@ -154,5 +155,44 @@ describe("queueSlot — penalties run strictly one at a time", () => {
   it("refuses once the queue is full, so a raid cannot buy an hour of effects in ten seconds", () => {
     expect(queueSlot(new Date("2026-07-25T20:00:10Z"), 5_000, now, MAX_QUEUE_DEPTH)).toBeNull();
     expect(queueSlot(null, 5_000, now, MAX_QUEUE_DEPTH + 3)).toBeNull();
+  });
+});
+
+describe("penaltyAction — the stored row → actuator action translation", () => {
+  const row = {
+    actionKind: "set_filter_intensity", scene: null, source: "Kamera", filter: "Blur",
+    setting: "Filter.Blur.Size", rangeMin: 1, rangeMax: 40, targetState: null,
+  };
+
+  it("carries the DRAWN duration as the revert window and the drawn intensity", () => {
+    const a = penaltyAction(row, 4, 7_500)!;
+    expect(a).toMatchObject({ kind: "set_filter_intensity", intensity: 4, revertAfterMs: 7_500, min: 1, max: 40 });
+  });
+
+  it("builds each of the four action kinds", () => {
+    expect(penaltyAction({ ...row, actionKind: "switch_scene", scene: "Kara" }, 3, 5_000))
+      .toMatchObject({ kind: "switch_scene", scene: "Kara", revertAfterMs: 5_000 });
+    expect(penaltyAction({ ...row, actionKind: "toggle_source", scene: "Main", targetState: false }, 3, 5_000))
+      .toMatchObject({ kind: "toggle_source", visible: false });
+    expect(penaltyAction({ ...row, actionKind: "toggle_filter", targetState: true }, 3, 5_000))
+      .toMatchObject({ kind: "toggle_filter", enabled: true });
+  });
+
+  it("returns null for an INCOMPLETE row instead of sending OBS a half-built action", () => {
+    // A row can lose a column through an admin edit or an older config. Refusing beats calling OBS
+    // with `undefined` names, which would throw inside the actuator on every draw.
+    expect(penaltyAction({ ...row, source: null }, 3, 5_000)).toBeNull();
+    expect(penaltyAction({ ...row, setting: null }, 3, 5_000)).toBeNull();
+    expect(penaltyAction({ ...row, rangeMin: null }, 3, 5_000)).toBeNull();
+    expect(penaltyAction({ ...row, actionKind: "switch_scene", scene: null }, 3, 5_000)).toBeNull();
+    expect(penaltyAction({ ...row, actionKind: "toggle_source", scene: null }, 3, 5_000)).toBeNull();
+    expect(penaltyAction({ ...row, actionKind: "nonsense" }, 3, 5_000)).toBeNull();
+  });
+
+  it("defaults an unset targetState to 'apply the effect', not 'undo it'", () => {
+    expect(penaltyAction({ ...row, actionKind: "toggle_filter", targetState: null }, 3, 5_000))
+      .toMatchObject({ enabled: true });
+    expect(penaltyAction({ ...row, actionKind: "toggle_source", scene: "Main", targetState: null }, 3, 5_000))
+      .toMatchObject({ visible: true });
   });
 });

@@ -2089,6 +2089,98 @@ model ClipDirectorConfig {
   @@map("clip_director_config")
 }
 
+// ── "Kary" — donation-triggered random stream penalties (#806). THREE NEW TABLES, nothing existing
+//    is touched, so applying them cannot affect a single current row.
+//
+//    ⚠️ LEGAL GATE: `PenaltyConfig.enabled` defaults to FALSE and must stay false in production until
+//    the gambling-law question in docs/CHIPS-CASINO.md is answered — paying real money for a RANDOM
+//    outcome is structurally what art. 2 ust. 5 describes, even though the payer wins nothing.
+//    Every reader is also .catch()-guarded, so the code is safe to deploy whether or not these tables
+//    exist yet: a failed read degrades to "penalties off", never to a 500.
+model PenaltyConfig {
+  id       String  @id @default(cuid())
+  tenantId String? @unique // per portal; null = founder/legacy. Read with findFirst — Postgres treats
+  //                          NULLs as distinct, so this unique cannot address the null-tenant row.
+  enabled  Boolean @default(false) // see the legal gate above
+
+  /// Smallest donation that draws a penalty at all, in PLN grosze (2000 = 20 zł).
+  minPlnGrosze Int @default(2000)
+  /// Minimum gap between two penalties STARTING, so a burst cannot stack effects.
+  cooldownMs   Int @default(30000)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("penalty_config")
+}
+
+/// One drawable penalty. The effect columns are flattened exactly like ObsRule/GoveeRule so the same
+/// validators and the same actuator vocabulary apply — `set_filter_intensity` is the one kind ObsRule
+/// cannot store, which is precisely why it lives here with its own setting name + range.
+model Penalty {
+  id       String  @id @default(cuid())
+  tenantId String?
+  enabled  Boolean @default(true)
+  label    String // shown to viewers on the public price list
+
+  /// Relative draw weight; <= 0 removes it from the pool without deleting the row.
+  weight       Int @default(10)
+  /// Tier: the smallest donation (PLN grosze) that puts this penalty in the pool. 0 = always.
+  minPlnGrosze Int @default(0)
+
+  minIntensity  Int @default(1)
+  maxIntensity  Int @default(3)
+  minDurationMs Int @default(3000)
+  maxDurationMs Int @default(10000)
+
+  /// switch_scene | toggle_source | toggle_filter | set_filter_intensity
+  actionKind  String
+  scene       String?
+  source      String?
+  filter      String?
+  /// set_filter_intensity only: the filter-plugin setting and the range intensity 1..5 maps onto.
+  setting     String?
+  rangeMin    Float?
+  rangeMax    Float?
+  targetState Boolean?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, enabled])
+  @@map("penalties")
+}
+
+/// The audit trail: what was drawn, for which donation, and when it ran. Mirrors WheelSpin's lesson —
+/// the catalogue can change after a draw, so the label and the drawn INDEX are snapshotted rather than
+/// resolved by join at read time.
+model PenaltyDraw {
+  id       String  @id @default(cuid())
+  tenantId String?
+
+  penaltyId    String? // nullable: the catalogue row may be deleted later
+  penaltyLabel String // snapshot at draw time
+  penaltyIndex Int // index within the eligible pool, for reproducing the draw
+  intensity    Int
+  durationMs   Int
+
+  /// What paid for it. `amountGrosze` is minor units of `currency` — never assumed to be PLN.
+  donationId   String?
+  amountGrosze Int
+  currency     String  @default("PLN")
+  donorName    String?
+
+  drawnAt  DateTime  @default(now())
+  /// When the queue lets it start — penalties run strictly one at a time.
+  startsAt DateTime
+  /// Set once the actuator has actually applied it, so an undelivered draw is visible.
+  appliedAt DateTime?
+
+  @@index([tenantId, drawnAt])
+  @@index([tenantId, startsAt])
+  @@map("penalty_draws")
+}
+
 model AutoClip {
   id        String   @id @default(cuid())
   tenantId  String?

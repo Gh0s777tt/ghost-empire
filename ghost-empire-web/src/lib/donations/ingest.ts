@@ -197,6 +197,27 @@ async function runEffects(a: {
     await safe("subathon", () => extendSubathon({ pln: Math.floor(a.plnAmount!) }, a.tenantId));
   }
 
+  // "Kary" (#806) — a donation over the portal's threshold draws a random stream penalty. Sits here,
+  // AFTER the money committed and behind safe(), because it is entertainment layered on a donation that
+  // is already banked: it must never be able to fail or delay the credit. It is also independent of
+  // whether a viewer was matched — an anonymous donation buys a penalty just the same.
+  //
+  // Off unless the portal enabled it, and the whole module is gated on the gambling-law question in
+  // docs/CHIPS-CASINO.md. It reads the PLN value, never the raw minor amount: tiers are configured in
+  // PLN, so 5000 RUB-minor would otherwise unlock the harshest tier for a ~220 PLN donation.
+  await safe("penalty", async () => {
+    const { runPenaltyForDonation } = await import("@/lib/penalties-run");
+    await runPenaltyForDonation(
+      {
+        plnAmount: a.plnAmount,
+        amountGrosze: a.event.amountMinor,
+        currency: a.event.currency,
+        donorName: a.donorName,
+      },
+      a.tenantId,
+    );
+  });
+
   if (!a.creditUserId) return; // nothing viewer-scoped to do for an uncredited donation
 
   await safe("achievements", async () => {
