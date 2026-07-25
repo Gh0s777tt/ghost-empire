@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
 import { gtFromPln } from "@/lib/donation-rate";
+import { plnFromMinor, currencyDecimals } from "@/lib/donations/fx";
 import { sendDonationReceipt } from "@/lib/email-receipts";
 import { claimsForDonation, type QueueDonation } from "@/lib/donation-claim";
 import { createLogger } from "@/lib/logger";
@@ -82,8 +83,26 @@ export async function PATCH(req: Request) {
 
   if (!user) return NextResponse.json({ error: `User "${target}" nie znaleziony` }, { status: 404 });
 
-  const amountFloat = donation.amountGrosze / 100;
-  const tokensGranted = gtFromPln(amountFloat); // shared rate + cap — this manual-match path is a mint rail too
+  // FX-CORRECT MINT. `amountGrosze` is minor units of `donation.currency`, NOT always grosze:
+  // dividing by 100 and calling it PLN was wrong in both directions the moment the donation layer
+  // admitted multi-currency providers — it under-mints a $10 Ko-fi tip (credited as 10 PLN instead
+  // of ~40) and OVER-mints a 5000 RUB DonationAlerts tip by ~20× (credited as 5000 PLN instead of
+  // ~220). This manual-match path is a mint rail, so it uses the same FX table as the automatic one.
+  const amountPln = plnFromMinor(donation.amountGrosze, donation.currency);
+  if (amountPln === null) {
+    // An unknown currency is never guessed — see lib/donations/fx.ts. Refusing here is the whole
+    // point: a human approving the row must not be the step that invents an exchange rate.
+    return NextResponse.json(
+      { error: `Nieznana waluta „${donation.currency}" — nie znam jej kursu, więc nie mogę wyliczyć kwoty w GT. Dodaj kurs w lib/donations/fx.ts albo zaksięguj wpłatę ręcznie.` },
+      { status: 422 },
+    );
+  }
+  const tokensGranted = gtFromPln(amountPln); // shared rate + cap — this manual-match path is a mint rail too
+
+  // What the supporter actually paid, in the currency they actually paid it in. The receipt and the
+  // thank-you notification must show THIS, never the synthetic PLN conversion — printing "40.00 PLN"
+  // for a $10 tip would be misleading on what is, to the supporter, a proof of payment.
+  const amountCharged = donation.amountGrosze / 10 ** currencyDecimals(donation.currency);
 
   const matched = await prisma.$transaction(async (tx) => {
     // Atomically claim the donation ONLY if still unmatched — two concurrent "assign"
@@ -102,7 +121,8 @@ export async function PATCH(req: Request) {
       where: { id: user.id },
       data: {
         isDonator: true,
-        totalDonated: { increment: donation.amountGrosze },
+        totalDonated: { increment: Math.round(amountPln * 100) } /* PLN grosze — NOT the row's own minor
+          units: 5000 RUB is ~220 PLN, and recording 500000 would inflate donator tiers ~23× */,
         tokens: { increment: tokensGranted },
         totalEarned: { increment: tokensGranted },
       },
@@ -112,7 +132,9 @@ export async function PATCH(req: Request) {
         userId: user.id,
         type: "earn",
         amount: tokensGranted,
-        reason: `donation:streamlabs:${donation.externalId}`,
+        // `externalId` is already namespaced by provider (`externalIdFor`), so it carries the real
+        // source. Hardcoding "streamlabs" mislabelled every Ko-fi / Tipply / DonationAlerts credit.
+        reason: `donation:${donation.externalId}`,
         status: "completed",
         note: donation.message?.slice(0, 500) ?? null,
       },
@@ -121,7 +143,7 @@ export async function PATCH(req: Request) {
       data: {
         userId: user.id,
         type: "system",
-        title: `Dzięki za donację ${amountFloat.toFixed(2)} ${donation.currency}!`,
+        title: `Dzięki za donację ${amountCharged.toFixed(2)} ${donation.currency}!`,
         message: `Admin dopasował Twoją donację. Otrzymałeś ${tokensGranted.toLocaleString("pl-PL")} %gt%.`,
         icon: "❤️",
         link: "/profile",
@@ -145,7 +167,7 @@ export async function PATCH(req: Request) {
     sendDonationReceipt({
       userId: user.id,
       tenantId: donation.tenantId ?? tid,
-      amount: amountFloat,
+      amount: amountCharged,
       currency: donation.currency,
       tokensGranted,
     }),
@@ -156,7 +178,7 @@ export async function PATCH(req: Request) {
     action: "set_user_role",
     targetType: "donation",
     targetId: donation.id,
-    details: { manualMatch: true, userId: user.id, amount: amountFloat, tokens: tokensGranted },
+    details: { manualMatch: true, userId: user.id, amount: amountCharged, currency: donation.currency, amountPln, tokens: tokensGranted },
     req,
   });
 

@@ -94,6 +94,76 @@ Daily logical JSON dump → S3-compatible bucket is wired (#677) but dormant unt
 Add `BACKUP_S3_ENDPOINT` / `BACKUP_S3_BUCKET` / `BACKUP_S3_ACCESS_KEY_ID` / `BACKUP_S3_SECRET_ACCESS_KEY`
 (+ optional `BACKUP_S3_REGION` / `PREFIX`) in Vercel env → the nightly `cron/backup` ships. Runbook: **[docs/BACKUP.md](BACKUP.md)**.
 
+## 🔵 9. Connect DonationAlerts (the only rail that credits viewers automatically)
+
+Built and wired (#805), **dormant until you register one OAuth app**. Every other donation rail
+either needs your approval per donation (Tipply, the generic webhook) or a token pasted per portal
+(Ko-fi). DonationAlerts is the one where a viewer who puts their `GE-XXXXXX` code in the donation
+message gets credited **with no human in the loop** — because we read the donations with a
+credential you granted us, straight from the vendor's API.
+
+**Register ONE app for the whole platform, not one per portal.** A single app means a single
+registered redirect URI; which portal a grant belongs to travels inside the signed OAuth `state`,
+not in the URL.
+
+1. **Work out the redirect URI for every portal you will connect from.** The portal builds it from
+   **the host you are actually on**, so it is one per portal:
+
+   ```
+   https://<that-portal's-domain>/api/auth/donationalerts/callback
+   ```
+
+   e.g. `https://empire-forge.com/api/auth/donationalerts/callback`.
+
+   This is deliberate and load-bearing. Production leaves `NEXTAUTH_URL` unset when portals run on
+   their own domains (see `docs/ENV.md`), so pinning the callback to one constant host would send the
+   admin of every other portal to a callback where the CSRF nonce cookie this flow just set does not
+   exist — the connect would fail every time, for every portal but one. Deriving from the request
+   keeps the start route, the cookie and the callback on the same origin, and makes both ends compute
+   the identical `redirect_uri` the vendor demands at token exchange.
+2. **Create the app:** <https://www.donationalerts.com/application/clients> → *New application*.
+   - **Redirect URI:** the URL from step 1, exactly — no trailing slash, `https`, same case.
+     If the vendor's form accepts several, add one line per portal. **If it accepts only one**, that
+     app can serve one portal; register the portal you actually collect on, and create a second
+     application for the next portal (the credentials are read from env, so a second app means a
+     second deployment-level value — tell me and I will make them per-portal instead).
+   - **Scopes:** `oauth-user-show` and `oauth-donation-index`. Do **not** grant
+     `oauth-donation-subscribe`; the portal polls and does not need the push stream, so a wider
+     grant would buy nothing and widen the blast radius if the credential ever leaked.
+3. **Put the credentials in Vercel** (Project → Settings → Environment Variables, *Production*):
+   - `DONATIONALERTS_CLIENT_ID`
+   - `DONATIONALERTS_CLIENT_SECRET`
+
+   These are **platform-level**, not per portal — like the Streamlabs pair. Redeploy (or let the
+   next push deploy) so the running functions pick them up.
+4. **Connect each portal:** `/admin` → **"Integracje donacji"** → the **DonationAlerts** card →
+   **"Połącz"**. You are sent to DonationAlerts, you approve, and you land back on `/admin` with
+   `?da_ok=1`. Repeat while logged into each portal you own — one grant per portal, stored
+   encrypted on that portal's row.
+5. ⚠️ **The FIRST poll after connecting deliberately credits nothing.** It only records where the
+   feed currently is. The vendor always returns the most recent page of donations, so ingesting it on
+   connect would replay your donation history as live, **auto-credited** income — with no human in the
+   loop. So the first tick primes and stays silent; the tick after it starts crediting. Do not read
+   the quiet first 10 minutes as a broken setup.
+6. **Verify** (the honest check, not "it looks fine"):
+   - the card shows **"Połączono ✓"** and, after the first donation, a **"Ostatnia wpłata"** time;
+   - send yourself a small real donation with your own `GE-XXXXXX` code in the message — within
+     ~10 minutes (the cron interval) the currency lands and the donation appears **credited**, not
+     in the reconciliation queue;
+   - a donation **without** a code appears in the queue for you to assign, which is correct.
+
+**Failure modes and what they mean, so a stalled rail is never mistaken for a quiet day:**
+
+| What you see | What it means |
+|---|---|
+| `?da_error=not_configured` | The two env vars are missing or the deploy predates them. |
+| `?da_error=state_mismatch` | The CSRF binding failed — usually a stale tab or a blocked cookie. Start from `/admin` again. |
+| `?da_error=no_refresh_token` | The vendor returned a grant we cannot renew; it is **refused on purpose** rather than stored to die silently days later. Re-authorize. |
+| `lastError` on the card | The last poll failed — the text names the cause. `expired_and_no_refresh_token` means reconnect; an HTTP code means the vendor. It is also in Sentry, and the cron answers non-200 so uptime monitoring sees it. |
+
+⚠️ **Removing the integration in the panel stops us using the grant, but does not revoke it at the
+vendor.** To fully revoke, also remove the application's access in your DonationAlerts account.
+
 ## 🚧 NOT a key-paste — these need building first
 The "dormant, waiting for keys" note over-promised two items. Verified against the code, they are
 **not wired at all** (so adding a key does nothing — they're future development):

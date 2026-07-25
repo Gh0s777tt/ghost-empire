@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
  * cannot influence it.
  */
 /** `needs` tells the panel WHICH field to ask for: a provider token/secret, or a public id we poll. */
-const PROVIDERS: Record<string, { label: string; maxTrust: "verified" | "unverified"; kind: "inbound" | "poll"; needs: "secret" | "widgetId"; help: string }> = {
+const PROVIDERS: Record<string, { label: string; maxTrust: "verified" | "unverified"; kind: "inbound" | "poll"; needs: "secret" | "widgetId" | "oauth"; help: string }> = {
   kofi: {
     label: "Ko-fi",
     maxTrust: "verified",
@@ -42,6 +42,13 @@ const PROVIDERS: Record<string, { label: string; maxTrust: "verified" | "unverif
     kind: "inbound",
     needs: "secret",
     help: "Wyślij POST na URL poniżej z nagłówkiem Authorization: Bearer <sekret> i ciałem {\"amount\":25,\"currency\":\"PLN\",\"donorName\":\"...\",\"message\":\"...\"}. Wpłaty z tego źródła zawsze wymagają Twojego zatwierdzenia.",
+  },
+  donationalerts: {
+    label: "DonationAlerts",
+    maxTrust: "verified",
+    kind: "poll",
+    needs: "oauth",
+    help: "Kliknij \u201ePo\u0142\u0105cz\u201d i zatwierd\u017a dost\u0119p w DonationAlerts \u2014 nie wklejasz \u017cadnego tokenu. To jedyne \u017ar\u00f3d\u0142o, kt\u00f3re mo\u017ce nalicza\u0107 walut\u0119 automatycznie: wp\u0142aty czytamy Twoim upowa\u017cnieniem prosto z API dostawcy. Widz dostanie walut\u0119 sam, je\u015bli poda sw\u00f3j kod GE-XXXXXX w wiadomo\u015bci.",
   },
   tipply: {
     label: "Tipply",
@@ -71,7 +78,12 @@ export async function GET() {
     .catch(() => []);
 
   return NextResponse.json({
-    providers: Object.entries(PROVIDERS).map(([key, p]) => ({ key, label: p.label, help: p.help, maxTrust: p.maxTrust, needs: p.needs })),
+    providers: Object.entries(PROVIDERS).map(([key, p]) => ({
+      key, label: p.label, help: p.help, maxTrust: p.maxTrust, needs: p.needs,
+      // An OAuth provider is unusable until the platform app credentials are set. Saying so beats a
+      // Connect button that silently bounces to `?da_error=not_configured` nothing renders.
+      configured: p.needs !== "oauth" || Boolean(process.env.DONATIONALERTS_CLIENT_ID && process.env.DONATIONALERTS_CLIENT_SECRET),
+    })),
     integrations: rows.map((r) => ({
       id: r.id,
       provider: r.provider,
@@ -106,7 +118,7 @@ export async function POST(req: Request) {
   // Postgres treats NULLs as distinct, so a compound unique cannot address the tenantId=null
   // (legacy/founder) row at all. findFirst handles both cases uniformly.
   const current = await prisma.donationIntegration
-    .findFirst({ where: { tenantId: tid ?? null, provider }, select: { id: true, secretEnc: true, externalRef: true } })
+    .findFirst({ where: { tenantId: tid ?? null, provider }, select: { id: true, secretEnc: true, tokenEnc: true, externalRef: true } })
     .catch(() => null);
 
   if (body.action === "delete") {
@@ -158,6 +170,28 @@ export async function POST(req: Request) {
   if (meta.needs === "widgetId" && enabled && !externalRef && !current?.externalRef) {
     return NextResponse.json({ error: "Najpierw wklej link widgetu — bez niego nie ma czego odpytywać" }, { status: 400 });
   }
+  // An OAuth grant can ONLY come from the provider's callback. Three separate holes were possible
+  // here, so all three are closed:
+  //  a) creating the row at all — a two-step POST (enabled:false, then enabled:true) skipped an
+  //     enable-only guard and left an `enabled` + `trust:"verified"` row with NO credential, which
+  //     the panel then displayed as "connected";
+  //  b) writing `secret` — for an OAuth provider `secretEnc` IS the refresh token, so a save would
+  //     destroy the grant's renewal path and the rail would die at the next expiry;
+  //  c) enabling a row whose credential is gone.
+  if (meta.needs === "oauth") {
+    if (!current?.tokenEnc) {
+      return NextResponse.json(
+        { error: "Najpierw połącz konto przyciskiem „Połącz” — grantu OAuth nie da się wpisać ręcznie" },
+        { status: 400 },
+      );
+    }
+    if (secret || externalRef) {
+      return NextResponse.json(
+        { error: "Ten dostawca używa OAuth — tokenów nie wpisuje się ręcznie (nadpisanie zepsułoby odnawianie grantu)" },
+        { status: 400 },
+      );
+    }
+  }
 
   const row = current
     ? await prisma.donationIntegration.update({
@@ -165,8 +199,10 @@ export async function POST(req: Request) {
         data: {
           enabled,
           trust: meta.maxTrust, // server-assigned; a client can never raise it
-          ...(secret ? { secretEnc: encryptSecret(secret) } : {}),
-          ...(externalRef ? { externalRef } : {}),
+          ...(meta.needs === "oauth" ? {} : {
+            ...(secret ? { secretEnc: encryptSecret(secret) } : {}),
+            ...(externalRef ? { externalRef } : {}),
+          }),
           lastError: null,
         },
         select: { id: true },

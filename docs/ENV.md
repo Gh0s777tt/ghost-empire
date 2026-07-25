@@ -51,6 +51,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 |---|---|
 | `TWITCH_EVENTSUB_SECRET` | Weryfikacja podpisu webhooków Twitch EventSub (suby/gifty/bity) |
 | `STREAMLABS_CLIENT_ID` / `STREAMLABS_CLIENT_SECRET` | OAuth Streamlabs (donacje) |
+| `DONATIONALERTS_CLIENT_ID` / `DONATIONALERTS_CLIENT_SECRET` | OAuth DonationAlerts (donacje). Rejestrujesz **jedną** aplikację na donationalerts.com/application/clients; redirect URI to `<NEXTAUTH_URL>/api/auth/donationalerts/callback`. Bez tych dwóch zmiennych integracja jest **uśpiona** — przycisk „Połącz” zwraca `da_error=not_configured` zamiast odbijać streamera na stronę błędu dostawcy. To jedyny dostawca donacji, który może **naliczać walutę automatycznie**, bo wpłaty czytamy upoważnieniem streamera prosto z API |
 | `GT_PER_PLN` | **Jeden** kurs GT/PLN dla WSZYSTKICH szyn wpływu (PayMedia · Streamlabs · YT superchat) — `lib/donation-rate.ts`. Default 100. Zastępuje rozjeżdżające się per-szyna kursy; `DONATION_GT_PER_PLN`/`PAYMEDIA_GT_PER_PLN` honorowane jako fallback |
 | `DONATION_GT_PER_PLN` | **Deprecated alias** kursu — fallback dla `GT_PER_PLN` (Streamlabs) |
 | `PAYMEDIA_WEBHOOK_SECRET` / `PAYMEDIA_GT_PER_PLN` | Webhook dostawcy płatności PayMedia; `PAYMEDIA_GT_PER_PLN` = **deprecated alias** kursu (fallback dla `GT_PER_PLN`) |

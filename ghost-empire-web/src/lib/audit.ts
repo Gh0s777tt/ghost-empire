@@ -52,7 +52,8 @@ type AdminActionType =
   | "backfill_tenant"
   // Per-tenant bot credential provisioned/rotated/cleared. The details NEVER carry the
   // secret itself — only which portal and which way it moved.
-  | "rotate_bot_secret";
+  | "rotate_bot_secret"
+  | "connect_donationalerts";
 
 export async function logAdminAction(opts: {
   adminId: string;

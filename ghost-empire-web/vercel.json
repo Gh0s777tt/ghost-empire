@@ -5,6 +5,10 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "path": "/api/cron/donationalerts-poll",
+      "schedule": "*/10 * * * *"
+    },
+    {
       "path": "/api/cron/tipply-poll",
       "schedule": "*/15 * * * *"
     },

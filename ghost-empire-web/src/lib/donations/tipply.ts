@@ -24,6 +24,7 @@
 // existing serverless cron with zero new infrastructure, so that is what this adapter feeds.)
 import { clampText, syntheticExternalId, type NormalizedDonation } from "./types";
 import { MAX_AMOUNT_MINOR } from "./fx";
+import { pollSince, selectFresh, DEFAULT_MAX_LOOKBACK_MS } from "./cursor";
 
 /** One item of Tipply's last-tips response. Everything optional — it is remote, undocumented input. */
 export type TipplyTip = {
@@ -123,33 +124,25 @@ export function tipplyFeedUrl(widgetId: string, limit = 25): string {
 }
 
 /**
- * How far back a poll may reach, as a backstop. Long enough that a multi-hour cron outage still
- * recovers the tips it missed, short enough that re-enabling a long-idle integration cannot replay
- * a whole month of history onto the overlay.
+ * How far back a Tipply poll may reach. Tipply's page is small (~25) and PL-only, so the shared
+ * backstop fits; the constant is kept exported because the tests and docs name it.
  */
-export const TIPPLY_MAX_LOOKBACK_MS = 12 * 60 * 60 * 1000;
-
-/** Overlap kept around `lastEventAt` so a tip created mid-poll isn't skipped. Duplicates are free. */
-const TIPPLY_GRACE_MS = 30 * 60 * 1000;
+export const TIPPLY_MAX_LOOKBACK_MS = DEFAULT_MAX_LOOKBACK_MS;
 
 /**
  * The oldest tip a poll for this integration may ingest.
  *
- * WHY this exists: the last-tips endpoint always returns the most recent ~25 tips, so a naive first
- * poll would ingest a full page of HISTORY — firing 25 overlay alerts at once and filling the
- * streamer's reconciliation queue with tips they already handled in Tipply. The cutoff is the latest
- * of: when the integration was set up (nothing before it is ours to process), the last successful
- * ingest minus a grace window, and a hard lookback backstop.
+ * Thin wrapper over the shared {@link pollSince} — the "never replay the page as live donations"
+ * rule is identical for every polling provider and lives in `cursor.ts`, so DonationAlerts and any
+ * future poll adapter inherit the same behaviour instead of re-deriving it.
  *
  * @remarks unit-tested in `__tests__/donations-tipply.test.ts`.
  */
 export function tipplySince(createdAt: Date, lastEventAt: Date | null, now: Date): Date {
-  const floors = [createdAt.getTime(), now.getTime() - TIPPLY_MAX_LOOKBACK_MS];
-  if (lastEventAt) floors.push(lastEventAt.getTime() - TIPPLY_GRACE_MS);
-  return new Date(Math.max(...floors));
+  return pollSince(createdAt, lastEventAt, now, TIPPLY_MAX_LOOKBACK_MS);
 }
 
 /** Drop tips older than the cutoff — see {@link tipplySince}. */
 export function selectFreshTips(tips: NormalizedDonation[], since: Date): NormalizedDonation[] {
-  return tips.filter((t) => t.donatedAt.getTime() >= since.getTime());
+  return selectFresh(tips, since);
 }

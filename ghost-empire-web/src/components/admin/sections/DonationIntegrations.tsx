@@ -13,7 +13,7 @@ import { Webhook, Loader2, Check, Copy, Trash2, RefreshCw, ShieldCheck, ShieldAl
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { SectionCard } from "../shared";
 
-type Provider = { key: string; label: string; help: string; maxTrust: "verified" | "unverified"; needs: "secret" | "widgetId" };
+type Provider = { key: string; label: string; help: string; maxTrust: "verified" | "unverified"; needs: "secret" | "widgetId" | "oauth"; configured?: boolean };
 type Integration = {
   id: string; provider: string; enabled: boolean; trust: string; hasSecret: boolean;
   webhookPath: string | null; externalRef: string | null; lastEventAt: string | null; lastError: string | null;
@@ -26,6 +26,8 @@ const T = {
     url: "Twój adres webhooka", copy: "Kopiuj", copied: "Skopiowano ✓",
     token: "Token / sekret od dostawcy", tokenSet: "zapisany", tokenNone: "brak",
     widget: "Link widgetu (TIP_ALERT)", widgetSet: "zapisany",
+    connect: "Połącz", reconnect: "Połącz ponownie", connected: "Połączono ✓",
+    notConfigured: "Właściciel platformy musi najpierw dodać dane aplikacji OAuth (patrz docs/OWNER-SETUP.md §9) — dopóki ich nie ma, przycisk nic nie zrobi.",
     save: "Zapisz", enable: "Włączona", generate: "Wygeneruj sekret", rotate: "Nowy sekret", del: "Usuń",
     verified: "Może naliczać walutę automatycznie", unverified: "Zawsze wymaga Twojego zatwierdzenia w kolejce donacji",
     lastEvent: "Ostatnia wpłata", never: "jeszcze nic nie przyszło",
@@ -39,6 +41,8 @@ const T = {
     url: "Your webhook URL", copy: "Copy", copied: "Copied ✓",
     token: "Token / secret from the provider", tokenSet: "saved", tokenNone: "none",
     widget: "Widget link (TIP_ALERT)", widgetSet: "saved",
+    connect: "Connect", reconnect: "Reconnect", connected: "Connected ✓",
+    notConfigured: "The platform owner must add the OAuth app credentials first (see docs/OWNER-SETUP.md §9) — until then this button does nothing.",
     save: "Save", enable: "Enabled", generate: "Generate secret", rotate: "New secret", del: "Remove",
     verified: "May credit currency automatically", unverified: "Always needs your approval in the donation queue",
     lastEvent: "Last tip", never: "nothing received yet",
@@ -120,7 +124,7 @@ export function DonationIntegrationsManager({ onToast }: { onToast: (k: "ok" | "
                     type="checkbox"
                     checked={!!row?.enabled}
                     disabled={busy === p.key}
-                    onChange={(e) => void act(p.key, "save", { enabled: e.target.checked, ...(p.needs === "widgetId" ? { externalRef: secretDraft[p.key] || undefined } : { secret: secretDraft[p.key] || undefined }) })}
+                    onChange={(e) => void act(p.key, "save", { enabled: e.target.checked, ...(p.needs === "oauth" ? {} : p.needs === "widgetId" ? { externalRef: secretDraft[p.key] || undefined } : { secret: secretDraft[p.key] || undefined }) })}
                     className="accent-emerald-500"
                   />
                   {t.enable}
@@ -151,7 +155,23 @@ export function DonationIntegrationsManager({ onToast }: { onToast: (k: "ok" | "
               )}
 
               <div className="flex flex-wrap items-center gap-1.5">
-                {p.needs === "widgetId" ? (
+                {p.needs === "oauth" ? (
+                  <>
+                    {/* "Connected" must come from the stored CREDENTIAL, not from row existence — a row
+                        can exist with no grant, and calling that connected would be a lie. */}
+                    {row?.hasSecret ? <span className="text-[11px] text-emerald-400 self-center">{t.connected}</span> : null}
+                    {p.configured === false ? (
+                      <span className="text-[11px] text-amber-400 flex-1 min-w-[14rem] leading-snug">{t.notConfigured}</span>
+                    ) : (
+                      <a
+                        href={`/api/auth/${p.key}`}
+                        className="px-2.5 py-1.5 border border-zinc-700 text-zinc-200 hover:border-emerald-600 text-[10px] font-bold tracking-widest uppercase"
+                      >
+                        {row?.hasSecret ? t.reconnect : t.connect}
+                      </a>
+                    )}
+                  </>
+                ) : p.needs === "widgetId" ? (
                   <>
                     <input
                       value={secretDraft[p.key] ?? ""}
