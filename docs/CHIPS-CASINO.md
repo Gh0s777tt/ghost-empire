@@ -306,6 +306,15 @@ Każda faza: kod + testy + dokumentacja (`CHANGELOG`/`ENDPOINTS`/`ENV` wg `CLAUD
 3. **Kwota dziennego grantu żetonów** + czy „welcome grant" jednorazowy.
 4. **Duele/heist** — potwierdzić przeniesienie na chips (rekomendowane — to też stawka+losowość).
 5. **Prawnik od prawa hazardowego** — krok równoległy; docelowo decyzja MF (art. 2 ust. 6).
+   ⚠️ **Dołożone pytanie (2026-07-25) — moduł kar za donaty (#806).** Widz wpłaca REALNE pieniądze,
+   a system **losuje** rodzaj, nasilenie i czas kary na streamie. To strukturalnie „gra komercyjna +
+   losowość" z art. 2 ust. 5 — z tą różnicą, że **płacący nic nie wygrywa**: efekt dzieje się na ekranie
+   streamera i nie ma wartości majątkowej dla wpłacającego, więc nie ma ani stawki w rozumieniu gry, ani
+   wygranej. Ekspozycja wygląda słabsza niż kasyna, ale to ta sama kategoria pytania, więc idzie na tę
+   listę, a nie do domysłu. **Moduł jest zbudowany i domyślnie WYŁĄCZONY per portal** — nie włączać na
+   produkcji przed odpowiedzią. Alternatywa gotowa do wdrożenia szybko, gdyby odpowiedź była zła: realna
+   wpłata odpala karę **wskazaną** przez próg (deterministycznie), a losowanie zostaje przy żetonach,
+   gdzie pętla wartości jest już przecięta.
 6. **Przegląd native/prawny copy `shop.helpChips`** (14 locale) — ⏳ **otwarte**.
    *Stan na 2026-07-25 (przegląd własny, nie zastępuje prawnika):* wszystkie 14 wersji niosą
    **te same trzy twierdzenia** co PL (waluta darmowa · wyłącznie kosmetyka bez wartości

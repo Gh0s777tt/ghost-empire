@@ -17,7 +17,8 @@
     "src/lib/oauth-email.ts",
     "src/lib/chips.ts",
     "src/lib/shop-currency.ts",
-    "src/lib/after-safe.ts"
+    "src/lib/after-safe.ts",
+    "src/lib/penalties.ts"
   ],
   "out": "../docs/api",
   "readme": "none",
