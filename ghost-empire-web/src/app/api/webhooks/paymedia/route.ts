@@ -142,7 +142,10 @@ export async function POST(req: Request) {
   // `externalId` existed (legacy rows carry the payment_id only in `reason`).
   if (payload.payment_id) {
     const existing = await prisma.transaction.findFirst({
-      where: { reason: { contains: payload.payment_id } },
+      // ANCHORED to the paymedia prefix. This used to be an unanchored `contains`, which now that the
+      // donation layer writes provider-controlled text into `reason` could match an unrelated row —
+      // and a false positive here silently DROPS a real payment (neither credited nor queued).
+      where: { OR: [{ externalId: `paymedia:${payload.payment_id}` }, { reason: `paymedia:${payload.payment_id}` }] },
     });
     if (existing) {
       return NextResponse.json({ ok: true, ignored: "already processed", paymentId: payload.payment_id });

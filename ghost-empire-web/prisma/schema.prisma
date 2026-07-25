@@ -1499,6 +1499,45 @@ model Donation {
   @@map("donations")
 }
 
+/// Per-portal configuration of ONE donation provider (#donation-layer).
+///
+/// White-label requirement: every streamer connects THEIR OWN account, so credentials are per
+/// tenant — a single platform-wide integration would mean one streamer's donations crediting
+/// another's portal. Secrets are stored encrypted (lib/crypto.encryptSecret), never in plaintext.
+///
+/// `trust` mirrors lib/donations/types.DonationTrust and decides whether events from this
+/// integration may MINT currency or only land in the reconciliation queue: providers that sign
+/// their webhooks or authenticate us (Ko-fi, DonationAlerts, Streamlabs) are "verified"; an open
+/// socket keyed by a capability id (Tipply) or a generic incoming webhook is "unverified".
+model DonationIntegration {
+  id       String  @id @default(cuid())
+  tenantId String? // portal this integration belongs to (null = legacy/founder)
+  /// Provider key — matches lib/donations/types.DonationProvider ("kofi", "tipply", "custom", …).
+  provider String
+  enabled  Boolean @default(false)
+  /// "verified" | "unverified" — set by the adapter, not by the owner (see the model doc).
+  trust    String  @default("unverified")
+
+  /// Shared secret we generate for INBOUND webhooks: the streamer pastes our URL (which carries
+  /// this id) into the provider, and the provider's own token/signature is checked against
+  /// `secretEnc`. Encrypted at rest.
+  secretEnc String? @db.Text
+  /// Provider-side credential we hold to CALL them (OAuth refresh token, API key, JWT). Encrypted.
+  tokenEnc  String? @db.Text
+  /// Non-secret provider-side reference (channel id, widget uuid, account handle) — safe to display.
+  externalRef String?
+
+  lastEventAt DateTime? // last donation actually ingested through this integration
+  lastError   String?   @db.Text // last failure, surfaced in the admin panel
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  /// One row per (portal, provider) — a portal cannot have two conflicting Ko-fi configs.
+  @@unique([tenantId, provider])
+  @@index([provider, enabled])
+  @@map("donation_integrations")
+}
+
 /// A viewer's ASSERTION that an uncredited payment was theirs ("I tipped without the code").
 ///
 /// A donation sent without the GE-code credits nothing and sits in the admin reconciliation queue
