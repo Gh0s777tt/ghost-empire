@@ -13,6 +13,7 @@ import { goalProgress } from "@/lib/support-goal";
 import { Header } from "@/components/Header";
 import { SupportClient } from "@/components/support/SupportClient";
 import { SponsorStrip } from "@/components/support/SponsorStrip";
+import { PenaltyList, type PublicPenalty } from "@/components/support/PenaltyList";
 import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 
@@ -52,7 +53,7 @@ const firstName = (n: string | null) => {
  */
 async function loadSupport(tid: string | null, brandName: string) {
   return cacheJson(`support:${tid ?? "_"}`, 60_000, async () => {
-    const [methods, goalRow, supporterRows, topRows, sponsors] = await Promise.all([
+    const [methods, goalRow, supporterRows, topRows, sponsors, penaltyCfg, penaltyRows] = await Promise.all([
       prisma.paymentMethod
         .findMany({
           where: { active: true, ...(tid ? { tenantId: tid } : {}) },
@@ -89,6 +90,18 @@ async function loadSupport(tid: string | null, brandName: string) {
           select: { name: true, url: true, logoUrl: true, note: true, tier: true, featured: true },
         })
         .catch(() => [] as { name: string; url: string; logoUrl: string | null; note: string | null; tier: string | null; featured: boolean }[]),
+      // "Kary" (#806) — both .catch()-guarded like the payment methods above, so a portal without the
+      // migration (or with the feature off) simply renders no price list instead of a broken page.
+      prisma.penaltyConfig.findFirst({ where: { tenantId: tid ?? null } }).catch(() => null),
+      prisma.penalty
+        .findMany({
+          where: { tenantId: tid ?? null, enabled: true },
+          orderBy: [{ minPlnGrosze: "asc" }, { sortOrder: "asc" }],
+          // Only what a viewer may see: the effect columns (scene/source/filter names) are the
+          // streamer's OBS layout and have no business on a public page.
+          select: { label: true, weight: true, minPlnGrosze: true, minDurationMs: true, maxDurationMs: true },
+        })
+        .catch(() => []),
     ]);
 
     // Auto-tracked goals DERIVE their progress from committed Donation rows in the goal window
@@ -142,11 +155,15 @@ async function loadSupport(tid: string | null, brandName: string) {
       }),
     );
 
-    return { shaped, goal, supporters, topSupporters, sponsors, tipCurrency };
+    // The list is served only when the portal switched penalties ON — the catalogue existing is not
+    // consent to advertise it.
+    const penalties = penaltyCfg?.enabled ? penaltyRows : [];
+    return { shaped, goal, supporters, topSupporters, sponsors, tipCurrency, penalties, penaltyMinPlnGrosze: penaltyCfg?.minPlnGrosze ?? 2000 };
   });
 }
 
-export default async function SupportPage() {
+export default async function SupportPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const tid = await currentTenantId();
   const tenant = await getCurrentTenant();
 
@@ -186,6 +203,11 @@ export default async function SupportPage() {
           customHeading={tenant.supportHeading}
           customIntro={tenant.supportIntro}
           customThanks={tenant.supportThanks}
+        />
+        <PenaltyList
+          penalties={data.penalties as PublicPenalty[]}
+          minPlnGrosze={data.penaltyMinPlnGrosze}
+          locale={locale}
         />
         <SponsorStrip sponsors={data.sponsors} />
       </main>
