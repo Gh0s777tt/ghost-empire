@@ -24,7 +24,7 @@ async function loadHub() {
   const row = tenant.id
     ? await prisma.tenant.findUnique({
         where: { id: tenant.id },
-        select: { hubEnabled: true, hubBio: true, hubLinks: true, socialLinks: true },
+        select: { hubEnabled: true, hubBio: true, hubLinks: true, socialLinks: true, supportHeading: true },
       })
     : null;
 
@@ -42,6 +42,15 @@ async function loadHub() {
         .catch(() => [])
     : [];
 
+  // Does this portal accept support at all? Counted, never linked to directly: /support renders EVERY
+  // method the streamer configured, with QR codes and the goal bar, and it is what counts clicks per
+  // method (payment_methods.clicks) — the only signal telling the streamer which method actually
+  // works. It is also where the GE-code attribution is explained, so sending a viewer straight to an
+  // external provider would skip the instruction that makes their donation land on their account.
+  const supportMethods = tenant.id
+    ? await prisma.paymentMethod.count({ where: { tenantId: tenant.id, active: true } }).catch(() => 0)
+    : 0;
+
   return {
     name: tenant.name,
     logoUrl: tenant.logoUrl,
@@ -56,6 +65,9 @@ async function loadHub() {
     // footer and would be a white-label leak on a streamer's own link-in-bio page.
     platforms: hubPlatformTiles(row?.socialLinks as { platform: string; url: string }[] | null),
     live: hubLive(sessions, new Date()),
+    // No new column and no toggle: the CTA configures itself from what the streamer already set up.
+    hasSupport: supportMethods > 0,
+    supportHeading: row?.supportHeading?.trim() || null,
   };
 }
 
@@ -150,6 +162,20 @@ export default async function HubPage() {
             <p className="text-center text-sm text-zinc-500 py-6">Brak linków — dodaj je w panelu (Hub).</p>
           )}
         </div>
+
+        {/* Support CTA — only when this portal has at least one active method. Label from the
+            streamer's own supportHeading, with a neutral fallback: no founder wording ever reaches
+            another portal's public page. */}
+        {hub.hasSupport && (
+          <a
+            href="/support"
+            className="mt-3 w-full px-5 py-4 rounded-xl border text-center font-bold text-white transition-all
+                       hover:-translate-y-0.5 active:translate-y-0"
+            style={{ borderColor: accent, background: `${accent}1f` }}
+          >
+            {hub.supportHeading ?? "Wesprzyj stream"}
+          </a>
+        )}
 
         {/* Subtle attribution back to the portal */}
         <a href="/" className="mt-12 text-[11px] font-mono uppercase tracking-widest text-zinc-600 hover:text-zinc-400 transition-colors">
