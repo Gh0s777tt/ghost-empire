@@ -55,3 +55,83 @@ export function sanitizeHubBio(raw: unknown): string | null {
   const s = raw.trim().slice(0, HUB_BIO_MAX);
   return s || null;
 }
+
+// ── Live badge + platform tiles for /hub (#815) ─────────────────────────────────────────────────
+//
+// WHITE-LABEL, and this is the part that must never slip: the hub is a PUBLIC page on a streamer's
+// own portal, so every value here comes from that portal's own config. There is deliberately NO
+// fallback to the founder's channels — `parseTenantSocials` falls back to the founder SOCIALS list
+// when a tenant has none, which is right for the footer but would be a leak here: another streamer's
+// link-in-bio page would advertise the founder's Twitch. An empty list renders NO tiles instead.
+
+/** Platforms a hub tile can be rendered for, with the label shown on it. */
+export const HUB_PLATFORMS: Record<string, string> = {
+  twitch: "Twitch",
+  kick: "Kick",
+  youtube: "YouTube",
+  rumble: "Rumble",
+  discord: "Discord",
+  x: "X",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+};
+
+export type HubPlatformTile = { platform: string; label: string; url: string };
+
+/**
+ * Build the platform tiles from a portal's OWN social links.
+ *
+ * @param socials - `tenant.socialLinks` as stored; pass the raw per-tenant list, never a fallback.
+ * @returns One tile per recognised platform with a valid http(s) URL, in the portal's own order.
+ *
+ * @remarks
+ * Unknown platforms are dropped rather than rendered with a raw key as their label — a tile reading
+ * "myspace" would look like a bug. Non-http URLs are dropped by {@link isHttpUrl}, which is what keeps
+ * a `javascript:` entry out of a public page.
+ */
+export function hubPlatformTiles(socials: { platform: string; url: string }[] | null | undefined): HubPlatformTile[] {
+  if (!Array.isArray(socials)) return [];
+  const out: HubPlatformTile[] = [];
+  const seen = new Set<string>();
+  for (const s of socials) {
+    const key = typeof s?.platform === "string" ? s.platform.trim().toLowerCase() : "";
+    const label = HUB_PLATFORMS[key];
+    if (!label || seen.has(key)) continue;
+    if (typeof s.url !== "string" || !isHttpUrl(s.url)) continue;
+    seen.add(key);
+    out.push({ platform: key, label, url: s.url });
+  }
+  return out;
+}
+
+/** What the hub shows about a live stream, or null when nothing is live. */
+export type HubLive = { platform: string; label: string; startedAt: Date };
+
+/**
+ * Derive the live badge from the portal's own open stream sessions.
+ *
+ * @param sessions - Rows with `endedAt === null` meaning "still live", for THIS portal only.
+ * @param now - Current time, injected so the staleness guard is testable.
+ * @param maxHours - Treat an older open session as a missed offline event rather than a live stream.
+ * @returns The most recently started live session, or null.
+ *
+ * @remarks
+ * The staleness guard is the load-bearing part. `endedAt` is set by an EventSub `stream.offline`
+ * webhook, and a missed webhook leaves the row open forever — without a bound the hub would claim the
+ * streamer is live for weeks. Showing nothing is the safe direction: a missed "live" costs a click,
+ * a false "live" costs trust.
+ */
+export function hubLive(
+  sessions: { platform: string; startedAt: Date; endedAt: Date | null }[],
+  now: Date,
+  maxHours = 24,
+): HubLive | null {
+  const cutoff = now.getTime() - maxHours * 3_600_000;
+  const open = sessions
+    .filter((s) => s.endedAt === null && s.startedAt.getTime() >= cutoff && s.startedAt.getTime() <= now.getTime())
+    .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
+  const s = open[0];
+  if (!s) return null;
+  const key = s.platform.trim().toLowerCase();
+  return { platform: key, label: HUB_PLATFORMS[key] ?? s.platform, startedAt: s.startedAt };
+}

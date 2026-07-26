@@ -7,7 +7,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentTenant } from "@/lib/tenant";
-import { parseHubLinks } from "@/lib/hub";
+import { parseHubLinks, hubPlatformTiles, hubLive } from "@/lib/hub";
 
 export async function generateMetadata() {
   const { name, hubBio } = await loadHub();
@@ -24,9 +24,24 @@ async function loadHub() {
   const row = tenant.id
     ? await prisma.tenant.findUnique({
         where: { id: tenant.id },
-        select: { hubEnabled: true, hubBio: true, hubLinks: true },
+        select: { hubEnabled: true, hubBio: true, hubLinks: true, socialLinks: true },
       })
     : null;
+
+  // Live badge from THIS portal's own sessions. `endedAt: null` means still live; hubLive() also
+  // rejects a stale row, because a missed EventSub stream.offline would otherwise claim a week-long
+  // stream. `.catch` keeps a public page from 500-ing on a DB hiccup — it just shows no badge.
+  const sessions = tenant.id
+    ? await prisma.streamSession
+        .findMany({
+          where: { tenantId: tenant.id, endedAt: null },
+          orderBy: { startedAt: "desc" },
+          take: 5,
+          select: { platform: true, startedAt: true, endedAt: true },
+        })
+        .catch(() => [])
+    : [];
+
   return {
     name: tenant.name,
     logoUrl: tenant.logoUrl,
@@ -36,6 +51,11 @@ async function loadHub() {
     hubEnabled: row?.hubEnabled ?? false,
     hubBio: row?.hubBio ?? null,
     links: parseHubLinks(row?.hubLinks),
+    // Read from the portal's OWN socialLinks column, deliberately NOT through parseTenantSocials:
+    // that helper falls back to the founder's channels when a tenant has none, which is right for the
+    // footer and would be a white-label leak on a streamer's own link-in-bio page.
+    platforms: hubPlatformTiles(row?.socialLinks as { platform: string; url: string }[] | null),
+    live: hubLive(sessions, new Date()),
   };
 }
 
@@ -44,6 +64,7 @@ export default async function HubPage() {
   if (!hub.hubEnabled) notFound();
 
   const accent = hub.brandColor || "#E50914";
+  const liveLabel = hub.live ? `LIVE · ${hub.live.label}` : null;
   return (
     <div
       className="min-h-screen w-full flex flex-col items-center px-5 py-12 sm:py-16 relative"
@@ -63,7 +84,51 @@ export default async function HubPage() {
         </div>
         <h1 className="font-display text-3xl text-white tracking-wider text-center">{hub.name}</h1>
         {hub.ownerHandle && <p className="font-mono text-xs text-zinc-400 mt-1">@{hub.ownerHandle}</p>}
+        {/* Live badge. Rendered only from this portal's own open StreamSession rows, and only when
+            hubLive() accepts them — a stale row (missed stream.offline webhook) shows nothing, because
+            a false "live" costs trust while a missed one costs a click. */}
+        {liveLabel && (() => {
+          // Only a link when the live platform is actually among the portal's own socials. Otherwise a
+          // plain badge: an <a> with no href looks clickable and does nothing, which is a small lie.
+          const url = hub.platforms.find((p) => p.platform === hub.live?.platform)?.url;
+          const cls =
+            "mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-bold" +
+            " tracking-widest uppercase text-white";
+          const style = { borderColor: accent, background: `${accent}22` };
+          const dot = <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: accent }} />;
+          return url ? (
+            <a href={url} target="_blank" rel="noopener noreferrer" className={cls} style={style}>
+              {dot}
+              {liveLabel}
+            </a>
+          ) : (
+            <span className={cls} style={style}>
+              {dot}
+              {liveLabel}
+            </span>
+          );
+        })()}
         {hub.hubBio && <p className="text-sm text-zinc-300 text-center mt-3 leading-relaxed max-w-sm">{hub.hubBio}</p>}
+
+        {/* Platform tiles — from the portal's OWN socialLinks only. No entries → no row, never a
+            fallback to anyone else's channels. */}
+        {hub.platforms.length > 0 && (
+          <div className="w-full grid grid-cols-2 gap-2 mt-6 sm:grid-cols-4">
+            {hub.platforms.map((p) => (
+              <a
+                key={p.platform}
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2 py-2 rounded-lg border bg-zinc-950/60 text-center text-[11px] font-bold
+                           tracking-wider uppercase text-zinc-200 transition-colors hover:text-white"
+                style={{ borderColor: `${accent}44` }}
+              >
+                {p.label}
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Links */}
         <div className="w-full flex flex-col gap-3 mt-8">
