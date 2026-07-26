@@ -19,8 +19,11 @@ import OBSWebSocket from "obs-websocket-js";
 import { obsActionsForAlert, type ObsRule, type ObsAction } from "@/lib/obs-rules";
 import { revertTargetKey, mergeRevert, revertDelayMs, type PendingRevert, type RestoreSpec } from "@/lib/obs-revert";
 import { intensityValue } from "@/lib/obs-rules";
+import { hueRevertTargetKey } from "@/lib/obs-revert";
+import { hueActionsForAlert, briFromPercent, hexToXy, type HueAction, type HueRule } from "@/lib/hue-rules";
 
-type Config = { obsUrl: string | null; obsPassword: string | null; rules: ObsRule[] };
+type HueConfig = { bridgeIp: string; apiKey: string; rules: HueRule[] };
+type Config = { obsUrl: string | null; obsPassword: string | null; rules: ObsRule[]; hue: HueConfig | null };
 type Status = "connecting" | "connected" | "no-config" | "no-token" | "bad-token" | "error";
 
 const POLL_MS = 2000;
@@ -58,6 +61,8 @@ export function ObsControlClient() {
           await obs.call("SetSceneItemEnabled", { sceneName: r.sceneName, sceneItemId: r.sceneItemId, sceneItemEnabled: r.enabled });
         } else if (r.kind === "filter") {
           await obs.call("SetSourceFilterEnabled", { sourceName: r.sourceName, filterName: r.filterName, filterEnabled: r.enabled });
+        } else if (r.kind === "hueLight") {
+          await huePut(r.lightId, r.state);
         } else {
           // Restore the WHOLE settings object we captured, so an intensity change cannot leave a
           // half-overwritten filter config behind.
@@ -93,6 +98,78 @@ export function ObsControlClient() {
         void applyRestore(plan.pending.restore);
       }, revertDelayMs(plan.pending, Date.now()));
       pendingReverts.set(key, { revert: plan.pending, timer });
+    }
+
+    /** Bridge config for this session, filled from /api/obs-control/config. */
+    let hue: HueConfig | null = null;
+
+    /**
+     * Write a light state through the bridge's LOCAL v1 API.
+     *
+     * `lightId` empty/"*" targets group 0, which is "all lights" — the only way the bridge exposes a
+     * whole-house write. Plain http on the LAN is deliberate: the bridge's own certificate is
+     * self-signed, and a browser source cannot click through a certificate warning.
+     */
+    async function huePut(lightId: string, state: Record<string, unknown>): Promise<void> {
+      if (!hue) return;
+      const all = !lightId || lightId === "*";
+      const url = all
+        ? `http://${hue.bridgeIp}/api/${hue.apiKey}/groups/0/action`
+        : `http://${hue.bridgeIp}/api/${hue.apiKey}/lights/${encodeURIComponent(lightId)}/state`;
+      try {
+        await fetch(url, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(state) });
+      } catch {
+        /* the bridge may be off or the LAN unreachable — lights are best-effort, never fatal */
+      }
+    }
+
+    /** Read what a light (or group 0) looks like NOW, so the ledger can put it back afterwards. */
+    async function hueReadState(lightId: string): Promise<Record<string, unknown>> {
+      if (!hue) return {};
+      const all = !lightId || lightId === "*";
+      try {
+        const res = await fetch(
+          all ? `http://${hue.bridgeIp}/api/${hue.apiKey}/groups/0` : `http://${hue.bridgeIp}/api/${hue.apiKey}/lights/${encodeURIComponent(lightId)}`,
+          { cache: "no-store" },
+        );
+        const json = (await res.json()) as { state?: Record<string, unknown>; action?: Record<string, unknown> };
+        // A single light reports `state`; a group reports `action`. Keep only the fields we write, so a
+        // restore cannot push back read-only properties the bridge would reject.
+        const src = (all ? json.action : json.state) ?? {};
+        const keep: Record<string, unknown> = {};
+        for (const k of ["on", "bri", "xy"]) if (k in src) keep[k] = src[k];
+        return keep;
+      } catch {
+        return {};
+      }
+    }
+
+    async function actuateHue(a: HueAction, lightId: string | null) {
+      if (!hue) return;
+      const id = lightId ?? "";
+      const key = hueRevertTargetKey(lightId);
+
+      if (a.revertAfterMs) {
+        await scheduleRevert(key, a.revertAfterMs, async () => ({
+          kind: "hueLight",
+          lightId: id,
+          state: await hueReadState(id),
+        }));
+      }
+
+      if (a.kind === "turn") {
+        await huePut(id, { on: a.on });
+        setLastAction(`hue: ${a.on ? "on" : "off"}`);
+      } else if (a.kind === "set_brightness") {
+        // The streamer configures a percentage; the bridge takes 1..254. See lib/hue-rules.ts.
+        await huePut(id, { on: true, bri: briFromPercent(a.percent) });
+        setLastAction(`hue: ${a.percent}%`);
+      } else {
+        const xy = hexToXy(a.hex);
+        if (!xy) return; // validation rejects black, but never trust a stored row
+        await huePut(id, { on: true, xy });
+        setLastAction(`hue: ${a.hex}`);
+      }
     }
 
     async function actuate(a: ObsAction) {
@@ -182,6 +259,17 @@ export function ObsControlClient() {
                 setLastAction(`błąd akcji: ${(e as Error).message}`);
               }
             }
+            // Lights react to the SAME alerts, from the same loop, so an OBS effect and a light effect
+            // stay ordered relative to each other and share one revert ledger.
+            if (hue) {
+              for (const hr of hue.rules) {
+                for (const ha of hueActionsForAlert({ type: al.type, amount: al.amount }, [hr])) {
+                  try {
+                    await actuateHue(ha, hr.lightId ?? null);
+                  } catch { /* best-effort — a lamp must never break the alert loop */ }
+                }
+              }
+            }
           }
           if (seen.size > 500) [...seen].slice(0, seen.size - 200).forEach((id) => seen.delete(id));
         }
@@ -220,6 +308,7 @@ export function ObsControlClient() {
         }
         const cfg = (await cfgRes.json()) as Config;
         rules = cfg.rules ?? [];
+        hue = cfg.hue ?? null; // null when the bridge is only half-configured — see the config route
         setRulesCount(rules.length);
         if (!cfg.obsUrl) {
           setStatus("no-config");

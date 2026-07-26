@@ -4,6 +4,7 @@ import {
   hueActionsForAlert, validateHueAction, validateHueRule, briFromPercent, hexToXy,
   BRI_MIN, BRI_MAX, ANY_TRIGGER, type HueRule,
 } from "@/lib/hue-rules";
+import { hueRevertTargetKey, mergeRevert } from "@/lib/obs-revert";
 
 const rule = (over: Partial<HueRule> = {}): HueRule => ({
   enabled: true, triggerType: "donation", minAmount: null, lightId: null,
@@ -95,5 +96,39 @@ describe("validation refuses what the Bridge would reject", () => {
     const r = validateHueRule({ ...rule(), lightId: "  " });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value.lightId).toBeNull();
+  });
+});
+
+// ── The shared revert ledger: lights join it rather than growing their own timers.
+
+describe("hueRevertTargetKey — two rules on one lamp collapse, two lamps stay independent", () => {
+  it("keys per light", () => {
+    expect(hueRevertTargetKey("3")).toBe(hueRevertTargetKey("3"));
+    expect(hueRevertTargetKey("3")).not.toBe(hueRevertTargetKey("4"));
+  });
+
+  it("treats 'all lights' as its own target, since it collides with any other all-lights rule", () => {
+    expect(hueRevertTargetKey(null)).toBe(hueRevertTargetKey(""));
+    expect(hueRevertTargetKey(null)).toBe(hueRevertTargetKey("*"));
+    expect(hueRevertTargetKey(null)).not.toBe(hueRevertTargetKey("3"));
+  });
+
+  it("never collides with an OBS target key", () => {
+    expect(hueRevertTargetKey("3")).not.toBe("scene");
+    expect(hueRevertTargetKey("3").startsWith("hue:")).toBe(true);
+  });
+
+  it("restores the state from BEFORE the first light effect, not the effect colour", () => {
+    // The failure this prevents: a red 30s flash then a blue 5s flash on one lamp. Without the shared
+    // ledger the blue revert would restore RED and leave the lamp red for good.
+    const key = hueRevertTargetKey("3");
+    const original = { kind: "hueLight" as const, lightId: "3", state: { on: true, bri: 200 } };
+    const first = mergeRevert(undefined, { key, dueAt: 30_000, restore: original });
+    const second = mergeRevert(first.pending, {
+      key, dueAt: 5_000, restore: { kind: "hueLight", lightId: "3", state: { on: true, xy: [0.6, 0.3] } },
+    });
+    expect(second.pending.restore).toEqual(original);
+    expect(second.pending.dueAt).toBe(30_000);
+    expect(second.cancelPrevious).toBe(true);
   });
 });
