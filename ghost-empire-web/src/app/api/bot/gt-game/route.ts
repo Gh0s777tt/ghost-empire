@@ -15,8 +15,13 @@ import { getCurrentTenantBotAuth } from "@/lib/tenant";
 import { CHIP_SYMBOL } from "@/lib/chips";
 import { rateLimit } from "@/lib/rate-limit";
 import { playGtGame } from "@/lib/gt-games";
+import { casinoGate } from "@/lib/compliance";
 
 export async function POST(req: Request) {
+  // §7 ust. 12 zakazuje mechaniki i nazewnictwa kasynowego — patrz lib/compliance.ts.
+  const blocked = casinoGate();
+  if (blocked) return blocked;
+
   // Auth + tenant scope from the request Host: a portal's bot can only resolve/play for its
   // own viewers. tenantId null (no request scope) → unscoped (legacy single-tenant behaviour).
   const { id: tenantId, botSecret } = await getCurrentTenantBotAuth();

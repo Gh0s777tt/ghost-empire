@@ -5,10 +5,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { casinoGate } from "@/lib/compliance";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // §7 ust. 12 zakazuje mechaniki i nazewnictwa kasynowego — patrz lib/compliance.ts.
+  const blocked = casinoGate();
+  if (blocked) return blocked;
+
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userId = session.user.id;

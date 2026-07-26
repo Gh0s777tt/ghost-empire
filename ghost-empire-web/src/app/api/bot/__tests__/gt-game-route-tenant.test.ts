@@ -4,6 +4,18 @@
 // portal's bot can only play for — and move GT of — its OWN viewers. Same contract as chat-award,
 // but this exercises the `user: { tenantId }` relation-filter shape (Connection has no tenantId of
 // its own). Mocks prisma / tenant / rate-limit / gt-games; uses the REAL verifyBotSecretForTenant.
+// ⚠️ THE SUITES BELOW ARE PARKED, NOT DELETED (2026-07-26).
+//
+// /api/bot/gt-game drives the chat casino games, a surface retired under REGULAMIN_GHOST_TOKENS.md
+// §7 ust. 12 (the ban covers the MECHANIC, not just the naming, and applies regardless of prize
+// value). The route now answers 410 before doing anything, so their assertions about auth, tenant
+// scoping and chat wording no longer describe reality — they describe the surface as it worked.
+//
+// They are `describe.skip` rather than removed because the coverage they encode (per-tenant secret
+// acceptance, Connection lookup scoped through the user relation, the chips-vs-GT wording rule) is
+// expensive to rebuild and would be needed again the day the terms change. The live test at the
+// bottom is the one that matters now: it pins that the retirement holds.
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const state = vi.hoisted(() => ({
@@ -41,7 +53,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
-describe("/api/bot/gt-game — auth", () => {
+describe.skip("/api/bot/gt-game — auth", () => {
   it("401 for a secret matching neither the global nor this tenant's secret", async () => {
     const res = await POST(req("nope"));
     expect(res.status).toBe(401);
@@ -54,7 +66,7 @@ describe("/api/bot/gt-game — auth", () => {
   });
 });
 
-describe("/api/bot/gt-game — tenant-scoped Connection match", () => {
+describe.skip("/api/bot/gt-game — tenant-scoped Connection match", () => {
   it("scopes the platformId lookup to the tenant's users via the user relation", async () => {
     await POST(req("global-secret"));
     expect(state.connFindFirst).toHaveBeenCalledWith(
@@ -88,7 +100,7 @@ describe("/api/bot/gt-game — tenant-scoped Connection match", () => {
 //      `user.chips` i stempluje ledger `currency:"CHIPS"`, więc gracz wygrał DARMOWE żetony.
 // Poprawna etykieta to uniwersalne 🪙 (docs/CHIPS-CASINO.md): nie należy do niczyjej marki
 // i nie sugeruje wartości, której żetony nie mają.
-describe("/api/bot/gt-game — czat nazywa walutę, którą gra faktycznie płaci (żetony)", () => {
+describe.skip("/api/bot/gt-game — czat nazywa walutę, którą gra faktycznie płaci (żetony)", () => {
   it("WYGRANA jest w żetonach, nie w tokenie portalu", async () => {
     state.playGtGame.mockResolvedValue({ ok: true, payout: 250, bet: 100, detail: "🍒🍒🍒", newBalance: 350 });
     const msg = (await (await POST(req("global-secret"))).json()).message as string;
@@ -118,5 +130,15 @@ describe("/api/bot/gt-game — czat nazywa walutę, którą gra faktycznie płac
     const msg = (await (await POST(req("global-secret"))).json()).message as string;
     expect(msg).toContain("250 🪙!");
     expect(msg).not.toMatch(/\bGT\b/);
+  });
+});
+
+describe("/api/bot/gt-game — retired under §7 ust. 12", () => {
+  it("refuses with 410 before touching auth, the tenant or any balance", async () => {
+    // 410 and not 404: the endpoint existed and was intentionally withdrawn, so a bot that gets this
+    // stops retrying instead of treating it as a routing glitch.
+    const res = await POST(new Request("https://portal.example/api/bot/gt-game", { method: "POST", body: "{}" }));
+    expect(res.status).toBe(410);
+    expect((await res.json()).reason).toBe("casino_surfaces_disabled_by_terms_7_12");
   });
 });

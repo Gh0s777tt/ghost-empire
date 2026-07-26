@@ -7,10 +7,15 @@ import { prisma } from "@/lib/prisma";
 import { getWheelConfig } from "@/lib/wheel";
 import { currentTenantId } from "@/lib/tenant";
 import { displayNick } from "@/lib/utils";
+import { casinoGate } from "@/lib/compliance";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // §7 ust. 12 zakazuje mechaniki i nazewnictwa kasynowego — patrz lib/compliance.ts.
+  const blocked = casinoGate();
+  if (blocked) return blocked;
+
   const [cfg, session] = await Promise.all([getWheelConfig(), auth()]);
 
   let balance: number | null = null;

@@ -5,10 +5,15 @@ import { jackpotPool } from "@/lib/gt-games";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/audit";
+import { casinoGate } from "@/lib/compliance";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  // §7 ust. 12 zakazuje mechaniki i nazewnictwa kasynowego — patrz lib/compliance.ts.
+  const blocked = casinoGate();
+  if (blocked) return blocked;
+
   // The casino UI polls this during play, so the per-IP cap is generous — high
   // enough for an active player, low enough to stop an unauthenticated flood.
   const ip = extractIp(req) ?? "unknown";
