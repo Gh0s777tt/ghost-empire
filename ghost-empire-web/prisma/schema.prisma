@@ -2545,6 +2545,42 @@ model GoveeRule {
   @@map("govee_rules")
 }
 
+/// Per-tenant Philips Hue lighting rules (#813). Same shape as GoveeRule on purpose — one mental
+/// model for both lighting integrations, and the pure logic lives in lib/hue-rules.ts.
+///
+/// ⚠️ ACTUATED CLIENT-SIDE, unlike Govee. The Hue Bridge is a box on the STREAMER'S LAN
+/// (IntegrationConfig.hueBridgeIp, e.g. 192.168.1.50) and no serverless function can reach a private
+/// address, so the in-OBS browser source drives it — the only thing the portal runs on the streamer's
+/// own machine. That also lets a Hue flash reuse the revert ledger in lib/obs-revert.ts instead of
+/// growing a second set of timers.
+model HueRule {
+  id       String  @id @default(cuid())
+  tenantId String? // multi-tenant — per-portal; null = legacy/founder
+  enabled  Boolean @default(true)
+
+  triggerType String // StreamAlert.type, or "*" for any
+  minAmount   Int? // only fire when alert.amount >= this
+  /// Which bridge light to drive. null = every light the bridge exposes.
+  lightId     String?
+
+  /// set_color | set_brightness | turn
+  actionKind    String
+  /// set_color: #rrggbb. The actuator converts to CIE xy — the Bridge does not take RGB.
+  color         String?
+  revertColor   String?
+  /// set_brightness: a PERCENTAGE (0-100). The actuator converts to the Bridge's 1-254 `bri`.
+  brightness    Int?
+  turnOn        Boolean?
+  revertAfterMs Int?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, triggerType])
+  @@map("hue_rules")
+}
+
 // Viewer Bounties (#679): viewers pool GT to challenge the streamer to do something on
 // stream. Pledges ESCROW GT (deducted at pledge time). On "completed" the pool is kept —
 // burned, a GT sink, the viewers got the action; on "rejected"/"expired" every pledge is
