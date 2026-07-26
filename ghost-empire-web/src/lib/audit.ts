@@ -53,7 +53,10 @@ type AdminActionType =
   // Per-tenant bot credential provisioned/rotated/cleared. The details NEVER carry the
   // secret itself — only which portal and which way it moved.
   | "rotate_bot_secret"
-  | "connect_donationalerts";
+  | "connect_donationalerts"
+  | "create_hue_rule"
+  | "update_hue_rule"
+  | "delete_hue_rule";
 
 export async function logAdminAction(opts: {
   adminId: string;
