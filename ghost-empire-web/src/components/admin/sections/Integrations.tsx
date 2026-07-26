@@ -116,6 +116,8 @@ export function IntegrationsManager({
   const [xUsername, setXUsername] = useState("");
   const [metaIgUserId, setMetaIgUserId] = useState("");
   const [hueBridgeIp, setHueBridgeIp] = useState("");
+  const [hueFinding, setHueFinding] = useState(false);
+  const [hueFound, setHueFound] = useState<string | null>(null);
   // secrets — empty unless the admin types a new value; null = clear
   const [aiKey, setAiKey] = useState<string | null>("");
   const [sentry, setSentry] = useState<string | null>("");
@@ -170,6 +172,35 @@ export function IntegrationsManager({
   const xConfigured = meta.hasXToken || meta.xUsername.trim().length > 0;
   const igConfigured = meta.hasMetaIgToken || meta.metaIgUserId.trim().length > 0;
   const hueConfigured = meta.hasHueApiKey || meta.hueBridgeIp.trim().length > 0;
+
+  /**
+   * Ask Philips' public discovery service which bridges sit on THIS network.
+   *
+   * It must run in the streamer's browser, never on the server: the service answers with the bridges
+   * seen from the CALLER'S public IP, so a serverless call would report Vercel's network and find
+   * nothing. It is https, so the admin panel can call it without tripping mixed-content rules — which
+   * is exactly why discovery can be automated here while fetching the KEY cannot (that needs plain
+   * http to a LAN address, see the copy-paste command below).
+   */
+  async function findBridge() {
+    setHueFinding(true);
+    setHueFound(null);
+    try {
+      const res = await fetch("https://discovery.meethue.com", { cache: "no-store" });
+      const list = (await res.json()) as Array<{ internalipaddress?: string }>;
+      const ip = list.find((b) => b.internalipaddress)?.internalipaddress;
+      if (ip) {
+        setHueBridgeIp(ip);
+        setHueFound(ip);
+      } else {
+        setHueFound("");
+      }
+    } catch {
+      setHueFound(""); // rate-limited, offline, or no bridge on this network
+    } finally {
+      setHueFinding(false);
+    }
+  }
 
   return (
     <SectionCard title={t("title")} icon={Plug}>
@@ -247,7 +278,33 @@ export function IntegrationsManager({
         <label className="text-[11px] text-zinc-400 block">{t("hueIpLabel")}
           <input value={hueBridgeIp} onChange={(e) => setHueBridgeIp(e.target.value)} placeholder={t("hueIpPh")} className="w-full mt-0.5 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-green-600" />
         </label>
+        <button
+          type="button"
+          onClick={() => void findBridge()}
+          disabled={hueFinding}
+          className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 border border-zinc-700 text-zinc-300
+                     hover:border-green-600 disabled:opacity-50"
+        >
+          {hueFinding ? t("hueFinding") : t("hueFind")}
+        </button>
+        {hueFound !== null && (
+          <p className={`text-[10px] ${hueFound ? "text-emerald-400" : "text-amber-400"}`}>
+            {hueFound ? t("hueFoundOk", { ip: hueFound }) : t("hueFoundNone")}
+          </p>
+        )}
         <SecretField label={t("hueKeyLabel")} has={meta.hasHueApiKey} preview={meta.hueApiKeyPreview} value={hueApiKey ?? ""} onChange={setHueApiKey} onClear={() => setHueApiKey(null)} placeholder={t("hueKeyPh")} />
+        {/* The key CANNOT be fetched from this page: it needs a plain-http call to a LAN address, which
+            a browser blocks as mixed content on an https panel. So the streamer runs one command
+            locally and pastes the result — honest and works on every OS, no extra software. */}
+        <details className="text-[10px] text-zinc-500">
+          <summary className="cursor-pointer text-zinc-400">{t("huePairTitle")}</summary>
+          <p className="mt-1 leading-snug">{t("huePairSteps")}</p>
+          <pre className="mt-1 p-2 bg-black border border-zinc-800 overflow-x-auto text-[10px] text-zinc-300 font-mono">
+{`curl -s -X POST http://${hueBridgeIp || "IP_MOSTKA"}/api \\
+  -d '{"devicetype":"e-forge#portal"}'`}
+          </pre>
+          <p className="mt-1 leading-snug">{t("huePairResult")}</p>
+        </details>
         <p className="text-[10px] text-zinc-600">{t("hueHint")}</p>
       </IntegrationCard>
 

@@ -65,8 +65,16 @@ po cichu świeci nie tym kolorem. Czysta czerń jest odrzucana: światło nie mo
 zgaszone (`turn`).
 
 ### Konfiguracja
-1. `/admin#integrations` → karta **Philips Hue**: adres IP mostka + klucz API (naciśnij przycisk na
-   mostku, potem wygeneruj klucz). Zapisywane **zaszyfrowane**.
+1. `/admin#integrations` → karta **Philips Hue**. Oba pola są **per portal** — każdy streamer wpisuje
+   swoje, nic nie jest zahardkodowane, klucz zapisywany **zaszyfrowany**.
+   * **IP mostka** — przycisk „Wykryj mostek w sieci" wypełnia je sam. Odpytuje publiczną usługę
+     Philipsa, która zwraca mostki widziane **z publicznego IP dzwoniącego**, dlatego woła ją
+     **przeglądarka streamera, nie serwer** — z Vercela odpowiedź dotyczyłaby sieci Vercela i nie
+     znalazłaby nic. Usługa jest po https, więc panel może ją wołać bez treści mieszanej.
+   * **Klucz API** — tego **nie da się** pobrać z panelu: wymaga zwykłego `http` do adresu w LAN, co
+     przeglądarka blokuje na stronie https. Dlatego karta rozwija instrukcję: naciśnij przycisk na
+     mostku i w ciągu 30 s uruchom jedno polecenie `curl` (z już wstawionym IP), a z odpowiedzi
+     wklej `username`. Bez instalowania czegokolwiek, na każdym systemie.
 2. Reguły — sekcja panelu w kolejnej porcji; do tego czasu wiersze `hue_rules` zakłada się przez API.
 3. Źródło **sterowania OBS** musi być dodane w OBS (to samo, które obsługuje reguły scen).
 
