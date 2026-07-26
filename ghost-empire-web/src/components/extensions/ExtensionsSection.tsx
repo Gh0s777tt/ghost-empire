@@ -12,19 +12,21 @@ import { useTenantBranding } from "@/components/TenantBranding";
 type Brand = { tokenName: string; tokenSymbol: string };
 
 const COPY = {
-  heading: { pl: "Rozszerzenia przeglądarkowe", en: "Browser extensions" },
+  heading: { pl: "Dodatki do portalu", en: "Portal add-ons" },
   sub: {
-    pl: "Zabierz portal na streamy Twitch i Kick — bez otwierania nowej karty.",
-    en: "Bring the portal onto Twitch & Kick streams — without opening a new tab.",
+    pl: "Zabierz portal na streamy i na Discorda — bez otwierania nowej karty.",
+    en: "Bring the portal onto your streams and onto Discord — without opening a new tab.",
   },
   soon: { pl: "Wkrótce", en: "Coming soon" },
+  invite: { pl: "Dodaj na Discorda", en: "Add to Discord" },
+  panel: { pl: "Panel bota", en: "Bot dashboard" },
   soonNote: {
     pl: "Publikacja w sklepach Chrome i Firefox w przygotowaniu.",
     en: "Chrome & Firefox store release in the works.",
   },
   chrome: { pl: "Chrome", en: "Chrome" },
   firefox: { pl: "Firefox", en: "Firefox" },
-  seeAll: { pl: "Zobacz rozszerzenia", en: "See extensions" },
+  seeAll: { pl: "Zobacz dodatki", en: "See add-ons" },
   free: { pl: "Za darmo · open-source", en: "Free · open-source" },
 } as const;
 
@@ -56,6 +58,46 @@ function FirefoxMark({ className }: { className?: string }) {
 }
 
 function StoreButtons({ ext, locale }: { ext: Extension; locale: string }) {
+  // A Discord bot is invited to a server, not installed from a browser store — rendering
+  // "add to Chrome" for it would be an action the user can never complete.
+  if (ext.kind === "discord-bot") {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {ext.inviteUrl ? (
+          <a
+            href={ext.inviteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white
+                       bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 clip-corner transition-colors"
+          >
+            {pick(COPY.invite, locale)}
+          </a>
+        ) : (
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase
+                       border border-zinc-700 text-zinc-400 clip-corner"
+            title={pick(COPY.soonNote, locale)}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            {pick(COPY.soon, locale)}
+          </span>
+        )}
+        {ext.dashboardUrl && (
+          <a
+            href={ext.dashboardUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-200
+                       bg-transparent hover:bg-zinc-800 border border-zinc-700 clip-corner transition-colors"
+          >
+            {pick(COPY.panel, locale)}
+          </a>
+        )}
+      </div>
+    );
+  }
+
   if (!ext.chromeUrl && !ext.firefoxUrl) {
     return (
       <span

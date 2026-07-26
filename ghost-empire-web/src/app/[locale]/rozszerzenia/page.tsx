@@ -13,24 +13,24 @@ import { ShieldCheck, Zap, Puzzle } from "lucide-react";
 export async function generateMetadata() {
   const { name } = await getCurrentTenant();
   return {
-    title: "Rozszerzenia przeglądarkowe",
+    title: "Dodatki do portalu",
     description: `NX Companion i NX Chat Tools — ${name} prosto na streamach Twitch i Kick.`,
   };
 }
 
 const T = {
   kicker: { pl: "Ekosystem", en: "Ecosystem" },
-  title: { pl: "Rozszerzenia przeglądarkowe", en: "Browser extensions" },
+  title: { pl: "Dodatki do portalu", en: "Portal add-ons" },
   lead: {
-    pl: "Dwa lekkie dodatki do przeglądarki, które przenoszą portal wprost na streamy — saldo %sym%, questy i narzędzia moderacji bez przełączania kart.",
-    en: "Two lightweight browser add-ons that bring the portal onto the stream itself — %sym% balance, quests and mod tools without tab-switching.",
+    pl: "Dwa lekkie dodatki do przeglądarki i bot na Discorda — saldo %sym%, questy, narzędzia moderacji i powiadomienia live bez przełączania kart.",
+    en: "Two lightweight browser add-ons and a Discord bot — %sym% balance, quests, mod tools and live alerts without tab-switching.",
   },
   info: [
     {
       icon: "zap",
       title: { pl: "Zero tarcia", en: "Zero friction" },
       body: {
-        pl: "Overlay pojawia się na Twitchu i Kicku. Odbierasz questy i drop-code'y tam, gdzie oglądasz.",
+        pl: "Overlay pojawia się na Twitchu i Kicku, a bot pilnuje Discorda. Odbierasz questy i drop-code'y tam, gdzie jesteś.",
         en: "The overlay sits on Twitch and Kick. Claim quests and drop-codes right where you watch.",
       },
     },

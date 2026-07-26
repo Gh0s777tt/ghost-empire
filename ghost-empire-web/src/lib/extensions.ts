@@ -23,20 +23,55 @@ export type Extension = {
   id: string;
   emoji: string;
   name: string;
+  /**
+   * What the user actually installs. A browser extension comes from a store; the Discord bot is
+   * INVITED to a server instead, so it must not render "add to Chrome" buttons it can never satisfy.
+   */
+  kind: "extension" | "discord-bot";
   tagline: Bi;
   features: Bi[];
-  /** Store URLs — null until published (renders a "coming soon" badge). */
+  /** Store URLs — null until published (renders a "coming soon" badge). Always null for a bot. */
   chromeUrl: string | null;
   firefoxUrl: string | null;
-  /** Accent color for the card (matches the extension's identity). */
+  /** discord-bot only: the one-click invite, and the self-serve dashboard for server admins. */
+  inviteUrl?: string | null;
+  dashboardUrl?: string | null;
+  /** Accent color for the card (matches the product's identity). */
   accent: string;
 };
 
 export const EXTENSIONS: Extension[] = [
   {
+    id: "e-bot",
+    emoji: "🤖",
+    name: "E-Bot",
+    kind: "discord-bot",
+    tagline: {
+      pl: "Discordowe ramię portalu: %token% za aktywność, powiadomienia live i anti-nuke.",
+      en: "The portal's Discord arm: %token% for activity, live alerts and anti-nuke.",
+    },
+    features: [
+      // Verified against the bot's own README — this is the one feature that ties it to the portal:
+      // Discord activity is inside the closed catalogue of GT sources (terms §8 ust. 1 lit. e), and
+      // `/link` is what connects a Discord account to a portal account.
+      { pl: "%sym% za wiadomości i rozmowy głosowe; /link łączy Discorda z kontem w portalu", en: "%sym% for messages and voice; /link connects Discord to the portal account" },
+      { pl: "Powiadomienia live: Twitch, Kick, Rumble i YouTube, w kolorach platform", en: "Live alerts for Twitch, Kick, Rumble and YouTube, in each platform's colours" },
+      { pl: "Anti-nuke i moderacja: ochrona ról i kanałów, automod, tickety, logi", en: "Anti-nuke and moderation: role/channel protection, automod, tickets, logs" },
+      { pl: "Własny panel: personalizacja bota, statystyki, izolacja per serwer", en: "Its own dashboard: bot personalisation, stats, per-server isolation" },
+    ],
+    chromeUrl: null,
+    firefoxUrl: null,
+    // Left null on purpose: the invite URL embeds a Discord application id, which is per-deployment.
+    // A wrong one sends the streamer to an error page, so it activates only once the owner fills it.
+    inviteUrl: null,
+    dashboardUrl: "https://e-bot-dc.vercel.app",
+    accent: "#5865f2", // Discord blurple
+  },
+  {
     id: "nx-companion",
     emoji: "🪟",
     name: "NX Companion",
+    kind: "extension",
     tagline: {
       pl: "Twoje %token%, questy i drop-code'y podczas oglądania streama.",
       en: "Your %token%, quests and drop-codes while you watch the stream.",
@@ -54,6 +89,7 @@ export const EXTENSIONS: Extension[] = [
     id: "nx-chat-tools",
     emoji: "🛡️",
     name: "NX Chat Tools",
+    kind: "extension",
     tagline: {
       pl: "Narzędzia moderacji i emotki 7TV na czatach Twitch i Kick.",
       en: "Moderation tools and 7TV emotes for Twitch and Kick chats.",
