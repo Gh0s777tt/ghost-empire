@@ -7,13 +7,8 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { currentTenantId } from "@/lib/tenant";
 import { playGtGame } from "@/lib/gt-games";
 import { featureGateResponse } from "@/lib/entitlements";
-import { casinoGate } from "@/lib/compliance";
 
 export async function POST(req: Request) {
-  // §7 ust. 12 zakazuje mechaniki i nazewnictwa kasynowego — patrz lib/compliance.ts.
-  const blocked = casinoGate();
-  if (blocked) return blocked;
-
   const session = await auth();
   if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
 

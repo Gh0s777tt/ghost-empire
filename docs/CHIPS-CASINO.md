@@ -306,6 +306,17 @@ Każda faza: kod + testy + dokumentacja (`CHANGELOG`/`ENDPOINTS`/`ENV` wg `CLAUD
 3. **Kwota dziennego grantu żetonów** + czy „welcome grant" jednorazowy.
 4. **Duele/heist** — potwierdzić przeniesienie na chips (rekomendowane — to też stawka+losowość).
 5. **Prawnik od prawa hazardowego** — krok równoległy; docelowo decyzja MF (art. 2 ust. 6).
+   🔴 **OTWARTA SPRZECZNOŚĆ (2026-07-26) — portal łamie własny obowiązujący regulamin.** Właściciel
+   uznał `REGULAMIN_GHOST_TOKENS.md` za wiążący, a jego **§7 ust. 12** zakazuje oprawy, **mechaniki**
+   i nazewnictwa kasynowego — wymieniając z nazwy bębny, koło fortuny, ruletkę, karty, **żetony**,
+   mnożniki stawki, „spin", jackpota i słowa „kasyno"/„zakład"/„stawka" — **niezależnie od wartości
+   nagrody**, i jest **niederogowalny** (§28 ust. 2). Kasyno i koło zostały z tego powodu wycofane
+   (#809), a następnie **przywrócone polecną właściciela** (#810). Skutek: funkcje działają, a
+   dokument, który je zakazuje, obowiązuje. **To wymaga rozstrzygnięcia, nie odłożenia** — do wyboru:
+   (a) zmienić albo zawęzić §7 ust. 12 przed opublikowaniem tego regulaminu, (b) uznać, że wiąże
+   publikowany `/terms` (który te funkcje wprost dopuszcza w §3), albo (c) ponownie wycofać funkcje.
+   ⚠️ Uwaga na pułapkę: obrona „żetony są darmowe i bez wartości" **nie zamyka §7 ust. 12** — ten
+   przepis mówi o formie, nie o wartości, więc migracja na żetony w tym punkcie nie pomaga.
    ⚠️ **Dołożone pytanie (2026-07-25) — moduł kar za donaty (#806).** Widz wpłaca REALNE pieniądze,
    a system **losuje** rodzaj, nasilenie i czas kary na streamie. To strukturalnie „gra komercyjna +
    losowość" z art. 2 ust. 5 — z tą różnicą, że **płacący nic nie wygrywa**: efekt dzieje się na ekranie

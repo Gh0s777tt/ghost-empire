@@ -9,15 +9,10 @@ import { spinWheel, WheelError } from "@/lib/wheel";
 import { featureGateResponse } from "@/lib/entitlements";
 import { updateDailyTaskProgress } from "@/lib/daily-tasks";
 import { createLogger } from "@/lib/logger";
-import { casinoGate } from "@/lib/compliance";
 
 const log = createLogger("wheel");
 
 export async function POST() {
-  // §7 ust. 12 zakazuje mechaniki i nazewnictwa kasynowego — patrz lib/compliance.ts.
-  const blocked = casinoGate();
-  if (blocked) return blocked;
-
   const session = await auth();
   if (!session?.user?.id) {
     return jsonError("Musisz być zalogowany", 401);

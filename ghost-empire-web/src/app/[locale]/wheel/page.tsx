@@ -3,20 +3,16 @@ import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { WheelPageClient } from "@/components/wheel/WheelPageClient";
 import { GamblingGate } from "@/components/kasyno/GamblingGate";
-import { notFound } from "next/navigation";
-import { CASINO_SURFACES_ENABLED } from "@/lib/compliance";
 
 export const dynamic = "force-dynamic";
 
 // Wheel runs on free "Żetony/Chips" (🪙) — non-branded casino currency, same on every portal.
-// The page is retired (see below), so it must not stay indexed or advertised either.
-export const metadata = { title: "Niedostępne", robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Koło Fortuny",
+  description: "Zakręć Kołem Fortuny na darmowe żetony 🪙 i wygraj więcej. 18+, graj rozsądnie.",
+};
 
 export default async function WheelPage() {
-  // §7 ust. 12 zakazuje mechaniki i nazewnictwa kasynowego niezależnie od wartości nagrody, więc
-  // ta powierzchnia jest wycofana. Dane graczy zostają nietknięte — patrz lib/compliance.ts.
-  if (!CASINO_SURFACES_ENABLED) notFound();
-
   const session = await auth();
 
   return (

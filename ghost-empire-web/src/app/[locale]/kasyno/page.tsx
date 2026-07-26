@@ -4,20 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { KasynoClient } from "@/components/kasyno/KasynoClient";
 import { GamblingGate } from "@/components/kasyno/GamblingGate";
-import { notFound } from "next/navigation";
-import { CASINO_SURFACES_ENABLED } from "@/lib/compliance";
 
 export const dynamic = "force-dynamic";
 // Casino runs on free "Żetony/Chips" (🪙) — a fixed, non-branded casino currency, same on every
 // portal — so this copy is universal (no tenant token name) and must NOT say "GT/Ghost Tokens".
-// The page is retired (see below), so it must not stay indexed or advertised either.
-export const metadata = { title: "Niedostępne", robots: { index: false, follow: false } };
+export const metadata = { title: "Kasyno", description: "Gry na darmowe żetony 🪙 — sloty, ruletka, blackjack, mines i więcej. 18+, graj rozsądnie." };
 
 export default async function KasynoPage() {
-  // §7 ust. 12 zakazuje mechaniki i nazewnictwa kasynowego niezależnie od wartości nagrody, więc
-  // ta powierzchnia jest wycofana. Dane graczy zostają nietknięte — patrz lib/compliance.ts.
-  if (!CASINO_SURFACES_ENABLED) notFound();
-
   const session = await auth();
   let balance: number | null = null;
   if (session?.user?.id) {
