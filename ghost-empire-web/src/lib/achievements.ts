@@ -19,6 +19,30 @@ import { createLogger, errContext } from "@/lib/logger";
 
 const log = createLogger("achievements");
 
+/**
+ * Triggers a PAYMENT can cause. They may never grant GT.
+ *
+ * @remarks
+ * REGULAMIN_GHOST_TOKENS.md (binding since 2026-07-26) §7 ust. 3 forbids crediting GT for "wpłatę,
+ * darowiznę (donate, tip), zakup subskrypcji, bitów, cheersów, prezentów, członkostwa", and §8 ust. 4
+ * extends the ban to indirect forms — explicitly including an "dodatkowe zadanie" (an extra task) that
+ * pays out. An achievement whose condition is "you paid" is exactly that, and every achievement grants
+ * `tokenReward` GT. §28 ust. 2 makes both clauses non-derogable.
+ *
+ * The achievement DEFINITIONS and any already-earned rows are deliberately left alone — nothing is
+ * revoked. They simply can no longer be newly granted.
+ */
+const PAYMENT_LINKED_TRIGGERS = new Set<string>([
+  "donations_count",
+  "donations_amount_pln",
+  "twitch_sub_received",
+  "kick_sub_received",
+  "gift_subs_given",
+  "bits_cheered",
+  "super_chats_received",
+  "yt_member",
+]);
+
 export type AchievementTriggerType =
   | "donations_count"        // # of donations made (Streamlabs + YouTube super chats)
   | "donations_amount_pln"   // cumulative PLN donated
@@ -57,6 +81,12 @@ export async function checkAndGrantAchievements(opts: {
   /** Caller's hint of the new value (e.g. "this is their 5th donation"). If omitted, helper queries DB. */
   hintValue?: number;
 }): Promise<CheckResult> {
+  // The prohibition, enforced once at the entry point rather than at each of the ~8 call sites: a
+  // trigger a PAYMENT can cause may never grant GT (§7 ust. 3 / §8 ust. 4, non-derogable per
+  // §28 ust. 2). Returning an empty result rather than throwing keeps every caller — which treats
+  // this as a best-effort side effect — working unchanged.
+  if (PAYMENT_LINKED_TRIGGERS.has(opts.triggerType)) return { granted: [] };
+
   try {
     return await runCheck(opts);
   } catch (e) {

@@ -1,26 +1,45 @@
 // src/lib/donation-rate.ts
-// SINGLE source of the real-money→GT rate and the per-donation cap, shared by EVERY money-in rail
-// (PayMedia webhook, Streamlabs poll, YouTube superchats). Before this, each rail read its own env
-// (PAYMEDIA_GT_PER_PLN / DONATION_GT_PER_PLN / a hardcoded 100) — so setting one silently desynced
-// the rails and could break the advertised "1 PLN = 100 GT" promise. Env is read once here; the
-// pure math (gtFromPln) is unit-tested. Old env vars are still honoured as fallbacks (no migration).
-const RAW = parseInt(
-  process.env.GT_PER_PLN ?? process.env.DONATION_GT_PER_PLN ?? process.env.PAYMEDIA_GT_PER_PLN ?? "100",
-  10,
-);
-
-/** GT minted per 1 PLN donated — one value for all ingress rails (default 100, guarded against NaN/≤0). */
-export const GT_PER_PLN = Number.isFinite(RAW) && RAW > 0 ? RAW : 100;
-
-/** Cap one donation's GT at ~100k PLN-equivalent so a malformed/huge upstream amount can't mint absurd GT. */
-export const MAX_DONATION_GT = GT_PER_PLN * 100_000;
+// THE PROHIBITION on turning money into GT. This module used to be the shared real-money→GT rate; it
+// is now the single place that enforces that no such conversion exists.
+//
+// WHY (REGULAMIN_GHOST_TOKENS.md — ruled the binding terms by the owner, 2026-07-26):
+//   §7 ust. 3  — "GT nie są przyznawane w zamian za świadczenie pieniężne. GT nie są i nie będą
+//                naliczane za: wpłatę, darowiznę (donate, tip) […]. Liczba GT przyznanych
+//                Użytkownikowi nie zależy od kwoty jakiejkolwiek wpłaty ani od faktu jej dokonania."
+//   §8 ust. 1  — the sources of GT are a CLOSED list: drop codes, quests, the daily bonus,
+//                watch-streak, Discord activity, weekly goals, the season pass. A payment is not one.
+//   §8 ust. 4  — the ban covers indirect forms too: multipliers, starting bonuses, extra tasks,
+//                shortened unlocks, higher daily caps.
+//   §28 ust. 2 — §7 is NON-DEROGABLE: no event or campaign rules can reinstate it.
+// The stated legal reason is that GT with monetary value would fall under the Polish gambling act.
+//
+// WHAT THIS MEANS IN CODE: `gtFromPln` still exists and all five money-in rails still call it, so a
+// donation is still RECORDED, matched to a supporter, announced on the overlay, and counted toward
+// goals and the subathon — none of which the terms forbid. It simply always returns 0, so no rail
+// can credit GT. Keeping the call sites rather than deleting them is deliberate: the prohibition is
+// enforced in ONE auditable place, and a future rail copied from an existing one inherits it free.
+//
+// ⚠️ DO NOT "restore" the rate. A test pins the result at 0 across the input range and cites the
+// clause. If you are here because that test failed, the change you are making is a compliance
+// violation, not a bug fix.
 
 /**
- * GT for a PLN amount — rounded and capped. Use on EVERY money-in rail so a bad upstream value
- * (negative, NaN, or an enormous mis-parsed amount) can never mint out-of-band GT.
- * @param pln PLN already converted from the donation's source currency (see economy.plnFromCurrency).
+ * GT credited for a PLN amount — always 0.
+ *
+ * @param _pln - The donation's PLN value. Accepted and ignored, so every money-in rail keeps a
+ *               single greppable call site for the prohibition.
+ * @returns Always `0`.
+ *
+ * @remarks
+ * §7 ust. 3 of the binding terms forbids two things at once: crediting GT *for* a payment, and the
+ * credited amount depending on the payment's size or on the payment happening at all. Only a constant
+ * zero satisfies both — a merely "small" or "flat" rate would still breach the first half.
+ *
+ * @example
+ * ```ts
+ * const tokensGranted = gtFromPln(plnAmount); // 0, by §7 ust. 3, on every rail
+ * ```
  */
-export function gtFromPln(pln: number, rate: number = GT_PER_PLN, cap: number = MAX_DONATION_GT): number {
-  if (!Number.isFinite(pln) || pln <= 0) return 0;
-  return Math.min(Math.round(pln * rate), cap);
+export function gtFromPln(_pln: number): number {
+  return 0;
 }

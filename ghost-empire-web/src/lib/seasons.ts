@@ -13,14 +13,25 @@ const log = createLogger("seasons");
 
 // XP awarded per event type — tuned so a casual viewer reaches a few tiers/month,
 // an active supporter most of the pass, and whales can finish.
+//
+// ⚠️ THE FIVE ZEROES ARE A LEGAL PROHIBITION, NOT A BALANCE CHOICE (REGULAMIN_GHOST_TOKENS.md,
+// ruled binding 2026-07-26). Season progress unlocks the pass, and the pass grants GT (§8 ust. 1 g).
+// §8 ust. 4 therefore forbids paying to advance it: "Subskrypcja, darowizna, bity, cheersy, prezenty
+// i członkostwa nie powodują naliczenia, przyspieszenia ani zwielokrotnienia GT w jakiejkolwiek
+// formie, w tym […] skróconego czasu odblokowania". Buying season XP is exactly a shortened unlock.
+// §7 ust. 3 names the same list, and §28 ust. 2 makes both non-derogable.
+//
+// They stay in the table at 0 rather than being deleted so the call sites keep compiling and the
+// prohibition is visible where someone would otherwise re-add a number. `awardSeasonXp` returns early
+// on `amount <= 0`, so a zero here neutralises every rail without touching any of them.
 export const SEASON_XP = {
   chat_message: 10,
   voice_minute: 20,
-  twitch_sub: 500,
-  kick_sub: 500,
-  gift_sub_each: 250,
-  bit_each: 1,
-  donation_per_pln: 10,
+  twitch_sub: 0, // §8 ust. 4 — paid subscription
+  kick_sub: 0, // §8 ust. 4 — paid subscription
+  gift_sub_each: 0, // §8 ust. 4 — gifted subs
+  bit_each: 0, // §8 ust. 4 — bits / cheers
+  donation_per_pln: 0, // §7 ust. 3 — donations
   drop_claim: 50,
   event_won: 500,
   shop_purchase: 100,
