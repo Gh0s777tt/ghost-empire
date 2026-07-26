@@ -306,17 +306,28 @@ Każda faza: kod + testy + dokumentacja (`CHANGELOG`/`ENDPOINTS`/`ENV` wg `CLAUD
 3. **Kwota dziennego grantu żetonów** + czy „welcome grant" jednorazowy.
 4. **Duele/heist** — potwierdzić przeniesienie na chips (rekomendowane — to też stawka+losowość).
 5. **Prawnik od prawa hazardowego** — krok równoległy; docelowo decyzja MF (art. 2 ust. 6).
-   🔴 **OTWARTA SPRZECZNOŚĆ (2026-07-26) — portal łamie własny obowiązujący regulamin.** Właściciel
-   uznał `REGULAMIN_GHOST_TOKENS.md` za wiążący, a jego **§7 ust. 12** zakazuje oprawy, **mechaniki**
-   i nazewnictwa kasynowego — wymieniając z nazwy bębny, koło fortuny, ruletkę, karty, **żetony**,
-   mnożniki stawki, „spin", jackpota i słowa „kasyno"/„zakład"/„stawka" — **niezależnie od wartości
-   nagrody**, i jest **niederogowalny** (§28 ust. 2). Kasyno i koło zostały z tego powodu wycofane
-   (#809), a następnie **przywrócone polecną właściciela** (#810). Skutek: funkcje działają, a
-   dokument, który je zakazuje, obowiązuje. **To wymaga rozstrzygnięcia, nie odłożenia** — do wyboru:
-   (a) zmienić albo zawęzić §7 ust. 12 przed opublikowaniem tego regulaminu, (b) uznać, że wiąże
-   publikowany `/terms` (który te funkcje wprost dopuszcza w §3), albo (c) ponownie wycofać funkcje.
-   ⚠️ Uwaga na pułapkę: obrona „żetony są darmowe i bez wartości" **nie zamyka §7 ust. 12** — ten
-   przepis mówi o formie, nie o wartości, więc migracja na żetony w tym punkcie nie pomaga.
+   ✅ **ROZSTRZYGNIĘTE (2026-07-26) — regulamin dostosowany, wariant (a).** Sprzeczność z §7 ust. 12
+   zamknięta zmianą dokumentu, nie kodu. `REGULAMIN_GHOST_TOKENS.md` → **wersja 1.1** (dokument nadal
+   PRZED wejściem w życie, data to `[DO UZUPEŁNIENIA]`, więc to zmiana szkicu, nie regulaminu w
+   obiegu). Co się zmieniło i dlaczego:
+   * **§2 pkt 2 — definicja Żetonów.** To była luka u źródła: dokument napisano dla portalu z samym
+     GT i **nie definiował Żetonów wcale**, więc przepis o GT przypadkiem zakazywał gier, które GT
+     nie dotyczą.
+   * **Nowy §7a — gry rozrywkowe na Żetony** dopuszczone wprost, ale pod warunkami, na których stoi
+     całe uzasadnienie: brak jakiejkolwiek ścieżki zakupu, brak naliczania za świadczenie pieniężne,
+     brak wypłaty i wymiany, brak nagród o wartości majątkowej, 18+, samowyłączenie dostępu,
+     rozdzielność od ekonomii GT.
+   * **§7 ust. 12 zawężone do wydarzeń, w których przyznawana jest nagroda** — tam ten zakaz chronił
+     realny interes (losowanie decydujące o nagrodzie), i tam zostaje nietknięty.
+   * **Nowy §7 ust. 13 — bezwyjątkowy zakaz wzorców wprowadzających w błąd** (liczniki „jesteś
+     blisko", przegrana pokazana jako wygrana, saldo prezentowane jako pieniądze), obowiązujący
+     **także** w grach z §7a. To celowa wymiana: zdjęto zakaz formy, dodano zakaz manipulacji.
+   * **§28 ust. 2** — §7a dopisany do listy niederogowalnej, bo zabezpieczenia z ust. 2–6 są tym, na
+     czym opiera się dopuszczalność; regulamin wydarzenia nie może ich wyłączyć.
+   ⚠️ **Co to NIE zamyka:** §7a ust. 7 opiera się na tym, że nie ma ani stawki pieniężnej, ani
+   wygranej o wartości majątkowej. Residualne pytanie z **art. 2 ust. 5** (gra komercyjna + losowość
+   **nawet bez wygranej**) pozostaje otwarte i dalej wymaga prawnika — zmiana dokumentu go nie
+   rozstrzyga, tylko przestaje mu zaprzeczać własnym regulaminem.
    ⚠️ **Dołożone pytanie (2026-07-25) — moduł kar za donaty (#806).** Widz wpłaca REALNE pieniądze,
    a system **losuje** rodzaj, nasilenie i czas kary na streamie. To strukturalnie „gra komercyjna +
    losowość" z art. 2 ust. 5 — z tą różnicą, że **płacący nic nie wygrywa**: efekt dzieje się na ekranie
