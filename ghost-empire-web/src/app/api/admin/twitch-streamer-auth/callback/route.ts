@@ -9,16 +9,19 @@ import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { verifyOAuthState } from "@/lib/oauth-state";
 import { tokenUpsertKeys } from "@/lib/platform-tokens";
+import { requestOrigin } from "@/lib/http";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("twitch-streamer");
 
-const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
-
 export async function GET(req: Request) {
+  // Per-host (audyt 2026-08): redirect/redirect_uri z hosta STREAMERA, nie zaszytego
+  // NEXTAUTH_URL — inaczej sub-tenant nie ma tu sesji i requireAdmin go blokuje. Ten sam
+  // origin, którego użył start (authorize), więc redirect_uri byte-matchuje przy wymianie kodu.
+  const base = requestOrigin(req);
   const auth = await requireAdmin();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/admin?twitch_error=unauthorized", BASE));
+    return NextResponse.redirect(new URL("/admin?twitch_error=unauthorized", base));
   }
 
   const url = new URL(req.url);
@@ -27,22 +30,22 @@ export async function GET(req: Request) {
   const error = url.searchParams.get("error");
 
   if (error) {
-    return NextResponse.redirect(new URL(`/admin?twitch_error=${encodeURIComponent(error)}`, BASE));
+    return NextResponse.redirect(new URL(`/admin?twitch_error=${encodeURIComponent(error)}`, base));
   }
   if (!code) {
-    return NextResponse.redirect(new URL("/admin?twitch_error=no_code", BASE));
+    return NextResponse.redirect(new URL("/admin?twitch_error=no_code", base));
   }
 
   // Signed state → {tenantId, userId} (HMAC + 10-min TTL); the flow cookie
   // additionally pins the state to THIS browser when present (same-host flows).
   const payload = verifyOAuthState(state, "twitch-streamer");
   if (!payload) {
-    return NextResponse.redirect(new URL("/admin?twitch_error=state_mismatch", BASE));
+    return NextResponse.redirect(new URL("/admin?twitch_error=state_mismatch", base));
   }
   const cookieStore = await cookies();
   const cookieNonce = cookieStore.get("twitch_streamer_state")?.value;
   if (cookieNonce && cookieNonce !== payload.nonce) {
-    return NextResponse.redirect(new URL("/admin?twitch_error=state_mismatch", BASE));
+    return NextResponse.redirect(new URL("/admin?twitch_error=state_mismatch", base));
   }
   cookieStore.delete("twitch_streamer_state");
 
@@ -52,7 +55,7 @@ export async function GET(req: Request) {
     client_secret: process.env.TWITCH_CLIENT_SECRET ?? "",
     code,
     grant_type: "authorization_code",
-    redirect_uri: BASE + "/api/admin/twitch-streamer-auth/callback",
+    redirect_uri: base + "/api/admin/twitch-streamer-auth/callback",
   });
   const tokenRes = await fetch("https://id.twitch.tv/oauth2/token", {
     method: "POST",
@@ -62,7 +65,7 @@ export async function GET(req: Request) {
   if (!tokenRes.ok) {
     const text = await tokenRes.text();
     log.error("token exchange failed", undefined, { status: tokenRes.status, body: text });
-    return NextResponse.redirect(new URL("/admin?twitch_error=token_exchange", BASE));
+    return NextResponse.redirect(new URL("/admin?twitch_error=token_exchange", base));
   }
   const tokenData = await tokenRes.json();
 
@@ -74,12 +77,12 @@ export async function GET(req: Request) {
     },
   });
   if (!userRes.ok) {
-    return NextResponse.redirect(new URL("/admin?twitch_error=user_fetch", BASE));
+    return NextResponse.redirect(new URL("/admin?twitch_error=user_fetch", base));
   }
   const userData = await userRes.json();
   const user = userData.data?.[0];
   if (!user) {
-    return NextResponse.redirect(new URL("/admin?twitch_error=user_not_found", BASE));
+    return NextResponse.redirect(new URL("/admin?twitch_error=user_not_found", base));
   }
 
   const expiresAt = tokenData.expires_in
@@ -119,5 +122,5 @@ export async function GET(req: Request) {
     req,
   });
 
-  return NextResponse.redirect(new URL("/admin?twitch_success=1", BASE));
+  return NextResponse.redirect(new URL("/admin?twitch_success=1", base));
 }

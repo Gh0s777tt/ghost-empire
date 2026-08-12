@@ -10,16 +10,18 @@ import { encryptSecret } from "@/lib/crypto";
 import { exchangeCodeForToken, getOwnChannel } from "@/lib/youtube";
 import { verifyOAuthState } from "@/lib/oauth-state";
 import { tokenUpsertKeys } from "@/lib/platform-tokens";
+import { requestOrigin } from "@/lib/http";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("yt-streamer");
 
-const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
-
 export async function GET(req: Request) {
+  // Per-host (audyt 2026-08): origin z hosta STREAMERA, nie zaszytego NEXTAUTH_URL — inaczej
+  // sub-tenant nie ma tu sesji i requireAdmin go blokuje. Ten sam origin co w authorize (redirect_uri).
+  const base = requestOrigin(req);
   const auth = await requireAdmin();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/admin?yt_error=unauthorized", BASE));
+    return NextResponse.redirect(new URL("/admin?yt_error=unauthorized", base));
   }
 
   const url = new URL(req.url);
@@ -28,31 +30,31 @@ export async function GET(req: Request) {
   const error = url.searchParams.get("error");
 
   if (error) {
-    return NextResponse.redirect(new URL(`/admin?yt_error=${encodeURIComponent(error)}`, BASE));
+    return NextResponse.redirect(new URL(`/admin?yt_error=${encodeURIComponent(error)}`, base));
   }
   if (!code) {
-    return NextResponse.redirect(new URL("/admin?yt_error=no_code", BASE));
+    return NextResponse.redirect(new URL("/admin?yt_error=no_code", base));
   }
 
   const payload = verifyOAuthState(state, "youtube-streamer");
   if (!payload) {
-    return NextResponse.redirect(new URL("/admin?yt_error=state_mismatch", BASE));
+    return NextResponse.redirect(new URL("/admin?yt_error=state_mismatch", base));
   }
   const cookieStore = await cookies();
   const cookieNonce = cookieStore.get("yt_streamer_state")?.value;
   if (cookieNonce && cookieNonce !== payload.nonce) {
-    return NextResponse.redirect(new URL("/admin?yt_error=state_mismatch", BASE));
+    return NextResponse.redirect(new URL("/admin?yt_error=state_mismatch", base));
   }
   cookieStore.delete("yt_streamer_state");
 
-  const redirectUri = BASE + "/api/admin/youtube-streamer-auth/callback";
+  const redirectUri = base + "/api/admin/youtube-streamer-auth/callback";
 
   let tokenData: Awaited<ReturnType<typeof exchangeCodeForToken>>;
   try {
     tokenData = await exchangeCodeForToken(code, redirectUri);
   } catch (e) {
     log.error("token exchange failed", e);
-    return NextResponse.redirect(new URL("/admin?yt_error=token_exchange", BASE));
+    return NextResponse.redirect(new URL("/admin?yt_error=token_exchange", base));
   }
 
   if (!tokenData.refresh_token) {
@@ -60,14 +62,14 @@ export async function GET(req: Request) {
     // without revoking, Google won't send it. `prompt=consent` should force it but
     // double-check here.
     return NextResponse.redirect(
-      new URL("/admin?yt_error=no_refresh_token_revoke_at_myaccount", BASE),
+      new URL("/admin?yt_error=no_refresh_token_revoke_at_myaccount", base),
     );
   }
 
   // Look up channel info to store channelId + title
   const channel = await getOwnChannel(tokenData.access_token);
   if (!channel) {
-    return NextResponse.redirect(new URL("/admin?yt_error=no_channel", BASE));
+    return NextResponse.redirect(new URL("/admin?yt_error=no_channel", base));
   }
 
   const expiresAt = new Date(Date.now() + (tokenData.expires_in ?? 3600) * 1000);
@@ -109,5 +111,5 @@ export async function GET(req: Request) {
     req,
   });
 
-  return NextResponse.redirect(new URL("/admin?yt_success=1#youtube", BASE));
+  return NextResponse.redirect(new URL("/admin?yt_success=1#youtube", base));
 }

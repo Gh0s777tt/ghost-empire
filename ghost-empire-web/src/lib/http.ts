@@ -150,3 +150,23 @@ export function clientIp(req: { headers: Headers }): string {
 export function clientIpOrNull(req: { headers: Headers }): string | null {
   return ipFromHeaders(req.headers);
 }
+
+/**
+ * Origin (`https://<host>`) of the incoming request, from the `Host` header.
+ *
+ * WHY (audyt 2026-08, per-tenant onboarding): the streamer-connect OAuth flows
+ * (Twitch/Kick/YouTube/Streamlabs) must build their `redirect_uri` and post-flow
+ * redirects from the host the streamer is ACTUALLY on — not a hardcoded
+ * `NEXTAUTH_URL` (the founder host). With a fixed founder host, a sub-tenant admin
+ * lands on a callback where they have no session and `requireAdmin` rejects them,
+ * so they can never connect their OWN Twitch/YT — the exact white-label gap. This
+ * mirrors what NextAuth login and the DonationAlerts flow already do (WHITE-LABEL-
+ * SETUP.md §"callbacki": every portal host must be registered in each OAuth app).
+ * `NEXTAUTH_URL` stays only as the fallback when the `Host` header is absent (e.g.
+ * a non-HTTP invocation). https-only because every deployed portal is https.
+ */
+export function requestOrigin(req: { headers: Headers }): string {
+  const host = req.headers.get("host");
+  if (host) return `https://${host}`;
+  return process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
+}

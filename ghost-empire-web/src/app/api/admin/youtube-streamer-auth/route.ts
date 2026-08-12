@@ -7,13 +7,15 @@ import { requireAdmin } from "@/lib/admin";
 import { getAuthorizeUrl } from "@/lib/youtube";
 import { signOAuthState } from "@/lib/oauth-state";
 import { currentTenantId } from "@/lib/tenant";
+import { requestOrigin } from "@/lib/http";
 
-const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
-
-export async function GET() {
+export async function GET(req: Request) {
+  // Per-host origin (audyt 2026-08): redirect_uri z hosta STREAMERA, nie zaszytego
+  // NEXTAUTH_URL — inaczej sub-tenant nie podłączy WŁASNEGO YouTube (brak sesji na callbacku).
+  const base = requestOrigin(req);
   const auth = await requireAdmin();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/admin?yt_error=unauthorized", BASE));
+    return NextResponse.redirect(new URL("/admin?yt_error=unauthorized", base));
   }
 
   // Signed state carries {tenantId, userId} (shared OAuth app → one callback URL)
@@ -31,6 +33,6 @@ export async function GET() {
     path: "/",
   });
 
-  const redirectUri = BASE + "/api/admin/youtube-streamer-auth/callback";
+  const redirectUri = base + "/api/admin/youtube-streamer-auth/callback";
   return NextResponse.redirect(getAuthorizeUrl(state, redirectUri));
 }

@@ -22,11 +22,12 @@ Zweryfikowane ścieżka po ścieżce (agent SEC-donation-routing):
 - OAuth: **HMAC-podpisany `state {tenantId,userId}`** → callback nie podmieni tenanta.
 
 **Dwie luki (medium) → SLICE 2:**
-1. **Onboarding platform dla nie-foundera.** Callbacki Twitch/Kick/YouTube/Streamlabs mają zaszyte
-   `redirect_uri = NEXTAUTH_URL` (host foundera) + `requireAdmin` na tym hoście, więc admin innego
-   tenanta odbija się o `isWrongTenant`. **DonationAlerts już to rozwiązał** przez `originOf(req)` —
-   pozostałe cztery trzeba do tego dociągnąć, inaczej nowy streamer NIE podłączy sam swojego konta.
-   *(To dokładnie obawa właściciela „każdy łączy własne konta".)* Effort: M.
+1. ✅ **ZROBIONE (slice 2).** Onboarding platform dla nie-foundera. Callbacki Twitch/Kick/YouTube/
+   Streamlabs miały zaszyte `redirect_uri = NEXTAUTH_URL` + `requireAdmin` na hoście foundera, więc
+   sub-tenant nie miał tam sesji. Wszystkie cztery przełączone na `requestOrigin(req)` (jak
+   DonationAlerts i logowanie NextAuth) — callback wraca na host streamera, sesja obecna,
+   `redirect_uri` byte-matchuje. **⚠️ Wymaga rejestracji callbacków w konsolach OAuth per host
+   (WHITE-LABEL-SETUP.md §4) + testu na żywym OAuth przed mergem — nietestowalne w CI.**
 2. **PayMedia founder-global** (`PAYMEDIA_WEBHOOK_SECRET`, `tenantId:null`). Nieoferowany tenantom,
    więc brak aktywnego wycieku — ale łamie inwariant. Przerobić na per-integration jak Ko-fi lub
    usunąć jeśli nieużywany. Effort: S/M.

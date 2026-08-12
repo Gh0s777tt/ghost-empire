@@ -9,16 +9,18 @@ import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { verifyOAuthState } from "@/lib/oauth-state";
 import { tokenUpsertKeys } from "@/lib/platform-tokens";
+import { requestOrigin } from "@/lib/http";
 import { createLogger, errContext } from "@/lib/logger";
 
 const log = createLogger("streamlabs");
 
-const BASE = process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app";
-
 export async function GET(req: Request) {
+  // Per-host (audyt 2026-08): origin z hosta STREAMERA, nie zaszytego NEXTAUTH_URL — inaczej
+  // sub-tenant nie ma tu sesji i requireAdmin go blokuje. Ten sam origin w authorize i exchange.
+  const base = requestOrigin(req);
   const auth = await requireAdmin();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/admin?streamlabs_error=unauthorized", BASE));
+    return NextResponse.redirect(new URL("/admin?streamlabs_error=unauthorized", base));
   }
 
   const url = new URL(req.url);
@@ -27,32 +29,32 @@ export async function GET(req: Request) {
   const error = url.searchParams.get("error");
 
   if (error) {
-    return NextResponse.redirect(new URL(`/admin?streamlabs_error=${encodeURIComponent(error)}`, BASE));
+    return NextResponse.redirect(new URL(`/admin?streamlabs_error=${encodeURIComponent(error)}`, base));
   }
   if (!code) {
-    return NextResponse.redirect(new URL("/admin?streamlabs_error=no_code", BASE));
+    return NextResponse.redirect(new URL("/admin?streamlabs_error=no_code", base));
   }
 
   // Signed state → {tenantId, userId}; cookie nonce pins it to this browser.
   const payload = verifyOAuthState(state, "streamlabs");
   if (!payload) {
-    return NextResponse.redirect(new URL("/admin?streamlabs_error=state_mismatch", BASE));
+    return NextResponse.redirect(new URL("/admin?streamlabs_error=state_mismatch", base));
   }
   const cookieStore = await cookies();
   const cookieNonce = cookieStore.get("streamlabs_oauth_state")?.value;
   // Require the CSRF nonce cookie AND a match — a missing cookie must not skip the bind.
   if (!cookieNonce || cookieNonce !== payload.nonce) {
-    return NextResponse.redirect(new URL("/admin?streamlabs_error=state_mismatch", BASE));
+    return NextResponse.redirect(new URL("/admin?streamlabs_error=state_mismatch", base));
   }
   cookieStore.delete("streamlabs_oauth_state");
 
   // Exchange code for token
   let token;
   try {
-    token = await exchangeCode(code);
+    token = await exchangeCode(code, base + "/api/auth/streamlabs/callback");
   } catch (e) {
     log.error("token exchange failed", e);
-    return NextResponse.redirect(new URL("/admin?streamlabs_error=token_exchange", BASE));
+    return NextResponse.redirect(new URL("/admin?streamlabs_error=token_exchange", base));
   }
 
   // Fetch user info (optional — for display)
@@ -107,5 +109,5 @@ export async function GET(req: Request) {
     req,
   });
 
-  return NextResponse.redirect(new URL("/admin?streamlabs_success=1", BASE));
+  return NextResponse.redirect(new URL("/admin?streamlabs_success=1", base));
 }
