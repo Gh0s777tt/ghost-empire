@@ -36,6 +36,52 @@ const lastAward = new Map<string, number>();
 startTimestampPrune(lastAward, AWARD_COOLDOWN_MS); // przeciw wyciekowi pamięci (długi proces)
 let sendToken: string | null = null;
 
+// --- self-echo guard: kim jest BOT na Kicku ---
+// Twitch dostaje flagę `self` od tmi.js (twitch.ts:47), YouTube porównuje channelId
+// z ownChannelId (youtube.ts:138). Kick nie daje ani jednego, ani drugiego: Pusher
+// zwraca NASZE własne odpowiedzi tym samym kanałem co wiadomości widzów, więc bez
+// własnego id bot przetwarza swój własny czat. Id ustalamy RAZ przy starcie
+// (`/public/v1/users` bez ?id= = właściciel tokenu) i trzymamy w pamięci — konto
+// bota nie zmienia się w trakcie życia procesu.
+let botUserId: string | null = null;
+// Fallback, gdy id bota nie da się ustalić (Kick 5xx / brak scope user:read): pamiętamy
+// treści, które sami wysłaliśmy, i odrzucamy ich echo. Okno jest krótkie — echo z Pushera
+// wraca w sekundy, a im dłuższe okno, tym większa szansa uciszenia widza, który po prostu
+// zacytował bota. Świadomie NIE używamy tego, gdy znamy id: id jest autorytatywne.
+export const SELF_ECHO_WINDOW_MS = 30_000;
+const recentSelfSent = new Map<string, number>();
+startTimestampPrune(recentSelfSent, SELF_ECHO_WINDOW_MS); // jak lastAward — mapa nie może rosnąć w nieskończoność
+
+/** Klucz echa. `slice(0,500)` PRZED `trim()`, bo dokładnie to leci na Kicka (sendKickMessage),
+ *  więc echo znormalizuje się do tej samej wartości co oryginał. */
+function echoKey(content: string): string {
+  return content.slice(0, 500).trim();
+}
+
+/** Zapisuje treść wysłaną przez bota, żeby fallbackowy guard rozpoznał jej echo. */
+export function rememberSelfSent(map: Map<string, number>, content: string, at: number = Date.now()): void {
+  map.set(echoKey(content), at);
+}
+
+/**
+ * Czy ta wiadomość z Pushera to WŁASNE echo bota (→ wyrzucić przed jakimkolwiek efektem ubocznym)?
+ *
+ * Wyodrębnione jako czysta funkcja, żeby dało się to przetestować bez sieci i bez żywego
+ * websocketu — dokładnie ten predykat decyduje, czy konto bota dostaje tokeny za swój własny
+ * spam, więc musi mieć test, a nie tylko przegląd kodu.
+ */
+export function isSelfEcho(
+  senderId: string | undefined,
+  content: string,
+  opts: { botUserId: string | null; recentSent: Map<string, number>; now?: number },
+): boolean {
+  // Znamy id bota → jedyne wiarygodne kryterium. Widz, który zacytuje bota słowo w słowo,
+  // ma zostać obsłużony normalnie.
+  if (opts.botUserId) return senderId === opts.botUserId;
+  const sentAt = opts.recentSent.get(echoKey(content));
+  return sentAt != null && (opts.now ?? Date.now()) - sentAt <= SELF_ECHO_WINDOW_MS;
+}
+
 type KickChat = {
   content?: string;
   sender?: { id?: number; username?: string; identity?: { badges?: Array<{ type?: string }> } };
@@ -70,9 +116,22 @@ async function resolveChatroomId(): Promise<string | null> {
 }
 
 function handleChat(d: KickChat): void {
-  markActivity();
   const content = d.content ?? "";
   const userId = d.sender?.id != null ? String(d.sender.id) : undefined;
+
+  // SELF-ECHO GUARD — musi stać PRZED markActivity() i przed każdym innym efektem ubocznym,
+  // tak jak `if (self) return` w twitch.ts:47. Wcześniej Kick nie miał go wcale, a jedyny
+  // check tożsamości (`userId !== env.kick.broadcasterId`, dawne :123) NIGDY nim nie był:
+  // wyklucza STREAMERA, nie bota. Bot pisze type:"user" NA kanał broadcastera, ale pod
+  // WŁASNYM user id, więc nie równa się broadcasterId i przechodził dalej. Skutki siedziały
+  // w całości poza tamtym ifem: własne odpowiedzi szły na overlay (pushChatFeed), emoji bota
+  // liczyły się do combo, bot wchodził we własną loterię, a wpadnięcie w swoją odpowiedź
+  // słowa-klucza FAQ dawało pętlę bot→bot ograniczoną tylko cooldownem FAQ. Najdroższe:
+  // blok nagród był poza guardem, więc KONTO BOTA dostawało 1 token/min za własne gadanie —
+  // czysta inflacja ekonomii tenanta.
+  if (isSelfEcho(userId, content, { botUserId, recentSent: recentSelfSent })) return;
+
+  markActivity();
   const username = d.sender?.username;
 
   // Automod — Kick's public bot API (chat:write) can't delete/timeout, so we warn
@@ -203,6 +262,10 @@ async function sendKickMessage(content: string, retry = true): Promise<void> {
     console.warn("[kick] KICK_BROADCASTER_ID not set — can't target the channel; skipping reply");
     return;
   }
+  // Zapisujemy PRZED wysyłką, żeby echo z Pushera nie wyprzedziło wpisu (fallbackowy
+  // self-echo guard używa tego tylko, gdy nie znamy id bota). Zapis mimo nieudanego POST-a
+  // jest bezpieczny: najwyżej przez SELF_ECHO_WINDOW_MS zignorujemy identyczną wiadomość widza.
+  rememberSelfSent(recentSelfSent, content);
   try {
     const r = await fetch("https://api.kick.com/public/v1/chat", {
       method: "POST",
@@ -220,6 +283,28 @@ async function sendKickMessage(content: string, retry = true): Promise<void> {
     if (!r.ok) console.warn(`[kick] send ${r.status}: ${(await r.text()).slice(0, 160)}`);
   } catch (e) {
     console.warn("[kick] send failed:", (e as Error).message);
+  }
+}
+
+// Ustala id KONTA BOTA (właściciela tokenu). Ta sama publiczna platform-API co przy
+// wysyłce, więc zero nowych zależności: `/public/v1/users` BEZ ?id= zwraca zalogowanego
+// usera, a scope `user:read` jest już żądany przez `npm run auth:kick`.
+async function resolveBotUserId(): Promise<string | null> {
+  if (!sendToken) return null;
+  try {
+    const r = await fetch("https://api.kick.com/public/v1/users", {
+      headers: { authorization: `Bearer ${sendToken}`, accept: "application/json" },
+    });
+    if (!r.ok) {
+      console.warn(`[kick] bot identity lookup ${r.status}: ${(await r.text()).slice(0, 160)}`);
+      return null;
+    }
+    const data = (await r.json()) as { data?: Array<{ user_id?: number }> };
+    const id = data.data?.[0]?.user_id;
+    return id != null ? String(id) : null;
+  } catch (e) {
+    console.warn("[kick] bot identity lookup failed:", (e as Error).message);
+    return null;
   }
 }
 
@@ -257,7 +342,23 @@ export async function startKick(): Promise<void> {
 
   await refreshSendToken();
   if (!sendToken) {
+    // Bez tokenu bot nic nie wysyła, więc nie ma własnego echa do odsiania — pomijamy lookup
+    // (inaczej marnowalibyśmy 30 s retry na pewny null przy każdym starcie).
     console.warn("[kick] no chat token — reading + awarding only (run `npm run auth:kick` to enable replies)");
+  } else {
+    // Tożsamość bota MUSI być znana zanim wejdziemy na feed — inaczej pierwsze minuty
+    // działamy na słabszym fallbacku. Ta sama polityka co przy chatroom id powyżej:
+    // kilka prób z odstępem, bo boot potrafi trafić na przejściowy błąd Kicka, a proces
+    // chodzi 24/7 i nie może zostać z ułomnym guardem na całe życie. Nie rzucamy — brak
+    // id degraduje do dopasowania po treści, nie zabija Kicka.
+    botUserId = await resolveBotUserId();
+    for (let attempt = 1; !botUserId && attempt <= 3; attempt++) {
+      console.warn(`[kick] bot identity lookup failed — retry ${attempt}/3 in 10s`);
+      await new Promise((r) => setTimeout(r, 10_000));
+      botUserId = await resolveBotUserId();
+    }
+    if (botUserId) console.log(`[kick] bot user id ${botUserId} — self-echo guard armed`);
+    else console.warn("[kick] bot user id unknown — self-echo guard degraded to recent-content match");
   }
 
   connect(chatroomId);
