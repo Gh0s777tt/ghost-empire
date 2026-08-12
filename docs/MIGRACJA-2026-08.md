@@ -6,9 +6,17 @@ te, które wymagają świadomej akcji właściciela na bazie**. Repo używa `pri
 migracji) — patrz [`RLS.md`](RLS.md) i CLAUDE.md; ten dokument jest odtwarzalnym zapisem tego,
 co `db push` faktycznie zrobi, żeby dało się to przejrzeć PRZED odpaleniem.
 
-> **Kolejność ma znaczenie.** Najpierw deploy kodu (Vercel z gałęzi), potem `db push`, potem
-> backfille. Kod jest wstecznie zgodny z bazą PRZED zmianą (dual-read), więc chwilowy rozjazd
-> nie psuje logowania ani bota.
+> **⚠️ Kolejność ma znaczenie i różni się dla dwóch zmian:**
+> - **Connection (§1): `db push` MUSI być PRZED deployem nowego kodu.** Zregenerowany klient
+>   Prisma zapisuje `tenantId` w upsercie połączenia — gdyby nowy kod wdrożył się przed
+>   dodaniem kolumny, insert trafiłby w nieistniejącą kolumnę i **złamał logowanie**. `db push`
+>   jest za to bezpieczny przy STARYM kodzie (dodaje nullable kolumnę + luzuje unique; stary
+>   kod nie pisze `tenantId` i nie używał starego globalnego klucza).
+> - **botSecret (§2): kolejność dowolna** — brak zmiany schematu, odczyt jest dual-read.
+>
+> Ponieważ `main` auto-deployuje na Vercel przy pushu, praktyczna sekwencja to:
+> **(1) `db push` na prod z gałęzi/lokalnie → (2) backfill → (3) merge gałęzi do `main`
+> (dopiero to wdraża nowy kod).** NIE merguj do `main` przed `db push`.
 
 ---
 
@@ -37,14 +45,17 @@ CREATE INDEX "connections_tenantId_idx" ON "connections"("tenantId");
 CREATE UNIQUE INDEX "connections_platform_platformId_tenantId_key" ON "connections"("platform", "platformId", "tenantId");
 ```
 
-**Kroki:**
-1. Deploy kodu (Vercel podchwytuje gałąź). Kod działa jeszcze na bazie sprzed zmiany.
-2. `cd ghost-empire-web && npm run db:push` — przejrzyj plan (ma odpowiadać SQL wyżej), zatwierdź.
-   Kolumna `connections.tenantId` istnieje. **RLS:** `connections` już ma RLS ON (nie tworzymy
-   tabeli, tylko kolumnę — nic do zrobienia, ale potwierdź `RLS.md`).
-3. `npx tsx scripts/backfill-connection-tenant.ts` — ustawia `tenantId` istniejących połączeń z
+**Kroki (kolejność obowiązkowa):**
+1. `cd ghost-empire-web && npm run db:push` — **na STARYM kodzie (przed mergem do `main`)**.
+   Przejrzyj plan (ma odpowiadać SQL wyżej), zatwierdź. Kolumna `connections.tenantId` istnieje.
+   Stary kod działa dalej (nie pisze `tenantId`, nie używał starego globalnego klucza). **RLS:**
+   `connections` już ma RLS ON (nie tworzymy tabeli, tylko kolumnę — nic do zrobienia, ale
+   potwierdź `RLS.md`).
+2. `npx tsx scripts/backfill-connection-tenant.ts` — ustawia `tenantId` istniejących połączeń z
    tenanta ich użytkownika. Idempotentny. Reszta NULL to konta legacy bez portalu (self-heal
    przy kolejnym logowaniu — patrz `lib/auth.ts`).
+3. **Dopiero teraz** merge `fix/audit-2026-08` → `main` (Vercel wdraża nowy kod, który zaczyna
+   pisać `tenantId` do już istniejącej kolumny).
 
 **Rollback:** kod czyta połączenia przez relację `user.tenantId` (kolumny `tenantId` NIE czyta),
 więc gdyby coś poszło nie tak, wystarczy revert kodu — kolumna może zostać, jest addytywna.
