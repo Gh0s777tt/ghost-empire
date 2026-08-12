@@ -73,8 +73,13 @@ Zwraca publiczny URL → wpina się w istniejące pola URL (bgImageUrl/alerty/sc
   (b) wpięcie uploadu w **alerty** (§2c) i **sceny** (§2b). Effort resztki: **M**.
 
 ### 2b. Kreator Scen — własne sceny statyczne/animowane
-Edytor już jest. Dodać: typ elementu `image`/`video` (URL-only szybko, upload po 2a), warstwy
-(z-index), więcej stylowania elementu (kolor/opacity/rotacja). Effort: **M** (URL-only) → **L** (upload+animacje).
+✅ **WŁASNE OBRAZY W SCENACH ZROBIONE (slice 5).** Nowy typ elementu `image` (w tym samym JSON
+`elements` → **zero migracji**): w edytorze przycisk „Wgraj plik" (upload z §2a) lub pole URL dodaje
+grafikę jako element sceny; drag/resize jak widgety; render przez `<img>` (nie iframe), `src`
+zsanityzowany przez `safeMediaUrl` po obu stronach (klient + serwer w `parseElements`). Daje **sceny
+statyczne** na własnej grafice.
+**ZOSTAJE:** wideo/animacje jako element (`video` — po signed-URL z §2a) + warstwy (z-index) + więcej
+stylowania elementu (opacity/rotacja). Effort resztki: **M**.
 
 ### 2c. Widgety/Alerty — własna grafika/animacja
 **Szybko (URL-only):** kolumny `imageUrl`+`mediaType` na `AlertTypeConfig`/`CustomAlert` (migracja) +
