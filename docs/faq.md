@@ -18,6 +18,9 @@ Automatycznie: Twitch/Kick przez **webhooki** (EventSub / Kick events), Streamla
 ### Co to jest tryb white-label / multi-tenant?
 Ten sam kod obsługuje wiele portali (marka „E-Forge"). Każdy tenant ma własną walutę, branding, domenę i dane, odseparowane po `tenantId` (host → tenant). Zob. [Per-tenant identity](PER-TENANT-IDENTITY.md) i [White-label setup](WHITE-LABEL-SETUP.md).
 
+### Jak włączyć/wyłączyć funkcje mojego portalu?
+W panelu `/admin` → sekcja **„Funkcje portalu"** przełączasz każdą funkcję osobnym switchem z opisem (kasyno, kary, karty/kolekcje, koło fortuny, drops, predykcje, songrequest, overlaye, integracje…). Wyłączona funkcja **znika z Twojego panelu i ze stron widzów**. Funkcje spoza Twojego planu są **zablokowane** (z podpowiedzią o ulepszeniu). Domyślnie prawie wszystko jest włączone; **kary za realne wpłaty** (`penalties`) są domyślnie wyłączone za bramką prawną. Twoje wybory dotyczą tylko Twojego portalu.
+
 ### Gdzie jest bot czatu?
 `ghost-empire-chat` to **osobny runtime** (Node + tmi.js, zwykle w Dockerze). Łączy się z API portalu Bearerem `BOT_SECRET`. Bot Discorda (`E-Bot`) to osobne repo.
 
