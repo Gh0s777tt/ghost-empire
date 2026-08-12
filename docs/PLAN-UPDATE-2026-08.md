@@ -61,12 +61,16 @@ Zweryfikowane ścieżka po ścieżce (agent SEC-donation-routing):
 ## 2. Duże feature'y — roadmap (SLICE 2+)
 
 ### 2a. Wspólny enabler: **pipeline uploadu mediów** (BLOKER dla 3 obszarów)
-Dziś **nie ma żadnego uploadu** (brak Vercel Blob / Supabase Storage / multipart). To blokuje:
-własne obrazy/wideo scen, własne grafiki/animacje alertów, upload tła.
-- **Decyzja do podjęcia:** Supabase Storage (już mamy Supabase) vs Vercel Blob. Rekomendacja:
-  **Supabase Storage** — zero nowego dostawcy, per-tenant prefix klucza, RLS.
-- Zakres: `POST /api/upload` (auth, limit MIME/rozmiar, per-tenant prefix), picker plików, podmiana
-  „URL-only" na „URL lub upload" w scenach/alertach/brandingu. Effort: **L**.
+✅ **FUNDAMENT ZROBIONY (slice 4, Supabase Storage — decyzja właściciela).** `lib/media-upload.ts`
+(REST Storage przez fetch, bez zależności; magic-bytes allowlist, SVG wykluczony jako XSS, cap 20 MB,
+per-tenant prefix `<tenantId>/<uuid>.<ext>`) + `POST /api/upload` (requireAdmin, rate-limit) +
+reużywalny `MediaUploadButton`. **Pierwszy konsument: tło portalu** (przycisk „Wgraj plik" w Wyglądzie).
+Zwraca publiczny URL → wpina się w istniejące pola URL (bgImageUrl/alerty/sceny) — **zero zmian schematu**.
+- **⚠️ SETUP WŁAŚCICIELA (ENV.md):** `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + publiczny bucket
+  (domyślnie `media`, Supabase → Storage → New bucket → Public). Bez tego `/api/upload` zwraca 503.
+- **ZOSTAJE:** (a) **signed-URL** dla dużego WIDEO — Vercel Functions mają limit body ~4.5 MB, więc
+  proxy `/api/upload` obsługuje obrazy; wideo/duże media → direct upload browser→Supabase (fast-follow);
+  (b) wpięcie uploadu w **alerty** (§2c) i **sceny** (§2b). Effort resztki: **M**.
 
 ### 2b. Kreator Scen — własne sceny statyczne/animowane
 Edytor już jest. Dodać: typ elementu `image`/`video` (URL-only szybko, upload po 2a), warstwy

@@ -2529,6 +2529,9 @@
     "secSeasons": "Battle Pass",
     "secWheel": "Wheel of Fortune",
     "secPenalties": "Donation penalties",
+    "mediaUpload": "Upload file",
+    "mediaUploading": "Uploading…",
+    "mediaUploadErr": "Upload failed",
     "penalties": {
       "title": "Donation penalties",
       "intro": "A viewer donates — a penalty (an OBS effect) is drawn for you. The amount threshold and catalogue are fully editable.",

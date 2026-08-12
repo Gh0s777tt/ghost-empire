@@ -12,6 +12,7 @@ import { Palette, Loader2, Check, ExternalLink, Lock } from "lucide-react";
 import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
 import { BG_PRESETS, bgPresetId, bgPresetValue, resolveBgPresetCss } from "@/lib/bg-presets";
 import { SectionCard, FieldInput } from "../shared";
+import { MediaUploadButton } from "../MediaUploadButton";
 
 type MyTenant = {
   slug: string; name: string; shortName: string | null; ownerHandle: string | null;
@@ -154,6 +155,11 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
           </div>
         </div>
         <FieldInput label={ta("tntBgImage")} value={bgImageUrl} onChange={setBgImageUrl} placeholder="https://…/bg.jpg" />
+        {/* Upload własnej grafiki tła (update 2026-08): wgrany plik ustawia bgImageUrl na publiczny
+            URL z Supabase Storage. Obrazy — duże wideo pójdzie ścieżką signed-URL (patrz /api/upload). */}
+        <div className="mt-1.5">
+          <MediaUploadButton onUploaded={(url) => setBgImageUrl(url)} onError={(m) => onToast("err", m)} />
+        </div>
         {/* Live preview — resolve a preset to its gradient, else treat an http(s) value as a CSS
             image (same read semantics the portal uses); anything else (e.g. a half-typed URL) shows nothing. */}
         {(() => {

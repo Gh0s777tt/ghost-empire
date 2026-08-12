@@ -2529,6 +2529,9 @@
     "secSeasons": "Battle Pass",
     "secWheel": "Koło Fortuny",
     "secPenalties": "Kary za donaty",
+    "mediaUpload": "Wgraj plik",
+    "mediaUploading": "Wgrywanie…",
+    "mediaUploadErr": "Nie udało się wgrać pliku",
     "penalties": {
       "title": "Kary za donaty",
       "intro": "Widz wpłaca — losuje się kara (efekt OBS) dla Ciebie. Kwota progowa i katalog są w pełni edytowalne.",

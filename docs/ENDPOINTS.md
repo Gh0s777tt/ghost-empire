@@ -150,6 +150,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/mod-violations` | admin | Statystyki naruszeń moderacji + top recydywiści |
 | `…/api/admin/games` | admin | Biblioteka gier — konfiguracja SteamID + sync + ukrywanie |
 | `…/api/admin/webhooks-out` | admin | Webhooki wychodzące — CRUD + test (POST JSON na zewnętrzne URL) |
+| `…/api/upload` | admin | `POST` multipart — upload mediów (tło/alerty/sceny) do Supabase Storage, per-tenant prefix; zwraca publiczny URL. Magic-bytes allowlist (SVG wykluczony), cap 20 MB, rate-limit. 503 bez `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`/bucketa |
 | `…/api/admin/donations` | admin | Donacje: `GET` statystyki (suma PLN/liczba/per-provider, tenant-scoped) + `PATCH` dopasowanie/skip |
 | `…/api/admin/streamlabs` | admin | Stan połączenia Streamlabs |
 | `…/api/admin/subathon` | admin | Subathon (start/stop/±czas) |
