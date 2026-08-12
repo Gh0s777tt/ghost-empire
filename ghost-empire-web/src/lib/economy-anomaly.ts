@@ -1,7 +1,8 @@
 // src/lib/economy-anomaly.ts
 // Anti-abuse: flag unusual admin token grants (a single huge grant, or a spike in
-// cumulative grants per hour) and notify every admin. Fire-and-forget — never blocks
-// or breaks the grant itself.
+// cumulative grants per hour) and notify the admins OF THAT PORTAL. Fire-and-forget —
+// never blocks or breaks the grant itself. Everything here is per-tenant: the window it
+// measures and the audience it alerts (see checkGrantAnomaly).
 import { prisma } from "@/lib/prisma";
 import { createLogger } from "@/lib/logger";
 
@@ -29,14 +30,16 @@ export function anomalyReasons(amount: number, hourlyTotal: number): string[] {
 }
 
 /**
- * Flag an admin grant that looks abusive and notify every admin. Fire-and-forget: it
- * swallows its own errors so a failed check can never break (or roll back) the grant.
+ * Flag an admin grant that looks abusive and notify that portal's admins. Fire-and-forget:
+ * it swallows its own errors so a failed check can never break (or roll back) the grant.
  *
  * @param opts.adminId - Admin who issued the grant (logged, not notified separately).
  * @param opts.amount - Signed grant amount; anything ≤ 0 returns immediately (deductions
  *   can't inflate the economy).
  * @param opts.targetUsername - Recipient, quoted in the alert so admins can jump to the
  *   audit log.
+ * @param opts.tenantId - Portal the grant happened on (the caller's `auth.tenantId`). Scopes
+ *   BOTH the rolling-hour window and the admin audience; `null` = legacy/single-tenant.
  *
  * @remarks
  * **Real GT only.** Callers must not invoke this for `CHIPS` grants, and the rolling-hour
@@ -44,20 +47,34 @@ export function anomalyReasons(amount: number, hourlyTotal: number): string[] {
  * so a legitimate chips giveaway would otherwise trip a "someone is minting GT" alarm and,
  * worse, desensitise the alarm that actually matters. Same GT-only rule as the weekly ranking
  * and the economy-health dashboard (docs/CHIPS-CASINO.md, Faza 8).
+ *
+ * **Per-portal only.** Both DB reads are tenant-scoped — see the comment on the aggregate.
  */
 export async function checkGrantAnomaly(opts: {
   adminId: string;
   amount: number;
   targetUsername: string | null;
+  tenantId: string | null;
 }): Promise<void> {
   try {
     if (opts.amount <= 0) return; // only positive grants are flagged
 
     const since = new Date(Date.now() - WINDOW_MS);
+    // Tenant-scope the rolling-hour window: an unscoped aggregate here blends every portal's
+    // grants, so portal A's activity pushes portal B over HOURLY_GRANT_THRESHOLD (false alarms
+    // desensitise the one alarm that matters) while an abusive admin on a small portal hides in
+    // platform-wide noise. Same reasoning — and the same idiom — as the achievements/weekly
+    // aggregates in src/lib/cached.ts:70,112-119: `Transaction` has no tenantId column, so the
+    // only scope is the `user` relation. `tenantId` null = legacy/single-tenant → no isolation
+    // boundary to enforce (repo-wide `...(tid ? {…} : {})` convention).
+    const tid = opts.tenantId;
     const agg = await prisma.transaction.aggregate({
       // `currency: "GT"` is safe for legacy rows: the column is non-nullable with a "GT"
       // default, so everything written before the chips split already reads as GT.
-      where: { type: "admin_grant", currency: "GT", amount: { gt: 0 }, createdAt: { gte: since } },
+      where: {
+        type: "admin_grant", currency: "GT", amount: { gt: 0 }, createdAt: { gte: since },
+        ...(tid ? { user: { tenantId: tid } } : {}),
+      },
       _sum: { amount: true },
     });
     const hourly = agg._sum.amount ?? 0;
@@ -66,7 +83,14 @@ export async function checkGrantAnomaly(opts: {
     if (reasons.length === 0) return;
 
     const summary = reasons.join(" · ");
-    const admins = await prisma.user.findMany({ where: { isAdmin: true }, select: { id: true } });
+    // …and scope the audience the same way: the message below quotes the RECIPIENT'S username,
+    // and GET /api/notifications filters by userId alone, so an unscoped `isAdmin` fan-out really
+    // does show a foreign portal's admin the nick of this portal's viewer — a cross-tenant leak,
+    // on top of the alert being none of their business.
+    const admins = await prisma.user.findMany({
+      where: { isAdmin: true, ...(tid ? { tenantId: tid } : {}) },
+      select: { id: true },
+    });
     if (admins.length > 0) {
       await prisma.notification.createMany({
         data: admins.map((a) => ({
@@ -79,7 +103,8 @@ export async function checkGrantAnomaly(opts: {
         })),
       });
     }
-    log.warn("economy anomaly detected", { summary, adminId: opts.adminId, target: opts.targetUsername });
+    // `tenantId` in the context so a platform-wide log stream still says WHICH portal fired.
+    log.warn("economy anomaly detected", { summary, adminId: opts.adminId, target: opts.targetUsername, tenantId: tid ?? null });
   } catch (e) {
     log.error("anomaly check failed", e);
   }

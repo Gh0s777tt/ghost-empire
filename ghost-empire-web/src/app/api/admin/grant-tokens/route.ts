@@ -144,8 +144,12 @@ export async function POST(req: Request) {
   // Anti-abuse anomaly check (fire-and-forget — never blocks the response). GT only: the
   // detector's thresholds describe the REAL economy, and chips are free by design, so
   // feeding them in would raise false alarms and dull the real one (docs/CHIPS-CASINO.md).
+  // Pass `auth.tenantId` — the detector is per-portal (rolling-hour window AND the admins it
+  // alerts). Without it the check spans every portal: foreign grants trip this portal's hourly
+  // threshold, and the alert (which quotes `user.username`) reaches other portals' admins.
+  // The target was already resolved inside this tenant by findManagedUser above.
   if (isGrant && !isChips) {
-    void checkGrantAnomaly({ adminId: auth.userId, amount, targetUsername: user.username }).catch(() => {});
+    void checkGrantAnomaly({ adminId: auth.userId, amount, targetUsername: user.username, tenantId: auth.tenantId }).catch(() => {});
   }
 
   return NextResponse.json({
