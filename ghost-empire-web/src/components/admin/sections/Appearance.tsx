@@ -10,16 +10,21 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Palette, Loader2, Check, ExternalLink, Lock } from "lucide-react";
 import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
+import { BG_PRESETS, bgPresetId, bgPresetValue, resolveBgPresetCss } from "@/lib/bg-presets";
 import { SectionCard, FieldInput } from "../shared";
 
 type MyTenant = {
   slug: string; name: string; shortName: string | null; ownerHandle: string | null;
   tokenName: string; tokenSymbol: string; brandColor: string; logoUrl: string | null;
+  bgImageUrl: string | null;
   plan: string; effectivePlan: string;
 };
 
 export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void; onSuccess?: () => void; pending?: boolean }) {
   const t = useTranslations("admin.appearance");
+  // Reuse the platform-owner's background labels (admin.tntBg*) — same control, same words,
+  // no new i18n keys for the streamer-facing surface.
+  const ta = useTranslations("admin");
   const [tenant, setTenant] = useState<MyTenant | null | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
@@ -29,6 +34,7 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [color, setColor] = useState("#E50914");
   const [logoUrl, setLogoUrl] = useState("");
+  const [bgImageUrl, setBgImageUrl] = useState("");
 
   useEffect(() => {
     apiGet<{ tenant: MyTenant | null }>("/api/onboarding/my")
@@ -42,6 +48,7 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
           setTokenSymbol(d.tenant.tokenSymbol);
           setColor(d.tenant.brandColor);
           setLogoUrl(d.tenant.logoUrl ?? "");
+          setBgImageUrl(d.tenant.bgImageUrl ?? "");
         }
       })
       .catch(() => setTenant(null));
@@ -70,6 +77,7 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
     try {
       await apiPatch("/api/onboarding/my", {
         name, shortName, ownerHandle: handle, tokenName, tokenSymbol, brandColor: color, logoUrl: logoUrl.trim() || null,
+        bgImageUrl: bgImageUrl.trim() || null,
       });
       onToast("ok", t("saved"));
     } catch (e) {
@@ -114,6 +122,51 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
         </div>
         <FieldInput label={t("logoUrl")} value={logoUrl} onChange={setLogoUrl} placeholder="https://…" />
         {logoUrl.trim() && <img src={logoUrl} alt="" className="w-16 h-16 object-contain border border-zinc-800 bg-black rounded" loading="lazy" decoding="async" />}
+
+        {/* Portal background (#audit3): the streamer self-serves what only the platform owner
+            (Tenants.tsx) could set before — a curated preset OR a custom image URL. Persisted in
+            the SAME Tenant.bgImageUrl column via the "preset:<id>" scheme (no schema change). */}
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{ta("tntBgPreset")}</label>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setBgImageUrl("")}
+              className={`px-2 py-1 text-[10px] font-bold uppercase tracking-widest border ${!bgImageUrl ? "border-red-500 text-red-300" : "border-zinc-800 text-zinc-500 hover:border-zinc-600"}`}
+            >
+              {ta("tntBgNone")}
+            </button>
+            {BG_PRESETS.map((p) => {
+              const active = bgPresetId(bgImageUrl) === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setBgImageUrl(bgPresetValue(p.id))}
+                  title={p.label}
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold uppercase tracking-widest border ${active ? "border-red-500 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"}`}
+                >
+                  <span className="w-4 h-4 rounded-sm border border-white/10 shrink-0" style={{ backgroundImage: p.css }} />
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <FieldInput label={ta("tntBgImage")} value={bgImageUrl} onChange={setBgImageUrl} placeholder="https://…/bg.jpg" />
+        {/* Live preview — resolve a preset to its gradient, else treat an http(s) value as a CSS
+            image (same read semantics the portal uses); anything else (e.g. a half-typed URL) shows nothing. */}
+        {(() => {
+          const trimmed = bgImageUrl.trim();
+          const bg = resolveBgPresetCss(trimmed) ?? (/^https?:\/\//i.test(trimmed) ? `url("${trimmed}")` : null);
+          return bg ? (
+            <div
+              className="h-16 rounded border border-zinc-800"
+              style={{ backgroundImage: bg, backgroundSize: "cover", backgroundPosition: "center" }}
+              aria-hidden
+            />
+          ) : null;
+        })()}
       </div>
 
       <button

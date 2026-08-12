@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { effectivePlan, planHasFeature } from "@/lib/entitlements";
 import { safeMediaUrl } from "@/lib/url-safe";
+import { isBgPreset } from "@/lib/bg-presets";
 import { parseHubLinks, sanitizeHubBio } from "@/lib/hub";
 import { logAdminAction } from "@/lib/audit";
 
@@ -25,6 +26,7 @@ export async function GET() {
     select: {
       slug: true, name: true, shortName: true, ownerHandle: true,
       tokenName: true, tokenSymbol: true, brandColor: true, logoUrl: true,
+      bgImageUrl: true,
       hubEnabled: true, hubBio: true, hubLinks: true,
       plan: true, planExpiresAt: true, createdAt: true,
       stripeSubscriptionId: true,
@@ -85,9 +87,14 @@ export async function PATCH(req: Request) {
   str("tokenName", 40);
   str("tokenSymbol", 8);
   str("logoUrl", 300, { allowEmptyNull: true });
+  str("bgImageUrl", 300, { allowEmptyNull: true });
   // Owner is semi-trusted, but logoUrl renders site-wide as <img src> — only
   // accept absolute http(s) (drop javascript:/data:/tracking schemes).
   if (typeof data.logoUrl === "string") data.logoUrl = safeMediaUrl(data.logoUrl);
+  // Streamer self-serve background (#audit3): validated IDENTICALLY to the platform-owner
+  // route — bgImageUrl is EITHER a built-in "preset:<id>" template (kept verbatim,
+  // allowlist-checked) or a custom image URL rendered as CSS url() (must be absolute http(s)).
+  if (typeof data.bgImageUrl === "string" && !isBgPreset(data.bgImageUrl)) data.bgImageUrl = safeMediaUrl(data.bgImageUrl);
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }
