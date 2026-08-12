@@ -120,7 +120,7 @@ Legenda: **R** = wymagane do działania rdzenia · **O** = opcjonalne / dla konk
 | `GHOST_BOT_SECRET` (R) | **Ten sam** co `BOT_SECRET` w portalu (bearer do `/api/internal/*`) |
 | `GHOST_API_URL` (O) | URL portalu (domyślnie `https://ghost-empire-web.vercel.app`) |
 | `DISCORD_GUILD_ID` (O) | Zawęża naliczanie do jednego serwera |
-| `GHOST_MESSAGE_REWARD` / `GHOST_MESSAGE_COOLDOWN_SECONDS` / `GHOST_VOICE_REWARD_PER_MINUTE` / `GHOST_VOICE_TICK_SECONDS` / `GHOST_AFK_GIVES_REWARD` / `GHOST_MUTED_GIVES_REWARD` (O) | Strojenie nagród (defaulty pollowane z `/api/bot/config`, czyli z `/admin#bot`; env nadpisuje) |
+| `GHOST_MESSAGE_REWARD` / `GHOST_MESSAGE_COOLDOWN_SECONDS` / `GHOST_VOICE_REWARD_PER_MINUTE` / `GHOST_VOICE_TICK_SECONDS` / `GHOST_AFK_GIVES_REWARD` / `GHOST_MUTED_GIVES_REWARD` (O) | Strojenie nagród. **Precedencja: portal wygrywa.** Env daje tylko wartości STARTOWE przy boot; `fetchConfig()` (E-Bot `empire/config.mts`) bezwarunkowo nadpisuje każde pole z `GET /api/bot/config` (czyli z `/admin#bot`) przy starcie i co 60 s. Ustaw je w panelu, nie w env — env-owa wartość żyje tylko do pierwszego udanego pollu. |
 
 > Dodatkowo w Discord Dev Portal apki E-Bota włącz **Message Content** + **Server Members** (privileged intents) — bez tego bot z `GHOST_ECONOMY=1` nie zaloguje się. Po zmianie: `cd bot && npm run deploy` (rejestruje `/portal`) + restart.
 
