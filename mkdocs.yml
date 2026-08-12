@@ -79,6 +79,7 @@ nav:
       - Raffle przez czat: RAFFLE-BOT.md
   - Rozwój:
       - Utrzymanie i operacje (DevOps): MAINTENANCE.md
+      - Plan aktualizacji (2026-08): PLAN-UPDATE-2026-08.md
       - Świadome decyzje architektoniczne: DECISIONS.md
       - Backlog pomysłów: IDEAS.md
       - Master-plan ekosystemu: PLAN-EKOSYSTEM.md

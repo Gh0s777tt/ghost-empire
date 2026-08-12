@@ -150,7 +150,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/mod-violations` | admin | Statystyki naruszeń moderacji + top recydywiści |
 | `…/api/admin/games` | admin | Biblioteka gier — konfiguracja SteamID + sync + ukrywanie |
 | `…/api/admin/webhooks-out` | admin | Webhooki wychodzące — CRUD + test (POST JSON na zewnętrzne URL) |
-| `…/api/admin/donations` | admin | Donacje / dopasowania |
+| `…/api/admin/donations` | admin | Donacje: `GET` statystyki (suma PLN/liczba/per-provider, tenant-scoped) + `PATCH` dopasowanie/skip |
 | `…/api/admin/streamlabs` | admin | Stan połączenia Streamlabs |
 | `…/api/admin/subathon` | admin | Subathon (start/stop/±czas) |
 | `…/api/admin/welcome` · `chat-commands` · `chat-timers` · `faq` · `song-requests` | admin | Konfiguracja bota czatu |

@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Added
+
+- **Update E-Forge — slice 1 (gałąź `feat/eforge-update-2026-08`)** — pierwszy wycinek zamówionego updatu (bez uploadu mediów i bez migracji; pełny plan: [`docs/PLAN-UPDATE-2026-08.md`](docs/PLAN-UPDATE-2026-08.md)). **Feature'y:** streamer ustawia **własne tło portalu** (presety + własny URL, self-serve w Wyglądzie, walidacja jak u platform-ownera); **osiągnięcia pogrupowane w kategorie** jako zwijana lista w profilu (bez migracji, kategorie z `triggerType`); **panel donacji w Ekonomii** — kolejka rekonsyliacji odpięta od Streamlabs (Ko-fi/Tipply/custom też widzą) + nagłówek statystyk (`GET /api/admin/donations`: suma PLN / liczba / per-provider); **SongRequest** — akcja „next" (domknij bieżącą + startuj następną jednym kliknięciem) + `!unsr`/`!wrongsong` (widz anuluje własną ostatnią prośbę z czatu, wyłącznie swoją). **Bugfixy z pełnej diagnostyki:** utwardzony `safeMediaUrl` przeciw CSS-breakoutowi w `url("…")` tła (zwraca zakodowany href, odrzuca `" ) { }`\\newline); TTS overlaya czyta nazwę waluty **tenanta** zamiast zaszytej „Ghost Tokenów" (white-label leak); avatar alertu przez `safeMediaUrl`. Diagnostyka potwierdziła też: **izolacja donacji per-tenant trzyma** (pieniądze nowego tenanta nie trafiają na cudze konta) — 2 luki (onboarding platform dla nie-foundera, PayMedia founder-global) zaplanowane na slice 2. Zielone: tsc + eslint + 1218 testów (portal) + 75 (bot) + 4 bramki docs.
+
 ### Changed
 
 - **CLAUDE.md — zasada „zawsze zsynchronizowane, zero backlogów"** — nowa sekcja robocza: każda sesja kończy się dopiero, gdy kod+testy+docs są zielone, zacommitowane i **wypchnięte na oba remote'y** (origin+gitlab), docs (CHANGELOG/ROADMAP/README/`docs/*`) aktualne na bieżąco, PR/MR otwarty, a zmergowane/martwe gałęzie posprzątane. Bez wiszących braków.
