@@ -231,4 +231,51 @@ describe("verifyBotSecretForTenant (Batch B)", () => {
   it("does not let an empty tenant secret authenticate an empty bearer", () => {
     expect(verifyBotSecretForTenant("Bearer ", "")).toBe(false);
   });
+
+  it("treats a non-truthy BOT_SECRET_STRICT as the back-compat default (no silent lockout)", () => {
+    for (const v of ["", "0", "false", "yes", "no"]) {
+      vi.stubEnv("BOT_SECRET_STRICT", v);
+      expect(verifyBotSecretForTenant("Bearer global-s3cr3t", "tenant-key")).toBe(true);
+    }
+  });
+});
+
+// The global BOT_SECRET was an unconditional master key across EVERY tenant (host-derived
+// tenant + /api excluded from middleware), so a portal that rotated its own Tenant.botSecret
+// gained no isolation. BOT_SECRET_STRICT=1|true makes the tenant's own secret exclusive.
+describe("verifyBotSecretForTenant — BOT_SECRET_STRICT (per-tenant isolation)", () => {
+  beforeEach(() => {
+    vi.stubEnv("BOT_SECRET", "global-s3cr3t");
+    vi.stubEnv("BOT_SECRET_STRICT", "1");
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs(); // env must not leak into the default-mode cases above
+  });
+
+  it("rejects the global secret once the tenant has its own", () => {
+    expect(verifyBotSecretForTenant("Bearer global-s3cr3t", "tenant-key")).toBe(false);
+  });
+
+  it("still accepts the global secret when the tenant has none (portal must not go dark)", () => {
+    expect(verifyBotSecretForTenant("Bearer global-s3cr3t", null)).toBe(true);
+    expect(verifyBotSecretForTenant("Bearer global-s3cr3t", undefined)).toBe(true);
+    expect(verifyBotSecretForTenant("Bearer global-s3cr3t", "")).toBe(true);
+  });
+
+  it("accepts the tenant secret in strict mode, exactly as in the default mode", () => {
+    expect(verifyBotSecretForTenant("Bearer tenant-key", "tenant-key")).toBe(true);
+    vi.stubEnv("BOT_SECRET_STRICT", "true"); // 'true' is the other accepted spelling
+    expect(verifyBotSecretForTenant("Bearer tenant-key", "tenant-key")).toBe(true);
+    vi.stubEnv("BOT_SECRET_STRICT", "");
+    expect(verifyBotSecretForTenant("Bearer tenant-key", "tenant-key")).toBe(true);
+  });
+
+  it("keeps rejecting a wrong secret, a missing header and an unset expected secret", () => {
+    expect(verifyBotSecretForTenant("Bearer nope", "tenant-key")).toBe(false);
+    expect(verifyBotSecretForTenant(null, "tenant-key")).toBe(false);
+    expect(verifyBotSecretForTenant("Bearer ", "")).toBe(false);
+    vi.stubEnv("BOT_SECRET", ""); // no global at all → tenant secret is the only key
+    expect(verifyBotSecretForTenant("Bearer global-s3cr3t", null)).toBe(false);
+    expect(verifyBotSecretForTenant("Bearer tenant-key", "tenant-key")).toBe(true);
+  });
 });
