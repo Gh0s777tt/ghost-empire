@@ -87,12 +87,16 @@ konkretnego utworu (nowa kolumna/tabela). Spotify (Web API, per-tenant OAuth) re
 SoundCloud ciężkie. Effort: **M** (player+Spotify) → **L** (reszta).
 
 ### 2f. „Koło za donaty" — panel admina (silnik JUŻ istnieje!)
-`penalties.ts` w całości implementuje „donate → losowa kara/wyzwanie", kwota+katalog per-streamer,
-dostarczanie do OBS. **Brakuje tylko UI admina** (nie ma `PenaltiesManager` ani wpisu w nawigacji)
-+ free-text „wyzwanie" (dziś tylko akcje OBS) + opcjonalna animacja koła (reuse `/overlay/wheel`).
-⚠️ **Prawnie:** to moduł na **realne pieniądze** (art. 2 ust. 5), zostaje `enabled=false` za bramką
-`LEGAL_WARNING`. UI budujemy, żeby właściciel MÓGŁ włączyć po sygnale prawnika — samo włączenie to
-jego decyzja. Effort: **M**.
+✅ **PANEL ADMINA ZROBIONY (slice 3).** `penalties.ts` implementował już „donate → losowa kara",
+kwota+katalog per-streamer, dostarczanie do OBS — ale **nie było UI, żeby to włączyć/skonfigurować**.
+Dodana sekcja `Penalties` (grupa Ekonomia): przełącznik + ostrzeżenie prawne z API, próg wpłaty,
+cooldown, edytowalny katalog kar (nazwa/waga/próg/efekt OBS/pasma intensywności+czasu), historia
+losowań. ⚠️ **Prawnie:** moduł na **realne pieniądze** (art. 2 ust. 5) — `enabled=false` domyślnie,
+`LEGAL_WARNING` zawsze widoczne przy przełączniku. Konfiguracja ≠ włączenie; włączenie to gated-
+decyzja właściciela po sygnale prawnika (prawnik oczyścił kasyno chipsowe, NIE ten moduł).
+**ZOSTAJE (roadmap):** free-text „wyzwanie" (streamer coś robi, bez akcji OBS — osobny typ, wymaga
+zmiany silnika + ścieżki wyświetlania w overlayu) + opcjonalna animacja koła (reuse `/overlay/wheel`).
+Effort resztki: **M**.
 
 ---
 

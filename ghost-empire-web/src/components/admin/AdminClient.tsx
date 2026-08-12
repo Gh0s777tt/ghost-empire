@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Tv2, Menu, GitMerge, Radio, MonitorPlay, Lightbulb,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy, Wand2, Palette, Link2,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy, Wand2, Palette, Link2, Gavel,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
@@ -27,7 +27,7 @@ import {
   AnalyticsSection, EconomyHealthSection, CommunitySection, ClanWarsManager, SoundRewardsManager, PaymentMethodsManager,
   PushBroadcastManager, SponsorsManager, SceneBuilder, CollectiblesManager, RecapManager, ClipDirectorManager,
   TriviaManager, TwoFactorManager, AuditLogSection, PollsManager, ModerationManager, WidgetsLibrary,
-  IntegrationsManager, ObsRulesManager, GoveeRulesManager, WheelManager, WebhooksOutManager, GamesLibraryManager,
+  IntegrationsManager, ObsRulesManager, GoveeRulesManager, WheelManager, PenaltiesManager, WebhooksOutManager, GamesLibraryManager,
   AchievementsManager, PredictionsManager, BountiesManager, WelcomeManager, FaqManager, ChatTimersManager,
   ChatCommandsManager, SongQueueManager, SubathonManager, GrantTokensCard, CreateDropCard, DatabaseResetCard,
   CustomAlertsCard, ChatOverlayCard, StreamGoalsManager, KickEventsManager, YouTubeLiveManager, RumbleManager,
@@ -95,7 +95,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub" | "donationIntegrations";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "penalties" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub" | "donationIntegrations";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -164,6 +164,7 @@ export function AdminClient({
     { id: "drops",     label: t("secDrops"),       icon: Gift,            group: "economy",    level: 1, permission: () => can("create_drops") },
     { id: "seasons",   label: t("secSeasons"), icon: Ticket,          group: "economy",    level: 2, permission: () => isAdmin },
     { id: "wheel",     label: t("secWheel"), icon: Disc3,          group: "economy",    level: 2, permission: () => isAdmin },
+    { id: "penalties", label: t("secPenalties"), icon: Gavel,       group: "economy",    level: 2, permission: () => isAdmin },
     { id: "donations", label: t("secDonations"),     icon: Heart,           group: "economy",    level: 2, permission: () => isAdmin },
 
     { id: "events",    label: t("secEvents"),      icon: Calendar,        group: "community",  level: 1, permission: () => can("create_events") || can("edit_events") || can("draw_events") },
@@ -400,6 +401,10 @@ export function AdminClient({
 
           {activeSection === "wheel" && isAdmin && (
             <WheelManager {...sharedProps} />
+          )}
+
+          {activeSection === "penalties" && isAdmin && (
+            <PenaltiesManager {...sharedProps} />
           )}
 
           {activeSection === "webhooks" && isAdmin && (
