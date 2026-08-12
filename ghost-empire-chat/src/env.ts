@@ -19,6 +19,12 @@ function req(name: string): string {
 export const env = {
   portalUrl: req("PORTAL_URL"),
   botSecret: req("BOT_SECRET"),
+  // Twitch jest STRUKTURALNIE wymagany (req() rzuca przy imporcie modułu) — znane i na razie
+  // ŚWIADOME założenie (audyt 2026-08, finding low/5): każdy dotychczasowy tenant startuje na
+  // Twitchu, Kick/YT są dodatkami. Tenant "Kick-only"/"YT-only" to decyzja produktowa, nie
+  // jednolinijkowy fix: samo zluzowanie req() zostawiłoby heartbeat.ts raportujący fantomowy
+  // Twitch jako online i proces "działający" z zerem platform — jeśli to luzujesz, dodaj
+  // walidację "co najmniej jedna platforma skonfigurowana" + napraw configuredPlatforms().
   twitch: {
     username: req("TWITCH_BOT_USERNAME"),
     channel: req("TWITCH_CHANNEL"),

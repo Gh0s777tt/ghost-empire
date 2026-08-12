@@ -134,6 +134,13 @@ let config: ModConfig = {
 
 export async function refreshModeration(): Promise<void> {
   try {
+    // ŚWIADOMIE bez nagłówka Authorization (audyt 2026-08, finding medium/4): konfiguracyjne
+    // GET-y (/api/bot/moderation, chat-commands, faq, chat-timers, welcome, active-prediction,
+    // /api/companion/branding) są po stronie portalu zadeklarowaną PUBLICZNĄ powierzchnią —
+    // Host-resolved per tenant + rate-limit per IP (web: docs/ENDPOINTS.md, przeklasyfikowane
+    // tamże). Dodanie Beara tutaj nic nie chroni (egzekwować musiałby portal) i wyłączyłoby
+    // każdy już wdrożony bot. KONSEKWENCJA dla admina: words/regex/whitelist automodu są
+    // publicznie odczytywalne — traktuj tę konfigurację jak jawną, sekrety tu nie wchodzą.
     const res = await fetch(`${env.portalUrl}/api/bot/moderation`);
     if (!res.ok) { console.warn(`[moderation] fetch ${res.status} — keeping current`); return; }
     const data = (await res.json()) as Partial<ModConfig>;
