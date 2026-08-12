@@ -1,6 +1,27 @@
 # 🧭 PLAN.md — analiza projektu + plan ukończenia
 
-Świeża, szczegółowa analiza stanu projektu **Ghost Empire** i wykonawczy plan dokończenia — z **kolejnością wykonania zaczynającą od rzeczy autonomicznych** (które wdrażam sam, bez Twojej uwagi). Aktualizowany na bieżąco.
+> ## 🗄️ ARCHIWUM — migawka z 2026-06-11 (ostatni opisany PR: **#192**)
+>
+> **Ten plik NIE jest już aktualizowany i NIE opisuje bieżącego stanu projektu.**
+> Ostatnia realna zmiana treści: **2026-06-11** (#444). HEAD jest dziś na **#817+**,
+> czyli ~625 PR-ów dalej — praktycznie każdy „TODO"/„🟡" poniżej został w międzyczasie
+> dowieziony, przeprojektowany albo porzucony. Czytanie tego pliku jako planu da
+> **fałszywy obraz** zakresu i priorytetów.
+>
+> **Gdzie jest prawda (żywe dokumenty):**
+> | Czego szukasz | Idź do |
+> |---|---|
+> | co jest zrobione / w toku / planowane | [`ROADMAP.md`](ROADMAP.md) |
+> | co i kiedy dokładnie shipnęło (per PR) | [`CHANGELOG.md`](CHANGELOG.md) |
+> | jak to działa dziś | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/ENDPOINTS.md`](docs/ENDPOINTS.md) |
+> | ocena jakości / dług | [`docs/audit/AUDIT-2026-07-13.md`](docs/audit/AUDIT-2026-07-13.md) |
+>
+> Plik zostaje **celowo** (nie kasujemy historii decyzji): jest zapisem tego, jak
+> wyglądał plan w czerwcu 2026 i dlaczego kolejność prac była właśnie taka.
+> Zdjęte przy audycie 2026-08 — znalezisko „PLAN/PHASE2/PHASE3/SUMMARY to martwe
+> dokumenty wciąż linkowane jako żywe".
+
+Świeża, szczegółowa analiza stanu projektu **Ghost Empire** i wykonawczy plan dokończenia — z **kolejnością wykonania zaczynającą od rzeczy autonomicznych** (które wdrażam sam, bez Twojej uwagi). *(Historycznie: „aktualizowany na bieżąco" — patrz banner archiwalny wyżej, dziś nieprawda.)*
 
 > Skróty: 🤖 = robię sam · 🔑 = wymaga Twoich kluczy/kont · 🎨 = wymaga Twojego kierunku (gust).
 > Reszta dokumentów: [README](README.md) · [CHANGELOG](CHANGELOG.md) · [ROADMAP](ROADMAP.md) · [ARCHITEKTURA](docs/ARCHITECTURE.md) · [ENDPOINTY](docs/ENDPOINTS.md) · [ENV](docs/ENV.md) · [PERMISSIONS](PERMISSIONS.md).

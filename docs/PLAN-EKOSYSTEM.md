@@ -142,7 +142,14 @@ produkcji (real-time) i konta (store) są na końcu.
   udokumentowany**, tylko niespójną notacją człowieka (`·`, `…/` = raz dziecko raz rodzeństwo, `+ /callback`,
   `(+callback)` plain-text, dynamiczne `[feed]` opisane przez konkretne instancje). Notacja nie jest
   parsowalna maszynowo bez fałszywych alarmów → guard skasowany. **Pozytyw:** audyt potwierdził, że
-  `ENDPOINTS.md` **jest w sync** (wszystkie 205 route'ów opisane). Kontrast z ENV (proste tokeny → guard się opłacił).
+  `ENDPOINTS.md` **był w sync** — ale to **zdjęcie z 2026-07-19 przy 205 route'ach**, nie stała gwarancja.
+  ⚠️ **Nie czytaj tego jako „ENDPOINTS.md jest w sync" dzisiaj.** Skoro guard został ODRZUCONY, nic
+  nie odświeża tej weryfikacji automatycznie — a drzewo urosło do **221** tras (220× `route.ts` + 1× `route.tsx`;
+  licznik w `ENDPOINTS.md` już przeliczony, wcześniej stał na 193). Innymi słowy ~16 tras przybyło po audycie
+  i **nikt ich nie przeszedł ręcznie**. Zdanie „jest w sync" było dokładnie tym, na czym przyszły opiekun
+  oparłby decyzję o pominięciu re-weryfikacji — stąd ta korekta. Przed każdą pracą zależną od kompletności
+  `ENDPOINTS.md`: przelicz (`find ghost-empire-web/src/app/api -type f -name "route.*" | wc -l`) i sprawdź deltę.
+  Kontrast z ENV (proste tokeny → guard się opłacił).
 - **Dok.:** ghost-empire `docs/ENV.md`, `CHANGELOG.md`, `CLAUDE.md`.
 
 ### Faza 8 — 🔑 Wydanie / store (Twoje konta)
@@ -157,6 +164,22 @@ produkcji (real-time) i konta (store) są na końcu.
 - **Faza 7** 🌐 — zgoda na zmiany dotykające prod-Supabase; DSN Sentry.
 - **Faza 4/7** 🔑 — Twitch Clip API scope (`clips:edit`) do „Utnij clip".
 - **Faza 8** 🔑 — konta Chrome/AMO, opłata 5 USD, e-mail kontaktowy, hosting URL polityki.
+- **Higiena repo ghost-empire** 🧹 (audyt 2026-08; komendy do odpalenia przez Ciebie — celowo
+  NIE wykonane automatycznie, bo kasowanie gałęzi/worktree to decyzja właściciela):
+  - **3 worktree „prunable"** wskazują martwą ścieżkę ze starego Maca
+    (`/Users/ghostt77/Downloads/Moje Projekty/…/.claude/worktrees/*`). Czyszczenie wpisów
+    (samych metadanych — katalogów i tak nie ma): `git worktree prune`.
+  - **41 z 50 lokalnych gałęzi jest już zmergowanych do `main`**. Bezpieczne kasowanie
+    (`-d` odmówi przy czymkolwiek niezmergowanym, więc 8 gałęzi z realną pracą — m.in.
+    `claude/heuristic-feynman-*`, `claude/zen-goodall-*` — zostaje nietkniętych):
+    `git branch --merged main | grep -vE '^\*|^\+|  main$' | xargs git branch -d`.
+    Osobno `claude/dreamy-cori-e75a8b` — upstream oznaczony `gone` (skasowany na originie);
+    obejrzyj i zdecyduj (`git log origin/main..claude/dreamy-cori-e75a8b`).
+  - **Remote `gitlab` odrzuca auth** (`HTTP Basic: Access denied … token expired/improperly
+    scoped`) — a to GitLab jest źródłem prawdy CI. Odśwież PAT (scope `write_repository`)
+    w credential managerze, inaczej z tej maszyny nie da się pchnąć tam niczego.
+  - Remotes nie są mirrorami (origin: 21 gałęzi, gitlab: 9; `main` identyczny) — po
+    sprzątnięciu lokalnym warto przejrzeć też stare gałęzie zdalne (`git branch -r`).
 
 ## Status
 - **Faza 0:** ✅ dowieziona (ten plan + `IDEAS.md` w 3 projektach + wpisy CHANGELOG).

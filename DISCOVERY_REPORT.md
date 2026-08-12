@@ -1,12 +1,28 @@
 # DISCOVERY_REPORT.md — E-Forge / Ghost Empire
 
+> ## 🗄️ ARCHIWUM — migawka z **2026-07-03** (stan na PR **#787**). NIE jest to bieżąca ocena produktu.
+>
+> Raport discovery (produkt/UX) wykonany dzień po audycie technicznym z 2026-07-02 — i nietknięty
+> od publikacji, podczas gdy HEAD jest dziś na **#817+**. Część pozycji „odroczonych świadomie"
+> i ustaleń §3 mogła zostać w międzyczasie dowieziona albo przeprojektowana; ten plik tego
+> **nie** odnotowuje.
+>
+> **Bieżący stan:** [`ROADMAP.md`](ROADMAP.md) (plan) · [`CHANGELOG.md`](CHANGELOG.md) (co shipnęło).
+> Ocena techniczna: [`docs/audit/AUDIT-2026-07-13.md`](docs/audit/AUDIT-2026-07-13.md) — nowsza
+> niż ten raport i jedyna podpięta do nawigacji serwisu dokumentacji.
+>
+> Data-stempel + wskazanie następców dodane przy audycie 2026-08 (znalezisko: „migawki bez
+> terminu ważności, prezentowane jako bieżące" — ta sama wada, którą AUDIT_REPORT.md §8
+> wytknął własnemu poprzednikowi). **Nowszy raport discovery ⇒ zaktualizuj ten banner.**
+
 **Tryb:** discovery (analiza produktu, **zero zmian w kodzie**). **Data:** 2026-07-03. **Autor:** product designer + PM (Claude).
 **Metoda:** analiza kodu (3 równoległe agenty gruntujące: first-run/aktywacja · pętla widza/ekonomia · konfiguracja streamera) + własne przeglądy IA/nawigacji + skala produktu (liczba tras/overlayów/sekcji) + odczyt żywej bazy (rozkład userów per portal). Fakty mają dowód `plik:linia`; hipotezy są **oznaczone** jako założenia do weryfikacji.
 **Ograniczenie nadrzędne:** brak telemetrii użycia (DAU, rozkład sald GT, lejek konwersji) — patrz §8. Prod ma realnie **1 aktywnego usera na e-forge**, więc „które funkcje są używane" to wnioski z kodu, nie z danych.
 
 ---
 
-> **✅ Status wdrożenia (2026-07-03, po „zrób wszystko"):** wszystkie **5 z top-5** + cały A-tail wdrożone i na produkcji — **#781** (A1/A2/A3 tarcie onboardingu), **#782** (A4 integralność startu), **#786** (C2 „wydaj 500 GT"), **#785** (C1 self-serve branding), **#784** (A7/A8 IA + odnajdywalność), **#783** (A5 stany: aukcje error+retry, szkielety SSR), **#787** (C3 widoczność aktywacji dla operatora). **B3** (pakiet sceny OBS) już pokryte przez kompozytor scen #550 + szablony #771 + link wizard→biblioteka #784. **Odroczone świadomie:** A6 „X z N" osiągnięć (wymaga osobnej infry liczenia progresu) · pełny sweep toast→ErrorState na Shop/Kasyno/Home/Profil (mają działający toast) · **B2** wrapped-history (rozlewa się na `getWrapped`+`getMyLeagueStats`+2 OG — osobna sesja) · **B4/B5/B6/C4** — wymagają `prisma db push` na PROD i/lub decyzji ekonomicznej → **czekają na zgodę właściciela** (patrz §6 wiadra B/C).
+> **✅ Status wdrożenia — ZAMROŻONY NA 2026-07-03** (po „zrób wszystko"); opisuje wyłącznie
+> ustalenia tego raportu i **nie** był aktualizowany później: wszystkie **5 z top-5** + cały A-tail wdrożone i na produkcji — **#781** (A1/A2/A3 tarcie onboardingu), **#782** (A4 integralność startu), **#786** (C2 „wydaj 500 GT"), **#785** (C1 self-serve branding), **#784** (A7/A8 IA + odnajdywalność), **#783** (A5 stany: aukcje error+retry, szkielety SSR), **#787** (C3 widoczność aktywacji dla operatora). **B3** (pakiet sceny OBS) już pokryte przez kompozytor scen #550 + szablony #771 + link wizard→biblioteka #784. **Odroczone świadomie:** A6 „X z N" osiągnięć (wymaga osobnej infry liczenia progresu) · pełny sweep toast→ErrorState na Shop/Kasyno/Home/Profil (mają działający toast) · **B2** wrapped-history (rozlewa się na `getWrapped`+`getMyLeagueStats`+2 OG — osobna sesja) · **B4/B5/B6/C4** — wymagają `prisma db push` na PROD i/lub decyzji ekonomicznej → **czekają na zgodę właściciela** (patrz §6 wiadra B/C).
 
 ## 1. Podsumowanie
 

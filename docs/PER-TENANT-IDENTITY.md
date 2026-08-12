@@ -203,9 +203,15 @@ so a per-portal secret is defence-in-depth, not isolation. Making it strict requ
 portal to run its own bot instance with its own secret first, coordinated with the
 `ghost-empire-chat` repo. Provisioning (this section) is the prerequisite that was missing.
 
-## 11. Related white-label surface: the bot's viewer-facing chat copy (shipped)
+## 11. Related white-label surface: `ghost-empire-chat`'s viewer-facing chat copy (shipped)
 
-§9 closed the bot's **data** isolation (and §10 made its secret self-serve); its **wording** was still the founder's. The bot wrote
+> **Scope, stated up front (was previously implicit and read as broader than it is):** everything in
+> this section covers **`ghost-empire-chat` only** — the Twitch/Kick/YouTube chat bot. It does **not**
+> cover the portal's own `/api/bot/*` responses (see the ⚠️ at the end of this section) and it does
+> **not** cover **E-Bot**, the Discord arm (separate repo `Gh0s777tt/E-Bot`), which is still fully
+> founder-branded — see §11a. Read "the bot" below as "the chat bot", never as "every bot".
+
+§9 closed the chat bot's **data** isolation (and §10 made its secret self-serve); its **wording** was still the founder's. The bot wrote
 `Ghost Tokens` / `GT` straight into sentences that every portal's viewers read in
 Twitch/Kick/YouTube chat (`!portal`, `!sklep`, the open-bet auto-announce), which is the same
 white-label leak class CLAUDE.md forbids in pages and emails — just in a different runtime.
@@ -276,7 +282,50 @@ Deliberate exclusions: `console.*` arguments (operator logs, no viewer sees them
 carrying a trailing `// wl-ok: <reason>` escape hatch. The currency-symbol pattern is
 **case-sensitive** so the shared `%gt%` placeholder passes.
 
-⚠️ **Still uncovered: the portal side.** `lint:brand` scans `ghost-empire-chat/src` only. The
+⚠️ **Still uncovered (1/2): the portal side.** `lint:brand` scans `ghost-empire-chat/src` only. The
 `/api/bot/*` routes build chat messages too (that is how `WYGRANA … GT` reached chat), and no
 equivalent guard exists in `ghost-empire-web`. Extending the same AST approach there — flagging
 founder literals in any `NextResponse.json({ message: … })` — is the obvious follow-up.
+
+## 11a. Still uncovered (2/2): **E-Bot**, the Discord arm (NOT white-labelled)
+
+The section above was written about `ghost-empire-chat` and shipped there. **E-Bot** — the separate
+repo `Gh0s777tt/E-Bot` that this documentation elsewhere designates as the replacement for the retired
+`ghost-empire-bot` — is a **third** viewer-facing runtime and received **none** of it. Recording that
+here because §11 read as if "the bot" had been de-branded across the fleet; it had not, and a reader
+planning a currency rename would have skipped the one surface that still hardcodes the old name.
+
+What is actually true of E-Bot today (verified against the repo, not assumed):
+
+- **No branding fetch.** `grep -r "companion/branding" E-Bot/bot` → 0 hits. E-Bot never calls
+  `/api/companion/branding`, so it has no `branding.ts` equivalent, no TTL cache, and no neutral
+  fallback. It cannot learn a tenant's `tokenName`, so there is nothing to degrade *to*.
+- **No brand linter.** There is no `lint:brand` / `check-white-label` script in E-Bot's `package.json`,
+  so nothing stops a new founder literal being typed in.
+- **Founder literals in copy every Discord member sees** (these are the files to fix, in order of blast radius):
+
+  | File | What leaks |
+  |---|---|
+  | `bot/src/i18n/commandDescriptions.mts` | `link` / `portal` command descriptions in **all 14 languages** — `E-Forge` + `Ghost Tokens` are baked into every locale. Discord renders these in the slash-command picker, so every member sees them **without invoking anything**. |
+  | `bot/src/commands/portal.mts` | The `/portal` embed: title `🌐 E-Forge`, body line `**Jak zdobywać Ghost Tokens (GT) na Discordzie:**`, plus the `⚠️ Integracja E-Forge nie jest skonfigurowana` reply. |
+  | `bot/src/commands/link.mts` | `/link`'s description, the `✅ Połączono z E-Forge` success embed, and both error strings (`Integracja E-Forge nie jest skonfigurowana`, `Błąd połączenia z E-Forge`). |
+
+- **Deliberately founder, leave alone:** `bot/src/setup/eforge-cards.mts` and
+  `bot/src/setup/ghost-empire-messages.mts` hardcode the founder's Discord layout **and** the founder
+  Vercel URL, but they are one-off operator scripts (`node … --guild <ID> [--dry-run]`) that rewrite
+  messages in the founder's own server. Same category as the founder-voiced `about` news feed — a
+  tenant never runs them, so they are not leaks.
+- **Already closed, do not re-report:** the "E-Bot defaults its portal base to the founder deployment"
+  half of this problem is **fixed**. `bot/src/empire/config.mts` now exposes a single `ghostUrl()` gate
+  that returns `''` on an empty/invalid/non-http(s) `GHOST_API_URL` (fail-closed, no
+  `ghost-empire-web.vercel.app` fallback), and `award.mts` / `link.mts` / `portal.mts` all route
+  through it. A misconfigured tenant instance now awards nothing instead of awarding against the
+  founder portal.
+
+**Why this cannot be closed by copying `ghost-empire-chat`'s fix verbatim.** E-Bot's viewer text is
+`SlashCommandBuilder().setDescription(...)` and `EmbedBuilder().setTitle(...)` — **command metadata
+registered with Discord at deploy time**, not a string rendered per message. A TTL'd branding read
+cannot reach it: descriptions are uploaded once by `npm run deploy` and only change on a
+re-registration. So the fix is a **different shape** than §11's (re-register on rename, or accept a
+neutral description and put the tenant name only in the embed body, which *is* per-invocation) and it
+must be designed on the E-Bot side. This section documents the gap; it does not prescribe the fix.

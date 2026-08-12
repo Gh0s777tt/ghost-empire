@@ -119,7 +119,10 @@ npm run dev                       # http://localhost:3000
 
 Pełna referencja zmiennych: [docs/ENV.md](docs/ENV.md). Setup właściciela: [docs/OWNER-SETUP.md](docs/OWNER-SETUP.md).
 
-**Bramka jakości** (zastępuje CI, dopóki nie stoi GitLab CI): `npm run verify-all` — typecheck · lint · docs:check · testy jednostkowe · integracyjne (stawia jednorazowy lokalny Postgres) · opcjonalnie `--build`.
+<!-- Audyt 2026-08 (znalezisko „README jako front door mówi nieprawdę"): wcześniej stało tu
+     „zastępuje CI, dopóki nie stoi GitLab CI" — pipeline GitLab stoi od ETAP 4 profesjonalizacji
+     i to ON jest źródłem prawdy; verify-all to jego lokalne lustro, nie zastępstwo. -->
+**Bramka jakości** (lokalne lustro pipeline'u — CI w GitLab stoi i jest źródłem prawdy, zob. [docs/MAINTENANCE.md](docs/MAINTENANCE.md)): `npm run verify-all` — typecheck · lint · docs:check · testy jednostkowe · integracyjne (stawia jednorazowy lokalny Postgres) · opcjonalnie `--build`.
 
 ## 📂 Monorepo
 
