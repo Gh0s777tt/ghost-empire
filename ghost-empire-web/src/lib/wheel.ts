@@ -1,9 +1,12 @@
 // src/lib/wheel.ts
-// Wheel of Fortune (Koło Fortuny). Viewers spend Ghost Tokens to spin a weighted
-// wheel and win GT back. Config (cost + segments) is a singleton; each spin is
-// recorded in WheelSpin and drives the /overlay/wheel animation. The token math
-// runs in a single transaction so a spin can never charge without recording, or
-// reward without charging.
+// Wheel of Fortune (Koło Fortuny). Viewers spend CHIPS (żetony — the free, non-cashable
+// casino currency, NOT Ghost Tokens/GT) to spin a weighted wheel and win chips back: every
+// balance move below is on User.chips and each Transaction row carries currency:"CHIPS".
+// (An earlier header said "Ghost Tokens/GT", which mis-described the code — the wheel lives
+// in the 18+ casino, so it must never touch the purchasable GT economy.) Config (cost +
+// segments) is per-tenant; each spin is recorded in WheelSpin and drives the /overlay/wheel
+// animation. The chips math runs in a single transaction so a spin can never charge without
+// recording, or reward without charging.
 import { prisma } from "@/lib/prisma";
 import { pickWeightedIndex } from "@/lib/economy";
 import { cryptoRng } from "@/lib/secure-rng";

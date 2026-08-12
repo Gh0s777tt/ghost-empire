@@ -107,6 +107,22 @@ export async function POST(req: Request) {
       const updated = await prisma.songRequest.update({ where: { id: body.id }, data: { status: "played", playedAt: new Date() } });
       return NextResponse.json({ ok: true, song: serialize(updated) });
     }
+    case "next": {
+      // "Następny" jednym kliknięciem: domknij właśnie graną pozycję (→ played) i od razu
+      // wystartuj szczyt kolejki (→ playing). Domyka finding: dziś streamer musi kliknąć dwa
+      // razy ("played", potem "play"). Cała para w JEDNEJ transakcji + tenant-scoped, żeby
+      // nigdy nie zostać z dwiema "playing" naraz i nie ruszyć cudzego portalu.
+      const started = await prisma.$transaction(async (tx) => {
+        // 1) zamknij bieżącą (jeśli jakaś gra) — identycznie jak akcja "played"
+        await tx.songRequest.updateMany({ where: { status: "playing", ...tenantScope }, data: { status: "played", playedAt: new Date() } });
+        // 2) weź najstarszą zakolejkowaną (FIFO) w obrębie tego portalu i ustaw na "playing"
+        const nextUp = await tx.songRequest.findFirst({ where: { status: "queued", ...tenantScope }, orderBy: { createdAt: "asc" }, select: { id: true } });
+        if (!nextUp) return null; // kolejka pusta — została tylko domknięta bieżąca
+        return tx.songRequest.update({ where: { id: nextUp.id }, data: { status: "playing" } });
+      });
+      // song:null gdy kolejka była pusta — panel odświeży listę tak czy inaczej.
+      return NextResponse.json({ ok: true, song: started ? serialize(started) : null });
+    }
     case "skip": {
       if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
       const owned = await prisma.songRequest.findFirst({ where: { id: body.id, ...tenantScope } });
@@ -126,6 +142,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, cleared: res.count });
     }
     default:
-      return NextResponse.json({ error: "action: add | play | played | skip | delete | clear | ban | unban" }, { status: 400 });
+      return NextResponse.json({ error: "action: add | play | played | next | skip | delete | clear | ban | unban" }, { status: 400 });
   }
 }
