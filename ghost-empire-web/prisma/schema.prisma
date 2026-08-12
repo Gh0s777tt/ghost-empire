@@ -474,13 +474,26 @@ model Connection {
   connectedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Per-tenant identity (audyt 2026-08, zgoda właściciela) — mirror Account #510/#511.
+  // Nullable + additive: backfilled from `user.tenantId`; the create in lib/auth.ts sets it.
+  // NULL = legacy/pre-backfill. Reads already tenant-scope through the `user` relation
+  // (`scopeToTenant = { user: { tenantId } }`), so they need no change; this column exists to
+  // make the uniqueness constraint per-portal instead of global.
+  tenantId String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, platform])
-  @@unique([platform, platformId])
+  // BYŁO `@@unique([platform, platformId])` — GLOBALNE, więc ten sam login platformy mógł być
+  // podpięty tylko RAZ na CAŁEJ platformie: widz używający tego samego konta Twitch na portalu A
+  // i B kolidował przy drugim podpięciu. Teraz per-portal. Żaden kod nie używał starego klucza
+  // `platform_platformId` w zapytaniu (weryfikacja audytu), więc zmiana nie dotyka ścieżek
+  // odczytu; poluzowanie unique nie może odrzucić istniejących wierszy.
+  @@unique([platform, platformId, tenantId])
   // Webhook handlers (Twitch/Kick) look up the linked account by platform + username
   // on every sub/cheer/gift event — index the equality columns.
   @@index([platform, username])
+  @@index([tenantId])
   @@map("connections")
 }
 

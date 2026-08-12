@@ -13,11 +13,17 @@
 //   2. Only this portal's owner/admin (or the platform owner) may touch it —
 //      `canManageTenantBotSecret`, which is stricter than requireAdmin() alone.
 //
-// Stored as plaintext on purpose: `verifyBotSecretForTenant` compares the incoming Bearer
-// against the column in constant time, exactly like `IntegrationConfig.overlayToken`. Wrapping
-// it in encryptSecret() would make every future verifier responsible for remembering to
-// decrypt, and would take bot auth down on ENCRYPTION_KEY drift — a worse trade for a
-// rotatable bearer token that is never read back.
+// Szyfrowany at-rest (AUDYT 2026-08, zgoda właściciela). WCZEŚNIEJ trzymany plaintextem
+// świadomie — argumentem było "każdy weryfikator musiałby pamiętać o decrypt" oraz "dryf
+// ENCRYPTION_KEY położyłby bot-auth". Rewizja: (1) istnieje DOKŁADNIE JEDEN punkt odczytu do
+// porównania — getCurrentTenantBotAuth() w tenant.ts deszyfruje centralnie, więc footgun
+// sprowadza się do jednej udokumentowanej linii; (2) odczyt jest DUAL-READ/drift-safe —
+// decryptSecret przepuszcza legacy plaintext bez zmian i przy dryfie klucza zwraca null →
+// sekret nie matchuje → spadamy na globalny BOT_SECRET (podłoga), a nie na martwy bot-auth.
+// botSecret był JEDYNYM sekretem w schemacie bez szyfrowania (Connection tokeny, secretEnc/
+// tokenEnc, TOTP są szyfrowane) — to go z nimi zrównuje: wyciek backupu/dashboardu Supabase
+// nie daje już użytecznego poświadczenia bota. Porównanie w verifyBotSecretForTenant pozostaje
+// constant-time (na odszyfrowanej wartości).
 //
 //   GET                             → { configured, hint, slug, name, globalFallback }
 //   POST { action: "rotate" }       → { ok, secret, hint }   ← the one and only reveal
@@ -27,6 +33,7 @@ import { requireAdmin, requireStepUp } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { randomToken } from "@/lib/secure-rng";
+import { encryptSecret, decryptSecret } from "@/lib/crypto";
 import { canManageTenantBotSecret, maskBotSecret } from "@/lib/tenants";
 import { logAdminAction } from "@/lib/audit";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
@@ -72,7 +79,9 @@ export async function GET() {
   return NextResponse.json({
     configured: Boolean(target.botSecret),
     // A tail fingerprint so the admin can match this against their bot's .env — never the value.
-    hint: maskBotSecret(target.botSecret),
+    // Deszyfrujemy przed maską: kolumna trzyma ciphertext, a odcisk ma pasować do REALNEGO
+    // sekretu w .env bota (decryptSecret przepuszcza legacy plaintext bez zmian).
+    hint: maskBotSecret(decryptSecret(target.botSecret)),
     slug: target.slug,
     name: target.name,
     // Boolean only: whether a shared global BOT_SECRET exists to fall back on when this
@@ -123,7 +132,8 @@ export async function POST(req: Request) {
   }
 
   const secret = randomToken(BOT_SECRET_BYTES);
-  await prisma.tenant.update({ where: { id: target.id }, data: { botSecret: secret } });
+  // Szyfrujemy at-rest; w odpowiedzi (niżej) leci PLAINTEXT `secret` — to jedyny reveal.
+  await prisma.tenant.update({ where: { id: target.id }, data: { botSecret: encryptSecret(secret) } });
   await logAdminAction({
     adminId: auth.userId,
     action: "rotate_bot_secret",

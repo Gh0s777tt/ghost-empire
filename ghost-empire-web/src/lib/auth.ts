@@ -602,6 +602,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               userId: dbUser.id,
               platform: platformName,
               platformId,
+              // Per-tenant identity (audyt 2026-08): stempluj Connection tenantem właściciela,
+              // żeby unique `[platform, platformId, tenantId]` był per-portal, a ten sam login
+              // platformy mógł istnieć na wielu portalach. Jedyne miejsce TWORZĄCE Connection.
+              tenantId: dbUser.tenantId,
               username: platformUsername,
               displayName: connectionDisplayName,
               avatar: user.image ?? "",
