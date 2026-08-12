@@ -4,8 +4,8 @@
 # ETAP 3 (dokumentacja jako kod): build MkDocs Material → GitLab Pages przy każdym
 # mergu do `main`, oraz strażnik świeżości docs na Merge Requestach. ZACHOWANE 1:1
 # (jedyna zmiana: `needs: []` na jobach docs — patrz sekcja DOCS).
-# ETAP 4 (ten plik): verify (commitlint) · lint · test · build · security
-# (gitleaks/semgrep/trivy) · docs · release (semantic-release) · renovate.
+# ETAP 4 (ten plik): verify (commitlint) · lint · test · build · e2e (Playwright) ·
+# security (gitleaks/semgrep/trivy) · docs · release (semantic-release) · renovate.
 # GitLab shared runners (Linux/docker), obrazy publiczne, npm (lockfileVersion 3;
 # ghost-empire-web/.npmrc: legacy-peer-deps=true). Monorepo: kod w podfolderach
 # `ghost-empire-web/` (Next 16) i `ghost-empire-chat/` (bot, tsx — bez kroku build).
@@ -26,6 +26,10 @@ stages:
   - lint
   - test
   - build
+  # `e2e` MUSI być osobnym stage'em PO `build`: Playwright startuje apkę przez
+  # `npm run start` (next start), a to wymaga artefaktu `.next/` z `build:web`. W stage
+  # `test` (który leci PRZED `build`) nie byłoby czego uruchomić.
+  - e2e
   - security
   - docs
   - release
@@ -151,8 +155,13 @@ lint:chat:
 # ═════════════════════════════════════════════════════════════════════════════
 # Jednostkowe: bez bazy (vitest.setup.ts wstrzykuje atrapy DATABASE_URL). Reporter
 # coverage w vitest.config.ts to `text-summary` → drukuje wiersz "Statements : NN%",
-# stąd regex poniżej (NIE 'All files' — tego ten reporter NIE drukuje). Progów brak,
-# więc job nie failuje na spadku pokrycia (zgodnie ze stanem repo).
+# stąd regex poniżej (NIE 'All files' — tego ten reporter NIE drukuje). UWAGA (audyt):
+# `coverage:` wyciąga TYLKO liczbę na badge — nie porównuje jej z żadną podłogą, więc ten
+# job nadal nie failuje na spadku pokrycia. Bramką może być WYŁĄCZNIE `thresholds` w
+# vitest.config.ts (wtedy sam vitest kończy się kodem != 0 i job czerwienieje). Progi
+# jeszcze NIE są ustawione — mają być RATCHETEM (kilka punktów pod REALNIE zmierzonym
+# pokryciem: zielono dziś, czerwono tylko na regresji), a pomiaru nie dało się wykonać;
+# procedura i ostatni zapisany pomiar są opisane w ghost-empire-web/vitest.config.ts.
 # Bot: wbudowany test runner Node (`node:test`) odpalany przez tsx — świadomie BEZ vitesta,
 # bo jedyne dev-tooling bota to tsx + tsc i nie chcemy tam nowej zależności. Pilnuje
 # inwariantów `src/branding.ts`: awaria portalu schodzi na neutralne „tokeny" (NIGDY na „GT"),
@@ -233,6 +242,78 @@ build:web:
     expire_in: 1 day
     paths:
       - ghost-empire-web/.next/
+  rules: !reference [.rules_mr_main, rules]
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  E2E — Playwright na REALNIE uruchomionej aplikacji (smoke)
+# ═════════════════════════════════════════════════════════════════════════════
+# DLACZEGO TO ISTNIEJE (audyt): `e2e/smoke.spec.ts` nie był wpięty w ŻADNĄ bramkę — ani
+# tutaj, ani w `ghost-empire-web/scripts/verify-all.sh` — mimo że jest JEDYNYM automatycznym
+# strażnikiem nonce/strict-dynamic CSP budowanego w `src/proxy.ts`, i jedynym pokryciem dla
+# pingu DB w `/api/health`, content-type dynamicznego OG, per-tenantowego `og:image` oraz 401
+# gościa na `/api/gt-games/play`. TEST_REPORT.md §7 zapisał ten skip jako świadomie tymczasowy
+# ("Faza 3 pominięta świadomie") — i stał się trwały. To go przywraca.
+#
+# BAZA: ten sam `postgres:16` co `test:integration:web`, z tym samym jawnym `pg_isready`
+# (cache-hit na node_modules potrafi wyprzedzić start serwisu → wyścig). `prisma db push`
+# daje schemat, `db:seed` zakłada tenanta `ghost-empire` — na pustej bazie strony i `og:image`
+# nie mają czego czytać. Redis ŚWIADOMIE niewpięty: `jackpotPool()` bez redisa zwraca
+# `JACKPOT_SEED` = 5000, czyli dokładnie próg, którego oczekuje test puli jackpota (>= 5000).
+#
+# PRZEGLĄDARKA: `npx playwright install --with-deps chromium` zamiast przypiętego obrazu
+# `mcr.microsoft.com/playwright:vX` — obraz trzeba by ręcznie trzymać w zgodzie z wersją
+# `@playwright/test` z lockfile'a (renovate bumpuje lockfile, NIE obraz), a rozjazd = twarde
+# "Executable doesn't exist". Instalacja z poziomu zainstalowanego pakietu jest z definicji
+# spójna; ceną jest pobranie chromium w każdym przebiegu.
+#
+# `allow_failure: true` — ŚWIADOMIE i UCZCIWIE: tego joba NIE udało się przepuścić przed
+# wpięciem (maszyna autora ma node_modules zbudowane pod darwin-arm64, więc ani vitest, ani
+# playwright tam nie startują), a wpinanie niezweryfikowanego joba jako TWARDEJ bramki
+# zaczerwieniłoby main na czymś, czego nikt nie sprawdził — to ta sama choroba co
+# `release` niżej. ZDEJMIJ `allow_failure`, gdy job przejdzie na zielono co najmniej raz na
+# realnym runnerze i potwierdzisz, że:
+#   (1) wszystkie przypadki z `e2e/smoke.spec.ts` przechodzą na ŚWIEŻO zaseedowanej bazie
+#       (kandydaci na flaka: "pages carry a per-tenant og:image" i asercje liczące elementy
+#       DOM — zależą od danych tenanta, nie od czystej logiki),
+#   (2) `npx playwright install --with-deps chromium` mieści się w limicie czasu joba,
+#   (3) `next start` z artefaktu `build:web` wstaje pod http://localhost:3000 w 120 s
+#       (`webServer.timeout` w playwright.config.ts).
+e2e:web:
+  extends: .web
+  stage: e2e
+  needs: ["build:web"]   # pobiera artefakt ghost-empire-web/.next/ — bez niego `next start` nie ruszy
+  allow_failure: true
+  services:
+    - name: postgres:16
+      alias: postgres
+  variables:
+    POSTGRES_DB: ghost_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_HOST_AUTH_METHOD: trust
+    # prisma.config.ts czyta TEST_DATABASE_URL ?? DIRECT_URL ?? DATABASE_URL; apka w RUNTIME
+    # czyta DATABASE_URL — tu liczy się runtime, bo testy pukają w żywy serwer, nie w vitest.
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/ghost_test"
+    DIRECT_URL: "postgresql://postgres:postgres@postgres:5432/ghost_test"
+    # Stuby jak w build:web — smoke nigdy się nie loguje, sprawdza tylko, że auth wall ODRZUCA gościa.
+    NEXTAUTH_SECRET: "dummy-e2e-secret-not-a-real-secret"
+    NEXTAUTH_URL: "http://localhost:3000"
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends postgresql-client
+    - cd ghost-empire-web
+    - npm ci $NPM_FLAGS
+    - npx playwright install --with-deps chromium
+    - until pg_isready -h postgres -p 5432 -U postgres; do echo "waiting for postgres..."; sleep 1; done
+  script:
+    - npx prisma db push   # plain: Prisma 7 czyta schema+URL z prisma.config.ts (flagi konfliktują)
+    - npm run db:seed      # tenant "ghost-empire" + dane bazowe
+    - npm run test:e2e     # playwright test (webServer = `npm run start` na .next z build:web)
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - ghost-empire-web/playwright-report/
+      - ghost-empire-web/test-results/
   rules: !reference [.rules_mr_main, rules]
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -369,12 +450,35 @@ docs-drift:
 # → wersja SemVer → tag vX.Y.Z → Release na GitLab → wpis w CHANGELOG.md (commit
 # zwrotny z [skip ci] — brak pętli).
 #
-# `allow_failure: true` = BOOTSTRAP-GUARD (NIE fałszywy zielony przez brak configu —
-# config jest kompletny). Zapobiega czerwonemu main DOPÓKI user nie wykona
-# jednorazowego setupu: (1) CI/CD var GITLAB_TOKEN (scope api), (2) bazowy tag
-# `v0.1.0` (inaczej pierwsze wydanie = 1.0.0), (3) zacommitowany root
-# package-lock.json. PO pierwszym udanym wydaniu → USUŃ allow_failure, by release
-# stał się autorytatywny. Brak setupu = pomarańczowe ostrzeżenie (widoczne, nie ukryte).
+# ⚠️ AUDYT: TEN JOB NIE WYDAŁ JESZCZE ANI JEDNEGO RELEASE'U — I W OBECNYM STANIE REPO
+# NIE MOŻE. `npm ci` twardo failuje bez lockfile'a, a root `package-lock.json` NIE
+# ISTNIEJE: nie ma go ani na dysku, ani w gicie (`git ls-files | grep -x package-lock.json`
+# → pusto; zalockowane są tylko `ghost-empire-web/` i `ghost-empire-chat/`). Więc
+# `npx semantic-release` nigdy się nie uruchamia. Dowód z historii: 1005 commitów,
+# DOKŁADNIE JEDEN tag (`v0.1.0`, założony ręcznie 2026-07-16) i ZERO commitów
+# `chore(release):`.
+#
+# Dlaczego nikt tego nie zauważył: `allow_failure: true` z komentarzem opisującym się jako
+# BOOTSTRAP-GUARD do zdjęcia „PO pierwszym udanym wydaniu" — czyli po zdarzeniu, które przy
+# tej konfiguracji nie może nastąpić. Awaria była więc niewidoczna, a `docs/MAINTENANCE.md`
+# do dziś twierdzi, że „wersje wydają się automatycznie z Conventional Commits". Nie wydają się.
+#
+# ZAMIAST CICHEJ AWARII — JAWNY PRECHECK (patrz `before_script`): job zatrzymuje się z
+# czytelnym komunikatem NAZYWAJĄCYM brakujący warunek, zamiast wywalać się na `npm ci`
+# z generycznym błędem npm. `allow_failure` ZOSTAJE, dopóki warunki nie są spełnione —
+# ale teraz pomarańczowy job mówi, CZEGO brakuje.
+#
+# ŻEBY TO WŁĄCZYĆ (kolejność ma znaczenie):
+#   1. Wygeneruj i ZACOMMITUJ root `package-lock.json` (`npm install --package-lock-only`
+#      w root-cie — root package.json ma już devDep semantic-release + pluginy).
+#   2. Ustaw CI/CD var `GITLAB_TOKEN` (scope: api).
+#   3. Tag bazowy `v0.1.0` już istnieje (bez niego pierwsze wydanie wyszłoby jako 1.0.0).
+#   4. Uzgodnij `CHANGELOG.md` — jest pisany RĘCZNIE i ma 818 KB; plugin
+#      @semantic-release/changelog dopisuje swoją sekcję na górze. Zdecyduj, czy
+#      generowane wpisy mają dokładać się do istniejącego pliku (jak zrobił to E-Bot,
+#      dokumentując punkt przejścia w `.releaserc.json` → `changelogTitle`), czy release
+#      ma CHANGELOG-a w ogóle nie dotykać.
+#   5. Dopiero wtedy ZDEJMIJ `allow_failure: true` — i popraw `docs/MAINTENANCE.md`.
 release:
   stage: release
   image: node:22-bookworm-slim
@@ -391,6 +495,23 @@ release:
     paths:
       - node_modules/
   before_script:
+    # PRECHECK — nazwij brakujący warunek, zamiast dać `npm ci` wywalić się z generycznym
+    # „The `npm ci` command can only install with an existing package-lock.json". To jest
+    # cała różnica między „job jest pomarańczowy, pewnie tak ma być" a „job mówi, co zrobić".
+    - |
+      if [ ! -f package-lock.json ]; then
+        echo "═══════════════════════════════════════════════════════════════════"
+        echo "RELEASE POMINIĘTY: brak root package-lock.json."
+        echo ""
+        echo "semantic-release instaluje się tu przez 'npm ci', które BEZ lockfile'a"
+        echo "kończy się błędem — więc żadne wydanie nigdy nie powstało (1 ręczny tag,"
+        echo "0 commitów chore(release) na 1005 commitów historii)."
+        echo ""
+        echo "Napraw: npm install --package-lock-only  (w root-cie) i zacommituj wynik."
+        echo "Pełna instrukcja: komentarz nad jobem 'release' w .gitlab-ci.yml."
+        echo "═══════════════════════════════════════════════════════════════════"
+        exit 1
+      fi
     # node:*-slim nie ma gita ani certyfikatów CA — wymagane przez semantic-release.
     - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
     - npm ci --ignore-scripts $NPM_FLAGS   # root deps; --ignore-scripts pomija `prepare`(lefthook)

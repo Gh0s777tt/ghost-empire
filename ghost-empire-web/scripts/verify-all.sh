@@ -2,7 +2,8 @@
 # scripts/verify-all.sh — local stand-in for CI while GitHub Actions is down.
 #
 # Runs the same gates CI runs (typecheck · lint · docs:check · docs:env ·
-# docs:i18n · docs:i18n:dup · unit tests · integration tests) plus an optional production build.
+# docs:i18n · docs:i18n:dup · unit tests · integration tests) plus an optional production
+# build and an optional Playwright E2E smoke run.
 # The integration step
 # needs a real Postgres; this script spins up a THROWAWAY local cluster
 # (postgresql@16 via Homebrew), points the tests at it, and tears it down on
@@ -11,6 +12,7 @@
 # Usage (from ghost-empire-web/):
 #   npm run verify-all            # all gates incl. integration
 #   npm run verify-all -- --build # + `next build` (slow; needs a healthy node_modules)
+#   npm run verify-all -- --e2e   # + Playwright smoke (needs `npx playwright install chromium`)
 #   npm run verify-all -- --fast  # skip integration (no DB) — quick pre-push
 #
 # Exit code is non-zero if ANY gate fails, so it works as a git pre-push hook.
@@ -19,12 +21,13 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
 # ---- flags ----------------------------------------------------------------
-RUN_DB=1; RUN_BUILD=0
+RUN_DB=1; RUN_BUILD=0; RUN_E2E=0
 for arg in "$@"; do
   case "$arg" in
     --fast) RUN_DB=0 ;;
     --no-db) RUN_DB=0 ;;
     --build) RUN_BUILD=1 ;;
+    --e2e) RUN_E2E=1 ;;
     *) echo "unknown flag: $arg" >&2; exit 2 ;;
   esac
 done
@@ -109,6 +112,21 @@ if [[ "$RUN_BUILD" == 1 ]]; then
   gate "build (next build)" npm run --silent build
 else
   record "build (next build)" skip
+fi
+
+# ---- E2E (opt-in) ---------------------------------------------------------
+# AUDIT: e2e/smoke.spec.ts was wired into NO gate at all — not here, not in
+# .gitlab-ci.yml — even though it is the ONLY automated check on the nonce +
+# strict-dynamic CSP built in src/proxy.ts, and the only coverage of /api/health's
+# db ping, the dynamic OG content-type, per-tenant og:image, and the guest 401 on
+# /api/gt-games/play. TEST_REPORT.md §7 logged the skip as deliberately temporary;
+# it became permanent. Opt-in rather than default because Playwright needs a real
+# browser binary (`npx playwright install chromium`) and boots the app via
+# playwright.config.ts's webServer — too heavy for a pre-push hook.
+if [[ "$RUN_E2E" == 1 ]]; then
+  gate "e2e (playwright)" npm run --silent test:e2e
+else
+  record "e2e (playwright)" skip
 fi
 
 # ---- summary --------------------------------------------------------------
