@@ -2,7 +2,7 @@
 // Localized root layout — provides <html lang={locale}>, fonts, Providers, footer
 // and the next-intl client provider. PL is unprefixed ("/"), English under "/en".
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
@@ -73,14 +73,18 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   const messages = await getMessages();
   // Scope the client i18n bundle per route: the `admin` namespace is ~84 KB (over half
-  // the catalog) and is only ever read by client components under /admin. Ship it there,
-  // and keep it off every viewer page's payload. Server components use getTranslations()
-  // (the full catalog, independent of this), so they are unaffected.
-  const pathname = (await headers()).get("x-pathname") ?? "";
-  const isAdminRoute = /(^|\/)admin(\/|$)/.test(pathname);
-  const clientMessages = isAdminRoute
-    ? messages
-    : Object.fromEntries(Object.entries(messages).filter(([ns]) => ns !== "admin"));
+  // the catalog) and is only ever read by client components under /admin. Strip it here
+  // unconditionally so it never reaches a viewer page's payload; the /admin subtree gets
+  // the full catalog back from the nested provider in [locale]/admin/layout.tsx. Server
+  // components use getTranslations() (the full catalog, independent of this), so they
+  // are unaffected.
+  // #audit-arch4: this used to be a conditional gate keyed off the proxy's `x-pathname`
+  // header. That header does NOT survive next-intl's internal locale rewrite in
+  // production, so the "ship it on /admin" branch was dead there (isAdminRoute always
+  // false) and fired only in dev — which HID the raw-keys bug locally instead of
+  // catching it, and is exactly why the nested admin layout had to be added. The nested
+  // layout is the real mechanism; don't restore the header gate on top of it.
+  const clientMessages = Object.fromEntries(Object.entries(messages).filter(([ns]) => ns !== "admin"));
   const t = await getTranslations("common");
   // White-label branding for client components ("123 GT" suffixes outside i18n).
   const tenant = await getCurrentTenant();

@@ -10,6 +10,22 @@
 // Token-gated (OVERLAY_TOKEN) + no-store. The OBS password is the streamer's OWN
 // local-OBS secret, delivered only to a holder of the overlay token and consumed on
 // the streamer's own machine — the same trust model as every other OBS browser source.
+//
+// KNOWN EXPOSURE, accepted deliberately — do not "fix" it by moving the token off the query
+// string. An OBS browser source is a URL and nothing else: it cannot send an Authorization
+// header, so a query-string bearer is the ONLY shape this transport has. The consequence is
+// real and worth naming, because THIS route is the one place where the delta bites: the other
+// seven overlay feeds behind the same token expose display data, while this one hands back
+// DECRYPTED credentials for the streamer's LAN (obsPassword, hue.apiKey). A URL leaks through
+// browser history, OBS's own config/logs, screen shares and Referer — so treat any leak of an
+// overlay URL as a leak of these two credentials, not merely of the overlay.
+//
+// What contains it: the token is per-tenant and rotatable — POST /api/admin/alerts with
+// { action: "regenerate_token" } mints a new one and busts the validation cache, so
+// rotation immediately kills every leaked overlay URL for that portal. Splitting the credential
+// feed onto its own short-lived token would need a second column on StreamAlertSettings and a
+// re-paste of every streamer's browser-source URL — a schema + operational change, not a code
+// tweak. Residual risk stands: overlay-token holder == holder of this portal's OBS/Hue keys.
 import { NextResponse } from "next/server";
 import { isValidOverlayToken } from "@/lib/alerts";
 import { currentTenantId } from "@/lib/tenant";

@@ -33,7 +33,8 @@ const securityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
   // Stop legacy Flash/Acrobat from loading cross-domain policy files.
   { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
-  // NOTE: Content-Security-Policy is now set PER-REQUEST in src/middleware.ts so
+  // NOTE: Content-Security-Policy is now set PER-REQUEST in src/proxy.ts (the file
+  // was src/middleware.ts before the Next 16 rename — #audit-arch5) so
   // script-src can use a fresh nonce + 'strict-dynamic' (drops 'unsafe-inline') —
   // a static header here can't carry a per-request nonce. style-src keeps
   // 'unsafe-inline' (inline style attrs on overlays/cards). The headers below stay.

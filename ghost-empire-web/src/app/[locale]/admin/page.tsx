@@ -48,6 +48,13 @@ export default async function AdminPage() {
   // section lazy-loads its own data on open via /api/admin/section-data, so the
   // initial /admin render went from ~18 queries to these 7. All scoped to the
   // admin's tenant (counts via User.tenantId; collections + transactions via theirs).
+  // Transaction carries NO tenantId (#audit-arch1), so the only way to scope the ledger
+  // is the join through User — which is precisely the filter that's easy to drop on one
+  // of the two reads below (`{ type: "spend", status: "pending" }` reads correct at a
+  // glance while spanning every portal). The badge count and the list it labels MUST see
+  // the same rows, so the where lives in ONE place instead of being retyped twice.
+  const pendingSpendWhere = { type: "spend", status: "pending", ...(tid ? { user: { tenantId: tid } } : {}) };
+
   const [
     totalUsers, sums, eventsActive, ordersPending,
     activeDrops, activeEvents, pendingOrders, openTickets,
@@ -55,7 +62,7 @@ export default async function AdminPage() {
     prisma.user.count({ where: tid ? { tenantId: tid } : {} }),
     prisma.user.aggregate({ _sum: { tokens: true, totalEarned: true }, where: tid ? { tenantId: tid } : {} }),
     prisma.event.count({ where: { active: true, ...(tid ? { tenantId: tid } : {}) } }),
-    prisma.transaction.count({ where: { type: "spend", status: "pending", ...(tid ? { user: { tenantId: tid } } : {}) } }),
+    prisma.transaction.count({ where: pendingSpendWhere }),
     prisma.streamDrop.findMany({
       where: { active: true, ...(tid ? { tenantId: tid } : {}) },
       orderBy: { createdAt: "desc" },
@@ -69,7 +76,7 @@ export default async function AdminPage() {
       include: { _count: { select: { entries: true, raffleTickets: true } } },
     }),
     prisma.transaction.findMany({
-      where: { type: "spend", status: "pending", ...(tid ? { user: { tenantId: tid } } : {}) },
+      where: pendingSpendWhere,
       orderBy: { createdAt: "desc" },
       take: 50,
       include: {
