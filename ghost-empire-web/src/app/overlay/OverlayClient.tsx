@@ -49,6 +49,9 @@ type AlertItem = {
   animation?: AlertAnimation;
   position?: AlertPosition;
   soundUrl?: string | null;
+  // Własna grafika/animacja alertu (update 2026-08) — z AlertTypeConfig, renderowane przez AlertCard.
+  imageUrl?: string | null;
+  mediaType?: "image" | "video" | null;
   createdAt: string;
 };
 

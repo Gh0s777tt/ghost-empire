@@ -234,6 +234,8 @@ export async function getAlertTypeConfigs(
         animation: r.animation as AlertAnimation,
         position: r.position as AlertPosition,
         soundUrl: r.soundUrl,
+        imageUrl: r.imageUrl,
+        mediaType: (r.mediaType === "image" || r.mediaType === "video" ? r.mediaType : null),
         minAmount: r.minAmount,
       };
     }

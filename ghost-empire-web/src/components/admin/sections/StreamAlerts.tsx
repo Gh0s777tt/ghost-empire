@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { AlertCard } from "@/components/AlertCard";
+import { MediaUploadButton } from "../MediaUploadButton";
 import {
   ALERT_TYPE_LIST,
   ALERT_ANIMATIONS,
@@ -24,6 +25,8 @@ type AlertTypeRow = {
   animation: AlertAnimation;
   position: AlertPosition;
   soundUrl: string | null;
+  imageUrl: string | null;
+  mediaType: "image" | "video" | null;
   minAmount: number | null;
   configured: boolean;
 };
@@ -71,6 +74,8 @@ function AlertTypeList({
         animation: row.animation,
         position: row.position,
         soundUrl: row.soundUrl,
+        imageUrl: row.imageUrl,
+        mediaType: row.mediaType,
         minAmount: row.minAmount,
       });
       // #757: sync the SERVER-sanitized config back (a non-http soundUrl comes back null) so the
@@ -140,6 +145,24 @@ function AlertTypeList({
                         <div>
                           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("soundLabel")}</label>
                           <input type="text" value={row.soundUrl ?? ""} onChange={(e) => patch(type, "soundUrl", e.target.value || null)} placeholder="https://…/sound.mp3" className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500" />
+                        </div>
+                        {/* Własna grafika/animacja alertu (update 2026-08) — upload lub URL + typ. */}
+                        <div className="sm:col-span-2">
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("mediaLabel")}</label>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <input type="text" value={row.imageUrl ?? ""} onChange={(e) => patch(type, "imageUrl", e.target.value || null)} placeholder="https://…/grafika.png" className="flex-1 min-w-[140px] bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500" />
+                            <MediaUploadButton
+                              accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm"
+                              onUploaded={(url, kind) => { patch(type, "imageUrl", url); patch(type, "mediaType", kind ?? "image"); }}
+                              onError={(m) => onToast("err", m)}
+                            />
+                            {row.imageUrl && (
+                              <select value={row.mediaType ?? "image"} onChange={(e) => patch(type, "mediaType", e.target.value as "image" | "video")} className="bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-500">
+                                <option value="image">{t("mediaImage")}</option>
+                                <option value="video">{t("mediaVideo")}</option>
+                              </select>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("thresholdLabel")}</label>

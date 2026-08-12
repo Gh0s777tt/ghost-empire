@@ -16,8 +16,8 @@ export function MediaUploadButton({
   accept = "image/png,image/jpeg,image/gif,image/webp,image/avif",
   className = "",
 }: {
-  /** Wywoływane z publicznym URL-em po udanym uploadzie. */
-  onUploaded: (url: string) => void;
+  /** Wywoływane z publicznym URL-em (i wykrytym typem) po udanym uploadzie. `kind` z /api/upload. */
+  onUploaded: (url: string, kind?: "image" | "video") => void;
   /** Opcjonalny handler błędu (np. toast sekcji). */
   onError?: (msg: string) => void;
   /** Filtr pickera plików (nie zastępuje walidacji serwera). */
@@ -34,12 +34,12 @@ export function MediaUploadButton({
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      const data = (await res.json().catch(() => ({}))) as { url?: string; kind?: "image" | "video"; error?: string };
       if (!res.ok || !data.url) {
         onError?.(data.error || t("mediaUploadErr"));
         return;
       }
-      onUploaded(data.url);
+      onUploaded(data.url, data.kind);
     } catch {
       onError?.(t("mediaUploadErr"));
     } finally {

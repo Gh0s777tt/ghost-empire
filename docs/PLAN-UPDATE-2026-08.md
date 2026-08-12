@@ -82,9 +82,14 @@ statyczne** na własnej grafice.
 stylowania elementu (opacity/rotacja). Effort resztki: **M**.
 
 ### 2c. Widgety/Alerty — własna grafika/animacja
-**Szybko (URL-only):** kolumny `imageUrl`+`mediaType` na `AlertTypeConfig`/`CustomAlert` (migracja) +
-gałąź `<img>`/`<video>` w `AlertCard`. Pełny designer alertów (media jako tło + tekst/kwota na
-wierzchu, Lottie/WebM) po 2a. Effort: **M** → **L**.
+✅ **WŁASNA GRAFIKA/ANIMACJA ALERTU ZROBIONE (slice 6).** `AlertTypeConfig` dostał `imageUrl`+
+`mediaType` (2 nullable kolumny — migracja w `MIGRACJA-2026-08.md §3`). Per typ alertu
+(follow/sub/cheer/donation…) streamer wgrywa („Wgraj plik" z §2a) lub wkleja URL własnej grafiki
+LUB **wideo/animacji** — render jako banner nad kartą alertu (`<img>`/`<video>` autoplay/muted/loop),
+`src` przez `safeMediaUrl` po obu stronach. Doklejane serwerowo tą samą ścieżką co `soundUrl`
+(getAlertTypeConfigs → alert-feed → OverlayClient → AlertCard). Podgląd na żywo w panelu Alerty.
+**ZOSTAJE:** per-`CustomAlert` media (manualne alerty), pełny designer warstwowy (media jako tło +
+tekst na wierzchu), Lottie. Effort resztki: **M**.
 
 ### 2d. Branding — bogatsze tokeny
 Dodać nullable kolumny `Tenant`: `--surface/--border/--text-muted/--radius/--accent-2`, font,

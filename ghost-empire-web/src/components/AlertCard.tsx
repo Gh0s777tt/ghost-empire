@@ -14,6 +14,10 @@ export type AlertCardData = {
   actorImage?: string | null;
   amount?: number | null;
   amountLabel?: string | null;
+  // Własna grafika/animacja alertu (update 2026-08) — per typ alertu (AlertTypeConfig). Gdy
+  // ustawione, renderowane jako banner NAD kartą (obraz lub wideo). null = jak dotąd.
+  imageUrl?: string | null;
+  mediaType?: "image" | "video" | null;
 };
 
 export function AlertCard({
@@ -36,8 +40,20 @@ export function AlertCard({
   // /breakout URL can never reach the DOM — same guard the alert sound URLs already get.
   // null (rejected or absent) → fall back to the icon bubble below.
   const actorImage = safeMediaUrl(alert.actorImage);
+  // Własna grafika/animacja alertu — sanityzowana (http(s), bez breakoutu). Wideo → <video>
+  // autoplay/muted/loop (OBS nie ma interakcji), obraz → <img>. null → banner się nie renderuje.
+  const mediaUrl = safeMediaUrl(alert.imageUrl);
   return (
     <div style={{ transform: `scale(${sizeScale})`, transformOrigin: scaleOrigin }}>
+      {mediaUrl && (
+        <div style={{ marginBottom: 8, borderRadius: 16, overflow: "hidden", boxShadow: `0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px ${accent}55` }}>
+          {alert.mediaType === "video" ? (
+            <video src={mediaUrl} autoPlay muted loop playsInline style={{ display: "block", width: "100%", maxHeight: 220, objectFit: "cover" }} />
+          ) : (
+            <img src={mediaUrl} alt="" style={{ display: "block", width: "100%", maxHeight: 220, objectFit: "cover" }} loading="lazy" decoding="async" />
+          )}
+        </div>
+      )}
       <div
         style={{
           position: "relative",

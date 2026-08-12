@@ -84,6 +84,27 @@ się przy najbliższej rotacji.
 
 ---
 
+## 3. `AlertTypeConfig` — własna grafika/animacja alertu (2 kolumny, addytywne)
+
+**Po co:** własna grafika/animacja alertu per typ (follow/sub/cheer/donation…) — kolejny feature
+updatu (`docs/PLAN-UPDATE-2026-08.md §2c`). Równolegle do istniejącego `soundUrl`.
+
+**Bezpieczeństwo:** obie kolumny **nullable**, `null` = zachowanie jak dotąd (avatar/emoji). Brak
+backfillu. Kolejność dowolna względem deployu kodu (kod czyta `null` bez problemu — pole opcjonalne).
+
+**Co zrobi `npm run db:push`** (delta z `prisma migrate diff`):
+
+```sql
+-- AlterTable
+ALTER TABLE "alert_type_config" ADD COLUMN     "imageUrl" TEXT,
+ADD COLUMN     "mediaType" TEXT;
+```
+
+Kroki: `cd ghost-empire-web && npm run db:push` (przejrzyj plan = SQL wyżej). RLS: nie tworzymy
+tabeli, tylko kolumny — nic do zrobienia. Rollback: kod czyta `null` bezpiecznie, kolumny mogą zostać.
+
+---
+
 ## Czego tu NIE ma (świadomie)
 
 - **Migracje Prisma** — repo używa `db push` z założenia (RLS.md/CLAUDE.md). Ten runbook jest
