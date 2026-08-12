@@ -2553,6 +2553,8 @@
       "kind_toggle_source": "Toggle source",
       "kind_toggle_filter": "Toggle filter",
       "kind_set_filter_intensity": "Set filter intensity",
+      "kind_challenge": "Challenge (free-text — streamer does X)",
+      "challengeHint": "The penalty name = the challenge text on the banner. No OBS action — it shows in the “OBS Control” source for the time from the band below; the streamer does it manually.",
       "penaltyEnabled": "Active",
       "phScene": "Scene name (OBS)",
       "phSource": "Source name (OBS)",

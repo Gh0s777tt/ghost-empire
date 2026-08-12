@@ -239,14 +239,19 @@ export function PenaltiesManager({
                   {p.actionKind === "toggle_source" ? t("stateVisible") : t("stateEnabled")}
                 </label>
               )}
+              {p.actionKind === "challenge" && (
+                <p className="col-span-2 text-[10px] text-amber-300/70 leading-relaxed">{t("challengeHint")}</p>
+              )}
             </div>
 
-            {/* pasma intensywności + czasu trwania */}
+            {/* pasma intensywności (nie dla „wyzwania") + czasu trwania */}
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-zinc-500">
-              <span className="flex items-center gap-1">{t("intensityBand")}
-                <input type="number" min={1} max={data.limits.intensityMax} value={p.minIntensity} onChange={(e) => patchRow(i, { minIntensity: parseInt(e.target.value || "1", 10) })} className="w-12 bg-black border border-zinc-800 px-1 py-0.5 text-white font-mono" />–
-                <input type="number" min={1} max={data.limits.intensityMax} value={p.maxIntensity} onChange={(e) => patchRow(i, { maxIntensity: parseInt(e.target.value || "1", 10) })} className="w-12 bg-black border border-zinc-800 px-1 py-0.5 text-white font-mono" />
-              </span>
+              {p.actionKind !== "challenge" && (
+                <span className="flex items-center gap-1">{t("intensityBand")}
+                  <input type="number" min={1} max={data.limits.intensityMax} value={p.minIntensity} onChange={(e) => patchRow(i, { minIntensity: parseInt(e.target.value || "1", 10) })} className="w-12 bg-black border border-zinc-800 px-1 py-0.5 text-white font-mono" />–
+                  <input type="number" min={1} max={data.limits.intensityMax} value={p.maxIntensity} onChange={(e) => patchRow(i, { maxIntensity: parseInt(e.target.value || "1", 10) })} className="w-12 bg-black border border-zinc-800 px-1 py-0.5 text-white font-mono" />
+                </span>
+              )}
               <span className="flex items-center gap-1">{t("durationBand")}
                 <input type="number" min={data.limits.durationMinMs} max={data.limits.durationMaxMs} step={500} value={p.minDurationMs} onChange={(e) => patchRow(i, { minDurationMs: parseInt(e.target.value || "0", 10) })} className="w-20 bg-black border border-zinc-800 px-1 py-0.5 text-white font-mono" />–
                 <input type="number" min={data.limits.durationMinMs} max={data.limits.durationMaxMs} step={500} value={p.maxDurationMs} onChange={(e) => patchRow(i, { maxDurationMs: parseInt(e.target.value || "0", 10) })} className="w-20 bg-black border border-zinc-800 px-1 py-0.5 text-white font-mono" />

@@ -2553,6 +2553,8 @@
       "kind_toggle_source": "Przełącz źródło",
       "kind_toggle_filter": "Przełącz filtr",
       "kind_set_filter_intensity": "Ustaw intensywność filtra",
+      "kind_challenge": "Wyzwanie (free-text — streamer robi X)",
+      "challengeHint": "Nazwa kary = tekst wyzwania na banerze. Nie rusza OBS — pokazuje się w źródle „Sterowanie OBS” na czas z pasma poniżej; streamer wykonuje je ręcznie.",
       "penaltyEnabled": "Aktywna",
       "phScene": "Nazwa sceny (OBS)",
       "phSource": "Nazwa źródła (OBS)",

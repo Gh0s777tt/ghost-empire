@@ -20,8 +20,11 @@ export const dynamic = "force-dynamic";
 
 const log = createLogger("admin.penalties");
 
-/** Every kind a penalty may use — the three storable rule kinds plus the intensity one. */
-const PENALTY_ACTION_KINDS = [...OBS_ACTION_KINDS, "set_filter_intensity"] as const;
+/** Every kind a penalty may use — the three storable rule kinds, the intensity one, plus the
+ *  free-text "challenge" (update 2026-08): NIE aktuuje OBS, tylko WYŚWIETLA `label` jako wyzwanie
+ *  ("zrób X") w źródle OBS-control. Streamer robi to ręcznie. Idzie tym samym at-most-once
+ *  kanałem co reszta kar — patrz obs-control/penalties + ObsControlClient. */
+const PENALTY_ACTION_KINDS = [...OBS_ACTION_KINDS, "set_filter_intensity", "challenge"] as const;
 
 const LEGAL_WARNING =
   "Kary losowane za REALNE wpłaty to pytanie otwarte u prawnika (art. 2 ust. 5 — gra komercyjna + losowość, " +
@@ -125,14 +128,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `actionKind: ${PENALTY_ACTION_KINDS.join(" | ")}` }, { status: 400 });
   }
 
-  // Validate the effect with the SAME validators the OBS rules use, so a penalty cannot describe an
-  // action the actuator would choke on. The intensity kind has its own validator because it is not
-  // storable as an ObsRule (no columns there for a setting name or a range).
+  // "challenge" (update 2026-08): free-text wyzwanie bez akcji OBS — pomija walidację efektu,
+  // wszystkie pola OBS zostają null; liczy się tylko `label` (tekst) + pasmo czasu (jak długo
+  // pokazać). Reszta kindów: walidacja TYMI SAMYMI walidatorami co reguły OBS, żeby kara nie
+  // opisała akcji, na której aktuator by się wywalił.
   const effect =
-    kind === "set_filter_intensity"
-      ? validateIntensityAction({ ...p, kind, intensity: 1, revertAfterMs: null })
-      : validateObsAction({ ...p, kind, revertAfterMs: null });
-  if (!effect.ok) return NextResponse.json({ error: effect.error }, { status: 400 });
+    kind === "challenge"
+      ? null
+      : kind === "set_filter_intensity"
+        ? validateIntensityAction({ ...p, kind, intensity: 1, revertAfterMs: null })
+        : validateObsAction({ ...p, kind, revertAfterMs: null });
+  if (effect && !effect.ok) return NextResponse.json({ error: effect.error }, { status: 400 });
+  const ev = effect && effect.ok ? effect.value : null;
 
   const minIntensity = int(p.minIntensity, 1, 1, INTENSITY_SCALE_MAX);
   const minDurationMs = int(p.minDurationMs, 3_000, DURATION_MIN_MS, DURATION_MAX_MS);
@@ -148,15 +155,15 @@ export async function POST(req: Request) {
     minDurationMs,
     maxDurationMs: int(p.maxDurationMs, minDurationMs, minDurationMs, DURATION_MAX_MS),
     actionKind: kind,
-    scene: "scene" in effect.value ? effect.value.scene : null,
-    source: "source" in effect.value ? effect.value.source : null,
-    filter: "filter" in effect.value ? effect.value.filter : null,
-    setting: effect.value.kind === "set_filter_intensity" ? effect.value.setting : null,
-    rangeMin: effect.value.kind === "set_filter_intensity" ? effect.value.min : null,
-    rangeMax: effect.value.kind === "set_filter_intensity" ? effect.value.max : null,
+    scene: ev && "scene" in ev ? ev.scene : null,
+    source: ev && "source" in ev ? ev.source : null,
+    filter: ev && "filter" in ev ? ev.filter : null,
+    setting: ev?.kind === "set_filter_intensity" ? ev.setting : null,
+    rangeMin: ev?.kind === "set_filter_intensity" ? ev.min : null,
+    rangeMax: ev?.kind === "set_filter_intensity" ? ev.max : null,
     targetState:
-      effect.value.kind === "toggle_source" ? effect.value.visible
-      : effect.value.kind === "toggle_filter" ? effect.value.enabled
+      ev?.kind === "toggle_source" ? ev.visible
+      : ev?.kind === "toggle_filter" ? ev.enabled
       : null,
     sortOrder: int(p.sortOrder, 0, 0, 9_999),
   };

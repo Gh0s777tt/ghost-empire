@@ -34,6 +34,8 @@ export function ObsControlClient() {
   const [rulesCount, setRulesCount] = useState(0);
   const [lastAction, setLastAction] = useState("—");
   const [actionCount, setActionCount] = useState(0);
+  // Banner "wyzwania" (free-text kara): tekst + moment wygaśnięcia (update 2026-08).
+  const [challenge, setChallenge] = useState<{ text: string; until: number } | null>(null);
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token");
@@ -282,9 +284,18 @@ export function ObsControlClient() {
       try {
         const pres = await fetch(`/api/obs-control/penalties?token=${encodeURIComponent(token!)}`, { cache: "no-store" });
         if (pres.ok) {
-          const pdata = (await pres.json()) as { penalties: { drawId: string; label: string; intensity: number; action: ObsAction }[] };
+          const pdata = (await pres.json()) as {
+            penalties: { drawId: string; label: string; intensity: number; durationMs: number; action: ObsAction | { kind: "challenge" } }[];
+          };
           for (const p of pdata.penalties) {
             try {
+              // "challenge" (update 2026-08): free-text wyzwanie — nie aktuujemy OBS, pokazujemy
+              // `label` jako prominentny banner na czas durationMs. Streamer wykonuje je ręcznie.
+              if (p.action.kind === "challenge") {
+                setChallenge({ text: p.label, until: Date.now() + Math.max(3000, p.durationMs) });
+                setLastAction(`wyzwanie: ${p.label}`);
+                continue;
+              }
               await actuate(p.action);
               setLastAction(`kara: ${p.label} (siła ${p.intensity}/5)`);
             } catch (e) {
@@ -351,6 +362,15 @@ export function ObsControlClient() {
     };
   }, []);
 
+  // Auto-zdejmij banner wyzwania po upływie jego czasu (update 2026-08).
+  useEffect(() => {
+    if (!challenge) return;
+    const ms = challenge.until - Date.now();
+    if (ms <= 0) { setChallenge(null); return; }
+    const timer = setTimeout(() => setChallenge(null), ms);
+    return () => clearTimeout(timer);
+  }, [challenge]);
+
   const color =
     status === "connected" ? "#22c55e" : status === "no-config" || status === "connecting" ? "#eab308" : "#ef4444";
   const label: Record<Status, string> = {
@@ -363,7 +383,27 @@ export function ObsControlClient() {
   };
 
   return (
-    <div
+    <>
+      {/* Banner WYZWANIA (free-text kara) — prominentny, wypełnia źródło OBS na czas trwania.
+          Streamer pozycjonuje to źródło na scenie; gdy nieaktywne, renderuje się tylko status. */}
+      {challenge && (
+        <div
+          style={{
+            position: "fixed", inset: 0, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", textAlign: "center",
+            gap: 12, padding: "6vh 6vw", pointerEvents: "none",
+            fontFamily: "system-ui, sans-serif",
+          }}
+        >
+          <div style={{ fontSize: "min(4vw, 28px)", fontWeight: 800, letterSpacing: 4, color: "#f59e0b", textTransform: "uppercase" }}>
+            Wyzwanie!
+          </div>
+          <div style={{ fontSize: "min(8vw, 64px)", fontWeight: 900, color: "#fff", textShadow: "0 4px 24px rgba(0,0,0,0.9)", lineHeight: 1.1 }}>
+            {challenge.text}
+          </div>
+        </div>
+      )}
+      <div
       style={{
         fontFamily: "ui-monospace, monospace",
         fontSize: 12,
@@ -390,6 +430,7 @@ export function ObsControlClient() {
           ostatnia: <span style={{ color: "#e4e4e7" }}>{lastAction}</span>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

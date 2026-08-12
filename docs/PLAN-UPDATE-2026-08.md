@@ -94,9 +94,13 @@ cooldown, edytowalny katalog kar (nazwa/waga/próg/efekt OBS/pasma intensywnośc
 losowań. ⚠️ **Prawnie:** moduł na **realne pieniądze** (art. 2 ust. 5) — `enabled=false` domyślnie,
 `LEGAL_WARNING` zawsze widoczne przy przełączniku. Konfiguracja ≠ włączenie; włączenie to gated-
 decyzja właściciela po sygnale prawnika (prawnik oczyścił kasyno chipsowe, NIE ten moduł).
-**ZOSTAJE (roadmap):** free-text „wyzwanie" (streamer coś robi, bez akcji OBS — osobny typ, wymaga
-zmiany silnika + ścieżki wyświetlania w overlayu) + opcjonalna animacja koła (reuse `/overlay/wheel`).
-Effort resztki: **M**.
+✅ **FREE-TEXT „WYZWANIE" ZROBIONE (slice 3).** Nowy typ kary `challenge`: nie rusza OBS, tylko
+WYŚWIETLA `label` jako prominentny banner w źródle „Sterowanie OBS" na czas z pasma; streamer robi
+to ręcznie (dokładnie „streamer musi coś zrobić jak grać"). Idzie tym samym at-most-once kanałem co
+reszta kar (zero nowej trasy/overlaya, zero wyścigu na money-path). W panelu: wybór typu „Wyzwanie",
+pola OBS się chowają, liczy się tekst + czas.
+**ZOSTAJE (roadmap):** opcjonalna animacja koła dla losowania donatu (reuse `/overlay/wheel`, dziś
+efekt jest natychmiastowy). Effort resztki: **S-M**.
 
 ---
 
