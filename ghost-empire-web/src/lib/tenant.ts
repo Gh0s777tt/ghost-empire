@@ -16,6 +16,7 @@ import { safeMediaUrl } from "@/lib/url-safe";
 import { resolveBgPresetCss } from "@/lib/bg-presets";
 import { normalizeDailyChips, DAILY_CHIPS_DEFAULT } from "@/lib/daily-chips";
 import { decryptSecret } from "@/lib/crypto";
+import { parseFeatureFlags } from "@/lib/feature-catalog";
 
 /** Slug (and future subdomain) of the original single-streamer tenant. */
 export const DEFAULT_TENANT_SLUG = "ghost-empire";
@@ -54,6 +55,9 @@ export type TenantBrand = {
   supportThanks: string | null;
   /** Size of the free daily casino-chips grant on this portal (docs/CHIPS-CASINO.md). */
   dailyChipsAmount: number;
+  /** Per-feature owner toggles (validated). Missing key ⇒ that feature's coded default — read via
+   *  isFeatureLive/resolvedFlag (feature-catalog.ts), never directly. `{}` = all coded defaults. */
+  featureFlags: Record<string, boolean>;
 };
 
 /** Safely parse the Tenant.socialLinks JSON into a validated list (defensive on read). */
@@ -91,6 +95,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   supportIntro: null,
   supportThanks: null,
   dailyChipsAmount: DAILY_CHIPS_DEFAULT,
+  featureFlags: {},
 };
 
 /** Map a Tenant row to the request-facing brand (shared by every resolution path). */
@@ -120,6 +125,9 @@ function toBrand(t: Tenant): TenantBrand {
     // Re-clamped on read: a value written before the bounds existed (or edited straight in
     // the DB) must not hand out an extreme grant.
     dailyChipsAmount: normalizeDailyChips(t.dailyChipsAmount),
+    // Validated on read: only known catalog keys with boolean values survive (parseFeatureFlags),
+    // so a junk/legacy blob can never blank a portal.
+    featureFlags: parseFeatureFlags(t.featureFlags),
   };
 }
 

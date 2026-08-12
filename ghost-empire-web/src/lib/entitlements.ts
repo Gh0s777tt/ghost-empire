@@ -8,53 +8,20 @@
 // changes for the existing portal. An EXPIRED paid plan degrades to basic —
 // the community keeps running; the premium toys pause until renewal.
 //
-// Pure logic lives in planFeatures/planHasFeature (unit-tested); request-time
-// gating goes through requireTenantFeature() for API routes.
+// The PURE plan logic (Plan, Feature, normalizePlan, effectivePlan, planHasFeature) now
+// lives in `entitlements-core.ts` so client-safe modules (the feature-catalog, admin UI)
+// can import it without pulling `next/server` into the browser bundle. It is re-exported
+// here so existing `@/lib/entitlements` imports are unaffected. Request-time gating
+// (needs NextResponse + Prisma) stays here in `requireTenantFeature()` / `featureGateResponse()`.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { createLogger } from "@/lib/logger";
+import { type Plan, type Feature, effectivePlan, planHasFeature } from "@/lib/entitlements-core";
+
+export { type Plan, type Feature, normalizePlan, effectivePlan, planHasFeature } from "@/lib/entitlements-core";
 
 const log = createLogger("entitlements");
-
-export type Plan = "basic" | "pro" | "elite";
-
-export type Feature =
-  // pro
-  | "casino"
-  | "wheel"
-  | "predictions"
-  | "overlays"
-  | "subathon"
-  | "song_queue"
-  // elite
-  | "ai"
-  | "webhooks_out"
-  | "custom_branding";
-
-const PRO_FEATURES: Feature[] = ["casino", "wheel", "predictions", "overlays", "subathon", "song_queue"];
-const ELITE_FEATURES: Feature[] = [...PRO_FEATURES, "ai", "webhooks_out", "custom_branding"];
-
-const PLAN_FEATURES: Record<Plan, ReadonlySet<Feature>> = {
-  basic: new Set<Feature>(),
-  pro: new Set<Feature>(PRO_FEATURES),
-  elite: new Set<Feature>(ELITE_FEATURES),
-};
-
-export function normalizePlan(plan: string | null | undefined): Plan {
-  return plan === "basic" || plan === "pro" || plan === "elite" ? plan : "basic";
-}
-
-/** The plan that is actually in force: expired paid plans degrade to basic. */
-export function effectivePlan(plan: string | null | undefined, planExpiresAt: Date | null | undefined, now = new Date()): Plan {
-  const p = normalizePlan(plan);
-  if (planExpiresAt && planExpiresAt.getTime() < now.getTime()) return "basic";
-  return p;
-}
-
-export function planHasFeature(plan: Plan, feature: Feature): boolean {
-  return PLAN_FEATURES[plan].has(feature);
-}
 
 export type FeatureGate =
   | { ok: true; plan: Plan }

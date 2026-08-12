@@ -13,6 +13,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { featureFlagGateResponse } from "@/lib/feature-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -40,12 +41,16 @@ async function getStatus(userId: string) {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const gate = await featureFlagGateResponse("casino"); // owner turned the casino off → 403
+  if (gate) return gate;
   return NextResponse.json(await getStatus(session.user.id));
 }
 
 export async function POST() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const gate = await featureFlagGateResponse("casino"); // owner turned the casino off → 403 (no free chips)
+  if (gate) return gate;
   const userId = session.user.id;
 
   const rl = await rateLimit(`chips-daily:${userId}`, 10, 60_000);

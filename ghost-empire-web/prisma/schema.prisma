@@ -38,6 +38,14 @@ model Tenant {
   hubEnabled           Boolean   @default(false) // owner toggles the public /hub page on
   hubBio               String?   @db.Text // short bio/tagline shown under the brand header on /hub
   hubLinks             Json? // ordered [{ id, label, url, icon? }] the owner curates; null = none yet
+  // Per-feature OWNER toggles (per-portal switchboard, src/lib/feature-catalog.ts). The owner turns
+  // a feature on/off WITHIN what its plan already unlocks — a flag only NARROWS, never widens.
+  // Rides the cached Tenant row (getCurrentTenant) → zero extra query, like socialLinks/hubLinks.
+  // Nullable + additive: NULL / a missing key ⇒ that feature's coded default (FEATURE_CATALOG
+  // .defaultOn, almost all true), so an un-migrated deploy or a new portal hides NOTHING.
+  // Shape: { [featureKey]: boolean }. Read ONLY through parseFeatureFlags / isFeatureLive — never
+  // trust the raw JSON (mirrors socialLinks). `hub` state stays in its own hubEnabled column.
+  featureFlags         Json?
   // Free daily casino-chips grant, per portal (docs/CHIPS-CASINO.md — Faza 3/6). Additive with
   // a default, so an un-migrated deploy keeps the previous hardcoded 500. Chips are free and
   // value-less, so this only tunes how fast the casino's faucet runs — it can never mint value.

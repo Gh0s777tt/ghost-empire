@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { AdminClient } from "@/components/admin/AdminClient";
+import { effectivePlan } from "@/lib/entitlements-core";
+import { FEATURE_CATALOG, isFeatureLive } from "@/lib/feature-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +56,16 @@ export default async function AdminPage() {
   // glance while spanning every portal). The badge count and the list it labels MUST see
   // the same rows, so the where lives in ONE place instead of being retyped twice.
   const pendingSpendWhere = { type: "spend", status: "pending", ...(tid ? { user: { tenantId: tid } } : {}) };
+
+  // Feature switchboard: which catalog features are LIVE on this portal (owner flag ON + plan allows).
+  // AdminClient hides the nav section of a disabled feature. getCurrentTenant() is cached (shares the
+  // metadata lookup, carries featureFlags); the plan needs the row's plan/planExpiresAt.
+  const brand = await getCurrentTenant();
+  const planRow = tid
+    ? await prisma.tenant.findUnique({ where: { id: tid }, select: { plan: true, planExpiresAt: true } }).catch(() => null)
+    : null;
+  const plan = effectivePlan(planRow?.plan, planRow?.planExpiresAt);
+  const enabledFeatures = FEATURE_CATALOG.filter((r) => isFeatureLive(brand.featureFlags, plan, r.key)).map((r) => r.key);
 
   const [
     totalUsers, sums, eventsActive, ordersPending,
@@ -113,6 +125,7 @@ export default async function AdminPage() {
           }}
           // Per-section nav badges — counts that need the owner's attention (#651).
           badges={{ shop: ordersPending, tickets: openTickets }}
+          enabledFeatures={enabledFeatures}
           drops={activeDrops.map((d) => ({
             id: d.id,
             code: d.code,

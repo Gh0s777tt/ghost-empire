@@ -7,7 +7,7 @@ import {
   Users, TrendingUp, Dice5, Heart, UserCog, History, Award,
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Tv2, Menu, GitMerge, Radio, MonitorPlay, Lightbulb,
-  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy, Wand2, Palette, Link2, Gavel,
+  Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy, Wand2, Palette, Link2, Gavel, SlidersHorizontal,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
@@ -34,8 +34,9 @@ import {
   SeasonsManager, MergeUsersSection, BotConfigCard, BotSecretCard, ScheduleManager, TwitchEventSubManager, StreamlabsManager,
   UserRolesCard, ConnectionRolesCard, ShopManager, CodeDropsCard, HolidayEventsCard, CreateEventCard,
   EventsManager, ActiveDropsList, PendingOrdersList, StreamAlertsManager, TenantsManager, AppearanceManager, HubManager, DonationIntegrationsManager, SupportTicketsManager,
-  RoleRoster, SubscribersManager, SupportPreview,
+  RoleRoster, SubscribersManager, SupportPreview, FeatureSettingsManager,
 } from "./lazy-sections";
+import { FEATURE_CATALOG_BY_KEY } from "@/lib/feature-catalog";
 
 // Panel modes: how much of the admin is shown in the nav. Persisted per browser
 // (localStorage "ge-admin-mode"); defaults to "dev" = everything, the pre-modes behavior.
@@ -63,7 +64,7 @@ type AdminEvent = {
 
 export function AdminClient({
   isAdmin, isPlatformOwner = false, myPermissions,
-  stats, drops, events, pendingOrders, badges = {},
+  stats, drops, events, pendingOrders, badges = {}, enabledFeatures,
 }: {
   isAdmin: boolean;
   /** Permanent-admin email (admin-of-admins) — unlocks the Tenants section. */
@@ -75,6 +76,11 @@ export function AdminClient({
   pendingOrders: PendingOrder[];
   /** Per-section attention counts (e.g. pending orders, open tickets) → nav badges (#651). */
   badges?: Record<string, number>;
+  /** Feature keys currently LIVE on this portal (owner flag ON + plan allows) — computed server-side
+   *  via isFeatureLive. A section whose id IS a catalog feature key hides when that key is absent;
+   *  sections that are not catalog keys (dashboard, features, moderation, …) are never gated.
+   *  `undefined` ⇒ fail-open (gate nothing) so a missing prop can never blank the panel. */
+  enabledFeatures?: string[];
   // Everything else (shop/events-manager/schedule/bot/audit/streamlabs/twitch/alerts)
   // is lazy-loaded per-section via <LazySection> + /api/admin/section-data — keeps the
   // initial /admin server render to just the Dashboard's data.
@@ -94,7 +100,7 @@ export function AdminClient({
   // Navigation sections — each maps to a group of cards previously rendered linearly.
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
-    | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
+    | "dashboard" | "features" | "users" | "merge" | "events" | "shop" | "drops"
     | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "penalties" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub" | "donationIntegrations";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
@@ -109,6 +115,9 @@ export function AdminClient({
     permission: () => boolean;
   }> = [
     { id: "dashboard", label: t("secDashboard"),   icon: LayoutDashboard, group: "main",       level: 1, permission: () => true },
+    // The per-portal feature switchboard. level 1 (a streamer finds it immediately) and NO `feature`
+    // key of its own — the master switchboard must never be hideable, or an owner could lock themselves out.
+    { id: "features",  label: t("secFeatures"),     icon: SlidersHorizontal, group: "main",     level: 1, permission: () => isAdmin },
     // Self-serve portal branding for the tenant owner (#785) — level 1 so a streamer finds
     // "make it mine" immediately (the API is owner-scoped + Elite-gated, so it's safe for any admin).
     { id: "appearance", label: t("secAppearance"),  icon: Palette,        group: "main",       level: 1, permission: () => isAdmin },
@@ -187,7 +196,14 @@ export function AdminClient({
     try { localStorage.setItem("ge-admin-mode", m); } catch { /* private mode */ }
   }, []);
 
-  const permittedSections = SECTIONS.filter((s) => s.permission());
+  // Owner feature switchboard (slice 2): a section whose id IS a catalog feature key is hidden
+  // when that feature is not LIVE (owner turned it off, or the plan lacks it). Sections that aren't
+  // catalog keys (dashboard, features, moderation, users, …) are never gated. `enabledFeatures`
+  // undefined ⇒ fail-open (gate nothing) — a missing prop must never blank the whole panel.
+  const enabledFeatureSet = enabledFeatures ? new Set(enabledFeatures) : null;
+  const permittedSections = SECTIONS.filter(
+    (s) => s.permission() && (!FEATURE_CATALOG_BY_KEY[s.id] || !enabledFeatureSet || enabledFeatureSet.has(s.id)),
+  );
   const visibleSections = permittedSections.filter((s) => s.level <= MODE_RANK[adminMode]);
   const hiddenByMode = permittedSections.length - visibleSections.length;
 
@@ -417,6 +433,10 @@ export function AdminClient({
 
           {activeSection === "tenants" && isPlatformOwner && (
             <TenantsManager {...sharedProps} />
+          )}
+
+          {activeSection === "features" && isAdmin && (
+            <FeatureSettingsManager onToast={showToast} />
           )}
 
           {activeSection === "appearance" && isAdmin && (

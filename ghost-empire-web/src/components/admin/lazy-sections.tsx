@@ -80,3 +80,4 @@ export const SupportTicketsManager = dynamic(() => import("./sections/SupportTic
 export const RoleRoster = dynamic(() => import("./sections/RoleRoster").then((m) => m.RoleRoster), { ssr: false, loading: SectionLoading });
 export const SubscribersManager = dynamic(() => import("./sections/Subscribers").then((m) => m.SubscribersManager), { ssr: false, loading: SectionLoading });
 export const SupportPreview = dynamic(() => import("./sections/SupportPreview").then((m) => m.SupportPreview), { ssr: false, loading: SectionLoading });
+export const FeatureSettingsManager = dynamic(() => import("./sections/FeatureSettings").then((m) => m.FeatureSettingsManager), { ssr: false, loading: SectionLoading });
