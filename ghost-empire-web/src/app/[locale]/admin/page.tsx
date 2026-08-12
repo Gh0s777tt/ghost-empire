@@ -64,7 +64,11 @@ export default async function AdminPage() {
   const planRow = tid
     ? await prisma.tenant.findUnique({ where: { id: tid }, select: { plan: true, planExpiresAt: true } }).catch(() => null)
     : null;
-  const plan = effectivePlan(planRow?.plan, planRow?.planExpiresAt);
+  // FAIL-OPEN on the plan axis, exactly like requireTenantFeature / isFeatureLiveForRequest: a
+  // missing tenant / missing featureFlags column (findUnique throws → null) / DB hiccup must HIDE
+  // NOTHING, so default to "elite" (not "basic"). Otherwise a migration/outage window would silently
+  // drop the founder's own pro/elite sections (wheel/overlays/subathon/…) from the admin nav.
+  const plan = tid && planRow ? effectivePlan(planRow.plan, planRow.planExpiresAt) : "elite";
   const enabledFeatures = FEATURE_CATALOG.filter((r) => isFeatureLive(brand.featureFlags, plan, r.key)).map((r) => r.key);
 
   const [

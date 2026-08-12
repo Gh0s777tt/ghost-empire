@@ -196,15 +196,19 @@ export function AdminClient({
     try { localStorage.setItem("ge-admin-mode", m); } catch { /* private mode */ }
   }, []);
 
-  // Owner feature switchboard (slice 2): a section whose id IS a catalog feature key is hidden
-  // when that feature is not LIVE (owner turned it off, or the plan lacks it). Sections that aren't
-  // catalog keys (dashboard, features, moderation, users, …) are never gated. `enabledFeatures`
-  // undefined ⇒ fail-open (gate nothing) — a missing prop must never blank the whole panel.
+  // Owner feature switchboard (slice 2): a section whose id IS a catalog feature key is hidden from
+  // the NAV when that feature is not LIVE (owner turned it off, or the plan lacks it). Applied to the
+  // NAV only (like the level/mode filter) — NOT to `permittedSections` — so a switchboard-hidden
+  // section stays reachable by deep-link (/admin#wheel) and the command palette. That deliberately
+  // matches the level-gate ("deep links still open ANY permitted section") and, crucially, keeps a
+  // toggle from ORPHANING an admin workflow whose data path keeps running (donation reconciliation,
+  // pending orders). `enabledFeatures` undefined ⇒ fail-open (gate nothing). Sections that aren't
+  // catalog keys (dashboard, features, moderation, penalties, …) are never gated.
   const enabledFeatureSet = enabledFeatures ? new Set(enabledFeatures) : null;
-  const permittedSections = SECTIONS.filter(
-    (s) => s.permission() && (!FEATURE_CATALOG_BY_KEY[s.id] || !enabledFeatureSet || enabledFeatureSet.has(s.id)),
-  );
-  const visibleSections = permittedSections.filter((s) => s.level <= MODE_RANK[adminMode]);
+  const featureVisible = (id: SectionId) =>
+    !FEATURE_CATALOG_BY_KEY[id] || !enabledFeatureSet || enabledFeatureSet.has(id);
+  const permittedSections = SECTIONS.filter((s) => s.permission());
+  const visibleSections = permittedSections.filter((s) => s.level <= MODE_RANK[adminMode] && featureVisible(s.id));
   const hiddenByMode = permittedSections.length - visibleSections.length;
 
   // URL hash → active section (deep-linkable: /admin#shop)

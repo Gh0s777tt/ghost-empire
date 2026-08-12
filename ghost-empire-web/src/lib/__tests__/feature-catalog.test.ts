@@ -22,12 +22,13 @@ describe("FEATURE_CATALOG integrity", () => {
   it("every row's category is one of FEATURE_CATEGORIES", () => {
     for (const r of FEATURE_CATALOG) expect(FEATURE_CATEGORIES).toContain(r.category);
   });
-  it("defaults are ON for everything except penalties", () => {
-    for (const r of FEATURE_CATALOG) {
-      expect(r.defaultOn).toBe(r.key !== "penalties");
-    }
-    expect(DEFAULT_FLAGS.penalties).toBe(false);
+  it("defaults are ON for every catalog feature", () => {
+    for (const r of FEATURE_CATALOG) expect(r.defaultOn).toBe(true);
     expect(DEFAULT_FLAGS.wheel).toBe(true);
+  });
+  it("penalties is deliberately NOT a switchboard feature (real money → own legal gate)", () => {
+    expect(FEATURE_CATALOG_BY_KEY.penalties).toBeUndefined();
+    expect(FEATURE_KEYS.has("penalties")).toBe(false);
   });
   it("section-backed rows use key === adminSectionId (trivial nav gate)", () => {
     for (const r of FEATURE_CATALOG) {
@@ -53,12 +54,12 @@ describe("parseFeatureFlags", () => {
 describe("resolvedFlag", () => {
   it("explicit value wins over the default", () => {
     expect(resolvedFlag({ wheel: false }, "wheel")).toBe(false);
-    expect(resolvedFlag({ penalties: true }, "penalties")).toBe(true);
+    expect(resolvedFlag({ casino: false }, "casino")).toBe(false);
   });
-  it("missing key falls through to the coded default", () => {
+  it("missing key falls through to the coded default (all ON)", () => {
     expect(resolvedFlag({}, "wheel")).toBe(true);
     expect(resolvedFlag(null, "wheel")).toBe(true);
-    expect(resolvedFlag({}, "penalties")).toBe(false);
+    expect(resolvedFlag({}, "casino")).toBe(true);
   });
   it("unknown key resolves false", () => {
     expect(resolvedFlag({}, "does-not-exist")).toBe(false);
@@ -82,9 +83,9 @@ describe("isFeatureLive — owner flag AND plan, never widening", () => {
     expect(isFeatureLive({ webhooks: true }, "pro", "webhooks")).toBe(false);
     expect(isFeatureLive({ webhooks: true }, "elite", "webhooks")).toBe(true);
   });
-  it("penalties stays off by default even on elite", () => {
-    expect(isFeatureLive({}, "elite", "penalties")).toBe(false);
-    expect(isFeatureLive({ penalties: true }, "elite", "penalties")).toBe(true);
+  it("an unknown / non-catalog key is never live", () => {
+    expect(isFeatureLive({}, "elite", "penalties")).toBe(false); // removed from catalog
+    expect(isFeatureLive({ penalties: true }, "elite", "penalties")).toBe(false);
   });
 });
 

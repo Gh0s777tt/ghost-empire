@@ -22,9 +22,12 @@ const log = createLogger("feature-gate");
  * switchboard gate can never take a portal down; the two non-steady-state arms leave a log line.
  */
 export async function isFeatureLiveForRequest(key: string): Promise<boolean> {
-  const tid = await currentTenantId();
-  if (!tid) return true; // no Host→tenant mapping — nothing to gate (documented, silent)
+  let tid: string | null = null;
   try {
+    // Inside the try so an unexpected throw from tenant resolution ALSO fails open (returns true)
+    // rather than 500-ing the page/route — a switchboard gate must never take a portal down.
+    tid = await currentTenantId();
+    if (!tid) return true; // no Host→tenant mapping — nothing to gate (documented, silent)
     const t = await prisma.tenant.findUnique({
       where: { id: tid },
       select: { featureFlags: true, plan: true, planExpiresAt: true },

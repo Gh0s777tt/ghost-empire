@@ -7,6 +7,7 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { currentTenantId } from "@/lib/tenant";
 import { playGtGame } from "@/lib/gt-games";
 import { featureGateResponse } from "@/lib/entitlements";
+import { featureFlagGateResponse } from "@/lib/feature-gate";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -15,6 +16,10 @@ export async function POST(req: Request) {
   // Plan gate (Phase 6): the casino is a pro+ feature for paying tenants.
   const gated = await featureGateResponse("casino");
   if (gated) return gated;
+  // Owner switchboard: if the portal owner turned the casino OFF, stop new play too — not just the
+  // page + faucet (chips-only, so no economy corruption, but "off" must actually stop betting).
+  const off = await featureFlagGateResponse("casino");
+  if (off) return off;
 
   let body: { game?: string; bet?: number; choice?: string };
   try { body = await req.json(); } catch {

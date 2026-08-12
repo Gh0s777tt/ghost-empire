@@ -7,12 +7,15 @@ import { currentTenantId } from "@/lib/tenant";
 import { hiloStart } from "@/lib/gt-hilo";
 import { feedJackpot } from "@/lib/gt-games";
 import { featureGateResponse } from "@/lib/entitlements";
+import { featureFlagGateResponse } from "@/lib/feature-gate";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
   const gated = await featureGateResponse("casino");
   if (gated) return gated;
+  const off = await featureFlagGateResponse("casino"); // owner switchboard OFF → no new game
+  if (off) return off;
 
   let body: { bet?: number };
   try { body = await req.json(); } catch { return jsonError("Nieprawidłowe dane", 400); }

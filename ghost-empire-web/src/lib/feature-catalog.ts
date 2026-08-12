@@ -69,9 +69,12 @@ export const FEATURE_CATALOG: FeatureRow[] = [
   { key: "seasons",       label: "secSeasons",           description: "secDesc_seasons",    category: "economy", defaultOn: true,  adminSectionId: "seasons" },
   { key: "achievements",  label: "secAchievements",      description: "secDesc_achievements", category: "economy", defaultOn: true, adminSectionId: "achievements" },
   { key: "soundrewards",  label: "secSoundrewards",      description: "secDesc_soundrewards", category: "economy", defaultOn: true, adminSectionId: "soundrewards" },
-  // penalties: defaults OFF. The switch here just surfaces it; the REAL-MONEY legal gate + enable
-  // decision stays in api/admin/penalties (LEGAL_WARNING). Turning this on does not bypass that.
-  { key: "penalties",     label: "secPenalties",         description: "featDesc_penalties",  category: "economy", defaultOn: false, adminSectionId: "penalties" },
+  // NOTE: `penalties` (real-money donation penalties) is deliberately NOT a switchboard feature.
+  // It already has its OWN dedicated on/off — `PenaltyConfig.enabled` behind the LEGAL_WARNING in
+  // api/admin/penalties — which is the single source of truth for whether it actuates. A second,
+  // casual switchboard toggle would DESYNC dangerously: flipping it "off" would hide the panel from
+  // the nav while donations kept triggering real-money penalties (actuation reads PenaltyConfig,
+  // not this flag). So penalties stays out of the catalog; its admin section is always reachable.
 
   // ── overlays ─────────────────────────────────────────────────────────────
   { key: "goals",         label: "secGoals",             description: "secDesc_goals",      category: "overlays", defaultOn: true, adminSectionId: "goals",    planFeature: "overlays" },
