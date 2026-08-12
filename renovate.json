@@ -79,6 +79,12 @@
       "allowedVersions": "<23"
     },
     {
+      "description": "AUDIT [12]: keep @types/node on the same Node 22 floor as the CI image above — with types at ^26, tsc typechecked against the Node 26 stdlib while CI/prod run Node 22, so a Node-26-only API could pass green and throw at runtime.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<23"
+    },
+    {
       "description": "Prisma pieces move together (client/CLI/adapter must stay in lockstep).",
       "matchManagers": ["npm"],
       "matchPackageNames": ["prisma", "@prisma/client", "@prisma/adapter-pg"],

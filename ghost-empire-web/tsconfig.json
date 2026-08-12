@@ -9,6 +9,17 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    // AUDYT [10] — flagi ponad `strict`. Te dwie są DARMOWE (0 błędów w repo w dniu
+    // włączenia, zmierzone `tsc --noEmit`), a łapią realne klasy regresji (literówka
+    // w override, przelot przez case w switchu na ścieżkach gier/ekonomii):
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    // `noUncheckedIndexedAccess` świadomie NIE włączone: pomiar 2026-08-12 dał 344 błędy
+    // repo-wide, w tym 31 w libach money-critical (gt-games 14, wheel 13, economy 2,
+    // companion-token 2) — czyli dokładnie tam, gdzie `arr[i]` typowane jako `T` zamiast
+    // `T | undefined` może zaklepać off-by-one w loot-table. Włączenie wymaga celowej
+    // migracji src/lib (osobny PR z testami), nie przełącznika w tsconfig — nie zamiatać
+    // tego przez dopisanie `!`.
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
