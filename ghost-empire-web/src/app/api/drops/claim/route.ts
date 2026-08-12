@@ -1,9 +1,20 @@
 // src/app/api/drops/claim/route.ts
+// Auth: sesja (portal UI) LUB companion bearer token (rozszerzenie NX Companion).
+// Finding "companion nie odbierze drop kodu / daily bonusa": ten endpoint był
+// session-only, a rozszerzenie woła go z MV3 service workera — czyli CROSS-ORIGIN,
+// więc cookie sesji (SameSite=Lax) NIE jest wysyłane, a wysyłany Bearer był
+// ignorowany → gwarantowane 401 na funkcji reklamowanej w obu store listingach.
+// Ścieżka bearer istnieje wyłącznie z tego powodu. Wzorzec 1:1 jak
+// /api/companion/tasks/claim: tenant rozwiązany PRZED auth, a token MUSI być
+// zmintowany na TYM portalu — bez tej równości token z portalu A odebrałby drop
+// na portalu B (cross-tenant, #qa D-3). CORS + OPTIONS są obowiązkowe, inaczej
+// preflight (Bearer + content-type) pada i fix jest martwy.
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { prisma } from "@/lib/prisma";
 import { getCurrentTenant } from "@/lib/tenant";
+import { bearerFromRequest, verifyCompanionToken } from "@/lib/companion-token";
 import { today } from "@/lib/utils";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { dispatchAlertSafe } from "@/lib/alerts";
@@ -15,41 +26,60 @@ const log = createLogger("drops");
 
 const CODE_REGEX = /^[A-Z0-9_-]{3,24}$/;
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "content-type, authorization",
+};
+
+export function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS });
+}
+
 export async function POST(req: Request) {
+  // One request-cached tenant read (getCurrentTenant is cache()d, and currentTenantId only
+  // wraps it): `id` scopes the drop/quest lookups, `tokenSymbol` labels the bonus alert below
+  // with THIS portal's currency instead of the founder's hardcoded "GT". Read BEFORE auth so
+  // a bearer token's tenant scope can be compared against the Host-resolved portal.
+  const tenant = await getCurrentTenant();
+  const tid = tenant.id;
+
   const session = await auth();
-  if (!session?.user?.id) {
-    return jsonError("Musisz być zalogowany", 401);
+  let actorId = session?.user?.id ?? null;
+  if (!actorId) {
+    const payload = verifyCompanionToken(bearerFromRequest(req));
+    if (payload && payload.tenantId === tid) actorId = payload.userId;
   }
+  if (!actorId) {
+    return jsonError("Musisz być zalogowany", 401, CORS);
+  }
+  // Stały string dla domknięć transakcji (narrowing) — KAŻDE zapytanie niżej
+  // (claim, credit, questy, notyfikacja, achievementy, XP) używa właśnie tego id,
+  // niezależnie od tego, który credential uwierzytelnił żądanie.
+  const userId = actorId;
 
   let body: { code?: string };
   try { body = await req.json(); } catch {
-    return jsonError("Nieprawidłowe dane", 400);
+    return jsonError("Nieprawidłowe dane", 400, CORS);
   }
 
   const code = (body.code ?? "").trim().toUpperCase();
-  if (!code) return jsonError("Brak kodu", 400);
+  if (!code) return jsonError("Brak kodu", 400, CORS);
   if (!CODE_REGEX.test(code)) {
-    return jsonError("Kod: 3-24 znaków A-Z, 0-9, _, -", 400);
+    return jsonError("Kod: 3-24 znaków A-Z, 0-9, _, -", 400, CORS);
   }
-
-  const userId = session.user.id;
 
   // Anti-brute-force: max 30 attempts per minute per user (trying random codes)
   const rl = await rateLimit(`drop:claim:${userId}`, 30, 60_000);
   if (!rl.allowed) {
-    return jsonError("Za dużo prób. Poczekaj chwilę.", 429, rateLimitHeaders(rl));
+    return jsonError("Za dużo prób. Poczekaj chwilę.", 429, { ...CORS, ...rateLimitHeaders(rl) });
   }
 
-  // One request-cached tenant read (getCurrentTenant is cache()d, and currentTenantId only
-  // wraps it): `id` scopes the drop/quest lookups, `tokenSymbol` labels the bonus alert below
-  // with THIS portal's currency instead of the founder's hardcoded "GT".
-  const tenant = await getCurrentTenant();
-  const tid = tenant.id;
   const drop = await prisma.streamDrop.findFirst({ where: { code, ...(tid ? { tenantId: tid } : {}) } });
-  if (!drop) return jsonError("Kod nie istnieje", 404);
-  if (!drop.active) return jsonError("Kod nieaktywny", 410);
+  if (!drop) return jsonError("Kod nie istnieje", 404, CORS);
+  if (!drop.active) return jsonError("Kod nieaktywny", 410, CORS);
   if (drop.expiresAt && drop.expiresAt < new Date()) {
-    return jsonError("Kod wygasł", 410);
+    return jsonError("Kod wygasł", 410, CORS);
   }
 
   try {
@@ -153,15 +183,15 @@ export async function POST(req: Request) {
 
     const { _actor, ...publicResult } = result;
     void _actor;
-    return NextResponse.json(publicResult);
+    return NextResponse.json(publicResult, { headers: CORS });
   } catch (e: unknown) {
     if (
       typeof e === "object" && e !== null && "code" in e &&
       (e as { code: string }).code === "P2002"
     ) {
-      return jsonError("Już odebrałeś ten kod", 409);
+      return jsonError("Już odebrałeś ten kod", 409, CORS);
     }
     log.error("claim error", e);
-    return jsonError("Błąd serwera", 500);
+    return jsonError("Błąd serwera", 500, CORS);
   }
 }
