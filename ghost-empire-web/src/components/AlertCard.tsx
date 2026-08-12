@@ -4,6 +4,7 @@
 //
 // Customizable: accent color, overall size (sizeScale), text size (textScale),
 // message text color (textColor). Defaults reproduce the original look.
+import { safeMediaUrl } from "@/lib/url-safe";
 
 export type AlertCardData = {
   title: string;
@@ -30,6 +31,11 @@ export function AlertCard({
   textColor?: string;
   scaleOrigin?: string;
 }) {
+  // #sec-unguarded-img: actorImage is viewer-supplied (donor avatar) and was rendered
+  // straight into <img src>. Filter it through safeMediaUrl so a javascript:/data:/relative
+  // /breakout URL can never reach the DOM — same guard the alert sound URLs already get.
+  // null (rejected or absent) → fall back to the icon bubble below.
+  const actorImage = safeMediaUrl(alert.actorImage);
   return (
     <div style={{ transform: `scale(${sizeScale})`, transformOrigin: scaleOrigin }}>
       <div
@@ -49,10 +55,9 @@ export function AlertCard({
       >
         {/* Icon / Avatar */}
         <div style={{ flexShrink: 0 }}>
-          {alert.actorImage ? (
-             
+          {actorImage ? (
             <img
-              src={alert.actorImage}
+              src={actorImage}
               alt=""
               style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: `2px solid ${accent}` }} loading="lazy" decoding="async" />
           ) : (
