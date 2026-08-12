@@ -7,6 +7,10 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ## [Unreleased]
 
+### Security
+
+- **Bezpieczeństwo zależności dev — Dependabot (gałąź `fix/deps-dev-2026-08`)** — lockfile refresh (bez zmiany `package.json`, w istniejących rangeach): `nanoid 3.3.16 → 3.3.18` ([GHSA-2v37](https://github.com/advisories/GHSA-2v37-7h3g-55p8) — infinite-loop przy `size=0`; tylko postcss build-tooling, `size` nie-atakowalny), `brace-expansion 5.0.8 → 5.0.9` (ReDoS; przez minimatch/glob tooling, override `^5.0.8`), `js-yaml 4.3.0 → 4.3.1` (przez eslintrc). Wszystkie **dev/build-only, poza prod runtime**. Bump auth (`next-auth beta.32` + `@auth/core 0.41.3`, GHSA-x445) **rozdzielony do osobnego PR-a** — wymaga smoke'a logowania OAuth przed prod. Odłożone needs-human (dev-only): `@hono/node-server`+valibot (tooling dev Prisma), root `ip-address`/`sigstore`/`@sigstore/core` (zabundlowane w CLI npm). Zielone: tsc + build + 4 bramy docs (1218 testów zielonych na nadzbiorze [#516]).
+
 ### Changed
 
 - **CLAUDE.md — zasada „zawsze zsynchronizowane, zero backlogów"** — nowa sekcja robocza: każda sesja kończy się dopiero, gdy kod+testy+docs są zielone, zacommitowane i **wypchnięte na oba remote'y** (origin+gitlab), docs (CHANGELOG/ROADMAP/README/`docs/*`) aktualne na bieżąco, PR/MR otwarty, a zmergowane/martwe gałęzie posprzątane. Bez wiszących braków.
