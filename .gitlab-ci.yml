@@ -4,8 +4,8 @@
 # ETAP 3 (dokumentacja jako kod): build MkDocs Material → GitLab Pages przy każdym
 # mergu do `main`, oraz strażnik świeżości docs na Merge Requestach. ZACHOWANE 1:1
 # (jedyna zmiana: `needs: []` na jobach docs — patrz sekcja DOCS).
-# ETAP 4 (ten plik): verify (commitlint) · lint · test · build · security
-# (gitleaks/semgrep/trivy) · docs · release (semantic-release) · renovate.
+# ETAP 4 (ten plik): verify (commitlint) · lint · test · build · e2e (Playwright) ·
+# security (gitleaks/semgrep/trivy) · docs · release (semantic-release) · renovate.
 # GitLab shared runners (Linux/docker), obrazy publiczne, npm (lockfileVersion 3;
 # ghost-empire-web/.npmrc: legacy-peer-deps=true). Monorepo: kod w podfolderach
 # `ghost-empire-web/` (Next 16) i `ghost-empire-chat/` (bot, tsx — bez kroku build).
@@ -26,6 +26,10 @@ stages:
   - lint
   - test
   - build
+  # `e2e` MUSI być osobnym stage'em PO `build`: Playwright startuje apkę przez
+  # `npm run start` (next start), a to wymaga artefaktu `.next/` z `build:web`. W stage
+  # `test` (który leci PRZED `build`) nie byłoby czego uruchomić.
+  - e2e
   - security
   - docs
   - release
@@ -37,6 +41,23 @@ variables:
 # ── Zapobieganie podwójnym pipeline'om (MR + branch) ─────────────────────────
 # Pipeline TYLKO dla: MR-ów, gałęzi domyślnej (main) oraz harmonogramu. Push do
 # zwykłej gałęzi feature bez MR nie odpala CI.
+#
+# AUDYT (feature-branch bez MR = zero jobów) — ŚWIADOMA DECYZJA, NIE poszerzam automatem.
+# To jest KLASYCZNY wzorzec „MR-only pipelines": bramki jakości (.rules_mr_main) i tak
+# celują w MR + main, więc feature-branch dostaje pełne typecheck/lint/unit w chwili
+# OTWARCIA MR — po prostu nie na każdym gołym pushu bez MR. Poszerzenie „pushy feature
+# też uruchamiają CI" NIE jest jednym poprawnym dopiskiem — wymaga DECYZJI właściciela,
+# bo:
+#   (1) wprowadza z powrotem PODWÓJNE pipeline'y (gdy branch ma otwarty MR, poleciałby
+#       i pipeline brancha, i pipeline MR) — dokładnie to, co ten workflow eliminuje;
+#       trzeba by dołożyć strażnik `if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+#       when: never` PRZED regułą brancha;
+#   (2) samo poszerzenie `workflow:` nie wystarczy — joby lint/test wiszą na
+#       `!reference [.rules_mr_main]`, które też trzeba by rozszerzyć o feature-branch
+#       (i świadomie ZOSTAWIĆ poza nim `build:web`/`e2e`/`release` — koszt: integracja
+#       stawia Postgresa na KAŻDYM pushu).
+# To zmiana zachowania z realnym kosztem (minuty runnera, podwójne pipeline'y), więc
+# DOKUMENTUJĘ ją tu zamiast zgadywać; do włączenia jak właściciel zaakceptuje powyższe.
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -151,8 +172,11 @@ lint:chat:
 # ═════════════════════════════════════════════════════════════════════════════
 # Jednostkowe: bez bazy (vitest.setup.ts wstrzykuje atrapy DATABASE_URL). Reporter
 # coverage w vitest.config.ts to `text-summary` → drukuje wiersz "Statements : NN%",
-# stąd regex poniżej (NIE 'All files' — tego ten reporter NIE drukuje). Progów brak,
-# więc job nie failuje na spadku pokrycia (zgodnie ze stanem repo).
+# stąd regex poniżej (NIE 'All files' — tego ten reporter NIE drukuje). `coverage:` wyciąga
+# TYLKO liczbę na badge — samą bramką jest `thresholds` w vitest.config.ts (wtedy vitest kończy
+# się kodem != 0 i job czerwienieje na spadku pokrycia). Progi SĄ USTAWIONE (audyt 2026-08) jako
+# RATCHET kilka punktów pod realnym pomiarem (statements 50.14 / branches 49.54 / functions 54.24
+# / lines 49.8) — zielono dziś, czerwono tylko na regresji; szczegóły w vitest.config.ts.
 # Bot: wbudowany test runner Node (`node:test`) odpalany przez tsx — świadomie BEZ vitesta,
 # bo jedyne dev-tooling bota to tsx + tsc i nie chcemy tam nowej zależności. Pilnuje
 # inwariantów `src/branding.ts`: awaria portalu schodzi na neutralne „tokeny" (NIGDY na „GT"),
@@ -236,6 +260,78 @@ build:web:
   rules: !reference [.rules_mr_main, rules]
 
 # ═════════════════════════════════════════════════════════════════════════════
+#  E2E — Playwright na REALNIE uruchomionej aplikacji (smoke)
+# ═════════════════════════════════════════════════════════════════════════════
+# DLACZEGO TO ISTNIEJE (audyt): `e2e/smoke.spec.ts` nie był wpięty w ŻADNĄ bramkę — ani
+# tutaj, ani w `ghost-empire-web/scripts/verify-all.sh` — mimo że jest JEDYNYM automatycznym
+# strażnikiem nonce/strict-dynamic CSP budowanego w `src/proxy.ts`, i jedynym pokryciem dla
+# pingu DB w `/api/health`, content-type dynamicznego OG, per-tenantowego `og:image` oraz 401
+# gościa na `/api/gt-games/play`. TEST_REPORT.md §7 zapisał ten skip jako świadomie tymczasowy
+# ("Faza 3 pominięta świadomie") — i stał się trwały. To go przywraca.
+#
+# BAZA: ten sam `postgres:16` co `test:integration:web`, z tym samym jawnym `pg_isready`
+# (cache-hit na node_modules potrafi wyprzedzić start serwisu → wyścig). `prisma db push`
+# daje schemat, `db:seed` zakłada tenanta `ghost-empire` — na pustej bazie strony i `og:image`
+# nie mają czego czytać. Redis ŚWIADOMIE niewpięty: `jackpotPool()` bez redisa zwraca
+# `JACKPOT_SEED` = 5000, czyli dokładnie próg, którego oczekuje test puli jackpota (>= 5000).
+#
+# PRZEGLĄDARKA: `npx playwright install --with-deps chromium` zamiast przypiętego obrazu
+# `mcr.microsoft.com/playwright:vX` — obraz trzeba by ręcznie trzymać w zgodzie z wersją
+# `@playwright/test` z lockfile'a (renovate bumpuje lockfile, NIE obraz), a rozjazd = twarde
+# "Executable doesn't exist". Instalacja z poziomu zainstalowanego pakietu jest z definicji
+# spójna; ceną jest pobranie chromium w każdym przebiegu.
+#
+# `allow_failure: true` — ŚWIADOMIE i UCZCIWIE: tego joba NIE udało się przepuścić przed
+# wpięciem (maszyna autora ma node_modules zbudowane pod darwin-arm64, więc ani vitest, ani
+# playwright tam nie startują), a wpinanie niezweryfikowanego joba jako TWARDEJ bramki
+# zaczerwieniłoby main na czymś, czego nikt nie sprawdził — to ta sama choroba co
+# `release` niżej. ZDEJMIJ `allow_failure`, gdy job przejdzie na zielono co najmniej raz na
+# realnym runnerze i potwierdzisz, że:
+#   (1) wszystkie przypadki z `e2e/smoke.spec.ts` przechodzą na ŚWIEŻO zaseedowanej bazie
+#       (kandydaci na flaka: "pages carry a per-tenant og:image" i asercje liczące elementy
+#       DOM — zależą od danych tenanta, nie od czystej logiki),
+#   (2) `npx playwright install --with-deps chromium` mieści się w limicie czasu joba,
+#   (3) `next start` z artefaktu `build:web` wstaje pod http://localhost:3000 w 120 s
+#       (`webServer.timeout` w playwright.config.ts).
+e2e:web:
+  extends: .web
+  stage: e2e
+  needs: ["build:web"]   # pobiera artefakt ghost-empire-web/.next/ — bez niego `next start` nie ruszy
+  allow_failure: true
+  services:
+    - name: postgres:16
+      alias: postgres
+  variables:
+    POSTGRES_DB: ghost_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_HOST_AUTH_METHOD: trust
+    # prisma.config.ts czyta TEST_DATABASE_URL ?? DIRECT_URL ?? DATABASE_URL; apka w RUNTIME
+    # czyta DATABASE_URL — tu liczy się runtime, bo testy pukają w żywy serwer, nie w vitest.
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/ghost_test"
+    DIRECT_URL: "postgresql://postgres:postgres@postgres:5432/ghost_test"
+    # Stuby jak w build:web — smoke nigdy się nie loguje, sprawdza tylko, że auth wall ODRZUCA gościa.
+    NEXTAUTH_SECRET: "dummy-e2e-secret-not-a-real-secret"
+    NEXTAUTH_URL: "http://localhost:3000"
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends postgresql-client
+    - cd ghost-empire-web
+    - npm ci $NPM_FLAGS
+    - npx playwright install --with-deps chromium
+    - until pg_isready -h postgres -p 5432 -U postgres; do echo "waiting for postgres..."; sleep 1; done
+  script:
+    - npx prisma db push   # plain: Prisma 7 czyta schema+URL z prisma.config.ts (flagi konfliktują)
+    - npm run db:seed      # tenant "ghost-empire" + dane bazowe
+    - npm run test:e2e     # playwright test (webServer = `npm run start` na .next z build:web)
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - ghost-empire-web/playwright-report/
+      - ghost-empire-web/test-results/
+  rules: !reference [.rules_mr_main, rules]
+
+# ═════════════════════════════════════════════════════════════════════════════
 #  SECURITY — samodzielne skanery (bez szablonów). Obrazy PRZYPIĘTE wersjami.
 # ═════════════════════════════════════════════════════════════════════════════
 # gitleaks — SEKRETY, TWARDA BRAMKA (allow_failure domyślnie false). Skanuje BIEŻĄCE
@@ -254,17 +350,20 @@ gitleaks:
   rules: !reference [.rules_scan, rules]
   interruptible: true
 
-# semgrep — SAST (p/ci + p/typescript). DORADCZE (allow_failure:true): na realnym
-# drzewie Next 16 / React 19 reguły niemal zawsze coś zgłoszą; twarda bramka
-# blokowałaby całą pracę. Findings = POMARAŃCZOWE ostrzeżenie (nie zielony) + raport
-# joba. Aby uczynić bramkę twardą: usuń allow_failure po triażu.
+# semgrep — SAST (p/ci + p/typescript). TWARDA BRAMKA na autoryzację właściciela
+# (audyt): finding od tej chwili czerwieni cały pipeline — koniec fałszywego zielonego.
+# Wcześniej było `allow_failure:true` (doradcze) z uzasadnieniem, że na drzewie Next 16 /
+# React 19 reguły niemal zawsze coś zgłoszą — ten dług został świadomie zamknięty: findings
+# wytriażowano, a bramkę zaostrzono na polecenie właściciela.
+# WAŻNE: gdy pojedynczy finding to POTWIERDZONY false-positive, NIE przywracaj allow_failure
+# (to znów zaślepia CAŁY skaner). Wycisz PUNKTOWO: inline `// nosemgrep: <rule-id>` na danej
+# linii albo wpis w `.semgrepignore` — zawsze z powodem w komentarzu/commit'cie.
 semgrep:
   stage: security
   image:
     name: semgrep/semgrep:1.85.0
     entrypoint: [""]
   needs: []
-  allow_failure: true
   variables:
     SEMGREP_SEND_METRICS: "off"
   script:
@@ -273,18 +372,19 @@ semgrep:
   rules: !reference [.rules_scan, rules]
   interruptible: true
 
-# trivy — skan zależności (fs, scanner vuln). DORADCZE (allow_failure:true): duże
-# drzewo npm niemal na pewno ma ≥1 HIGH/CRITICAL CVE; twarda bramka blokowałaby
-# wszystko do ręcznego triażu. Przebieg 1 = informacyjny (LOW/MEDIUM, exit 0);
-# przebieg 2 = HIGH/CRITICAL (exit 1) → job-warning. Aby zablokować realnie: usuń
-# allow_failure i dodaj `.trivyignore` na zaakceptowane CVE.
+# trivy — skan zależności (fs, scanner vuln). TWARDA BRAMKA na autoryzację właściciela
+# (audyt): HIGH/CRITICAL CVE od tej chwili czerwieni pipeline — koniec fałszywego zielonego.
+# Przebieg 1 = informacyjny (LOW/MEDIUM, exit 0); przebieg 2 = HIGH/CRITICAL (exit 1) → job
+# CZERWONY (wcześniej: `allow_failure:true` → tylko żółte ostrzeżenie, dług zamknięty świadomie).
+# WAŻNE: gdy CVE jest niereachable / zaakceptowane po triażu, NIE przywracaj allow_failure
+# (to znów zaślepia CAŁY skaner). Wycisz PUNKTOWO: wpis w `.trivyignore` (jeden CVE = jedna
+# linia `CVE-XXXX-YYYY`) — zawsze z komentarzem podającym powód i datę przeglądu.
 trivy:
   stage: security
   image:
     name: aquasec/trivy:0.58.0
     entrypoint: [""]
   needs: []
-  allow_failure: true
   variables:
     TRIVY_NO_PROGRESS: "true"
     TRIVY_CACHE_DIR: ".trivycache/"
@@ -337,6 +437,15 @@ pages:
 
 # ── Strażnik świeżości dokumentacji (Merge Request) ──────────────────────────
 # Failuje MR, gdy zmieniono publiczne trasy API bez aktualizacji dokumentacji.
+#
+# WZMOCNIENIE (audyt): stara wersja łapała TYLKO „zmieniono route.ts, a docs/ nietknięte".
+# To za słabe — licznik tras w nagłówku ENDPOINTS.md („łącznie **NNN** tras") potrafił
+# stać w miejscu długo po tym, jak realny stan go wyprzedził (historycznie: 193 vs 221),
+# a ENDPOINTS.md jest JEDYNĄ mapą powierzchni API — zaniżony licznik czyta się jako
+# „wszystko jest opisane", gdy dziesiątki tras nie było. Dodajemy więc TWARDĄ asercję
+# liczbową: realna liczba plików `route.*` MUSI zgadzać się z liczbą w nagłówku. Robimy
+# to w czystym shellu (busybox `find`/`sed`/`wc` — BEZ nowej zależności); wzorzec `route.*`
+# i sposób liczenia są 1:1 z komentarzem-instrukcją w samym ENDPOINTS.md.
 docs-drift:
   stage: docs
   image: alpine:3.20
@@ -346,6 +455,30 @@ docs-drift:
   before_script:
     - apk add --no-cache git
   script:
+    # 1) Twarda asercja licznika tras — łapie STALE ENDPOINTS niezależnie od tego, czy MR
+    #    tknął docs/. `route.*` = route.ts + route.tsx (dokładnie jak dokumentuje ENDPOINTS.md).
+    - ACTUAL=$(find ghost-empire-web/src/app/api -type f -name 'route.*' | wc -l | tr -d ' ')
+    # Wyłuskaj liczbę z nagłówka „… łącznie **NNN** tras …". Kotwiczymy na ASCII-owym `tras`
+    # (nie na UTF-8 „łącznie"), żeby busybox sed nie potknął się na bajtach spoza ASCII.
+    - DOCUMENTED=$(sed -n 's/.*\*\*\([0-9][0-9]*\)\*\* tras.*/\1/p' docs/ENDPOINTS.md | head -1)
+    - echo "Trasy API — realnie plików route.*= $ACTUAL ; w nagłówku ENDPOINTS.md= $DOCUMENTED"
+    - |
+      if [ -z "$DOCUMENTED" ]; then
+        echo ""
+        echo "✗ Nie udało się odczytać licznika tras z docs/ENDPOINTS.md (nagłówek '… **NNN** tras')."
+        echo "  Nagłówek jest kontraktem tego strażnika — przywróć go w formacie 'łącznie **NNN** tras'."
+        exit 1
+      fi
+    - |
+      if [ "$ACTUAL" != "$DOCUMENTED" ]; then
+        echo ""
+        echo "✗ Licznik tras w docs/ENDPOINTS.md jest NIEAKTUALNY: realnie $ACTUAL plików route.*, w nagłówku $DOCUMENTED."
+        echo "  Przelicz i zaktualizuj nagłówek ('… łącznie **$ACTUAL** tras …') oraz dopisz nowe/zmienione trasy do tabel."
+        echo "  Komenda odniesienia (jak w komentarzu ENDPOINTS.md): find ghost-empire-web/src/app/api -type f -name 'route.*' | wc -l"
+        exit 1
+      fi
+    # 2) Stara reguła (zachowana): zmiana route.ts bez tknięcia docs/ — łapie zmiany
+    #    ZACHOWANIA trasy, których sam licznik nie wykryje (ta sama liczba, inna semantyka).
     - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --depth 50
     - CHANGED=$(git diff --name-only "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"...HEAD)
     - echo "$CHANGED"
@@ -369,12 +502,41 @@ docs-drift:
 # → wersja SemVer → tag vX.Y.Z → Release na GitLab → wpis w CHANGELOG.md (commit
 # zwrotny z [skip ci] — brak pętli).
 #
-# `allow_failure: true` = BOOTSTRAP-GUARD (NIE fałszywy zielony przez brak configu —
-# config jest kompletny). Zapobiega czerwonemu main DOPÓKI user nie wykona
-# jednorazowego setupu: (1) CI/CD var GITLAB_TOKEN (scope api), (2) bazowy tag
-# `v0.1.0` (inaczej pierwsze wydanie = 1.0.0), (3) zacommitowany root
-# package-lock.json. PO pierwszym udanym wydaniu → USUŃ allow_failure, by release
-# stał się autorytatywny. Brak setupu = pomarańczowe ostrzeżenie (widoczne, nie ukryte).
+# ⚠️ AUDYT: TEN JOB NIE WYDAŁ JESZCZE ANI JEDNEGO RELEASE'U. Historia jest dowodem:
+# 1005 commitów, DOKŁADNIE JEDEN tag (`v0.1.0`, założony ręcznie 2026-07-16) i ZERO
+# commitów `chore(release):`. Były DWIE nałożone przyczyny, obie już usunięte:
+#
+#   (a) root `package-lock.json` NIE ISTNIAŁ (ani na dysku, ani w gicie — zalockowane
+#       były tylko `ghost-empire-web/` i `ghost-empire-chat/`), a `npm ci` bez lockfile'a
+#       twardo failuje, więc `npx semantic-release` nigdy się nie uruchamiał;
+#   (b) GŁĘBSZA, niewidoczna spod (a): root `package.json` przypinał
+#       `@semantic-release/commit-analyzer: ^13.0.6` — wersję, której NIE MA na npm
+#       (najwyższa opublikowana to 13.0.1). Nawet z lockfile'em instalacja kończyłaby się
+#       `ETARGET`. Poprawione na `^13.0.1`; pozostałe dziewięć zakresów zweryfikowano
+#       jako spełnialne.
+#
+# Zweryfikowane lokalnie po naprawie: `npm ci --ignore-scripts --dry-run` → exit 0,
+# 416 pakietów, lockfileVersion 3 (zgodnie z konwencją repo opisaną na górze pliku).
+#
+# Dlaczego nikt tego nie zauważył: `allow_failure: true` z komentarzem opisującym się jako
+# BOOTSTRAP-GUARD do zdjęcia „PO pierwszym udanym wydaniu" — czyli po zdarzeniu, które przy
+# tamtej konfiguracji nastąpić nie mogło. Awaria była niewidoczna.
+#
+# PRECHECK w `before_script` ZOSTAJE mimo naprawy — jest tani, a gdyby lockfile kiedyś
+# wypadł z repo (np. przez regułę w .gitignore), job powie CO jest nie tak zamiast wywalić
+# się na generycznym błędzie npm.
+#
+# CO ZOSTAŁO DO PIERWSZEGO WYDANIA:
+#   1. ✅ root `package-lock.json` — wygenerowany i zacommitowany.
+#   2. ⬜ CI/CD var `GITLAB_TOKEN` (scope: api) — TEGO NIE DA SIĘ USTAWIĆ Z REPO.
+#   3. ✅ tag bazowy `v0.1.0` istnieje (bez niego pierwsze wydanie wyszłoby jako 1.0.0).
+#   4. ⬜ decyzja o `CHANGELOG.md` — jest pisany RĘCZNIE i ma 818 KB, a plugin
+#      @semantic-release/changelog dopisuje swoją sekcję na górze. Zdecyduj, czy generowane
+#      wpisy mają dokładać się do istniejącego pliku (jak zrobił to E-Bot, dokumentując
+#      punkt przejścia w `.releaserc.json` → `changelogTitle`), czy release ma CHANGELOG-a
+#      w ogóle nie dotykać. Uruchom `npm run release:dry` po ustawieniu tokenu, żeby
+#      zobaczyć, co plugin faktycznie chce zrobić, ZANIM zdejmiesz allow_failure.
+#   5. ⬜ Dopiero wtedy ZDEJMIJ `allow_failure: true`.
 release:
   stage: release
   image: node:22-bookworm-slim
@@ -391,6 +553,23 @@ release:
     paths:
       - node_modules/
   before_script:
+    # PRECHECK — nazwij brakujący warunek, zamiast dać `npm ci` wywalić się z generycznym
+    # „The `npm ci` command can only install with an existing package-lock.json". To jest
+    # cała różnica między „job jest pomarańczowy, pewnie tak ma być" a „job mówi, co zrobić".
+    - |
+      if [ ! -f package-lock.json ]; then
+        echo "═══════════════════════════════════════════════════════════════════"
+        echo "RELEASE POMINIĘTY: brak root package-lock.json."
+        echo ""
+        echo "semantic-release instaluje się tu przez 'npm ci', które BEZ lockfile'a"
+        echo "kończy się błędem — więc żadne wydanie nigdy nie powstało (1 ręczny tag,"
+        echo "0 commitów chore(release) na 1005 commitów historii)."
+        echo ""
+        echo "Napraw: npm install --package-lock-only  (w root-cie) i zacommituj wynik."
+        echo "Pełna instrukcja: komentarz nad jobem 'release' w .gitlab-ci.yml."
+        echo "═══════════════════════════════════════════════════════════════════"
+        exit 1
+      fi
     # node:*-slim nie ma gita ani certyfikatów CA — wymagane przez semantic-release.
     - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
     - npm ci --ignore-scripts $NPM_FLAGS   # root deps; --ignore-scripts pomija `prepare`(lefthook)

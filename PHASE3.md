@@ -1,6 +1,19 @@
 # Phase 3 — Streaming bot ecosystem (Twitch + Kick + YouTube)
 
-**Status:** **Phase 3A (chat bot) + 3B (engagement) ZREALIZOWANE i na produkcji** (2026-05-30). Bot czatu na Twitch + Kick + YouTube żyje, komendy zarządzane z portalu, plus timery / FAQ / powitania / song requests / chat overlay. **Następny duży krok: 3C (alerts upgrade + hardware) i 3D (AI + analityka)** — pozostają planem poniżej. 👉 **Aktualny, wykonawczy plan ukończenia całego projektu: [PLAN.md](PLAN.md).**
+> ## 🗄️ ARCHIWUM — migawka z 2026-06-06 (ostatni opisany PR: **#17**)
+>
+> **Ten plik NIE jest już aktualizowany.** Opisane niżej „następne duże kroki" **już się wydarzyły**:
+> **3C (sterowanie OBS)** dowiezione w #664–#672 (zob. [`docs/OBS-CONTROL.md`](docs/OBS-CONTROL.md)),
+> **3D (AI + analityka)** w #166 i dalej. Traktuj to jako zapis pierwotnego podziału na
+> pod-fazy i szacunków zakresu — **nie** jako listę TODO.
+>
+> **Żywe dokumenty:** stan i plan → [`ROADMAP.md`](ROADMAP.md) · co shipnęło → [`CHANGELOG.md`](CHANGELOG.md) ·
+> jak działa bot i overlaye → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/OBS-CONTROL.md`](docs/OBS-CONTROL.md).
+> Wskazywany niżej [`PLAN.md`](PLAN.md) **też jest archiwum** (migawka 2026-06-11).
+>
+> Zdjęte przy audycie 2026-08 — znalezisko „martwe dokumenty linkowane jako żywe".
+
+**Status (stan na 2026-05-30, historyczny):** **Phase 3A (chat bot) + 3B (engagement) ZREALIZOWANE i na produkcji**. Bot czatu na Twitch + Kick + YouTube żyje, komendy zarządzane z portalu, plus timery / FAQ / powitania / song requests / chat overlay. **Wówczas następny duży krok: 3C (alerts upgrade + hardware) i 3D (AI + analityka)** — dziś jedno i drugie jest już dowiezione (patrz banner wyżej).
 
 > ### ✅ Już shipped z Phase 3
 > - **Phase 3A — chat bot** (`ghost-empire-chat`) — bot na **Twitch + Kick + YouTube**, 1 GT/min/widz, komendy zarządzane z portalu (`/admin#chat`), auto-refresh tokenów. **DZIAŁA na produkcji** (PR #6–#8).
@@ -10,8 +23,9 @@
 > - **Rozbudowa achievementów** — 53 odznaki, auto-grant engine wyzwalany zdarzeniami streamowymi
 > - **Kick auto-events + YouTube super chaty** — domknięcie Phase 2 (patrz [PHASE2.md](PHASE2.md))
 >
-> ### 🚧 Następny duży krok: Phase 3C (alerts + hardware) → 3D (AI + analityka)
-> **3A i 3B są zrobione.** Poniżej zostaje plan 3C / 3D; sekcje 3A/3B zostawione jako referencja i oznaczone ✅ DONE.
+> ### 🗄️ Wtedy „następny duży krok": Phase 3C (alerts + hardware) → 3D (AI + analityka)
+> **Historycznie:** 3A i 3B zrobione, poniżej został plan 3C / 3D; sekcje 3A/3B zostawione jako referencja i oznaczone ✅ DONE.
+> **Dziś (2026-08):** 3C i 3D również są dowiezione — nie czytaj tego jako listy TODO (patrz banner archiwalny na górze pliku).
 
 ## TL;DR realistyczny zakres
 

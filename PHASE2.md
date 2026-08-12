@@ -4,11 +4,16 @@ Things that need either **external account setup by Gh0s77tt** or **bigger engin
 
 ---
 
-## ✅ PHASE 2 — ZAMKNIĘTE (2026-05)
+## ✅ PHASE 2 — ZAMKNIĘTE (2026-05) · 🗄️ archiwum
 
-**Wszystkie items E–K zrealizowane i na produkcji.** Ten plik zostaje jako dokumentacja setupu (instrukcje „Co musisz zrobić” są nadal aktualne przy konfiguracji od zera).
+**Wszystkie items E–K zrealizowane i na produkcji.** Ten plik zostaje **celowo** jako dokumentacja
+setupu — instrukcje „Co musisz zrobić” są nadal użyteczne przy konfiguracji od zera, ale **statusy
+i zakres to migawka z maja 2026**, nie stan bieżący.
 
-> 👉 Bieżący stan i wykonawczy plan dokończenia projektu: [PLAN.md](PLAN.md).
+> 👉 **Bieżący stan i plan: [`ROADMAP.md`](ROADMAP.md)**; co i kiedy shipnęło: [`CHANGELOG.md`](CHANGELOG.md).
+> *(Ten wskaźnik prowadził wcześniej do [`PLAN.md`](PLAN.md) — a PLAN.md sam jest dziś archiwum
+> z 2026-06-11, więc wskazywał na kolejny martwy dokument. Poprawione przy audycie 2026-08,
+> znalezisko „martwe dokumenty linkowane jako żywe".)*
 
 | # | Feature | Status |
 |---|---|---|

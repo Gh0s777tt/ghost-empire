@@ -6,12 +6,33 @@
 // "daily-bonus:<userId>:<utcDay>" key on the already-unique `Transaction.externalId`
 // column, so two concurrent claims race on the unique index and exactly one wins
 // (P2002) — no over-credit, no Serializable/retry dance needed (#audit-M4).
+//
+// Auth na POST: sesja (portal UI) LUB companion bearer token. Finding "companion nie
+// odbierze drop kodu / daily bonusa": POST był session-only, a rozszerzenie NX Companion
+// woła go z MV3 service workera — czyli CROSS-ORIGIN, więc cookie sesji (SameSite=Lax)
+// nie jest wysyłane, a wysyłany Bearer był ignorowany → gwarantowane 401. Ścieżka bearer
+// istnieje wyłącznie z tego powodu i jest kopią wzorca z /api/companion/tasks/claim:
+// tenant rozwiązany PRZED auth + token MUSI być zmintowany na TYM portalu, inaczej token
+// z portalu A odbierałby bonus na koncie portalu B (cross-tenant, #qa D-3). GET (status)
+// zostaje session-only — rozszerzenie go nie woła, więc nie otwieram go cross-origin.
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCurrentTenant } from "@/lib/tenant";
+import { bearerFromRequest, verifyCompanionToken } from "@/lib/companion-token";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "content-type, authorization",
+};
+
+export function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS });
+}
 
 const BASE = 50;
 const STEP = 25;
@@ -45,20 +66,31 @@ export async function GET() {
   return NextResponse.json(await getStatus(session.user.id));
 }
 
-export async function POST() {
+export async function POST(req: Request) {
+  // Tenant PRZED auth — companion token niesie tenantId, na którym został zmintowany,
+  // i musi on równać się portalowi rozwiązanemu z Hosta (userId jest per-tenant).
+  const tid = (await getCurrentTenant()).id;
+
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userId = session.user.id;
+  let actorId = session?.user?.id ?? null;
+  if (!actorId) {
+    const payload = verifyCompanionToken(bearerFromRequest(req));
+    if (payload && payload.tenantId === tid) actorId = payload.userId;
+  }
+  if (!actorId) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: CORS });
+  // Id aktora z tego credentialu, którym się uwierzytelnił — używa go KAŻDE zapytanie
+  // niżej (status/streak, credit, transakcja z unikalnym externalId).
+  const userId = actorId;
 
   // Per-user throttle on the token-granting path. The unique `externalId` already blocks
   // double-claims; this caps session/spam attempts for parity with other economy routes. #audit-M
   const rl = await rateLimit(`daily-bonus:${userId}`, 10, 60_000);
   if (!rl.allowed) {
-    return NextResponse.json({ error: "Za szybko. Spróbuj za chwilę." }, { status: 429, headers: rateLimitHeaders(rl) });
+    return NextResponse.json({ error: "Za szybko. Spróbuj za chwilę." }, { status: 429, headers: { ...CORS, ...rateLimitHeaders(rl) } });
   }
 
   const s = await getStatus(userId);
-  if (s.claimedToday) return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409 });
+  if (s.claimedToday) return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409, headers: CORS });
   const reward = s.nextReward;
 
   const dayKey = dayStartUtc(new Date());
@@ -79,14 +111,14 @@ export async function POST() {
       const u = await tx.user.findUnique({ where: { id: userId }, select: { tokens: true } });
       return u?.tokens ?? 0;
     });
-    return NextResponse.json({ ok: true, reward, streak: s.streak + 1, newBalance });
+    return NextResponse.json({ ok: true, reward, streak: s.streak + 1, newBalance }, { headers: CORS });
   } catch (e) {
     if (e instanceof Error && e.message === "DUP") {
-      return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409 });
+      return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409, headers: CORS });
     }
     if (typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2002") {
-      return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409 });
+      return NextResponse.json({ error: "Bonus już odebrany — wróć jutro!" }, { status: 409, headers: CORS });
     }
-    return NextResponse.json({ error: "Błąd serwera — spróbuj ponownie" }, { status: 500 });
+    return NextResponse.json({ error: "Błąd serwera — spróbuj ponownie" }, { status: 500, headers: CORS });
   }
 }

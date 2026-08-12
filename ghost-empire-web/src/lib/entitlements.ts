@@ -13,6 +13,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("entitlements");
 
 export type Plan = "basic" | "pro" | "elite";
 
@@ -61,16 +64,32 @@ export type FeatureGate =
  * Request-time gate for API routes. Resolves the current tenant (Host) and
  * checks its effective plan. No tenant row / legacy single-tenant → allowed
  * (the founder portal predates billing). Throws nothing; returns a verdict.
+ *
+ * @remarks
+ * Every "allowed without a plan check" arm below is a deliberate FAIL-OPEN — a
+ * billing check must never take a portal down. The behaviour stays, but the two
+ * arms that are NOT normal steady state now leave a log line (#audit-arch3):
+ * fail-open was previously indistinguishable from "the plan really does cover
+ * this", so a misconfigured `NEXT_PUBLIC_ROOT_DOMAIN` or a longer Supabase
+ * outage silently unlocked every paid feature for everyone, forever, with
+ * nothing in the logs to notice it by. Grep `scope=entitlements` to see it.
  */
 export async function requireTenantFeature(feature: Feature): Promise<FeatureGate> {
   const tid = await currentTenantId();
+  // Legacy single-tenant path (no Host→tenant mapping at all) — documented and
+  // expected, so it stays silent; logging it would drown the two below in noise.
   if (!tid) return { ok: true, plan: "elite" };
   try {
     const t = await prisma.tenant.findUnique({
       where: { id: tid },
       select: { plan: true, planExpiresAt: true },
     });
-    if (!t) return { ok: true, plan: "elite" };
+    if (!t) {
+      // Host resolved to a tenant id whose row is gone (deleted portal / stale cache).
+      // Not steady state — a persistent one means everyone on that Host gets elite.
+      log.warn("tenant row missing for resolved id → feature allowed (fail-open)", { tenantId: tid, feature });
+      return { ok: true, plan: "elite" };
+    }
     const plan = effectivePlan(t.plan, t.planExpiresAt);
     if (planHasFeature(plan, feature)) return { ok: true, plan };
     return {
@@ -79,8 +98,10 @@ export async function requireTenantFeature(feature: Feature): Promise<FeatureGat
       error: "Ta funkcja nie jest dostępna w obecnym planie portalu",
       plan,
     };
-  } catch {
-    // DB hiccup → fail OPEN (a billing check must never take the portal down).
+  } catch (e) {
+    // DB hiccup → fail OPEN (a billing check must never take the portal down),
+    // but LOUDLY: a hiccup is one line, a broken pool is a flood in the logs.
+    log.error("plan lookup failed → feature allowed (fail-open)", e, { tenantId: tid, feature });
     return { ok: true, plan: "elite" };
   }
 }

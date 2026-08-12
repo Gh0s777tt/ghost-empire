@@ -1,11 +1,30 @@
 # AUDIT_REPORT.md — E-Forge / Ghost Empire
 
+> ## 🗄️ ARCHIWUM — migawka z **2026-07-02** (commit `44adb6d`, #775). NIE jest to bieżąca ocena repo.
+>
+> **Zastąpiony przez:** [`docs/audit/AUDIT-2026-07-13.md`](docs/audit/AUDIT-2026-07-13.md) — to
+> **jedyny** audyt podpięty do nawigacji serwisu dokumentacji (`mkdocs.yml` → *Jakość*).
+> Ten plik zostaje w korzeniu repo jako zapis stanu z lipca; jeśli oba mówią co innego,
+> **nowszy wygrywa**.
+>
+> **Czego ten raport NIE wie** (przykłady, nie lista zamknięta): dowiezione po 2026-07-02
+> #776–#817 — m.in. Philips Hue przestało być „guzikiem bez akcji" (realny aktuator, rdzeń
+> reguł i admin API, #813–#817), a część ustaleń §3/§4 domknięto w #776–#779.
+> **Bieżący stan:** [`ROADMAP.md`](ROADMAP.md) · [`CHANGELOG.md`](CHANGELOG.md).
+>
+> **Dlaczego ten banner istnieje:** §8 tego samego raportu wytyka poprzednikowi dokładnie tę
+> wadę („datowany 2026-06-28 na commit #730 — nieaktualny względem #775, mylący jako »bieżący«
+> stan"). Po miesiącu ta sama diagnoza dotyczy jego. Data-stempel + wskazanie następcy
+> dodane przy audycie 2026-08 (znalezisko: „migawki bez terminu ważności, prezentowane jako
+> bieżące"). **Nowy raport ⇒ zaktualizuj ten banner.**
+
 **Tryb:** read-only (bez zmian w kodzie, bez mutacji produkcji). **Data:** 2026-07-02. **Audytor:** senior engineer (Claude).
 **Zakres:** `ghost-empire-phase1/` (głównie `ghost-empire-web/`), stan na commit `44adb6d` (#775), `main` = `origin/main` = zdalny `main`.
 **Metoda:** analiza statyczna (2 równoległe przebiegi agentowe: jakość kodu · parytet UI↔kod) + własne deterministyczne sprawdzenia (git, `npm audit`/`npm outdated`, skan sekretów w HEAD i historii, testy+coverage, RLS/schemat na żywej bazie przez pg — tylko SELECT, sondy produkcji HTTP, przegląd tras w dev-serwerze). Wartości sekretów nie są ujawniane — tylko nazwy zmiennych.
 **Poprzedni audyt:** 2026-06-28 (#730→#731 remediacja) — ten raport go zastępuje; stan tamtych ustaleń odnotowany w §8.
 
-> **✅ Status remediacji (2026-07-02, po „zrób wszystko i napraw"):** wszystkie ustalenia w KODZIE domknięte w **#776–#779** — kontrakt błędów API `{error}`/`{reason}` + koniec cichych `try/finally` (§3/§6), crypto-RNG we wszystkich grach kasyna (§3), parytet UI↔kod: `/deck`+`/overlay/obs-control` dostają wejścia, nota ObsRules i status Hue przestają mylić, `/predictions` w NAV, martwy link rankingu (§3/§4), higiena: `clientIp()`/`clampInt()` do lib + `ENDPOINTS.md` uzupełnione + drobiazgi (§3). **733 testy zielone, 0 db push, 0 mutacji prod.** Zostają wyłącznie **owner-actions** (poza kodem): 🔴 rotacja klucza Resend i przegląd `origin/imgbot`; oraz świadomie **odroczone** większe prace (testy integracyjne money-path, podział `kasyno/shared.tsx` + wyniesienie changelogu z `about/page.tsx`, sweep hardcode `pl-PL`, rozszerzenie `check-docs-sync`) — patrz §7.8–7.9.
+> **✅ Status remediacji — ZAMROŻONY NA 2026-07-02** (po „zrób wszystko i napraw"); ten status
+> opisuje wyłącznie ustalenia tego raportu i **nie** był aktualizowany później: wszystkie ustalenia w KODZIE domknięte w **#776–#779** — kontrakt błędów API `{error}`/`{reason}` + koniec cichych `try/finally` (§3/§6), crypto-RNG we wszystkich grach kasyna (§3), parytet UI↔kod: `/deck`+`/overlay/obs-control` dostają wejścia, nota ObsRules i status Hue przestają mylić, `/predictions` w NAV, martwy link rankingu (§3/§4), higiena: `clientIp()`/`clampInt()` do lib + `ENDPOINTS.md` uzupełnione + drobiazgi (§3). **733 testy zielone, 0 db push, 0 mutacji prod.** Zostają wyłącznie **owner-actions** (poza kodem): 🔴 rotacja klucza Resend i przegląd `origin/imgbot`; oraz świadomie **odroczone** większe prace (testy integracyjne money-path, podział `kasyno/shared.tsx` + wyniesienie changelogu z `about/page.tsx`, sweep hardcode `pl-PL`, rozszerzenie `check-docs-sync`) — patrz §7.8–7.9.
 
 ---
 

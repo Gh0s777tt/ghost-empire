@@ -26,6 +26,11 @@
 
 # IDE / OS
 .DS_Store
+# macOS AppleDouble resource forks ("._Foo.ts") — sypie je Finder/iCloud na każdym
+# nie-HFS wolumenie. Bez tej reguły jeden `git add -A` z checkoutu zsynchronizowanego
+# z macOS wrzuca tysiące śmieciowych binarek i psuje każdy tool globujący `**/*.ts`
+# (tsc/eslint/vitest widzą "._route.ts" jako źródło). Nigdy nie commituj. (#audit)
+._*
 **/Thumbs.db
 **/*.pem
 .idea/

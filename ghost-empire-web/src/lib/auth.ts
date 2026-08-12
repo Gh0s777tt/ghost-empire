@@ -24,16 +24,64 @@ import { createLogger } from "@/lib/logger";
 const log = createLogger("auth");
 
 // Permanent admins by email — these accounts are ALWAYS admin, regardless of DB
-// state (survives a database reset / wipe). The owner's email is hardcoded so the
-// account can never be locked out; extra emails can be added via ADMIN_EMAILS
-// (comma-separated env var).
-const PERMANENT_ADMIN_EMAILS = new Set(
-  ["dzierzawskii98.dam@gmail.com", ...(process.env.ADMIN_EMAILS ?? "").split(",")]
+// state (survives a database reset / wipe).
+//
+// AUDIT FIX — the list used to be built as `new Set([<hardcoded literal>, ...ADMIN_EMAILS])`,
+// i.e. config could only ADD to the literal and could NEVER remove it. That one address
+// re-persists isAdmin on every sign-in (session/signIn/linkAccount callbacks below), skips
+// the cross-tenant guard (lib/admin.ts) and unlocks platform-owner powers — and it is PUBLIC
+// (the repo's own GitHub mirror, CHANGELOG.md, ROADMAP.md), so anyone reading the repo knows
+// exactly whose mailbox/OAuth to take over to own every portal. ADMIN_EMAILS is now the
+// PRIMARY and REPLACING source: whatever it lists is the complete list.
+//
+// The hardcoded fallback survives for ONE reason only — a deployment that forgot ADMIN_EMAILS
+// would otherwise have NO admin at all (after a DB wipe there is no other route back into the
+// panel), locking the owner out of production. It therefore stays, but fires a single loud
+// startup warning. DELETE THE FALLBACK once ADMIN_EMAILS is set in the deployment.
+const HARDCODED_ADMIN_FALLBACK = ["dzierzawskii98.dam@gmail.com"];
+
+/**
+ * Resolve the permanent-admin list ONCE at module load (not per request), so the
+ * "you are running on the hardcoded fallback" warning is emitted exactly once per
+ * server instance instead of spamming every sign-in.
+ */
+function resolvePermanentAdminEmails(): Set<string> {
+  const configured = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
     .map((e) => e.trim().toLowerCase())
-    .filter(Boolean),
-);
+    .filter(Boolean);
+  if (configured.length > 0) return new Set(configured);
+  // Never log the address itself — the point of the fix is to stop advertising it.
+  log.warn(
+    "ADMIN_EMAILS is not set — falling back to the HARDCODED permanent-admin list. " +
+      "Set ADMIN_EMAILS on this deployment and remove the fallback.",
+  );
+  return new Set(HARDCODED_ADMIN_FALLBACK.map((e) => e.trim().toLowerCase()).filter(Boolean));
+}
+
+const PERMANENT_ADMIN_EMAILS = resolvePermanentAdminEmails();
 export function isPermanentAdminEmail(email?: string | null): boolean {
   return !!email && PERMANENT_ADMIN_EMAILS.has(email.toLowerCase());
+}
+
+/**
+ * Czy ban konta jest AKTUALNIE aktywny — JEDNO źródło prawdy dla wszystkich ścieżek
+ * logowania (OAuth przez signIn callback + passkey, który tworzy Session sam z siebie:
+ * api/auth/passkey/login/verify). Wydzielone z signIn, bo passkey w ogóle bana nie
+ * sprawdzał — zbanowany użytkownik z passkeyem logował się z powrotem mimo bana.
+ *
+ * Czysta funkcja (bez DB) — sam zapis "auto-unban" należy do wywołującego.
+ * @param user - pola `isBanned`/`bannedUntil` z wiersza User.
+ * @param now - punkt odniesienia (wstrzykiwany w testach).
+ * @returns true = odmów logowania; false = wpuść (brak bana LUB ban czasowy już wygasł).
+ */
+export function isBanActive(
+  user: { isBanned?: boolean | null; bannedUntil?: Date | null },
+  now: Date = new Date(),
+): boolean {
+  if (!user.isBanned) return false;
+  // Ban czasowy sam się zdejmuje po terminie; ban bez daty (bannedUntil === null) jest wieczny.
+  return !(user.bannedUntil && user.bannedUntil < now);
 }
 
 // Custom Kick provider — KICK isn't built into next-auth.
@@ -381,10 +429,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { id: user.id },
         });
 
-        // BLOCK BANNED USERS — site-level ban
+        // BLOCK BANNED USERS — site-level ban. The verdict itself lives in isBanActive()
+        // so the passkey sign-in route (which mints a Session outside NextAuth) applies the
+        // IDENTICAL rule and the two paths cannot drift apart.
         if (dbUser?.isBanned) {
           // Expired bans auto-unban themselves
-          if (dbUser.bannedUntil && dbUser.bannedUntil < new Date()) {
+          if (!isBanActive(dbUser)) {
             await prisma.user.update({
               where: { id: dbUser.id },
               data: { isBanned: false, bannedUntil: null, banReason: null },
@@ -552,6 +602,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               userId: dbUser.id,
               platform: platformName,
               platformId,
+              // Per-tenant identity (audyt 2026-08): stempluj Connection tenantem właściciela,
+              // żeby unique `[platform, platformId, tenantId]` był per-portal, a ten sam login
+              // platformy mógł istnieć na wielu portalach. Jedyne miejsce TWORZĄCE Connection.
+              tenantId: dbUser.tenantId,
               username: platformUsername,
               displayName: connectionDisplayName,
               avatar: user.image ?? "",

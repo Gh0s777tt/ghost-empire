@@ -7,6 +7,7 @@
 // ticket weighting. Locally deduped so we never spam the portal. No chat echo (spam-free) —
 // the streamer announces winners after the draw in /admin#events.
 import { env } from "./env";
+import { trackInFlight } from "./shutdown";
 
 let keywords = new Set<string>();
 const seen = new Set<string>(); // `${keyword}:${platform}:${username}` — reset when the keyword set changes
@@ -41,9 +42,13 @@ export function checkRaffleEntry(
   if (seen.has(dedupe)) return;
   if (seen.size > 5000) seen.clear(); // safety bound — a single raffle won't approach this
   seen.add(dedupe);
-  void fetch(`${env.portalUrl}/api/internal/raffle-entry`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.botSecret}` },
-    body: JSON.stringify({ keyword: kw, platform, username, isSub, isMod }),
-  }).catch(() => {}); // ok:true even when entered:false (no active raffle / unlinked / already entered)
+  // Tracked as in-flight work: the local dedupe above already marked this viewer as entered,
+  // so a request killed by a SIGTERM would cost them their ticket with no retry anywhere.
+  void trackInFlight(
+    fetch(`${env.portalUrl}/api/internal/raffle-entry`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.botSecret}` },
+      body: JSON.stringify({ keyword: kw, platform, username, isSub, isMod }),
+    }),
+  ).catch(() => {}); // ok:true even when entered:false (no active raffle / unlinked / already entered)
 }

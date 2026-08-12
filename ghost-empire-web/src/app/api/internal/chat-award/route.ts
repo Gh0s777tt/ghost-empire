@@ -85,6 +85,16 @@ export async function POST(req: Request) {
   // is globally unique, so findFirst + the tenant relation filter returns that single row
   // only when it belongs here. tenantId null (pre-backfill / no request scope) → unscoped
   // (legacy single-tenant behaviour).
+  //
+  // KNOWN GAP (#audit-db1): that global unique also means whichever portal a viewer linked
+  // FIRST owns the [platform, platformId] row forever. When the same person signs into a
+  // SECOND portal, the signIn `connection.upsert` collides with portal A's row and the error
+  // is swallowed by auth.ts's broad catch — so the portal-B user has NO Connection at all,
+  // and this tenant-scoped read correctly returns null → `user_not_linked` on that portal
+  // (chat awards, sub/VIP flags and violation attribution never attach there). Closing it
+  // needs the Connection unique to become per-tenant (mirroring Account's
+  // [provider, providerAccountId, tenantId]) — a live-DB schema change, decided elsewhere.
+  // Until then a null here for a cross-portal viewer is EXPECTED, not a lookup bug.
   const scopeToTenant = tenantId ? { user: { tenantId } } : {};
   const connection = platformUserId
     ? await prisma.connection.findFirst({

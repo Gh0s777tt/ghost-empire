@@ -12,7 +12,13 @@ const eslintConfig = [
   {
     rules: {
       "react/no-unescaped-entities": "off",
-      // Hobby plan: native <img> avoids the image-optimizer quota (ROADMAP §3).
+      // Native <img> everywhere by design, next/image migration is a tracked ROADMAP §3
+      // item. AUDIT [11]: the old "Hobby plan quota" rationale was stale — the project runs
+      // on Vercel Pro now (docs/BACKUP.md, sub-daily crons in vercel.json are Pro-only).
+      // The rule stays OFF because (a) the whole codebase still renders native <img>, so
+      // enabling it just paints every image red without migrating anything, and (b) even on
+      // Pro the image optimizer is usage-billed past the included quota — the switch should
+      // land as the deliberate ROADMAP §3 migration, not be forced through lint.
       "@next/next/no-img-element": "off",
       // Admin sections legitimately use <a href="/api/..."> to trigger full-page
       // navigations to API endpoints (OAuth-start redirects + the backup download) —

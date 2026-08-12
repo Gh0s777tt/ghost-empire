@@ -16,7 +16,12 @@ useDefault = true
 description = "Placeholdery w szablonach env — brak realnych sekretów"
 paths = [
   '''ghost-empire-web/\.env\.example$''',
-  '''ghost-empire-chat/tenants/.*\.env$''',
+  # TYLKO szablon, nie `tenants/.*\.env$`. Ten glob przepuszczał KAŻDY plik env
+  # floty (`tenants/neo-zone.env` itd.) — a to są realne, per-portal poświadczenia
+  # (BOT_SECRET, TWITCH/KICK/GOOGLE_CLIENT_SECRET, YOUTUBE_BOT_REFRESH_TOKEN).
+  # Razem z brakiem `tenants/*.env` w .gitignore dawało to komplet sekretów, który
+  # dało się scommitować I który twarda bramka `gitleaks` przepuszczała bez słowa. (#audit)
+  '''ghost-empire-chat/tenants/example-tenant\.env$''',
   '''.*\.env\.example$''',
 ]
 # Dodatkowo wycisz typowe wartości-placeholdery, gdyby pojawiły się w innych plikach

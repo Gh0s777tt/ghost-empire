@@ -1,7 +1,7 @@
 // src/lib/admin.ts
 import { auth, isPermanentAdminEmail } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { currentTenantId } from "@/lib/tenant";
+import { currentTenantId, getCurrentTenant, isFounderBrand } from "@/lib/tenant";
 import type { ModPermission } from "@/lib/permissions";
 import { hasPermission } from "@/lib/permissions";
 import { decryptSecret } from "@/lib/crypto";
@@ -54,15 +54,30 @@ export async function findManagedUser(target: string, gate: { isPlatformOwner: b
  * Cross-tenant guard (SaaS Phase 4): an admin/moderator of tenant A must not
  * administer tenant B's subdomain — global `isAdmin` alone would let them.
  * The platform owner (permanent admin email) passes everywhere
- * (admin-of-admins). Legacy NULL tenantId passes — those accounts self-heal
- * on next login (#369), and single-tenant deployments resolve to one tenant
- * anyway.
+ * (admin-of-admins).
+ *
+ * Legacy NULL `tenantId` used to short-circuit to "not wrong" on EVERY host,
+ * which made this guard a no-op for exactly the accounts it cannot vouch for:
+ * `User.tenantId` is still nullable, the self-heal (#369) only stamps it on the
+ * account's NEXT successful login, and a failed backfill leaves no trace — so
+ * that population is not provably empty, yet it reached every portal's ~83
+ * admin endpoints (grant_tokens, ban_users, manage_shop). It now passes only on
+ * the founder/default portal, which is where every pre-tenant account actually
+ * came from; any other portal treats it as cross-tenant. Same verdict
+ * `canManageTenantBotSecret` already reached for the per-tenant bot secret.
+ *
+ * NOT a lockout: the self-heal stamps `tenantId` from the request Host on the
+ * next login, so a legacy admin who really belongs to a non-founder portal gets
+ * their panel back by signing out and in once on that portal. `tid === null`
+ * (single-tenant / pre-`db push` deployment) still passes — there is no
+ * isolation boundary to enforce there at all.
  */
 async function isWrongTenant(user: { tenantId: string | null; email: string | null }): Promise<boolean> {
-  if (!user.tenantId) return false;
   if (isPermanentAdminEmail(user.email)) return false;
   const tid = await currentTenantId();
   if (!tid) return false;
+  // Same request-cached tenant read `currentTenantId()` already resolved — no extra query.
+  if (!user.tenantId) return !isFounderBrand(await getCurrentTenant());
   return user.tenantId !== tid;
 }
 

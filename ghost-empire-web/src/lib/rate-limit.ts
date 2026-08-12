@@ -5,6 +5,20 @@
 // Redis isn't configured OR errors (so behavior is never worse than the proven
 // DB path). Both fail OPEN by default (a DB-backed op fails anyway, so the bypass
 // opens nothing); a CPU-heavy non-DB caller can pass failClosed to block instead.
+//
+// Known limit of that default (#audit-arch6) — kept deliberately, but write it down:
+//   1. "the guarded write fails anyway" holds only while the limiter and the guarded
+//      op share a failure domain. It does NOT hold for a REDIS-only outage: we then
+//      degrade to the DB limiter, and if THAT also errors the mint still succeeds
+//      while its ceiling is gone. Any caller whose limit is the ONLY cap on minting
+//      value (chat-award's per-viewer farming cap) — rather than a nicety on top of a
+//      DB write that would fail regardless — should pass failClosed explicitly.
+//   2. Without Redis the counters live per-instance in lib/redis.ts's in-memory shim
+//      (FIFO-capped at 1000 keys), so on serverless the EFFECTIVE limit is
+//      maxHits × warm instances. Sizing a limit as an exact anti-abuse budget only
+//      works with Upstash actually configured.
+// Neither is changed here: flipping the global default to fail-closed would turn a DB
+// blip into a full portal outage for every guarded endpoint, which is the worse trade.
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";

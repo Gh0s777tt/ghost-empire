@@ -7,7 +7,7 @@ import { env } from "./env";
 const INTERVAL_MS = 60_000;
 
 function configuredPlatforms(): string[] {
-  const platforms = ["twitch"]; // Twitch env is required, the bot always joins it
+  const platforms = ["twitch"]; // Twitch env is required, the bot always joins it (see env.ts — deliberate; revisit together with any "Kick-only tenant" change)
   if (env.kick.channel) platforms.push("kick");
   if (env.youtube.refreshToken) platforms.push("youtube");
   return platforms;

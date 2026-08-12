@@ -4,6 +4,23 @@
 // per-tenant secret (a streamer running their own bot); see verifyBotSecretForTenant.
 // The target user is matched by discordId SCOPED to the request's tenant, so a portal's
 // bot can only award its own users. Rate limit per user (defense in depth if secret leaks).
+//
+// NO REPLAY PROTECTION HERE — known, and the caps below are the whole defence. The webhook
+// routes (webhooks/twitch-eventsub, webhooks/kick-events) verify a signature AND
+// isMessageFresh(ts), and Twitch additionally takes a unique-insert idempotency lock on its
+// messageId; the internal/* and bot/* routes have none of that, so a captured body +
+// Authorization pair replays verbatim. The ceiling is the
+// per-user fixed window right below: PER_USER_HITS × PER_USER_AMOUNT_CAP per window, per user.
+// Closing it properly needs BOTH a request-id/nonce in every bot call (a contract change in the
+// bot repo — every deployed bot breaks the moment this route starts requiring one) and a dedup
+// store to remember spent ids. It cannot be faked by hashing the body: legitimate awards ARE
+// byte-identical (two "message" awards for the same user in the same minute), so body-dedup
+// would silently drop real earnings. Deliberately deferred, not overlooked.
+//
+// One thing that is NOT part of that gap: rateLimit() fails OPEN on a terminal DB failure and
+// these callers do not pass failClosed. That is correct here rather than a second hole — the
+// grant is itself a Postgres $transaction, so the same outage that blinds the limiter also
+// fails the write; there is nothing to mint through the opened limiter (see lib/rate-limit.ts).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyBotSecretForTenant } from "@/lib/utils";

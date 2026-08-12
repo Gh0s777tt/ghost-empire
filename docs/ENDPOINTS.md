@@ -11,7 +11,13 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **193** trasy (192× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **221** tras (220× `route.ts` + 1× `route.tsx`)
+
+<!-- Licznik przeliczany, nie przepisywany: `find ghost-empire-web/src/app/api -type f -name "route.*" | wc -l`
+     (osobno `-name "route.ts"` = 220 i `-name "route.tsx"` = 1). Stał na 193 długo po tym, jak
+     realny stan dobił 221 — a ten plik jest jedyną mapą powierzchni API, więc zaniżony licznik
+     czyta się jako „wszystko jest tu opisane", kiedy 28 tras nie było. -->
+
 
 **Admin (`requireAdmin`):**
 | Trasa | Po co |
@@ -22,7 +28,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/backup` | Pobranie backupu JSON (config/katalog/salda, bez sekretów) |
 | `…/api/admin/widgets` | CRUD własnych widgetów (generator) |
 
-**Bot (`botSecret`):**
+**Bot / internal** *(klasa auth jest w komórce — te dwie trasy `bot/*` są **public GET**, nie `botSecret`; pełny podział 7 public / 6 `botSecret` w sekcji „Bot" niżej)*:
 | `…/api/bot/moderation` | public GET — config automoda dla bota |
 | `…/api/bot/active-prediction` | public GET — otwarty zakład (auto-pin na czacie) |
 | `…/api/internal/emoji-combo` | POST — bot zgłasza wykryty emoji-combo |
@@ -89,6 +95,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/presence` | GET/POST | Obecność na portalu (#767) — GET publiczny snapshot (online + próbka userów); POST heartbeat (zalogowany `u:<id>` server-side, gość `a:<anonId>` hex-walidowany). Dormant bez Upstash Redis (`{active:false}`) |
 | `…/api/companion/feed` | POST | Karmienie companiona GT (osobny endpoint akcji) |
 | `…/api/companion/tasks` | GET/OPTIONS | **Read-only** dzienne questy usera na dziś (`{date, tasks:[{id,text,textEn,target,reward,bonusReward,progress,done,claimed}], claimable}`); sesja LUB bearer-token companiona (== tenant), CORS, **nie tworzy** wierszy UserTask (w przeciwieństwie do strony /quests) |
+| `…/api/companion/tasks/claim` | POST/OPTIONS | 💰 **ŚCIEŻKA PIENIĘŻNA — jedyny zapis kredytujący GT w powierzchni companiona.** Odbiór nagrody za dziennego questa z rozszerzenia `nx-companion` (wołane **cross-origin**, stąd CORS + `OPTIONS`). Auth: sesja **LUB** bearer-token companiona, i token musi być **tego** tenanta (`payload.tenantId === tid`) — quest obcego portalu zwraca **404**, nie 403, żeby nie potwierdzać istnienia cudzych wierszy. Rate-limit 20/min/user. Kredyt jest atomowy: `updateMany` z guardem `claimed:false` **wewnątrz** transakcji, `count === 0` ⇒ rollback zamiast podwójnego creditu; `Transaction` typu `earn` + `tokens`/`totalEarned` rosną w tej samej transakcji. Świadome **lustro** `…/api/tasks/claim` (portal UI) — żywej ścieżki pieniężnej celowo nie refaktoryzowano, zmiana była addytywna. ⚠️ Sąsiedni `…/api/companion/tasks` jest **read-only**, i dopóki tego wiersza tu nie było, czytelnik wyciągał z tego wniosek, że powierzchnia companiona nie mintuje. **Mintuje.** |
 | `…/api/companion/season` | GET/OPTIONS | **Read-only** aktywny sezon + postęp usera (`{season:{number,name,totalTiers,xpPerTier,endsAt}\|null, progress:{xp,tier,premium,xpIntoTier,xpToNextTier}}`); sesja LUB bearer-token, CORS, **nie tworzy** sezonu (create-on-read pominięte) |
 | `…/api/assistant` | session + plan `ai` | Asystent pomocy („?" na każdej stronie) — wymaga zalogowania; degraduje się gdy brak planu/klucza AI |
 | `…/api/trivia` | GET/POST | Trivia/quiz (widz, #523) — aktywne pytania + moje odpowiedzi; POST = odpowiedź za GT (poprawna ukryta do czasu) |
@@ -195,13 +202,39 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/tenants/[id]` | PATCH | Edycja tenanta (branding, plan, wygaśnięcie) |
 | `…/api/admin/backfill-tenant` | admin GET/POST | Backfill `tenantId` na istniejących rekordach (migracja na multi-tenant) |
 
-## Bot (botSecret) — bot czatu pobiera konfigurację
+## Bot — bot czatu pobiera konfigurację i gra
+> ⚠️ **Ta sekcja ma DWIE klasy auth, nie jedną.** Z 13 tras `…/api/bot/*` **7 to `public` GET**
+> (żadna nie woła `verifyBotSecretForTenant`; nagłówek każdego z tych plików mówi wprost
+> „PUBLIC GET"), a **6 wymaga `botSecret`**. Nagłówek obiecywał wcześniej `botSecret` dla wszystkich
+> 13: `moderation` i `active-prediction` były już poprawnie opisane jako public GET wyżej (sekcja
+> „Nowe trasy — Studio"), a `config`/`chat-commands`/`chat-timers`/`faq`/`welcome` po prostu nigdy
+> nie zostały przeklasyfikowane. Weryfikacja jednym poleceniem:
+> `grep -L verifyBotSecretForTenant ghost-empire-web/src/app/api/bot/*/route.ts`.
+>
+> **Ta publiczna powierzchnia jest ŚWIADOMA, nie luką do „naprawienia".** Bot czatu nie ma sesji, a
+> portal bez własnego `Tenant.botSecret` rozwiązuje tenanta wyłącznie z `Host` — dokładnie ta sama
+> sytuacja co `…/api/companion/branding` niżej, który z tego samego powodu **musi zostać publiczny**.
+> Koszt jest realny i przyjęty świadomie: kto zna `Host` portalu, odczyta jego strojenie ekonomii
+> (`messageReward`, `voiceRewardPerMinute`, cooldowny), pełną listę komend, timery, FAQ i powitania.
+> Zero zapisu, zero sekretów, zero PII w odpowiedzi — to konfiguracja, którą widz i tak widzi na
+> czacie. **Dołożenie tu auth cichaczem zrzuci z konfiguracji każdego wdrożonego bota** (fetch
+> zwróci 401, bot zostanie na fallbacku/pustej liście komend), więc taka zmiana to skoordynowane
+> wydanie portalu **i** bota, nie jednolinijkowiec w `route.ts`.
+
+**`public` (GET, bez auth) — 7 tras:**
 | Trasa | Po co |
 |---|---|
-| `…/api/bot/config` | Parametry nagród (message/voice) |
-| `…/api/bot/chat-commands` · `chat-timers` · `faq` · `welcome` | Komendy / timery / FAQ / powitania |
-| `…/api/bot/moderation` | Konfiguracja automod (reguły + akcje) |
-| `…/api/bot/active-prediction` | Otwarty zakład do re-anonsu na czacie (tylko `announceToChat`) |
+| `…/api/bot/config` | public GET — parametry nagród (message/voice) + cooldowny; defaulty gdy brak wiersza w bazie |
+| `…/api/bot/chat-commands` | public GET — włączone komendy + status live (do warunkowych `requiresLive` / `activeFromMinute`, żeby bot nie odpytywał Twitcha sam) |
+| `…/api/bot/chat-timers` | public GET — włączone timery cykliczne |
+| `…/api/bot/faq` | public GET — auto-odpowiedzi FAQ (dopasowanie po słowie kluczowym) |
+| `…/api/bot/welcome` | public GET — konfiguracja powitań |
+| `…/api/bot/moderation` | public GET — konfiguracja automod (reguły + akcje) |
+| `…/api/bot/active-prediction` | public GET — otwarty zakład do re-anonsu na czacie (tylko `announceToChat`) |
+
+**`botSecret` (`verifyBotSecretForTenant`) — 6 tras:**
+| Trasa | Po co |
+|---|---|
 | `…/api/bot/ai-reply` · `…/api/bot/imagine` | AI: odpowiedź `@bot` + generowanie obrazka `!imagine` (klucz server-side) |
 | `…/api/bot/gt-game` | Mini-gra GT (`!slots` / `!coinflip`) — atomowa gra, zwraca gotową wiadomość |
 | `…/api/bot/duel` | Pojedynki PvP (`!duel` / `!accept` / `!decline`) — atomowy transfer puli, zwraca wiadomość |

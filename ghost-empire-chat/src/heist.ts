@@ -6,6 +6,7 @@
 // the resolution call, posting the result back to the same platform's chat.
 import { env } from "./env";
 import { sendTo } from "./broadcast";
+import { onShutdown, trackInFlight } from "./shutdown";
 
 export function isHeistTrigger(message: string): boolean {
   return /^!heist\b/i.test(message.trim());
@@ -13,7 +14,7 @@ export function isHeistTrigger(message: string): boolean {
 
 type HeistResp = { message?: string; ok?: boolean; resolveInMs?: number; heistId?: string };
 
-async function postHeist(payload: Record<string, unknown>): Promise<HeistResp | null> {
+async function callHeistApi(payload: Record<string, unknown>): Promise<HeistResp | null> {
   try {
     const r = await fetch(`${env.portalUrl}/api/bot/heist`, {
       method: "POST",
@@ -25,6 +26,36 @@ async function postHeist(payload: Record<string, unknown>): Promise<HeistResp | 
     return null;
   }
 }
+
+/** Every heist call moves chips server-side, so a shutdown waits for one already on the wire. */
+function postHeist(payload: Record<string, unknown>): Promise<HeistResp | null> {
+  return trackInFlight(callHeistApi(payload));
+}
+
+// Resolutions whose join window has not closed yet, keyed by heistId. Tracked (instead of a
+// bare setTimeout) so a restart can flush them — see the shutdown drain below. An entry is
+// consumed exactly once: whichever of the timer / the drain gets there first deletes it.
+const pending = new Map<string, { timer: ReturnType<typeof setTimeout>; platform: string }>();
+
+async function resolveHeist(heistId: string): Promise<void> {
+  const entry = pending.get(heistId);
+  if (!entry) return; // already resolved — the timer and the drain must never double-resolve
+  clearTimeout(entry.timer);
+  pending.delete(heistId);
+  const res = await postHeist({ action: "resolve", platform: entry.platform, heistId });
+  if (res?.message) await sendTo(entry.platform, res.message);
+}
+
+// SIGTERM/SIGINT: the timers above live only in this process's memory while the crew's chips
+// are already escrowed in the portal, so dropping a pending resolution strands the stake and
+// posts nothing to chat (this is the concrete data loss `docker stop` used to cause). Resolving
+// a few seconds EARLY only shortens the join window; not resolving at all is the real damage.
+onShutdown("heist", async () => {
+  const open = [...pending.keys()];
+  if (open.length === 0) return;
+  console.log(`[heist] shutdown — resolving ${open.length} pending heist(s) now`);
+  await Promise.all(open.map((id) => resolveHeist(id)));
+});
 
 export async function handleHeist(
   platform: string,
@@ -49,11 +80,8 @@ export async function handleHeist(
   // If this call OPENED a new heist, schedule its resolution and post the result to chat.
   if (d.resolveInMs && d.heistId) {
     const heistId = d.heistId;
-    setTimeout(() => {
-      void postHeist({ action: "resolve", platform, heistId }).then((res) => {
-        if (res?.message) void sendTo(platform, res.message);
-      });
-    }, d.resolveInMs + 500); // small grace so the join window is definitely closed
+    const timer = setTimeout(() => void resolveHeist(heistId), d.resolveInMs + 500); // small grace so the join window is definitely closed
+    pending.set(heistId, { timer, platform });
   }
 
   return typeof d.message === "string" ? d.message : null;

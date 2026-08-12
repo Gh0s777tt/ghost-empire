@@ -53,3 +53,8 @@ logs
 
 # iCloud/Dropbox sync conflict copies ("Foo 2.ts") — never commit, break tsc (#audit)
 *\ 2.*
+
+# macOS AppleDouble forks ("._Foo.ts") + Finder metadata — same class as above:
+# never commit, they break every tool that globs **/*.ts (#audit)
+._*
+.DS_Store

@@ -7,8 +7,9 @@ efektem profesjonalizacji repo (ETAP 0–5) i stanowi jej domknięcie.
 
 > **TL;DR dla nowego maintainera:** źródłem prawdy jest **GitLab**. Pracujesz na
 > gałęzi od `main` → Merge Request → zielony pipeline → merge. Przed wysłaniem
-> `cd ghost-empire-web && npm run verify-all`. Wersje wydają się automatycznie z Conventional Commits.
-> Nigdy nie dodawaj `.github/workflows/` (GitHub Actions w tym repo nie działa).
+> `cd ghost-empire-web && npm run verify-all`. Wersje **docelowo** wydaje semantic-release
+> z Conventional Commits — ale **żadne wydanie jeszcze nie wyszło**; do pierwszego brakuje
+> akcji właściciela (§4). Nigdy nie dodawaj `.github/workflows/` (GitHub Actions w tym repo nie działa).
 
 ---
 
@@ -116,15 +117,70 @@ npm run verify-all         # typecheck · lint · docs:check · docs:env · docs
 npm run verify-all -- --fast   # to samo bez integracji/bazy (szybkie, jak pre-push)
 ```
 
+### Higiena gałęzi (stan: audyt 2026-08 — czeka na przegląd właściciela)
+
+Przestrzeń refów przestała odróżniać żywą pracę od historii: z **48** gałęzi historycznych
+(poza `main` i bieżącą gałęzią audytu `fix/audit-2026-08`)
+aż **40 jest w całości zmergowanych** do `main`, ale nigdy nie skasowanych (lokalnie
+i jako refy zdalne na `origin`/`gitlab`), a **8 gałęzi `claude/*` niesie niezmergowane
+commity** — wszystkie nietknięte od 2026-07-24/25, przetrwały całą falę #805–#817.
+To ta sama klasa problemu, którą AUDIT_REPORT.md wytknął dla `origin/imgbot`
+(„wisi bez PR-decyzji") i która nigdy nie została zaadresowana.
+
+| Gałąź (niezmergowana) | commitów przed `main` |
+|---|---|
+| `claude/determined-blackwell-82da8f` | 5 |
+| `claude/vibrant-jang-4aa4a4` | 3 |
+| `claude/heuristic-feynman-d4b2b2` | 2 |
+| `claude/hungry-ritchie-ce69af` | 2 |
+| `claude/wonderful-yalow-f55899` | 2 |
+| `claude/festive-golick-43880a` | 1 |
+| `claude/jolly-lederberg-153dcd` | 1 |
+| `claude/zen-goodall-a5456f` | 1 |
+
+**Dlaczego audyt niczego tu sam nie skasował:** każda z 8 gałęzi to potencjalnie
+wartościowa, niedokończona praca — „zmergować czy porzucić" wymaga oceny właściciela,
+a kasowanie refów jest destrukcyjne (odzysk tylko przez reflog, do czasu `gc`).
+
+**Procedura sprzątania (właściciel):**
+
+```bash
+# 1) Przejrzyj, co niesie każda niezmergowana gałąź (przykład):
+git log --oneline main..claude/determined-blackwell-82da8f
+#    wartościowe → gałąź od main + MR; martwe → skasuj jak w (2).
+
+# 2) Gałęzie zmergowane — kasowanie bezpieczne (git branch -d ODMÓWI przy niezmergowanej):
+git branch --merged main | grep -vE '^\*|^\s*main$' | xargs -r -n1 git branch -d
+#    i po stronie zdalnej (dla każdego remote'a):
+git push origin --delete <gałąź>
+
+# 3) Na przyszłość: przy merge'u MR-a zaznaczaj „Delete source branch"
+#    (Settings → Merge requests → „Enable 'Delete source branch' option by default"),
+#    żeby lista nie odrastała.
+```
+
 ---
 
 ## 4. Wydawanie wersji (semantic-release)
 
 Konfiguracja: [`.releaserc.json`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/.releaserc.json) + root [`package.json`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/package.json).
-Po każdym merge do `main` job `release` analizuje **Conventional Commits** od
-ostatniego tagu i — jeśli są zmiany warte wydania — **automatycznie**: podbija
-wersję (SemVer), tworzy tag `vX.Y.Z`, publikuje Release na GitLab i dopisuje sekcję
-do [`CHANGELOG.md`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/CHANGELOG.md) (commit zwrotny z `[skip ci]`).
+
+> ⚠️ **Stan faktyczny (audyt 2026-08): ten mechanizm NIE wydał dotąd ANI JEDNEGO wydania.**
+> Dowód w historii repo: 1000+ commitów, dokładnie **jeden** tag (`v0.1.0`, założony **ręcznie**
+> 2026-07-16) i **zero** commitów `chore(release):`. Wcześniejsza wersja tego rozdziału (i TL;DR)
+> opisywała wydania jako działający automat — to była nieprawda: job `release` fizycznie nie mógł
+> się wykonać (brak root `package-lock.json` → `npm ci` twardo failował; głębiej: niespełnialny
+> zakres `@semantic-release/commit-analyzer`), a `allow_failure: true` maskował awarię jako
+> „pomarańczowy bootstrap". Obie przyczyny są już usunięte. **Autorytatywna diagnoza i pełna
+> procedura włączenia wydań** żyje w komentarzu nad jobem `release` w
+> [`.gitlab-ci.yml`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/.gitlab-ci.yml)
+> (sekcja „RELEASE" — łącznie z precheckiem, który przy braku lockfile'a mówi *co* naprawić,
+> zamiast wywalać się generycznym błędem npm).
+
+**Docelowe działanie** (gdy setup niżej zostanie domknięty): po każdym merge do `main` job
+`release` analizuje **Conventional Commits** od ostatniego tagu i — jeśli są zmiany warte
+wydania — podbija wersję (SemVer), tworzy tag `vX.Y.Z`, publikuje Release na GitLab i dopisuje
+sekcję do [`CHANGELOG.md`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/CHANGELOG.md) (commit zwrotny z `[skip ci]`).
 
 | Typ commita | Efekt na wersję | Sekcja w CHANGELOG |
 |---|---|---|
@@ -134,26 +190,41 @@ do [`CHANGELOG.md`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/CHANGE
 | `feat!:` lub `BREAKING CHANGE:` w stopce | **major** (`X.0.0`) | Added + notka o zmianie łamiącej |
 | `docs:` / `chore:` / `ci:` / `test:` / `build:` / `style:` | brak wydania | ukryte |
 
-### Jednorazowy setup wydań (wymagany, w tej kolejności)
-Dopóki nie wykonasz poniższego, job `release` daje **pomarańczowe ostrzeżenie**
-(`allow_failure`) i nic nie wydaje — to nie jest błąd, to bootstrap-guard.
+### Jednorazowy setup wydań (stan po audycie 2026-08)
+Dopóki lista nie jest domknięta, job `release` daje **pomarańczowe ostrzeżenie**
+(`allow_failure`) i nic nie wydaje — to bootstrap-guard, nie błąd. Wersją autorytatywną
+tej listy jest komentarz nad jobem `release` w `.gitlab-ci.yml`; poniżej stan na 2026-08:
 
-1. **Root lockfile:** w katalogu `ghost-empire/` uruchom `npm install` i **zacommituj**
-   `package.json` + `package-lock.json` (job `release` używa `npm ci`). Przy okazji
-   `npm install` zainstaluje git-hooki (skrypt `prepare` → `lefthook install`).
-2. **Zmienna `GITLAB_TOKEN`** (Settings → CI/CD → Variables): GitLab PAT / Project
+1. ✅ **Root lockfile** — `package-lock.json` wygenerowany i zacommitowany (wcześniej
+   **nie istniał**, przez co `npm ci` twardo failował i `semantic-release` nigdy nie
+   wystartował — to była główna przyczyna zera wydań). Pierwsze `npm install` w korzeniu
+   instaluje też git-hooki (skrypt `prepare` → `lefthook install`).
+2. ⬜ **Zmienna `GITLAB_TOKEN`** (Settings → CI/CD → Variables): GitLab PAT / Project
    Access Token roli **Maintainer**, scope `api`, **Masked + Protected**. Potrzebny do
-   tagu, Release'u i pushu CHANGELOG na chronioną `main`.
-3. **Tag bazowy:** repo ma 0 tagów → bez bazy pierwsze wydanie wyszłoby jako `1.0.0`.
-   Aby zacząć od `0.1.0`: `git tag v0.1.0 && git push gitlab v0.1.0`.
-4. **Po pierwszym udanym wydaniu:** usuń `allow_failure: true` z joba `release` w
+   tagu, Release'u i pushu CHANGELOG na chronioną `main`. **Tylko właściciel** może ją
+   ustawić — z poziomu repo się nie da.
+3. ✅ **Tag bazowy** — `v0.1.0` istnieje (założony ręcznie 2026-07-16); bez niego
+   pierwsze wydanie wyszłoby jako `1.0.0`.
+4. ⬜ **Decyzja o `CHANGELOG.md`** — zob. ostrzeżenie o kolizji niżej. Po ustawieniu
+   tokenu uruchom `npm run release:dry` i obejrzyj, co plugin faktycznie chce zrobić,
+   **zanim** cokolwiek zostanie opublikowane.
+5. ⬜ **Po pierwszym udanym wydaniu:** usuń `allow_failure: true` z joba `release` w
    `.gitlab-ci.yml`, żeby wydania stały się autorytatywne.
 
-> ⚠️ **Napięcie CHANGELOG:** nagłówek `CHANGELOG.md` deklaruje „wersje kalendarzowe",
-> a semantic-release używa **SemVer**. `changelogTitle` w `.releaserc.json` jest
-> dokładną kopią obecnego nagłówka — jeśli zmienisz nagłówek, zsynchronizuj oba,
-> inaczej wtyczka zdubluje nagłówek. Historyczny, ręcznie prowadzony format
-> `[Unreleased]` pozostaje; nowe sekcje semantic-release dokłada pod tytułem.
+> ⚠️ **Kolizja z ręcznym CHANGELOG — decyzja właściciela przed pierwszym wydaniem**
+> (audyt 2026-08, znalezisko „semantic-release koliduje z ręcznym changelogiem"):
+> `CHANGELOG.md` to ręcznie pisany dokument (~800 KB, wpisy po 200–600 słów, żywa sekcja
+> `## [Unreleased]`) i cel twardej bramki `docs:check`. `.releaserc.json` celuje pluginem
+> `@semantic-release/changelog` w **ten sam plik**: pierwsze udane wydanie wstawi nad ręczną
+> treścią maszynową sekcję `## [X.Y.Z]` z jednolinijkowymi skrótami tych samych PR-ów,
+> a `[Unreleased]` zostawi nietknięte — dwa systemy opisywałyby te same zdarzenia w
+> niekompatybilnych formatach, nieświadome siebie nawzajem. Do wyboru:
+> **(a)** zaakceptować dokładanie sekcji nad ręcznym formatem i udokumentować punkt
+> przejścia (tak zrobił E-Bot w `changelogTitle`), albo **(b)** wypiąć z `.releaserc.json`
+> pluginy `@semantic-release/changelog` + `@semantic-release/git`, żeby release
+> CHANGELOG-a w ogóle nie dotykał. Dopóki plugin zostaje: `changelogTitle` musi być
+> dokładną kopią nagłówka pliku (deklarującego „wersje kalendarzowe" — semantic-release
+> używa SemVer), inaczej wtyczka zdubluje nagłówek. Zawsze najpierw `npm run release:dry`.
 
 **Podgląd bez publikacji:** `npm run release:dry` (w korzeniu).
 

@@ -10,6 +10,32 @@ Data: 2026-07-05 · środowisko: lokalne (unit, `environment: node`, bez sieci/D
 > Testy regresyjne przełączone ze `skip` na aktywne (zielone po fixie). U-2 świadomie
 > pozostawione bez zmiany kodu (repo-wide wzorzec legacy-fallback — patrz Triage). Suite: 787 zielonych.
 
+> **⚠️ SNAPSHOT HISTORYCZNY — zastąpiony (audyt 2026-08-12, znaleziska [1]/[2]).**
+> Wszystko PONIŻEJ tej ramki opisuje stan z 2026-07-05 (era #796) i **nie jest** aktualnym
+> obrazem suite'u; raport zostaje jako zapis metodologii (mutation testing, defect-first)
+> i defektów D-1/D-2/D-3 — wszystkie trzy potwierdzone jako realnie naprawione.
+> Zmierzona rzeczywistość na HEAD `240f2118` (2026-08-12, `npx vitest run`):
+>
+> - **Suite: 134 pliki / 1 210 testów / 0 skip — wszystkie zielone.** Historyczne „99 plików /
+>   787 zielonych" oraz wewnętrznie sprzeczne warianty „783 + 2 skip" w §5/§8 (opisują różne
+>   momenty tamtej sesji, przed i po aktywacji testów regresyjnych) są nieaktualne — nie
+>   cytować ich dalej.
+> - **Pokrycie — czytaj ze zrozumieniem [1]:** `npm run test:coverage` daje dziś
+>   **statements 50,13 % / branches 49,54 % / functions 54,24 % / lines 49,78 %**, ALE v8
+>   bez `coverage.include` instrumentuje wyłącznie pliki realnie zaimportowane przez testy:
+>   **145 z 826** plików źródłowych (~18 %). Pomiar całego repo (`vitest run --coverage
+>   --coverage.all --coverage.include='src/**/*.ts{,x}'`, 689 plików po wykluczeniach) daje
+>   **~10,6 % linii** (statements 10,67 %). Nagłówkowe „~50 %" znaczy więc: *50 % tej części
+>   kodu, której suite unit w ogóle dotyka* — głównie `src/lib`; ~220 route handlerów
+>   i ~173 komponenty React są niemal poza pomiarem. Progi-zapadki w vitest.config.ts
+>   (47/46/51/46) są skalibrowane do tego WĄSKIEGO zakresu — włączenie `coverage.all`
+>   zbiłoby wynik pod progi, więc zmiana zakresu pomiaru wymaga świadomej decyzji
+>   właściciela o nowych progach (i nowej podłodze), nie przestawienia flagi mimochodem.
+> - Luka nr 1 z §6 („endpoint drops/claim bez testu") jest **zamknięta**:
+>   `src/app/api/drops/__tests__/claim-route.test.ts` istnieje. Liczby per-plik w §5 także
+>   odjechały od dzisiejszych plików (np. rate-limit-behavior ma dziś 13 `it(`, 0 skip) —
+>   traktować cały dokument jako snapshot, nie źródło bieżących liczb.
+
 ---
 
 ## 1. Podsumowanie

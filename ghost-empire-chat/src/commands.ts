@@ -39,6 +39,9 @@ const lastUsed = new Map<string, number>();
 /** Fetch the enabled commands from the portal. Keeps the current list on error. */
 export async function refreshCommands(): Promise<void> {
   try {
+    // Bez auth ŚWIADOMIE — publiczna powierzchnia portalu (pełne "dlaczego": moderation.ts
+    // refreshModeration()). Uwaga: odpowiedź niesie live/liveSince i AKTYWNE keywordy loterii,
+    // więc keyword nie jest tajemnicą — serwer i tak wpisuje tylko POŁĄCZONYCH widzów (1/user).
     const res = await fetch(`${env.portalUrl}/api/bot/chat-commands`);
     if (!res.ok) {
       console.warn(`[commands] fetch ${res.status} — keeping current (${commands.length})`);
@@ -96,9 +99,13 @@ export function matchCommand(message: string): string | null {
   const now = Date.now();
   if (now - (lastUsed.get(trigger) ?? 0) < cmd.cooldownSec * 1000) return null;
   lastUsed.set(trigger, now);
-  // Only the built-in fallback copy carries placeholders; portal-managed responses are the
-  // tenant admin's own text and go out verbatim.
-  return everLoaded ? cmd.response : applyBranding(cmd.response);
+  // ZAWSZE przez applyBranding, także dla odpowiedzi z portalu (audyt 2026-08, finding low/6):
+  // panel /admin#chat i katalogi i18n portalu dzielą tę samą konwencję %tokenName%/%gt%
+  // (branding.ts), więc admin, który naturalnie wpisze "Zgarniaj %tokenName%!", dostawałby
+  // w czacie widzów LITERALNY marker — dokładnie leak, który CLAUDE.md zakazuje na
+  // powierzchniach bez resolvera. applyBranding jest no-opem na tekście bez placeholderów
+  // (gwarantowane testem branding.test.ts), więc verbatim tekst admina przechodzi nietknięty.
+  return applyBranding(cmd.response);
 }
 
 // Exposed for tests / diagnostics.

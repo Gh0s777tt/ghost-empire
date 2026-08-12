@@ -35,6 +35,31 @@ a change is not finished until code, tests **and** docs are all green.
 | Code/API reference | `docs/api/**` | *Money-critical `src/lib/*` public API* | `npm run docs:api` (**TypeDoc**, generated — never hand-edit) |
 | PDF handbooks | `ghost-empire-web/public/wiki/*.pdf` (served at `/wiki/`) | *Complete user guide + developer guide* | produced out-of-band; **flag for regen**, don't let drift |
 
+## 🔄 Zawsze zsynchronizowane — repo, docs, push (mandatory)
+
+Właściciel nie chce backlogów ani braków. Każda sesja pracy jest „skończona" dopiero, gdy **kod +
+testy + docs są zielone, zacommitowane I wypchnięte** — nic nie zostaje wiszące. Konkretnie:
+
+1. **Nic niezacommitowanego na koniec.** Zero „zapomnianych" plików w working tree. Jeśli coś jest
+   celowo odłożone, jest **śledzone** (wpis w `ROADMAP.md` / `docs/IDEAS.md` / TODO z właścicielem),
+   nigdy po cichu porzucone.
+2. **Docs aktualizowane NA BIEŻĄCO, nie na końcu** — razem ze zmianą, którą opisują (patrz dwie
+   sekcje niżej): `CHANGELOG.md` (każda dowieziona zmiana), `ROADMAP.md` (status: 🟡→✅), `README.md`
+   (pitch/feature'y/setup), właściwe `docs/*.md` (`ENDPOINTS`, `ARCHITECTURE`, `ENV`, `RLS`,
+   `MAINTENANCE`…), i **otwarty PR/MR** dla wypchniętej gałęzi.
+3. **Wszystko wypchnięte na OBA remote'y.** `origin` = GitHub, `gitlab` = GitLab (źródło prawdy /
+   CI). Po zacommitowaniu → push na oba. Na koniec zweryfikuj: dla każdej pracującej gałęzi
+   `HEAD == origin/<branch> == gitlab/<branch>`; zero commitów „ponad remote". Jeśli remote nie da
+   się zautoryzować (sesja nieinteraktywna), powiedz to WPROST i zostaw dokładną komendę do pushu.
+4. **Bez rozjazdu remote'ów i bez martwych gałęzi.** Po zmergowaniu gałęzi — usuń ją z obu remote'ów.
+   Nie zostawiaj zmergowanych/porzuconych gałęzi jako śmieci (to też backlog).
+5. **Definition of Done rozszerzone:** zmiana jest „done" dopiero, gdy wszystkie punkty Definition of
+   Done niżej są spełnione **oraz** commit jest wypchnięty na oba remote'y i docs+CHANGELOG+ROADMAP
+   odzwierciedlają stan. „Działa lokalnie" to nie „done".
+
+Zasada nadrzędna: **jeśli po Twojej pracy zostaje jakikolwiek brak — niezacommitowany plik,
+niewypchnięty commit, nieaktualny doc, nieotwarty PR, martwa gałąź — praca NIE jest skończona.**
+
 ## 📌 Documentation must never drift (mandatory)
 Every change that ships behavior **must** update the docs in the same PR. `npm run docs:check`
 (CI + local gate) fails if any PR shipped in recent git history is missing from `CHANGELOG.md`.

@@ -15,6 +15,7 @@ import { resolveTenantSlug, customDomainFromHost } from "@/lib/tenant-host";
 import { safeMediaUrl } from "@/lib/url-safe";
 import { resolveBgPresetCss } from "@/lib/bg-presets";
 import { normalizeDailyChips, DAILY_CHIPS_DEFAULT } from "@/lib/daily-chips";
+import { decryptSecret } from "@/lib/crypto";
 
 /** Slug (and future subdomain) of the original single-streamer tenant. */
 export const DEFAULT_TENANT_SLUG = "ghost-empire";
@@ -191,7 +192,16 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
  */
 export async function getCurrentTenantBotAuth(): Promise<{ id: string | null; botSecret: string | null }> {
   const t = await resolveCurrentTenantRow();
-  return { id: t?.id ?? null, botSecret: t?.botSecret ?? null };
+  // AUDYT 2026-08 (zgoda właściciela): `Tenant.botSecret` jest teraz szyfrowany at-rest
+  // (AES-256-GCM przez encryptSecret w trasie rotacji) — dotąd był JEDYNYM sekretem w schemacie
+  // trzymanym plaintextem, w przeciwieństwie do Connection tokenów, secretEnc/tokenEnc i TOTP.
+  // To JEDYNY punkt odczytu do porównania (→ dalej verifyBotSecretForTenant), więc "każdy
+  // weryfikator musi pamiętać o decrypt" sprowadza się do tej jednej linii.
+  // DUAL-READ / drift-safe: decryptSecret zwraca legacy plaintext bez zmian (rollout bez migracji
+  // wsteczny), a przy dryfie ENCRYPTION_KEY zwraca null → sekret tenanta po prostu nie zmatchuje →
+  // spadamy na globalny BOT_SECRET (udokumentowana podłoga), zamiast położyć bot-auth. Jedynie
+  // tenant z BOT_SECRET_STRICT poczułby dryf — świadomy koszt jego własnego opt-inu w ostrość.
+  return { id: t?.id ?? null, botSecret: decryptSecret(t?.botSecret ?? null) };
 }
 
 /**

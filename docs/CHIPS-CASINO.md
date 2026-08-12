@@ -5,9 +5,16 @@
 > **darmową, niekupowalną, niespieniężalną** walutę „Żetony" (`chips`), całkowicie odciętą od
 > realnych pieniędzy (donacje/suby → GT) i od przedmiotów o wartości rynkowej (sklep GT).
 >
-> ⚠️ **To nie jest porada prawna.** Projekt zbija ryzyko mocno, ale nie zastępuje **radcy/adwokata od
-> prawa hazardowego** (residual: art. 2 ust. 5 — gra komercyjna + losowa nawet bez wygranej). Docelowo
-> rozważyć wniosek o **decyzję Ministra Finansów (art. 2 ust. 6)**. Bramka **18+** (`GamblingGate`) — zostaje.
+> ✅ **Kasyno na żetonach — zgłoszony sign-off prawnika (2026-08).** Właściciel zgłasza, że radca od
+> prawa hazardowego potwierdził dopuszczalność **darmowego kasyna żetonowego** (`/kasyno`, `/wheel`):
+> żetony są **darmowe, niekupowalne, niespieniężalne**, gra jest **18+** i wyłącznie **rozrywkowa —
+> nie hazard o pieniądze**. To **domyka pytanie prawne kasyna żetonowego**, w tym residual
+> **art. 2 ust. 5** *w zakresie darmowych gier żetonowych*. ⚠️ **To nie jest porada prawna z naszej
+> strony** — to sign-off zgłoszony przez właściciela; ewentualna **decyzja Ministra Finansów
+> (art. 2 ust. 6)** i inne rozstrzygnięcia MF pozostają w gestii/odpowiedzialności właściciela.
+> **Osobno i NIE objęty tym sign-offem:** moduł kar za **REALNE** donaty (art. 2 ust. 5 w wariancie
+> płatnym — patrz „Decyzje…" §5) — odrębne, otwarte pytanie, **domyślnie WYŁĄCZONY**. Bramka **18+**
+> (`GamblingGate`) — zostaje.
 
 ## 📌 Status wdrożenia (2026-07-23)
 - ✅ **Faza 1 (schemat)** — `User.chips`, `Transaction.currency`, `ShopItem.currency` dodane; `prisma generate` OK. **`db push` na prod — DO ZROBIENIA przez właściciela.**
@@ -23,7 +30,7 @@
 - ✅ **Faza 4 (split sklepu — KOMPLETNA):** `shop/buy` currency-aware (itemy `currency:"CHIPS"` obciążają żetony, nie GT/`totalSpent`; guard `emitBalance` w ShopClient) **+ 4 kosmetyki „High Roller" za żetony w `prisma/seed.ts`** (odznaka/ramka/tytuł/efekt nicku — sink, zero wartości rynkowej). Sklep forward-safe. tsc+eslint. *(Opcjonalny follow-up: UI pokazujące cenę/saldo chips w ShopClient + funkcjonalny efekt kosmetyków na profilu.)*
 - ✅ **Faza 4 (domknięcie — 2026-07-24):** inwariant **`CHIPS ⇒ category:"cosmetic"` wymuszony w kodzie**, a nie tylko w komentarzu + dyscyplinie seeda. Nowa czysta `src/lib/shop-currency.ts` (+ **11 testów**, `typedoc.json`) wpięta w `admin/shop` POST+PATCH (400 — walidacja *wynikowego* stanu, więc sam PATCH `category` na itemie CHIPS też jest blokowany; to była realna, klikalna dziura w panelu), w `prisma/seed.ts` (rzut przed `deleteMany`) i **fail-closed w `shop/buy`** (410 zamiast cichej sprzedaży). Szczegóły: sekcja „Inwariant `CHIPS ⇒ category:\"cosmetic\"`" w Fazie 4. Zielone: tsc + eslint + 883 testy + build.
 - ⏳ **Opcjonalnie (nie blokuje legalnie):** kosmetyki za chips (content/admin), admin grant chips (Faza 6), welcome/activity chips, pełna strona ToS.
-- 🚀 **Do deployu zostaje TYLKO: `db push` na prod** (właściciel — dodaje kolumny `chips`/`currency`) + commit/review. Krok 0 równolegle: prawnik.
+- 🚀 **Do deployu zostaje TYLKO: `db push` na prod** (właściciel — dodaje kolumny `chips`/`currency`) + commit/review. Krok 0 (prawnik) — ✅ **zielone światło dla kasyna żetonowego (2026-08, zgłoszone przez właściciela)** — patrz nagłówek i „Decyzje…" §5. *(Nie dotyczy modułu kar za realne donaty — ten dalej wyłączony.)*
 - ⚠️ **NIE deployować** przed: `db push` + Faza 3 (źródła) + Faza 5 (UI/salda) — inaczej kasyno pokaże saldo GT, a gra na 0 żetonów = „Za mało żetonów".
 
 ## Zasada (dlaczego to działa)
@@ -324,10 +331,18 @@ Każda faza: kod + testy + dokumentacja (`CHANGELOG`/`ENDPOINTS`/`ENV` wg `CLAUD
      **także** w grach z §7a. To celowa wymiana: zdjęto zakaz formy, dodano zakaz manipulacji.
    * **§28 ust. 2** — §7a dopisany do listy niederogowalnej, bo zabezpieczenia z ust. 2–6 są tym, na
      czym opiera się dopuszczalność; regulamin wydarzenia nie może ich wyłączyć.
-   ⚠️ **Co to NIE zamyka:** §7a ust. 7 opiera się na tym, że nie ma ani stawki pieniężnej, ani
-   wygranej o wartości majątkowej. Residualne pytanie z **art. 2 ust. 5** (gra komercyjna + losowość
-   **nawet bez wygranej**) pozostaje otwarte i dalej wymaga prawnika — zmiana dokumentu go nie
-   rozstrzyga, tylko przestaje mu zaprzeczać własnym regulaminem.
+   ✅ **DOMKNIĘTE (2026-08) — zgłoszony sign-off prawnika dla kasyna żetonowego.** Właściciel zgłasza,
+   że radca od prawa hazardowego dał **zielone światło** dla darmowego kasyna żetonowego (`/kasyno`,
+   `/wheel`): żetony **darmowe, niekupowalne, niespieniężalne**, **18+**, wyłącznie rozrywka — **nie
+   hazard o pieniądze**. To **zamyka pytanie prawne kasyna żetonowego**, w tym residual z
+   **art. 2 ust. 5** (gra komercyjna + losowość nawet bez wygranej) *w zakresie darmowych gier
+   żetonowych* (§7a): sign-off potwierdza to, na czym stoi §7a ust. 7 — brak stawki pieniężnej i brak
+   wygranej o wartości majątkowej. ⚠️ **Nie nadinterpretować:** to jest sign-off **zgłoszony przez
+   właściciela**, **nie porada prawna z naszej strony**; ewentualna decyzja MF (**art. 2 ust. 6**) i
+   inne rozstrzygnięcia MF pozostają odpowiedzialnością właściciela. ⚠️ **Osobno i NIE objęte tym
+   sign-offem** (odrębne, wciąż otwarte pytanie): moduł kar za **REALNE** donaty — art. 2 ust. 5 w
+   wariancie płatnym — opisany niżej; ten sign-off go NIE dotyczy i pozostaje on **domyślnie
+   WYŁĄCZONY**.
    ⚠️ **Dołożone pytanie (2026-07-25) — moduł kar za donaty (#806).** Widz wpłaca REALNE pieniądze,
    a system **losuje** rodzaj, nasilenie i czas kary na streamie. To strukturalnie „gra komercyjna +
    losowość" z art. 2 ust. 5 — z tą różnicą, że **płacący nic nie wygrywa**: efekt dzieje się na ekranie

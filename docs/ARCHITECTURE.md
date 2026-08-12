@@ -11,7 +11,7 @@ Przegląd architektury ekosystemu Ghost Empire: 3 pakiety, jeden wspólny model 
 | **`ghost-empire-web`** | Portal + API + panel admina + overlaye OBS | Next.js 16 (App Router), React 19, Prisma 7, Auth.js v5 (next-auth 5), Tailwind 4 | Vercel |
 | **`ghost-empire-chat`** | Bot czatu na żywo (Twitch + Kick + YouTube + Rumble) | Node + `tsx` (tmi.js / Pusher WS / YouTube polling) | Docker / VPS 24/7 |
 | **E-Bot** (osobne repo `Gh0s777tt/E-Bot`) | Bot Discord — ekonomia GT (wiadomości/voice) + linkowanie kont. **Zastępuje `ghost-empire-bot`** | Node (discord.js v14, natywne `.mts`) | lokalnie / VPS |
-| ~~`ghost-empire-bot`~~ *(deprecated)* | Dawny bot Discord w monorepo — **wyłączony**, przejęty przez E-Bot. Katalog zostaje jako referencja | Node (discord.js) | — |
+| ~~`ghost-empire-bot`~~ *(usunięty)* | Dawny bot Discord w monorepo — przejęty przez E-Bot. **Katalog został skasowany z drzewa** (`ls ghost-empire-bot` → brak); wcześniej ten wiersz obiecywał, że „zostaje jako referencja" — nie zostaje. Kod czytaj z historii gita albo z repo `Gh0s777tt/E-Bot` | Node (discord.js) | — |
 
 Baza danych: **PostgreSQL (Supabase)**, jeden schemat dla portalu. Boty **nie** łączą się z bazą bezpośrednio — rozmawiają z portalem przez HTTP API (`BOT_SECRET`, a per portal opcjonalnie własny `Tenant.botSecret` — [PER-TENANT-IDENTITY §9](PER-TENANT-IDENTITY.md#10-per-tenant-bot-identity-tenantbotsecret)). **Podział ról:** `ghost-empire-chat` = streaming (Twitch/Kick/YT/Rumble), **E-Bot** = Discord + społeczność.
 
@@ -123,7 +123,15 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 8. Jakość i deploy
 
-- **CI** (GitHub Actions): job `quality` = `tsc --noEmit` + `eslint` + `vitest run` + `npm audit` (nieblokujący); job `integration · postgres` = `vitest run` przeciw **realnemu Postgresowi** (service container) na ścieżkach money-critical. Testy: czysta logika w `src/lib/__tests__` (622 unit, 79 plików) + integracyjne w `tests/integration` (real DB). Pokrycie (v8) przez `npm run test:coverage`.
+- **CI = GitLab CI/CD, plik `.gitlab-ci.yml` (425 linii) — i tylko on.** GitHub Actions **nie działa** (jest wyłączone na koncie właściciela; GitHub to ręcznie odświeżany, read-only mirror), a katalog `.github/workflows/` **nie istnieje** — w `.github/` leży wyłącznie `dependabot.yml`, którego PR-y i tak nie trafiają do GitLaba, dlatego aktualizacje zależności robi job `renovate`. Ten punkt opisywał wcześniej pipeline GitHub Actions z jobami `quality` / `integration · postgres`, których **nie ma w tym repo**: pierwszy plik nagłówka `.gitlab-ci.yml` mówi wprost „NIE dodawać niczego w `.github/workflows/`". **7 etapów, 14 jobów:**
+  - **`verify`** — `commitlint` (Conventional Commits, tylko na MR).
+  - **`lint`** — `lint:web` (`typecheck` + `eslint` + bramki anty-drift `docs:check` / `docs:env` / `docs:i18n`), `lint:chat`.
+  - **`test`** — `test:unit:web` (`vitest run --coverage`), `test:integration:web` (**realny Postgres 16** jako `services:`, `prisma db push` przed testami), `test:chat`.
+  - **`build`** — `build:web` (`next build --turbopack`, artefakt `.next/`).
+  - **`security`** — `gitleaks` (sekrety, **twarda bramka**), `semgrep` (SAST, doradczy), `trivy` (CVE zależności, doradczy), `renovate` (dedykowany harmonogram, otwiera MR-y w GitLabie). Świadomie **bez** szablonów `Security/*.gitlab-ci.yml` — obrazy przypięte wersjami, uzasadnienie w nagłówku pliku.
+  - **`docs`** — `pages` (TypeDoc → `mkdocs build` → GitLab Pages, na `main`), `docs-drift` (failuje MR, który rusza `src/app/api/**/route.ts` bez tknięcia `docs/`; to on ma łapać dokładnie ten rodzaj dryfu, który ten akapit naprawia).
+  - **`release`** — `release` (`semantic-release`, tylko realny push do `main`, `allow_failure: true`).
+- Testy: czysta logika w `src/lib/__tests__` — **126 plików, 1123 przypadki** (`find src/lib/__tests__ -name "*.test.ts*" | wc -l`; wcześniej stało tu „622 unit, 79 plików"). Cały `vitest run` bierze `src/**/*.test.ts`, czyli **133 pliki** (dochodzą `__tests__` przy trasach `api/*` i przy komponentach kasyna). Integracyjne: `tests/integration` (9 plików, real DB). Pokrycie (v8) przez `npm run test:coverage`.
 - **Workflow zmian (żelazna zasada):** branch → edycja → typecheck/lint/test (+ `db push` przy zmianie schematu) → PR → squash-merge. **Dokumentacja (CHANGELOG · README · ROADMAP · PLAN · PHASE · docs/* · on-site `/about`) jest aktualizowana w TYM SAMYM PR co zmiana** — nigdy nie zostaje w tyle.
 - **Schemat:** Prisma `db push` (bez plików migracji) na Supabase; `prisma generate` regeneruje klienta.
 - Build (`next build`) po stronie Vercela (preview deploy na każdym pushu).
@@ -132,7 +140,7 @@ Portal jest **multi-tenant** — z jednej instancji obsługuje wiele niezależny
 
 ## 9. Model danych — wybrane / najnowsze modele
 
-Schemat (`prisma/schema.prisma`) ma **~100 modeli** (m.in. `ObsRule` — reguły sterowania OBS #664; `Bounty` / `BountyPledge` — Viewer Bounties #679; `LeagueSeasonResult` — podia Ligi Typerów + Hall of Fame #682); pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
+Schemat (`prisma/schema.prisma`) ma **110 modeli** (`grep -c '@@map' ghost-empire-web/prisma/schema.prisma` — ta sama liczba, którą musi pokazywać blok Step-2 w [RLS.md](RLS.md); m.in. `ObsRule` — reguły sterowania OBS #664; `Bounty` / `BountyPledge` — Viewer Bounties #679; `LeagueSeasonResult` — podia Ligi Typerów + Hall of Fame #682); pełna prawda jest w pliku. Poniżej najnowsze/istotne grupy dodane w fali „donatr.ee + marketplace + społeczność" — wszystkie z nullable `tenantId` i odczytami scope'owanymi per portal (§7):
 
 - **Karty + marketplace P2P:** `Collectible` / `UserCollectible` (katalog kart + kolekcja, paczki za GT, #551), `CardListing` (listingi P2P z escrow + 5% fee spalane, #552).
 - **Overlay + alerty:** `OverlayScene` (sceny wielowidżetowe → jedno źródło OBS, #550), `StreamAlertSettings` (ustawienia + auto-token overlaya, **per tenant 1:1**), `AlertTypeConfig` (styl/próg per typ alertu).

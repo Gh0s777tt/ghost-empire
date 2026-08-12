@@ -14,6 +14,13 @@
 #
 # Uwaga: `lefthook install` przejmuje .git/hooks/* (istniejący ręczny
 # .git/hooks/pre-push zostanie zarchiwizowany jako *.old — usuń go po instalacji).
+#
+# AUDYT [4]: ten plik jest JEDYNYM kanonicznym mechanizmem hooków. Ręczny
+# `ghost-empire-web/scripts/hooks/pre-push` (dokumentowany w CLAUDE.md przez
+# `cp` do .git/hooks) pozostaje wyłącznie jako fallback dla klonów bez
+# `npm install` w korzeniu i odpala DOKŁADNIE te same bramki pre-push co my
+# (verify-all:fast + chat typecheck) — więc wyścig „kto zainstalował ostatni"
+# nie zmienia już zachowania. Commit-msg/pre-commit ma tylko lefthook.
 
 # ── pre-commit: lint + auto-fix TYLKO na zmienionych plikach ──────────────────
 # Bez typecheck — `tsc --noEmit` na Next 16 jest za wolny na każdy commit; pełny
@@ -40,7 +47,8 @@ commit-msg:
 
 # ── pre-push: pełna szybka bramka (WYŁĄCZNIE realne skrypty z repo) ────────────
 # web:  npm run verify-all:fast  → scripts/verify-all.sh --fast
-#        = typecheck · lint · docs:check · unit  (bez integracji/bez DB)
+#        = typecheck · lint · docs:check · docs:env · docs:i18n · docs:i18n:dup
+#          · unit  (bez integracji/bez DB) — pełna lista, nie skrót (audyt [11])
 # chat: npm run typecheck        → tsc --noEmit  (jedyna bramka, jaką chat posiada)
 pre-push:
   parallel: false

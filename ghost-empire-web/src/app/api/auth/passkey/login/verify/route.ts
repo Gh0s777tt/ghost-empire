@@ -7,14 +7,20 @@
 // session cookie to that raw sessionToken. rpID/origin (and therefore the cookie
 // name/secure) are pinned to the canonical URL, not the request headers, so this can't
 // be steered by a spoofed Host. This adds a NEW session for THIS browser only — it
-// never reads or alters the NextAuth config, the OAuth providers, or any other user's
+// never alters the NextAuth config, the OAuth providers, or any other user's
 // session. Worst case is "didn't sign in," never "broke OAuth."
+//
+// Because it is a SECOND sign-in path, every gate NextAuth applies must be repeated here or
+// it is simply absent: that is how the site ban was bypassed (see the isBanActive() check
+// below). The one thing borrowed from lib/auth.ts is that pure predicate — no config, no
+// provider, no session read — precisely so the two paths share one definition of "banned".
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomUUID } from "node:crypto";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import type { AuthenticationResponseJSON, AuthenticatorTransportFuture } from "@simplewebauthn/server";
 import { prisma } from "@/lib/prisma";
+import { isBanActive } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { webauthnContext, AUTH_CHALLENGE_COOKIE, b64url, isSecureContext } from "@/lib/webauthn";
 import { clientIp } from "@/lib/http";
@@ -85,6 +91,29 @@ export async function POST(req: Request) {
   await prisma.passkey
     .update({ where: { id: pk.id }, data: { counter: newCounter, lastUsedAt: new Date() } })
     .catch(() => {});
+
+  // SITE BAN — checked BEFORE any session exists. [audit fix] This route replicates the DB
+  // sign-in independently of NextAuth, and it used to skip the ban gate entirely: banning a
+  // user sets isBanned, deletes their Session rows and blocks OAuth re-login (the signIn
+  // callback in lib/auth.ts), but ANY banned user who had registered a passkey simply signed
+  // back in here with full economy access. The verdict comes from the SHARED isBanActive()
+  // helper — the same predicate the signIn callback uses, including "an expired bannedUntil
+  // auto-unbans" — so the two sign-in paths can never drift apart. A failed lookup rejects
+  // (fail closed): no user row ⇒ no session.
+  const user = await prisma.user
+    .findUnique({ where: { id: pk.userId }, select: { id: true, isBanned: true, bannedUntil: true } })
+    .catch(() => null);
+  if (!user) return done({ error: "not-verified" }, 400);
+  if (user.isBanned) {
+    // Deliberately the same generic "not-verified" as every other refusal above: the response
+    // must not become an oracle telling a probing client whether an account is banned.
+    if (isBanActive(user)) return done({ error: "not-verified" }, 400);
+    // Ban czasowy już wygasł → zdejmujemy go dokładnie jak signIn callback (best-effort:
+    // przeterminowany ban i tak nie blokuje, więc nieudany zapis nie może wywalić logowania).
+    await prisma.user
+      .update({ where: { id: user.id }, data: { isBanned: false, bannedUntil: null, banReason: null } })
+      .catch(() => {});
+  }
 
   // Mint the database session exactly like NextAuth's DB sign-in (cookie name/secure
   // pinned to the canonical origin, matching @auth/core).

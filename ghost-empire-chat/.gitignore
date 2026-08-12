@@ -4,3 +4,18 @@ dist/
 .env.local
 *.log
 .kick-tokens.json
+
+# Per-portal env-y floty SaaS. README §"Multi-tenant" każe operatorowi zrobić
+# `cp tenants/example-tenant.env tenants/neo-zone.env` i wpisać tam REALNE
+# BOT_SECRET / TWITCH_CLIENT_SECRET / KICK_CLIENT_SECRET / GOOGLE_CLIENT_SECRET /
+# YOUTUBE_BOT_REFRESH_TOKEN. Wzorce `.env`/`.env.local` wyżej to nazwy plików —
+# NIE łapią `tenants/neo-zone.env`, więc komplet poświadczeń jednego portalu
+# dawał się scommitować. Ignorujemy cały katalog env-ów… (#audit)
+tenants/*.env
+# …poza szablonem z samymi placeholderami — ten ma zostać w repo (i tylko on jest
+# na allowliście gitleaks w .gitleaks.toml).
+!tenants/example-tenant.env
+
+# macOS AppleDouble forks ("._Foo.ts") + Finder metadata — never commit (#audit)
+._*
+.DS_Store

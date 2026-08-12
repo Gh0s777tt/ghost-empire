@@ -51,7 +51,12 @@ export function matchFaq(message: string): string | null {
         : text.includes(f.keyword);
     if (!hit) continue;
     const key = `${f.matchType}:${f.keyword}`;
-    if (now - (lastUsed.get(key) ?? 0) < f.cooldownSec * 1000) return null; // matched but cooling down
+    // `continue`, nie `return null` (audyt 2026-08, finding low/7): wcześniejszy early-return
+    // uciszał CAŁĄ resztę listy, gdy pierwszy trafiony FAQ był na cooldownie — szeroki keyword
+    // (np. "jak") wyłączał bardziej specyficzne wpisy, a że iterujemy w kolejności wierszy
+    // z portalu, zachowanie zależało od kolejności ustawionej przez admina. Docstring od zawsze
+    // obiecywał "pierwszy pasujący FAQ, który jest POZA cooldownem" — teraz kod to robi.
+    if (now - (lastUsed.get(key) ?? 0) < f.cooldownSec * 1000) continue; // matched but cooling down — try the rest
     lastUsed.set(key, now);
     return f.response;
   }

@@ -177,19 +177,45 @@ export function verifyCronSecret(authHeader: string | null): boolean {
   return timingSafeEqualStr(authHeader, `Bearer ${expected}`);
 }
 
-// Verify a bot request that targets a specific tenant (Batch B). Accepts EITHER the
-// global BOT_SECRET (so the existing single shared bot keeps working, with no
-// behaviour change) OR — when the tenant has set its own `botSecret` — that
-// per-tenant secret. Intentionally permissive: the global secret is always accepted.
-// Strict per-tenant-only enforcement is gated on every tenant running its own bot
-// instance with its own secret, which has to be coordinated with the bot repo; until
-// then this is latent infrastructure that never rejects a currently-valid request.
+/** Czy globalny `BOT_SECRET` ma przestać być kluczem-wytrychem do KAŻDEGO portalu.
+ *  Osobny helper, bo env czytamy przy każdym żądaniu (Vercel podmienia env między
+ *  buildami, więc cache'owanie w module byłoby zamrożeniem wartości z pierwszego
+ *  requestu). Akceptujemy wyłącznie `1` / `true` — cokolwiek innego (w tym `0`,
+ *  `false`, pusty string) = tryb zgodnościowy, żeby literówka w env NIE odcięła
+ *  bota po cichu. */
+function botSecretStrictMode(): boolean {
+  const v = process.env.BOT_SECRET_STRICT?.trim().toLowerCase();
+  return v === "1" || v === "true";
+}
+
+// Verify a bot request that targets a specific tenant (Batch B).
+//
+// ⚠️ Bez `BOT_SECRET_STRICT` globalny `BOT_SECRET` jest MASTER KEY do wszystkich portali:
+// tenant wynika wyłącznie z nagłówka Host (`lib/tenant.ts`), a `/api` jest wyłączone z
+// middleware (`proxy.ts`), więc posiadacz jednego globalnego sekretu bije w mennicę waluty,
+// rozwiązuje tożsamości i steruje kasynem w CUDZYM portalu — a portal, który zrotował własny
+// `Tenant.botSecret`, nie zyskiwał tym ŻADNEJ izolacji. Stąd opt-in tryb ścisły:
+//
+//   • `BOT_SECRET_STRICT=1|true` → gdy tenant MA własny `botSecret`, akceptujemy TYLKO jego;
+//     globalny przestaje działać dla tego portalu. Gdy tenant NIE ma własnego — globalny nadal
+//     działa, inaczej portal, który nigdy nie rotował, zgasłby w chwili włączenia flagi.
+//   • bez flagi (DOMYŚLNIE) → zachowanie jak dotąd: globalny akceptowany zawsze, obok
+//     ewentualnego sekretu portalu. To świadomy default WSTECZNEJ ZGODNOŚCI — jeden wspólny bot
+//     nie padnie przy deployu. Wyłącz go (czyli włącz izolację), gdy każda instancja bota ma już
+//     własny sekret portalu: ustaw `BOT_SECRET_STRICT=1` w env portalu. Zob. docs/ENV.md.
+//
+// Wszystkie porównania idą przez `timingSafeEqualStr` (constant-time), a pusty/nieustawiony
+// sekret nigdy nie uwierzytelnia — `verifyBotSecret` odrzuca brak `BOT_SECRET`, a pusty
+// `tenantBotSecret` jest falsy, więc nie dopuszcza "Bearer " z pustym sekretem.
 export function verifyBotSecretForTenant(
   authHeader: string | null,
   tenantBotSecret: string | null | undefined,
 ): boolean {
-  if (verifyBotSecret(authHeader)) return true;
-  if (!tenantBotSecret || !authHeader) return false;
+  if (!authHeader) return false;
   const secret = authHeader.replace("Bearer ", "");
+  // Tryb ścisły + portal ma własny sekret ⇒ globalny NIE jest już brany pod uwagę.
+  if (tenantBotSecret && botSecretStrictMode()) return timingSafeEqualStr(secret, tenantBotSecret);
+  if (verifyBotSecret(authHeader)) return true;
+  if (!tenantBotSecret) return false;
   return timingSafeEqualStr(secret, tenantBotSecret);
 }
