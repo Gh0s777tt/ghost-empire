@@ -10,6 +10,28 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // (passthrough) on normal builds, so production is unaffected.
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
+// audyt (arch): inert dziś, ale nie zaszywaj founder-hostów. serverActions.allowedOrigins
+// to biała lista Originów dla Server Actions — w tej apce nie ma ANI JEDNEGO Server Action
+// ("use server" = 0 trafień), więc ustawienie jest dziś martwe. Mimo to nie hardkodujemy
+// hostów foundera: derywujemy listę z env (VERCEL_URL — host bieżącego deploymentu bez
+// protokołu; NEXT_PUBLIC_ROOT_DOMAIN — domena per-tenant, z wildcardem na subdomeny portali),
+// a do wartości foundera spadamy WYŁĄCZNIE jako fallback, gdy env jest puste (lokalny dev).
+// Dzięki temu nowy tenant/preview nie dziedziczy allow-listy Ghost Empire, gdy Server Actions
+// kiedyś wejdą do gry.
+const serverActionAllowedOrigins: string[] = [
+  "localhost:3000", // dev zawsze
+  ...(process.env.VERCEL_URL ? [process.env.VERCEL_URL] : []),
+  ...(process.env.NEXT_PUBLIC_ROOT_DOMAIN
+    ? [process.env.NEXT_PUBLIC_ROOT_DOMAIN, `*.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`]
+    : []),
+];
+// Fallback anty-pustka: gdy ani VERCEL_URL, ani NEXT_PUBLIC_ROOT_DOMAIN nie są ustawione,
+// utrzymaj dotychczasowy host foundera (nie founder-hardcode w kodzie ścieżki produkcyjnej —
+// to tylko domyślka na wypadek braku env, żeby nie skończyć z samą listą [localhost]).
+if (!process.env.VERCEL_URL && !process.env.NEXT_PUBLIC_ROOT_DOMAIN) {
+  serverActionAllowedOrigins.push("ghost-empire-web.vercel.app");
+}
+
 // Security headers applied to ALL routes
 const securityHeaders = [
   // Force HTTPS for 2 years; tells the browser "never use http for this domain again"
@@ -79,10 +101,9 @@ const nextConfig: NextConfig = {
 
   experimental: {
     serverActions: {
-      allowedOrigins: [
-        "localhost:3000",
-        "ghost-empire-web.vercel.app",
-      ],
+      // audyt (arch): lista derywowana z env — patrz komentarz przy
+      // serverActionAllowedOrigins wyżej (inert dziś: 0 Server Actions w apce).
+      allowedOrigins: serverActionAllowedOrigins,
     },
     // Client-side Router Cache: reuse the RSC payload when navigating BACK to a
     // page within this window instead of refetching from the server. Default for
