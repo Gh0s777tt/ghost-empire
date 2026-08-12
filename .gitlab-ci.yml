@@ -450,35 +450,41 @@ docs-drift:
 # → wersja SemVer → tag vX.Y.Z → Release na GitLab → wpis w CHANGELOG.md (commit
 # zwrotny z [skip ci] — brak pętli).
 #
-# ⚠️ AUDYT: TEN JOB NIE WYDAŁ JESZCZE ANI JEDNEGO RELEASE'U — I W OBECNYM STANIE REPO
-# NIE MOŻE. `npm ci` twardo failuje bez lockfile'a, a root `package-lock.json` NIE
-# ISTNIEJE: nie ma go ani na dysku, ani w gicie (`git ls-files | grep -x package-lock.json`
-# → pusto; zalockowane są tylko `ghost-empire-web/` i `ghost-empire-chat/`). Więc
-# `npx semantic-release` nigdy się nie uruchamia. Dowód z historii: 1005 commitów,
-# DOKŁADNIE JEDEN tag (`v0.1.0`, założony ręcznie 2026-07-16) i ZERO commitów
-# `chore(release):`.
+# ⚠️ AUDYT: TEN JOB NIE WYDAŁ JESZCZE ANI JEDNEGO RELEASE'U. Historia jest dowodem:
+# 1005 commitów, DOKŁADNIE JEDEN tag (`v0.1.0`, założony ręcznie 2026-07-16) i ZERO
+# commitów `chore(release):`. Były DWIE nałożone przyczyny, obie już usunięte:
+#
+#   (a) root `package-lock.json` NIE ISTNIAŁ (ani na dysku, ani w gicie — zalockowane
+#       były tylko `ghost-empire-web/` i `ghost-empire-chat/`), a `npm ci` bez lockfile'a
+#       twardo failuje, więc `npx semantic-release` nigdy się nie uruchamiał;
+#   (b) GŁĘBSZA, niewidoczna spod (a): root `package.json` przypinał
+#       `@semantic-release/commit-analyzer: ^13.0.6` — wersję, której NIE MA na npm
+#       (najwyższa opublikowana to 13.0.1). Nawet z lockfile'em instalacja kończyłaby się
+#       `ETARGET`. Poprawione na `^13.0.1`; pozostałe dziewięć zakresów zweryfikowano
+#       jako spełnialne.
+#
+# Zweryfikowane lokalnie po naprawie: `npm ci --ignore-scripts --dry-run` → exit 0,
+# 416 pakietów, lockfileVersion 3 (zgodnie z konwencją repo opisaną na górze pliku).
 #
 # Dlaczego nikt tego nie zauważył: `allow_failure: true` z komentarzem opisującym się jako
 # BOOTSTRAP-GUARD do zdjęcia „PO pierwszym udanym wydaniu" — czyli po zdarzeniu, które przy
-# tej konfiguracji nie może nastąpić. Awaria była więc niewidoczna, a `docs/MAINTENANCE.md`
-# do dziś twierdzi, że „wersje wydają się automatycznie z Conventional Commits". Nie wydają się.
+# tamtej konfiguracji nastąpić nie mogło. Awaria była niewidoczna.
 #
-# ZAMIAST CICHEJ AWARII — JAWNY PRECHECK (patrz `before_script`): job zatrzymuje się z
-# czytelnym komunikatem NAZYWAJĄCYM brakujący warunek, zamiast wywalać się na `npm ci`
-# z generycznym błędem npm. `allow_failure` ZOSTAJE, dopóki warunki nie są spełnione —
-# ale teraz pomarańczowy job mówi, CZEGO brakuje.
+# PRECHECK w `before_script` ZOSTAJE mimo naprawy — jest tani, a gdyby lockfile kiedyś
+# wypadł z repo (np. przez regułę w .gitignore), job powie CO jest nie tak zamiast wywalić
+# się na generycznym błędzie npm.
 #
-# ŻEBY TO WŁĄCZYĆ (kolejność ma znaczenie):
-#   1. Wygeneruj i ZACOMMITUJ root `package-lock.json` (`npm install --package-lock-only`
-#      w root-cie — root package.json ma już devDep semantic-release + pluginy).
-#   2. Ustaw CI/CD var `GITLAB_TOKEN` (scope: api).
-#   3. Tag bazowy `v0.1.0` już istnieje (bez niego pierwsze wydanie wyszłoby jako 1.0.0).
-#   4. Uzgodnij `CHANGELOG.md` — jest pisany RĘCZNIE i ma 818 KB; plugin
-#      @semantic-release/changelog dopisuje swoją sekcję na górze. Zdecyduj, czy
-#      generowane wpisy mają dokładać się do istniejącego pliku (jak zrobił to E-Bot,
-#      dokumentując punkt przejścia w `.releaserc.json` → `changelogTitle`), czy release
-#      ma CHANGELOG-a w ogóle nie dotykać.
-#   5. Dopiero wtedy ZDEJMIJ `allow_failure: true` — i popraw `docs/MAINTENANCE.md`.
+# CO ZOSTAŁO DO PIERWSZEGO WYDANIA:
+#   1. ✅ root `package-lock.json` — wygenerowany i zacommitowany.
+#   2. ⬜ CI/CD var `GITLAB_TOKEN` (scope: api) — TEGO NIE DA SIĘ USTAWIĆ Z REPO.
+#   3. ✅ tag bazowy `v0.1.0` istnieje (bez niego pierwsze wydanie wyszłoby jako 1.0.0).
+#   4. ⬜ decyzja o `CHANGELOG.md` — jest pisany RĘCZNIE i ma 818 KB, a plugin
+#      @semantic-release/changelog dopisuje swoją sekcję na górze. Zdecyduj, czy generowane
+#      wpisy mają dokładać się do istniejącego pliku (jak zrobił to E-Bot, dokumentując
+#      punkt przejścia w `.releaserc.json` → `changelogTitle`), czy release ma CHANGELOG-a
+#      w ogóle nie dotykać. Uruchom `npm run release:dry` po ustawieniu tokenu, żeby
+#      zobaczyć, co plugin faktycznie chce zrobić, ZANIM zdejmiesz allow_failure.
+#   5. ⬜ Dopiero wtedy ZDEJMIJ `allow_failure: true`.
 release:
   stage: release
   image: node:22-bookworm-slim
