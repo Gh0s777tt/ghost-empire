@@ -106,8 +106,13 @@ export default async function LocaleLayout({
     "--brand-rgb": hexToRgbTriplet(tenant.brandColor),
     // Optional per-portal background (#audit3): either a built-in DARK gradient template
     // (bgPreset — already dark, applied directly) or a custom image URL (rendered behind a
-    // strong dark gradient overlay so text contrast is preserved). The URL is sanitized in
-    // tenant.ts (safeMediaUrl) and the preset CSS comes from a fixed allowlist (bg-presets).
+    // strong dark gradient overlay so text contrast is preserved). The preset CSS comes from
+    // a fixed allowlist (bg-presets). The custom URL below is interpolated into a CSS
+    // `url("${…}")`, so it MUST be un-breakoutable: tenant.bgImageUrl arrives already run
+    // through safeMediaUrl (tenant.ts:114), which — hardened for #sec-css-injection — rejects
+    // any value carrying `"`, `)`, `{`, `}`, newline or `\` and returns the percent-encoded
+    // href, so it cannot close the url() or open a new declaration. React does NOT escape
+    // inside a style string, hence the guard lives in safeMediaUrl, not here.
     ...(tenant.bgPreset
       ? { backgroundImage: tenant.bgPreset, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }
       : tenant.bgImageUrl

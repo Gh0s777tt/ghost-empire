@@ -19,15 +19,19 @@ const STREAMLABS_OAUTH_TOKEN = "https://streamlabs.com/api/v2.0/token";
 const STREAMLABS_DONATIONS = "https://streamlabs.com/api/v2.0/donations";
 const STREAMLABS_USER = "https://streamlabs.com/api/v2.0/user";
 
+// Fallback redirect_uri z env — używany tylko, gdy caller nie poda per-host origin.
+// Per-host (audyt 2026-08): callery z requestem PRZEKAZUJĄ redirectUri z hosta STREAMERA,
+// żeby sub-tenant mógł podłączyć WŁASNE Streamlabs (redirect_uri musi byte-matchować w
+// authorize i w exchange). Wartość dla danego portalu musi być zarejestrowana w appce Streamlabs.
 const REDIRECT_URI = (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app")
   + "/api/auth/streamlabs/callback";
 
 export const SCOPES = "donations.read socket.token";
 
-export function getAuthorizeUrl(state: string): string {
+export function getAuthorizeUrl(state: string, redirectUri: string = REDIRECT_URI): string {
   const params = new URLSearchParams({
     client_id: process.env.STREAMLABS_CLIENT_ID ?? "",
-    redirect_uri: REDIRECT_URI,
+    redirect_uri: redirectUri,
     response_type: "code",
     scope: SCOPES,
     state,
@@ -43,12 +47,13 @@ type TokenResponse = {
   scope?: string;
 };
 
-export async function exchangeCode(code: string): Promise<TokenResponse> {
+export async function exchangeCode(code: string, redirectUri: string = REDIRECT_URI): Promise<TokenResponse> {
   const body = new URLSearchParams({
     grant_type: "authorization_code",
     client_id: process.env.STREAMLABS_CLIENT_ID ?? "",
     client_secret: process.env.STREAMLABS_CLIENT_SECRET ?? "",
-    redirect_uri: REDIRECT_URI,
+    // Musi byte-matchować redirect_uri użyty w authorize (patrz getAuthorizeUrl).
+    redirect_uri: redirectUri,
     code,
   });
   const res = await httpFetch(STREAMLABS_OAUTH_TOKEN, {

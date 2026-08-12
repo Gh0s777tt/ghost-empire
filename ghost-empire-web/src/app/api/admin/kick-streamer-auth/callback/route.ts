@@ -8,17 +8,19 @@ import { encryptSecret } from "@/lib/crypto";
 import { exchangeUserCode, getOwnUser } from "@/lib/kick";
 import { verifyOAuthState } from "@/lib/oauth-state";
 import { tokenUpsertKeys } from "@/lib/platform-tokens";
+import { requestOrigin } from "@/lib/http";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("kick-streamer");
 
-// Must byte-match the redirect_uri used in the authorize step — strip trailing slash too.
-const BASE = (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app").replace(/\/+$/, "");
-
 export async function GET(req: Request) {
+  // Per-host (audyt 2026-08): origin z hosta STREAMERA, nie zaszytego NEXTAUTH_URL — inaczej
+  // sub-tenant nie ma tu sesji i requireAdmin go blokuje. Ten sam origin co w authorize; trailing
+  // slash ucinamy, bo redirect_uri musi byte-matchować zarejestrowany URI Kicka.
+  const base = requestOrigin(req).replace(/\/+$/, "");
   const auth = await requireAdmin();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/admin?kick_error=unauthorized", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=unauthorized", base));
   }
 
   const url = new URL(req.url);
@@ -27,41 +29,41 @@ export async function GET(req: Request) {
   const error = url.searchParams.get("error");
 
   if (error) {
-    return NextResponse.redirect(new URL(`/admin?kick_error=${encodeURIComponent(error)}#kick`, BASE));
+    return NextResponse.redirect(new URL(`/admin?kick_error=${encodeURIComponent(error)}#kick`, base));
   }
   if (!code) {
-    return NextResponse.redirect(new URL("/admin?kick_error=no_code#kick", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=no_code#kick", base));
   }
 
   const payload = verifyOAuthState(state, "kick-streamer");
   if (!payload) {
-    return NextResponse.redirect(new URL("/admin?kick_error=state_mismatch#kick", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=state_mismatch#kick", base));
   }
   const cookieStore = await cookies();
   const cookieNonce = cookieStore.get("kick_streamer_state")?.value;
   const verifier = cookieStore.get("kick_streamer_verifier")?.value;
   if (cookieNonce && cookieNonce !== payload.nonce) {
-    return NextResponse.redirect(new URL("/admin?kick_error=state_mismatch#kick", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=state_mismatch#kick", base));
   }
   if (!verifier) {
     // PKCE verifier lives ONLY in the cookie — this flow can't complete cross-host.
-    return NextResponse.redirect(new URL("/admin?kick_error=missing_verifier#kick", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=missing_verifier#kick", base));
   }
   cookieStore.delete("kick_streamer_state");
   cookieStore.delete("kick_streamer_verifier");
 
-  const redirectUri = BASE + "/api/admin/kick-streamer-auth/callback";
+  const redirectUri = base + "/api/admin/kick-streamer-auth/callback";
   let tokenData: Awaited<ReturnType<typeof exchangeUserCode>>;
   try {
     tokenData = await exchangeUserCode(code, redirectUri, verifier);
   } catch (e) {
     log.error("token exchange failed", e);
-    return NextResponse.redirect(new URL("/admin?kick_error=token_exchange#kick", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=token_exchange#kick", base));
   }
 
   const user = await getOwnUser(tokenData.access_token);
   if (!user) {
-    return NextResponse.redirect(new URL("/admin?kick_error=user_fetch#kick", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=user_fetch#kick", base));
   }
 
   const expiresAt = tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : null;
@@ -94,7 +96,7 @@ export async function GET(req: Request) {
     });
   } catch (e) {
     log.error("DB upsert failed", e);
-    return NextResponse.redirect(new URL("/admin?kick_error=db_save#kick", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=db_save#kick", base));
   }
 
   await logAdminAction({
@@ -105,5 +107,5 @@ export async function GET(req: Request) {
     req,
   });
 
-  return NextResponse.redirect(new URL("/admin?kick_success=1#kick", BASE));
+  return NextResponse.redirect(new URL("/admin?kick_success=1#kick", base));
 }

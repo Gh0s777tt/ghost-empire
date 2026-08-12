@@ -4,8 +4,16 @@
 // them as iframes of the real /overlay/<widget> pages, so nothing about the existing
 // overlays has to change. Pure source-of-truth for the catalog + validation, shared by
 // the editor, the API and the render page.
+import { safeMediaUrl } from "@/lib/url-safe";
 
 export type SceneWidget = { id: string; path: string; query?: string; w: number; h: number };
+
+/** Element „image" (update 2026-08): własna grafika streamera (upload/URL) jako element sceny —
+ *  daje SCENY STATYCZNE. Renderowana jako <img>, NIE iframe widgetu; `src` przechodzi przez
+ *  safeMediaUrl (http(s), bez breakoutu). To jedyny widget spoza SCENE_WIDGETS, bo nie ma własnej
+ *  strony /overlay/*. Zapis w tym samym JSON `elements` → zero zmian schematu. */
+export const IMAGE_WIDGET = "image";
+const IMAGE_DEFAULT = { w: 30, h: 30 };
 
 // Curated to widgets that compose well in a scene (full-screen alerts excluded). w/h are
 // sensible DEFAULT sizes as % of the 1920×1080 canvas.
@@ -37,13 +45,14 @@ export function sceneWidget(id: string): SceneWidget | null {
   return BY_ID.get(id) ?? null;
 }
 
-export type SceneElement = { id: string; widget: string; x: number; y: number; w: number; h: number };
+export type SceneElement = { id: string; widget: string; x: number; y: number; w: number; h: number; src?: string };
 
 export const MAX_ELEMENTS = 24;
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-/** Clamp an element to the canvas: size 4..100%, position kept fully on-canvas. */
+/** Clamp an element to the canvas: size 4..100%, position kept fully on-canvas. Zachowuje `src`
+ *  (element „image"), już zsanityzowany przez parseElements. */
 export function clampElement(el: SceneElement): SceneElement {
   const w = clamp(Math.round(el.w), 4, 100);
   const h = clamp(Math.round(el.h), 4, 100);
@@ -54,6 +63,7 @@ export function clampElement(el: SceneElement): SceneElement {
     h,
     x: clamp(Math.round(el.x), 0, 100 - w),
     y: clamp(Math.round(el.y), 0, 100 - h),
+    ...(el.src ? { src: el.src } : {}),
   };
 }
 
@@ -68,6 +78,27 @@ export function parseElements(json: string | null | undefined): SceneElement[] {
     if (!raw || typeof raw !== "object") continue;
     const r = raw as Record<string, unknown>;
     const widget = String(r.widget ?? "");
+
+    // Element „image": własna grafika. Wymaga bezpiecznego http(s) URL — safeMediaUrl odrzuca
+    // javascript:/data:/relatywne i breakout; brak/nieprawidłowy src → element dropowany
+    // (nie renderujemy pustego <img>). NIE jest w SCENE_WIDGETS (nie ma strony /overlay/*).
+    if (widget === IMAGE_WIDGET) {
+      const src = safeMediaUrl(typeof r.src === "string" ? r.src : "");
+      if (!src) continue;
+      out.push(
+        clampElement({
+          id: String(r.id ?? `image-${out.length}`),
+          widget,
+          x: Number(r.x) || 0,
+          y: Number(r.y) || 0,
+          w: Number(r.w) || IMAGE_DEFAULT.w,
+          h: Number(r.h) || IMAGE_DEFAULT.h,
+          src,
+        }),
+      );
+      continue;
+    }
+
     const def = BY_ID.get(widget);
     if (!def) continue; // unknown / removed widget
     out.push(

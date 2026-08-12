@@ -1,11 +1,18 @@
 "use client";
 // src/components/admin/sections/Streamlabs.tsx — lazily-loaded Streamlabs donations manager.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link as LinkIcon, Loader2, Zap } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiPost, ApiError } from "@/lib/api-client";
 import type { StreamlabsConnectionData, UnmatchedDonation } from "../types";
+
+// Read-side shape of GET /api/admin/donations — tenant-scoped aggregate for the panel header.
+type DonationStats = {
+  count: number;
+  totalPln: number;
+  byProvider: { source: string; count: number; pln: number }[];
+};
 
 export function StreamlabsManager({
   connection, unmatchedDonations, onToast, onSuccess, pending,
@@ -21,6 +28,20 @@ export function StreamlabsManager({
   const isPl = nf.startsWith("pl");
   const [busy, setBusy] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Record<string, string>>({});
+  const [stats, setStats] = useState<DonationStats | null>(null);
+
+  // Header stats live on a separate GET (tenant-scoped aggregate) than the section-data payload that
+  // feeds `unmatchedDonations`. Re-fetch whenever that queue reference changes — every successful
+  // sync/assign/skip calls `onSuccess()`, which reloads section data and hands us a fresh array — so
+  // the header stays in sync without a second manual refresh wire.
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/admin/donations")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { stats?: DonationStats } | null) => { if (alive && d?.stats) setStats(d.stats); })
+      .catch(() => { /* header is non-critical — a failed stats read never blocks reconciling */ });
+    return () => { alive = false; };
+  }, [unmatchedDonations]);
 
   async function action(act: "sync" | "disconnect") {
     if (act === "disconnect" && !confirm(t("disconnectConfirm"))) return;
@@ -115,8 +136,51 @@ export function StreamlabsManager({
         )}
       </div>
 
-      {/* Unmatched donations */}
-      {connection.connected && (
+      {/* Donations stats header (this tenant only). Provider-agnostic — renders whenever the portal
+          has ANY money-in, so a Ko-fi/Tipply/custom streamer sees their totals even without a
+          Streamlabs OAuth connection. Labels follow the file's existing inline isPl pattern (no new
+          i18n keys); provider names come straight from the enum-ish `source` value. PLN here is the
+          operator's real settlement currency (admin-only surface), NOT the per-tenant virtual token —
+          so it is not a white-label leak. */}
+      {stats && stats.count > 0 && (
+        <div className="border border-zinc-800 bg-black/30 p-3 mb-3">
+          <div className="grid grid-cols-2 gap-3 mb-2">
+            <div>
+              <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 mb-0.5">
+                {isPl ? "Łącznie (PLN)" : "Total (PLN)"}
+              </div>
+              <div className="text-lg font-bold text-green-300">
+                {stats.totalPln.toLocaleString(nf, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div>
+              <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 mb-0.5">
+                {isPl ? "Donejty" : "Donations"}
+              </div>
+              <div className="text-lg font-bold text-white">{stats.count.toLocaleString(nf)}</div>
+            </div>
+          </div>
+          {stats.byProvider.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {stats.byProvider.map((p) => (
+                <span
+                  key={p.source}
+                  className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 border border-zinc-800 px-1.5 py-0.5"
+                >
+                  {p.source} · {p.count.toLocaleString(nf)} · {p.pln.toLocaleString(nf, { maximumFractionDigits: 0 })} PLN
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Unmatched donations. Decoupled from `connection.connected` (#reconcile-provider-agnostic):
+          the queue is populated provider-agnostically — Ko-fi/Tipply/custom enqueue unverified rows
+          too, not just Streamlabs — so it must render whenever THIS tenant has unmatched rows, even
+          with no Streamlabs OAuth connection. The Streamlabs-specific connect UI stays above where it
+          belongs. Still shows the connected empty-state (🎉) for a connected streamer with none. */}
+      {(connection.connected || unmatchedDonations.length > 0) && (
         <>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">

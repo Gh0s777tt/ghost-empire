@@ -10,14 +10,18 @@ import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
 import { signOAuthState } from "@/lib/oauth-state";
 import { currentTenantId } from "@/lib/tenant";
+import { requestOrigin } from "@/lib/http";
 
 const STREAMER_SCOPES = "channel:read:subscriptions bits:read channel:read:hype_train moderator:read:followers clips:edit";
 
-export async function GET() {
+export async function GET(req: Request) {
+  // Per-host origin (audyt 2026-08): redirect_uri musi wracać na host STREAMERA, nie na
+  // zaszyty host foundera — inaczej sub-tenant ląduje na callbacku bez sesji i requireAdmin
+  // go odrzuca (nie podłączy WŁASNEGO Twitcha). Ten sam origin w authorize i w wymianie kodu.
+  const base = requestOrigin(req);
   const auth = await requireAdmin();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/admin?twitch_error=unauthorized",
-      process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app"));
+    return NextResponse.redirect(new URL("/admin?twitch_error=unauthorized", base));
   }
 
   // Signed state carries {tenantId, userId} — the shared OAuth app returns all
@@ -38,7 +42,7 @@ export async function GET() {
 
   const params = new URLSearchParams({
     client_id: process.env.TWITCH_CLIENT_ID ?? "",
-    redirect_uri: (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app") + "/api/admin/twitch-streamer-auth/callback",
+    redirect_uri: base + "/api/admin/twitch-streamer-auth/callback",
     response_type: "code",
     scope: STREAMER_SCOPES,
     state,

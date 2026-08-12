@@ -34,7 +34,7 @@ describe("shapeAlerts", () => {
 
   it("applies the per-type config (animation / position / soundUrl)", () => {
     const cfg: Record<string, AlertTypeCfg> = {
-      donation: { animation: "scale", position: "top-center", soundUrl: "https://x/s.mp3", minAmount: null },
+      donation: { animation: "scale", position: "top-center", soundUrl: "https://x/s.mp3", imageUrl: null, mediaType: null, minAmount: null },
     };
     const [out] = shapeAlerts([row()], cfg);
     expect(out.animation).toBe("scale");

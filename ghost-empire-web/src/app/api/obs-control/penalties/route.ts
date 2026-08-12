@@ -56,7 +56,14 @@ export async function GET(req: Request) {
   const payload: Array<{ drawId: string; label: string; intensity: number; durationMs: number; action: unknown }> = [];
   for (const d of due) {
     const spec = d.penaltyId ? byId.get(d.penaltyId) : undefined;
-    const action = spec ? penaltyAction(spec, d.intensity, d.durationMs) : null;
+    // "challenge" (update 2026-08): free-text wyzwanie — brak akcji OBS, dostarczamy marker
+    // {kind:"challenge"}, a źródło OBS-control pokaże `label` jako banner zamiast aktuować OBS.
+    // Idzie tym samym at-most-once kanałem (stampowanie niżej obejmuje i te wiersze).
+    const action = spec
+      ? spec.actionKind === "challenge"
+        ? { kind: "challenge" as const }
+        : penaltyAction(spec, d.intensity, d.durationMs)
+      : null;
     if (!action) {
       // The catalogue row was deleted or is incomplete. Stamp it so it stops being re-served every
       // 2 seconds forever, and say so — silently retrying an unactuatable draw is a hot loop.

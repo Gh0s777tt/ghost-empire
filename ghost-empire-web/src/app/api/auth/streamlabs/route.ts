@@ -6,12 +6,15 @@ import { requireAdmin } from "@/lib/admin";
 import { getAuthorizeUrl } from "@/lib/streamlabs";
 import { signOAuthState } from "@/lib/oauth-state";
 import { currentTenantId } from "@/lib/tenant";
+import { requestOrigin } from "@/lib/http";
 
-export async function GET() {
+export async function GET(req: Request) {
+  // Per-host origin (audyt 2026-08): redirect_uri z hosta STREAMERA, nie zaszytego
+  // NEXTAUTH_URL — inaczej sub-tenant nie podłączy WŁASNYCH Streamlabs.
+  const base = requestOrigin(req);
   const auth = await requireAdmin();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/admin?streamlabs_error=unauthorized",
-      process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app"));
+    return NextResponse.redirect(new URL("/admin?streamlabs_error=unauthorized", base));
   }
 
   // Signed state carries {tenantId, userId} (shared OAuth app → one callback URL);
@@ -30,5 +33,5 @@ export async function GET() {
     path: "/",
   });
 
-  return NextResponse.redirect(getAuthorizeUrl(state));
+  return NextResponse.redirect(getAuthorizeUrl(state, base + "/api/auth/streamlabs/callback"));
 }

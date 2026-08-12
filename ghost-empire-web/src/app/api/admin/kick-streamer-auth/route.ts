@@ -8,19 +8,20 @@ import { requireAdmin } from "@/lib/admin";
 import { getStreamerAuthorizeUrl } from "@/lib/kick";
 import { signOAuthState } from "@/lib/oauth-state";
 import { currentTenantId } from "@/lib/tenant";
-
-// Strip any trailing slash so we never build "...app//api/..." which Kick rejects
-// as an invalid redirect_uri (must byte-match the registered URI).
-const BASE = (process.env.NEXTAUTH_URL ?? "https://ghost-empire-web.vercel.app").replace(/\/+$/, "");
+import { requestOrigin } from "@/lib/http";
 
 function base64url(buf: Buffer): string {
   return buf.toString("base64url");
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  // Per-host origin (audyt 2026-08): redirect_uri z hosta STREAMERA, nie zaszytego
+  // NEXTAUTH_URL — inaczej sub-tenant nie podłączy WŁASNEGO Kicka. Trailing slash ucinamy,
+  // bo Kick byte-matchuje redirect_uri z zarejestrowanym (nie może wyjść "...//api/...").
+  const base = requestOrigin(req).replace(/\/+$/, "");
   const auth = await requireAdmin();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/admin?kick_error=unauthorized", BASE));
+    return NextResponse.redirect(new URL("/admin?kick_error=unauthorized", base));
   }
 
   // PKCE — Kick requires code_challenge / code_verifier
@@ -49,6 +50,6 @@ export async function GET() {
     path: "/",
   });
 
-  const redirectUri = BASE + "/api/admin/kick-streamer-auth/callback";
+  const redirectUri = base + "/api/admin/kick-streamer-auth/callback";
   return NextResponse.redirect(getStreamerAuthorizeUrl(state, challenge, redirectUri));
 }

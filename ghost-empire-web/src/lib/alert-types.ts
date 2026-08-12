@@ -22,6 +22,9 @@ export type AlertTypeCfg = {
   animation: AlertAnimation;
   position: AlertPosition;
   soundUrl: string | null;
+  // Własna grafika/animacja alertu (update 2026-08) — URL + typ mediów; null = avatar/emoji jak dotąd.
+  imageUrl: string | null;
+  mediaType: "image" | "video" | null;
   minAmount: number | null;
 };
 
@@ -32,6 +35,8 @@ export const DEFAULT_ALERT_TYPE_CFG: AlertTypeCfg = {
   animation: "slide",
   position: "bottom-right",
   soundUrl: null,
+  imageUrl: null,
+  mediaType: null,
   minAmount: null,
 };
 

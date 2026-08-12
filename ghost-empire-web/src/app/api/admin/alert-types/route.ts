@@ -31,6 +31,8 @@ export async function GET() {
       animation: (r?.animation as AlertAnimation) ?? DEFAULT_ALERT_TYPE_CFG.animation,
       position: (r?.position as AlertPosition) ?? DEFAULT_ALERT_TYPE_CFG.position,
       soundUrl: r?.soundUrl ?? null,
+      imageUrl: r?.imageUrl ?? null,
+      mediaType: r?.mediaType ?? null,
       minAmount: r?.minAmount ?? null,
       configured: !!r,
     };
@@ -67,6 +69,12 @@ export async function POST(req: Request) {
 
   // Only allow real http(s) URLs (blocks javascript:/data:/relative).
   const soundUrl = safeMediaUrl(typeof body.soundUrl === "string" ? body.soundUrl : null);
+  // Własna grafika/animacja alertu (update 2026-08): URL przez safeMediaUrl; mediaType tylko
+  // z allowlisty. Gdy brak URL → mediaType null (spójność: nie trzymamy typu bez grafiki).
+  const imageUrl = safeMediaUrl(typeof body.imageUrl === "string" ? body.imageUrl : null);
+  const mediaType = imageUrl && (body.mediaType === "image" || body.mediaType === "video")
+    ? (body.mediaType as "image" | "video")
+    : null;
 
   let minAmount: number | null = null;
   if (body.minAmount !== undefined && body.minAmount !== null && body.minAmount !== "") {
@@ -74,7 +82,7 @@ export async function POST(req: Request) {
     minAmount = Number.isFinite(n) && n > 0 ? n : null;
   }
 
-  const data = { animation, position, soundUrl, minAmount };
+  const data = { animation, position, soundUrl, imageUrl, mediaType, minAmount };
   // Per-tenant (#512): upsert within this portal. Manual find-then-write avoids a
   // compound-unique upsert with a possibly-null tenantId (single-tenant fallback).
   const tid = await currentTenantId();

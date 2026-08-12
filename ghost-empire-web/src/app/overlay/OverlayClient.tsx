@@ -49,6 +49,9 @@ type AlertItem = {
   animation?: AlertAnimation;
   position?: AlertPosition;
   soundUrl?: string | null;
+  // Własna grafika/animacja alertu (update 2026-08) — z AlertTypeConfig, renderowane przez AlertCard.
+  imageUrl?: string | null;
+  mediaType?: "image" | "video" | null;
   createdAt: string;
 };
 
@@ -85,6 +88,11 @@ export function OverlayClient() {
   const lastSinceRef = useRef<string | null>(null);
   const currentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ttsRef = useRef<TtsCfg | null>(null);
+  // White-label: the spoken currency NAME must be THIS portal's, never the founder's.
+  // Filled from /api/companion/branding (Host-scoped, public) when TTS is on; until then
+  // buildTtsText falls back to a neutral word — never "Ghost Tokenów". A ref (not state)
+  // so the module-level buildTtsText reads the latest value at speak time without a re-render.
+  const ttsBrandingRef = useRef<{ tokenName: string; tokenSymbol: string } | null>(null);
 
   // Read token + TTS config from URL on mount
   useEffect(() => {
@@ -108,6 +116,22 @@ export function OverlayClient() {
         volume: num("ttsVolume", 1, 0, 1),
         voice: p.get("ttsVoice"),
       };
+      // Resolve the currency name for spoken alerts from the tenant, not a hardcoded
+      // "Ghost Tokenów" (white-label leak on non-founder portals). /api/companion/branding is
+      // public and resolves the portal from the request Host, so the overlay speaks its OWN
+      // token name/symbol. Only fetched when TTS is actually enabled. #white-label-tts
+      void (async () => {
+        try {
+          const res = await fetch("/api/companion/branding", { cache: "no-store" });
+          if (!res.ok) return;
+          const b = (await res.json()) as { tokenName?: string; tokenSymbol?: string };
+          const tokenName = (b.tokenName ?? "").trim();
+          const tokenSymbol = (b.tokenSymbol ?? "").trim();
+          if (tokenName || tokenSymbol) ttsBrandingRef.current = { tokenName, tokenSymbol };
+        } catch {
+          /* keep the neutral fallback — TTS must never break the overlay */
+        }
+      })();
     }
 
     // Particle burst intensity (#770): ?particles=0 disables, 1–200 scales the count.
@@ -148,7 +172,7 @@ export function OverlayClient() {
       }
     }
     // Optional spoken alert (?tts=1 on the OBS URL) — independent of the ding.
-    if (ttsRef.current?.enabled) speakAlert(next, ttsRef.current);
+    if (ttsRef.current?.enabled) speakAlert(next, ttsRef.current, ttsBrandingRef.current);
 
     if (currentTimerRef.current) clearTimeout(currentTimerRef.current);
     currentTimerRef.current = setTimeout(() => {
@@ -420,21 +444,47 @@ function playDing() {
 
 // --- TTS (browser speechSynthesis) — opt-in via ?tts=1 on the OBS URL ---
 
-/** Spoken text for an alert: "<actor> <message>", tidied for Polish speech. */
-function buildTtsText(a: AlertItem): string {
+/** Escapes a tenant-configured symbol so it is safe to embed in a RegExp (e.g. a "$"-based symbol). */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Spoken text for an alert: "<actor> <message>", tidied for speech. The portal's currency SYMBOL
+ * is expanded to its currency NAME — white-label: a non-founder portal must never hear the founder
+ * currency ("Ghost Tokenów"). `branding` carries this tenant's tokenSymbol/tokenName (from
+ * /api/companion/branding); until it loads we match "GT" and expand to a neutral "tokenów", never
+ * the founder name. #white-label-tts
+ */
+function buildTtsText(
+  a: AlertItem,
+  branding: { tokenName: string; tokenSymbol: string } | null,
+): string {
   const base = `${a.actorName ?? ""} ${a.message ?? ""}`.trim() || a.title || "";
+  // Symbol actually present in this portal's amounts (e.g. "GT", "EC"); "GT" is only the
+  // last-resort match target when branding hasn't loaded yet.
+  const symbol = branding?.tokenSymbol || "GT";
+  // Neutral local word, NEVER the founder "Ghost Tokenów" — that would leak on other portals.
+  const spokenName = branding?.tokenName || "tokenów";
+  const symRe = new RegExp(`\\b${escapeRegExp(symbol)}\\b`, "g");
   return base
     .replace(/\s+/g, " ")
-    .replace(/\bGT\b/g, "Ghost Tokenów")
+    .replace(symRe, spokenName)
+    // PLN is a real ISO-4217 currency code (the Polish operator's fiat), identical across portals —
+    // not a per-tenant brand token — so expanding it to the Polish "złotych" is tenant-safe.
     .replace(/\bPLN\b/gi, "złotych")
     .trim();
 }
 
-function speakAlert(a: AlertItem, cfg: TtsCfg) {
+function speakAlert(
+  a: AlertItem,
+  cfg: TtsCfg,
+  branding: { tokenName: string; tokenSymbol: string } | null,
+) {
   try {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     if (cfg.types !== "all" && !cfg.types.has(a.type)) return;
-    const text = buildTtsText(a);
+    const text = buildTtsText(a, branding);
     if (!text) return;
     const synth = window.speechSynthesis;
     synth.cancel(); // don't let alerts pile up mid-sentence

@@ -21,6 +21,7 @@ import { MAX_LEVEL, LEVEL_CAP_XP, PRESTIGE_XP, prestigeGtMultiplier, shopDiscoun
 import { useTenantBranding } from "@/components/TenantBranding";
 import { apiPost, ApiError } from "@/lib/api-client";
 import { ReferralCard } from "./ReferralCard";
+import { ACHIEVEMENT_CATEGORIES, categoryForTrigger } from "@/lib/achievement-categories";
 
 type Achievement = {
   id: string;
@@ -385,33 +386,68 @@ export function ProfileClient({
         <AccountsAndLinks connections={connections} linkedAccounts={linkedAccounts} socialLinks={socialLinks} />
       </SectionCard>
 
-      {/* Achievements */}
+      {/* Achievements — pogrupowane po KATEGORII (wyprowadzonej z triggerType, bez kolumny
+          w bazie: `src/lib/achievement-categories.ts`) i zwinięte w <details>, żeby długa
+          płaska siatka nie zajmowała pół ekranu. Zamyka finding „achievementy w profilu
+          grupowane po kategorii jako zwijana lista". #profil-achievements-kategorie */}
       <SectionCard
         title={t("achievementsTitle")}
         icon={Trophy}
         subtitle={t("achievementsSubtitle", { earned: earnedAchievements.length, total: allAchievements.length })}
       >
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-          {allAchievements.map((a) => {
-            const earned = earnedIds.has(a.id);
-            const style = RARITY_STYLE[a.rarity] ?? RARITY_STYLE.common;
+        <div className="space-y-2">
+          {ACHIEVEMENT_CATEGORIES.map((cat) => {
+            // Grupa = achievementy, których triggerType mapuje się na tę kategorię.
+            const group = allAchievements.filter((a) => categoryForTrigger(a.triggerType) === cat.id);
+            if (group.length === 0) return null; // pustych kategorii nie renderujemy
+            const earnedInGroup = group.reduce((n, a) => n + (earnedIds.has(a.id) ? 1 : 0), 0);
+            // Domyślnie rozwijamy tylko grupy, w których coś już zdobyto — reszta zwinięta,
+            // co jest całym sensem zmiany (oszczędność miejsca). `<details open>` jest
+            // niekontrolowane, więc użytkownik może dowolnie rozwijać/zwijać bez stanu Reacta.
+            const defaultOpen = earnedInGroup > 0;
             return (
-              <div
-                key={a.id}
-                className={cn(
-                  "border p-3 flex flex-col items-center text-center transition-all",
-                  earned ? `${style.border} ${style.bg}` : "border-zinc-900 bg-black/40 opacity-50",
-                )}
-                title={a.description}
+              <details
+                key={cat.id}
+                open={defaultOpen}
+                className="group border border-zinc-900 bg-black/20"
               >
-                <div className={cn("text-3xl mb-1.5", earned ? "" : "grayscale")}>{a.icon}</div>
-                <div className={cn("text-[11px] font-bold leading-tight", earned ? style.text : "text-zinc-600")}>
-                  {a.name}
+                {/* <summary> jest natywnie fokusowalne i obsługuje Enter/Spację —
+                    dodajemy tylko widoczny focus-ring i chowamy domyślny marker listy. */}
+                <summary className="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none list-none marker:hidden hover:bg-white/[0.03] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-red-600">
+                  <span className="text-base" aria-hidden="true">{cat.emoji}</span>
+                  <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-300 flex-1">{cat.label}</span>
+                  <span className="text-[10px] font-mono tabular-nums text-zinc-500 shrink-0" title={t("achievementsSubtitle", { earned: earnedInGroup, total: group.length })}>
+                    {earnedInGroup}/{group.length}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-zinc-500 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="p-3 pt-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                    {group.map((a) => {
+                      const earned = earnedIds.has(a.id);
+                      const style = RARITY_STYLE[a.rarity] ?? RARITY_STYLE.common;
+                      return (
+                        <div
+                          key={a.id}
+                          className={cn(
+                            "border p-3 flex flex-col items-center text-center transition-all",
+                            earned ? `${style.border} ${style.bg}` : "border-zinc-900 bg-black/40 opacity-50",
+                          )}
+                          title={a.description}
+                        >
+                          <div className={cn("text-3xl mb-1.5", earned ? "" : "grayscale")}>{a.icon}</div>
+                          <div className={cn("text-[11px] font-bold leading-tight", earned ? style.text : "text-zinc-600")}>
+                            {a.name}
+                          </div>
+                          <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mt-1">
+                            {t(style.label)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mt-1">
-                  {t(style.label)}
-                </div>
-              </div>
+              </details>
             );
           })}
         </div>

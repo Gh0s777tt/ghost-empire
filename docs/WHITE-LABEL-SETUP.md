@@ -44,17 +44,30 @@ W Settings → Domains projektu `ghost-empire-web` domena `empire-forge.com` mus
    - Kolizja (inny portal ma już tę domenę) → błąd 409.
 
 ## Krok 4 — adresy zwrotne OAuth (krytyczne)
-Logowanie buduje callback z hosta żądania, więc dla `empire-forge.com` dodaj w **każdej**
-konsoli dostawcy dokładnie te URL-e:
+**Logowanie ORAZ podłączanie kont streamera** budują callback z hosta żądania (audyt 2026-08:
+tak samo jak logowanie, żeby streamer podłączał WŁASNE konta na SWOIM portalu), więc dla
+`empire-forge.com` dodaj w **każdej** konsoli dostawcy dokładnie te URL-e.
+
+Logowanie użytkownika (NextAuth):
 ```
 https://empire-forge.com/api/auth/callback/twitch
 https://empire-forge.com/api/auth/callback/discord
 https://empire-forge.com/api/auth/callback/google
 https://empire-forge.com/api/auth/callback/kick
 ```
-- Konsole: dev.twitch.tv · discord.com/developers · console.cloud.google.com · dev.kick.com.
+Podłączanie kont streamera (EventSub / donacje — WYMAGANE, by nie-founder podłączył swoje konta):
+```
+https://empire-forge.com/api/admin/twitch-streamer-auth/callback
+https://empire-forge.com/api/admin/kick-streamer-auth/callback
+https://empire-forge.com/api/admin/youtube-streamer-auth/callback
+https://empire-forge.com/api/auth/streamlabs/callback
+https://empire-forge.com/api/auth/donationalerts/callback
+```
+- Konsole: dev.twitch.tv · discord.com/developers · console.cloud.google.com · dev.kick.com ·
+  streamlabs.com/dashboard#/settings/api-settings · www.donationalerts.com/application/clients.
 - Dostawcy **nie akceptują wildcardów** — każdą domenę/subdomenę dopisujesz ręcznie.
-- Pominięcie tego → błąd `OAuthCallback` przy logowaniu na tej domenie.
+- Pominięcie logowania → błąd `OAuthCallback`. Pominięcie streamer-auth → `redirect_uri`
+  odrzucony/`unauthorized` przy podłączaniu Twitcha/Kicka/YT/Streamlabs na tej domenie.
 
 ## Krok 5 — weryfikacja
 1. Otwórz `https://empire-forge.com` → powinien pokazać branding E-Forge (nie GH0ST EMPIRE).

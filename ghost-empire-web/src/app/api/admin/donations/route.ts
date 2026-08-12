@@ -1,5 +1,6 @@
 // src/app/api/admin/donations/route.ts
-// Admin reconciliation — manually match unmatched donations to users.
+// Admin reconciliation — manually match unmatched donations to users (PATCH), plus a read-only
+// tenant-scoped stats aggregate for the Economy-tab donations header (GET).
 import { NextResponse, after } from "next/server";
 import { requireAdmin, findManagedUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
@@ -38,6 +39,55 @@ async function resolveClaimsFor(donation: QueueDonation, creditedUserId: string 
   } catch (e) {
     log.warn("failed to resolve donation claims", { donationId: donation.id, error: e instanceof Error ? e.message : String(e) });
   }
+}
+
+/**
+ * GET — tenant-scoped donation stats for the Economy-tab header: total value in PLN, donation
+ * count, and a per-provider breakdown. Read side of the panel that previously had only the reconcile
+ * action (its one function). Mirrors how GET /api/admin/wheel returns a `stats` block. Tenant scope
+ * is identical to the PATCH mint path below — a tenant admin only ever sees their own portal's
+ * money-in; `tid === null` (legacy/founder caller) intentionally sees the null-tenant legacy rows too.
+ */
+export async function GET() {
+  const auth = await requireAdmin();
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  const tid = await currentTenantId();
+  const scope = tid ? { tenantId: tid } : {};
+
+  // Group by provider+currency so each bucket is FX-converted to PLN with the SAME table the mint
+  // rail uses (`plnFromMinor`): `amountGrosze` is minor units of the row's OWN currency, never
+  // assumed PLN — summing a $10 Ko-fi tip as 10 PLN would be the exact bug the mint path warns about.
+  // An unknown currency is never guessed (plnFromMinor === null): the row still counts, but adds 0
+  // PLN, matching lib/donations/fx.ts's "refuse to invent a rate" rule.
+  const groups = await prisma.donation.groupBy({
+    by: ["source", "currency"],
+    where: scope,
+    _count: { _all: true },
+    _sum: { amountGrosze: true },
+  });
+
+  let count = 0;
+  let totalPln = 0;
+  const byProvider = new Map<string, { count: number; pln: number }>();
+  for (const g of groups) {
+    const n = g._count._all;
+    const pln = plnFromMinor(g._sum.amountGrosze ?? 0, g.currency) ?? 0;
+    count += n;
+    totalPln += pln;
+    const prev = byProvider.get(g.source) ?? { count: 0, pln: 0 };
+    byProvider.set(g.source, { count: prev.count + n, pln: prev.pln + pln });
+  }
+
+  return NextResponse.json({
+    stats: {
+      count,
+      totalPln: Math.round(totalPln * 100) / 100,
+      byProvider: [...byProvider.entries()]
+        .map(([source, v]) => ({ source, count: v.count, pln: Math.round(v.pln * 100) / 100 }))
+        .sort((a, b) => b.pln - a.pln),
+    },
+  });
 }
 
 // PATCH { donationId, action: "assign", userTarget } | { donationId, action: "skip" }

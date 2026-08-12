@@ -2308,6 +2308,11 @@ model AlertTypeConfig {
   animation String   @default("slide") // slide | fade | scale | none
   position  String   @default("bottom-right") // {top|center|bottom}-{left|center|right}
   soundUrl  String? // custom sound URL; null = synthesized ding
+  // Własna grafika/animacja alertu (update 2026-08): URL (upload przez /api/upload lub wklejony)
+  // wyświetlany jako treść karty alertu dla tego typu. `mediaType` "image"|"video" wybiera renderer
+  // w AlertCard. null = zachowanie jak dotąd (avatar/emoji). Nullable + addytywne (brak backfillu).
+  imageUrl  String?
+  mediaType String? // "image" | "video" | null
   minAmount Int? // only show alert if amount >= this (null = always)
   updatedAt DateTime @updatedAt
 

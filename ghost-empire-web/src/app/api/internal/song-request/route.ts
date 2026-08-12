@@ -21,19 +21,39 @@ export async function POST(req: Request) {
   const gated = await featureGateResponse("song_queue");
   if (gated) return gated;
 
-  let body: { query?: string; requestedBy?: string; platform?: string };
+  let body: { action?: string; query?: string; requestedBy?: string; platform?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const tid = await currentTenantId();
+
+  // Viewer self-cancel (!unsr / !wrongsong): usuń NAJNOWSZĄ wciąż-zakolejkowaną prośbę TEGO
+  // widza. Dopasowanie po znormalizowanym handle (case-insensitive, jak ban) ORAZ status
+  // "queued" — więc nie da się skasować cudzej prośby ani pozycji już granej/odtworzonej.
+  // Tenant-scoped tym samym OR co reszta trasy. Idzie tą samą ścieżką auth/gate co !sr wyżej.
+  if (body.action === "cancel") {
+    const handle = normalizeRequester(body.requestedBy ?? "");
+    if (!handle) return NextResponse.json({ error: "Invalid requester" }, { status: 400 });
+    const tenantScope = tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {};
+    const own = await prisma.songRequest.findFirst({
+      where: { status: "queued", requestedBy: { equals: handle, mode: "insensitive" }, ...tenantScope },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, title: true, query: true },
+    });
+    if (!own) return NextResponse.json({ error: "not_found", message: "Nie masz utworu w kolejce do usunięcia." }, { status: 404 });
+    // Hard-delete: to była POMYŁKA widza ("zły utwór"), więc znika zamiast osiadać w liście
+    // "recent" jako skipped — spójne z akcją "delete" w panelu admina.
+    await prisma.songRequest.delete({ where: { id: own.id } });
+    return NextResponse.json({ ok: true, removed: own.title ?? own.query });
+  }
+
   const query = (body.query ?? "").trim();
   if (!query || query.length > MAX_QUERY) {
     return NextResponse.json({ error: "Invalid query" }, { status: 400 });
   }
-
-  const tid = await currentTenantId();
 
   // Ban check: a chatter the streamer banned (admin Song Queue) can't enqueue. The bot
   // relays the message to chat. Matched on the lowercased handle, scoped to this portal.
