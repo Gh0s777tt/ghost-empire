@@ -28,9 +28,10 @@ Zweryfikowane ścieżka po ścieżce (agent SEC-donation-routing):
    DonationAlerts i logowanie NextAuth) — callback wraca na host streamera, sesja obecna,
    `redirect_uri` byte-matchuje. **⚠️ Wymaga rejestracji callbacków w konsolach OAuth per host
    (WHITE-LABEL-SETUP.md §4) + testu na żywym OAuth przed mergem — nietestowalne w CI.**
-2. **PayMedia founder-global** (`PAYMEDIA_WEBHOOK_SECRET`, `tenantId:null`). Nieoferowany tenantom,
-   więc brak aktywnego wycieku — ale łamie inwariant. Przerobić na per-integration jak Ko-fi lub
-   usunąć jeśli nieużywany. Effort: S/M.
+2. ✅ **DYSPONOWANE (`docs/DECISIONS.md`).** PayMedia founder-global (`PAYMEDIA_WEBHOOK_SECRET`,
+   `tenantId:null`). Zweryfikowane: **nie ma go w `PROVIDERS`**, żaden tenant nie skieruje tam
+   wpłat → brak aktywnego wycieku; kredytuje wyłącznie foundera (kanał platformowy). Świadomie
+   founder-global; white-label per-integration dopiero gdyby był oferowany tenantom. Effort (opc.): S/M.
 
 ---
 
@@ -101,7 +102,10 @@ jego decyzja. Effort: **M**.
 Sterowanie OBS **już istnieje** (browser-source `obs-websocket-js` → `ws://localhost:4455`, reguły,
 sceny, Hue, kary). Realne luki, nie „nowe rozszerzenie":
 - 🔒 **Osobny token sterowania** — dziś jeden token overlaya zwraca też **odszyfrowane hasło OBS +
-  klucz Hue** (`obs-control/config`). Druga, rotowalna kolumna tokenu + walidacja. **Priorytet.**
+  klucz Hue** (`obs-control/config`). Świadomy trade-off z działającą mitygacją (rotowalny token
+  per-tenant); szczegóły `docs/DECISIONS.md`. **Plan: OPT-IN** — osobny token jako wybór streamera
+  (domyślnie token overlaya, zero breakage), bo właściwy fix wymaga migracji + **re-paste URL-a
+  źródła OBS u KAŻDEGO streamera** (zmiana łamiąca). Effort: **M** (schemat + rotacja + UI).
 - **Kanał komend na żądanie** — dziś OBS jest tylko reaktywny; dodać `/api/obs-control/commands`
   (kolejka at-most-once jak przy karach) + spiąć istniejący `/deck` (mobilna konsola streamera):
   „przełącz scenę TERAZ", „wycisz mik", „replay". To pierwszy konkretny wycinek „rozszerzenia OBS".

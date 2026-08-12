@@ -37,3 +37,35 @@ Trzymamy je tu, żeby kolejny przegląd nie „naprawiał" ich na ślepo i nie c
   puste. Literał **pozostał wyłącznie jako fallback anty-lockout**, żeby błędna /
   pusta konfiguracja `ADMIN_EMAILS` nie odcięła jedynego admina od portalu. To nie
   jest białkowy hardcode uprawnień, tylko bezpiecznik ostatniej szansy.
+
+## Token OBS zwraca odszyfrowane hasło OBS + klucz Hue (obs-control/config)
+
+- **CO:** trasa `obs-control/config` oddaje źródłu przeglądarkowemu w OBS odszyfrowane
+  hasło OBS WebSocket + klucz mostka Hue, autoryzowana **tym samym** per-tenant tokenem
+  overlaya co nieszkodliwe feedy wyświetlania. Token jest w URL-u źródła OBS (może wyciec
+  przez historię, logi OBS, screenshare, Referer).
+- **DLACZEGO (świadomy trade-off, udokumentowany też w nagłówku trasy):** źródło OBS to
+  *tylko URL* — nie wyśle nagłówka `Authorization`, więc bearer w query stringu to JEDYNY
+  kształt tego transportu. Mitygacja, która działa: token jest **rotowalny per-tenant**
+  (`POST /api/admin/alerts {action:"regenerate_token"}`) i rotacja natychmiast unieważnia
+  każdy wyciekły URL.
+- **CZEMU NIE „naprawione teraz":** rozdzielenie sekretnego feedu na własny token wymaga
+  (a) drugiej kolumny na `StreamAlertSettings` (migracja db push) ORAZ (b) **re-paste URL-a
+  źródła OBS u KAŻDEGO streamera** — zmiana ŁAMIĄCA działające setupy na żywym produkcie.
+- **PLAN (śledzony, `docs/PLAN-UPDATE-2026-08.md`):** dostarczyć osobny token sterowania jako
+  **OPT-IN** — streamer włącza ostrzejszy token, gdy jest gotów re-paste'ować, domyślnie
+  nadal działa token overlaya (zero breakage). Slice-3 (schemat + rotacja + UI).
+
+## PayMedia — kanał founder-global (nie per-tenant)
+
+- **CO:** webhook `webhooks/paymedia` używa jednego globalnego `PAYMEDIA_WEBHOOK_SECRET`
+  i pisze `tenantId: null` (kredytuje tablicę foundera), w przeciwieństwie do pozostałych
+  5 kanałów donacji (per-integration, per-tenant).
+- **DLACZEGO to NIE aktywny wyciek:** PayMedia **nie jest** w liście `PROVIDERS` panelu
+  integracji donacji — żaden tenant nie może skierować tam wpłat (to tylko rozpoznawany
+  *typ źródła* + etykieta transakcji, nie self-serve integracja). Kredytuje wyłącznie
+  founder-a, bo to founderowy kanał.
+- **DYSPOZYCJA:** świadomie **founder-global** (kanał platformowy jak Stripe-global).
+  Jeśli kiedyś ma być white-label — przerobić na per-integration id-w-URL jak Ko-fi
+  (`docs/PLAN-UPDATE-2026-08.md §0.2`). Do tego czasu: nie oferować tenantom, nie reklamować
+  jako metody płatności portalu.
