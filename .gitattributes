@@ -1,0 +1,71 @@
+# ===== Monorepo .gitattributes =====
+# Dlaczego to istnieje: repo jest rozwijane równolegle z Windowsa (core.autocrlf=true)
+# i z macOS/Linuksa. Bez tego pliku checkout na Windowsie przepisuje LF → CRLF w
+# `ghost-empire-web/scripts/verify-all.sh` i w hooku `scripts/hooks/pre-push`, po czym
+# bash wywala się na `$'\r': command not found` — czyli pada dokładnie ta bramka
+# jakości, która ma pilnować reszty (verify-all + pre-push). (#audit)
+
+# Domyślnie: normalizuj do LF w repo, LF w drzewie roboczym.
+# Git i tak sam wykrywa binaria, więc `text=auto` jest bezpieczne.
+* text=auto eol=lf
+
+# ---- Wykonywane przez /bin/sh — CRLF je zabija, pinujemy twardo na LF ----
+*.sh   text eol=lf
+# Hook pre-push nie ma rozszerzenia; kopiuje się go do .git/hooks i odpala bashem.
+ghost-empire-web/scripts/hooks/pre-push text eol=lf
+*.bash text eol=lf
+
+# ---- Źródła i konfiguracja — LF, żeby diff nie eksplodował po stronie Windows ----
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.jsx  text eol=lf
+*.mjs  text eol=lf
+*.cjs  text eol=lf
+*.json text eol=lf
+*.jsonc text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.css  text eol=lf
+*.svg  text eol=lf
+*.md   text eol=lf
+*.sql  text eol=lf
+*.prisma text eol=lf
+*.env.example text eol=lf
+.gitignore    text eol=lf
+.gitattributes text eol=lf
+Dockerfile    text eol=lf
+
+# ---- Skrypty natywne dla Windows: te MUSZĄ mieć CRLF, inaczej cmd.exe je odrzuca ----
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# ---- Binaria — bez konwersji końców linii i bez diffów ----
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.avif  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary
+*.db    binary
+*.mp3   binary
+*.mp4   binary
+
+# ---- Lockfile'e: generowane, nie recenzujemy ich ręcznie ----
+package-lock.json      -diff linguist-generated
+**/package-lock.json   -diff linguist-generated
+pnpm-lock.yaml         -diff linguist-generated
+**/pnpm-lock.yaml      -diff linguist-generated
+
+# ---- Klasyfikacja linguist (statystyki języków repo nie mają kłamać) ----
+*.md  linguist-documentation
+docs/**       linguist-documentation
+*.sql linguist-language=SQL
