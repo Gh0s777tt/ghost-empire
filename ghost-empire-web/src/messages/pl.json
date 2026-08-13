@@ -2387,6 +2387,27 @@
       "err": "Nie udało się zapisać",
       "fallbackNote": "Weryfikacja zawsze akceptuje też globalny BOT_SECRET, więc obecny wspólny bot działa bez zmian. Rotacja trafia do dziennika audytu (bez wartości sekretu)."
     },
+    "streamDeckToken": {
+      "title": "Token Stream Deck / Companion",
+      "intro": "Token, którym fizyczny Stream Deck / Bitfocus Companion odpala alerty na overlayu portalu ({portal}). Węższy niż sekret bota — umie tylko wyzwalać alerty, nie dotyka ekonomii ani panelu.",
+      "loading": "Ładowanie…",
+      "notOwner": "Ta sekcja jest dostępna dla właściciela/admina portalu.",
+      "statusOn": "Token ustawiony",
+      "statusOff": "Ten portal nie ma jeszcze tokenu — wygeneruj go, żeby wyzwalać alerty ze Stream Decka.",
+      "generateBtn": "Wygeneruj token",
+      "rotateBtn": "Rotuj token",
+      "clearBtn": "Usuń token",
+      "rotateConfirm": "Wygenerować nowy token? Stary natychmiast przestanie działać — przyciski Stream Decka trzeba będzie przepiąć na nowy.",
+      "clearConfirm": "Usunąć token? Wyzwalanie alertów ze Stream Decka zostanie wyłączone dla tego portalu.",
+      "revealWarn": "Zapisz go teraz — pokazujemy go tylko ten jeden raz.",
+      "revealHint": "Wklej w Bitfocus Companion / BarRaider jako nagłówek Authorization dla akcji HTTP POST na powyższy URL. Body przycisku: action = test (albo custom_fire z id alertu).",
+      "copyBtn": "Kopiuj",
+      "doneBtn": "Zapisałem",
+      "generatedMsg": "Nowy token Stream Deck wygenerowany",
+      "clearedMsg": "Token Stream Deck usunięty — wyzwalanie wyłączone",
+      "err": "Nie udało się zapisać",
+      "usageNote": "Rotacja/usunięcie trafia do dziennika audytu (bez wartości tokenu). Token nie daje dostępu do ekonomii ani panelu — tylko wyzwalanie alertów overlayu."
+    },
     "twoFactor": {
       "title": "Uwierzytelnianie dwuskładnikowe (2FA)",
       "intro": "Zabezpiecz konto admina kodem czasowym (TOTP). Po włączeniu może być wymagany przy wrażliwych akcjach. Użyj Google Authenticator, Authy lub dowolnej kompatybilnej aplikacji.",

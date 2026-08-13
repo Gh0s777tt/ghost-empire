@@ -31,7 +31,7 @@ import {
   AchievementsManager, PredictionsManager, BountiesManager, WelcomeManager, FaqManager, ChatTimersManager,
   ChatCommandsManager, SongQueueManager, SubathonManager, GrantTokensCard, CreateDropCard, DatabaseResetCard,
   CustomAlertsCard, ChatOverlayCard, StreamGoalsManager, KickEventsManager, YouTubeLiveManager, RumbleManager,
-  SeasonsManager, MergeUsersSection, BotConfigCard, BotSecretCard, ScheduleManager, TwitchEventSubManager, StreamlabsManager,
+  SeasonsManager, MergeUsersSection, BotConfigCard, BotSecretCard, StreamDeckTokenCard, ScheduleManager, TwitchEventSubManager, StreamlabsManager,
   UserRolesCard, ConnectionRolesCard, ShopManager, CodeDropsCard, HolidayEventsCard, CreateEventCard,
   EventsManager, ActiveDropsList, PendingOrdersList, StreamAlertsManager, TenantsManager, AppearanceManager, HubManager, DonationIntegrationsManager, SupportTicketsManager,
   RoleRoster, SubscribersManager, SupportPreview,
@@ -547,6 +547,9 @@ export function AdminClient({
                 {(d) => <StreamAlertsManager data={d.streamAlerts} {...sharedProps} />}
               </LazySection>
               <CustomAlertsCard {...sharedProps} />
+              {/* Stream Deck / Companion trigger token — grouped with alerts because its whole job
+                  is firing overlay alerts from a physical macropad. Self-contained like BotSecret. */}
+              <StreamDeckTokenCard onToast={showToast} />
             </div>
           )}
 

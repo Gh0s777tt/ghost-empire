@@ -2387,6 +2387,27 @@
       "err": "Could not save",
       "fallbackNote": "Verification always accepts the global BOT_SECRET too, so the current shared bot keeps working. Rotations go to the audit log (never the value)."
     },
+    "streamDeckToken": {
+      "title": "Stream Deck / Companion token",
+      "intro": "The token a physical Stream Deck / Bitfocus Companion uses to fire overlay alerts for this portal ({portal}). Narrower than the bot secret — it only triggers alerts, never the economy or admin.",
+      "loading": "Loading…",
+      "notOwner": "This section is available to the portal owner/admin.",
+      "statusOn": "Token set",
+      "statusOff": "This portal has no token yet — generate one to fire alerts from your Stream Deck.",
+      "generateBtn": "Generate token",
+      "rotateBtn": "Rotate token",
+      "clearBtn": "Remove token",
+      "rotateConfirm": "Generate a new token? The old one stops working immediately — you will need to re-paste the new one into your Stream Deck buttons.",
+      "clearConfirm": "Remove the token? Stream Deck alert triggering will be disabled for this portal.",
+      "revealWarn": "Save it now — we show it only this once.",
+      "revealHint": "Paste it into Bitfocus Companion / BarRaider as the Authorization header for an HTTP POST action to the URL above. Button body: action = test (or custom_fire with an alert id).",
+      "copyBtn": "Copy",
+      "doneBtn": "Saved",
+      "generatedMsg": "New Stream Deck token generated",
+      "clearedMsg": "Stream Deck token removed — triggering disabled",
+      "err": "Could not save",
+      "usageNote": "Rotation/removal is written to the audit log (never the token value). The token grants no access to the economy or admin — only overlay-alert triggers."
+    },
     "twoFactor": {
       "title": "Two-factor authentication (2FA)",
       "intro": "Protect your admin account with a time-based code (TOTP). Once enabled it can be required for sensitive actions. Use Google Authenticator, Authy or any compatible app.",
