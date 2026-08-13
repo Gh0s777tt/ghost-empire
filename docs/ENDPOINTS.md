@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **224** tras (223× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **225** tras (224× `route.ts` + 1× `route.tsx`)
 
 <!-- Licznik przeliczany, nie przepisywany: `find ghost-empire-web/src/app/api -type f -name "route.*" | wc -l`
      (osobno `-name "route.ts"` = 220 i `-name "route.tsx"` = 1). Stał na 193 długo po tym, jak
@@ -297,6 +297,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/cron/weekly-rewards` | Cron (Vercel, pon.) — tygodniowe nagrody GT + **miesięczne rozliczenie Ligi Typerów** (idempotentne, #682); `CRON_SECRET` |
 | `…/api/cron/backup` | Cron (Vercel, 05:00) — off-site backup JSON → bucket S3-compatible (R2/B2/S3); **dormant** bez `BACKUP_S3_*` (`CRON_SECRET`, #677) |
 | `…/api/cron/weekly-digest` | Cron (Vercel, pon. 07:00) — tygodniowy raport email do właścicieli portali (nowi/GT-flow/top/pending); **dormant** bez `RESEND_API_KEY`+`EMAIL_FROM` (`CRON_SECRET`, #773) |
+| `…/api/cron/reconcile-ledger` | Cron (Vercel, 06:00) — **nocny audyt księgi (double-entry)**: dla każdego portalu sprawdza inwariant `Σ salda == Σ Transaction.amount` osobno dla GT i CHIPS (salda z `User.tokens/chips`, ledger z relacji `user`). Rozjazd (niezaksięgowany mint/burn) → `Notification` do adminów **tego** portalu + `Sentry` + HTTP 500; alerty **dedupowane w Redis** (stały baseline alarmuje raz, nie co noc). Czysta logika w `lib/reconcile` (unit-tested). `CRON_SECRET` |
 
 ## Public / serwisowe (bez auth)
 | Trasa | Metoda | Po co |

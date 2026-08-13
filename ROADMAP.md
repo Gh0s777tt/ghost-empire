@@ -90,6 +90,7 @@ Dziś diagnostyka = logi Vercela. Pod produkcję z realnym ruchem to za mało.
 | ~~**Structured logging**~~ ✅ | — | **Zrobione** — `lib/logger.ts` (JSON+poziomy, `LOG_LEVEL`, +5 testów) wpięty w 3 webhooki (twitch-eventsub / kick-events / paymedia) + crony (`prune` #151, `streamlabs-poll` #160). *(Hot-path `award` świadomie bez logu na wywołanie — byłby szum; błędy łapie boundary.)* |
 | ~~**Uptime / health-check**~~ ✅ | — | Endpoint `/api/health` (status DB+Redis, 200/503) + per-IP rate-limit (#486). **Zewnętrzny monitor AKTYWNY od 2026-07-04**: Sentry Uptime (`empire-forge.com /api/health`, co 5 min z infry Sentry, alert po 3 porażkach → e-mail). Dodatkowo lokalny launchd na Macu właściciela (co 10 min, powiadomienie przy zmianie stanu) |
 | ~~**Alerty na anomalie ekonomii**~~ ✅ | — | **Zrobione (#161)** — `lib/economy-anomaly.ts`: pojedynczy grant ≥100k GT lub ≥500k GT/godz. → powiadomienie wszystkich adminów (link do audit logu) + `log.warn`. Fire-and-forget w `/api/admin/grant-tokens` |
+| ~~**Rekoncyliacja księgi (double-entry)**~~ ✅ | — | **Zrobione (gałąź `feat/platform-roadmap-2026-08`)** — nocny cron `/api/cron/reconcile-ledger` (06:00) sprawdza inwariant `Σ User.tokens/chips == Σ Transaction.amount` per portal, osobno GT i CHIPS. Łapie niezaksięgowany mint/burn (ekonomia nie ma centralnego API — parowanie saldo↔ledger to konwencja w ~45 ścieżkach). Rozjazd → `Notification` do adminów portalu + `Sentry` + top-offenders; alerty **dedupowane w Redis** (stały baseline alarmuje raz). Pure `lib/reconcile` + 13 testów. Bez zmian schematu |
 
 ---
 
