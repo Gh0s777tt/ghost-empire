@@ -67,6 +67,14 @@ model Tenant {
   // running single bot keeps working — enforcement-per-tenant lights up only once
   // each tenant runs its own bot instance with this secret. See verifyBotSecretForTenant.
   botSecret            String?
+  // Stream Deck / Companion integration: a per-tenant bearer token that authorizes ONLY the
+  // overlay-trigger endpoint (POST /api/streamdeck/trigger) — firing alerts from a physical
+  // Stream Deck or Bitfocus Companion via a generic HTTP action. Encrypted at-rest like
+  // botSecret; minted reveal-once via /api/admin/streamdeck-token. Deliberately NARROWER than
+  // botSecret: it can enqueue overlay alerts but never mints currency, resolves identities or
+  // touches admin — a leak from a desktop is contained to overlay triggers. Kept OUT of
+  // TenantBrand (server secret, never in the client payload). See verifyStreamDeckTokenForTenant.
+  streamDeckToken      String?
   // Setup wizard (#737): when the streamer FINISHED or DISMISSED the guided go-live wizard.
   // Per-step completion is DERIVED from real config (lib/setup-status.ts), not stored — these
   // only track the wizard's own state so it stops auto-opening once handled.

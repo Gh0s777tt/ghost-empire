@@ -53,6 +53,9 @@ type AdminActionType =
   // Per-tenant bot credential provisioned/rotated/cleared. The details NEVER carry the
   // secret itself — only which portal and which way it moved.
   | "rotate_bot_secret"
+  // Per-tenant Stream Deck / Companion overlay-trigger token provisioned/rotated/cleared.
+  // Same discretion as the bot secret: details carry the portal + direction, never the token.
+  | "rotate_streamdeck_token"
   | "connect_donationalerts"
   | "create_hue_rule"
   | "update_hue_rule"
