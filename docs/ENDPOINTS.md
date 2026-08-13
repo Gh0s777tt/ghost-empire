@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **221** tras (220× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **224** tras (223× `route.ts` + 1× `route.tsx`)
 
 <!-- Licznik przeliczany, nie przepisywany: `find ghost-empire-web/src/app/api -type f -name "route.*" | wc -l`
      (osobno `-name "route.ts"` = 220 i `-name "route.tsx"` = 1). Stał na 193 długo po tym, jak
@@ -159,6 +159,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/bot-config` | perm:manage_shop | Config bota Discord |
 | `…/api/admin/bot-status` | perm:manage_shop | Status żywotności bota czatu (online/lastSeen/platformy) z heartbeatu |
 | `…/api/admin/bot-secret` | admin (owner portalu) | Własny sekret bota portalu (`Tenant.botSecret`) — GET `{configured, hint, slug, name, globalFallback}` (**nigdy sama wartość**; `hint` = 4 ostatnie znaki), POST `{action:"rotate"}` → mintuje `randomToken(32)` i **pokazuje go dokładnie raz**, POST `{action:"clear"}` → powrót do globalnego `BOT_SECRET`. Bramka `canManageTenantBotSecret` (właściciel portalu / admin tego portalu / właściciel platformy — **nie** admin z `tenantId=NULL`), step-up 2FA, limit 10/5min, audit `rotate_bot_secret` bez wartości. Szczegóły: [PER-TENANT-IDENTITY §9](PER-TENANT-IDENTITY.md#10-per-tenant-bot-identity-tenantbotsecret) |
+| `…/api/admin/streamdeck-token` | admin (owner portalu) | Token Stream Deck / Companion portalu (`Tenant.streamDeckToken`) — GET `{configured, hint, slug, name}` (**nigdy sama wartość**), POST `{action:"rotate"}` → mintuje `randomToken(32)` i **pokazuje go dokładnie raz**, POST `{action:"clear"}` → wyłącza wyzwalanie. Bramka `canManageTenantBotSecret` (jak bot-secret), limit 10/5min, audit `rotate_streamdeck_token` bez wartości. **Bez step-up 2FA** — zakres wąski (tylko overlay-alerty, zero ekonomii). Konsumowany przez `…/api/streamdeck/trigger` (sekcja „Stream Deck / Companion"). |
 | `…/api/admin/ban-user` | perm:ban_users | Ban/mute |
 | `…/api/admin/merge-users` | admin | Scalanie duplikatów kont |
 | `…/api/admin/support-tickets` | admin | Skrzynka wsparcia — GET lista (filtr open/resolved/all, tenant-scoped), PATCH reply/resolve/reopen + powiadomienie widza (#650) |
@@ -256,6 +257,13 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/internal/mod-violation` | Log naruszenia automod (po egzekucji) — statystyki + eskalacja |
 | `…/api/internal/emoji-combo` | POST — bot zgłasza wykryty emoji-combo |
 | `…/api/internal/raffle-entry` | POST — bot zgłasza trafienie słowa-klucza rafli; wpis darmowy, sub/mod = więcej biletów (#611) |
+
+## Stream Deck / Companion (streamDeckToken) — wyzwalanie akcji
+> Fizyczny Stream Deck / Bitfocus Companion woła to **generyczną akcją HTTP POST** z nagłówkiem `Authorization: Bearer <token>` (token z `…/api/admin/streamdeck-token`, pokazany raz). Auth: per-tenant `Tenant.streamDeckToken` (`verifyStreamDeckTokenForTenant` — **bez** globalnego master-key, inaczej niż `botSecret`; portal ze swoim tokenem to jedyny klucz), tenant z Hosta, rate-limit 60/min per portal. Zakres **wąski**: tylko enqueue overlay-alertów, zero ekonomii/admina — wyciek tokenu z pulpitu ogranicza się do overlayu jednego portalu.
+
+| Trasa | Po co |
+|---|---|
+| `…/api/streamdeck/trigger` | POST `{action:"test"}` → wbudowany test-alert (jak przycisk „Test alert" w panelu Alerty); POST `{action:"custom_fire", id}` → odpala zapisany Custom Alert (`type:"custom"`, omija filtr enabled). Rozszerzalny `switch` — akcje ekonomii/eventów (drop/draw/goal_reset/subathon) to świadomy późniejszy slice na tym samym tokenie. Zob. [OBS-CONTROL.md](OBS-CONTROL.md). |
 
 ## Źródła OBS (overlayToken, odczyt)
 > **Transport realtime (#189/#190):** każdy overlay łączy się najpierw przez **SSE** (push), a przy dowolnym problemie spada na **polling** (fallback) — payload identyczny, bo overlay i fallback dzielą te same producery (`lib/overlay-feeds`; alerty: `lib/alert-feed`). Klient: hook `lib/use-overlay-stream`.

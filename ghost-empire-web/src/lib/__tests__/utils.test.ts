@@ -13,6 +13,7 @@ import {
   formatSeasonLabel,
   verifyBotSecret,
   verifyBotSecretForTenant,
+  verifyStreamDeckTokenForTenant,
 } from "@/lib/utils";
 
 describe("clampInt", () => {
@@ -277,5 +278,44 @@ describe("verifyBotSecretForTenant — BOT_SECRET_STRICT (per-tenant isolation)"
     vi.stubEnv("BOT_SECRET", ""); // no global at all → tenant secret is the only key
     expect(verifyBotSecretForTenant("Bearer global-s3cr3t", null)).toBe(false);
     expect(verifyBotSecretForTenant("Bearer tenant-key", "tenant-key")).toBe(true);
+  });
+});
+
+// The Stream Deck token is DELIBERATELY narrower than botSecret: no global master-key, no
+// strict-mode toggle — a portal's own token is the ONLY key, and a portal with none can't be
+// triggered at all. These cases pin exactly that (and prove a set BOT_SECRET never leaks in as a
+// backdoor, which is the whole point of keeping this credential's blast-radius to overlay alerts).
+describe("verifyStreamDeckTokenForTenant", () => {
+  beforeEach(() => {
+    // A global bot secret is set precisely to prove it does NOT authenticate here.
+    vi.stubEnv("BOT_SECRET", "global-s3cr3t");
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("accepts a matching per-tenant token", () => {
+    expect(verifyStreamDeckTokenForTenant("Bearer sd-token", "sd-token")).toBe(true);
+  });
+
+  it("rejects a wrong token", () => {
+    expect(verifyStreamDeckTokenForTenant("Bearer nope", "sd-token")).toBe(false);
+  });
+
+  it("has NO global master-key: the global BOT_SECRET never authenticates", () => {
+    expect(verifyStreamDeckTokenForTenant("Bearer global-s3cr3t", "sd-token")).toBe(false);
+    expect(verifyStreamDeckTokenForTenant("Bearer global-s3cr3t", null)).toBe(false);
+  });
+
+  it("rejects when the tenant has no token (can't be triggered at all)", () => {
+    expect(verifyStreamDeckTokenForTenant("Bearer sd-token", null)).toBe(false);
+    expect(verifyStreamDeckTokenForTenant("Bearer sd-token", undefined)).toBe(false);
+    expect(verifyStreamDeckTokenForTenant("Bearer sd-token", "")).toBe(false);
+  });
+
+  it("rejects a missing header and an empty bearer", () => {
+    expect(verifyStreamDeckTokenForTenant(null, "sd-token")).toBe(false);
+    expect(verifyStreamDeckTokenForTenant("Bearer ", "")).toBe(false);
+    expect(verifyStreamDeckTokenForTenant("Bearer ", "sd-token")).toBe(false);
   });
 });

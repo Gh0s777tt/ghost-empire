@@ -60,3 +60,29 @@ Hasło OBS jest Twoje, lokalne, i trafia **wyłącznie do posiadacza overlay-tok
 
 ## Ograniczenie (v1)
 Aktuator czyta ten sam feed co overlay alertów, więc respektuje **progi wyświetlania per-typ** (`AlertTypeConfig.minAmount`): alert ukryty przed overlayem (np. mały donejt) nie dotrze też do aktuatora. Próg specyficzny dla OBS ustawiasz w samej regule (`minAmount`). Dedykowany, niefiltrowany feed = ewentualny follow-up.
+
+---
+
+## 🎚️ Stream Deck / Bitfocus Companion — wyzwalanie alertów z pulpitu
+
+Fizyczny **Stream Deck** przełącza sceny/źródła OBS sam, przez `obs-websocket` (natywna wtyczka Elgato „OBS Studio") — to nie dotyka platformy. Żeby przycisk **odpalał alerty/overlaye portalu**, potrzebne jest wywołanie HTTP do platformy. Cały panel admina jest za ciasteczkiem sesji (przeglądarka), którego macropad nie utrzyma — dlatego jest jedna, wąska, token-authed furtka: `POST /api/streamdeck/trigger`.
+
+**Dlaczego osobny token (nie `botSecret`):** `botSecret` daje dostęp do ekonomii (mennica waluty, tożsamości, kasyno). Token Stream Decka umie **wyłącznie** wrzucić alert na overlay — zero ekonomii, zero admina. Weryfikacja (`verifyStreamDeckTokenForTenant`) **nie ma globalnego master-key**: tylko własny token portalu autoryzuje, portal bez tokenu nie da się wyzwolić w ogóle. Wyciek tokenu z pulpitu = co najwyżej spam alertów na własnym overlayu.
+
+### Konfiguracja (jednorazowo)
+1. **Panel admina → Stream Alerts → „Token Stream Deck"** (albo `POST /api/admin/streamdeck-token {action:"rotate"}`) → skopiuj token — **pokazywany dokładnie raz**.
+2. W **Bitfocus Companion** (lub BarRaider „API Ninja"/„Advanced Launcher") dodaj przyciskowi akcję **HTTP POST**:
+   - URL: `https://<twoj-portal>/api/streamdeck/trigger`
+   - Nagłówek: `Authorization: Bearer <TOKEN>` (w Companion trzymaj token w zmiennej, nie w każdym przycisku)
+   - Content-Type: `application/json`
+3. Body per przycisk:
+
+| Przycisk | Body |
+|---|---|
+| Test alert | `{"action":"test"}` |
+| Odpal zapisany Custom Alert | `{"action":"custom_fire","id":"<CUSTOM_ALERT_ID>"}` (id z panelu Custom Alerts) |
+
+> **Uwaga (`test`):** typ `test` musi być włączony w Stream Alerts, inaczej `dispatchAlert` po cichu go pomija — endpoint zwraca wtedy `{ok:true, dropped:true}`, więc feedback w Companion odróżni „wysłano" od „wyciszone ustawieniami". `custom_fire` (`type:"custom"`) omija ten filtr — zawsze się pokaże.
+
+### Rozszerzalność
+Switch endpointu jest celowo mały (v1 = domena alertów, zero mutacji ekonomii). Kolejny slice doda na **tym samym tokenie** akcje ekonomii/eventów: `drop` (drop GT), `draw` (losowanie eventu), `goal_reset` (reset celu), `subathon_*`, `song_next`, `trivia_golive`, `clip`. Rotacja/wyczyszczenie tokenu: `POST /api/admin/streamdeck-token {action:"clear"|"rotate"}`.

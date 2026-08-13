@@ -219,3 +219,27 @@ export function verifyBotSecretForTenant(
   if (!tenantBotSecret) return false;
   return timingSafeEqualStr(secret, tenantBotSecret);
 }
+
+/**
+ * Verify a Stream Deck / Bitfocus Companion request against a tenant's own `streamDeckToken`.
+ *
+ * Deliberately SIMPLER and STRICTER than {@link verifyBotSecretForTenant}: there is NO global
+ * master-key fallback and no strict-mode toggle. A tenant with no `streamDeckToken` cannot be
+ * triggered at all (an empty/falsy token never authenticates), and one portal's token is useless
+ * against another — the only accepted credential is THIS tenant's own token. That keeps the
+ * blast-radius of a leaked desktop token to overlay triggers on a single portal, unlike the
+ * currency-minting `botSecret`. Comparison is constant-time, on the already-decrypted value.
+ *
+ * @param authHeader the raw `Authorization` header (`"Bearer <token>"`) or null
+ * @param tenantToken the tenant's DECRYPTED `streamDeckToken`, or null/undefined if unset
+ * @returns true only when a non-empty bearer token matches the tenant's token, constant-time
+ */
+export function verifyStreamDeckTokenForTenant(
+  authHeader: string | null,
+  tenantToken: string | null | undefined,
+): boolean {
+  if (!authHeader || !tenantToken) return false;
+  const secret = authHeader.replace("Bearer ", "");
+  if (!secret) return false;
+  return timingSafeEqualStr(secret, tenantToken);
+}
