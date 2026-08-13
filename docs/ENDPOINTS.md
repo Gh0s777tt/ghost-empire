@@ -13,7 +13,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **226** tras (225× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **227** tras (226× `route.ts` + 1× `route.tsx`)
 
 <!-- Licznik przeliczany, nie przepisywany: `find ghost-empire-web/src/app/api -type f -name "route.*" | wc -l`
      (osobno `-name "route.ts"` = 220 i `-name "route.tsx"` = 1). Stał na 193 długo po tym, jak
@@ -186,6 +186,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/trivia` | admin | CRUD pytań trivia + runda live na overlayu (#523/#524) |
 | `…/api/admin/clan-wars` | admin | Wojny klanów — start/koniec/punkty/pula (#477) |
 | `…/api/admin/casino-config` | admin | GET/PATCH ekonomii kasyna dla portalu — dziś `dailyChipsAmount` (darmowy dzienny grant żetonów, widełki 50–100 000; nieliczbowa wartość → **400**, poza widełkami → przycięcie). Audytowane (`update_casino_config`) |
+| `…/api/admin/economy-collusion` | admin | **Skan anty-multikonto / zmów** — rankuje najczytelniejsze wzorce nadużyć user-side: **gwiazdy referralowe** (`User.referredById` + odsetek kont nieaktywnych), **kolucja w duelach** (pary z lopsided wynikami = lejek żetonów), **kolektory prezentów** (saldo złożone z cudzych giftów). Tenant-scoped; pure detekcja w `lib/economy-collusion` (+12 testów). v1 = flagi do przeglądu (bez auto-hold/ban — decyzja admina). **Braki danych (świadome, udokumentowane):** brak IP/fingerprint (klaster urządzeń wymaga migracji), gift-ledger bez `counterparty` (precyzyjny graf A→B→A wymaga kolumny) |
 | `…/api/admin/economy-health` | admin | Analityka ekonomii — mint/burn wg powodu + trend dzienny + top earners/spenders (#525). **Dwa obiegi osobno:** blok główny = realne GT, blok `chips` = żetony (obieg/mint/burn/health + top źródła i spusty). `currency` jest **kluczem `groupBy`**, nie filtrem, więc druga waluta nie kosztuje ani jednego zapytania więcej; trend i top-userzy zostają GT-only |
 | `…/api/admin/community` | admin | Statystyki społeczności (top Ghost Companions itd., tylko odczyt) |
 | `…/api/admin/recap` | admin + plan `ai` | AI Stream Recap — generuje podsumowanie streamu i opcjonalnie wysyła na Discord (#516) |
