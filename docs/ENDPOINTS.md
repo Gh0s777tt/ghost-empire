@@ -13,7 +13,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **225** tras (224× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **226** tras (225× `route.ts` + 1× `route.tsx`)
 
 <!-- Licznik przeliczany, nie przepisywany: `find ghost-empire-web/src/app/api -type f -name "route.*" | wc -l`
      (osobno `-name "route.ts"` = 220 i `-name "route.tsx"` = 1). Stał na 193 długo po tym, jak
@@ -103,7 +103,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/trivia` | GET/POST | Trivia/quiz (widz, #523) — aktywne pytania + moje odpowiedzi; POST = odpowiedź za GT (poprawna ukryta do czasu) |
 | `…/api/sound-rewards` | GET/POST | GT→dźwięki (widz, #505) — aktywny katalog + saldo; POST = wykup dźwięku (atomowy spend → alert) |
 | `…/api/referral` | GET/POST | Referrals (#501) — mój kod + statystyki + czy odebrałem; POST = odbiór kodu znajomego (oboje GT) |
-| `…/api/watch-streak` | GET/POST | Watch Streaks (#687) — passa dni oglądania: GET status, POST zalicza dzień (rate-limited, idempotentne per UTC-dzień) |
+| `…/api/watch-streak` | GET/POST | Watch Streaks (#687) — passa dni oglądania: GET status (w tym `freezes` = ochrony serii + `protected`), POST zalicza dzień (rate-limited, idempotentne per UTC-dzień; **auto-mostkuje** pojedynczy opuszczony dzień jeśli masz ochronę) |
+| `…/api/streak-freeze` | POST | **Kup ochronę serii (Streak Freeze)** za GT (`FREEZE_COST`, cap `FREEZE_MAX_OWNED`) — jednorazowo ratuje 1 opuszczony dzień passy. Bezschematowo: `owned = count(streak-freeze:buy) − count(streak-freeze:use)`, zużycie = 0-kwotowy marker mostkujący lukę w `computeStreak`. Idempotentne (pusty body → stały token). `lib/watch-streak` |
 | `…/api/portals` | GET/POST/DELETE | Hub „przełącz portale" (#508) — portale, które obserwuję; POST follow, DELETE unfollow |
 | `…/api/getting-started` | GET | Flagi ukończenia checklisty „Pierwsze kroki" na home (#503 — tylko odczyt) |
 

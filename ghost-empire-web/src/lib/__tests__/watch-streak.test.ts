@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { milestoneReward, loyaltyTier, nextMilestone, computeStreak } from "../watch-streak";
+import { milestoneReward, loyaltyTier, nextMilestone, computeStreak, streakEndingAt, freezeDisplay, claimPlan } from "../watch-streak";
 
 const DAY = 86_400_000;
 const T = Date.UTC(2026, 5, 27); // a fixed "today" (UTC midnight)
@@ -65,5 +65,48 @@ describe("computeStreak", () => {
   });
   it("handles an empty history", () => {
     expect(computeStreak(new Set(), T)).toEqual({ claimedToday: false, streak: 0 });
+  });
+});
+
+describe("streakEndingAt (freeze-aware run)", () => {
+  it("counts a plain consecutive run with no bridges", () => {
+    expect(streakEndingAt(new Set([daysAgo(1), daysAgo(2), daysAgo(3)]), new Set(), daysAgo(1))).toBe(3);
+  });
+  it("bridges a gap without counting the bridged day (a freeze preserves, doesn't add)", () => {
+    // watched: -1,-3,-4 ; bridge fills -2 → run -1,(-2 bridged),-3,-4 = 3 watched days
+    expect(streakEndingAt(new Set([daysAgo(1), daysAgo(3), daysAgo(4)]), new Set([daysAgo(2)]), daysAgo(1))).toBe(3);
+  });
+  it("stops at a gap that is neither watched nor bridged", () => {
+    expect(streakEndingAt(new Set([daysAgo(1), daysAgo(4)]), new Set([daysAgo(2)]), daysAgo(1))).toBe(1);
+  });
+});
+
+describe("freezeDisplay", () => {
+  it("claimed today → run ending today, not protected", () => {
+    expect(freezeDisplay(new Set([T, daysAgo(1)]), new Set(), T, 0)).toEqual({ claimedToday: true, streak: 2, protected: false });
+  });
+  it("not claimed but yesterday watched → run ending yesterday, not protected", () => {
+    expect(freezeDisplay(new Set([daysAgo(1), daysAgo(2)]), new Set(), T, 1)).toEqual({ claimedToday: false, streak: 2, protected: false });
+  });
+  it("fresh single-day gap + owned freeze → PROTECTED, streak held at the run before the gap", () => {
+    expect(freezeDisplay(new Set([daysAgo(2), daysAgo(3)]), new Set(), T, 1)).toEqual({ claimedToday: false, streak: 2, protected: true });
+  });
+  it("fresh single-day gap but NO freeze → streak reset, not protected", () => {
+    expect(freezeDisplay(new Set([daysAgo(2), daysAgo(3)]), new Set(), T, 0)).toEqual({ claimedToday: false, streak: 0, protected: false });
+  });
+  it("a PAST bridge keeps continuity without inflating the count", () => {
+    expect(freezeDisplay(new Set([daysAgo(1), daysAgo(3)]), new Set([daysAgo(2)]), T, 0)).toEqual({ claimedToday: false, streak: 2, protected: false });
+  });
+});
+
+describe("claimPlan", () => {
+  it("yesterday watched → no bridge, prior streak counts back from yesterday", () => {
+    expect(claimPlan(new Set([daysAgo(1), daysAgo(2)]), new Set(), T, 0)).toEqual({ claimedToday: false, willBridge: false, bridgeDay: null, priorStreak: 2 });
+  });
+  it("fresh single-day gap + freeze → will bridge yesterday, prior streak from the day before", () => {
+    expect(claimPlan(new Set([daysAgo(2), daysAgo(3)]), new Set(), T, 1)).toEqual({ claimedToday: false, willBridge: true, bridgeDay: daysAgo(1), priorStreak: 2 });
+  });
+  it("fresh single-day gap but no freeze → no bridge, streak resets (prior 0 → claim starts at 1)", () => {
+    expect(claimPlan(new Set([daysAgo(2), daysAgo(3)]), new Set(), T, 0)).toEqual({ claimedToday: false, willBridge: false, bridgeDay: null, priorStreak: 0 });
   });
 });
