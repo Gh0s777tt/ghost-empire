@@ -53,7 +53,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 ## Akcje użytkownika (session)
 | Trasa | Metoda | Po co |
 |---|---|---|
-| `…/api/shop/buy` | POST | Zakup przedmiotu (sprawdza wymagania: level/sub/mc/osiągnięcie). Waluta wg `ShopItem.currency`: `GT` → tokeny + `totalSpent`, `CHIPS` → żetony (darmowe, poza ekonomią GT). **Fail-closed:** item `CHIPS` spoza `category:"cosmetic"` = **410** + log (nie da się kupić rzeczy o wartości rynkowej za żetony) |
+| `…/api/shop/buy` | POST | Zakup przedmiotu (sprawdza wymagania: level/sub/mc/osiągnięcie). Waluta wg `ShopItem.currency`: `GT` → tokeny + `totalSpent`, `CHIPS` → żetony (darmowe, poza ekonomią GT). **Fail-closed:** item `CHIPS` spoza `category:"cosmetic"` = **410** + log (nie da się kupić rzeczy o wartości rynkowej za żetony). **Idempotencja (`lib/idempotency`):** double-click/retry tego samego zakupu → **409** (Redis `SET NX PX`; klucz = header `Idempotency-Key` albo hash body; fail-open bez Redisa) |
 | `…/api/polls/vote` | POST | Głos w ankiecie (1/usera, zmienialny; rate-limit) |
 | `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT (auto-zamykanie po `closesAt`) |
 | `…/api/bounties` · `…/api/bounties/pledge` | GET/POST | Viewer Bounties — lista/otwórz wyzwanie + zrzutka GT do puli (escrow, atomowo) |
@@ -80,7 +80,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/profile/tickets` | GET/POST | Zgłoszenia wsparcia widza — GET lista własnych (status/odpowiedź), POST nowe zgłoszenie (rate-limit 5/h, limit 10 otwartych, powiadamia właściciela portalu) (#649) |
 | `…/api/collectibles` · `…/open-pack` | GET/POST | Katalog kart + kolekcja widza; otwarcie paczki GT (#551 — atomowy zakup, ważona rzadkość) |
 | `…/api/market` | GET/POST | Marketplace P2P kart (#552 — list/buy/cancel, escrow + atomowy transfer GT, 5% fee spalane) |
-| `…/api/gift` | POST | Prezent GT między widzami (#553 — atomowy transfer, limity 5k/transfer + 10k/24h, powiadomienie) |
+| `…/api/gift` | POST | Prezent GT między widzami (#553 — atomowy transfer, limity 5k/transfer + 10k/24h, powiadomienie). **Idempotencja (`lib/idempotency`):** duplikat (ten sam odbiorca+kwota w oknie) → **409**; zwalniana przy insufficient/daily/error, trzymana przy sukcesie |
 | `…/api/titles` | GET/POST | Tytuły profilu (#761 — kosmetyczny GT sink): GET katalog + posiadane/założony + saldo; POST `buy` (atomowy spend, `FOR UPDATE`) / `equip` (załóż/zdejmij posiadany) |
 | `…/api/auctions` | GET (public)/POST | Dom aukcyjny GT (#762 — realny GT sink): GET lista aukcji portalu (leniwe rozliczanie wygasłych) + saldo/flagi licytującego; POST `bid` (atomowy escrow — trzyma GT, zwraca przebitemu, `FOR UPDATE`) / admin `create`/`cancel` |
 | `…/api/search/users` | **public** (rate-limit) | Szukanie widzów do palety poleceń (#549 — **bez logowania**, tylko publiczne pola, tenant-scoped, rate-limit per IP, min 2 znaki) |
