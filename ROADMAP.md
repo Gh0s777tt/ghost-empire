@@ -119,6 +119,7 @@ Solidna baza (HSTS, CSP, COOP, rate-limit, webhook verify, audit log — patrz C
 | ~~**Audyt zależności**~~ ✅ | — | **Zrobione (#156)** — `npm audit --omit=dev --audit-level=high` w CI (nieblokujący) + Dependabot (patrz §1) |
 | ~~**Rotacja sekretów + skan**~~ ✅ | — | **Zrobione** — skan: **GitGuardian** (na PR) + **runbook rotacji** w [docs/ENV.md §5](docs/ENV.md) (`BOT_SECRET`/`NEXTAUTH_SECRET`/`ENCRYPTION_KEY`/OAuth/EventSub/tokeny botów/webhooki) |
 | ~~**Rate-limit per-IP na publicznych API GET-ach**~~ ✅ | — | **Zrobione (#486)** — `extractIp`+`rateLimit` (Redis+fallback DB) na `/api/games`/`gt-games/jackpot`/`health`. Zostaje opcjonalnie warstwa edge/IP na publicznych *stronach* (RSC) — 🧊 |
+| ~~**Maszynowa bramka RLS-drift**~~ ✅ | — | **Zrobione (gałąź `feat/platform-roadmap-2026-08`)** — `npm run docs:rls` (`scripts/check-rls-sync.mjs`) statycznie pilnuje, że każdy `@@map` ze `schema.prisma` ma `ENABLE ROW LEVEL SECURITY` w bloku Step-2 `docs/RLS.md` (i odwrotnie: brak osieroconych `ALTER`). Zamienia błąd „zależny od pamięci" (przez który 9 tabel, m.in. `donation_integrations` z `secretEnc`/`tokenEnc`, siedziało otwartych na `anon`) w twardą bramkę CI/pre-push. Zero DB. `ENABLE` na prodzie = nadal owner-action (`docs/RLS.md`). |
 
 ---
 

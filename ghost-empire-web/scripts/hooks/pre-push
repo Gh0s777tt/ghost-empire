@@ -11,7 +11,7 @@
 # never ran root `npm install`, and it now runs THE SAME gates as lefthook's
 # pre-push, so the "whichever ran last" race can no longer change behaviour:
 #   web:  verify-all --fast → typecheck · lint · docs:check · docs:env ·
-#         docs:i18n · docs:i18n:dup · unit  (no integration/DB)
+#         docs:i18n · docs:i18n:dup · docs:rls · unit  (no integration/DB)
 #   chat: tsc --noEmit (the only gate chat has)
 # Run the FULL suite incl. integration before merging to main: npm run verify-all
 # Bypass in a pinch:  git push --no-verify
