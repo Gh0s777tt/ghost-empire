@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { SoundsClient } from "@/components/sounds/SoundsClient";
 import { getCurrentTenant } from "@/lib/tenant";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 // White-label: sounds cost this portal's own currency (tenant.tokenName), not the founder's.
@@ -16,6 +17,7 @@ export async function generateMetadata() {
 }
 
 export default async function SoundsPage() {
+  await requireFeature("sounds"); // 404 if disabled (/admin#features)
   const session = await auth();
 
   return (

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { ClipsClient } from "@/components/clips/ClipsClient";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -11,6 +12,7 @@ export const metadata = {
 };
 
 export default async function ClipsPage() {
+  await requireFeature("clips"); // 404 if disabled (/admin#features)
   const session = await auth();
 
   return (

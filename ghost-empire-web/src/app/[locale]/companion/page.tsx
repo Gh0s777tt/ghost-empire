@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { CompanionPageClient } from "@/components/companion/CompanionPageClient";
 import { getCurrentTenant } from "@/lib/tenant";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 // White-label: feeding the companion costs this portal's own currency (tenant.tokenName).
@@ -16,6 +17,7 @@ export async function generateMetadata() {
 }
 
 export default async function CompanionPage() {
+  await requireFeature("companion"); // 404 if disabled (/admin#features)
   const session = await auth();
 
   return (

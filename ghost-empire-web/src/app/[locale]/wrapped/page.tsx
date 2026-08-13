@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function WrappedPage({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
+  await requireFeature("wrapped"); // 404 if disabled (/admin#features)
   const sp = await searchParams;
   // #788/B2 — `?m=N` shows N months back (0 = current). Clamped to the last 12 months.
   const monthsBack = Math.max(0, Math.min(11, Number.parseInt(sp.m ?? "0", 10) || 0));
