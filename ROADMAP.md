@@ -145,6 +145,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 ### Pomysły użytkownika (2026-05-30) — do zrealizowania
 
+- 🟡 **Feature-flags portalu** — panel `/admin#features` + nav-hide (24 funkcje) + API + `Tenant.disabledFeatures` **ZROBIONE** (gałąź `feat/feature-flags-2026-08`, wymaga `db push`). **ZOSTAJE:** bramki `notFound()` na pozostałych stronach funkcji — wpięte w 6 (kasyno/wheel/shop/market/collectibles/bounties), do dopięcia 1-liniowym `await requireFeature("<klucz>")` (jak w tych 6) na: `games`, `clans`, `companion`, `sounds`, `clips`, `leagues`, `achievements`, `seasons`, `wrapped`, `events`, `auctions`, `predictions`, `polls`, `trivia`, `quests`, `schedule`, `drops`, `support`. Klucze: `src/lib/features.ts`.
 - ✅ **Customizacja alertów** (T16) — podgląd na żywo + rozmiar/kolor tekstu (#24, #25) **oraz per-typ**: animacja / pozycja / własny dźwięk / próg kwotowy osobno dla każdego typu alertu (`AlertTypeConfig`, `/admin#alerts`). **ZROBIONE w całości.**
 - 🔥 **OBS WebSocket — hasło wklejane na stronie** (`/admin`), nie w env → przeżywa zmianę komputera (kopiuj-wklej)
 - 🔥🎨 **Strona startowa (landing)** — ładny pierwszy ekran przy wejściu. *(Wymaga Twojego kierunku wizualnego — robię świadomie po Twoim feedbacku, by nie zgadywać gustu i nie generować churnu.)*

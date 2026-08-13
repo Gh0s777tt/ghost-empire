@@ -99,6 +99,7 @@ export default async function LocaleLayout({
     brandColor: tenant.brandColor,
     channels: streamingChannels(tenant.socialLinks, isFounderPortal),
     isPlatformBrand: isPlatformBrand(tenant),
+    disabledFeatures: tenant.disabledFeatures,
   };
   // Tenant accent → CSS variables; globals.css derives every red/glow from these.
   const brandStyle = {

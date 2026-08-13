@@ -54,6 +54,9 @@ export type TenantBrand = {
   supportThanks: string | null;
   /** Size of the free daily casino-chips grant on this portal (docs/CHIPS-CASINO.md). */
   dailyChipsAmount: number;
+  /** Keys of viewer features the owner DISABLED for this portal (allow-by-default; see lib/features).
+   *  Client-safe (which modules are on/off is not sensitive) → fed to the nav to hide toggled features. */
+  disabledFeatures: string[];
 };
 
 /** Safely parse the Tenant.socialLinks JSON into a validated list (defensive on read). */
@@ -91,6 +94,7 @@ export const FALLBACK_TENANT: TenantBrand = {
   supportIntro: null,
   supportThanks: null,
   dailyChipsAmount: DAILY_CHIPS_DEFAULT,
+  disabledFeatures: [],
 };
 
 /** Map a Tenant row to the request-facing brand (shared by every resolution path). */
@@ -120,6 +124,9 @@ function toBrand(t: Tenant): TenantBrand {
     // Re-clamped on read: a value written before the bounds existed (or edited straight in
     // the DB) must not hand out an extreme grant.
     dailyChipsAmount: normalizeDailyChips(t.dailyChipsAmount),
+    // Allow-by-default: a value written before this column existed reads as `[]` (DB default), so an
+    // un-migrated / legacy row shows every feature. Guard against a stray non-array just in case.
+    disabledFeatures: Array.isArray(t.disabledFeatures) ? t.disabledFeatures : [],
   };
 }
 

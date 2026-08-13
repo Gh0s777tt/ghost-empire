@@ -11,7 +11,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 
 ---
 
-## 🆕 Nowe trasy — Studio (2026-06) — łącznie **224** tras (223× `route.ts` + 1× `route.tsx`)
+## 🆕 Nowe trasy — Studio (2026-06) — łącznie **225** tras (224× `route.ts` + 1× `route.tsx`)
 
 <!-- Licznik przeliczany, nie przepisywany: `find ghost-empire-web/src/app/api -type f -name "route.*" | wc -l`
      (osobno `-name "route.ts"` = 220 i `-name "route.tsx"` = 1). Stał na 193 długo po tym, jak
@@ -25,6 +25,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/moderation` | Config automoda (przekleństwa/CAPS/długość/flood/zalgo + akcje) |
 | `…/api/admin/integrations` | Klucze API funkcji (AI / Sentry / OBS) — zapis w bazie, maskowane |
 | `…/api/admin/setup-status` | Checklista konfiguracji + dane Setup Wizarda (#737) — GET: kroki (wyprowadzane z realnej konfiguracji) + `progress` + `autoOpen` + flagi tenanta; POST `{action: complete\|dismiss\|reopen}` zapisuje stan kreatora |
+| `…/api/admin/features` | **Feature-flags portalu** (panel `/admin#features`) — GET: katalog funkcji (`lib/features`) + `disabled` (klucze wyłączone dla tego portalu); POST `{key, enabled}` przełącza jedną funkcję (allow-by-default: trzyma tylko wyłączone; walidacja klucza; audyt). Wyłączona funkcja znika z nawigacji widza i jej strona zwraca `notFound()` (`requireFeature`). Tenant-scoped |
 | `…/api/admin/backup` | Pobranie backupu JSON (config/katalog/salda, bez sekretów) |
 | `…/api/admin/widgets` | CRUD własnych widgetów (generator) |
 

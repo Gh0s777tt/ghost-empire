@@ -5,6 +5,7 @@ import { CollectiblesClient } from "@/components/collectibles/CollectiblesClient
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
+import { requireFeature } from "@/lib/feature-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: t("metaTitle"), description: t("metaDesc"), alternates: localeAlternates("/collectibles", locale) };
 }
 
-export default function CollectiblesPage() {
+export default async function CollectiblesPage() {
+  await requireFeature("collectibles"); // 404 if disabled (/admin#features)
   return (
     <div className="min-h-screen bg-black">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
