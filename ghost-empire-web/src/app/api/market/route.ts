@@ -12,6 +12,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { displayNick } from "@/lib/utils";
 import { clampPrice, sellerProceeds, MAX_ACTIVE_LISTINGS } from "@/lib/market";
 import { clientIp } from "@/lib/http";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 export const dynamic = "force-dynamic";
 
@@ -102,6 +103,13 @@ export async function POST(req: Request) {
   // ---- BUY: GT moves seller-ward (minus burned fee), card moves to buyer ----
   if (action === "buy") {
     const id = String(body.id ?? "");
+    // Idempotency: a double-clicked/retried buy of the SAME listing must not run twice → 409;
+    // released on failure. The listing-claim `updateMany` already stops a real double-sell, but the
+    // buyer's second click would otherwise 404 confusingly — this makes it a clean 409.
+    const idemToken = idempotencyToken(req, body);
+    if (!(await claimIdempotent(userId, "market:buy", idemToken)).ok) {
+      return NextResponse.json({ ok: false, reason: "duplicate" }, { status: 409 });
+    }
     const res = await prisma
       .$transaction(async (tx) => {
         // Atomically claim an ACTIVE listing that is NOT the buyer's own — scoped to
@@ -121,6 +129,7 @@ export async function POST(req: Request) {
         return { ok: true as const };
       })
       .catch((e) => ({ reason: e instanceof Error && e.message === "insufficient" ? ("insufficient" as const) : ("error" as const) }));
+    if ("reason" in res) await releaseIdempotent(userId, "market:buy", idemToken);
     return NextResponse.json("reason" in res ? { ok: false, reason: res.reason } : { ok: true });
   }
 

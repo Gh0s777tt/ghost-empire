@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { jsonError } from "@/lib/api-i18n";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { pledgeToBounty } from "@/lib/bounties";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -21,7 +22,16 @@ export async function POST(req: Request) {
     return jsonError("Wymagane: bountyId (string) + amount (number)", 400);
   }
 
+  // Idempotency: block a double-clicked/retried identical pledge (same bounty + amount) → 409;
+  // released on any non-success so a corrected retry isn't locked out.
+  const idemToken = idempotencyToken(req, body);
+  if (!(await claimIdempotent(userId, "bounty:pledge", idemToken)).ok) {
+    return jsonError("Akcja już przetwarzana — odśwież stronę.", 409);
+  }
   const result = await pledgeToBounty({ userId, bountyId: body.bountyId, amount: Math.floor(body.amount) });
-  if (!result.ok) return jsonError(result.error, result.status);
+  if (!result.ok) {
+    await releaseIdempotent(userId, "bounty:pledge", idemToken);
+    return jsonError(result.error, result.status);
+  }
   return NextResponse.json(result);
 }

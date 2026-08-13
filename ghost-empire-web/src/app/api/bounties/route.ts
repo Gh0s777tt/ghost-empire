@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { createBounty } from "@/lib/bounties";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 export const dynamic = "force-dynamic";
 
@@ -97,6 +98,11 @@ export async function POST(req: Request) {
     return jsonError("Wymagane: title (string) + initialPledge (number)", 400);
   }
 
+  // Idempotency: block a double-clicked/retried identical create (same body) → 409; released on failure.
+  const idemToken = idempotencyToken(req, body);
+  if (!(await claimIdempotent(userId, "bounty:create", idemToken)).ok) {
+    return jsonError("Akcja już przetwarzana — odśwież stronę.", 409);
+  }
   const result = await createBounty({
     userId,
     title: body.title,
@@ -104,6 +110,9 @@ export async function POST(req: Request) {
     initialPledge: Math.floor(body.initialPledge),
     expiresInHours: typeof body.expiresInHours === "number" ? Math.floor(body.expiresInHours) : null,
   });
-  if (!result.ok) return jsonError(result.error, result.status);
+  if (!result.ok) {
+    await releaseIdempotent(userId, "bounty:create", idemToken);
+    return jsonError(result.error, result.status);
+  }
   return NextResponse.json(result);
 }

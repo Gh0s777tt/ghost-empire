@@ -9,6 +9,8 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 - **overlayToken** — `?token=<OVERLAY_TOKEN>` (źródła OBS, tylko odczyt)
 - **public** — bez auth (lub własny podpis/sekret)
 
+> **Konwencja — idempotencja money-POST (`lib/idempotency`):** trasy zmieniające saldo, gdzie body rozróżnia intencję, są chronione przed double-clickiem/retry (Redis `SET NX PX`; token = header `Idempotency-Key` albo hash body; duplikat → **409**; slot trzymany przy sukcesie, zwalniany przy porażce; **fail-open bez Redisa**). Objęte: `shop/buy`, `gift`, `sound-rewards`, `companion/feed`, `events/raffle-tickets`, `bounties` (create/pledge), `clans` (create/contribute), `market` (buy), `auctions` (bid). **Świadomie POZA** (identyczny re-submit jest LEGALNY albo istnieje inna idempotencja): `wheel/spin` i `open-pack` (brak rozróżniającego body), `gt-games/*` + casino (żetony darmowe + szybkie identyczne zakłady legalne), `bot/*`+`internal/*` (awardy bajt-identyczne z założenia), oraz trasy z `externalId`/unique (`daily-bonus`, `casino/daily-chips`, `watch-streak`, `trivia`, `drops/claim`, `tasks/claim`).
+
 ---
 
 ## 🆕 Nowe trasy — Studio (2026-06) — łącznie **225** tras (224× `route.ts` + 1× `route.tsx`)

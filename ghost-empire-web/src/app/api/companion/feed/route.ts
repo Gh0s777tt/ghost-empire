@@ -12,6 +12,7 @@ import { isValidFeed } from "@/lib/companion";
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { updateDailyTaskProgress } from "@/lib/daily-tasks";
 import { createLogger } from "@/lib/logger";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 const log = createLogger("companion-feed");
 
@@ -35,6 +36,13 @@ export async function POST(req: Request) {
   if (!rl.allowed) return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
 
   const tid = await currentTenantId();
+
+  // Idempotency: block a double-clicked/retried identical feed (same amount) → 409; released on
+  // failure below. The `gte` guard stops overspend, not duplication.
+  const idemToken = idempotencyToken(req, body);
+  if (!(await claimIdempotent(userId, "companion:feed", idemToken)).ok) {
+    return jsonError("Akcja już przetwarzana — odśwież stronę.", 409);
+  }
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Atomic balance guard: decrement only if the user can afford it.
@@ -72,6 +80,7 @@ export async function POST(req: Request) {
       fed: amount,
     });
   } catch (e) {
+    await releaseIdempotent(userId, "companion:feed", idemToken);
     if (e instanceof FeedError) return jsonError(e.message, e.status);
     log.error("feed error", e);
     return jsonError("Błąd serwera", 500);
