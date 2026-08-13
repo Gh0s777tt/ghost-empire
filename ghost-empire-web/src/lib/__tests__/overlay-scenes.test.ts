@@ -57,3 +57,20 @@ describe("parseElements", () => {
     expect(parseElements(JSON.stringify(many)).length).toBe(MAX_ELEMENTS);
   });
 });
+
+describe("parseElements — media elements (image/video)", () => {
+  it("keeps an image element with a safe http(s) src (default 30×30)", () => {
+    const out = parseElements(JSON.stringify([{ id: "i", widget: "image", src: "https://cdn.example.com/a.png", x: 10, y: 10 }]));
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ widget: "image", src: "https://cdn.example.com/a.png", w: 30, h: 30 });
+  });
+  it("keeps a VIDEO element with a safe http(s) src (default 40×23, ~16:9)", () => {
+    const out = parseElements(JSON.stringify([{ id: "v", widget: "video", src: "https://cdn.example.com/clip.mp4", x: 5, y: 5 }]));
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ widget: "video", src: "https://cdn.example.com/clip.mp4", w: 40, h: 23 });
+  });
+  it("drops a media element whose src is unsafe (javascript:) or missing — no empty <img>/<video>", () => {
+    expect(parseElements(JSON.stringify([{ widget: "video", src: "javascript:alert(1)", x: 0, y: 0 }]))).toEqual([]);
+    expect(parseElements(JSON.stringify([{ widget: "image", x: 0, y: 0 }]))).toEqual([]);
+  });
+});

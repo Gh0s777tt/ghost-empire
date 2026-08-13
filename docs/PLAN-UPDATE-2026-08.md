@@ -78,8 +78,12 @@ Zwraca publiczny URL → wpina się w istniejące pola URL (bgImageUrl/alerty/sc
 grafikę jako element sceny; drag/resize jak widgety; render przez `<img>` (nie iframe), `src`
 zsanityzowany przez `safeMediaUrl` po obu stronach (klient + serwer w `parseElements`). Daje **sceny
 statyczne** na własnej grafice.
-**ZOSTAJE:** wideo/animacje jako element (`video` — po signed-URL z §2a) + warstwy (z-index) + więcej
-stylowania elementu (opacity/rotacja). Effort resztki: **M**.
+✅ **WIDEO/ANIMACJE W SCENACH ZROBIONE (gałąź `feat/scene-alert-video-2026-08`).** Nowy typ elementu
+`video` (mp4/webm) w tym samym JSON `elements` (`widget:"video"`) → **zero migracji**: upload (`accept`
++ wykryty `kind`) lub URL (rozpoznanie po rozszerzeniu); render `<video>` autoplay/muted/loop w
+`/overlay/scene/[id]`; `src` przez `safeMediaUrl` po obu stronach; podgląd wideo w kafelku edytora.
+Duże pliki (>~4.5 MB) przez URL (upload proxy Vercela ma limit body — signed-URL to osobny fast-follow).
+**ZOSTAJE:** warstwy (z-index) + więcej stylowania elementu (opacity/rotacja). Effort resztki: **S**.
 
 ### 2c. Widgety/Alerty — własna grafika/animacja
 ✅ **WŁASNA GRAFIKA/ANIMACJA ALERTU ZROBIONE (slice 6).** `AlertTypeConfig` dostał `imageUrl`+
