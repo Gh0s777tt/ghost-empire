@@ -13,6 +13,8 @@ Wersje datowane (kalendarzowe) zamiast SemVer — projekt jest aplikacją, nie b
 
 ### Changed
 
+- **CLAUDE.md — sekcja „Standard prowadzenia projektu" (zlecenie właściciela) (gałąź `docs/working-agreement-2026-08`)** — nowa nadrzędna sekcja *mandatory* kodyfikująca profesjonalne prowadzenie projektu **na bieżąco**: (1) cała dokumentacja żyje z kodem (CHANGELOG/ROADMAP/README/`docs/`/PDF/14 locale) — nic nieudokumentowane, brak-śledzony; (2) **wiki i handbooki PDF ze ZRZUTAMI EKRANU** (nie sam tekst) + cel **interaktywny PDF**, zrzuty zredagowane z PII; (3) **oba remote'y (GitHub+GitLab) + tagi + higiena gałęzi na bieżąco** — albo dokładne komendy push/tag/merge, gdy sesja nieinteraktywna (nigdy nie udawać, że wypchnięto); (4) **skan sekretów/PII na bieżąco** (nie czekać na CI, maskować zrzuty, rotować przy wycieku); (5) porządek w plikach/folderach/docs; (6) dokumentacja **dla kogoś z zewnątrz**; (7) **kod „niebezpieczny" — komentarz „dlaczego" + weryfikacja usuwalności/pełnego bezpieczeństwa**, decyzja w `docs/DECISIONS.md`. Wpięte też jako **4 nowe pozycje Definition of Done** + wzmianka o zrzutach w tabeli „Documentation surfaces". Zmiana docs-only (bez runtime/testów).
+
 - **CLAUDE.md — zasada „zawsze zsynchronizowane, zero backlogów"** — nowa sekcja robocza: każda sesja kończy się dopiero, gdy kod+testy+docs są zielone, zacommitowane i **wypchnięte na oba remote'y** (origin+gitlab), docs (CHANGELOG/ROADMAP/README/`docs/*`) aktualne na bieżąco, PR/MR otwarty, a zmergowane/martwe gałęzie posprzątane. Bez wiszących braków.
 
 ### Fixed
