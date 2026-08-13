@@ -10,7 +10,7 @@ import { Layers, Loader2, Plus, Trash2, Save, Copy, Check, X, ExternalLink } fro
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
-import { SCENE_WIDGETS, IMAGE_WIDGET, sceneWidget, clampElement, type SceneElement } from "@/lib/overlay-scenes";
+import { SCENE_WIDGETS, IMAGE_WIDGET, VIDEO_WIDGET, MEDIA_WIDGETS, sceneWidget, clampElement, type SceneElement } from "@/lib/overlay-scenes";
 import { SCENE_TEMPLATES } from "@/lib/scene-templates";
 import { MediaUploadButton } from "../MediaUploadButton";
 import { safeMediaUrl } from "@/lib/url-safe";
@@ -124,12 +124,16 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
     setDirty(true);
   }
   function removeEl(id: string) { setEls((p) => p.filter((e) => e.id !== id)); setDirty(true); if (sel === id) setSel(null); }
-  // Element „image" (update 2026-08): własna grafika (upload lub URL) jako element sceny — sceny
-  // statyczne. src walidowany klientowo (safeMediaUrl) i tak samo na serwerze (parseElements).
-  function addImage(rawUrl: string) {
+  // Elementy mediów (update 2026-08): własna grafika LUB wideo/animacja (mp4/webm), upload lub URL,
+  // jako element sceny → sceny statyczne ORAZ animowane. `kind` z uploadu jest wiarygodny; dla URL
+  // wykrywamy wideo po rozszerzeniu. src walidowany klientowo (safeMediaUrl) i tak samo na serwerze
+  // (parseElements). Wideo → <video> autoplay/muted/loop w renderze sceny.
+  function addMedia(rawUrl: string, kind?: "image" | "video") {
     const src = safeMediaUrl(rawUrl.trim());
     if (!src) return;
-    const el = clampElement({ id: `image-${Date.now().toString(36)}`, widget: IMAGE_WIDGET, x: 35, y: 35, w: 30, h: 30, src });
+    const isVideo = kind === "video" || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(src);
+    const widget = isVideo ? VIDEO_WIDGET : IMAGE_WIDGET;
+    const el = clampElement({ id: `${widget}-${Date.now().toString(36)}`, widget, x: 32, y: 32, w: isVideo ? 40 : 30, h: isVideo ? 23 : 30, src });
     setEls((p) => [...p, el]);
     setSel(el.id);
     setDirty(true);
@@ -230,7 +234,11 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                         : {}),
                     }}
                   >
-                    <span className="truncate pointer-events-none">{el.widget === IMAGE_WIDGET ? "" : el.widget}</span>
+                    {/* Podgląd wideo wprost w kafelku edytora (element „video"). */}
+                    {el.widget === VIDEO_WIDGET && el.src && (
+                      <video src={el.src} muted loop autoPlay playsInline className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
+                    )}
+                    <span className="truncate pointer-events-none">{MEDIA_WIDGETS.has(el.widget) ? "" : el.widget}</span>
                     {sel === el.id && (
                       <>
                         <button onPointerDown={(e) => { e.stopPropagation(); removeEl(el.id); }} className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center" title={t("removeEl")}><X className="w-2.5 h-2.5" /></button>
@@ -256,15 +264,19 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
               <div className="border border-zinc-800 bg-black/30 p-2 mb-2">
                 <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1.5">{t("addImage")}</div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <MediaUploadButton onUploaded={(url) => addImage(url)} />
+                  <MediaUploadButton
+                    accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm"
+                    onUploaded={(url, kind) => addMedia(url, kind)}
+                    onError={(m) => onToast("err", m)}
+                  />
                   <input
                     value={imgUrl}
                     onChange={(e) => setImgUrl(e.target.value)}
-                    placeholder="https://…/grafika.png"
+                    placeholder="https://…/grafika.png · .mp4 · .webm"
                     className="flex-1 min-w-[140px] bg-black border border-zinc-800 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
                   />
                   <button
-                    onClick={() => { addImage(imgUrl); setImgUrl(""); }}
+                    onClick={() => { addMedia(imgUrl); setImgUrl(""); }}
                     disabled={!imgUrl.trim()}
                     className="px-2 py-1 text-[11px] border border-zinc-800 text-zinc-400 hover:text-white hover:border-red-700 rounded disabled:opacity-40"
                   >

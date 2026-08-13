@@ -2225,7 +2225,7 @@
       "deleted": "Scene deleted",
       "save": "Save",
       "saved": "Saved",
-      "addImage": "Add your own image (upload or URL)",
+      "addImage": "Add image or video (mp4/webm — upload or URL)",
       "addImageUrl": "Add from URL",
       "addWidget": "Add a widget",
       "canvasEmpty": "Add widgets below — they'll appear here to position.",

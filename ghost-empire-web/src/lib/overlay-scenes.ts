@@ -15,6 +15,16 @@ export type SceneWidget = { id: string; path: string; query?: string; w: number;
 export const IMAGE_WIDGET = "image";
 const IMAGE_DEFAULT = { w: 30, h: 30 };
 
+/** Element „video" (update 2026-08): własne wideo/animacja streamera (mp4/webm, upload lub URL) jako
+ *  element sceny — daje SCENY Z ANIMACJĄ (nie tylko statyczne obrazy). Renderowane jako <video>
+ *  autoplay/muted/loop (OBS nie ma interakcji), NIE iframe; `src` przez ten sam `safeMediaUrl` co
+ *  „image". Zapis w tym samym JSON `elements` → zero zmian schematu. Domyślny rozmiar ~16:9. */
+export const VIDEO_WIDGET = "video";
+const VIDEO_DEFAULT = { w: 40, h: 23 };
+
+/** Elementy z własnym mediów-`src` (nie iframe widgetu): grafika i wideo. */
+export const MEDIA_WIDGETS = new Set([IMAGE_WIDGET, VIDEO_WIDGET]);
+
 // Curated to widgets that compose well in a scene (full-screen alerts excluded). w/h are
 // sensible DEFAULT sizes as % of the 1920×1080 canvas.
 export const SCENE_WIDGETS: SceneWidget[] = [
@@ -79,20 +89,22 @@ export function parseElements(json: string | null | undefined): SceneElement[] {
     const r = raw as Record<string, unknown>;
     const widget = String(r.widget ?? "");
 
-    // Element „image": własna grafika. Wymaga bezpiecznego http(s) URL — safeMediaUrl odrzuca
-    // javascript:/data:/relatywne i breakout; brak/nieprawidłowy src → element dropowany
-    // (nie renderujemy pustego <img>). NIE jest w SCENE_WIDGETS (nie ma strony /overlay/*).
-    if (widget === IMAGE_WIDGET) {
+    // Elementy mediów („image"/„video"): własna grafika lub wideo/animacja streamera. Wymagają
+    // bezpiecznego http(s) URL — safeMediaUrl odrzuca javascript:/data:/relatywne i breakout;
+    // brak/nieprawidłowy src → element dropowany (nie renderujemy pustego <img>/<video>). NIE są
+    // w SCENE_WIDGETS (nie mają strony /overlay/*). „video" → <video> autoplay/muted/loop w renderze.
+    if (MEDIA_WIDGETS.has(widget)) {
       const src = safeMediaUrl(typeof r.src === "string" ? r.src : "");
       if (!src) continue;
+      const def = widget === VIDEO_WIDGET ? VIDEO_DEFAULT : IMAGE_DEFAULT;
       out.push(
         clampElement({
-          id: String(r.id ?? `image-${out.length}`),
+          id: String(r.id ?? `${widget}-${out.length}`),
           widget,
           x: Number(r.x) || 0,
           y: Number(r.y) || 0,
-          w: Number(r.w) || IMAGE_DEFAULT.w,
-          h: Number(r.h) || IMAGE_DEFAULT.h,
+          w: Number(r.w) || def.w,
+          h: Number(r.h) || def.h,
           src,
         }),
       );

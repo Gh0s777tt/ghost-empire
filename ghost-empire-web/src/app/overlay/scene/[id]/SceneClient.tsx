@@ -4,7 +4,7 @@
 // the real /overlay/<widget> pages. The token from THIS source URL is forwarded to each
 // child iframe (which validates it). Pure layout — no feed logic of its own.
 import { useEffect, useState } from "react";
-import { SCENE_WIDGETS, IMAGE_WIDGET, type SceneElement } from "@/lib/overlay-scenes";
+import { SCENE_WIDGETS, VIDEO_WIDGET, MEDIA_WIDGETS, type SceneElement } from "@/lib/overlay-scenes";
 
 const BY_ID = new Map(SCENE_WIDGETS.map((w) => [w.id, w]));
 
@@ -23,21 +23,20 @@ export function SceneClient({ elements, found }: { elements: SceneElement[]; fou
   return (
     <div style={{ position: "fixed", inset: 0, overflow: "hidden" }}>
       {elements.map((el) => {
-        // Element „image" (update 2026-08): własna grafika streamera — <img> zamiast iframe widgetu.
-        // `el.src` jest już zsanityzowane serwerowo przez parseElements (safeMediaUrl, http(s) only).
-        if (el.widget === IMAGE_WIDGET) {
+        // Elementy mediów (update 2026-08): własna grafika/wideo streamera — <img>/<video> zamiast
+        // iframe widgetu. `el.src` jest już zsanityzowane serwerowo (parseElements, http(s) only).
+        // „video" → autoplay/muted/loop (źródło OBS nie ma interakcji; muted pozwala na autoplay).
+        if (MEDIA_WIDGETS.has(el.widget)) {
           if (!el.src) return null;
-          return (
-            <img
-              key={el.id}
-              src={el.src}
-              alt=""
-              style={{
-                position: "absolute",
-                left: `${el.x}%`, top: `${el.y}%`, width: `${el.w}%`, height: `${el.h}%`,
-                objectFit: "contain", pointerEvents: "none",
-              }}
-            />
+          const mediaStyle = {
+            position: "absolute" as const,
+            left: `${el.x}%`, top: `${el.y}%`, width: `${el.w}%`, height: `${el.h}%`,
+            objectFit: "contain" as const, pointerEvents: "none" as const,
+          };
+          return el.widget === VIDEO_WIDGET ? (
+            <video key={el.id} src={el.src} autoPlay muted loop playsInline style={mediaStyle} />
+          ) : (
+            <img key={el.id} src={el.src} alt="" style={mediaStyle} />
           );
         }
         const w = BY_ID.get(el.widget);
