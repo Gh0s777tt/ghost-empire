@@ -33,7 +33,7 @@ a change is not finished until code, tests **and** docs are all green.
 | Guides & reference (the "wiki") | `docs/*.md` | *Architecture, endpoints, env, runbooks, FAQ* | hand-written |
 | Website (docs site) | `docs/` → **MkDocs Material** (`mkdocs.yml`) | *Published docs at `gh0s777tt.gitlab.io/ghost-empire`* | `mkdocs build` (CI → GitLab Pages) |
 | Code/API reference | `docs/api/**` | *Money-critical `src/lib/*` public API* | `npm run docs:api` (**TypeDoc**, generated — never hand-edit) |
-| PDF handbooks | `ghost-empire-web/public/wiki/*.pdf` (served at `/wiki/`) | *Complete user guide + developer guide* | produced out-of-band; **flag for regen**, don't let drift |
+| PDF handbooks | `ghost-empire-web/public/wiki/*.pdf` (served at `/wiki/`) | *Complete user guide + developer guide* | produced out-of-band; **flag for regen**, don't let drift. **Ze zrzutami ekranu** (nie sam tekst) — patrz „Standard prowadzenia projektu" §2 |
 
 ## 🔄 Zawsze zsynchronizowane — repo, docs, push (mandatory)
 
@@ -59,6 +59,62 @@ testy + docs są zielone, zacommitowane I wypchnięte** — nic nie zostaje wisz
 
 Zasada nadrzędna: **jeśli po Twojej pracy zostaje jakikolwiek brak — niezacommitowany plik,
 niewypchnięty commit, nieaktualny doc, nieotwarty PR, martwa gałąź — praca NIE jest skończona.**
+
+## 🏛️ Standard prowadzenia projektu — zlecenie właściciela (mandatory)
+
+Projekt ma być prowadzony **maksymalnie profesjonalnie**. Poniższe obowiązuje w **KAŻDEJ** sesji i
+**na bieżąco** (razem ze zmianą, nie „na końcu", nie „kiedyś") — to część Definition of Done, nie
+dodatek. Sekcje niżej (Documentation / User-facing copy / Definition of Done / Code-level docs)
+opisują *jak*; ta sekcja jest nadrzędnym *co i dlaczego*.
+
+1. **Cała dokumentacja żyje razem z kodem — nic nie ginie.** Każda zmiana widoczna w produkcie lub
+   w API jest w tym samym kroku odzwierciedlona w: `CHANGELOG.md`, `ROADMAP.md`, `README.md`,
+   `docs/*` (wiki/reference), **handbookach PDF** oraz copy user-facing/legal (14 locale). Żadna
+   aktualizacja nie może wyjść **nieudokumentowana**. Czego nie da się dokończyć teraz — jest
+   **śledzone** (ROADMAP / `docs/IDEAS.md` / TODO z właścicielem), nigdy po cichu porzucone.
+
+2. **Wiki i PDF ze ZRZUTAMI EKRANU (nie sam tekst).** Handbooki (`public/wiki/*.pdf`) i strony wiki
+   (`docs/*`) mają pokazywać, nie tylko opisywać — każda istotna funkcja dostaje **screeny z
+   aplikacji**, żeby czytelnik z zewnątrz widział, o czym mowa. Gdy zmienia się UI funkcji, jej
+   zrzuty są **nieaktualne** → oznacz do odświeżenia razem ze zmianą (PDF powstaje out-of-band, więc
+   **zawołaj to wprost w opisie PR**, nigdy nie zostawiaj dryfu). Dąż do **interaktywnego PDF**
+   (klikalny spis treści, zakładki, linki) tam gdzie się da — nowocześniej i czytelniej. **Zrzuty
+   MUSZĄ być zredagowane** (patrz pkt 4).
+
+3. **Oba remote'y + tagi + higiena gałęzi — na bieżąco.** `origin` (GitHub) i `gitlab` (GitLab)
+   trzymane w synchronie; po commitcie → push na **OBA**. Na koniec pracy zweryfikuj: dla każdej
+   gałęzi `HEAD == origin/<branch> == gitlab/<branch>`, zero commitów ponad remote, zero
+   martwych/zmergowanych gałęzi (usuń z obu remote'ów), a **tag wersji** odzwierciedla stan wydania.
+   Sesja nieinteraktywna i nie da się autoryzować remote'u → **powiedz to WPROST i zostaw dokładne
+   komendy** (push / tag / merge); **nigdy nie udawaj, że wypchnięto/zmergowano.**
+
+4. **Skan sekretów i danych prywatnych — na bieżąco (nie czekaj na CI).** Przy KAŻDEJ zmianie
+   sprawdź, że w plikach trafiających do repo/publicznie (kod, `docs/`, wiki, **zrzuty ekranu**,
+   `*.env.example`, seedy, przykłady) **nie ma** prawdziwych kluczy, tokenów, sekretów ani danych
+   osobowych, które narażałyby projekt lub użytkowników. Sekrety wyłącznie w Vercel env / gitignored
+   `.env*`. **Maskuj** tokeny / e-maile / nicki / PII na zrzutach, zanim trafią do wiki/PDF.
+   Cokolwiek wyciekło → **zrotuj i zgłoś**. (Maszynowo pilnuje gitleaks w CI — ale to podłoga, nie
+   sufit.)
+
+5. **Porządek.** Utrzymuj ład w plikach, folderach i całej dokumentacji: spójne nazewnictwo, brak
+   osieroconych / zduplikowanych / martwych plików, docs w miejscach z tabeli „Documentation
+   surfaces", archiwalne migawki oznaczone datą i odesłane do żywych dokumentów.
+
+6. **Dokumentacja dla kogoś z ZEWNĄTRZ.** Zakładaj czytelnika, który widzi kod pierwszy raz. Każda
+   funkcja, moduł, narzędzie, skrypt i endpoint jasno mówi **co robi i PO CO istnieje** (patrz
+   „Code-level documentation"). Cel: ktoś z zewnątrz dostaje **pełną** dokumentację i wie, co się
+   dzieje — bez reverse-engineeringu.
+
+7. **Kod „niebezpieczny" — uzasadnij albo usuń.** Każdy fragment o podwyższonym ryzyku (RNG /
+   ekonomia / tokeny, `force-dynamic`, fail-open, zaszyte fallbacki, `dangerouslySetInnerHTML`,
+   surowy SQL, omijanie guardów, `eval`, obsługa sekretów) ma **komentarz DLACZEGO tam jest** oraz
+   świadomą weryfikację: **czy da się go usunąć** lub przerobić tak, by był **w pełni bezpieczny**?
+   Jeśli zostaje mimo ryzyka — zapisz decyzję w `docs/DECISIONS.md` z uzasadnieniem, mitygacją i
+   planem docelowym. Nie zostawiaj ryzykownego kodu bez wyjaśnienia.
+
+> **Zasada nadrzędna:** jeśli po Twojej pracy zostaje **jakikolwiek** brak — nieudokumentowana
+> zmiana, brakujący screen tam gdzie potrzebny, niewypchnięty commit, nieaktualny tag, martwa gałąź,
+> sekret/PII w pliku publicznym, ryzykowny kod bez wyjaśnienia — **praca NIE jest skończona.**
 
 ## 📌 Documentation must never drift (mandatory)
 Every change that ships behavior **must** update the docs in the same PR. `npm run docs:check`
@@ -103,6 +159,10 @@ Rule of thumb: **if a user would notice the change, a user-facing surface must d
 - [ ] Public/exported API and non-obvious logic carry code-level docs (see next section).
 - [ ] `CHANGELOG` / `ROADMAP` / affected `docs/` updated; `docs:check` green; PDF-regen flagged if needed.
 - [ ] **User-facing behavior change?** The product's own pages reflect it — `welcome`/`about`/`terms`/`privacy` (all 14 locales) + `docs/faq.md` (see "User-facing & legal copy" above).
+- [ ] **Wiki/PDF:** zrzuty ekranu dla zmienionego/nowego UI odświeżone albo **oznaczone do regenu** (żaden opis funkcji nie zostaje samym tekstem tam, gdzie screen pomaga) — patrz „Standard prowadzenia projektu" §2.
+- [ ] **Sekrety/PII:** żaden prawdziwy klucz/token/sekret ani dane osobowe nie trafiają do plików publicznych **ani do zrzutów ekranu** (zredagowane) — §4.
+- [ ] **Ryzykowny kod:** skomentowany „**dlaczego** tu jest" + świadoma weryfikacja „czy usuwalny / w pełni bezpieczny"; jeśli zostaje mimo ryzyka → decyzja w `docs/DECISIONS.md` — §7.
+- [ ] **Repo:** zacommitowane i **wypchnięte na oba remote'y** (albo zostawione dokładne komendy push/tag/merge, jeśli sesja nieinteraktywna); tag wersji i gałęzie zweryfikowane, martwe gałęzie posprzątane — §3.
 
 ## Code-level documentation (write for the first-time reader)
 The goal: someone opening a file cold should understand **what this code does and why**, without
