@@ -155,6 +155,7 @@ lint:web:
     - npm run docs:env         # node scripts/check-env-docs.mjs (każdy process.env.X udokumentowany w ENV.md)
     - npm run docs:i18n        # scripts/check-i18n-legal.mjs (copy prawne obecne w KAŻDYM locale)
     - npm run docs:i18n:dup    # scripts/check-i18n-duplicates.mjs (zero zduplikowanych kluczy w src/messages/*.json)
+    - npm run docs:brand       # scripts/check-white-label.mjs (zero stałych foundera w kodzie widocznym dla widza)
   rules: !reference [.rules_mr_main, rules]
 
 # ghost-empire-chat: `typecheck` + `lint:brand` + `test` (brak eslint/build — tsx odpala TS wprost).
