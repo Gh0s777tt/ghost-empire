@@ -3,6 +3,7 @@
 // caller (for the local spin animation) and /overlay/wheel (latest spin).
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { requireFeatureApi } from "@/lib/feature-gate";
 import { jsonError } from "@/lib/api-i18n";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { spinWheel, WheelError } from "@/lib/wheel";
@@ -13,6 +14,7 @@ import { createLogger } from "@/lib/logger";
 const log = createLogger("wheel");
 
 export async function POST() {
+  const off = await requireFeatureApi("wheel"); if (off) return off; // 403 gdy koło wyłączone (/admin#features)
   const session = await auth();
   if (!session?.user?.id) {
     return jsonError("Musisz być zalogowany", 401);

@@ -10,6 +10,7 @@
 // wins (P2002), so there is no over-credit and no schema change beyond the `chips` column.
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { requireFeatureApi } from "@/lib/feature-gate";
 import { prisma } from "@/lib/prisma";
 import { getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
@@ -44,6 +45,7 @@ export async function GET() {
 }
 
 export async function POST() {
+  const off = await requireFeatureApi("casino"); if (off) return off; // 403 gdy kasyno wyłączone (/admin#features)
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userId = session.user.id;

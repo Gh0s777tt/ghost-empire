@@ -2,6 +2,7 @@
 // Deal a blackjack hand: charges the bet, returns the session (naturals settle instantly).
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { requireFeatureApi } from "@/lib/feature-gate";
 import { jsonError } from "@/lib/api-i18n";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { currentTenantId } from "@/lib/tenant";
@@ -10,6 +11,7 @@ import { feedJackpot } from "@/lib/gt-games";
 import { featureGateResponse } from "@/lib/entitlements";
 
 export async function POST(req: Request) {
+  const off = await requireFeatureApi("casino"); if (off) return off; // 403 gdy kasyno wyłączone (/admin#features)
   const session = await auth();
   if (!session?.user?.id) return jsonError("Musisz być zalogowany", 401);
   const gated = await featureGateResponse("casino");

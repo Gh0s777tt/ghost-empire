@@ -25,7 +25,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/moderation` | Config automoda (przekleństwa/CAPS/długość/flood/zalgo + akcje) |
 | `…/api/admin/integrations` | Klucze API funkcji (AI / Sentry / OBS) — zapis w bazie, maskowane |
 | `…/api/admin/setup-status` | Checklista konfiguracji + dane Setup Wizarda (#737) — GET: kroki (wyprowadzane z realnej konfiguracji) + `progress` + `autoOpen` + flagi tenanta; POST `{action: complete\|dismiss\|reopen}` zapisuje stan kreatora |
-| `…/api/admin/features` | **Feature-flags portalu** (panel `/admin#features`) — GET: katalog funkcji (`lib/features`) + `disabled` (klucze wyłączone dla tego portalu); POST `{key, enabled}` przełącza jedną funkcję (allow-by-default: trzyma tylko wyłączone; walidacja klucza; audyt). Wyłączona funkcja znika z nawigacji widza i jej strona zwraca `notFound()` (`requireFeature`). Tenant-scoped |
+| `…/api/admin/features` | **Feature-flags portalu** (panel `/admin#features`) — GET: katalog funkcji (`lib/features`) + `disabled` (klucze wyłączone dla tego portalu); POST `{key, enabled}` przełącza jedną funkcję (allow-by-default: trzyma tylko wyłączone; walidacja klucza; audyt). Wyłączona funkcja znika z nawigacji widza i jej strona zwraca `notFound()` (`requireFeature`). Dodatkowo trasy hazardu bramkowane na API przez `requireFeatureApi`→**403** (kasyno: `gt-games/play`+`blackjack`/`hilo`/`mines`/start, `casino/daily-chips`; koło: `wheel/spin`), więc wyłączone kasyno/koło odmawia też na API. Tenant-scoped |
 | `…/api/admin/backup` | Pobranie backupu JSON (config/katalog/salda, bez sekretów) |
 | `…/api/admin/widgets` | CRUD własnych widgetów (generator) |
 
