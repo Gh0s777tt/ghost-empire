@@ -193,6 +193,7 @@ npm run docs:check      # CHANGELOG references every shipped PR
 npm run docs:env        # every process.env.X is documented in docs/ENV.md
 npm run docs:i18n       # privacy/terms present in every locale
 npm run docs:i18n:dup   # no duplicate keys in src/messages/*.json (JSON.parse hides them)
+npm run docs:roadmap    # ROADMAP freshness note isn't >14 days behind the newest shipped commit
 ```
 
 **`npm run verify-all`** runs all of the above locally in one shot — typecheck · lint ·
