@@ -69,6 +69,18 @@ export function elementEnabled(el: SceneElement): boolean {
 
 export const MAX_ELEMENTS = 24;
 
+/** WARSTWY (update 2026-08): kolejność w tablicy `elements` JEST kolejnością warstw — elementy są
+ *  pozycjonowane absolutnie, więc późniejszy rysuje się NA WIERZCHU wcześniejszego. Dzięki temu
+ *  „na wierzch / pod spód" to zwykłe przestawienie elementu w tablicy: żadnego pola `z`, żadnej
+ *  zmiany formatu zapisu i żadnej migracji danych. Renderer (`SceneClient`) i edytor mapują tę samą
+ *  tablicę w tej samej kolejności, więc podgląd zgadza się z OBS-em z definicji. */
+export function moveElement(els: SceneElement[], id: string, to: "front" | "back"): SceneElement[] {
+  const i = els.findIndex((e) => e.id === id);
+  if (i < 0) return els;
+  const bez = [...els.slice(0, i), ...els.slice(i + 1)];
+  return to === "front" ? [...bez, els[i]] : [els[i], ...bez];
+}
+
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 /** Clamp an element to the canvas: size 4..100%, position kept fully on-canvas. Zachowuje `src`

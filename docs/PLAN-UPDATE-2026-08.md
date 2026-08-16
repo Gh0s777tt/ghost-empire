@@ -88,7 +88,13 @@ prawdziwy widget (iframe jak w OBS, domyślnie off — 24 elementy × osobna str
 `enabled` na elemencie (w tym samym JSON → **zero migracji**, brak pola = włączony) i `OverlayScene.enabled`
 na całej scenie (**wymaga `prisma db push`**). Wyłączone elementy odsiewane SERWEROWO, więc nie kosztują CPU.
 Naprawiony przy okazji defekt: poprawka nazwy sceny kasowała niezapisane elementy z płótna.
-**ZOSTAJE:** warstwy (z-index) + więcej stylowania elementu (opacity/rotacja). Effort resztki: **S**.
+✅ **WARSTWY + PRZYCIĄGANIE + DUPLIKAT + EKSPORT/IMPORT + TŁO PODGLĄDU ZROBIONE (gałąź
+`feat/scene-editor-pro-2026-08`).** Warstwy bez pola `z` — tablica `elements` JEST kolejnością
+renderowania, więc „na wierzch/pod spód" to przestawienie w tablicy (zero zmian formatu).
+Przyciąganie do krawędzi/osi sąsiadów i środka płótna z prowadnicami. Duplikat sceny, eksport/import
+układu do JSON (import walidowany jak każdy zapis), podgląd na tle zrzutu z gry (localStorage,
+nie trafia do OBS). Wszystko **bez migracji bazy**.
+**ZOSTAJE:** więcej stylowania elementu (opacity/rotacja). Effort resztki: **S**.
 
 ### 2c. Widgety/Alerty — własna grafika/animacja
 ✅ **WŁASNA GRAFIKA/ANIMACJA ALERTU ZROBIONE (slice 6).** `AlertTypeConfig` dostał `imageUrl`+

@@ -66,6 +66,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, scene: { id: created.id, name: created.name, elements: created.elements, enabled: created.enabled ?? true } });
   }
 
+  // Duplikat istniejącej sceny (update 2026-08). Streamerzy budują warianty tego samego układu
+  // („to samo, ale bez czatu — na przerwę"), a bez tego jedyną drogą było ręczne rozstawianie od zera.
+  // Elementy przechodzą przez `parseElements` jak każdy inny zapis (defense in depth), a duplikat
+  // NIE dziedziczy `enabled` — nowa scena startuje włączona, żeby nie powstał ukryty klon,
+  // którego nie widać ani w OBS, ani w oczywisty sposób w panelu.
+  if (action === "duplicate") {
+    const id = String(body.id ?? "");
+    const src = await prisma.overlayScene
+      .findFirst({ where: { id, ...tenantWhere }, select: { name: true, elements: true } })
+      .catch(() => null);
+    if (!src) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    const name = String(body.name ?? `${src.name} (kopia)`).trim().slice(0, 60) || "Scene";
+    const elements = JSON.stringify(parseElements(src.elements));
+    const created = await prisma.overlayScene.create({ data: { ...(tid ? { tenantId: tid } : {}), name, elements } });
+    await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "overlay_scene", targetId: created.id, details: { duplicateOf: id }, req });
+    return NextResponse.json({ ok: true, scene: { id: created.id, name: created.name, elements: created.elements, enabled: created.enabled ?? true } });
+  }
+
   if (action === "update") {
     const id = String(body.id ?? "");
     const data: Record<string, unknown> = {};

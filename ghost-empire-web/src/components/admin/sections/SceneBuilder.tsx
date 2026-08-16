@@ -6,11 +6,11 @@
 // in lib/overlay-scenes.
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { Layers, Loader2, Plus, Trash2, Save, Copy, Check, X, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Layers, Loader2, Plus, Trash2, Save, Copy, Check, X, ExternalLink, Eye, EyeOff, CopyPlus, Download, Upload, Magnet, BringToFront, SendToBack, Image as ImageIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
-import { SCENE_WIDGETS, IMAGE_WIDGET, VIDEO_WIDGET, MEDIA_WIDGETS, sceneWidget, clampElement, elementEnabled, type SceneElement } from "@/lib/overlay-scenes";
+import { SCENE_WIDGETS, IMAGE_WIDGET, VIDEO_WIDGET, MEDIA_WIDGETS, sceneWidget, clampElement, elementEnabled, moveElement, type SceneElement } from "@/lib/overlay-scenes";
 import { SCENE_TEMPLATES } from "@/lib/scene-templates";
 import { MediaUploadButton } from "../MediaUploadButton";
 import { safeMediaUrl } from "@/lib/url-safe";
@@ -35,7 +35,26 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [preview, setPreview] = useState(false); // żywy podgląd widgetów (iframe) — patrz komentarz przy płótnie
+  const [snap, setSnap] = useState(true); // przyciąganie do krawędzi/osi innych elementów
+  const [bgUrl, setBgUrl] = useState(""); // zrzut z gry pod płótnem — TYLKO podgląd w edytorze
+  // Prowadnice rysowane w trakcie przeciągania: procentowe pozycje linii, które właśnie „złapały".
+  const [guides, setGuides] = useState<{ x: number[]; y: number[] }>({ x: [], y: [] });
   const [imgUrl, setImgUrl] = useState(""); // pole URL do dodania własnej grafiki jako elementu sceny
+
+  // Tło podglądu trzymamy w localStorage, NIE w bazie: to pomoc warsztatowa jednego streamera przy
+  // jednej przeglądarce (żeby zobaczyć, czy widgety nie zasłaniają minimapy), a nie część sceny —
+  // do OBS-a nigdy nie trafia. Trzymanie tego w `elements` zaśmiecałoby zapis i mieszałoby dwie
+  // różne rzeczy: to, co widzą widzowie, z tym, co pomaga układać.
+  useEffect(() => {
+    if (!activeId) return;
+    setBgUrl(localStorage.getItem(`scene-bg:${activeId}`) ?? "");
+  }, [activeId]);
+  function zapiszTlo(url: string) {
+    setBgUrl(url);
+    if (!activeId) return;
+    if (url) localStorage.setItem(`scene-bg:${activeId}`, url);
+    else localStorage.removeItem(`scene-bg:${activeId}`);
+  }
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: string; mode: "move" | "resize"; px: number; py: number; ox: number; oy: number; ow: number; oh: number; rect: DOMRect } | null>(null);
@@ -184,17 +203,111 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
     dragRef.current = { id: el.id, mode, px: e.clientX, py: e.clientY, ox: el.x, oy: el.y, ow: el.w, oh: el.h, rect };
     setSel(el.id);
   }
+  // Próg przyciągania w procentach płótna. 1.5% ≈ 29 px przy 1920 — na tyle blisko, żeby „łapało"
+  // celowo, i na tyle daleko, żeby dało się ustawić element tuż obok linii, jeśli tak się chce.
+  const PROG_PRZYCIAGANIA = 1.5;
+
+  /** Linie, do których przyciągamy w danej osi: krawędzie i środki POZOSTAŁYCH elementów plus
+   *  krawędzie i środek płótna. Bez tego układ jest zawsze „prawie" wyrównany — a to widać na streamie. */
+  function linie(os: "x" | "y", pomijId: string): number[] {
+    const out = [0, 50, 100];
+    for (const el of els) {
+      if (el.id === pomijId) continue;
+      const start = os === "x" ? el.x : el.y;
+      const rozmiar = os === "x" ? el.w : el.h;
+      out.push(start, start + rozmiar / 2, start + rozmiar);
+    }
+    return out;
+  }
+
+  /** Dopasuj `start` tak, by któraś z trzech krawędzi elementu (początek/środek/koniec) trafiła
+   *  w linię. Zwraca skorygowany początek i trafioną linię (do narysowania prowadnicy). */
+  function przyciagnij(start: number, rozmiar: number, cele: number[]): { v: number; linia: number | null } {
+    let best: { v: number; linia: number; d: number } | null = null;
+    for (const krawedz of [0, rozmiar / 2, rozmiar]) {
+      for (const cel of cele) {
+        const d = Math.abs(start + krawedz - cel);
+        if (d <= PROG_PRZYCIAGANIA && (!best || d < best.d)) best = { v: cel - krawedz, linia: cel, d };
+      }
+    }
+    return best ? { v: best.v, linia: best.linia } : { v: start, linia: null };
+  }
+
   function onMove(e: ReactPointerEvent) {
     const d = dragRef.current;
     if (!d) return;
     const dx = ((e.clientX - d.px) / d.rect.width) * 100;
     const dy = ((e.clientY - d.py) / d.rect.height) * 100;
-    update(d.id, (el) => (d.mode === "move"
-      ? clampElement({ ...el, x: d.ox + dx, y: d.oy + dy })
-      : clampElement({ ...el, w: d.ow + dx, h: d.oh + dy })));
+
+    if (d.mode === "move") {
+      let x = d.ox + dx;
+      let y = d.oy + dy;
+      const trafione: { x: number[]; y: number[] } = { x: [], y: [] };
+      if (snap) {
+        const sx = przyciagnij(x, d.ow, linie("x", d.id));
+        const sy = przyciagnij(y, d.oh, linie("y", d.id));
+        x = sx.v;
+        y = sy.v;
+        if (sx.linia !== null) trafione.x.push(sx.linia);
+        if (sy.linia !== null) trafione.y.push(sy.linia);
+      }
+      setGuides(trafione);
+      update(d.id, (el) => clampElement({ ...el, x, y }));
+    } else {
+      update(d.id, (el) => clampElement({ ...el, w: d.ow + dx, h: d.oh + dy }));
+    }
     setDirty(true);
   }
-  function endDrag(e: ReactPointerEvent) { if (dragRef.current) { canvasRef.current?.releasePointerCapture(e.pointerId); dragRef.current = null; } }
+  function endDrag(e: ReactPointerEvent) {
+    if (dragRef.current) { canvasRef.current?.releasePointerCapture(e.pointerId); dragRef.current = null; }
+    setGuides({ x: [], y: [] });
+  }
+
+  /** Warstwy: przestawienie w tablicy `elements` (patrz `moveElement` — tablica JEST kolejnością warstw). */
+  function warstwa(id: string, to: "front" | "back") {
+    setEls((p) => moveElement(p, id, to));
+    setDirty(true);
+  }
+
+  /** Duplikat sceny — wariant istniejącego układu bez rozstawiania go od zera. */
+  async function duplicateScene(s: Scene) {
+    setBusy(true);
+    try {
+      const d = await apiPost<{ scene?: Scene }>("/api/admin/overlay-scenes", { action: "duplicate", id: s.id });
+      if (d.scene) { setScenes((p) => [...p, d.scene!]); setActiveId(d.scene.id); onToast("ok", t("duplicated")); }
+    } catch (e) { onToast("err", e instanceof ApiError ? e.message : t("err")); }
+    finally { setBusy(false); }
+  }
+
+  /** Eksport układu do pliku — przenoszenie scen między portalami i kopia zapasowa przed eksperymentem. */
+  function exportScene() {
+    const s = scenes.find((x) => x.id === activeId);
+    if (!s) return;
+    const plik = new Blob([JSON.stringify({ name: s.name, elements: els }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(plik);
+    a.download = `scena-${s.name.replace(/[^a-z0-9-]+/gi, "-").toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  /** Import układu z pliku. Wejście przechodzi tę samą walidację co zapis — plik jest danymi
+   *  z zewnątrz, więc nieznane widgety i pozycje poza płótnem odpadają, zanim cokolwiek zobaczysz. */
+  async function importScene(f: File) {
+    try {
+      const raw = JSON.parse(await f.text()) as { elements?: unknown };
+      const arr = Array.isArray(raw?.elements) ? raw.elements : [];
+      const czyste = (arr as SceneElement[])
+        .filter((el) => el && typeof el === "object" && (sceneWidget(String(el.widget)) || MEDIA_WIDGETS.has(String(el.widget))))
+        .slice(0, 24)
+        .map((el) => clampElement({ ...el, id: String(el.id ?? `${el.widget}-${Math.random().toString(36).slice(2)}`) }));
+      if (czyste.length === 0) { onToast("err", t("importEmpty")); return; }
+      setEls(czyste);
+      setSel(null);
+      setDirty(true);
+      onToast("ok", t("imported", { n: czyste.length }));
+    } catch { onToast("err", t("importBad")); }
+  }
 
   const sceneUrl = token && activeId && typeof window !== "undefined" ? `${window.location.origin}/overlay/scene/${activeId}?token=${token}` : "";
 
@@ -267,6 +380,7 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                 >
                   {preview ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} {t("preview")}
                 </button>
+                <button onClick={() => { const s = scenes.find((x) => x.id === activeId); if (s) void duplicateScene(s); }} disabled={busy} title={t("duplicateScene")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 w-7 h-7 flex items-center justify-center shrink-0"><CopyPlus className="w-3.5 h-3.5" /></button>
                 <button onClick={() => { const s = scenes.find((x) => x.id === activeId); if (s) void removeScene(s); }} disabled={busy} title={t("deleteScene")} className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-7 h-7 flex items-center justify-center shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
 
@@ -279,6 +393,11 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                 className="relative aspect-video w-full border border-zinc-800 rounded-sm overflow-hidden touch-none select-none mb-2"
                 style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}
               >
+                {/* Zrzut z gry pod spodem — widać, czy widgety nie zasłaniają minimapy albo paska HP.
+                    Tylko podgląd w edytorze; do OBS-a to nie trafia. */}
+                {bgUrl && (
+                  <img src={bgUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 pointer-events-none" />
+                )}
                 {els.map((el) => {
                   const on = elementEnabled(el);
                   const wdef = WIDGET_PATH.get(el.widget);
@@ -319,6 +438,8 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                         <button onPointerDown={(e) => { e.stopPropagation(); toggleEl(el.id); }} className="absolute -top-2 -left-2 w-4 h-4 rounded-full bg-zinc-700 text-white flex items-center justify-center" title={on ? t("elHide") : t("elShow")}>
                           {on ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
                         </button>
+                        <button onPointerDown={(e) => { e.stopPropagation(); warstwa(el.id, "front"); }} className="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-zinc-700 text-white flex items-center justify-center" title={t("toFront")}><BringToFront className="w-2.5 h-2.5" /></button>
+                        <button onPointerDown={(e) => { e.stopPropagation(); warstwa(el.id, "back"); }} className="absolute -bottom-2 left-3 w-4 h-4 rounded-full bg-zinc-700 text-white flex items-center justify-center" title={t("toBack")}><SendToBack className="w-2.5 h-2.5" /></button>
                         <button onPointerDown={(e) => { e.stopPropagation(); removeEl(el.id); }} className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center" title={t("removeEl")}><X className="w-2.5 h-2.5" /></button>
                         <div onPointerDown={(e) => startDrag(e, el, "resize")} className="absolute right-0 bottom-0 w-3 h-3 bg-white border-2 border-red-600 rounded-sm cursor-nwse-resize translate-x-1/2 translate-y-1/2" title={t("resize")} />
                       </>
@@ -326,6 +447,13 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                   </div>
                   );
                 })}
+                {/* Prowidnice wyrównania — pokazują, w co element właśnie „trafił". */}
+                {guides.x.map((g) => (
+                  <div key={`gx-${g}`} className="absolute top-0 bottom-0 w-px bg-amber-400/80 pointer-events-none z-20" style={{ left: `${g}%` }} />
+                ))}
+                {guides.y.map((g) => (
+                  <div key={`gy-${g}`} className="absolute left-0 right-0 h-px bg-amber-400/80 pointer-events-none z-20" style={{ top: `${g}%` }} />
+                ))}
                 {els.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-600 pointer-events-none">{t("canvasEmpty")}</div>}
               </div>
 
@@ -370,6 +498,42 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                   {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} {dirty ? t("save") : t("saved")}
                 </button>
                 <span className="text-[10px] text-zinc-600">{t("count", { n: els.length })}</span>
+
+                <button
+                  onClick={() => setSnap((v) => !v)}
+                  title={t("snapHint")}
+                  className={`px-2 h-7 text-[10px] font-bold uppercase tracking-widest border shrink-0 inline-flex items-center gap-1 ${snap ? "border-amber-700 text-amber-300" : "border-zinc-800 text-zinc-500 hover:border-zinc-600"}`}
+                >
+                  <Magnet className="w-3 h-3" /> {t("snap")}
+                </button>
+
+                <button onClick={exportScene} title={t("exportHint")} className="px-2 h-7 text-[10px] font-bold uppercase tracking-widest border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 shrink-0 inline-flex items-center gap-1">
+                  <Download className="w-3 h-3" /> {t("export")}
+                </button>
+
+                <label title={t("importHint")} className="px-2 h-7 text-[10px] font-bold uppercase tracking-widest border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 shrink-0 inline-flex items-center gap-1 cursor-pointer">
+                  <Upload className="w-3 h-3" /> {t("import")}
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) void importScene(f); e.target.value = ""; }}
+                  />
+                </label>
+              </div>
+
+              {/* Zrzut z gry pod płótnem — pomoc warsztatowa, zapisywana lokalnie w przeglądarce. */}
+              <div className="mt-2 flex items-center gap-2">
+                <ImageIcon className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+                <input
+                  value={bgUrl}
+                  onChange={(e) => zapiszTlo(e.target.value.trim())}
+                  placeholder={t("bgPlaceholder")}
+                  className="flex-1 min-w-[140px] bg-black border border-zinc-800 px-2 py-1 text-[11px] text-white outline-hidden focus:border-red-600"
+                />
+                {bgUrl && (
+                  <button onClick={() => zapiszTlo("")} title={t("bgClear")} className="text-zinc-500 hover:text-white shrink-0"><X className="w-3.5 h-3.5" /></button>
+                )}
               </div>
 
               {sceneUrl && (
