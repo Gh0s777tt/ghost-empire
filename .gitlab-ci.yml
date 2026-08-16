@@ -134,7 +134,11 @@ commitlint:
     # ma czego walidować (commity już zmergowane).
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   before_script:
-    - apt-get update && apt-get install -y --no-install-recommends git
+    # `ca-certificates` jest tu OBOWIĄZKOWE, nie ozdobne: bez niego `git fetch` po HTTPS pada na
+    # „server certificate verification failed. CAfile: none", job kończy się exit 128 i — ponieważ
+    # commitlint jest bramką blokującą odpalaną na KAŻDYM MR — żaden merge request w repo nie może
+    # przejść CI. Obraz `-slim` nie niesie bundla CA, a instalowany tu `git` go wymaga.
+    - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
     - npm install --no-save @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
   script:
     - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --depth 100
