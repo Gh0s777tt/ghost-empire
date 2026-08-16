@@ -10,7 +10,7 @@ import { Layers, Loader2, Plus, Trash2, Save, Copy, Check, X, ExternalLink, Eye,
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
-import { SCENE_WIDGETS, IMAGE_WIDGET, VIDEO_WIDGET, MEDIA_WIDGETS, sceneWidget, clampElement, elementEnabled, moveElement, type SceneElement } from "@/lib/overlay-scenes";
+import { SCENE_WIDGETS, IMAGE_WIDGET, VIDEO_WIDGET, MEDIA_WIDGETS, sceneWidget, clampElement, elementEnabled, moveElement, parseElements, type SceneElement } from "@/lib/overlay-scenes";
 import { SCENE_TEMPLATES } from "@/lib/scene-templates";
 import { MediaUploadButton } from "../MediaUploadButton";
 import { safeMediaUrl } from "@/lib/url-safe";
@@ -299,7 +299,9 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
     a.href = URL.createObjectURL(plik);
     a.download = `scena-${s.name.replace(/[^a-z0-9-]+/gi, "-").toLowerCase()}.json`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    // Zwolnienie adresu NATYCHMIAST po `click()` potrafi anulować pobieranie w Firefoksie i Safari —
+    // klik jest obsługiwany asynchronicznie, więc URL musi jeszcze chwilę żyć.
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
   }
 
   /** Import układu z pliku. Wejście przechodzi tę samą walidację co zapis — plik jest danymi
@@ -307,11 +309,11 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
   async function importScene(f: File) {
     try {
       const raw = JSON.parse(await f.text()) as { elements?: unknown };
-      const arr = Array.isArray(raw?.elements) ? raw.elements : [];
-      const czyste = (arr as SceneElement[])
-        .filter((el) => el && typeof el === "object" && (sceneWidget(String(el.widget)) || MEDIA_WIDGETS.has(String(el.widget))))
-        .slice(0, 24)
-        .map((el) => clampElement({ ...el, id: String(el.id ?? `${el.widget}-${Math.random().toString(36).slice(2)}`) }));
+      // Ta SAMA funkcja, której używa serwer przy zapisie — zamiast drugiego, ręcznego filtra, który
+      // musiałby nadążać za zmianami walidacji. Odrzuca nieznane widgety, zaokrągla i przycina
+      // pozycje do płótna, obcina liczbę elementów i sanityzuje `src` mediów. Wcześniej ręczna
+      // wersja przepuszczała np. tekstowe `x`/`y`, co dawało na płótnie pozycje `NaN%`.
+      const czyste = parseElements(JSON.stringify(raw?.elements ?? []));
       if (czyste.length === 0) { onToast("err", t("importEmpty")); return; }
       setEls(czyste);
       setSel(null);

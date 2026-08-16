@@ -3042,7 +3042,7 @@
       "textColor": "Couleur du texte",
       "themeDefault": "du thème",
       "font": "Police",
-      "contrastHint": "Contraste selon WCAG 2.1. AA est le minimum pour le texte courant — en dessous, une partie du public ne pourra pas lire.",
+      "contrastHint": "Contraste selon WCAG 2.1. AA est le minimum pour le texte courant — en dessous, une partie du public ne pourra pas lire. Change le fond de page et la couleur de texte par défaut ; les panneaux avec leur propre fond gardent le leur.",
       "cTextOnSurface": "texte/fond",
       "cBrandOnSurface": "marque/fond",
       "font_system": "Système",

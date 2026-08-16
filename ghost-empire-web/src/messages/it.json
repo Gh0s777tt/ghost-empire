@@ -3042,7 +3042,7 @@
       "textColor": "Colore del testo",
       "themeDefault": "dal tema",
       "font": "Carattere",
-      "contrastHint": "Contrasto secondo WCAG 2.1. AA è il minimo per il testo — sotto, parte del pubblico non riesce a leggerlo.",
+      "contrastHint": "Contrasto secondo WCAG 2.1. AA è il minimo per il testo — sotto, parte del pubblico non riesce a leggerlo. Cambia lo sfondo della pagina e il colore di testo predefinito; i pannelli con sfondo proprio mantengono il loro.",
       "cTextOnSurface": "testo/sfondo",
       "cBrandOnSurface": "brand/sfondo",
       "font_system": "Di sistema",

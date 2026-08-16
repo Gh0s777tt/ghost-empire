@@ -3042,7 +3042,7 @@
       "textColor": "文字颜色",
       "themeDefault": "跟随主题",
       "font": "字体",
-      "contrastHint": "对比度依据 WCAG 2.1。正文至少需要 AA，低于该值会有观众读不清内容。",
+      "contrastHint": "对比度依据 WCAG 2.1。正文至少需要 AA，低于该值会有观众读不清内容。 会改变页面背景与默认文字颜色；自带背景的面板保持原样。",
       "cTextOnSurface": "文字/背景",
       "cBrandOnSurface": "品牌/背景",
       "font_system": "系统",

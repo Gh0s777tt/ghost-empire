@@ -3042,7 +3042,7 @@
       "textColor": "文字色",
       "themeDefault": "テーマの値",
       "font": "書体",
-      "contrastHint": "コントラストは WCAG 2.1 準拠。本文は AA が最低ラインで、それ未満だと読めない視聴者が出ます。",
+      "contrastHint": "コントラストは WCAG 2.1 準拠。本文は AA が最低ラインで、それ未満だと読めない視聴者が出ます。 ページ背景と既定の文字色が変わります。独自の背景を持つパネルはそのままです。",
       "cTextOnSurface": "文字/背景",
       "cBrandOnSurface": "ブランド/背景",
       "font_system": "システム",

@@ -3042,7 +3042,7 @@
       "textColor": "Warna teks",
       "themeDefault": "dari tema",
       "font": "Jenis huruf",
-      "contrastHint": "Kontras menurut WCAG 2.1. AA adalah minimum untuk teks — di bawahnya sebagian penonton tidak bisa membacanya.",
+      "contrastHint": "Kontras menurut WCAG 2.1. AA adalah minimum untuk teks — di bawahnya sebagian penonton tidak bisa membacanya. Mengubah latar halaman dan warna teks bawaan; panel dengan latar sendiri tetap seperti semula.",
       "cTextOnSurface": "teks/latar",
       "cBrandOnSurface": "brand/latar",
       "font_system": "Sistem",

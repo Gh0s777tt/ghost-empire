@@ -389,7 +389,7 @@
       "textColor": "Kolor tekstu",
       "themeDefault": "z motywu",
       "font": "Krój pisma",
-      "contrastHint": "Kontrast liczony wg WCAG 2.1. AA to minimum dla tekstu — poniżej treść bywa nieczytelna dla części widzów.",
+      "contrastHint": "Kontrast liczony wg WCAG 2.1. AA to minimum dla tekstu — poniżej treść bywa nieczytelna dla części widzów. Zmienia tło strony i domyślny kolor tekstu; panele z własnym tłem zachowują swoje kolory.",
       "cTextOnSurface": "tekst/tło",
       "cBrandOnSurface": "brand/tło",
       "font_system": "Systemowy",

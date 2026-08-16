@@ -3042,7 +3042,7 @@
       "textColor": "Textfarbe",
       "themeDefault": "aus Theme",
       "font": "Schriftart",
-      "contrastHint": "Kontrast nach WCAG 2.1. AA ist das Minimum für Fließtext — darunter können manche Zuschauer den Inhalt nicht lesen.",
+      "contrastHint": "Kontrast nach WCAG 2.1. AA ist das Minimum für Fließtext — darunter können manche Zuschauer den Inhalt nicht lesen. Ändert Seitenhintergrund und Standard-Textfarbe; Panels mit eigenem Hintergrund behalten ihre Farben.",
       "cTextOnSurface": "Text/HG",
       "cBrandOnSurface": "Marke/HG",
       "font_system": "System",

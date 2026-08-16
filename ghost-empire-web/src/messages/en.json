@@ -389,7 +389,7 @@
       "textColor": "Text colour",
       "themeDefault": "from theme",
       "font": "Typeface",
-      "contrastHint": "Contrast per WCAG 2.1. AA is the minimum for body text — below it some viewers can't read the content.",
+      "contrastHint": "Contrast per WCAG 2.1. AA is the minimum for body text — below it some viewers can't read the content. Changes the page background and default text colour; panels with their own background keep theirs.",
       "cTextOnSurface": "text/bg",
       "cBrandOnSurface": "brand/bg",
       "font_system": "System",

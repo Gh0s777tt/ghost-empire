@@ -3042,7 +3042,7 @@
       "textColor": "글자색",
       "themeDefault": "테마 값",
       "font": "서체",
-      "contrastHint": "대비는 WCAG 2.1 기준입니다. 본문은 AA가 최소이며, 그 이하에서는 일부 시청자가 읽지 못합니다.",
+      "contrastHint": "대비는 WCAG 2.1 기준입니다. 본문은 AA가 최소이며, 그 이하에서는 일부 시청자가 읽지 못합니다. 페이지 배경과 기본 글자색이 바뀝니다. 자체 배경이 있는 패널은 그대로 유지됩니다.",
       "cTextOnSurface": "글자/배경",
       "cBrandOnSurface": "브랜드/배경",
       "font_system": "시스템",
