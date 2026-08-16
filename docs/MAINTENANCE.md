@@ -52,7 +52,7 @@ flowchart LR
   T --> B["build<br/>build:web"]
   B --> R["release<br/>semantic-release"]
   SG["gitleaks<br/>(sekrety)"]
-  SS["semgrep · trivy<br/>(doradcze)"]
+  SS["semgrep · trivy<br/>(twarde)"]
   DD["docs-drift<br/>(MR)"]
   DP["pages<br/>(deploy)"]
   L -.->|needs: lint:web| T
@@ -61,12 +61,12 @@ flowchart LR
   B -.->|needs| R
   classDef hard fill:#0d2b1a,stroke:#3fcf8e,color:#fff;
   classDef soft fill:#3a2a0d,stroke:#e0a800,color:#fff;
-  class V,L,T,B,SG,DD hard;
-  class R,SS,DP soft;
+  class V,L,T,B,SG,SS,DD hard;
+  class R,DP soft;
 ```
 
-<sub>🟢 twarde bramki (blokują merge): commitlint*, lint, test, build, **gitleaks**, **docs-drift**.
-🟠 nie-blokujące: semgrep/trivy (doradcze), release (bootstrap), pages (deploy po merge). Skany i docs
+<sub>🟢 twarde bramki (blokują merge): commitlint*, lint, test, build, **gitleaks**, **semgrep**,
+**trivy**, **docs-drift**. 🟠 nie-blokujące: release (bootstrap), pages (deploy po merge). Skany i docs
 mają `needs: []` — startują równolegle. \* `commitlint` biegnie **wyłącznie na MR**.</sub>
 
 ### Joby i bramki
@@ -81,8 +81,8 @@ mają `needs: []` — startują równolegle. \* `commitlint` biegnie **wyłączn
 | `test:integration:web` | test | 🔴 twarda | MR + main | Realny **Postgres 16** (service) + `prisma db push` + testy integracyjne. |
 | `build:web` | build | 🔴 twarda | MR + main | `next build` (env-stuby; build nie sięga bazy). |
 | `gitleaks` | security | 🔴 **twarda** | MR + main + schedule | Skan sekretów w drzewie roboczym. |
-| `semgrep` | security | 🟠 doradcza | MR + main + schedule | SAST (`p/ci` + `p/typescript`). `allow_failure`. |
-| `trivy` | security | 🟠 doradcza | MR + main + schedule | CVE w zależnościach. `allow_failure`. |
+| `semgrep` | security | 🔴 **twarda** | MR + main + schedule | SAST (`p/ci` + `p/typescript`). Finding = czerwony pipeline. |
+| `trivy` | security | 🔴 **twarda** | MR + main + schedule | CVE w zależnościach (HIGH/CRITICAL czerwienią; LOW/MEDIUM informacyjnie). |
 | `pages` | docs | — | main | Buduje MkDocs + TypeDoc → GitLab Pages. `needs: []`. |
 | `docs-drift` | docs | 🔴 twarda | MR | Failuje MR, gdy zmieniono trasy `/api/*` bez `docs/`. |
 | `release` | release | 🟠 bootstrap | main | `semantic-release`. `allow_failure` do czasu setupu (§4). |
@@ -269,14 +269,28 @@ Skanuje bieżące drzewo (`--no-git`) z allowlistą [`.gitleaks.toml`](https://g
 > zakopany w starej historii nie zostanie złapany przez CI — bezpieczeństwo historii
 > zależy od rotacji (§7).
 
-### `semgrep` (SAST) i `trivy` (CVE) — DORADCZE
-Są `allow_failure: true`, bo na realnym drzewie Next 16 / npm **niemal zawsze** coś
-zgłoszą; twarda bramka blokowałaby całą pracę. Findings dają **pomarańczowe
-ostrzeżenie**, nie fałszywy zielony. **Triaż (docelowo):**
+### `semgrep` (SAST) i `trivy` (CVE) — TWARDE BRAMKI
+Od audytu 2026-08-12 **nie mają** `allow_failure` — pojedynczy finding **czerwieni cały
+pipeline**. Dług „szumu" został świadomie zamknięty: findings wytriażowano, a bramkę
+zaostrzono na polecenie właściciela. **Triaż:**
 - Przejrzyj findings w logu joba (`semgrep` / `trivy`).
-- Realne → napraw. Zaakceptowane CVE → dodaj do `.trivyignore`. Reguły semgrep z
-  false-positive → dostosuj `--config`.
-- Gdy szum opanowany → **usuń `allow_failure`**, żeby stały się twardymi bramkami.
+- **Realne → napraw u źródła.** Domyślne wyjście to poprawka, nie wyciszenie.
+- **Nie przywracaj `allow_failure`** przy pojedynczym false-positywie — to znów zaślepia
+  CAŁY skaner i przywraca fałszywy zielony.
+- Wyciszaj **PUNKTOWO** i zawsze z powodem: semgrep → inline `// nosemgrep: <rule-id>` na
+  danej linii lub wpis w `.semgrepignore`; trivy → jedna linia `CVE-XXXX-YYYY` w
+  `.trivyignore` z komentarzem i datą przeglądu. Świadome odstępstwa → [`DECISIONS.md`](DECISIONS.md).
+
+> **Uwaga o regułach tekstowych:** część reguł (np. `npm-missing-minimum-release-age`)
+> dopasowuje **surowy tekst pliku i nie pomija komentarzy** — opisanie w komentarzu
+> „złej" wartości potrafi samo w sobie zapalić finding. Zob. komentarz-pułapkę w
+> `ghost-empire-web/.npmrc`.
+
+**Lokalne odtworzenie bramki** (zanim wypchniesz — ten sam config co CI):
+
+```bash
+semgrep scan --error --config p/ci --config p/typescript ghost-empire-web ghost-empire-chat
+```
 
 Zgłaszanie podatności: [`SECURITY.md`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/SECURITY.md).
 
@@ -306,6 +320,23 @@ GitLab. Dependabot działa tylko na GitHubie (mirror) → jego PR-y nie trafiaj�
   są grupowane, żeby wersje szły w parze.
 - **Node** trzymany na `<23` (projekt celuje w Node 22).
 - Wymaga zmiennej **`RENOVATE_TOKEN`** (GitLab PAT, scope `api` + `write_repository`).
+
+### Karencja 7 dni na świeże wersje (`min-release-age`)
+
+`ghost-empire-web/.npmrc` ustawia **`min-release-age=7`**: rozwiązywanie zależności nie
+sięgnie po wersję młodszą niż 7 dni. Powód — Vercel przy deployu robi **świeży
+`npm install`**, który na nowo rozwiązuje zakresy `^` (43 z 47 zależności), więc to jedyne
+miejsce, gdzie złośliwa świeżo wypuszczona paczka wjeżdża na prod bez przeglądu.
+
+- **Nie dotyczy `npm ci`** (odtwarza lockfile, nie rozwiązuje zakresów) → CI i lokalne
+  instalacje działają bez zmian.
+- Klucz wymaga **npm ≥ 11.10**; npm 10.9.8 z obrazu `node:22-bookworm-slim` po prostu go
+  ignoruje (bez błędu i bez warningu) — bezpieczny no-op tam, gdzie npm jest starszy.
+- **Pilny bump bezpieczeństwa** trafiający w to okno → świadomie, jednorazowo:
+  `npm install <pkg>@<ver> --min-release-age 0`. Trwały wyjątek dla jednej paczki →
+  `min-release-age-exclude` w `.npmrc`, **zawsze z komentarzem i datą przeglądu** (każdy wpis
+  to dziura w tej ochronie).
+- Uzasadnienie i ryzyko rezydualne: [`DECISIONS.md`](DECISIONS.md).
 
 ---
 
