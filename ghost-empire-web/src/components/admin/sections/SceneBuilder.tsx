@@ -6,7 +6,7 @@
 // in lib/overlay-scenes.
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { Layers, Loader2, Plus, Trash2, Save, Copy, Check, X, ExternalLink, Eye, EyeOff, CopyPlus, Download, Upload, Magnet, BringToFront, SendToBack, Image as ImageIcon } from "lucide-react";
+import { Layers, Loader2, Plus, Trash2, Save, Copy, Check, X, ExternalLink, Eye, EyeOff, CopyPlus, Download, Upload, Magnet, BringToFront, SendToBack, Image as ImageIcon, Radio } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
@@ -15,7 +15,7 @@ import { SCENE_TEMPLATES } from "@/lib/scene-templates";
 import { MediaUploadButton } from "../MediaUploadButton";
 import { safeMediaUrl } from "@/lib/url-safe";
 
-type Scene = { id: string; name: string; elements: string; enabled?: boolean };
+type Scene = { id: string; name: string; elements: string; enabled?: boolean; isActive?: boolean };
 
 const WIDGET_PATH = new Map(SCENE_WIDGETS.map((w) => [w.id, w]));
 
@@ -263,6 +263,17 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
     setGuides({ x: [], y: [] });
   }
 
+  /** Ustaw scenę jako AKTYWNĄ — tę, którą renderuje stały adres `/overlay/live` w OBS. */
+  async function setActive(id: string) {
+    setBusy(true);
+    // Optymistycznie: jedna aktywna, reszta zgaszona — tak samo jak wymusza to serwer.
+    const poprzednie = scenes;
+    setScenes((p) => p.map((s) => ({ ...s, isActive: s.id === id })));
+    if (await call("set_active", { id })) onToast("ok", t("activated"));
+    else setScenes(poprzednie); // rollback — np. gdy migracja jeszcze nie poszła (503)
+    setBusy(false);
+  }
+
   /** Warstwy: przestawienie w tablicy `elements` (patrz `moveElement` — tablica JEST kolejnością warstw). */
   function warstwa(id: string, to: "front" | "back") {
     setEls((p) => moveElement(p, id, to));
@@ -310,6 +321,9 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
   }
 
   const sceneUrl = token && activeId && typeof window !== "undefined" ? `${window.location.origin}/overlay/scene/${activeId}?token=${token}` : "";
+  // Adres STAŁY: wkleja się do OBS raz, a potem przełącza sceny z panelu/Stream Decka. Adres
+  // per-scena zostaje — przydaje się, gdy ktoś woli mieć każdą scenę jako osobne źródło w OBS.
+  const liveUrl = token && typeof window !== "undefined" ? `${window.location.origin}/overlay/live?token=${token}` : "";
 
   return (
     <SectionCard title={t("title")} icon={Layers}>
@@ -323,7 +337,7 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
           <div className="flex items-center gap-1.5 flex-wrap mb-3">
             {scenes.map((s) => (
               <button key={s.id} onClick={() => setActiveId(s.id)} className={`px-2.5 py-1 text-xs border rounded inline-flex items-center gap-1 ${s.id === activeId ? "border-red-600 bg-red-950/40 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"} ${s.enabled === false ? "opacity-50" : ""}`}>
-                {s.enabled === false && <EyeOff className="w-3 h-3 text-amber-500" />}{s.name}
+                {s.isActive && <Radio className="w-3 h-3 text-emerald-400" />}{s.enabled === false && <EyeOff className="w-3 h-3 text-amber-500" />}{s.name}
               </button>
             ))}
             <button onClick={() => void createScene()} disabled={busy} className="px-2.5 py-1 text-xs border border-zinc-800 text-zinc-300 hover:border-red-600 rounded inline-flex items-center gap-1 disabled:opacity-50">
@@ -380,6 +394,19 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                 >
                   {preview ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} {t("preview")}
                 </button>
+                {(() => {
+                  const naZywo = scenes.find((s) => s.id === activeId)?.isActive === true;
+                  return (
+                    <button
+                      onClick={() => activeId && void setActive(activeId)}
+                      disabled={busy || naZywo}
+                      title={naZywo ? t("isLiveHint") : t("setLiveHint")}
+                      className={`px-2 h-7 text-[10px] font-bold uppercase tracking-widest border shrink-0 inline-flex items-center gap-1 disabled:opacity-60 ${naZywo ? "border-emerald-700 text-emerald-300" : "border-zinc-800 text-zinc-400 hover:border-emerald-700 hover:text-emerald-300"}`}
+                    >
+                      <Radio className="w-3 h-3" /> {naZywo ? t("isLive") : t("setLive")}
+                    </button>
+                  );
+                })()}
                 <button onClick={() => { const s = scenes.find((x) => x.id === activeId); if (s) void duplicateScene(s); }} disabled={busy} title={t("duplicateScene")} className="text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 w-7 h-7 flex items-center justify-center shrink-0"><CopyPlus className="w-3.5 h-3.5" /></button>
                 <button onClick={() => { const s = scenes.find((x) => x.id === activeId); if (s) void removeScene(s); }} disabled={busy} title={t("deleteScene")} className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-7 h-7 flex items-center justify-center shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
@@ -535,6 +562,15 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                   <button onClick={() => zapiszTlo("")} title={t("bgClear")} className="text-zinc-500 hover:text-white shrink-0"><X className="w-3.5 h-3.5" /></button>
                 )}
               </div>
+
+              {liveUrl && (
+                <div className="mt-2 flex items-center gap-2 border border-emerald-900/60 bg-emerald-950/20 p-2 rounded">
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-500 shrink-0">{t("liveUrlLabel")}</span>
+                  <code className="flex-1 text-[10px] text-zinc-400 font-mono truncate">{liveUrl}</code>
+                  <a href={liveUrl} target="_blank" rel="noreferrer" className="text-zinc-500 hover:text-white shrink-0" title={t("openUrl")}><ExternalLink className="w-3.5 h-3.5" /></a>
+                  <button onClick={() => { void navigator.clipboard.writeText(liveUrl); }} className="text-zinc-400 hover:text-white shrink-0" title={t("copy")}><Copy className="w-3.5 h-3.5" /></button>
+                </div>
+              )}
 
               {sceneUrl && (
                 <div className="mt-2 flex items-center gap-2 border border-zinc-800 bg-black/30 p-2 rounded">

@@ -127,6 +127,36 @@ Rollback: kod czyta brak kolumny jako „włączona", kolumna może zostać.
 
 ---
 
+## §5 — `OverlayScene.isActive` (aktywna scena + stały adres OBS)
+
+Gałąź `feat/scene-live-2026-08`. Streamer wkleja do OBS JEDEN adres (`/overlay/live`) raz na zawsze
+i przełącza sceny z panelu albo przyciskiem na Stream Decku — zamiast podmieniać źródło na żywo.
+
+**Co zrobi `npm run db:push`** (delta z `prisma migrate diff`):
+
+```sql
+-- AlterTable
+ALTER TABLE "overlay_scenes" ADD COLUMN     "isActive" BOOLEAN NOT NULL DEFAULT false;
+-- CreateIndex
+CREATE INDEX "overlay_scenes_tenantId_isActive_idx" ON "overlay_scenes"("tenantId", "isActive");
+```
+
+Kroki: `cd ghost-empire-web && npm run db:push`. **RLS: nic do zrobienia** — kolumna, nie tabela.
+
+**Dlaczego bez `@@unique([tenantId, isActive])`:** unique blokowałby DWIE *nieaktywne* sceny w tym
+samym portalu, a to stan całkowicie normalny. Jedyność aktywnej wymusza trasa API — dwa zapisy
+(zeruj wszystkie → ustaw jedną) w **transakcji**, żeby nieudany drugi zapis nie zostawił portalu
+z zerem albo dwiema aktywnymi scenami.
+
+**Kolejność nie ma znaczenia — kod jest odporny na brak kolumny.** `GET` panelu ponawia zapytanie bez
+`isActive`, `/api/overlay/live` zwraca wtedy „brak aktywnej sceny", a przełącznik (panel i Stream Deck)
+oddaje czytelne **503 „wymaga migracji bazy"**. Do czasu migracji cała reszta edytora działa, a adresy
+`/overlay/scene/<id>` zachowują się jak dotąd.
+
+Rollback: kod czyta brak kolumny jako „żadna scena nie jest aktywna", kolumna może zostać.
+
+---
+
 ---
 
 ## Czego tu NIE ma (świadomie)

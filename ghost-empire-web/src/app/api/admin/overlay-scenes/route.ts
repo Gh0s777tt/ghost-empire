@@ -27,11 +27,11 @@ export async function GET() {
   const where = tid ? { tenantId: tid } : {};
   const base = { id: true, name: true, elements: true, updatedAt: true } as const;
   const scenes = await prisma.overlayScene
-    .findMany({ where, orderBy: { createdAt: "asc" }, select: { ...base, enabled: true } })
+    .findMany({ where, orderBy: { createdAt: "asc" }, select: { ...base, enabled: true, isActive: true } })
     .catch(() =>
       prisma.overlayScene
         .findMany({ where, orderBy: { createdAt: "asc" }, select: base })
-        .then((rows) => rows.map((r) => ({ ...r, enabled: true })))
+        .then((rows) => rows.map((r) => ({ ...r, enabled: true, isActive: false })))
         .catch(() => []),
     );
   return NextResponse.json({ scenes });
@@ -108,6 +108,29 @@ export async function POST(req: Request) {
     }
     if (r === null) return NextResponse.json({ error: "Zapis nie powiódł się" }, { status: 500 });
     if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Ustaw scenę jako AKTYWNĄ (update 2026-08) — tę, którą renderuje stały adres `/overlay/live`.
+  // Jedyność wymuszamy TU, a nie unique-constraintem: `@@unique([tenantId, isActive])` blokowałby
+  // dwie NIEAKTYWNE sceny w tym samym portalu, co jest stanem zupełnie normalnym. Dwa zapisy idą
+  // w transakcji, żeby przełączenie nie zostawiło portalu z zerem albo dwiema aktywnymi scenami,
+  // gdyby drugi zapis padł.
+  if (action === "set_active") {
+    const id = String(body.id ?? "");
+    const exists = await prisma.overlayScene.findFirst({ where: { id, ...tenantWhere }, select: { id: true } }).catch(() => null);
+    if (!exists) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+    const ok = await prisma
+      .$transaction([
+        prisma.overlayScene.updateMany({ where: tenantWhere, data: { isActive: false } }),
+        prisma.overlayScene.updateMany({ where: { id, ...tenantWhere }, data: { isActive: true } }),
+      ])
+      .then(() => true)
+      .catch(() => false);
+    // Brak kolumny = migracja jeszcze nie poszła (docs/MIGRACJA-2026-08.md §5). Mówimy to wprost,
+    // zamiast zwracać gołe 500 — reszta edytora działa dalej bez tej migracji.
+    if (!ok) return NextResponse.json({ error: "Aktywna scena wymaga migracji bazy (db push)" }, { status: 503 });
+    await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "overlay_scene", targetId: id, details: { setActive: true }, req });
     return NextResponse.json({ ok: true });
   }
 
