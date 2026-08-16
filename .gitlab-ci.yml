@@ -379,6 +379,13 @@ semgrep:
 # WAŻNE: gdy CVE jest niereachable / zaakceptowane po triażu, NIE przywracaj allow_failure
 # (to znów zaślepia CAŁY skaner). Wycisz PUNKTOWO: wpis w `.trivyignore` (jeden CVE = jedna
 # linia `CVE-XXXX-YYYY`) — zawsze z komentarzem podającym powód i datę przeglądu.
+#
+# SKŁADNIA: `trivy fs` przyjmuje DOKŁADNIE JEDEN cel na wywołanie. Podanie dwóch katalogów
+# naraz (`trivy fs ... ghost-empire-web ghost-empire-chat`) kończyło się
+# `FATAL Fatal error multiple targets cannot be specified` i EXIT 1 — job był czerwony od
+# 2026-08-12, ale NIE dlatego, że coś znalazł: padał na pierwszej linii i nie skanował
+# NICZEGO. Dlatego każdy katalog ma własne wywołanie. Dokładając kolejny projekt —
+# dołóż PARĘ linii (przebieg informacyjny + bramkujący), nie kolejny argument.
 trivy:
   stage: security
   image:
@@ -394,8 +401,13 @@ trivy:
       - .trivycache/
   script:
     - trivy --version
-    - trivy fs --scanners vuln --severity UNKNOWN,LOW,MEDIUM --exit-code 0 ghost-empire-web ghost-empire-chat
-    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 ghost-empire-web ghost-empire-chat
+    # Przebieg 1 — INFORMACYJNY (exit 0): pokazuje LOW/MEDIUM w logu, nie czerwieni joba.
+    - trivy fs --scanners vuln --severity UNKNOWN,LOW,MEDIUM --exit-code 0 ghost-empire-web
+    - trivy fs --scanners vuln --severity UNKNOWN,LOW,MEDIUM --exit-code 0 ghost-empire-chat
+    # Przebieg 2 — BRAMKUJĄCY (exit 1): HIGH/CRITICAL czerwieni job. Osobno per katalog,
+    # więc log jednoznacznie wskazuje, KTÓRY projekt ma podatność.
+    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 ghost-empire-web
+    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 ghost-empire-chat
   rules: !reference [.rules_scan, rules]
   interruptible: true
 
