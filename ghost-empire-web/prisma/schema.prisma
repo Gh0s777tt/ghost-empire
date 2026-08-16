@@ -23,6 +23,15 @@ model Tenant {
   name                 String // brand display name, e.g. "GH0ST EMPIRE"
   shortName            String? // manifest short_name / compact UI
   brandColor           String    @default("#E50914")
+  // PALETA PORTALU (update 2026-08): `brandColor` był JEDYNYM kolorem, przez co portal z jasnym
+  // brandem dostawał nieczytelny tekst i nie miał jak się o tym dowiedzieć. Te dwa dokładają
+  // powierzchnię i tekst, a panel liczy dla nich kontrast WCAG (lib/brand-palette) i mówi wprost,
+  // gdy para jest nieczytelna. `null` = zachowanie sprzed zmiany (kolory z motywu).
+  surfaceColor         String?
+  textColor            String?
+  // Krój portalu — identyfikator z ZAMKNIĘTEJ listy (lib/brand-palette PORTAL_FONTS), nigdy dowolna
+  // nazwa: wartość trafia do CSS, a kroje systemowe nie wymagają zapytania do cudzego serwisu.
+  fontFamily           String?
   logoUrl              String?
   domain               String?   @unique // optional custom apex domain → this portal (#653, e.g. "empire-forge.com"); null = subdomain/default only
   // White-label currency naming (Phase 5): i18n catalogs carry %tokenName%/%gt%

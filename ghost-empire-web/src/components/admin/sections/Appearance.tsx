@@ -12,11 +12,12 @@ import { Palette, Loader2, Check, ExternalLink, Lock } from "lucide-react";
 import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
 import { BG_PRESETS, bgPresetId, bgPresetValue, resolveBgPresetCss } from "@/lib/bg-presets";
 import { SectionCard, FieldInput } from "../shared";
+import { contrastRatio, wcagLevel, PORTAL_FONTS } from "@/lib/brand-palette";
 import { MediaUploadButton } from "../MediaUploadButton";
 
 type MyTenant = {
   slug: string; name: string; shortName: string | null; ownerHandle: string | null;
-  tokenName: string; tokenSymbol: string; brandColor: string; logoUrl: string | null;
+  tokenName: string; tokenSymbol: string; brandColor: string; surfaceColor: string | null; textColor: string | null; fontFamily: string | null; logoUrl: string | null;
   bgImageUrl: string | null;
   plan: string; effectivePlan: string;
 };
@@ -36,6 +37,9 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
   const [color, setColor] = useState("#E50914");
   const [logoUrl, setLogoUrl] = useState("");
   const [bgImageUrl, setBgImageUrl] = useState("");
+  const [surface, setSurface] = useState(""); // pusty = kolor z motywu
+  const [text, setText] = useState("");
+  const [font, setFont] = useState("");
 
   useEffect(() => {
     apiGet<{ tenant: MyTenant | null }>("/api/onboarding/my")
@@ -48,6 +52,9 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
           setTokenName(d.tenant.tokenName);
           setTokenSymbol(d.tenant.tokenSymbol);
           setColor(d.tenant.brandColor);
+          setSurface(d.tenant.surfaceColor ?? "");
+          setText(d.tenant.textColor ?? "");
+          setFont(d.tenant.fontFamily ?? "");
           setLogoUrl(d.tenant.logoUrl ?? "");
           setBgImageUrl(d.tenant.bgImageUrl ?? "");
         }
@@ -79,6 +86,7 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
       await apiPatch("/api/onboarding/my", {
         name, shortName, ownerHandle: handle, tokenName, tokenSymbol, brandColor: color, logoUrl: logoUrl.trim() || null,
         bgImageUrl: bgImageUrl.trim() || null,
+        surfaceColor: surface.trim(), textColor: text.trim(), fontFamily: font,
       });
       onToast("ok", t("saved"));
     } catch (e) {
@@ -103,6 +111,18 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
       )}
 
       <div className="space-y-3">
+        {/* Paleta portalu + KONTROLA KONTRASTU. Sedno: próbka koloru pokazuje, czy kolor jest ładny;
+            ten pasek pokazuje, czy tekst będzie CZYTELNY — i to jest informacja, której brakowało. */}
+        <PaletteRow
+          t={t}
+          brand={color}
+          surface={surface}
+          text={text}
+          font={font}
+          onSurface={setSurface}
+          onText={setText}
+          onFont={setFont}
+        />
         <div className="grid grid-cols-2 gap-2">
           <FieldInput label={t("name")} value={name} onChange={setName} />
           <FieldInput label={t("shortName")} value={shortName} onChange={setShortName} />
@@ -184,5 +204,65 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
         {canBrand ? t("saveBtn") : t("eliteBtn")}
       </button>
     </SectionCard>
+  );
+}
+
+/** Jedna para „kolor + odczyt kontrastu". Wyliczenie jest czyste (lib/brand-palette), więc panel
+ *  mówi to samo, co zobaczy widz — bez zgadywania i bez renderowania próbnej strony. */
+function ContrastBadge({ tlo, tekst, etykieta }: { tlo: string; tekst: string; etykieta: string }) {
+  const r = contrastRatio(tlo, tekst);
+  if (r === null) return null;
+  const poziom = wcagLevel(r);
+  const ok = poziom === "AAA" || poziom === "AA";
+  return (
+    <span
+      className={`text-[10px] font-mono px-1.5 py-0.5 border ${ok ? "border-emerald-800 text-emerald-400" : "border-amber-700 text-amber-300"}`}
+      title={etykieta}
+    >
+      {etykieta} {r.toFixed(1)}:1 · {poziom}
+    </span>
+  );
+}
+
+function PaletteRow({
+  t, brand, surface, text, font, onSurface, onText, onFont,
+}: {
+  t: (k: string) => string;
+  brand: string; surface: string; text: string; font: string;
+  onSurface: (v: string) => void; onText: (v: string) => void; onFont: (v: string) => void;
+}) {
+  // Puste pole = kolor z motywu; do LICZENIA kontrastu podstawiamy wtedy domyślne ciemne tło
+  // i biały tekst, czyli to, co portal realnie pokaże — inaczej pasek milczałby akurat wtedy,
+  // gdy najbardziej się przydaje (świeży portal, nic nie ustawione).
+  const tloDoOceny = surface.trim() || "#0a0a0a";
+  const tekstDoOceny = text.trim() || "#ffffff";
+  return (
+    <div className="border border-zinc-800 bg-black/30 p-2 space-y-2">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("paletteHeading")}</div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("surfaceColor")}</label>
+          <input value={surface} onChange={(e) => onSurface(e.target.value)} placeholder={t("themeDefault")} className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-red-500" />
+        </div>
+        <div>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("textColor")}</label>
+          <input value={text} onChange={(e) => onText(e.target.value)} placeholder={t("themeDefault")} className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-red-500" />
+        </div>
+      </div>
+      <div>
+        <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("font")}</label>
+        <select value={font} onChange={(e) => onFont(e.target.value)} className="w-full bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white outline-hidden focus:border-red-500">
+          <option value="">{t("themeDefault")}</option>
+          {PORTAL_FONTS.map((f) => (
+            <option key={f.id} value={f.id}>{t(`font_${f.id}`)}</option>
+          ))}
+        </select>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <ContrastBadge tlo={tloDoOceny} tekst={tekstDoOceny} etykieta={t("cTextOnSurface")} />
+        <ContrastBadge tlo={tloDoOceny} tekst={brand} etykieta={t("cBrandOnSurface")} />
+      </div>
+      <p className="text-[10px] text-zinc-600">{t("contrastHint")}</p>
+    </div>
   );
 }

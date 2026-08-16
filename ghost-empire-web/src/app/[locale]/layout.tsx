@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { TenantBrandingProvider } from "@/components/TenantBranding";
 import { getCurrentTenant, isFounderBrand, isPlatformBrand } from "@/lib/tenant";
 import { streamingChannels } from "@/lib/channels";
+import { fontStack } from "@/lib/brand-palette";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { normalizeTheme } from "@/lib/themes";
 import { VIEWER_PREVIEW_COOKIE, readViewerPreview } from "@/lib/viewer-preview";
@@ -104,6 +105,15 @@ export default async function LocaleLayout({
   const brandStyle = {
     "--brand": tenant.brandColor,
     "--brand-rgb": hexToRgbTriplet(tenant.brandColor),
+    // Paleta portalu (update 2026-08). Ustawiamy zmienne TYLKO gdy portal je nadpisał — brak
+    // wartości zostawia kolory z motywu, czyli zachowanie sprzed zmiany. Oba pola przechodzą
+    // walidację `#rrggbb` przy zapisie (`/api/onboarding/my`), więc nie mogą zamknąć deklaracji
+    // ani otworzyć nowej; ta sama zasada co przy `bgImageUrl` i `safeMediaUrl`.
+    ...(tenant.surfaceColor ? { "--surface": tenant.surfaceColor } : {}),
+    ...(tenant.textColor ? { "--text": tenant.textColor, color: tenant.textColor } : {}),
+    // Krój z ZAMKNIĘTEJ listy — `fontStack` mapuje identyfikator na gotowy stos CSS i przy nieznanej
+    // wartości oddaje systemowy, więc string z bazy nigdy nie trafia do `font-family` wprost.
+    ...(tenant.fontFamily ? { fontFamily: fontStack(tenant.fontFamily) } : {}),
     // Optional per-portal background (#audit3): either a built-in DARK gradient template
     // (bgPreset — already dark, applied directly) or a custom image URL (rendered behind a
     // strong dark gradient overlay so text contrast is preserved). The preset CSS comes from

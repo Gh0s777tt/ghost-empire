@@ -157,6 +157,35 @@ Rollback: kod czyta brak kolumny jako „żadna scena nie jest aktywna", kolumna
 
 ---
 
+## §6 — paleta portalu i krój (`Tenant.surfaceColor` / `textColor` / `fontFamily`)
+
+Gałąź `feat/portal-palette-2026-08`. `brandColor` był JEDYNYM kolorem portalu, więc streamer
+z jasnym brandem dostawał nieczytelny tekst i **nie miał jak się o tym dowiedzieć** — panel pokazywał
+próbkę koloru, nie czytelność.
+
+**Co zrobi `npm run db:push`:**
+
+```sql
+-- AlterTable
+ALTER TABLE "tenants" ADD COLUMN     "surfaceColor" TEXT,
+ADD COLUMN     "textColor" TEXT,
+ADD COLUMN     "fontFamily" TEXT;
+```
+
+Kroki: `cd ghost-empire-web && npm run db:push`. **RLS: nic do zrobienia** — kolumny, nie tabela.
+
+**Wszystkie trzy nullable, `null` = zachowanie sprzed zmiany** (kolory i krój z motywu), więc migracja
+nie zmienia wyglądu żadnego istniejącego portalu. Kod czyta je przez `t.surfaceColor ?? null`, więc
+brak kolumny nie wywraca renderowania — portal po prostu wygląda jak dotąd.
+
+**Bezpieczeństwo:** oba kolory trafiają wprost do deklaracji CSS w `[locale]/layout.tsx`, dlatego zapis
+(`/api/onboarding/my`) przepuszcza **wyłącznie `#rrggbb`**, a krój jest identyfikatorem z **zamkniętej
+listy** (`lib/brand-palette` → `PORTAL_FONTS`), nie nazwą — `fontStack()` przy nieznanej wartości oddaje
+stos systemowy, więc string z bazy nigdy nie wchodzi do `font-family` wprost. Ta sama zasada, co przy
+`bgImageUrl`/`safeMediaUrl`.
+
+---
+
 ---
 
 ## Czego tu NIE ma (świadomie)
