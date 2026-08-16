@@ -3201,6 +3201,15 @@
       "filterWord": "filtro"
     },
     "scenes": {
+      "preview": "Vista previa",
+      "previewHint": "Muestra el aspecto real de los widgets en el lienzo (como en OBS)",
+      "sceneOn": "Activa",
+      "sceneOff": "Inactiva",
+      "sceneOnHint": "La escena está activa: haz clic para ocultarla en OBS",
+      "sceneOffHint": "La escena está inactiva: no se ve nada en OBS. Haz clic para activarla",
+      "elHide": "Ocultar elemento en OBS",
+      "elShow": "Mostrar elemento en OBS",
+      "elOff": "oculto",
       "tplHeading": "Plantillas:",
       "tplApplied": "Plantilla aplicada — la escena es tuya para editarla",
       "tpl_stream-hud": "HUD del stream",

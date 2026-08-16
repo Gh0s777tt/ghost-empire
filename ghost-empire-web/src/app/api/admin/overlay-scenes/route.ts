@@ -17,9 +17,23 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const tid = await currentTenantId();
+  // ⚠️ Kolejność wdrożenia: kolumna `enabled` jest addytywna i wymaga `db push`
+  // (docs/MIGRACJA-2026-08.md §4), a kod trafia na Vercela przy mergu do `main` — czyli MOŻE wylądować
+  // na produkcji ZANIM baza dostanie kolumnę. Bez tego fallbacku Prisma rzucałaby „column does not
+  // exist", `.catch` zwracał pustą listę i panel pokazywałby ZERO scen (czyli dokładnie ten objaw,
+  // od którego zaczęła się ta poprawka). Dlatego przy błędzie ponawiamy zapytanie bez `enabled`
+  // i traktujemy sceny jak włączone — zachowanie sprzed zmiany. Po migracji ścieżka zapasowa
+  // przestaje się odpalać i można ją usunąć.
+  const where = tid ? { tenantId: tid } : {};
+  const base = { id: true, name: true, elements: true, updatedAt: true } as const;
   const scenes = await prisma.overlayScene
-    .findMany({ where: tid ? { tenantId: tid } : {}, orderBy: { createdAt: "asc" }, select: { id: true, name: true, elements: true, updatedAt: true } })
-    .catch(() => []);
+    .findMany({ where, orderBy: { createdAt: "asc" }, select: { ...base, enabled: true } })
+    .catch(() =>
+      prisma.overlayScene
+        .findMany({ where, orderBy: { createdAt: "asc" }, select: base })
+        .then((rows) => rows.map((r) => ({ ...r, enabled: true })))
+        .catch(() => []),
+    );
   return NextResponse.json({ scenes });
 }
 
@@ -37,7 +51,7 @@ export async function POST(req: Request) {
     const name = String(body.name ?? "").trim().slice(0, 60) || "Scene";
     const created = await prisma.overlayScene.create({ data: { ...(tid ? { tenantId: tid } : {}), name, elements: "[]" } });
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "overlay_scene", targetId: created.id, details: { create: name }, req });
-    return NextResponse.json({ ok: true, scene: { id: created.id, name: created.name, elements: created.elements } });
+    return NextResponse.json({ ok: true, scene: { id: created.id, name: created.name, elements: created.elements, enabled: created.enabled ?? true } });
   }
 
   // One-click curated template (#771): create a scene pre-filled with the template's
@@ -49,18 +63,32 @@ export async function POST(req: Request) {
     const elements = JSON.stringify(parseElements(JSON.stringify(tpl.elements)));
     const created = await prisma.overlayScene.create({ data: { ...(tid ? { tenantId: tid } : {}), name, elements } });
     await logAdminAction({ adminId: auth.userId, action: "update_integrations", targetType: "overlay_scene", targetId: created.id, details: { template: tpl.id }, req });
-    return NextResponse.json({ ok: true, scene: { id: created.id, name: created.name, elements: created.elements } });
+    return NextResponse.json({ ok: true, scene: { id: created.id, name: created.name, elements: created.elements, enabled: created.enabled ?? true } });
   }
 
   if (action === "update") {
     const id = String(body.id ?? "");
     const data: Record<string, unknown> = {};
     if (typeof body.name === "string") data.name = body.name.trim().slice(0, 60) || "Scene";
+    // Wyłączenie/włączenie całej sceny (update 2026-08) — osobne od `elements`, żeby przełącznik
+    // nie wymagał wysyłania całego układu.
+    if (typeof body.enabled === "boolean") data.enabled = body.enabled;
     if (body.elements !== undefined) {
       // Re-validate: clamp positions, drop unknown widgets, cap count.
       data.elements = JSON.stringify(parseElements(JSON.stringify(body.elements)));
     }
-    const r = await prisma.overlayScene.updateMany({ where: { id, ...tenantWhere }, data });
+    // Przed migracją (patrz komentarz w GET) zapis `enabled` wywaliłby CAŁY update — razem z
+    // układem sceny, który z kolumną nie ma nic wspólnego. Dlatego przy błędzie ponawiamy bez tego
+    // pola i mówimy wprost, czego brakuje, zamiast zwracać gołe 500.
+    let r = await prisma.overlayScene.updateMany({ where: { id, ...tenantWhere }, data }).catch(() => null);
+    if (r === null && "enabled" in data) {
+      const { enabled: _pominiete, ...bezFlagi } = data;
+      if (Object.keys(bezFlagi).length === 0) {
+        return NextResponse.json({ error: "Włącz/wyłącz sceny wymaga migracji bazy (db push)" }, { status: 503 });
+      }
+      r = await prisma.overlayScene.updateMany({ where: { id, ...tenantWhere }, data: bezFlagi }).catch(() => null);
+    }
+    if (r === null) return NextResponse.json({ error: "Zapis nie powiódł się" }, { status: 500 });
     if (r.count === 0) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
     return NextResponse.json({ ok: true });
   }

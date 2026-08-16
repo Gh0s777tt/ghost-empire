@@ -6,16 +6,18 @@
 // in lib/overlay-scenes.
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { Layers, Loader2, Plus, Trash2, Save, Copy, Check, X, ExternalLink } from "lucide-react";
+import { Layers, Loader2, Plus, Trash2, Save, Copy, Check, X, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
-import { SCENE_WIDGETS, IMAGE_WIDGET, VIDEO_WIDGET, MEDIA_WIDGETS, sceneWidget, clampElement, type SceneElement } from "@/lib/overlay-scenes";
+import { SCENE_WIDGETS, IMAGE_WIDGET, VIDEO_WIDGET, MEDIA_WIDGETS, sceneWidget, clampElement, elementEnabled, type SceneElement } from "@/lib/overlay-scenes";
 import { SCENE_TEMPLATES } from "@/lib/scene-templates";
 import { MediaUploadButton } from "../MediaUploadButton";
 import { safeMediaUrl } from "@/lib/url-safe";
 
-type Scene = { id: string; name: string; elements: string };
+type Scene = { id: string; name: string; elements: string; enabled?: boolean };
+
+const WIDGET_PATH = new Map(SCENE_WIDGETS.map((w) => [w.id, w]));
 
 function parse(json: string): SceneElement[] {
   try { const a = JSON.parse(json); return Array.isArray(a) ? a : []; } catch { return []; }
@@ -32,6 +34,7 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
   const [busy, setBusy] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [preview, setPreview] = useState(false); // żywy podgląd widgetów (iframe) — patrz komentarz przy płótnie
   const [imgUrl, setImgUrl] = useState(""); // pole URL do dodania własnej grafiki jako elementu sceny
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -49,8 +52,18 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
     apiGet<{ token?: string | null }>("/api/admin/overlay-token").then((d) => setToken(d?.token ?? null)).catch(() => setToken(null));
   }, []);
 
-  // Load the active scene's elements into the editable canvas.
+  // Load the active scene's elements into the editable canvas — TYLKO przy realnej zmianie sceny.
+  //
+  // Wcześniej efekt zależał od całej tablicy `scenes`, więc KAŻDY `setScenes` przeładowywał płótno
+  // z wersji zapisanej. A `rename()` woła `setScenes` na każde naciśnięcie klawisza w polu nazwy —
+  // efekt: użytkownik rozstawiał widgety, poprawiał nazwę sceny i cała niezapisana praca znikała,
+  // a `setDirty(false)` gasił jeszcze przycisk „Zapisz", więc nie było czego ratować. Strażnik na
+  // ref przypina przeładowanie do zmiany `activeId` (przełączenie zakładki sceny), co było jedyną
+  // intencją tego efektu.
+  const loadedFor = useRef<string | null>(null);
   useEffect(() => {
+    if (loadedFor.current === activeId) return;
+    loadedFor.current = activeId;
     const s = scenes.find((x) => x.id === activeId);
     setEls(s ? parse(s.elements) : []);
     setSel(null);
@@ -108,10 +121,33 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
     }
     setBusy(false);
   }
-  async function rename(name: string) {
+  // Nazwa: podmiana lokalna od razu (pole ma być responsywne), ale zapis do API dopiero po 500 ms
+  // ciszy — wcześniej leciał jeden POST na KAŻDY wpisany znak.
+  const renameTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function rename(name: string) {
     if (!activeId) return;
-    setScenes((p) => p.map((s) => (s.id === activeId ? { ...s, name } : s)));
-    await call("update", { id: activeId, name });
+    const id = activeId;
+    setScenes((p) => p.map((s) => (s.id === id ? { ...s, name } : s)));
+    if (renameTimer.current) clearTimeout(renameTimer.current);
+    renameTimer.current = setTimeout(() => { void call("update", { id, name }); }, 500);
+  }
+  // Nie gub ostatniego znaku, gdy sekcja zniknie przed upływem debounce'u.
+  useEffect(() => () => { if (renameTimer.current) clearTimeout(renameTimer.current); }, []);
+
+  /** Włącz/wyłącz CAŁĄ scenę — wyłączona zostaje w panelu, ale jej URL w OBS renderuje pustkę. */
+  async function toggleScene(next: boolean) {
+    if (!activeId) return;
+    const id = activeId;
+    setScenes((p) => p.map((s) => (s.id === id ? { ...s, enabled: next } : s)));
+    if (!(await call("update", { id, enabled: next }))) {
+      setScenes((p) => p.map((s) => (s.id === id ? { ...s, enabled: !next } : s))); // rollback
+    }
+  }
+
+  /** Włącz/wyłącz POJEDYNCZY element — zostaje na płótnie, ale znika z renderu OBS. */
+  function toggleEl(id: string) {
+    update(id, (e) => ({ ...e, enabled: e.enabled === false }));
+    setDirty(true);
   }
 
   function addWidget(widgetId: string) {
@@ -173,8 +209,8 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
           {/* Scene tabs */}
           <div className="flex items-center gap-1.5 flex-wrap mb-3">
             {scenes.map((s) => (
-              <button key={s.id} onClick={() => setActiveId(s.id)} className={`px-2.5 py-1 text-xs border rounded ${s.id === activeId ? "border-red-600 bg-red-950/40 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"}`}>
-                {s.name}
+              <button key={s.id} onClick={() => setActiveId(s.id)} className={`px-2.5 py-1 text-xs border rounded inline-flex items-center gap-1 ${s.id === activeId ? "border-red-600 bg-red-950/40 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"} ${s.enabled === false ? "opacity-50" : ""}`}>
+                {s.enabled === false && <EyeOff className="w-3 h-3 text-amber-500" />}{s.name}
               </button>
             ))}
             <button onClick={() => void createScene()} disabled={busy} className="px-2.5 py-1 text-xs border border-zinc-800 text-zinc-300 hover:border-red-600 rounded inline-flex items-center gap-1 disabled:opacity-50">
@@ -209,6 +245,28 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                   onChange={(e) => rename(e.target.value.slice(0, 60))}
                   className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
                 />
+                {/* Włącz/wyłącz CAŁĄ scenę — wyłączona renderuje w OBS pustkę, ale zostaje do edycji. */}
+                {(() => {
+                  const on = scenes.find((s) => s.id === activeId)?.enabled !== false;
+                  return (
+                    <button
+                      onClick={() => void toggleScene(!on)}
+                      disabled={busy}
+                      title={on ? t("sceneOnHint") : t("sceneOffHint")}
+                      className={`px-2 h-7 text-[10px] font-bold uppercase tracking-widest border shrink-0 inline-flex items-center gap-1 disabled:opacity-50 ${on ? "border-emerald-800 text-emerald-400 hover:border-emerald-600" : "border-amber-800 text-amber-400 hover:border-amber-600"}`}
+                    >
+                      {on ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} {on ? t("sceneOn") : t("sceneOff")}
+                    </button>
+                  );
+                })()}
+                {/* Żywy podgląd widgetów — domyślnie off, bo każdy element to osobna strona. */}
+                <button
+                  onClick={() => setPreview((v) => !v)}
+                  title={t("previewHint")}
+                  className={`px-2 h-7 text-[10px] font-bold uppercase tracking-widest border shrink-0 inline-flex items-center gap-1 ${preview ? "border-red-700 text-red-300" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"}`}
+                >
+                  {preview ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} {t("preview")}
+                </button>
                 <button onClick={() => { const s = scenes.find((x) => x.id === activeId); if (s) void removeScene(s); }} disabled={busy} title={t("deleteScene")} className="text-red-500 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-7 h-7 flex items-center justify-center shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
 
@@ -221,11 +279,19 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                 className="relative aspect-video w-full border border-zinc-800 rounded-sm overflow-hidden touch-none select-none mb-2"
                 style={{ background: "repeating-conic-gradient(#18181b 0% 25%, #0a0a0a 0% 50%) 50% / 24px 24px" }}
               >
-                {els.map((el) => (
+                {els.map((el) => {
+                  const on = elementEnabled(el);
+                  const wdef = WIDGET_PATH.get(el.widget);
+                  // Żywy podgląd: ten sam iframe co w OBS, tylko `pointer-events: none`, żeby
+                  // przeciąganie kafelka działało dalej. Domyślnie WYŁĄCZONY — scena może mieć do 24
+                  // elementów, a każdy to osobna strona z własnym pollingiem/streamem, więc stały
+                  // podgląd potrafiłby zajechać panel. Wyłączony element nie dostaje iframe'a wcale.
+                  const showLive = preview && on && !!token && !!wdef && !MEDIA_WIDGETS.has(el.widget);
+                  return (
                   <div
                     key={el.id}
                     onPointerDown={(e) => startDrag(e, el, "move")}
-                    className={`absolute rounded-sm border flex items-center justify-center text-[10px] font-mono text-center px-1 cursor-move overflow-hidden ${sel === el.id ? "border-red-500 bg-red-500/20 text-white z-10" : "border-zinc-500/60 bg-zinc-800/50 text-zinc-300"}`}
+                    className={`absolute rounded-sm border flex items-center justify-center text-[10px] font-mono text-center px-1 cursor-move overflow-hidden ${sel === el.id ? "border-red-500 bg-red-500/20 text-white z-10" : "border-zinc-500/60 bg-zinc-800/50 text-zinc-300"} ${on ? "" : "opacity-40 grayscale"}`}
                     style={{
                       left: `${el.x}%`, top: `${el.y}%`, width: `${el.w}%`, height: `${el.h}%`,
                       // Miniatura obrazu wprost w kafelku (element „image"), reszta = nazwa widgetu.
@@ -238,15 +304,28 @@ export function SceneBuilder({ onToast }: { onToast: (k: "ok" | "err", m: string
                     {el.widget === VIDEO_WIDGET && el.src && (
                       <video src={el.src} muted loop autoPlay playsInline className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
                     )}
-                    <span className="truncate pointer-events-none">{MEDIA_WIDGETS.has(el.widget) ? "" : el.widget}</span>
+                    {showLive && (
+                      <iframe
+                        src={`${wdef.path}?${new URLSearchParams({ token: token, ...(wdef.query ? Object.fromEntries(new URLSearchParams(wdef.query)) : {}) }).toString()}`}
+                        title={el.widget}
+                        scrolling="no"
+                        className="absolute inset-0 w-full h-full border-0 bg-transparent pointer-events-none"
+                      />
+                    )}
+                    {!showLive && <span className="truncate pointer-events-none">{MEDIA_WIDGETS.has(el.widget) ? "" : el.widget}</span>}
+                    {!on && <span className="absolute inset-x-0 bottom-0 bg-black/70 text-[9px] text-amber-300 pointer-events-none">{t("elOff")}</span>}
                     {sel === el.id && (
                       <>
+                        <button onPointerDown={(e) => { e.stopPropagation(); toggleEl(el.id); }} className="absolute -top-2 -left-2 w-4 h-4 rounded-full bg-zinc-700 text-white flex items-center justify-center" title={on ? t("elHide") : t("elShow")}>
+                          {on ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
+                        </button>
                         <button onPointerDown={(e) => { e.stopPropagation(); removeEl(el.id); }} className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center" title={t("removeEl")}><X className="w-2.5 h-2.5" /></button>
                         <div onPointerDown={(e) => startDrag(e, el, "resize")} className="absolute right-0 bottom-0 w-3 h-3 bg-white border-2 border-red-600 rounded-sm cursor-nwse-resize translate-x-1/2 translate-y-1/2" title={t("resize")} />
                       </>
                     )}
                   </div>
-                ))}
+                  );
+                })}
                 {els.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-600 pointer-events-none">{t("canvasEmpty")}</div>}
               </div>
 

@@ -2205,6 +2205,15 @@
       "filterWord": "filter"
     },
     "scenes": {
+      "preview": "Preview",
+      "previewHint": "Show the widgets' real look on the canvas (as in OBS)",
+      "sceneOn": "On",
+      "sceneOff": "Off",
+      "sceneOnHint": "Scene is on — click to hide it in OBS",
+      "sceneOffHint": "Scene is off — nothing shows in OBS. Click to turn it on",
+      "elHide": "Hide element in OBS",
+      "elShow": "Show element in OBS",
+      "elOff": "hidden",
       "tplHeading": "Templates:",
       "tplApplied": "Template applied — the scene is yours to edit",
       "tpl_stream-hud": "Stream HUD",

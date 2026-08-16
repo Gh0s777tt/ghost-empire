@@ -3201,6 +3201,15 @@
       "filterWord": "filter"
     },
     "scenes": {
+      "preview": "Pratinjau",
+      "previewHint": "Tampilkan tampilan asli widget di kanvas (seperti di OBS)",
+      "sceneOn": "Aktif",
+      "sceneOff": "Nonaktif",
+      "sceneOnHint": "Scene aktif — klik untuk menyembunyikannya di OBS",
+      "sceneOffHint": "Scene nonaktif — tidak ada yang tampil di OBS. Klik untuk mengaktifkan",
+      "elHide": "Sembunyikan elemen di OBS",
+      "elShow": "Tampilkan elemen di OBS",
+      "elOff": "tersembunyi",
       "tplHeading": "Templat:",
       "tplApplied": "Templat diterapkan — scene siap kamu edit",
       "tpl_stream-hud": "HUD Siaran",

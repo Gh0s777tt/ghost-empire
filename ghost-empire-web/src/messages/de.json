@@ -3201,6 +3201,15 @@
       "filterWord": "Filter"
     },
     "scenes": {
+      "preview": "Vorschau",
+      "previewHint": "Zeigt das echte Aussehen der Widgets auf der Leinwand (wie in OBS)",
+      "sceneOn": "An",
+      "sceneOff": "Aus",
+      "sceneOnHint": "Szene ist an — klicken, um sie in OBS auszublenden",
+      "sceneOffHint": "Szene ist aus — in OBS ist nichts zu sehen. Klicken zum Einschalten",
+      "elHide": "Element in OBS ausblenden",
+      "elShow": "Element in OBS anzeigen",
+      "elOff": "ausgeblendet",
       "tplHeading": "Vorlagen:",
       "tplApplied": "Vorlage angewendet — die Szene kannst du jetzt bearbeiten",
       "tpl_stream-hud": "Stream-HUD",

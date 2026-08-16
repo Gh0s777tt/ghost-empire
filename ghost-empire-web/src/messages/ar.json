@@ -3201,6 +3201,15 @@
       "filterWord": "فلتر"
     },
     "scenes": {
+      "preview": "معاينة",
+      "previewHint": "إظهار الشكل الحقيقي للعناصر على اللوحة (كما في OBS)",
+      "sceneOn": "مفعّل",
+      "sceneOff": "معطّل",
+      "sceneOnHint": "المشهد مفعّل — انقر لإخفائه في OBS",
+      "sceneOffHint": "المشهد معطّل — لا يظهر شيء في OBS. انقر للتفعيل",
+      "elHide": "إخفاء العنصر في OBS",
+      "elShow": "إظهار العنصر في OBS",
+      "elOff": "مخفي",
       "tplHeading": "القوالب:",
       "tplApplied": "تم تطبيق القالب — المشهد جاهز للتعديل",
       "tpl_stream-hud": "واجهة البث (HUD)",

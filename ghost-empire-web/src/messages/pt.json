@@ -3201,6 +3201,15 @@
       "filterWord": "filtro"
     },
     "scenes": {
+      "preview": "Pré-visualização",
+      "previewHint": "Mostra o aspeto real dos widgets na tela (como no OBS)",
+      "sceneOn": "Ativa",
+      "sceneOff": "Inativa",
+      "sceneOnHint": "A cena está ativa — clique para a ocultar no OBS",
+      "sceneOffHint": "A cena está inativa — nada aparece no OBS. Clique para ativar",
+      "elHide": "Ocultar elemento no OBS",
+      "elShow": "Mostrar elemento no OBS",
+      "elOff": "oculto",
       "tplHeading": "Modelos:",
       "tplApplied": "Modelo aplicado — a cena é sua para editar",
       "tpl_stream-hud": "HUD da transmissão",

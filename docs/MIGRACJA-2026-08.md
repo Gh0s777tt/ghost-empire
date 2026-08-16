@@ -103,6 +103,30 @@ ADD COLUMN     "mediaType" TEXT;
 Kroki: `cd ghost-empire-web && npm run db:push` (przejrzyj plan = SQL wyżej). RLS: nie tworzymy
 tabeli, tylko kolumny — nic do zrobienia. Rollback: kod czyta `null` bezpiecznie, kolumny mogą zostać.
 
+## §4 — `OverlayScene.enabled` (włącz/wyłącz całą scenę)
+
+Gałąź `fix/scene-builder-2026-08`. Streamer chowa całą kompozycję jednym kliknięciem, bez kasowania
+układu i bez ruszania źródła w OBS.
+
+**Co zrobi `npm run db:push`** (delta z `prisma migrate diff`):
+
+```sql
+-- AlterTable
+ALTER TABLE "overlay_scenes" ADD COLUMN     "enabled" BOOLEAN NOT NULL DEFAULT true;
+```
+
+Kroki: `cd ghost-empire-web && npm run db:push` (przejrzyj plan = SQL wyżej). **RLS: nic do zrobienia**
+— nie tworzymy tabeli, tylko kolumnę (`overlay_scenes` ma RLS włączone od swojej migracji).
+
+**Addytywna i bezpieczna:** `DEFAULT true` sprawia, że wszystkie istniejące sceny pozostają włączone,
+więc migracja nie zmienia niczego, co widz ma na ekranie. **Do czasu jej wykonania** przełącznik
+sceny w panelu zwróci błąd (kolumny nie ma), a render traktuje scenę jak włączoną — czyli zachowanie
+sprzed zmiany. Włącz/wyłącz pojedynczego ELEMENTU działa **bez** tej migracji (siedzi w JSON `elements`).
+
+Rollback: kod czyta brak kolumny jako „włączona", kolumna może zostać.
+
+---
+
 ---
 
 ## Czego tu NIE ma (świadomie)

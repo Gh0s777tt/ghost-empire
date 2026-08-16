@@ -3201,6 +3201,15 @@
       "filterWord": "filtre"
     },
     "scenes": {
+      "preview": "Aperçu",
+      "previewHint": "Affiche le rendu réel des widgets sur le canevas (comme dans OBS)",
+      "sceneOn": "Activée",
+      "sceneOff": "Désactivée",
+      "sceneOnHint": "La scène est activée — cliquez pour la masquer dans OBS",
+      "sceneOffHint": "La scène est désactivée — rien ne s'affiche dans OBS. Cliquez pour l'activer",
+      "elHide": "Masquer l'élément dans OBS",
+      "elShow": "Afficher l'élément dans OBS",
+      "elOff": "masqué",
       "tplHeading": "Modèles :",
       "tplApplied": "Modèle appliqué — la scène est à toi, modifie-la",
       "tpl_stream-hud": "HUD de stream",

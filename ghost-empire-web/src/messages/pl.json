@@ -2205,6 +2205,15 @@
       "filterWord": "filtr"
     },
     "scenes": {
+      "preview": "Podgląd",
+      "previewHint": "Pokaż na płótnie prawdziwy wygląd widgetów (jak w OBS)",
+      "sceneOn": "Włączona",
+      "sceneOff": "Wyłączona",
+      "sceneOnHint": "Scena jest włączona — kliknij, aby ukryć ją w OBS",
+      "sceneOffHint": "Scena jest wyłączona — w OBS nic nie widać. Kliknij, aby włączyć",
+      "elHide": "Ukryj element w OBS",
+      "elShow": "Pokaż element w OBS",
+      "elOff": "ukryty",
       "tplHeading": "Szablony:",
       "tplApplied": "Szablon zastosowany — scena jest Twoja do edycji",
       "tpl_stream-hud": "HUD streamu",

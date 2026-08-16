@@ -3201,6 +3201,15 @@
       "filterWord": "フィルター"
     },
     "scenes": {
+      "preview": "プレビュー",
+      "previewHint": "キャンバス上にウィジェットの実際の表示を出します（OBSと同じ）",
+      "sceneOn": "オン",
+      "sceneOff": "オフ",
+      "sceneOnHint": "シーンはオンです — クリックするとOBSで非表示になります",
+      "sceneOffHint": "シーンはオフです — OBSには何も表示されません。クリックでオンにします",
+      "elHide": "OBSでこの要素を非表示にする",
+      "elShow": "OBSでこの要素を表示する",
+      "elOff": "非表示",
       "tplHeading": "テンプレート：",
       "tplApplied": "テンプレートを適用しました——シーンは自由に編集できます",
       "tpl_stream-hud": "配信 HUD",

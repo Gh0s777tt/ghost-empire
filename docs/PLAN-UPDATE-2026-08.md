@@ -83,6 +83,11 @@ statyczne** na własnej grafice.
 + wykryty `kind`) lub URL (rozpoznanie po rozszerzeniu); render `<video>` autoplay/muted/loop w
 `/overlay/scene/[id]`; `src` przez `safeMediaUrl` po obu stronach; podgląd wideo w kafelku edytora.
 Duże pliki (>~4.5 MB) przez URL (upload proxy Vercela ma limit body — signed-URL to osobny fast-follow).
+✅ **ŻYWY PODGLĄD + WŁĄCZ/WYŁĄCZ ZROBIONE (gałąź `fix/scene-builder-2026-08`).** Kafelki mogą renderować
+prawdziwy widget (iframe jak w OBS, domyślnie off — 24 elementy × osobna strona z pollingiem);
+`enabled` na elemencie (w tym samym JSON → **zero migracji**, brak pola = włączony) i `OverlayScene.enabled`
+na całej scenie (**wymaga `prisma db push`**). Wyłączone elementy odsiewane SERWEROWO, więc nie kosztują CPU.
+Naprawiony przy okazji defekt: poprawka nazwy sceny kasowała niezapisane elementy z płótna.
 **ZOSTAJE:** warstwy (z-index) + więcej stylowania elementu (opacity/rotacja). Effort resztki: **S**.
 
 ### 2c. Widgety/Alerty — własna grafika/animacja

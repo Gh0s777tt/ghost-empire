@@ -2020,7 +2020,11 @@ model OverlayScene {
   id        String   @id @default(cuid())
   tenantId  String?
   name      String
-  elements  String   @db.Text // JSON: [{ id, widget, x, y, w, h }]
+  elements  String   @db.Text // JSON: [{ id, widget, x, y, w, h, src?, enabled? }]
+  // Wyłączona scena zostaje w panelu (można ją dalej edytować), ale jej URL OBS renderuje pustkę —
+  // streamer chowa całą kompozycję jednym kliknięciem, bez kasowania układu i bez zmiany źródła
+  // w OBS. Domyślnie `true`, więc sceny sprzed tej zmiany działają bez ruszania danych.
+  enabled   Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

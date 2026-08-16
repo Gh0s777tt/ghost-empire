@@ -3201,6 +3201,15 @@
       "filterWord": "滤镜"
     },
     "scenes": {
+      "preview": "预览",
+      "previewHint": "在画布上显示小组件的真实外观（与 OBS 一致）",
+      "sceneOn": "已开启",
+      "sceneOff": "已关闭",
+      "sceneOnHint": "场景已开启 — 点击可在 OBS 中隐藏",
+      "sceneOffHint": "场景已关闭 — OBS 中不显示任何内容。点击开启",
+      "elHide": "在 OBS 中隐藏该元素",
+      "elShow": "在 OBS 中显示该元素",
+      "elOff": "已隐藏",
       "tplHeading": "模板：",
       "tplApplied": "模板已应用——场景可自由编辑",
       "tpl_stream-hud": "直播 HUD",

@@ -3201,6 +3201,15 @@
       "filterWord": "필터"
     },
     "scenes": {
+      "preview": "미리보기",
+      "previewHint": "캔버스에 위젯의 실제 모습을 표시합니다 (OBS와 동일)",
+      "sceneOn": "켜짐",
+      "sceneOff": "꺼짐",
+      "sceneOnHint": "장면이 켜져 있습니다 — 클릭하면 OBS에서 숨겨집니다",
+      "sceneOffHint": "장면이 꺼져 있습니다 — OBS에 아무것도 표시되지 않습니다. 클릭하면 켜집니다",
+      "elHide": "OBS에서 요소 숨기기",
+      "elShow": "OBS에서 요소 표시",
+      "elOff": "숨김",
       "tplHeading": "템플릿:",
       "tplApplied": "템플릿이 적용되었습니다 — 이제 장면을 편집할 수 있습니다",
       "tpl_stream-hud": "스트림 HUD",
