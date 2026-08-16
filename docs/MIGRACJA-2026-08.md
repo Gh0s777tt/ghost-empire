@@ -233,6 +233,99 @@ czytelne **503 „wymaga migracji bazy"**.
 
 ---
 
+## §8 — jeden zbiorczy skrypt dla §4–§7 (zweryfikowany na żywej bazie)
+
+§4–§7 są **czysto addytywne** (same `ADD COLUMN` / `CREATE TABLE` / `CREATE INDEX`, zero `DROP`
+i zero zmian istniejących kolumn), więc można je wykonać **naraz, jednym wklejeniem** w Supabase
+SQL Editorze — bez `db push`, czyli bez wpuszczania narzędzia z lokalnego środowiska na prod.
+
+Skrypt jest **idempotentny** (`IF NOT EXISTS` wszędzie): ponowne uruchomienie nie jest błędem,
+tylko serią `NOTICE … skipping`. To celowe — skrypt wkleja człowiek, więc musi wybaczać
+„czy ja to już odpaliłem?".
+
+```sql
+BEGIN;
+
+-- §6 — paleta portalu i krój (nullable => istniejące portale wyglądają jak dotąd)
+ALTER TABLE "tenants"
+  ADD COLUMN IF NOT EXISTS "surfaceColor" TEXT,
+  ADD COLUMN IF NOT EXISTS "textColor"    TEXT,
+  ADD COLUMN IF NOT EXISTS "fontFamily"   TEXT;
+
+-- §4 — włącz/wyłącz całą scenę (DEFAULT true => istniejące sceny zostają widoczne)
+ALTER TABLE "overlay_scenes"
+  ADD COLUMN IF NOT EXISTS "enabled" BOOLEAN NOT NULL DEFAULT true;
+
+-- §5 — aktywna scena + stały adres OBS (DEFAULT false => nic nie wchodzi na antenę samo)
+ALTER TABLE "overlay_scenes"
+  ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN NOT NULL DEFAULT false;
+
+CREATE INDEX IF NOT EXISTS "overlay_scenes_tenantId_isActive_idx"
+  ON "overlay_scenes" ("tenantId", "isActive");
+
+-- §7 — własna treść portalu (NOWA TABELA)
+CREATE TABLE IF NOT EXISTS "tenant_copy" (
+    "id"        TEXT NOT NULL,
+    "tenantId"  TEXT,
+    "locale"    TEXT NOT NULL,
+    "key"       TEXT NOT NULL,
+    "value"     TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "tenant_copy_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "tenant_copy_tenantId_locale_key_key"
+  ON "tenant_copy" ("tenantId", "locale", "key");
+
+CREATE INDEX IF NOT EXISTS "tenant_copy_tenantId_locale_idx"
+  ON "tenant_copy" ("tenantId", "locale");
+
+-- §7 krok DRUGI, OBOWIĄZKOWY — RLS na nowej tabeli. Wykonywany w tej samej transakcji,
+-- żeby nie dało się go pominąć: tabela i jej RLS wchodzą razem albo wcale.
+ALTER TABLE "tenant_copy" ENABLE ROW LEVEL SECURITY;
+
+COMMIT;
+```
+
+### Weryfikacja po wykonaniu
+
+```sql
+SELECT count(*) AS kolumny_tenants        -- oczekiwane: 3
+  FROM information_schema.columns
+ WHERE table_name = 'tenants'
+   AND column_name IN ('surfaceColor', 'textColor', 'fontFamily');
+
+SELECT count(*) AS kolumny_overlay_scenes -- oczekiwane: 2
+  FROM information_schema.columns
+ WHERE table_name = 'overlay_scenes'
+   AND column_name IN ('enabled', 'isActive');
+
+SELECT count(*) AS tabele_bez_rls         -- oczekiwane: 0
+  FROM pg_class
+ WHERE relname = 'tenant_copy' AND NOT relrowsecurity;
+```
+
+### Co zostało faktycznie sprawdzone (a nie tylko wygenerowane)
+
+SQL nie jest przepisany z głowy — powstał z `prisma migrate diff --from-schema … --to-schema …`
+(Prisma 7; stare `--from-schema-datamodel` / `--from-url` **zostały usunięte**), a potem przeszedł
+próbę na prawdziwym Postgresie 16 postawionym lokalnie:
+
+1. baza odtworzona ze schematu z `main` (stan „przed"), zasilona portalem i sceną,
+2. skrypt wykonany — dane przetrwały, istniejąca scena dostała `enabled = true` (nadal widoczna)
+   i `isActive = false` (nie wchodzi na antenę sama), portal `null`-e w palecie (wygląda jak dotąd),
+3. skrypt wykonany **drugi raz** — same `NOTICE … skipping`, wynik identyczny,
+4. `prisma db push` na nowym schemacie odpowiedział *„The database is already in sync"* —
+   czyli migracja jest **kompletna**, nie zostaje żadna różnica do dobicia,
+5. `relrowsecurity` dla `tenant_copy` = `true`.
+
+### Kolejność względem deployu
+
+Dowolna — inaczej niż §1. Cały kod §4–§7 jest odporny na brak kolumny/tabeli: odczyty ponawiają
+zapytanie bez brakującej kolumny albo oddają pustkę, a zapisy zwracają czytelne **503 „wymaga
+migracji bazy"**. Do czasu migracji portal zachowuje się jak przed zmianą.
+
 ---
 
 ## Czego tu NIE ma (świadomie)
