@@ -42,8 +42,14 @@ export default async function WelcomePage() {
     { icon: Puzzle, color: "#f59e0b", title: c("welcome.hlExt"), desc: c("welcome.hlExtDesc") },
   ];
 
+  // `bg-black` TYLKO gdy portal nie ustawił własnego tła. Ten wrapper jest pełnoekranowy, więc
+  // bezwarunkowa klasa przykrywałaby `backgroundColor` z `<body>` i ustawienie „kolor tła" w panelu
+  // nie robiłoby NIC widocznego — a ustawienie, które wygląda na zepsute, jest gorsze niż jego brak.
+  // Portale bez własnego tła zachowują dotychczasowy wygląd co do piksela.
+  const tlo = tenant.surfaceColor ? "" : " bg-black";
+
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden flex flex-col">
+    <div className={`min-h-screen relative overflow-hidden flex flex-col${tlo}`}>
       {/* Atmosphere */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-1/4 w-[700px] h-[700px] rounded-full blur-[160px] opacity-20"
