@@ -3023,6 +3023,19 @@
     "secAppearance": "Aspetto / Branding",
     "secHub": "Hub — link",
     "secDesc_appearance": "Rendi tuo questo portale: nome, nome della valuta, colore del brand e logo. Il branding personalizzato è una funzione Elite.",
+    "portalCopy": {
+      "title": "Testi del portale",
+      "intro": "Descrivi la tua community con parole tue. Campo vuoto = predefinito della piattaforma.",
+      "language": "Lingua",
+      "loading": "Caricamento…",
+      "save": "Salva",
+      "saved": "Testi salvati",
+      "err": "Salvataggio non riuscito",
+      "reset": "Svuota tutto",
+      "resetHint": "Ripristina i testi predefiniti della piattaforma (dopo il salvataggio)",
+      "hint": "Puoi usare i marcatori %tokenName% e %brandShort%: diventano i nomi del tuo portale. Termini e privacy non sono modificabili.",
+      "defaultPlaceholder": "predefinito"
+    },
     "appearance": {
       "paletteHeading": "Palette e tipografia",
       "surfaceColor": "Colore di sfondo",
@@ -3407,6 +3420,7 @@
       "err": "Qualcosa è andato storto."
     },
     "secScenes": "Costruttore di scene",
+    "secPortalCopy": "Testi del portale",
     "secSoundrewards": "Suoni dello stream",
     "secPayments": "Supporto / pagamenti",
     "secNotifications": "Notifiche",

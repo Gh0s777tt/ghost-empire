@@ -177,6 +177,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/govee-test` | admin | POST — jednorazowy widoczny test lampki Govee portalu (błyśnij zielonym→biały) by sprawdzić creds+urządzenie (#725) |
 | `…/api/admin/overlay-token` | admin | Token overlayów (do podglądów) |
 | `…/api/admin/overlay-scenes` | admin | CRUD scen overlay (#550 — wiele widżetów na jednym płótnie → jedno źródło OBS `/overlay/scene/<id>`). `duplicate` klonuje scenę (bez dziedziczenia `enabled`); `set_active` wskazuje scenę renderowaną pod stałym adresem `/overlay/live` (jedyność w transakcji); `update` przyjmuje też `enabled` (wyłączona scena renderuje w OBS pustkę); elementy mogą nieść `enabled:false` (ukryty element, odsiewany serwerowo przed renderem) |
+| `…/api/admin/tenant-copy` | admin | Nadpisania treści portalu (`welcome`) per locale — klucze WYŁĄCZNIE z zamkniętej listy `lib/tenant-copy`; pola prawne (`terms`/`privacy`) poza zasięgiem panelu z założenia |
 | `…/api/overlay/live` | token nakładki | Układ AKTYWNEJ sceny portalu — źródło danych dla stałego adresu OBS `/overlay/live`; portal z nagłówka Host, wyłączone elementy i wyłączona scena odsiewane serwerowo |
 | `…/api/admin/2fa` | admin | Enrollment/zarządzanie TOTP bieżącego admina (step-up dla wrażliwych akcji, #490) |
 | `…/api/admin/payment-methods` | admin | CRUD metod wsparcia/napiwków na `/support` (link/krypto/IBAN, #514) + cel zbiórki (`save-goal`) + konfigurowalny tekst strony (`save-support-text`: nagłówek/opis/dziękuję, #742) |

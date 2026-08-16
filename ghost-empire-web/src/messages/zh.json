@@ -3023,6 +3023,19 @@
     "secAppearance": "外观 / 品牌",
     "secHub": "中心——链接",
     "secDesc_appearance": "把这个门户变成你的——名称、货币命名、品牌颜色和徽标。自定义品牌是 Elite 功能。",
+    "portalCopy": {
+      "title": "门户文案",
+      "intro": "用你自己的话介绍社区。留空则显示平台默认文案。",
+      "language": "语言",
+      "loading": "加载中…",
+      "save": "保存",
+      "saved": "文案已保存",
+      "err": "保存失败",
+      "reset": "全部清空",
+      "resetHint": "保存后恢复平台默认文案",
+      "hint": "可使用 %tokenName% 与 %brandShort% 标记，会替换为你门户的名称。条款与隐私政策不可编辑。",
+      "defaultPlaceholder": "平台默认"
+    },
     "appearance": {
       "paletteHeading": "配色与排版",
       "surfaceColor": "背景色",
@@ -3407,6 +3420,7 @@
       "err": "出了点问题。"
     },
     "secScenes": "场景编辑器",
+    "secPortalCopy": "门户文案",
     "secSoundrewards": "直播音效",
     "secPayments": "支持 / 付款",
     "secNotifications": "通知",

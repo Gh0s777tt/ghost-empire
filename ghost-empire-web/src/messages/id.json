@@ -3023,6 +3023,19 @@
     "secAppearance": "Tampilan / Branding",
     "secHub": "Hub — tautan",
     "secDesc_appearance": "Jadikan portal ini milik Anda — nama, penamaan mata uang, warna brand, dan logo. Branding kustom adalah fitur Elite.",
+    "portalCopy": {
+      "title": "Teks portal",
+      "intro": "Jelaskan komunitasmu dengan katamu sendiri. Kolom kosong = bawaan platform.",
+      "language": "Bahasa",
+      "loading": "Memuat…",
+      "save": "Simpan",
+      "saved": "Teks disimpan",
+      "err": "Gagal menyimpan",
+      "reset": "Kosongkan semua",
+      "resetHint": "Mengembalikan teks bawaan platform (setelah disimpan)",
+      "hint": "Kamu bisa memakai penanda %tokenName% dan %brandShort% — keduanya diganti nama portalmu. Ketentuan dan privasi tidak dapat diubah.",
+      "defaultPlaceholder": "bawaan platform"
+    },
     "appearance": {
       "paletteHeading": "Palet & tipografi",
       "surfaceColor": "Warna latar",
@@ -3407,6 +3420,7 @@
       "err": "Kesalahan"
     },
     "secScenes": "Pembuat scene",
+    "secPortalCopy": "Teks portal",
     "secSoundrewards": "Suara siaran",
     "secPayments": "Dukungan / pembayaran",
     "secNotifications": "Notifikasi",

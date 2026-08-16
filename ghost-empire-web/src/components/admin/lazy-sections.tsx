@@ -21,6 +21,7 @@ export const PaymentMethodsManager = dynamic(() => import("./sections/PaymentMet
 export const PushBroadcastManager = dynamic(() => import("./sections/PushBroadcast").then((m) => m.PushBroadcastManager), { ssr: false, loading: SectionLoading });
 export const SponsorsManager = dynamic(() => import("./sections/Sponsors").then((m) => m.SponsorsManager), { ssr: false, loading: SectionLoading });
 export const SceneBuilder = dynamic(() => import("./sections/SceneBuilder").then((m) => m.SceneBuilder), { ssr: false, loading: SectionLoading });
+export const PortalCopy = dynamic(() => import("./sections/PortalCopy").then((m) => m.PortalCopy), { ssr: false, loading: SectionLoading });
 export const CollectiblesManager = dynamic(() => import("./sections/Collectibles").then((m) => m.CollectiblesManager), { ssr: false, loading: SectionLoading });
 export const RecapManager = dynamic(() => import("./sections/Recap").then((m) => m.RecapManager), { ssr: false, loading: SectionLoading });
 export const ClipDirectorManager = dynamic(() => import("./sections/ClipDirector").then((m) => m.ClipDirectorManager), { ssr: false, loading: SectionLoading });

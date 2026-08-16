@@ -3023,6 +3023,19 @@
     "secAppearance": "Apparence / Branding",
     "secHub": "Hub — liens",
     "secDesc_appearance": "Personnalisez ce portail — nom, nom de la devise, couleur de marque et logo. Le branding personnalisé est une fonction Elite.",
+    "portalCopy": {
+      "title": "Textes du portail",
+      "intro": "Décris ta communauté avec tes mots. Champ vide = valeur par défaut de la plateforme.",
+      "language": "Langue",
+      "loading": "Chargement…",
+      "save": "Enregistrer",
+      "saved": "Textes enregistrés",
+      "err": "Échec de l'enregistrement",
+      "reset": "Tout vider",
+      "resetHint": "Rétablit les valeurs par défaut de la plateforme (après enregistrement)",
+      "hint": "Tu peux utiliser les marqueurs %tokenName% et %brandShort% — ils prennent les noms de ton portail. Les CGU et la confidentialité ne sont pas modifiables.",
+      "defaultPlaceholder": "valeur par défaut"
+    },
     "appearance": {
       "paletteHeading": "Palette et typographie",
       "surfaceColor": "Couleur de fond",
@@ -3407,6 +3420,7 @@
       "err": "Une erreur est survenue."
     },
     "secScenes": "Éditeur de scènes",
+    "secPortalCopy": "Textes du portail",
     "secSoundrewards": "Sons du stream",
     "secPayments": "Soutien / paiements",
     "secNotifications": "Notifications",

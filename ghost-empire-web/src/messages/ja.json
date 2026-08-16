@@ -3023,6 +3023,19 @@
     "secAppearance": "外観 / ブランディング",
     "secHub": "ハブ — リンク",
     "secDesc_appearance": "このポータルを自分仕様に——名前、通貨の名称、ブランドカラー、ロゴ。カスタムブランディングは Elite の機能です。",
+    "portalCopy": {
+      "title": "ポータル文言",
+      "intro": "自分の言葉でコミュニティを紹介できます。空欄はプラットフォームの既定文になります。",
+      "language": "言語",
+      "loading": "読み込み中…",
+      "save": "保存",
+      "saved": "文言を保存しました",
+      "err": "保存できませんでした",
+      "reset": "すべて消去",
+      "resetHint": "保存するとプラットフォームの既定文に戻ります",
+      "hint": "%tokenName% と %brandShort% のマーカーが使えます（ポータルの名称に置き換わります）。利用規約とプライバシーポリシーは編集できません。",
+      "defaultPlaceholder": "既定文"
+    },
     "appearance": {
       "paletteHeading": "パレットとタイポグラフィ",
       "surfaceColor": "背景色",
@@ -3407,6 +3420,7 @@
       "err": "問題が発生しました。"
     },
     "secScenes": "シーンビルダー",
+    "secPortalCopy": "ポータル文言",
     "secSoundrewards": "配信サウンド",
     "secPayments": "応援 / 支払い",
     "secNotifications": "通知",

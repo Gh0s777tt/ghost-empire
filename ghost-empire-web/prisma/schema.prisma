@@ -2687,3 +2687,31 @@ model LeagueSeasonResult {
   @@index([tenantId, seasonNumber, rank])
   @@map("league_season_results")
 }
+
+// Nadpisania COPY per portal (update 2026-08). Do tej pory `welcome`/`about` pochodziły wyłącznie
+// z `src/messages/*.json`, wspólnych dla wszystkich portali — czyli każdy portal wyglądał inaczej,
+// ale MÓWIŁ to samo. To był realny sufit white-label: streamer nie mógł opisać własnej społeczności
+// swoimi słowami.
+//
+// Model celowo klucz-wartość, a nie kolumna per tekst: zbiór edytowalnych pól rośnie, a każde nowe
+// pole nie może znaczyć migracji. Klucze pochodzą z ZAMKNIĘTEJ listy (`lib/tenant-copy`), więc
+// tabela nie jest workiem na dowolne dane.
+//
+// Wartość PRZECHOWUJE markery (`%tokenName%`, `%brandShort%`) i jest rozwiązywana przy odczycie —
+// zgodnie z zasadą z CLAUDE.md: tekst, który PERSYSTUJE, trzyma marker, żeby zmiana nazwy waluty
+// naprawiła też stare wiersze.
+model TenantCopy {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  locale    String // 'pl' | 'en' | … (14 locale)
+  key       String // klucz z allowlisty, np. "welcome.sub2"
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Unique ZŁOŻONY z tenantem — nigdy globalny na `key`, inaczej pierwszy portal
+  // zabrałby klucz wszystkim pozostałym (konwencja multi-tenant z CLAUDE.md).
+  @@unique([tenantId, locale, key])
+  @@index([tenantId, locale])
+  @@map("tenant_copy")
+}

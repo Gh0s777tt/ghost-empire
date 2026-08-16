@@ -3023,6 +3023,19 @@
     "secAppearance": "Aparência / Branding",
     "secHub": "Hub — links",
     "secDesc_appearance": "Deixe este portal com a sua cara — nome, nome da moeda, cor da marca e logo. O branding personalizado é um recurso Elite.",
+    "portalCopy": {
+      "title": "Textos do portal",
+      "intro": "Descreve a tua comunidade pelas tuas palavras. Campo vazio = predefinição da plataforma.",
+      "language": "Idioma",
+      "loading": "A carregar…",
+      "save": "Guardar",
+      "saved": "Textos guardados",
+      "err": "Não foi possível guardar",
+      "reset": "Limpar tudo",
+      "resetHint": "Repõe as predefinições da plataforma (ao guardar)",
+      "hint": "Podes usar os marcadores %tokenName% e %brandShort% — passam a ser os nomes do teu portal. Termos e privacidade não são editáveis.",
+      "defaultPlaceholder": "predefinição"
+    },
     "appearance": {
       "paletteHeading": "Paleta e tipografia",
       "surfaceColor": "Cor de fundo",
@@ -3407,6 +3420,7 @@
       "err": "Algo deu errado."
     },
     "secScenes": "Construtor de cenas",
+    "secPortalCopy": "Textos do portal",
     "secSoundrewards": "Sons da live",
     "secPayments": "Apoio / pagamentos",
     "secNotifications": "Notificações",

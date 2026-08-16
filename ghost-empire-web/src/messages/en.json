@@ -370,6 +370,19 @@
     "secHub": "Hub — links",
     "secDonationIntegrations": "Donation integrations",
     "secDesc_appearance": "Make this portal yours — name, currency naming, brand colour and logo. Custom branding is an Elite feature.",
+    "portalCopy": {
+      "title": "Portal copy",
+      "intro": "Describe your community in your own words. An empty field = the platform default.",
+      "language": "Language",
+      "loading": "Loading…",
+      "save": "Save",
+      "saved": "Copy saved",
+      "err": "Could not save",
+      "reset": "Clear all",
+      "resetHint": "Restores the platform defaults (after saving)",
+      "hint": "You can use the %tokenName% and %brandShort% markers — they resolve to your portal's names. Terms and privacy are not editable.",
+      "defaultPlaceholder": "platform default"
+    },
     "appearance": {
       "paletteHeading": "Palette & typography",
       "surfaceColor": "Background colour",
@@ -2485,6 +2498,7 @@
     "secSongs": "Song requests",
     "secWidgets": "Widgets (OBS)",
     "secScenes": "Scene builder",
+    "secPortalCopy": "Portal copy",
     "secAlerts": "Stream Alerts",
     "secSoundrewards": "Stream sounds",
     "secPayments": "Support / payments",

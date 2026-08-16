@@ -8,7 +8,7 @@ import {
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Tv2, Menu, GitMerge, Radio, MonitorPlay, Lightbulb,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy, Wand2, Palette, Link2, Gavel,
-} from "lucide-react";
+  Languages } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
 import { useToast } from "@/components/ToastProvider";
@@ -25,7 +25,7 @@ import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, Strea
 
 import {
   AnalyticsSection, EconomyHealthSection, CommunitySection, ClanWarsManager, SoundRewardsManager, PaymentMethodsManager,
-  PushBroadcastManager, SponsorsManager, SceneBuilder, CollectiblesManager, RecapManager, ClipDirectorManager,
+  PushBroadcastManager, SponsorsManager, SceneBuilder, PortalCopy, CollectiblesManager, RecapManager, ClipDirectorManager,
   TriviaManager, TwoFactorManager, AuditLogSection, PollsManager, ModerationManager, WidgetsLibrary,
   IntegrationsManager, ObsRulesManager, GoveeRulesManager, WheelManager, PenaltiesManager, WebhooksOutManager, GamesLibraryManager,
   AchievementsManager, PredictionsManager, BountiesManager, WelcomeManager, FaqManager, ChatTimersManager,
@@ -95,7 +95,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "penalties" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub" | "donationIntegrations";
+    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "penalties" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "portal-copy" | "hub" | "donationIntegrations";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -112,6 +112,7 @@ export function AdminClient({
     // Self-serve portal branding for the tenant owner (#785) — level 1 so a streamer finds
     // "make it mine" immediately (the API is owner-scoped + Elite-gated, so it's safe for any admin).
     { id: "appearance", label: t("secAppearance"),  icon: Palette,        group: "main",       level: 1, permission: () => isAdmin },
+    { id: "portal-copy", label: t("secPortalCopy"), icon: Languages, group: "main", level: 2, permission: () => isAdmin },
     { id: "hub",       label: t("secHub"),          icon: Link2,          group: "main",       level: 1, permission: () => isAdmin },
     { id: "donationIntegrations", label: t("secDonationIntegrations"), icon: Webhook, group: "main", level: 2, permission: () => isAdmin },
     { id: "analytics", label: t("secAnalytics"),    icon: TrendingUp,     group: "main",       level: 2, permission: () => isAdmin },
@@ -589,6 +590,7 @@ export function AdminClient({
           {activeSection === "obsrules" && isAdmin && <ObsRulesManager onToast={showToast} />}
           {activeSection === "goverules" && isAdmin && <GoveeRulesManager onToast={showToast} />}
           {activeSection === "scenes" && isAdmin && <SceneBuilder onToast={showToast} />}
+          {activeSection === "portal-copy" && isAdmin && <PortalCopy onToast={showToast} />}
           {activeSection === "collectibles" && isAdmin && <CollectiblesManager onToast={showToast} />}
           {activeSection === "recap" && isAdmin && <RecapManager onToast={showToast} />}
           {activeSection === "clipdirector" && isAdmin && <ClipDirectorManager onToast={showToast} />}

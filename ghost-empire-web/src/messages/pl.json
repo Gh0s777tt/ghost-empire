@@ -370,6 +370,19 @@
     "secHub": "Hub — linki",
     "secDonationIntegrations": "Integracje donacji",
     "secDesc_appearance": "Zrób ten portal swoim — nazwa, nazwa waluty, kolor marki i logo. Własny branding to funkcja Elite.",
+    "portalCopy": {
+      "title": "Treść portalu",
+      "intro": "Opisz swoją społeczność własnymi słowami. Puste pole = tekst domyślny platformy.",
+      "language": "Język",
+      "loading": "Wczytywanie…",
+      "save": "Zapisz",
+      "saved": "Treść zapisana",
+      "err": "Nie udało się zapisać",
+      "reset": "Wyczyść wszystko",
+      "resetHint": "Przywraca teksty domyślne platformy (po zapisaniu)",
+      "hint": "Możesz używać znaczników %tokenName% i %brandShort% — podstawią się nazwy Twojego portalu. Regulamin i polityka prywatności nie są edytowalne.",
+      "defaultPlaceholder": "tekst domyślny platformy"
+    },
     "appearance": {
       "paletteHeading": "Paleta i typografia",
       "surfaceColor": "Kolor tła",
@@ -2485,6 +2498,7 @@
     "secSongs": "Song requests",
     "secWidgets": "Widgety (OBS)",
     "secScenes": "Kreator scen",
+    "secPortalCopy": "Treść portalu",
     "secAlerts": "Stream Alerts",
     "secSoundrewards": "Dźwięki na streamie",
     "secPayments": "Wsparcie / płatności",

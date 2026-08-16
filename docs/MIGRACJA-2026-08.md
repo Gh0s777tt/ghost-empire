@@ -186,6 +186,53 @@ stos systemowy, więc string z bazy nigdy nie wchodzi do `font-family` wprost. T
 
 ---
 
+## §7 — `TenantCopy` (własna treść portalu) ⚠️ NOWA TABELA — RLS OBOWIĄZKOWE
+
+Gałąź `feat/portal-copy-2026-08`. Portale wyglądały inaczej, ale MÓWIŁY to samo — `welcome` pochodził
+wyłącznie ze wspólnych katalogów i18n. Ta tabela trzyma nadpisania per portal i locale.
+
+**Co zrobi `npm run db:push`:**
+
+```sql
+-- CreateTable
+CREATE TABLE "tenant_copy" (
+    "id"        TEXT NOT NULL,
+    "tenantId"  TEXT,
+    "locale"    TEXT NOT NULL,
+    "key"       TEXT NOT NULL,
+    "value"     TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "tenant_copy_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX "tenant_copy_tenantId_locale_key_key" ON "tenant_copy"("tenantId", "locale", "key");
+CREATE INDEX "tenant_copy_tenantId_locale_idx" ON "tenant_copy"("tenantId", "locale");
+```
+
+### ⚠️ Krok DRUGI, obowiązkowy — RLS
+
+To **nowa tabela**, a Postgres tworzy tabele z RLS **wyłączonym**; Supabase automatycznie wystawia
+każdą tabelę `public` przez PostgREST kluczowi `anon`. Zgodnie z `docs/RLS.md` i CLAUDE.md, zaraz po
+`db push` uruchom w SQL Editorze:
+
+```sql
+ALTER TABLE "tenant_copy" ENABLE ROW LEVEL SECURITY;
+```
+
+**Bez polityki** — aplikacja łączy się jako właściciel tabeli (`rolbypassrls = true`), więc RLS jej nie
+dotyczy, a włączenie bez polityki to default-deny dla `anon`. Weryfikacja:
+`select count(*) from pg_class where relname = 'tenant_copy' and not relrowsecurity;` → **0**.
+
+*(Ta tabela nie trzyma sekretów ani PII — same teksty marketingowe — ale zasada obowiązuje każdą nową
+tabelę bez wyjątku; to właśnie pominięcie tego kroku zostawiło kiedyś `donation_integrations`
+z `secretEnc` widocznym dla roli `anon`.)*
+
+**Kolejność nie ma znaczenia — kod jest odporny na brak tabeli.** Odczyt (`getTenantCopy`) i panel
+przy błędzie oddają puste nadpisania, więc strona powitalna renderuje teksty domyślne; zapis zwraca
+czytelne **503 „wymaga migracji bazy"**.
+
+---
+
 ---
 
 ## Czego tu NIE ma (świadomie)

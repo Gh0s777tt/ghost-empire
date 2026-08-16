@@ -1,7 +1,9 @@
 // src/app/welcome/page.tsx
 // Landing / first-visit page — a focused hero shown on a visitor's first load
 // (see FirstVisitRedirect). Reachable any time at /welcome.
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
+import { getTenantCopy } from "@/lib/tenant-copy-server";
+import { resolveCopy } from "@/lib/tenant-copy";
 import { localeAlternates } from "@/i18n/metadata";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
@@ -23,13 +25,21 @@ export default async function WelcomePage() {
   const isAuthed = !!session?.user?.id;
   const t = await getTranslations("welcome");
   const tenant = await getCurrentTenant();
+  const locale = await getLocale();
+
+  // Treść portalu (update 2026-08): jeśli portal nadpisał dane pole, pokazujemy JEGO tekst; jeśli nie
+  // (albo wyczyścił) — tłumaczenie domyślne. Dzięki temu portale przestają mówić jednym głosem,
+  // a jednocześnie żadne pole nie może zostać puste. Markery `%tokenName%` rozwiązuje ta sama
+  // ścieżka co dla katalogu i18n, więc zmiana nazwy waluty naprawia też teksty własne.
+  const overrides = await getTenantCopy(locale);
+  const c = (key: string) => resolveCopy(overrides, key, t);
 
   const highlights = [
-    { icon: Coins, color: "var(--brand)", title: t("hlTokens"), desc: t("hlTokensDesc") },
-    { icon: Gift, color: "#10b981", title: t("hlRewards"), desc: t("hlRewardsDesc") },
-    { icon: Trophy, color: "#FFD700", title: t("hlCompete"), desc: t("hlCompeteDesc") },
-    { icon: MessageSquare, color: "#8b5cf6", title: t("hlBot"), desc: t("hlBotDesc") },
-    { icon: Puzzle, color: "#f59e0b", title: t("hlExt"), desc: t("hlExtDesc") },
+    { icon: Coins, color: "var(--brand)", title: c("welcome.hlTokens"), desc: c("welcome.hlTokensDesc") },
+    { icon: Gift, color: "#10b981", title: c("welcome.hlRewards"), desc: c("welcome.hlRewardsDesc") },
+    { icon: Trophy, color: "#FFD700", title: c("welcome.hlCompete"), desc: c("welcome.hlCompeteDesc") },
+    { icon: MessageSquare, color: "#8b5cf6", title: c("welcome.hlBot"), desc: c("welcome.hlBotDesc") },
+    { icon: Puzzle, color: "#f59e0b", title: c("welcome.hlExt"), desc: c("welcome.hlExtDesc") },
   ];
 
   return (
@@ -58,10 +68,15 @@ export default async function WelcomePage() {
           {tenant.name}
         </h1>
         <p className="text-zinc-300 text-base sm:text-xl max-w-2xl mb-2">
-          {t("sub1pre")} <span className="text-red-400 font-semibold">Twitch · Kick · YouTube · Discord</span>.
+          {c("welcome.sub1pre")} <span className="text-red-400 font-semibold">Twitch · Kick · YouTube · Discord</span>.
         </p>
         <p className="text-zinc-500 text-sm sm:text-base max-w-xl mb-8">
-          {t.rich("sub2", { b: (chunks) => <strong className="text-white">{chunks}</strong> })}
+          {/* `sub2` w katalogu i18n niesie pogrubienie (`t.rich`), a nadpisanie portalu jest zwykłym
+              tekstem — więc gdy portal je ustawi, renderujemy je BEZ formatowania zamiast udawać,
+              że tagi zadziałają. Brak nadpisania = pełne, bogate tłumaczenie domyślne. */}
+          {overrides.get("welcome.sub2")?.trim()
+            ? overrides.get("welcome.sub2")
+            : t.rich("sub2", { b: (chunks) => <strong className="text-white">{chunks}</strong> })}
         </p>
 
         {/* Platform icons */}
