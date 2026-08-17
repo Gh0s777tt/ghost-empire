@@ -3023,6 +3023,7 @@
     "secAppearance": "Apparence / Branding",
     "secHub": "Hub — liens",
     "secDesc_appearance": "Personnalisez ce portail — nom, nom de la devise, couleur de marque et logo. Le branding personnalisé est une fonction Elite.",
+    "secDesc_portal-copy": "Rédigez votre page d'accueil avec vos propres mots : titres, descriptions et appels à l'action, séparément pour chacune des 14 langues. Un champ vide revient au texte par défaut. Les conditions et la confidentialité sont volontairement hors périmètre.",
     "portalCopy": {
       "title": "Textes du portail",
       "intro": "Décris ta communauté avec tes mots. Champ vide = valeur par défaut de la plateforme.",

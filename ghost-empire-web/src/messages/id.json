@@ -3023,6 +3023,7 @@
     "secAppearance": "Tampilan / Branding",
     "secHub": "Hub — tautan",
     "secDesc_appearance": "Jadikan portal ini milik Anda — nama, penamaan mata uang, warna brand, dan logo. Branding kustom adalah fitur Elite.",
+    "secDesc_portal-copy": "Tulis halaman sambutanmu dengan kata-katamu sendiri — judul, deskripsi, dan ajakan bertindak, terpisah untuk masing-masing 14 bahasa. Kolom kosong kembali ke teks bawaan. Ketentuan dan kebijakan privasi sengaja di luar cakupan.",
     "portalCopy": {
       "title": "Teks portal",
       "intro": "Jelaskan komunitasmu dengan katamu sendiri. Kolom kosong = bawaan platform.",

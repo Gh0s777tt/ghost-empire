@@ -3023,6 +3023,7 @@
     "secAppearance": "Darstellung / Branding",
     "secHub": "Hub — Links",
     "secDesc_appearance": "Mach dieses Portal zu deinem — Name, Währungsbezeichnung, Markenfarbe und Logo. Eigenes Branding ist eine Elite-Funktion.",
+    "secDesc_portal-copy": "Schreibe deine Willkommensseite in eigenen Worten — Überschriften, Beschreibungen und Handlungsaufrufe, getrennt für jede der 14 Sprachen. Ein leeres Feld fällt auf den Standardtext zurück. AGB und Datenschutz sind bewusst ausgenommen.",
     "portalCopy": {
       "title": "Portal-Texte",
       "intro": "Beschreibe deine Community mit eigenen Worten. Leeres Feld = Plattform-Standard.",
