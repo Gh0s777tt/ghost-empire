@@ -3023,6 +3023,9 @@
     "secAppearance": "Apariencia / Branding",
     "secHub": "Hub — enlaces",
     "secDesc_appearance": "Haz tuyo este portal — nombre, nombre de la moneda, color de marca y logo. El branding personalizado es una función Elite.",
+    "secDesc_hub": "Tu página de un solo enlace: /hub con biografía y enlaces a todo lo que gestionas. Actívalo, añade enlaces y ordénalos; un hub desactivado devuelve 404.",
+    "secDesc_penalties": "Penalizaciones por donación: el espectador compra una consecuencia para ti en directo. El módulo implica dinero real y está desactivado por defecto; lee el aviso legal antes de activarlo.",
+    "secDesc_donationIntegrations": "Conecta proveedores de pago externos mediante webhooks, cada uno con su secreto y nivel de confianza. El secreto se muestra una vez al rotarlo y después siempre enmascarado.",
     "appearance": {
       "title": "Apariencia / Branding",
       "intro": "Cómo ven tu portal los espectadores. Los cambios se aplican en todo el portal al instante.",

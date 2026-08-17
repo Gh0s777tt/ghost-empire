@@ -370,6 +370,9 @@
     "secHub": "Hub — links",
     "secDonationIntegrations": "Donation integrations",
     "secDesc_appearance": "Make this portal yours — name, currency naming, brand colour and logo. Custom branding is an Elite feature.",
+    "secDesc_hub": "Your one-link page — /hub with a bio and links to everything you run. Turn it on, add links, set their order; a disabled hub returns 404.",
+    "secDesc_penalties": "Donation penalties — a viewer buys a consequence for you on stream. This module involves real money and is off by default; read the legal warning before enabling it.",
+    "secDesc_donationIntegrations": "Connect external payment providers over webhooks, each with its own secret and trust level. The secret is shown once on rotation, and masked everywhere after that.",
     "appearance": {
       "title": "Appearance / Branding",
       "intro": "How your portal looks to viewers. Changes apply across the whole portal right away.",
