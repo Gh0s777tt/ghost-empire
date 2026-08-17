@@ -53,6 +53,8 @@ flowchart LR
   B --> R["release<br/>semantic-release"]
   SG["gitleaks<br/>(sekrety)"]
   SS["semgrep · trivy<br/>(twarde)"]
+
+  SS["semgrep · trivy<br/>(SAST · CVE)"]
   DD["docs-drift<br/>(MR)"]
   DP["pages<br/>(deploy)"]
   L -.->|needs: lint:web| T
@@ -83,14 +85,18 @@ mają `needs: []` — startują równolegle. \* `commitlint` biegnie **wyłączn
 | `gitleaks` | security | 🔴 **twarda** | MR + main + schedule | Skan sekretów w drzewie roboczym. |
 | `semgrep` | security | 🔴 **twarda** | MR + main + schedule | SAST (`p/ci` + `p/typescript`). Finding = czerwony pipeline. |
 | `trivy` | security | 🔴 **twarda** | MR + main + schedule | CVE w zależnościach (HIGH/CRITICAL czerwienią; LOW/MEDIUM informacyjnie). |
+
+| `gitleaks` | security | 🔴 **twarda** | MR + main + schedule | Skan sekretów w drzewie roboczym (`--no-git`), allowlista w `.gitleaks.toml`. |
+| `semgrep` | security | 🔴 **twarda** | MR + main + schedule | SAST (`p/ci` + `p/typescript`). `allow_failure` **zdjęte** (audyt 2026-08). |
+| `trivy` | security | 🔴 **twarda** | MR + main + schedule | CVE w zależnościach (`fs --scanners vuln`, **jeden cel na wywołanie** — po jednym przebiegu na `ghost-empire-web` i `ghost-empire-chat`). HIGH/CRITICAL czerwieni job; `allow_failure` **zdjęte** (audyt 2026-08). |
 | `pages` | docs | — | main | Buduje MkDocs + TypeDoc → GitLab Pages. `needs: []`. |
 | `docs-drift` | docs | 🔴 twarda | MR | Failuje MR, gdy zmieniono trasy `/api/*` bez `docs/`. |
 | `release` | release | 🟠 bootstrap | main | `semantic-release`. `allow_failure` do czasu setupu (§4). |
 | `renovate` | security | 🟠 | schedule `RENOVATE=true` | Otwiera MR-y z aktualizacjami zależności. |
 
 **Twarda bramka** = jej porażka **czerwieni** pipeline. **Doradcza** (`allow_failure:
-true`) = porażka daje **pomarańczowe ostrzeżenie**, nie blokuje merge'a. To świadomy
-kompromis — zob. §6.
+true`) = porażka daje **pomarańczowe ostrzeżenie**, nie blokuje merge'a. Wszystkie trzy
+skanery bezpieczeństwa są dziś **twarde** — zob. §6.
 
 ### Egzekwowanie bramek na MR
 Bramki są *blokujące* dopiero, gdy właściciel włączy **Settings → Merge requests →
@@ -263,7 +269,13 @@ Skanuje bieżące drzewo (`--no-git`) z allowlistą [`.gitleaks.toml`](https://g
 1. Jeśli **prawdziwy** — natychmiast **zrotuj** go u dostawcy (nie tylko usuń z kodu;
    historia git go pamięta), potem usuń z drzewa i użyj zmiennej środowiskowej.
 2. Jeśli **placeholder / false-positive** — dodaj ścieżkę lub regex do allowlisty w
-   `.gitleaks.toml` (nie wyłączaj całego joba).
+   `.gitleaks.toml` (nie wyłączaj całego joba). **Allowlista ma być WĄSKA:** wycisza się
+   konkretną **wartość** (dosłowny regex), a nie regułę i nie cały plik — `paths` i
+   `regexes` w jednym bloku `[allowlist]` łączy **OR**, więc dopisanie pliku do `paths`
+   zdejmuje skan z CAŁEGO pliku. Po każdej zmianie allowlisty zrób **kontrolę pozytywną**:
+   wstrzyknij atrapę sekretu do tego samego pliku i sprawdź, że job dalej jest czerwony
+   (przykład: `ge-gambling-ack-v1` — nazwa klucza w `localStorage`, łapana przez
+   `generic-api-key` po entropii; wyciszona sama wartość, reguła w tym pliku dalej działa).
 
 > `gitleaks` skanuje tylko **bieżące drzewo**, nie pełną historię git. Sekret
 > zakopany w starej historii nie zostanie złapany przez CI — bezpieczeństwo historii
@@ -280,17 +292,36 @@ zaostrzono na polecenie właściciela. **Triaż:**
 - Wyciszaj **PUNKTOWO** i zawsze z powodem: semgrep → inline `// nosemgrep: <rule-id>` na
   danej linii lub wpis w `.semgrepignore`; trivy → jedna linia `CVE-XXXX-YYYY` w
   `.trivyignore` z komentarzem i datą przeglądu. Świadome odstępstwa → [`DECISIONS.md`](DECISIONS.md).
-
 > **Uwaga o regułach tekstowych:** część reguł (np. `npm-missing-minimum-release-age`)
 > dopasowuje **surowy tekst pliku i nie pomija komentarzy** — opisanie w komentarzu
 > „złej" wartości potrafi samo w sobie zapalić finding. Zob. komentarz-pułapkę w
 > `ghost-empire-web/.npmrc`.
-
 **Lokalne odtworzenie bramki** (zanim wypchniesz — ten sam config co CI):
-
 ```bash
 semgrep scan --error --config p/ci --config p/typescript ghost-empire-web ghost-empire-chat
 ```
+
+### `semgrep` (SAST) i `trivy` (CVE) — TWARDE bramki
+`allow_failure` zostało **zdjęte** (audyt 2026-08, decyzja właściciela): finding czerwieni
+pipeline. Wcześniej były doradcze — po wytriażowaniu szumu dług zamknięto. **Triaż:**
+- Przejrzyj findings w logu joba (`semgrep` / `trivy`).
+- Realne → napraw. Zaakceptowane CVE → `.trivyignore` (jeden CVE = jedna linia, zawsze
+  z powodem i datą przeglądu). Reguła semgrep z false-positive → inline
+  `// nosemgrep: <rule-id>` albo `.semgrepignore`.
+- **NIE przywracaj `allow_failure`** dla pojedynczego false-positive — to zaślepia CAŁY
+  skaner. Wycisz punktowo.
+
+**`trivy fs` przyjmuje DOKŁADNIE JEDEN cel na wywołanie.** Dwa katalogi naraz kończą się
+`FATAL Fatal error multiple targets cannot be specified` i **exit 1** — job jest wtedy
+czerwony, choć nie przeskanował niczego (tak stał od 2026-08-12 do naprawy). Dokładasz
+projekt → dokładasz **parę linii** (przebieg informacyjny LOW/MEDIUM + bramkujący
+HIGH/CRITICAL), nie kolejny argument. Uwaga przy triażu: trivy domyślnie **pomija
+dev-dependencies** (`--include-dev-deps` je pokazuje), więc zielony job znaczy „brak
+HIGH/CRITICAL w zależnościach produkcyjnych".
+
+> **Czerwona bramka to nie zawsze finding.** Zanim uznasz job za „znalazł podatność",
+> sprawdź w logu, czy nie padł na **błędzie konfiguracji** (zła składnia, brak celu) —
+> wtedy nie chroni niczego, mimo że świeci na czerwono.
 
 Zgłaszanie podatności: [`SECURITY.md`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/SECURITY.md).
 
