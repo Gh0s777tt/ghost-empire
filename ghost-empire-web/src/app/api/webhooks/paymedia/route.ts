@@ -125,7 +125,7 @@ export async function POST(req: Request) {
         })
         .catch((e: unknown) => {
           const code = typeof e === "object" && e !== null && "code" in e ? (e as { code: string }).code : "";
-          if (code !== "P2002") log.error("failed to persist unmatched paymedia donation", { paymentId: payload.payment_id, error: e instanceof Error ? e.message : String(e) });
+          if (code !== "P2002") log.error("failed to persist unmatched paymedia donation", e, { paymentId: payload.payment_id });
         });
     }
     log.warn("payment — no valid donation code (queued for manual reconciliation)", { paymentId: payload.payment_id, amountPLN });
