@@ -880,7 +880,7 @@ function DashboardSection({
           {t("dashShortcutsHint")}
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] font-mono uppercase tracking-widest">
-          <a href="#users" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="cine-tile p-3 text-zinc-300">
+          <a href="#events" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="cine-tile p-3 text-zinc-300">
             ▸ {t("secEvents")}
           </a>
           <a href="#drops" onClick={(e) => { e.preventDefault(); onJump("drops"); }} className="cine-tile p-3 text-zinc-300">

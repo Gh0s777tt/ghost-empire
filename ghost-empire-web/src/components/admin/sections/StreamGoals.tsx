@@ -9,6 +9,7 @@ import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { GoalBar, HypeTrainBanner } from "@/components/GoalBar";
 import { WIDGET_FONTS } from "@/lib/widget-fonts";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type StreamGoalData = {
   id: string;
@@ -46,6 +47,9 @@ export function StreamGoalsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.streamGoals");
+  // Kolor marki jest per portal — literał #E50914 pokazywałby każdemu tenantowi
+  // czerwień założyciela w podglądzie "jak to wygląda".
+  const { brandColor } = useTenantBranding();
   const nf = useLocale();
   const GOAL_TYPE_LABEL: Record<string, string> = {
     subs: t("goalType.subs"), gift_subs: t("goalType.gift_subs"), follows: t("goalType.follows"),
@@ -176,8 +180,8 @@ export function StreamGoalsManager({
 
       <div className="mb-4">
         <OverlayPreview path="/overlay/goals" note={t("obsNote")}>
-          <GoalBar goal={{ id: "preview1", type: "subs", label: t("previewGoal1"), current: 327, target: 500, color: null, completedAt: null }} accent="#E50914" />
-          <GoalBar goal={{ id: "preview2", type: "donations_pln", label: t("previewGoal2"), current: 1500, target: 1500, color: "#10b981", completedAt: new Date().toISOString() }} accent="#E50914" />
+          <GoalBar goal={{ id: "preview1", type: "subs", label: t("previewGoal1"), current: 327, target: 500, color: null, completedAt: null }} accent={brandColor} />
+          <GoalBar goal={{ id: "preview2", type: "donations_pln", label: t("previewGoal2"), current: 1500, target: 1500, color: "#10b981", completedAt: new Date().toISOString() }} accent={brandColor} />
         </OverlayPreview>
       </div>
 
@@ -210,14 +214,14 @@ export function StreamGoalsManager({
           <div className="mb-2">
             <HypeTrainBanner
               train={{ level: 3, goal: 1000, total: 640, topContributor: "viewer123", expiresAt: null, color: hypeColor || null, bgColor: hypeBgColor || null, fontFamily: hypeFont || null }}
-              accent="#E50914"
+              accent={brandColor}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-0.5">{t("colorLabel")}</label>
               <div className="flex items-center gap-1.5">
-                <input type="color" value={hypeColor || "#E50914"} onChange={(e) => setHypeColor(e.target.value)} className="w-9 h-7 border border-zinc-700 bg-black/40 cursor-pointer" />
+                <input type="color" value={hypeColor || brandColor} onChange={(e) => setHypeColor(e.target.value)} className="w-9 h-7 border border-zinc-700 bg-black/40 cursor-pointer" />
                 <input value={hypeColor} onChange={(e) => setHypeColor(e.target.value)} placeholder={t("autoPh")} className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white font-mono outline-hidden focus:border-red-600" />
               </div>
             </div>
@@ -254,7 +258,7 @@ export function StreamGoalsManager({
           ) : (
             goals.map((g) => {
               const pct = Math.min(100, (g.current / Math.max(1, g.target)) * 100);
-              const color = g.color ?? "#E50914";
+              const color = g.color ?? brandColor;
               return (
                 <div
                   key={g.id}
@@ -357,7 +361,7 @@ export function StreamGoalsManager({
               fontFamily: newFont || null,
               completedAt: null,
             }}
-            accent="#E50914"
+            accent={brandColor}
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
@@ -409,7 +413,7 @@ export function StreamGoalsManager({
             <div className="flex items-center gap-1.5">
               <input
                 type="color"
-                value={newColor || "#E50914"}
+                value={newColor || brandColor}
                 onChange={(e) => setNewColor(e.target.value)}
                 className="w-9 h-7 border border-zinc-700 bg-black/40 cursor-pointer"
               />
