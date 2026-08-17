@@ -34,6 +34,7 @@ export const WidgetsLibrary = dynamic(() => import("./sections/Widgets").then((m
 export const IntegrationsManager = dynamic(() => import("./sections/Integrations").then((m) => m.IntegrationsManager), { ssr: false, loading: SectionLoading });
 export const ObsRulesManager = dynamic(() => import("./sections/ObsRules").then((m) => m.ObsRulesManager), { ssr: false, loading: SectionLoading });
 export const GoveeRulesManager = dynamic(() => import("./sections/GoveeRules").then((m) => m.GoveeRulesManager), { ssr: false, loading: SectionLoading });
+export const HueRulesManager = dynamic(() => import("./sections/HueRules").then((m) => m.HueRulesManager), { ssr: false, loading: SectionLoading });
 export const WheelManager = dynamic(() => import("./sections/Wheel").then((m) => m.WheelManager), { ssr: false, loading: SectionLoading });
 export const PenaltiesManager = dynamic(() => import("./sections/Penalties").then((m) => m.PenaltiesManager), { ssr: false, loading: SectionLoading });
 export const WebhooksOutManager = dynamic(() => import("./sections/WebhooksOut").then((m) => m.WebhooksOutManager), { ssr: false, loading: SectionLoading });

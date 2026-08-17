@@ -27,7 +27,7 @@ import {
   AnalyticsSection, EconomyHealthSection, CommunitySection, ClanWarsManager, SoundRewardsManager, PaymentMethodsManager,
   PushBroadcastManager, SponsorsManager, SceneBuilder, PortalCopy, CollectiblesManager, RecapManager, ClipDirectorManager,
   TriviaManager, TwoFactorManager, AuditLogSection, PollsManager, ModerationManager, WidgetsLibrary,
-  IntegrationsManager, ObsRulesManager, GoveeRulesManager, WheelManager, PenaltiesManager, WebhooksOutManager, GamesLibraryManager,
+  IntegrationsManager, ObsRulesManager, GoveeRulesManager, HueRulesManager, WheelManager, PenaltiesManager, WebhooksOutManager, GamesLibraryManager,
   AchievementsManager, PredictionsManager, BountiesManager, WelcomeManager, FaqManager, ChatTimersManager,
   ChatCommandsManager, SongQueueManager, SubathonManager, GrantTokensCard, CreateDropCard, DatabaseResetCard,
   CustomAlertsCard, ChatOverlayCard, StreamGoalsManager, KickEventsManager, YouTubeLiveManager, RumbleManager,
@@ -95,7 +95,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "penalties" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "portal-copy" | "hub" | "donationIntegrations";
+    | "huerules" | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "penalties" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub" | "donationIntegrations" | "portal-copy";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -129,6 +129,7 @@ export function AdminClient({
     { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
     { id: "obsrules",  label: t("secObsRules"),     icon: MonitorPlay,    group: "main",       level: 3, permission: () => isAdmin },
     { id: "goverules", label: t("secGoveeRules"),   icon: Lightbulb,      group: "main",       level: 3, permission: () => isAdmin },
+    { id: "huerules",  label: t("secHueRules"),     icon: Lightbulb,      group: "main",       level: 3, permission: () => isAdmin },
     { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
     // level 1 = always visible: it's already gated to the platform owner (only they see it
     // at all), so hiding it behind "dev" mode just made the multi-portal creator hard to find (#656).
@@ -589,6 +590,7 @@ export function AdminClient({
           {activeSection === "sponsors" && isAdmin && <SponsorsManager onToast={showToast} />}
           {activeSection === "obsrules" && isAdmin && <ObsRulesManager onToast={showToast} />}
           {activeSection === "goverules" && isAdmin && <GoveeRulesManager onToast={showToast} />}
+          {activeSection === "huerules" && isAdmin && <HueRulesManager onToast={showToast} />}
           {activeSection === "scenes" && isAdmin && <SceneBuilder onToast={showToast} />}
           {activeSection === "portal-copy" && isAdmin && <PortalCopy onToast={showToast} />}
           {activeSection === "collectibles" && isAdmin && <CollectiblesManager onToast={showToast} />}
@@ -882,7 +884,7 @@ function DashboardSection({
           {t("dashShortcutsHint")}
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] font-mono uppercase tracking-widest">
-          <a href="#users" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="cine-tile p-3 text-zinc-300">
+          <a href="#events" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="cine-tile p-3 text-zinc-300">
             ▸ {t("secEvents")}
           </a>
           <a href="#drops" onClick={(e) => { e.preventDefault(); onJump("drops"); }} className="cine-tile p-3 text-zinc-300">

@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       results.push({ tenantId: tk.tenantId, ok: r.ok, status: r.status, ...(r.ok ? {} : { error: r.error }) });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      log.error("poll failed for portal", { tenantId: tk.tenantId, error: msg });
+      log.error("poll failed for portal", e, { tenantId: tk.tenantId });
       results.push({ tenantId: tk.tenantId, ok: false, status: "error", error: msg.slice(0, 300) });
     }
   }

@@ -123,7 +123,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | Trasa | Metoda | Po co |
 |---|---|---|
 | `…/api/onboarding` | POST | Provisioning portalu tenanta przy zakładaniu konta (slug/nazwa/branding) |
-| `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta |
+| `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta — od 2026-08 także `socialLinks`, `timezone`, `companionDefaultName`, `supportAlertMode` (walidacja przepisana co do znaku z trasy właściciela platformy). **`domain` świadomie poza zakresem**: jest `@unique` i mapuje Host→tenant, więc samoobsługa bez weryfikacji DNS pozwoliłaby przejąć cudzy adres |
 | `…/api/billing/checkout` | GET/POST | Status billingu (GET `{configured}`) / utworzenie Stripe Checkout (POST `{plan,months,currency}` — wielowaluta przez `currency_options`, trial 14 dni, #744). Gdy Stripe nieskonfigurowany → 503 (trial bez karty) |
 | `…/api/billing/portal` | POST | Stripe Customer Portal dla własnego tenanta — samodzielne faktury/karta/anulowanie. 400 przed pierwszym checkoutem (brak customer), 503 gdy Stripe nieskonfigurowany |
 

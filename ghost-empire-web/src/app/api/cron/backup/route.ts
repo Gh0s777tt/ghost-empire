@@ -24,6 +24,6 @@ export async function GET(req: Request) {
   const json = JSON.stringify(await buildBackup());
   const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
   const result = await uploadBackup(`backups/ghost-empire-${stamp}.json`, json);
-  if (!result.uploaded) log.error("backup upload failed", { status: result.status, error: result.error });
+  if (!result.uploaded) log.error("backup upload failed", result.error, { status: result.status });
   return NextResponse.json({ ok: result.uploaded, ...result, bytes: json.length });
 }
