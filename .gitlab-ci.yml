@@ -67,7 +67,7 @@ workflow:
 # ── Ukryte szablony jobów (DRY) ──────────────────────────────────────────────
 # Cache node_modules per-projekt, kluczowany hashem lockfile'a danego projektu.
 .web:
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   cache:
     key:
       files:
@@ -81,7 +81,7 @@ workflow:
   interruptible: true
 
 .chat:
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   cache:
     key:
       files:
@@ -126,7 +126,7 @@ workflow:
 # ODPORNY na brak root package-lock.json (bootstrap) — commitlint leci na KAŻDYM MR.
 commitlint:
   stage: verify
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   needs: []
   rules:
     # commitlint TYLKO na MR: na push do main CI_MERGE_REQUEST_TARGET_BRANCH_NAME
@@ -429,7 +429,7 @@ trivy:
 # jest generowana z kodu tuż przed buildem, więc zawsze zgadza się ze źródłem.
 pages:
   stage: docs
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   needs: []
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
@@ -555,7 +555,7 @@ docs-drift:
 #   5. ⬜ Dopiero wtedy ZDEJMIJ `allow_failure: true`.
 release:
   stage: release
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   needs: ["test:unit:web", "test:integration:web", "build:web"]
   allow_failure: true
   rules:

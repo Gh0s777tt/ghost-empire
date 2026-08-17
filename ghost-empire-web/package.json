@@ -64,7 +64,7 @@
     "@next/bundle-analyzer": "^16.2.7",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4.3.0",
-    "@types/node": "^22",
+    "@types/node": "^24",
     "@types/pg": "^8.20.0",
     "@types/qrcode": "^1.5.6",
     "@types/web-push": "^3.6.4",
