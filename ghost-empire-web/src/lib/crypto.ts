@@ -32,11 +32,17 @@ const HKDF_SALT = Buffer.from("ghost-empire/crypto/hkdf/v2");
  * the tag length is an authentication parameter, not a formatting detail — it is stated
  * explicitly on BOTH ends rather than inherited from a runtime default.
  *
- * This is NOT theoretical on our runtime. Measured on `node:22` — the version prod actually runs
- * (`engines.node >=22`, CI image `node:22-bookworm-slim`) — a decipher built WITHOUT this option
- * happily decrypts a payload carrying a 4-byte tag; Node 26 rejects it. So on Node 22 the
- * truncation the `gcm-no-tag-length` rule warns about was reachable, and pinning the length here
- * is the fix, not a lint appeasement.
+ * This is NOT theoretical. Measured on `node:22` — the CI image (`node:22-bookworm-slim`) — a
+ * decipher built WITHOUT this option happily decrypts a payload carrying a 4-byte tag; Node 26
+ * rejects it. So on Node 22 the truncation the `gcm-no-tag-length` rule warns about was
+ * reachable, and pinning the length here is the fix, not a lint appeasement.
+ *
+ * ⚠️ Uwaga o środowiskach, sprostowana 2026-08-17: **produkcja NIE chodzi na Node 22**. Vercel
+ * raportuje `nodeVersion: 24.x`, a `engines.node: ">=22"` jest tylko dolną granicą. Zachowania
+ * Node 24 przy obciętym tagu nie mierzyliśmy — może być takie jak w 22, może jak w 26. Właśnie
+ * dlatego długość tagu jest **podana jawnie po obu stronach**, zamiast dziedziczona z domyślnej
+ * wartości runtime'u: przy rozjeździe CI (22) ↔ produkcja (24) ↔ lokalnie (26) jedyną wartością,
+ * na której można polegać, jest ta zapisana w kodzie.
  *
  * The envelope layout is unchanged (`iv[12] | tag[16] | ciphertext`) and `getAuthTag()` has always
  * emitted 16 bytes, so every row already in the database keeps decrypting — the v1/v2 round-trip
