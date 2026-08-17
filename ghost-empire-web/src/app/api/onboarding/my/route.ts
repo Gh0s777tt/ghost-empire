@@ -27,6 +27,9 @@ export async function GET() {
       slug: true, name: true, shortName: true, ownerHandle: true,
       tokenName: true, tokenSymbol: true, brandColor: true, logoUrl: true,
       bgImageUrl: true,
+      // Pola, które do tej pory umiał ustawić WYŁĄCZNIE właściciel platformy (#asymetria):
+      // bez własnych `socialLinks` stopka i /hub cudzego portalu pokazują socjale założyciela.
+      socialLinks: true, timezone: true, companionDefaultName: true, supportAlertMode: true,
       hubEnabled: true, hubBio: true, hubLinks: true,
       plan: true, planExpiresAt: true, createdAt: true,
       stripeSubscriptionId: true,
@@ -98,6 +101,44 @@ export async function PATCH(req: Request) {
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }
+  // ── Pola, które do tej pory umiał ustawić WYŁĄCZNIE właściciel platformy ────────────────
+  // Asymetria, nie polityka: kolumny i walidacja istniały od dawna w /api/admin/tenants/[id],
+  // brakowało ich tutaj. Skutek był konkretny — bez własnych `socialLinks` stopka, kafelki /hub
+  // i przycisk „oglądaj na żywo" cudzego portalu pokazywały socjale ZAŁOŻYCIELA, a streamer nie
+  // miał jak tego zmienić bez proszenia operatora platformy.
+  //
+  // Walidacja przepisana CO DO ZNAKU z trasy właściciela platformy. To nie jest kosmetyka:
+  // gdyby tu była luźniejsza, powstałaby druga, słabsza furtka do tych samych kolumn.
+  //
+  // `domain` świadomie POZA zakresem — jest `@unique` i mapuje Host→tenant, więc samoobsługa
+  // bez weryfikacji DNS pozwoliłaby przejąć cudzy adres. Zostaje u właściciela platformy.
+  str("companionDefaultName", 30, { allowEmptyNull: true });
+  str("timezone", 64, { allowEmptyNull: true });
+  // Strefa steruje godzinami na /schedule — odrzucamy śmieci zamiast zapisać nieużywalną strefę.
+  // Puste → null (odczyt spada na Europe/Warsaw).
+  if (typeof data.timezone === "string") {
+    try { new Intl.DateTimeFormat(undefined, { timeZone: data.timezone }); }
+    catch { return NextResponse.json({ error: "Nieprawidłowa strefa czasowa (IANA)" }, { status: 400 }); }
+  }
+  // Socjale portalu — tablica { platform (znany zbiór), url (http(s)) }; puste/null czyści.
+  if (body.socialLinks !== undefined) {
+    if (body.socialLinks === null || (Array.isArray(body.socialLinks) && body.socialLinks.length === 0)) {
+      data.socialLinks = null;
+    } else if (Array.isArray(body.socialLinks)) {
+      const ALLOWED = new Set(["discord", "twitch", "kick", "youtube", "tiktok", "instagram", "x"]);
+      const clean = body.socialLinks
+        .filter((s): s is { platform: string; url: string } =>
+          !!s && typeof s === "object" && typeof (s as { platform?: unknown }).platform === "string" && typeof (s as { url?: unknown }).url === "string")
+        .map((s) => ({ platform: s.platform.toLowerCase().trim().slice(0, 20), url: safeMediaUrl(s.url.trim()) ?? "" }))
+        .filter((s) => ALLOWED.has(s.platform) && s.url)
+        .slice(0, 12);
+      data.socialLinks = clean.length ? clean : null;
+    }
+  }
+  if (typeof body.supportAlertMode === "string" && ["none", "bell", "overlay", "both"].includes(body.supportAlertMode)) {
+    data.supportAlertMode = body.supportAlertMode;
+  }
+
   // Link-in-bio Hub config (#hub). hubLinks/hubBio are re-validated here (never trust the client
   // blob), so the /hub page can render them raw. Present-but-absent keys are simply skipped.
   if (typeof body.hubEnabled === "boolean") data.hubEnabled = body.hubEnabled;
