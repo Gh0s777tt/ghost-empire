@@ -409,6 +409,9 @@
     "secHub": "Hub — linki",
     "secDonationIntegrations": "Integracje donacji",
     "secDesc_appearance": "Zrób ten portal swoim — nazwa, nazwa waluty, kolor marki i logo. Własny branding to funkcja Elite.",
+    "secDesc_hub": "Twoja wizytówka pod jednym adresem — /hub z bio i linkami do wszystkiego, co prowadzisz. Włącz, dodaj linki i ustaw kolejność; wyłączony hub zwraca 404.",
+    "secDesc_penalties": "Kary za donaty — widz wykupuje konsekwencję dla Ciebie na streamie. Moduł działa na realnych pieniądzach i jest domyślnie wyłączony; przed włączeniem przeczytaj ostrzeżenie prawne.",
+    "secDesc_donationIntegrations": "Podłącz zewnętrznych dostawców wpłat przez webhooki — każdy z własnym sekretem i poziomem zaufania. Sekret pokazujemy jeden raz przy rotacji, potem wyłącznie zamaskowany.",
     "appearance": {
       "title": "Wygląd / Branding",
       "intro": "Jak Twój portal wygląda dla widzów. Zmiany widać od razu na całym portalu.",
