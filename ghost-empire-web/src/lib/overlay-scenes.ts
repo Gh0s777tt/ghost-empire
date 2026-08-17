@@ -55,14 +55,37 @@ export function sceneWidget(id: string): SceneWidget | null {
   return BY_ID.get(id) ?? null;
 }
 
-export type SceneElement = { id: string; widget: string; x: number; y: number; w: number; h: number; src?: string };
+/** Element sceny. `enabled` (update 2026-08) pozwala WYŁĄCZYĆ pojedynczy element bez kasowania go:
+ *  zostaje na płótnie edytora (wyszarzony), ale render OBS go pomija. Pole jest OPCJONALNE i
+ *  domyślnie „włączone" — dzięki temu wszystkie sceny zapisane przed tą zmianą (bez `enabled`)
+ *  renderują się dalej bez migracji danych. Zapisujemy je tylko wtedy, gdy element jest wyłączony
+ *  (patrz `clampElement`), żeby nie puchł JSON `elements` i nie zmieniał się dla nikogo innego. */
+export type SceneElement = { id: string; widget: string; x: number; y: number; w: number; h: number; src?: string; enabled?: boolean };
+
+/** Czy element ma się renderować w OBS. Brak pola = włączony (zgodność wsteczna). */
+export function elementEnabled(el: SceneElement): boolean {
+  return el.enabled !== false;
+}
 
 export const MAX_ELEMENTS = 24;
+
+/** WARSTWY (update 2026-08): kolejność w tablicy `elements` JEST kolejnością warstw — elementy są
+ *  pozycjonowane absolutnie, więc późniejszy rysuje się NA WIERZCHU wcześniejszego. Dzięki temu
+ *  „na wierzch / pod spód" to zwykłe przestawienie elementu w tablicy: żadnego pola `z`, żadnej
+ *  zmiany formatu zapisu i żadnej migracji danych. Renderer (`SceneClient`) i edytor mapują tę samą
+ *  tablicę w tej samej kolejności, więc podgląd zgadza się z OBS-em z definicji. */
+export function moveElement(els: SceneElement[], id: string, to: "front" | "back"): SceneElement[] {
+  const i = els.findIndex((e) => e.id === id);
+  if (i < 0) return els;
+  const bez = [...els.slice(0, i), ...els.slice(i + 1)];
+  return to === "front" ? [...bez, els[i]] : [els[i], ...bez];
+}
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 /** Clamp an element to the canvas: size 4..100%, position kept fully on-canvas. Zachowuje `src`
- *  (element „image"), już zsanityzowany przez parseElements. */
+ *  (element „image"), już zsanityzowany przez parseImage/parseElements, oraz `enabled` — ale tylko
+ *  gdy jest `false`, bo „włączony" to domyślny stan i zapisywanie go zaśmiecałoby JSON. */
 export function clampElement(el: SceneElement): SceneElement {
   const w = clamp(Math.round(el.w), 4, 100);
   const h = clamp(Math.round(el.h), 4, 100);
@@ -74,6 +97,7 @@ export function clampElement(el: SceneElement): SceneElement {
     x: clamp(Math.round(el.x), 0, 100 - w),
     y: clamp(Math.round(el.y), 0, 100 - h),
     ...(el.src ? { src: el.src } : {}),
+    ...(el.enabled === false ? { enabled: false } : {}),
   };
 }
 
@@ -106,6 +130,7 @@ export function parseElements(json: string | null | undefined): SceneElement[] {
           w: Number(r.w) || def.w,
           h: Number(r.h) || def.h,
           src,
+          enabled: r.enabled !== false,
         }),
       );
       continue;
@@ -121,6 +146,7 @@ export function parseElements(json: string | null | undefined): SceneElement[] {
         y: Number(r.y) || 0,
         w: Number(r.w) || def.w,
         h: Number(r.h) || def.h,
+        enabled: r.enabled !== false,
       }),
     );
   }

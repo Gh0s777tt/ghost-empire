@@ -4,6 +4,7 @@
 // API (/api/admin/tenants/[id]) — no slug changes, no plan/expiry changes
 // (plans move via billing or the platform owner).
 import { NextResponse } from "next/server";
+import { PORTAL_FONTS } from "@/lib/brand-palette";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { effectivePlan, planHasFeature } from "@/lib/entitlements";
@@ -25,7 +26,7 @@ export async function GET() {
     where: { ownerUserId: session.user.id },
     select: {
       slug: true, name: true, shortName: true, ownerHandle: true,
-      tokenName: true, tokenSymbol: true, brandColor: true, logoUrl: true,
+      tokenName: true, tokenSymbol: true, brandColor: true, surfaceColor: true, textColor: true, fontFamily: true, logoUrl: true,
       bgImageUrl: true,
       // Pola, które do tej pory umiał ustawić WYŁĄCZNIE właściciel platformy (#asymetria):
       // bez własnych `socialLinks` stopka i /hub cudzego portalu pokazują socjale założyciela.
@@ -98,6 +99,22 @@ export async function PATCH(req: Request) {
   // route — bgImageUrl is EITHER a built-in "preset:<id>" template (kept verbatim,
   // allowlist-checked) or a custom image URL rendered as CSS url() (must be absolute http(s)).
   if (typeof data.bgImageUrl === "string" && !isBgPreset(data.bgImageUrl)) data.bgImageUrl = safeMediaUrl(data.bgImageUrl);
+  // Paleta (update 2026-08): pusty string = wyczyść (wróć do koloru z motywu), poprawny hex = ustaw.
+  // Walidacja HEX jest tu OBOWIĄZKOWA, nie kosmetyczna — te wartości trafiają wprost do deklaracji
+  // CSS w layoucie, więc cokolwiek spoza `#rrggbb` byłoby wektorem wstrzyknięcia stylu.
+  for (const pole of ["surfaceColor", "textColor"] as const) {
+    const v = body[pole];
+    if (typeof v !== "string") continue;
+    const trim = v.trim();
+    if (trim === "") data[pole] = null;
+    else if (HEX.test(trim)) data[pole] = trim;
+  }
+  // Krój: przyjmujemy WYŁĄCZNIE identyfikator z zamkniętej listy — nie nazwę kroju.
+  if (typeof body.fontFamily === "string") {
+    const id = body.fontFamily.trim();
+    if (id === "") data.fontFamily = null;
+    else if (PORTAL_FONTS.some((f) => f.id === id)) data.fontFamily = id;
+  }
   if (typeof body.brandColor === "string" && HEX.test(body.brandColor.trim())) {
     data.brandColor = body.brandColor.trim();
   }

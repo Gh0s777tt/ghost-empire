@@ -435,3 +435,30 @@ mają w regule `&& $CI_PIPELINE_SOURCE != "schedule"`, więc żaden scheduled pi
 (driver-adapter `@prisma/adapter-pg`, konfiguracja w `prisma.config.ts`) · Postgres
 (Supabase) · Tailwind 4 · NextAuth · next-intl · bot `ghost-empire-chat` (Node + tmi.js + tsx).
 Node **≥ 22**. Menedżer pakietów: **npm** (`.npmrc`: `legacy-peer-deps=true`).
+
+## 13. Kolejność scalania serii „update scen i portalu" (2026-08)
+
+Seria z sierpnia 2026 to **siedem commitów w jednym łańcuchu** plus jedna niezależna poprawka CI.
+Gałęzie pośrednie istnieją wyłącznie po to, żeby dało się przejrzeć zmiany po kawałku — **szczyt
+łańcucha zawiera je wszystkie**, więc nie trzeba scalać sześciu MR-ów po kolei.
+
+| Krok | Gałąź | Co wnosi |
+|:-:|:--|:--|
+| 1 | `ci/commitlint-ca-certs` | Odblokowuje `commitlint`, przez który **żaden MR nie przechodził CI**. Mała, niezależna, bez migracji — dlatego pierwsza. |
+| 2 | `fix/scenes-selfreview-2026-08` | **Cała reszta**: poprawka Kreatora Scen, fale A–D, przegląd własnych zmian i weryfikacja na żywo (7 commitów). |
+
+**Jedyny konflikt między nimi to `CHANGELOG.md`** — oba wpisy wchodzą na górę tej samej sekcji. Kod
+jest całkowicie rozłączny (`.gitlab-ci.yml` kontra reszta). Rozwiązanie: **zachowaj oba wpisy**, jeden
+pod drugim.
+
+Świadomie NIE przestawiałem serii na poprawkę CI: rebase przepisałby siedem SHA, unieważnił sześć
+otwartych MR-ów i wymagał dwunastu force-pushy — nieproporcjonalnie do jednego trywialnego konfliktu
+w pliku tekstowym.
+
+Po scaleniu kroku 2 gałęzie pośrednie (`feat/scene-editor-pro`, `feat/scene-live`,
+`feat/portal-palette`, `feat/portal-copy`, `fix/scene-builder`) zamkną się same — ich commity będą już
+w `main`. Skasuj je z obu remote'ów.
+
+**Migracje** (wszystkie addytywne, każda z runbookiem w `MIGRACJA-2026-08.md`; kod działa też PRZED
+ich wykonaniem): §4 `OverlayScene.enabled` · §5 `OverlayScene.isActive` · §6 paleta portalu ·
+§7 `TenantCopy` **+ obowiązkowe `ENABLE ROW LEVEL SECURITY`**.

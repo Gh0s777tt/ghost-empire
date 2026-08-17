@@ -86,3 +86,21 @@ Fizyczny **Stream Deck** przełącza sceny/źródła OBS sam, przez `obs-websock
 
 ### Rozszerzalność
 Switch endpointu jest celowo mały (v1 = domena alertów, zero mutacji ekonomii). Kolejny slice doda na **tym samym tokenie** akcje ekonomii/eventów: `drop` (drop GT), `draw` (losowanie eventu), `goal_reset` (reset celu), `subathon_*`, `song_next`, `trivia_golive`, `clip`. Rotacja/wyczyszczenie tokenu: `POST /api/admin/streamdeck-token {action:"clear"|"rotate"}`.
+
+## Przełączanie scen z Stream Decka (`scene_switch`)
+
+Od update'u 2026-08 `POST /api/streamdeck/trigger` przyjmuje trzecią akcję:
+
+```json
+{ "action": "scene_switch", "name": "Przerwa" }
+```
+
+albo `{ "action": "scene_switch", "id": "<cuid>" }`. Nazwa jest wygodniejsza w Bitfocus Companion
+(nie trzeba przepisywać cuid) i jest szukana **wyłącznie w obrębie portalu z nagłówka Host**.
+
+Akcja ustawia scenę jako **aktywną**, czyli tę, którą renderuje stały adres **`/overlay/live?token=…`**.
+Dzięki temu jeden przycisk na pulpicie zmienia obraz na streamie, a źródło w OBS zostaje nietknięte —
+wklejasz je raz i nigdy więcej nie dotykasz.
+
+Wymaga migracji `OverlayScene.isActive` (patrz `MIGRACJA-2026-08.md` §5); bez niej akcja zwraca
+**503** z czytelnym komunikatem zamiast cichej porażki.
