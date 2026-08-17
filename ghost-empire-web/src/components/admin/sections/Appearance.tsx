@@ -8,7 +8,7 @@
 // save" trap. A non-owner (e.g. a portal the platform operator runs) sees a note instead.
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Palette, Loader2, Check, ExternalLink, Lock } from "lucide-react";
+import { Palette, Loader2, Check, ExternalLink, Lock, X, Plus } from "lucide-react";
 import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
 import { BG_PRESETS, bgPresetId, bgPresetValue, resolveBgPresetCss } from "@/lib/bg-presets";
 import { SectionCard, FieldInput } from "../shared";
@@ -19,8 +19,26 @@ type MyTenant = {
   slug: string; name: string; shortName: string | null; ownerHandle: string | null;
   tokenName: string; tokenSymbol: string; brandColor: string; logoUrl: string | null;
   bgImageUrl: string | null;
+  socialLinks: unknown;
+  timezone: string | null;
+  companionDefaultName: string | null;
+  supportAlertMode: string | null;
   plan: string; effectivePlan: string;
 };
+
+// Lustro allowlisty z /api/onboarding/my — serwer i tak odsiewa, ale wybór z listy oszczędza
+// streamerowi zapisu, który zostałby po cichu odrzucony.
+const SOCIAL_PLATFORMS = ["discord", "twitch", "kick", "youtube", "tiktok", "instagram", "x"] as const;
+
+/** Obronny parser socjali: kolumna to JSON, więc nie zakładamy kształtu wiersza. */
+function parseSocials(v: unknown): Array<{ platform: string; url: string }> {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((x): x is { platform: string; url: string } =>
+      !!x && typeof x === "object" && typeof (x as { platform?: unknown }).platform === "string" && typeof (x as { url?: unknown }).url === "string")
+    .map((x) => ({ platform: x.platform, url: x.url }))
+    .slice(0, 12);
+}
 
 export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void; onSuccess?: () => void; pending?: boolean }) {
   const t = useTranslations("admin.appearance");
@@ -40,6 +58,11 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
   const [color, setColor] = useState(brandColor);
   const [logoUrl, setLogoUrl] = useState("");
   const [bgImageUrl, setBgImageUrl] = useState("");
+  // Pola, które do tej pory ustawiał WYŁĄCZNIE właściciel platformy.
+  const [socials, setSocials] = useState<Array<{ platform: string; url: string }>>([]);
+  const [timezone, setTimezone] = useState("");
+  const [companionName, setCompanionName] = useState("");
+  const [alertMode, setAlertMode] = useState("bell");
 
   useEffect(() => {
     apiGet<{ tenant: MyTenant | null }>("/api/onboarding/my")
@@ -54,6 +77,10 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
           setColor(d.tenant.brandColor);
           setLogoUrl(d.tenant.logoUrl ?? "");
           setBgImageUrl(d.tenant.bgImageUrl ?? "");
+          setSocials(parseSocials(d.tenant.socialLinks));
+          setTimezone(d.tenant.timezone ?? "");
+          setCompanionName(d.tenant.companionDefaultName ?? "");
+          setAlertMode(d.tenant.supportAlertMode ?? "bell");
         }
       })
       .catch(() => setTenant(null));
@@ -83,6 +110,10 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
       await apiPatch("/api/onboarding/my", {
         name, shortName, ownerHandle: handle, tokenName, tokenSymbol, brandColor: color, logoUrl: logoUrl.trim() || null,
         bgImageUrl: bgImageUrl.trim() || null,
+        socialLinks: socials.filter((x) => x.url.trim()),
+        timezone: timezone.trim(),
+        companionDefaultName: companionName.trim(),
+        supportAlertMode: alertMode,
       });
       onToast("ok", t("saved"));
     } catch (e) {
@@ -177,6 +208,75 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
             />
           ) : null;
         })()}
+      </div>
+
+      {/* Pola, które do tej pory ustawiał WYŁĄCZNIE właściciel platformy. `socialLinks` jest
+          jedynym źródłem przycisku „oglądaj na żywo" i kafelków /hub, więc bez nich portal
+          streamera pokazywał socjale założyciela. */}
+      <div className="mt-4 pt-4 border-t border-zinc-900 space-y-3">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("portalTitle")}</div>
+
+        <div>
+          <div className="text-[10px] text-zinc-500 mb-1.5">{t("socials")}</div>
+          <div className="space-y-1.5">
+            {socials.map((s, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <select
+                  value={s.platform}
+                  onChange={(e) => setSocials((a) => a.map((x, j) => (j === i ? { ...x, platform: e.target.value } : x)))}
+                  className="border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600 w-28"
+                >
+                  {SOCIAL_PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <input
+                  value={s.url}
+                  placeholder="https://…"
+                  onChange={(e) => setSocials((a) => a.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))}
+                  className="flex-1 border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSocials((a) => a.filter((_, j) => j !== i))}
+                  title={t("socialRemove")}
+                  className="shrink-0 text-zinc-600 hover:text-red-400 border border-zinc-800 hover:border-red-700 w-7 h-7 flex items-center justify-center"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            {socials.length < 12 && (
+              <button
+                type="button"
+                onClick={() => setSocials((a) => [...a, { platform: "discord", url: "" }])}
+                className="text-[10px] font-mono uppercase tracking-widest border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 px-2.5 py-1.5 inline-flex items-center gap-1.5"
+              >
+                <Plus className="w-3 h-3" /> {t("socialAdd")}
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] text-zinc-600 mt-1">{t("socialsHint")}</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label className="text-[10px] text-zinc-500 flex flex-col gap-1">{t("timezone")}
+            <input value={timezone} placeholder="Europe/Warsaw" onChange={(e) => setTimezone(e.target.value)} className="border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600" />
+            <span className="text-[10px] text-zinc-600">{t("timezoneHint")}</span>
+          </label>
+          <label className="text-[10px] text-zinc-500 flex flex-col gap-1">{t("companionName")}
+            <input value={companionName} maxLength={30} onChange={(e) => setCompanionName(e.target.value)} className="border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600" />
+            <span className="text-[10px] text-zinc-600">{t("companionNameHint")}</span>
+          </label>
+        </div>
+
+        <label className="text-[10px] text-zinc-500 flex flex-col gap-1">{t("alertMode")}
+          <select value={alertMode} onChange={(e) => setAlertMode(e.target.value)} className="border border-zinc-700 bg-black/40 px-2 py-1.5 text-xs text-white outline-hidden focus:border-red-600">
+            <option value="none">{t("alertModeNone")}</option>
+            <option value="bell">{t("alertModeBell")}</option>
+            <option value="overlay">{t("alertModeOverlay")}</option>
+            <option value="both">{t("alertModeBoth")}</option>
+          </select>
+          <span className="text-[10px] text-zinc-600">{t("alertModeHint")}</span>
+        </label>
       </div>
 
       <button
