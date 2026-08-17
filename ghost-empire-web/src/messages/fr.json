@@ -3023,6 +3023,9 @@
     "secAppearance": "Apparence / Branding",
     "secHub": "Hub — liens",
     "secDesc_appearance": "Personnalisez ce portail — nom, nom de la devise, couleur de marque et logo. Le branding personnalisé est une fonction Elite.",
+    "secDesc_hub": "Votre page à lien unique — /hub avec une bio et des liens vers tout ce que vous gérez. Activez-la, ajoutez des liens et ordonnez-les ; un hub désactivé renvoie 404.",
+    "secDesc_penalties": "Pénalités de don — un spectateur achète une conséquence pour vous en direct. Ce module implique de l'argent réel et est désactivé par défaut ; lisez l'avertissement légal avant de l'activer.",
+    "secDesc_donationIntegrations": "Connectez des prestataires de paiement externes via des webhooks, chacun avec son secret et son niveau de confiance. Le secret s'affiche une seule fois lors de la rotation, puis toujours masqué.",
     "appearance": {
       "title": "Apparence / Branding",
       "intro": "L'apparence de ton portail pour les spectateurs. Les modifications s'appliquent immédiatement à tout le portail.",

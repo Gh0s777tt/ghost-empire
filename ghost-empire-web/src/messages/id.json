@@ -3023,6 +3023,9 @@
     "secAppearance": "Tampilan / Branding",
     "secHub": "Hub — tautan",
     "secDesc_appearance": "Jadikan portal ini milik Anda — nama, penamaan mata uang, warna brand, dan logo. Branding kustom adalah fitur Elite.",
+    "secDesc_hub": "Halaman satu tautan milikmu — /hub dengan bio dan tautan ke semua yang kamu kelola. Aktifkan, tambahkan tautan, atur urutannya; hub yang dinonaktifkan mengembalikan 404.",
+    "secDesc_penalties": "Penalti donasi — penonton membeli konsekuensi untukmu saat siaran. Modul ini melibatkan uang sungguhan dan mati secara bawaan; baca peringatan hukum sebelum mengaktifkannya.",
+    "secDesc_donationIntegrations": "Hubungkan penyedia pembayaran eksternal lewat webhook, masing-masing dengan rahasia dan tingkat kepercayaannya sendiri. Rahasia ditampilkan sekali saat rotasi, setelah itu selalu disamarkan.",
     "appearance": {
       "title": "Tampilan / Branding",
       "intro": "Tampilan portal di mata penonton. Perubahan berlaku di seluruh portal seketika.",

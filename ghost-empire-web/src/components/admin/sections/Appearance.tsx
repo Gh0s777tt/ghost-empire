@@ -13,6 +13,7 @@ import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
 import { BG_PRESETS, bgPresetId, bgPresetValue, resolveBgPresetCss } from "@/lib/bg-presets";
 import { SectionCard, FieldInput } from "../shared";
 import { MediaUploadButton } from "../MediaUploadButton";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type MyTenant = {
   slug: string; name: string; shortName: string | null; ownerHandle: string | null;
@@ -41,6 +42,9 @@ function parseSocials(v: unknown): Array<{ platform: string; url: string }> {
 
 export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void; onSuccess?: () => void; pending?: boolean }) {
   const t = useTranslations("admin.appearance");
+  // Kolor marki jest per portal — literał #E50914 pokazywałby każdemu tenantowi
+  // czerwień założyciela w podglądzie "jak to wygląda".
+  const { brandColor } = useTenantBranding();
   // Reuse the platform-owner's background labels (admin.tntBg*) — same control, same words,
   // no new i18n keys for the streamer-facing surface.
   const ta = useTranslations("admin");
@@ -51,7 +55,7 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
   const [handle, setHandle] = useState("");
   const [tokenName, setTokenName] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
-  const [color, setColor] = useState("#E50914");
+  const [color, setColor] = useState(brandColor);
   const [logoUrl, setLogoUrl] = useState("");
   const [bgImageUrl, setBgImageUrl] = useState("");
   // Pola, które do tej pory ustawiał WYŁĄCZNIE właściciel platformy.
@@ -146,7 +150,7 @@ export function AppearanceManager({ onToast }: { onToast: (k: "ok" | "err", m: s
           <div>
             <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">{t("color")}</label>
             <div className="flex items-center gap-2">
-              <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(color) ? color : "#E50914"} onChange={(e) => setColor(e.target.value)} className="w-9 h-9 bg-transparent border border-zinc-800 shrink-0" aria-label={t("color")} />
+              <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(color) ? color : brandColor} onChange={(e) => setColor(e.target.value)} className="w-9 h-9 bg-transparent border border-zinc-800 shrink-0" aria-label={t("color")} />
               <input value={color} onChange={(e) => setColor(e.target.value)} className="flex-1 min-w-0 bg-black border border-zinc-800 px-2 py-1.5 text-sm text-white font-mono outline-hidden focus:border-red-500" />
             </div>
           </div>
