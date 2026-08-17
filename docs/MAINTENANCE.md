@@ -52,9 +52,7 @@ flowchart LR
   T --> B["build<br/>build:web"]
   B --> R["release<br/>semantic-release"]
   SG["gitleaks<br/>(sekrety)"]
-  SS["semgrep · trivy<br/>(twarde)"]
-
-  SS["semgrep · trivy<br/>(SAST · CVE)"]
+  SS["semgrep · trivy<br/>(SAST · CVE, twarde)"]
   DD["docs-drift<br/>(MR)"]
   DP["pages<br/>(deploy)"]
   L -.->|needs: lint:web| T
@@ -82,13 +80,9 @@ mają `needs: []` — startują równolegle. \* `commitlint` biegnie **wyłączn
 | `test:unit:web` | test | 🔴 twarda | MR + main | `test:coverage` (vitest, bez bazy). Badge coverage. |
 | `test:integration:web` | test | 🔴 twarda | MR + main | Realny **Postgres 16** (service) + `prisma db push` + testy integracyjne. |
 | `build:web` | build | 🔴 twarda | MR + main | `next build` (env-stuby; build nie sięga bazy). |
-| `gitleaks` | security | 🔴 **twarda** | MR + main + schedule | Skan sekretów w drzewie roboczym. |
-| `semgrep` | security | 🔴 **twarda** | MR + main + schedule | SAST (`p/ci` + `p/typescript`). Finding = czerwony pipeline. |
-| `trivy` | security | 🔴 **twarda** | MR + main + schedule | CVE w zależnościach (HIGH/CRITICAL czerwienią; LOW/MEDIUM informacyjnie). |
-
 | `gitleaks` | security | 🔴 **twarda** | MR + main + schedule | Skan sekretów w drzewie roboczym (`--no-git`), allowlista w `.gitleaks.toml`. |
 | `semgrep` | security | 🔴 **twarda** | MR + main + schedule | SAST (`p/ci` + `p/typescript`). `allow_failure` **zdjęte** (audyt 2026-08). |
-| `trivy` | security | 🔴 **twarda** | MR + main + schedule | CVE w zależnościach (`fs --scanners vuln`, **jeden cel na wywołanie** — po jednym przebiegu na `ghost-empire-web` i `ghost-empire-chat`). HIGH/CRITICAL czerwieni job; `allow_failure` **zdjęte** (audyt 2026-08). |
+| `trivy` | security | 🔴 **twarda** | MR + main + schedule | CVE w zależnościach (`fs --scanners vuln`, **jeden cel na wywołanie** — po jednym przebiegu na `ghost-empire-web` i `ghost-empire-chat`). HIGH/CRITICAL czerwieni job, LOW/MEDIUM informacyjnie; `allow_failure` **zdjęte** (audyt 2026-08). |
 | `pages` | docs | — | main | Buduje MkDocs + TypeDoc → GitLab Pages. `needs: []`. |
 | `docs-drift` | docs | 🔴 twarda | MR | Failuje MR, gdy zmieniono trasy `/api/*` bez `docs/`. |
 | `release` | release | 🟠 bootstrap | main | `semantic-release`. `allow_failure` do czasu setupu (§4). |
@@ -281,51 +275,40 @@ Skanuje bieżące drzewo (`--no-git`) z allowlistą [`.gitleaks.toml`](https://g
 > zakopany w starej historii nie zostanie złapany przez CI — bezpieczeństwo historii
 > zależy od rotacji (§7).
 
-### `semgrep` (SAST) i `trivy` (CVE) — TWARDE BRAMKI
-Od audytu 2026-08-12 **nie mają** `allow_failure` — pojedynczy finding **czerwieni cały
-pipeline**. Dług „szumu" został świadomie zamknięty: findings wytriażowano, a bramkę
-zaostrzono na polecenie właściciela. **Triaż:**
+### `semgrep` (SAST) i `trivy` (CVE) — TWARDE bramki
+`allow_failure` zostało **zdjęte** (audyt 2026-08, decyzja właściciela): pojedynczy finding
+**czerwieni cały pipeline**. Wcześniej były doradcze — dług „szumu" wytriażowano i zamknięto.
+**Triaż:**
 - Przejrzyj findings w logu joba (`semgrep` / `trivy`).
 - **Realne → napraw u źródła.** Domyślne wyjście to poprawka, nie wyciszenie.
-- **Nie przywracaj `allow_failure`** przy pojedynczym false-positywie — to znów zaślepia
-  CAŁY skaner i przywraca fałszywy zielony.
-- Wyciszaj **PUNKTOWO** i zawsze z powodem: semgrep → inline `// nosemgrep: <rule-id>` na
-  danej linii lub wpis w `.semgrepignore`; trivy → jedna linia `CVE-XXXX-YYYY` w
-  `.trivyignore` z komentarzem i datą przeglądu. Świadome odstępstwa → [`DECISIONS.md`](DECISIONS.md).
+- **NIE przywracaj `allow_failure`** dla pojedynczego false-positive — to zaślepia CAŁY
+  skaner i przywraca fałszywy zielony. Wycisz **punktowo** i zawsze z powodem: semgrep →
+  inline `// nosemgrep: <rule-id>` albo wpis w `.semgrepignore`; trivy → jedna linia
+  `CVE-XXXX-YYYY` w `.trivyignore` z komentarzem i datą przeglądu. Świadome odstępstwa →
+  [`DECISIONS.md`](DECISIONS.md).
+
+**`trivy fs` przyjmuje DOKŁADNIE JEDEN cel na wywołanie.** Dwa katalogi naraz kończą się
+`FATAL Fatal error multiple targets cannot be specified` i **exit 1** — job jest wtedy
+czerwony, choć nie przeskanował niczego. Dokładasz projekt → dokładasz **parę linii**
+(przebieg informacyjny LOW/MEDIUM + bramkujący HIGH/CRITICAL), nie kolejny argument. Trivy
+domyślnie **pomija dev-dependencies** (`--include-dev-deps` je pokazuje), więc zielony job
+znaczy „brak HIGH/CRITICAL w zależnościach produkcyjnych".
+
 > **Uwaga o regułach tekstowych:** część reguł (np. `npm-missing-minimum-release-age`)
 > dopasowuje **surowy tekst pliku i nie pomija komentarzy** — opisanie w komentarzu
 > „złej" wartości potrafi samo w sobie zapalić finding. Zob. komentarz-pułapkę w
 > `ghost-empire-web/.npmrc`.
-**Lokalne odtworzenie bramki** (zanim wypchniesz — ten sam config co CI):
-```bash
-semgrep scan --error --config p/ci --config p/typescript ghost-empire-web ghost-empire-chat
-```
-
-### `semgrep` (SAST) i `trivy` (CVE) — TWARDE bramki
-`allow_failure` zostało **zdjęte** (audyt 2026-08, decyzja właściciela): finding czerwieni
-pipeline. Wcześniej były doradcze — po wytriażowaniu szumu dług zamknięto. **Triaż:**
-- Przejrzyj findings w logu joba (`semgrep` / `trivy`).
-- Realne → napraw. Zaakceptowane CVE → `.trivyignore` (jeden CVE = jedna linia, zawsze
-  z powodem i datą przeglądu). Reguła semgrep z false-positive → inline
-  `// nosemgrep: <rule-id>` albo `.semgrepignore`.
-- **NIE przywracaj `allow_failure`** dla pojedynczego false-positive — to zaślepia CAŁY
-  skaner. Wycisz punktowo.
-
-**`trivy fs` przyjmuje DOKŁADNIE JEDEN cel na wywołanie.** Dwa katalogi naraz kończą się
-`FATAL Fatal error multiple targets cannot be specified` i **exit 1** — job jest wtedy
-czerwony, choć nie przeskanował niczego (tak stał od 2026-08-12 do naprawy). Dokładasz
-projekt → dokładasz **parę linii** (przebieg informacyjny LOW/MEDIUM + bramkujący
-HIGH/CRITICAL), nie kolejny argument. Uwaga przy triażu: trivy domyślnie **pomija
-dev-dependencies** (`--include-dev-deps` je pokazuje), więc zielony job znaczy „brak
-HIGH/CRITICAL w zależnościach produkcyjnych".
 
 > **Czerwona bramka to nie zawsze finding.** Zanim uznasz job za „znalazł podatność",
 > sprawdź w logu, czy nie padł na **błędzie konfiguracji** (zła składnia, brak celu) —
-> wtedy nie chroni niczego, mimo że świeci na czerwono.
+> albo na `ci_quota_exceeded` (wyczerpane minuty planu free) — wtedy nie chroni niczego,
+> mimo że świeci na czerwono.
 
-Zgłaszanie podatności: [`SECURITY.md`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/SECURITY.md).
+**Lokalne odtworzenie bramki** (zanim wypchniesz — ten sam config co CI):
 
----
+```bash
+semgrep scan --error --config p/ci --config p/typescript ghost-empire-web ghost-empire-chat
+```
 
 ## 7. Rotacja sekretów
 
