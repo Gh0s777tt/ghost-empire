@@ -70,9 +70,26 @@ describe("driftSummary", () => {
       { currency: "GT", balance: 1500, ledger: 1000, drift: 500 },
       { currency: "CHIPS", balance: 200, ledger: 200, drift: 0 },
     ]);
-    expect(s).toContain("GT");
     expect(s).toContain("+500");
     expect(s).not.toContain("CHIPS");
+    expect(s).not.toContain("Żetony");
+  });
+
+  // Tekst z `driftSummary` ląduje w `Notification.message`, czyli PERSYSTUJE — więc niesie
+  // MARKER, nie rozwiniętą nazwę. Bez tego portal z walutą „Duszki" dostawał powiadomienie
+  // mówiące „GT" (waluta cudzego portalu). Rozwija dopiero `GET /api/notifications`.
+  it("waluta portalu wychodzi jako marker %gt%, nigdy jako literał GT", () => {
+    const s = driftSummary([{ currency: "GT", balance: 1500, ledger: 1000, drift: 500 }]);
+    expect(s).toContain("%gt%");
+    expect(s).not.toMatch(/\bGT\b/);
+  });
+
+  // Żetony to celowo WSPÓLNA, darmowa waluta kasyna — nie brandowana per portal
+  // (`terms` §3 opiera na tym 18+ i „to nie hazard na pieniądze"), więc zostają dosłownie.
+  it("żetony zostają dosłowne — nie są walutą per portal", () => {
+    const s = driftSummary([{ currency: "CHIPS", balance: 200, ledger: 50, drift: 150 }]);
+    expect(s).toContain("Żetony");
+    expect(s).not.toContain("%");
   });
   it("is empty when everything reconciles (caller skips the alert)", () => {
     expect(driftSummary([{ currency: "GT", balance: 0, ledger: 0, drift: 0 }])).toBe("");

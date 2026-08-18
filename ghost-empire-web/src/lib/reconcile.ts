@@ -106,6 +106,23 @@ export function findOffenders(
 }
 
 /**
+ * Etykieta waluty do tekstu, który **persystuje** (wiersz `Notification`).
+ *
+ * @remarks
+ * `ReconcileCurrency` to wewnętrzny dyskryminant (klucz w migawce Redis i w `offenders`), a NIE
+ * nazwa waluty portalu — portal z walutą „Duszki" dostawał powiadomienie mówiące „GT". Dlatego
+ * `GT` wychodzi stąd jako **marker `%gt%`**, który rozwija dopiero czytelnik powiadomień
+ * (`GET /api/notifications` → `applyTokenBranding`): dzięki temu zmiana nazwy waluty naprawia też
+ * powiadomienia zapisane wcześniej, a jeden portal nigdy nie zobaczy symbolu drugiego.
+ *
+ * Żetony zostają dosłownie: to celowo **wspólna, darmowa** waluta kasyna, nie brandowana per portal
+ * (`terms` §3 opiera na tym 18+ i „to nie hazard na pieniądze").
+ */
+function etykietaWaluty(c: ReconcileCurrency): string {
+  return c === "CHIPS" ? "Żetony" : "%gt%";
+}
+
+/**
  * One-line Polish summary of a portal's drifting currencies, for the admin `Notification` body.
  * Only nonzero-drift rows are mentioned; returns `""` when everything reconciles (caller skips the
  * alert on empty).
@@ -113,6 +130,6 @@ export function findOffenders(
 export function driftSummary(rows: CurrencyDrift[]): string {
   return rows
     .filter((r) => r.drift !== 0)
-    .map((r) => `${r.currency}: saldo ${r.balance.toLocaleString("pl-PL")} vs ledger ${r.ledger.toLocaleString("pl-PL")} (dryf ${r.drift > 0 ? "+" : ""}${r.drift.toLocaleString("pl-PL")})`)
+    .map((r) => `${etykietaWaluty(r.currency)}: saldo ${r.balance.toLocaleString("pl-PL")} vs ledger ${r.ledger.toLocaleString("pl-PL")} (dryf ${r.drift > 0 ? "+" : ""}${r.drift.toLocaleString("pl-PL")})`)
     .join(" · ");
 }

@@ -96,7 +96,9 @@ export async function GET(req: Request) {
     let alertedPortals = 0;
 
     for (const [k, t] of portal) {
-      const gt = currencyDrift("GT", t.gtBal, t.gtLed);
+      // Dyskryminant enuma `ReconcileCurrency` (klucz migawki Redis i `offenders`), NIE nazwa waluty
+      // portalu — etykieta dla człowieka powstaje w `driftSummary` i wychodzi jako marker `%gt%`.
+      const gt = currencyDrift("GT", t.gtBal, t.gtLed); // wl-ok: dyskryminant enuma, nie etykieta
       const chips = currencyDrift("CHIPS", t.chipsBal, t.chipsLed);
       snapshot[k] = { GT: gt.drift, CHIPS: chips.drift };
 
