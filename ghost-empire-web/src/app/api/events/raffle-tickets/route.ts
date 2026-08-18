@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { currentTenantId } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 const log = createLogger("raffle-tickets");
 
@@ -38,6 +39,13 @@ export async function POST(req: Request) {
   const userId = session.user.id;
 
   const tid = await currentTenantId();
+
+  // Idempotency: block a double-clicked/retried identical buy (same eventId + count) → 409; released
+  // on failure below. The event-row lock serializes numbering; it does not dedupe request replays.
+  const idemToken = idempotencyToken(req, body);
+  if (!(await claimIdempotent(userId, "raffle:tickets", idemToken)).ok) {
+    return jsonError("Akcja już przetwarzana — odśwież stronę.", 409);
+  }
   try {
     const result = await prisma.$transaction(async (tx) => {
       const event = await tx.event.findFirst({ where: { id: eventId, ...(tid ? { tenantId: tid } : {}) } });
@@ -126,6 +134,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(result);
   } catch (e) {
+    await releaseIdempotent(userId, "raffle:tickets", idemToken);
     if (e instanceof HttpError) {
       return jsonError(e.message, e.status);
     }

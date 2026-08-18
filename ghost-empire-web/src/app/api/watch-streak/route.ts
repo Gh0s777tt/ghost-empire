@@ -19,5 +19,5 @@ export async function POST() {
 
   const r = await claimWatchDay(session.user.id);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-  return NextResponse.json({ ok: true, reward: r.reward, streak: r.streak, tier: r.tier, newBalance: r.newBalance });
+  return NextResponse.json({ ok: true, reward: r.reward, streak: r.streak, tier: r.tier, newBalance: r.newBalance, bridged: r.bridged });
 }

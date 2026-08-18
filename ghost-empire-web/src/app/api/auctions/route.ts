@@ -22,6 +22,7 @@ import {
   AUCTION_TITLE_MAX,
   AUCTION_DESC_MAX,
 } from "@/lib/auctions";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 export const dynamic = "force-dynamic";
 
@@ -174,6 +175,12 @@ export async function POST(req: Request) {
     if (!auctionId || !Number.isInteger(amount) || amount <= 0) {
       return NextResponse.json({ error: "Nieprawidłowa oferta" }, { status: 400 });
     }
+    // Idempotency: a double-clicked/retried identical bid (same auction + amount) must not create a
+    // duplicate hold/bid row → 409; released on any non-success so a corrected bid isn't locked out.
+    const idemToken = idempotencyToken(req, body);
+    if (!(await claimIdempotent(userId, "auction:bid", idemToken)).ok) {
+      return NextResponse.json({ error: "Oferta już przetwarzana — odśwież stronę." }, { status: 409 });
+    }
     const tid = await currentTenantId();
     const now = Date.now();
 
@@ -220,6 +227,7 @@ export async function POST(req: Request) {
       });
 
       if ("error" in result) {
+        await releaseIdempotent(userId, "auction:bid", idemToken);
         switch (result.error) {
           case "notfound": return NextResponse.json({ error: "Aukcja nie istnieje" }, { status: 404 });
           case "closed": return NextResponse.json({ error: "Ta aukcja już się zakończyła" }, { status: 409 });
@@ -229,6 +237,7 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({ ok: true, balance: result.balance, currentBid: result.currentBid });
     } catch {
+      await releaseIdempotent(userId, "auction:bid", idemToken);
       return NextResponse.json({ error: "Nie udało się złożyć oferty" }, { status: 500 });
     }
   }

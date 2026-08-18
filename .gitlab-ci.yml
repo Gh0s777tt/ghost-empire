@@ -161,6 +161,7 @@ lint:web:
     - npm run docs:i18n:dup    # scripts/check-i18n-duplicates.mjs (zero zduplikowanych kluczy w src/messages/*.json)
     - npm run docs:brand       # scripts/check-white-label.mjs (zero stałych foundera w kodzie widocznym dla widza)
     - npm run docs:roadmap     # scripts/check-roadmap-sync.mjs (nota „Świeżo dowiezione" nie odstaje >14 dni od shipped)
+    - npm run docs:rls         # scripts/check-rls-sync.mjs (każdy @@map ze schemy ma ENABLE RLS w bloku Step-2 docs/RLS.md)
   rules: !reference [.rules_mr_main, rules]
 
 # ghost-empire-chat: `typecheck` + `lint:brand` + `test` (brak eslint/build — tsx odpala TS wprost).

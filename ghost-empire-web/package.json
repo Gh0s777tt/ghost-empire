@@ -30,6 +30,7 @@
     "docs:i18n:dup": "node scripts/check-i18n-duplicates.mjs",
     "docs:brand": "node scripts/check-white-label.mjs",
     "docs:roadmap": "node scripts/check-roadmap-sync.mjs",
+    "docs:rls": "node scripts/check-rls-sync.mjs",
     "docs:api": "typedoc",
     "verify-all": "bash scripts/verify-all.sh",
     "verify-all:fast": "bash scripts/verify-all.sh --fast",

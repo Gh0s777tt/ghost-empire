@@ -48,7 +48,7 @@ commit-msg:
 # ── pre-push: pełna szybka bramka (WYŁĄCZNIE realne skrypty z repo) ────────────
 # web:  npm run verify-all:fast  → scripts/verify-all.sh --fast
 #        = typecheck · lint · docs:check · docs:env · docs:i18n · docs:i18n:dup
-#          · unit  (bez integracji/bez DB) — pełna lista, nie skrót (audyt [11])
+#          · docs:rls · unit  (bez integracji/bez DB) — pełna lista, nie skrót (audyt [11])
 # chat: npm run typecheck        → tsc --noEmit  (jedyna bramka, jaką chat posiada)
 pre-push:
   parallel: false

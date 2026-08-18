@@ -11,6 +11,7 @@ import { currentTenantId } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 import { clampGift, giftError, GIFT_DAILY_LIMIT } from "@/lib/gift";
 import { clientIp } from "@/lib/http";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,15 @@ export async function POST(req: Request) {
   const err = giftError(amount, balance, sentToday);
   if (err) return NextResponse.json({ ok: false, reason: err });
 
+  // Idempotency: a double-clicked / retried identical gift (same recipient + amount) must not send
+  // twice. The atomic `gte` guard stops overspend, not duplication. Claim a short slot (client
+  // Idempotency-Key header, else body hash); the duplicate gets 409. Released on every non-success
+  // path below so a friendly "insufficient/daily" outcome doesn't lock out a corrected retry.
+  const idemToken = idempotencyToken(req, body);
+  if (!(await claimIdempotent(senderId, "gift", idemToken)).ok) {
+    return NextResponse.json({ ok: false, reason: "duplicate" }, { status: 409 });
+  }
+
   try {
     const res = await prisma.$transaction(async (tx) => {
       // Lock the sender row so concurrent gifts from this sender serialize — then the
@@ -60,8 +70,9 @@ export async function POST(req: Request) {
       const u = await tx.user.findUnique({ where: { id: senderId }, select: { tokens: true } });
       return { balance: u?.tokens ?? 0 };
     });
-    if ("daily" in res) return NextResponse.json({ ok: false, reason: "daily" });
-    if ("insufficient" in res) return NextResponse.json({ ok: false, reason: "insufficient" });
+    // Not a real transfer → free the slot so the sender can retry once corrected.
+    if ("daily" in res) { await releaseIdempotent(senderId, "gift", idemToken); return NextResponse.json({ ok: false, reason: "daily" }); }
+    if ("insufficient" in res) { await releaseIdempotent(senderId, "gift", idemToken); return NextResponse.json({ ok: false, reason: "insufficient" }); }
 
     const senderName = session.user.username || "Someone";
     await prisma.notification
@@ -70,6 +81,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, balance: res.balance });
   } catch {
+    await releaseIdempotent(senderId, "gift", idemToken);
     return NextResponse.json({ ok: false, reason: "error" }, { status: 500 });
   }
 }

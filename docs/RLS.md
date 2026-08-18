@@ -4,14 +4,14 @@
 > connection has `rolbypassrls=true` (Prisma unaffected) and the app is Prisma-only (no
 > `@supabase/supabase-js`/PostgREST), then enabled via a safe script: canary on `notifications` +
 > read test → enable-all → verify (live app-reads OK) with auto-rollback on any failure.
-> **Re-audited live: 110/110 public tables have RLS ON, 0 open** (count grew from the original 97
+> **Re-audited live (2026-08-18): 112/112 public tables have RLS ON, 0 open** (count grew from the original 97
 > as tables shipped since #671 — e.g. `govee_rules` #721, `song_request_bans` #729, and the #807
 > sweep that found `donation_integrations` sitting open with `secretEnc`/`tokenEnc` in it — each
 > enabled via the post-`db push` step below).
 > This doc is retained as the runbook + rollback reference. **Re-run the matching `ENABLE` line
 > after any future `db push` that adds a table** (new tables default to RLS off).
 >
-> **110 is not a vibe — it is `grep -c '@@map' ghost-empire-web/prisma/schema.prisma`.** Header,
+> **111 is not a vibe — it is `grep -c '@@map' ghost-empire-web/prisma/schema.prisma`.** Header,
 > the Step-2 block and the footer must all state that one number and it must equal that grep;
 > re-derive both sides before you touch this file (`sed -n '/^## Step 2/,/^```$/p' docs/RLS.md |
 > grep -c 'ENABLE ROW LEVEL SECURITY'`). ⚠️ **Why this matters more than a stale counter usually
@@ -53,7 +53,7 @@ keeps full access. This is exactly Supabase's recommended baseline ("enable RLS 
 > would break the Prisma app. Plain `ENABLE` is what you want.
 
 ## Step 1 — canary (recommended, ~30 s)
-Confirm the app's role really bypasses RLS before doing all 110 tables. Run on **one** low-risk table:
+Confirm the app's role really bypasses RLS before doing all 111 tables. Run on **one** low-risk table:
 ```sql
 ALTER TABLE public."notifications" ENABLE ROW LEVEL SECURITY;
 ```
@@ -65,7 +65,7 @@ ALTER TABLE public."notifications" DISABLE ROW LEVEL SECURITY;
 ```
 
 ## Step 2 — enable on every public table
-Paste this whole block into the Supabase SQL Editor and run it. **110 lines, one per `@@map` in
+Paste this whole block into the Supabase SQL Editor and run it. **111 lines, one per `@@map` in
 `schema.prisma`** — if your `grep -c '@@map'` says something else, the schema moved and this block
 is stale, not the schema:
 ```sql
@@ -160,6 +160,7 @@ ALTER TABLE public."streamlabs_connection" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."subathon" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."support_goals" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."support_tickets" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."tenant_copy" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."tenants" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."transactions" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."trivia_answers" ENABLE ROW LEVEL SECURITY;
@@ -207,7 +208,7 @@ scope. The app's own per-portal isolation remains enforced at the application la
 > New tables added later default to RLS **off** — re-run the matching `ENABLE` line after any
 > future `prisma db push` that adds a model, **and add it to the Step-2 block in the same commit**.
 > (Keep `schema.prisma` the source of truth; this doc lists the tables as of the current schema,
-> **110 tables** — the same number as the header and as `grep -c '@@map'`. The two-step "enable it
+> **111 tables** — the same number as the header and as `grep -c '@@map'`. The two-step "enable it
 > live, document it later" is exactly how 9 tables — including `donation_integrations` with its
 > `secretEnc`/`tokenEnc` — ended up absent from the only artefact that can rebuild RLS.)
 > Live check that this file is still true: `select count(*) from pg_class c join pg_namespace n on

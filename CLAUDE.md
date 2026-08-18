@@ -195,6 +195,7 @@ npm run docs:i18n       # privacy/terms present in every locale
 npm run docs:i18n:dup   # no duplicate keys in src/messages/*.json (JSON.parse hides them)
 npm run docs:brand      # zero founder-brand literals (GT/Ghost Empire/…) in viewer-facing code
 npm run docs:roadmap    # ROADMAP freshness note isn't >14 days behind the newest shipped commit
+npm run docs:rls        # every @@map table has an ENABLE-RLS line in docs/RLS.md Step-2 (no table ships open to anon)
 ```
 
 **`npm run verify-all`** runs all of the above locally in one shot — typecheck · lint ·

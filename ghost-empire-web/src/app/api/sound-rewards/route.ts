@@ -11,6 +11,7 @@ import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { displayNick } from "@/lib/utils";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 const log = createLogger("sound-rewards");
 
@@ -53,6 +54,13 @@ export async function POST(req: Request) {
   const tenant = await getCurrentTenant();
   const tid = tenant.id;
   const actor = displayNick(session.user.name, session.user.username);
+
+  // Idempotency: block a double-clicked/retried identical redemption (same rewardId) → 409;
+  // released on failure below. rateLimit throttles bursts, `gte` stops overspend, neither dedupes.
+  const idemToken = idempotencyToken(req, body);
+  if (!(await claimIdempotent(userId, "sound-rewards", idemToken)).ok) {
+    return jsonError("Akcja już przetwarzana — odśwież stronę.", 409);
+  }
   try {
     const result = await prisma.$transaction(async (tx) => {
       const reward = await tx.soundReward.findFirst({ where: { id: rewardId, active: true, ...(tid ? { tenantId: tid } : {}) } });
@@ -86,6 +94,7 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ ok: true, newBalance: result.balance });
   } catch (e) {
+    await releaseIdempotent(userId, "sound-rewards", idemToken);
     if (e instanceof RedeemError) return jsonError(e.message, e.status);
     log.error("redeem error", e);
     return jsonError("Błąd serwera", 500);

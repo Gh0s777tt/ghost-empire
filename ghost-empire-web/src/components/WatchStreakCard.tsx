@@ -14,13 +14,15 @@ import { useTenantBranding } from "@/components/TenantBranding";
 import { sfxPlay } from "@/lib/sfx";
 
 type Tier = "none" | "bronze" | "silver" | "gold" | "diamond";
-type Status = { claimedToday: boolean; streak: number; tier: Tier; nextDays: number | null; nextReward: number | null };
+type Status = { claimedToday: boolean; streak: number; tier: Tier; nextDays: number | null; nextReward: number | null; freezes: number; protected: boolean };
 
 const TIER_EMOJI: Record<Tier, string> = { none: "🔥", bronze: "🥉", silver: "🥈", gold: "🥇", diamond: "💎" };
 // Mirrors WATCH_MILESTONES in lib/watch-streak (kept here to avoid bundling the prisma-importing
 // lib into the client — same precedent as DailyBonusCard recomputing its reward formula).
 const MILESTONES = [{ days: 3, reward: 100 }, { days: 7, reward: 300 }, { days: 14, reward: 750 }, { days: 30, reward: 2000 }];
 const nextOf = (streak: number) => MILESTONES.find((m) => m.days > streak) ?? null;
+const FREEZE_COST = 500; // mirrors FREEZE_COST in lib/watch-streak
+const FREEZE_MAX = 2; // mirrors FREEZE_MAX_OWNED
 
 export function WatchStreakCard() {
   const t = useTranslations("home");
@@ -28,6 +30,7 @@ export function WatchStreakCard() {
   const { tokenSymbol } = useTenantBranding();
   const [st, setSt] = useState<Status | null>(null);
   const [busy, setBusy] = useState(false);
+  const [busyBuy, setBusyBuy] = useState(false);
   const [justReward, setJustReward] = useState<number | null>(null);
 
   const load = useCallback(async () => {
@@ -39,15 +42,27 @@ export function WatchStreakCard() {
     if (busy || !st || st.claimedToday) return;
     setBusy(true);
     try {
-      const d = await apiPost<{ ok: true; reward: number; streak: number; tier: Tier; newBalance: number }>("/api/watch-streak");
+      const d = await apiPost<{ ok: true; reward: number; streak: number; tier: Tier; newBalance: number; bridged: boolean }>("/api/watch-streak");
       emitBalance(d.newBalance);
       if (d.reward > 0) { sfxPlay("win"); setJustReward(d.reward); }
       const next = nextOf(d.streak);
-      setSt({ claimedToday: true, streak: d.streak, tier: d.tier, nextDays: next?.days ?? null, nextReward: next?.reward ?? null });
+      // A bridged claim spent one freeze to save the streak — reflect the consumed freeze locally.
+      setSt({ claimedToday: true, streak: d.streak, tier: d.tier, nextDays: next?.days ?? null, nextReward: next?.reward ?? null, freezes: d.bridged ? Math.max(0, st.freezes - 1) : st.freezes, protected: false });
     } catch {
       void load(); // 409 (already checked in elsewhere) → refresh
     }
     setBusy(false);
+  }
+
+  async function buyFreeze() {
+    if (busyBuy || !st || st.freezes >= FREEZE_MAX) return;
+    setBusyBuy(true);
+    try {
+      const d = await apiPost<{ ok: true; freezes: number; newBalance: number }>("/api/streak-freeze");
+      emitBalance(d.newBalance);
+      setSt({ ...st, freezes: d.freezes });
+    } catch { void load(); } // 402/409 → refresh (balance/limit)
+    setBusyBuy(false);
   }
 
   if (!st) return null;
@@ -70,6 +85,15 @@ export function WatchStreakCard() {
             <span className="ms-2 text-zinc-500">· +{fmt(st.nextReward)} {tokenSymbol} {t("wsNextIn", { days: st.nextDays - st.streak })}</span>
           ) : (
             <span className="ms-2 text-violet-300">· {t("wsMaxTier")}</span>
+          )}
+        </div>
+        <div className="text-[11px] text-zinc-500 font-mono mt-1 flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+          <span title={t("wsFreezeHint")}>🛡️ {t("wsFreezes", { count: st.freezes })}</span>
+          {st.protected && <span className="text-emerald-300">· {t("wsProtected")}</span>}
+          {st.freezes < FREEZE_MAX && (
+            <button onClick={buyFreeze} disabled={busyBuy} className="underline decoration-dotted underline-offset-2 hover:text-violet-300 disabled:opacity-50">
+              {t("wsBuyFreeze")} · {fmt(FREEZE_COST)} {tokenSymbol}
+            </button>
           )}
         </div>
       </div>

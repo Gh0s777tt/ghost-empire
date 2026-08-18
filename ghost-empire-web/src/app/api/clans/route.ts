@@ -17,6 +17,7 @@ import { CLAN_CREATE_COST, normalizeClanTag, isValidClanTag, isValidClanName, is
 import { checkAndGrantAchievements } from "@/lib/achievements";
 import { updateDailyTaskProgress } from "@/lib/daily-tasks";
 import { isWarLive } from "@/lib/clan-wars";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 const log = createLogger("clans");
 
@@ -109,6 +110,13 @@ export async function POST(req: Request) {
   if (!rl.allowed) return jsonError("Za szybko. Spróbuj za chwilę.", 429, rateLimitHeaders(rl));
 
   const tid = await currentTenantId();
+
+  // Idempotency: block a double-clicked/retried identical action (create/contribute keyed by body)
+  // → 409; released on failure below. Guards the GT-spending actions; join/leave are idempotent anyway.
+  const idemToken = idempotencyToken(req, body);
+  if (!(await claimIdempotent(userId, "clans", idemToken)).ok) {
+    return jsonError("Akcja już przetwarzana — odśwież stronę.", 409);
+  }
   try {
     switch (body.action) {
       case "create": return await createClan(userId, tid, body);
@@ -118,6 +126,7 @@ export async function POST(req: Request) {
       default: return jsonError("action: create | join | leave | contribute", 400);
     }
   } catch (e) {
+    await releaseIdempotent(userId, "clans", idemToken);
     if (e instanceof ClanError) return jsonError(e.message, e.status);
     log.error("clan action error", e);
     return jsonError("Błąd serwera", 500);

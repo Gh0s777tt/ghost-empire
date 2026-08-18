@@ -12,6 +12,7 @@ import { awardSeasonXp } from "@/lib/seasons";
 import { discountedPrice } from "@/lib/economy";
 import { checkCurrencyCategory, isChipsCurrency } from "@/lib/shop-currency";
 import { createLogger } from "@/lib/logger";
+import { claimIdempotent, releaseIdempotent, idempotencyToken } from "@/lib/idempotency";
 
 const log = createLogger("shop-buy");
 
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
   // labels the stream alert below with THIS portal's currency (never a hardcoded "GT").
   const tenant = await getCurrentTenant();
   const tid = tenant.id;
+
+  // Idempotency: a double-clicked / retried identical buy must not charge twice. rateLimit throttles
+  // bursts and the `gte` guard stops overspend, but two honest duplicates with enough balance BOTH
+  // succeed — so claim a short-lived slot (client Idempotency-Key header, else body hash) and reject
+  // the duplicate with 409. Released in catch below so a failed attempt doesn't lock out a real retry.
+  const idemToken = idempotencyToken(req, body);
+  if (!(await claimIdempotent(userId, "shop:buy", idemToken)).ok) {
+    return jsonError("Zakup już przetwarzany — odśwież stronę.", 409);
+  }
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Tenant-guard: only this tenant's catalog item is buyable.
@@ -234,6 +244,8 @@ export async function POST(req: Request) {
     void _actor; void _item;
     return NextResponse.json(publicResult);
   } catch (e) {
+    // The purchase didn't complete — free the idempotency slot so an honest retry isn't blocked.
+    await releaseIdempotent(userId, "shop:buy", idemToken);
     if (e instanceof ShopError) {
       return jsonError(e.message, e.status);
     }
