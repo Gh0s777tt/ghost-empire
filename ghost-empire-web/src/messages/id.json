@@ -1082,7 +1082,7 @@
     "s10i1": "Ketentuan ini diatur oleh hukum Polandia.",
     "s10i2": "Hal-hal yang tidak diatur tunduk pada KUH Perdata Polandia dan GDPR.",
     "s10i3": "Sengketa diselesaikan oleh pengadilan yang berwenang di tempat tinggal Operator, kecuali Konsumen memilih sebaliknya.",
-    "s10i4": "Kontak: server Discord <discord>discord.gg/deAPJ9Ym2F</discord>"
+    "s10i4": "Kontak: server Discord <discord>Discord</discord>"
   },
   "privacy": {
     "metaTitle": "Kebijakan privasi",
@@ -1092,7 +1092,7 @@
     "seeAlso": "Lihat juga:",
     "termsLink": "Ketentuan",
     "s1": "1. Pengendali data",
-    "s1p": "Pengendali data pribadimu di portal %brandShort% (selanjutnya: <em>Portal</em>) adalah <b>%owner%</b> — streamer yang aktif di Twitch, Kick, dan Discord. Kontak GDPR: via server Discord <discord>discord.gg/deAPJ9Ym2F</discord> — pesan langsung ke admin.",
+    "s1p": "Pengendali data pribadimu di portal %brandShort% (selanjutnya: <em>Portal</em>) adalah <b>%owner%</b> — streamer yang aktif di Twitch, Kick, dan Discord. Kontak GDPR: via server Discord <discord>Discord</discord> — pesan langsung ke admin.",
     "s2": "2. Data apa yang kami kumpulkan",
     "s2intro1": "Saat kamu masuk via OAuth (Twitch / Discord), Portal menerima:",
     "s2b1": "<b>Alamat email</b>mu (dari akun Twitch atau Discord-mu)",

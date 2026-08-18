@@ -1082,7 +1082,7 @@
     "s10i1": "Estes termos são regidos pela lei polonesa.",
     "s10i2": "As questões não previstas estão sujeitas ao Código Civil polonês e ao GDPR.",
     "s10i3": "As disputas são resolvidas pelo tribunal competente do local de residência do Operador, salvo se o Consumidor escolher de outra forma.",
-    "s10i4": "Contato: servidor do Discord <discord>discord.gg/deAPJ9Ym2F</discord>"
+    "s10i4": "Contato: servidor do Discord <discord>Discord</discord>"
   },
   "privacy": {
     "metaTitle": "Política de privacidade",
@@ -1092,7 +1092,7 @@
     "seeAlso": "Veja também:",
     "termsLink": "Termos",
     "s1": "1. Controlador de dados",
-    "s1p": "O controlador dos seus dados pessoais no portal %brandShort% (doravante: <em>Portal</em>) é <b>%owner%</b> — um streamer ativo na Twitch, Kick e Discord. Contato GDPR: pelo servidor do Discord <discord>discord.gg/deAPJ9Ym2F</discord> — mensagem direta ao admin.",
+    "s1p": "O controlador dos seus dados pessoais no portal %brandShort% (doravante: <em>Portal</em>) é <b>%owner%</b> — um streamer ativo na Twitch, Kick e Discord. Contato GDPR: pelo servidor do Discord <discord>Discord</discord> — mensagem direta ao admin.",
     "s2": "2. Quais dados coletamos",
     "s2intro1": "Quando você entra via OAuth (Twitch / Discord), o Portal recebe:",
     "s2b1": "Seu <b>endereço de e-mail</b> (da sua conta Twitch ou Discord)",

@@ -1082,7 +1082,7 @@
     "s10i1": "本規約はポーランド法に準拠します。",
     "s10i2": "本規約で扱われない事項は、ポーランド民法および GDPR に従います。",
     "s10i3": "紛争は、消費者が別途選択しない限り、運営者の居住地を管轄する裁判所で解決されます。",
-    "s10i4": "連絡先：Discord サーバー <discord>discord.gg/deAPJ9Ym2F</discord>"
+    "s10i4": "連絡先：Discord サーバー <discord>Discord</discord>"
   },
   "privacy": {
     "metaTitle": "プライバシーポリシー",
@@ -1092,7 +1092,7 @@
     "seeAlso": "関連：",
     "termsLink": "利用規約",
     "s1": "1. データ管理者",
-    "s1p": "%brandShort% ポータル（以下：<em>ポータル</em>）におけるあなたの個人データの管理者は <b>%owner%</b>——Twitch、Kick、Discord で活動する配信者です。GDPR に関する連絡先：Discord サーバー <discord>discord.gg/deAPJ9Ym2F</discord> 経由——管理者へのダイレクトメッセージ。",
+    "s1p": "%brandShort% ポータル（以下：<em>ポータル</em>）におけるあなたの個人データの管理者は <b>%owner%</b>——Twitch、Kick、Discord で活動する配信者です。GDPR に関する連絡先：Discord サーバー <discord>Discord</discord> 経由——管理者へのダイレクトメッセージ。",
     "s2": "2. 収集するデータ",
     "s2intro1": "OAuth（Twitch / Discord）でログインすると、ポータルは次を受け取ります：",
     "s2b1": "あなたの<b>メールアドレス</b>（Twitch または Discord アカウントから）",

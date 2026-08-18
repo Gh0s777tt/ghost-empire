@@ -1082,7 +1082,7 @@
     "s10i1": "본 약관은 폴란드 법의 적용을 받습니다.",
     "s10i2": "본 약관에서 다루지 않은 사항은 폴란드 민법 및 GDPR의 적용을 받습니다.",
     "s10i3": "분쟁은 소비자가 달리 선택하지 않는 한 운영자의 거주지 관할 법원에서 해결됩니다.",
-    "s10i4": "연락처: Discord 서버 <discord>discord.gg/deAPJ9Ym2F</discord>"
+    "s10i4": "연락처: Discord 서버 <discord>Discord</discord>"
   },
   "privacy": {
     "metaTitle": "개인정보 처리방침",
@@ -1092,7 +1092,7 @@
     "seeAlso": "함께 보기:",
     "termsLink": "이용약관",
     "s1": "1. 데이터 관리자",
-    "s1p": "%brandShort% 포털(이하: <em>포털</em>)에서 귀하의 개인정보 관리자는 <b>%owner%</b>입니다 — Twitch, Kick, Discord에서 활동하는 스트리머. GDPR 문의: Discord 서버 <discord>discord.gg/deAPJ9Ym2F</discord>를 통해 — 관리자에게 보내는 직접 메시지.",
+    "s1p": "%brandShort% 포털(이하: <em>포털</em>)에서 귀하의 개인정보 관리자는 <b>%owner%</b>입니다 — Twitch, Kick, Discord에서 활동하는 스트리머. GDPR 문의: Discord 서버 <discord>Discord</discord>를 통해 — 관리자에게 보내는 직접 메시지.",
     "s2": "2. 수집하는 데이터",
     "s2intro1": "OAuth(Twitch / Discord)로 로그인하면 포털은 다음을 받습니다:",
     "s2b1": "귀하의 <b>이메일 주소</b>(Twitch 또는 Discord 계정에서)",

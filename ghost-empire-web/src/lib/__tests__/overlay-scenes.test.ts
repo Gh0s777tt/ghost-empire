@@ -141,3 +141,34 @@ describe("moveElement — warstwy", () => {
     expect(wynik[1]).toMatchObject({ id: "a", enabled: false });
   });
 });
+
+// Strażnik rozjazdu dwóch katalogów widgetów (audyt 2026-08). Biblioteka widgetów
+// (`components/admin/sections/Widgets.tsx` → WIDGET_META) i kreator scen (SCENE_WIDGETS) to
+// dwie osobne listy, które przez pół roku niepostrzeżenie się rozjechały: 25 vs 19. Skutek —
+// streamer widział widget w bibliotece i nie znajdował go w kreatorze, bez żadnego komunikatu.
+//
+// Test czyta obie listy z PLIKÓW ŹRÓDŁOWYCH, bo Widgets.tsx to komponent kliencki z importami
+// UI, których nie da się zaimportować do czystego unit testu bez ciągnięcia całego Reacta.
+describe("SCENE_WIDGETS ↔ biblioteka widgetów", () => {
+  const idsZ = (tekst: string, marker: string): string[] => {
+    const start = tekst.indexOf(marker);
+    const blok = tekst.slice(start, tekst.indexOf("\n];", start));
+    return [...blok.matchAll(/id:\s*"([a-z0-9-]+)"/g)].map((m) => m[1]);
+  };
+
+  it("każdy widget z biblioteki da się postawić na scenie — poza dwoma świadomie wykluczonymi", async () => {
+    const { readFileSync } = await import("node:fs");
+    const biblioteka = idsZ(readFileSync("src/components/admin/sections/Widgets.tsx", "utf8"), "const WIDGET_META");
+    const scena = new Set(idsZ(readFileSync("src/lib/overlay-scenes.ts", "utf8"), "export const SCENE_WIDGETS"));
+
+    // `alerts` to pełnoekranowa warstwa 1920×1080, `obs-control` jest headless — żadnego z nich
+    // nie da się sensownie położyć na płótnie. Każdy INNY brak to regresja.
+    const WYKLUCZONE = new Set(["alerts", "obs-control"]);
+    const brakujace = biblioteka.filter((id) => !scena.has(id) && !WYKLUCZONE.has(id));
+    expect(brakujace).toEqual([]);
+
+    // W drugą stronę: kreator nie może oferować widgetu, którego biblioteka nie zna.
+    const osierocone = [...scena].filter((id) => !biblioteka.includes(id));
+    expect(osierocone).toEqual([]);
+  });
+});

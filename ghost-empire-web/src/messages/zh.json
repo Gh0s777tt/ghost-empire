@@ -1082,7 +1082,7 @@
     "s10i1": "本条款受波兰法律管辖。",
     "s10i2": "本条款未涵盖的事项受波兰民法典和 GDPR 管辖。",
     "s10i3": "争议由运营者居住地的有管辖权的法院解决，除非消费者另有选择。",
-    "s10i4": "联系方式：Discord 服务器 <discord>discord.gg/deAPJ9Ym2F</discord>"
+    "s10i4": "联系方式：Discord 服务器 <discord>Discord</discord>"
   },
   "privacy": {
     "metaTitle": "隐私政策",
@@ -1092,7 +1092,7 @@
     "seeAlso": "另请参阅：",
     "termsLink": "条款",
     "s1": "1. 数据控制者",
-    "s1p": "你在 %brandShort% 门户（以下简称：<em>门户</em>）上个人数据的控制者为 <b>%owner%</b>——活跃于 Twitch、Kick 和 Discord 的主播。GDPR 联系方式：通过 Discord 服务器 <discord>discord.gg/deAPJ9Ym2F</discord>——向管理员发送私信。",
+    "s1p": "你在 %brandShort% 门户（以下简称：<em>门户</em>）上个人数据的控制者为 <b>%owner%</b>——活跃于 Twitch、Kick 和 Discord 的主播。GDPR 联系方式：通过 Discord 服务器 <discord>Discord</discord>——向管理员发送私信。",
     "s2": "2. 我们收集哪些数据",
     "s2intro1": "当你通过 OAuth（Twitch / Discord）登录时，门户会收到：",
     "s2b1": "你的<b>电子邮箱地址</b>（来自你的 Twitch 或 Discord 账户）",

@@ -25,8 +25,17 @@ const VIDEO_DEFAULT = { w: 40, h: 23 };
 /** Elementy z własnym mediów-`src` (nie iframe widgetu): grafika i wideo. */
 export const MEDIA_WIDGETS = new Set([IMAGE_WIDGET, VIDEO_WIDGET]);
 
-// Curated to widgets that compose well in a scene (full-screen alerts excluded). w/h are
-// sensible DEFAULT sizes as % of the 1920×1080 canvas.
+// Widgety, które da się ułożyć na scenie. `w`/`h` to sensowne rozmiary DOMYŚLNE, w procentach
+// płótna 1920×1080 (rozmiary źródłowe z biblioteki widgetów przeliczone na proporcje).
+//
+// ⚠️ Ta lista MUSI nadążać za `WIDGET_META` w `components/admin/sections/Widgets.tsx` — inaczej
+// streamer widzi widget w bibliotece i nie znajduje go w kreatorze, bez żadnego wyjaśnienia.
+// Dwa widgety są wykluczone ŚWIADOMIE i nie są przeoczeniem:
+//   • `alerts`      — źródło 1920×1080, czyli pełnoekranowa WARSTWA alertów, a nie kafelek;
+//                     wstawiona jako element sceny przykryłaby wszystko pozostałe.
+//   • `obs-control` — źródło `headless`: nie renderuje nic, tylko wykonuje reguły OBS/Hue/Govee.
+//                     Nie ma czego położyć na płótnie.
+// Poza tą dwójką każdy widget z biblioteki powinien tu być.
 export const SCENE_WIDGETS: SceneWidget[] = [
   { id: "chat", path: "/overlay/chat", w: 28, h: 60 },
   { id: "goals", path: "/overlay/goals", w: 26, h: 37 },
@@ -47,6 +56,11 @@ export const SCENE_WIDGETS: SceneWidget[] = [
   { id: "last-sub", path: "/overlay/last-event", query: "kind=sub", w: 18, h: 8 },
   { id: "last-donator", path: "/overlay/last-event", query: "kind=donation", w: 18, h: 8 },
   { id: "last-follower", path: "/overlay/last-event", query: "kind=follow", w: 18, h: 8 },
+  // Dorzucone 2026-08 — były w bibliotece, ale nie dało się ich postawić na scenie.
+  { id: "codes", path: "/overlay/codes", w: 31, h: 28 },
+  { id: "sponsors", path: "/overlay/sponsors", w: 16, h: 17 },
+  { id: "social", path: "/overlay/social", w: 22, h: 13 },
+  { id: "presence", path: "/overlay/presence", w: 11, h: 6 },
 ];
 
 const BY_ID = new Map(SCENE_WIDGETS.map((w) => [w.id, w]));

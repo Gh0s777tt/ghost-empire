@@ -1082,7 +1082,7 @@
     "s10i1": "Diese Bedingungen unterliegen polnischem Recht.",
     "s10i2": "Nicht geregelte Angelegenheiten unterliegen dem polnischen Zivilgesetzbuch und der DSGVO.",
     "s10i3": "Streitigkeiten werden vom für den Wohnsitz des Betreibers zuständigen Gericht entschieden, sofern der Verbraucher nicht etwas anderes wählt.",
-    "s10i4": "Kontakt: Discord-Server <discord>discord.gg/deAPJ9Ym2F</discord>"
+    "s10i4": "Kontakt: Discord-Server <discord>Discord</discord>"
   },
   "privacy": {
     "metaTitle": "Datenschutzerklärung",
@@ -1092,7 +1092,7 @@
     "seeAlso": "Siehe auch:",
     "termsLink": "Nutzungsbedingungen",
     "s1": "1. Verantwortlicher",
-    "s1p": "Verantwortlicher für deine personenbezogenen Daten auf dem %brandShort%-Portal (nachfolgend: <em>Portal</em>) ist <b>%owner%</b> — ein auf Twitch, Kick und Discord aktiver Streamer. DSGVO-Kontakt: über den Discord-Server <discord>discord.gg/deAPJ9Ym2F</discord> — eine Direktnachricht an den Admin.",
+    "s1p": "Verantwortlicher für deine personenbezogenen Daten auf dem %brandShort%-Portal (nachfolgend: <em>Portal</em>) ist <b>%owner%</b> — ein auf Twitch, Kick und Discord aktiver Streamer. DSGVO-Kontakt: über den Discord-Server <discord>Discord</discord> — eine Direktnachricht an den Admin.",
     "s2": "2. Welche Daten wir erheben",
     "s2intro1": "Wenn du dich via OAuth (Twitch / Discord) anmeldest, erhält das Portal:",
     "s2b1": "Deine <b>E-Mail-Adresse</b> (von deinem Twitch- oder Discord-Konto)",
