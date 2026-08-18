@@ -5,7 +5,7 @@ import { CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { SectionCard, FieldInput } from "../shared";
-import { apiPost, ApiError } from "@/lib/api-client";
+import { apiPost, apiPatch, apiDelete, ApiError } from "@/lib/api-client";
 import type { ScheduleSlot } from "../types";
 
 export function ScheduleManager({
@@ -50,21 +50,25 @@ export function ScheduleManager({
     if (!confirm(t("deleteConfirm"))) return;
     setBusyId(id);
     try {
-      const res = await fetch(`/api/admin/schedule?id=${id}`, { method: "DELETE" });
-      if (res.ok) { onToast("ok", t("slotDeleted")); onSuccess(); }
-      else onToast("err", t("err"));
+      await apiDelete(`/api/admin/schedule?id=${encodeURIComponent(id)}`);
+      onToast("ok", t("slotDeleted"));
+      onSuccess();
+    } catch (e) {
+      onToast("err", e instanceof ApiError ? e.message : t("err"));
     } finally { setBusyId(null); }
   }
 
   async function toggleActive(slot: ScheduleSlot) {
     setBusyId(slot.id);
     try {
-      const res = await fetch("/api/admin/schedule", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: slot.id, active: !slot.active }),
-      });
-      if (res.ok) { onSuccess(); }
+      // Kiedyś: `if (res.ok) { onSuccess(); }` — BEZ gałęzi else. Nieudany zapis nie dawał ani
+      // komunikatu, ani cofnięcia: przełącznik po prostu nie drgał, a streamer nie wiedział,
+      // czy kliknął za słabo, czy serwer odmówił. Jedyne miejsce w panelu, które połykało błąd
+      // po cichu — reszta gołych `fetch` ma obsługę, brakowało im tylko wspólnego klienta.
+      await apiPatch("/api/admin/schedule", { id: slot.id, active: !slot.active });
+      onSuccess();
+    } catch (e) {
+      onToast("err", e instanceof ApiError ? e.message : t("err"));
     } finally { setBusyId(null); }
   }
 

@@ -7,7 +7,11 @@ const eslintConfig = [
   // Ignore build artifacts + coverage anywhere, and Claude Code's working dir (`.claude/`
   // holds transient git worktrees from parallel agent sessions, each with its own built
   // `.next/` — `eslint .` would otherwise choke on those generated files).
-  { ignores: [".next/**", "**/.next/**", "node_modules/**", "next-env.d.ts", "coverage/**", ".claude/**"] },
+  // `._*` — AppleDouble: na woluminach nie-HFS macOS zapisuje resource fork obok pliku, więc obok
+  // `route.ts` powstaje `._route.ts`. Jest już w `.gitignore` (linia 33), ale flat config ESLinta
+  // NIE czyta .gitignore, więc `eslint .` dalej próbuje je parsować i wywala się na „Invalid
+  // character" — to właśnie te pliki potrafiły wygenerować 864 błędy parsowania w audycie 2026-08.
+  { ignores: [".next/**", "**/.next/**", "node_modules/**", "next-env.d.ts", "coverage/**", ".claude/**", "**/._*"] },
   ...nextCoreWebVitals,
   {
     rules: {

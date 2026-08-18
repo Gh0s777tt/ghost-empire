@@ -123,7 +123,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | Trasa | Metoda | Po co |
 |---|---|---|
 | `…/api/onboarding` | POST | Provisioning portalu tenanta przy zakładaniu konta (slug/nazwa/branding) |
-| `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta |
+| `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta — od 2026-08 także `socialLinks`, `timezone`, `companionDefaultName`, `supportAlertMode` (walidacja przepisana co do znaku z trasy właściciela platformy). **`domain` świadomie poza zakresem**: jest `@unique` i mapuje Host→tenant, więc samoobsługa bez weryfikacji DNS pozwoliłaby przejąć cudzy adres |
 | `…/api/billing/checkout` | GET/POST | Status billingu (GET `{configured}`) / utworzenie Stripe Checkout (POST `{plan,months,currency}` — wielowaluta przez `currency_options`, trial 14 dni, #744). Gdy Stripe nieskonfigurowany → 503 (trial bez karty) |
 | `…/api/billing/portal` | POST | Stripe Customer Portal dla własnego tenanta — samodzielne faktury/karta/anulowanie. 400 przed pierwszym checkoutem (brak customer), 503 gdy Stripe nieskonfigurowany |
 
@@ -176,7 +176,9 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/govee-rules` | admin | CRUD reguł oświetlenia Govee (event→akcja świetlna, #721) — GET/POST/PATCH/DELETE, tenant-scoped, limit 50/portal |
 | `…/api/admin/govee-test` | admin | POST — jednorazowy widoczny test lampki Govee portalu (błyśnij zielonym→biały) by sprawdzić creds+urządzenie (#725) |
 | `…/api/admin/overlay-token` | admin | Token overlayów (do podglądów) |
-| `…/api/admin/overlay-scenes` | admin | CRUD scen overlay (#550 — wiele widżetów na jednym płótnie → jedno źródło OBS `/overlay/scene/<id>`) |
+| `…/api/admin/overlay-scenes` | admin | CRUD scen overlay (#550 — wiele widżetów na jednym płótnie → jedno źródło OBS `/overlay/scene/<id>`). `duplicate` klonuje scenę (bez dziedziczenia `enabled`); `set_active` wskazuje scenę renderowaną pod stałym adresem `/overlay/live` (jedyność w transakcji); `update` przyjmuje też `enabled` (wyłączona scena renderuje w OBS pustkę); elementy mogą nieść `enabled:false` (ukryty element, odsiewany serwerowo przed renderem) |
+| `…/api/admin/tenant-copy` | admin | Nadpisania treści portalu (`welcome`) per locale — klucze WYŁĄCZNIE z zamkniętej listy `lib/tenant-copy`; pola prawne (`terms`/`privacy`) poza zasięgiem panelu z założenia |
+| `…/api/overlay/live` | token nakładki | Układ AKTYWNEJ sceny portalu — źródło danych dla stałego adresu OBS `/overlay/live`; portal z nagłówka Host, wyłączone elementy i wyłączona scena odsiewane serwerowo |
 | `…/api/admin/2fa` | admin | Enrollment/zarządzanie TOTP bieżącego admina (step-up dla wrażliwych akcji, #490) |
 | `…/api/admin/payment-methods` | admin | CRUD metod wsparcia/napiwków na `/support` (link/krypto/IBAN, #514) + cel zbiórki (`save-goal`) + konfigurowalny tekst strony (`save-support-text`: nagłówek/opis/dziękuję, #742) |
 | `…/api/admin/sound-rewards` | admin | CRUD katalogu GT-dźwięków (widz wykupuje na `/sounds`, #505) |

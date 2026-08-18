@@ -33,7 +33,10 @@ const ACTION_META: Record<string, { emoji: string; color: string }> = {
   rotate_bot_secret:   { emoji: "🔐", color: "#ef4444" },
 };
 
-export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
+/** @param total - ile wpisów jest W BAZIE. Bez tego nagłówek podpisywał listę liczbą
+ *  POKAZANYCH wpisów (30) i wyglądał jak pełna historia — a `pruneOldRecords` świadomie
+ *  nie kasuje `AdminAction`, więc realnych wpisów mogą być tysiące. */
+export function AuditLogSection({ auditLog, total }: { auditLog: AuditEntry[]; total?: number }) {
   const t = useTranslations("admin.auditLog");
   const nf = useLocale();
   if (auditLog.length === 0) {
@@ -45,7 +48,10 @@ export function AuditLogSection({ auditLog }: { auditLog: AuditEntry[] }) {
   }
 
   return (
-    <SectionCard title={t("title", { count: auditLog.length })} icon={History}>
+    <SectionCard title={t("title", { count: total ?? auditLog.length })} icon={History}>
+      {typeof total === "number" && total > auditLog.length && (
+        <div className="text-[10px] text-zinc-500 mb-2">{t("truncated", { shown: auditLog.length, total })}</div>
+      )}
       <div className="space-y-1 max-h-[500px] overflow-y-auto">
         {auditLog.map((entry) => {
           const meta = ACTION_META[entry.action] ?? { emoji: "•", color: "#71717a" };

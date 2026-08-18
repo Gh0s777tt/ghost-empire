@@ -7,6 +7,7 @@ import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { OverlayPreview } from "@/components/admin/OverlayPreview";
 import { SubathonCard } from "@/components/SubathonCard";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type SubathonData = {
   active: boolean;
@@ -37,6 +38,9 @@ export function SubathonManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.subathon");
+  // Kolor marki jest per portal — literał #E50914 pokazywałby każdemu tenantowi
+  // czerwień założyciela w podglądzie "jak to wygląda".
+  const { brandColor } = useTenantBranding();
   const nf = useLocale();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SubathonData | null>(null);
@@ -47,7 +51,7 @@ export function SubathonManager({
   const [perSub, setPerSub] = useState("300");
   const [perPln, setPerPln] = useState("60");
   const [maxMinutes, setMaxMinutes] = useState("");
-  const [accent, setAccent] = useState("#E50914");
+  const [accent, setAccent] = useState(brandColor);
   const [label, setLabel] = useState("Subathon");
 
   const seededRef = useRef(false);
