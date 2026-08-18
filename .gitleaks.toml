@@ -26,9 +26,21 @@ paths = [
 ]
 # Dodatkowo wycisz typowe wartości-placeholdery, gdyby pojawiły się w innych plikach
 # dokumentacji (np. README/docs z przykładowym connection-string).
+#
+# UWAGA co do zakresu: `paths` i `regexes` w JEDNYM bloku `[allowlist]` są łączone
+# przez OR (dopasowanie któregokolwiek = finding wyciszony), NIE przez AND. Dlatego
+# fałszywy alarm na konkretnej WARTOŚCI wycisza się regexem na tej wartości, a nie
+# przez dopisanie jej pliku do `paths` — to wyciszyłoby cały plik. Każdy wpis niżej
+# ma być dosłowną, wąską wartością (nie wzorcem typu `.*KEY.*`), bo to jedyna bramka
+# na sekrety w CI.
 regexes = [
   '''PROJECT_REF''',
   '''<[A-Z_]+>''',
   '''postgres:postgres@''',
   '''dummy-build-time-secret-not-a-real-secret''',
+  # NAZWA klucza w localStorage (`GamblingGate.tsx` — zgoda 18+ zapisywana po stronie
+  # klienta), nie sekret: to identyfikator wpisu, jawny z definicji, bo siedzi w
+  # przeglądarce użytkownika. Reguła `generic-api-key` łapała go po entropii (3.53)
+  # przez sam wzorzec `const ACK_KEY = "..."`. Wycisz TĘ wartość, nie regułę i nie plik.
+  '''ge-gambling-ack-v1''',
 ]

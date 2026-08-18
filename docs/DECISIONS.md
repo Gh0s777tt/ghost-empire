@@ -89,3 +89,97 @@ Trzymamy je tu, żeby kolejny przegląd nie „naprawiał" ich na ślepo i nie c
 - **PLAN (śledzony):** dołożyć `redirectUri` do wiersza połączenia przy connectcie i czytać go
   w `refreshConnectionToken`; do tego czasu per-host sub-tenant Streamlabs degraduje do
   ręcznego re-connectu (widoczne w panelu + Sentry). Founder niezmieniony.
+## `min-release-age=7` w `.npmrc` — karencja na świeże wersje z npm
+
+- **CO:** `ghost-empire-web/.npmrc` ustawia `min-release-age=7` — rozwiązywanie zależności
+  nigdy nie sięgnie po wersję opublikowaną w ciągu ostatnich 7 dni. Lista wyjątków
+  (`min-release-age-exclude`) jest **pusta** i ma taka zostać.
+- **DLACZEGO (a nie „uciszenie reguły" semgrepa `npm-missing-minimum-release-age`):** ten
+  projekt jest na atak przez rejestr wystawiony **bardziej** niż przeciętny. Vercel przy
+  deployu robi ŚWIEŻY `npm install`, który na nowo rozwiązuje zakresy — a **43 z 47**
+  zależności to carety (`^`). Lockfile ich tam nie chroni (to dokładnie mechanizm z #654).
+  To jedyne miejsce w pipelinie, gdzie złośliwa świeżo wypuszczona wersja wjeżdża na
+  produkcję bez ludzkiego przeglądu; przejęte konto maintainera bywa unpublishowane w
+  godziny, więc 7-dniowe okno realnie zamyka to okno ekspozycji.
+- **ZASIĘG (zweryfikowany, nie założony):**
+  - `npm ci` (CI + lokalnie) odtwarza lockfile i **nie** rozwiązuje zakresów → opcja go nie
+    dotyka. Sprawdzone: `npm ci` na npm 11.17 z włączoną opcją przechodzi zielono.
+  - Klucz wymaga **npm ≥ 11.10**. Obraz CI `node:22-bookworm-slim` niesie **npm 10.9.8**,
+    który nieznany klucz po prostu ignoruje (sprawdzone: `legacy-peer-deps` nadal działa,
+    zero warningu, zero błędu). Czyli: działa tam, gdzie npm jest dość nowy, i jest
+    bezpiecznym no-opem tam, gdzie nie jest — **zero ryzyka dla obecnego deployu**.
+  - Wszystkie 4 zależności pinowane dokładnie (`prisma`/`@prisma/client`/`@prisma/adapter-pg`
+    7.8.0, `next-auth` 5.0.0-beta.32) mają w dniu wdrożenia **26+ dni** → okno nie blokuje
+    dziś żadnej instalacji.
+- **KOSZT / RYZYKO REZYDUALNE:** pilny bump bezpieczeństwa (jak `next-auth` beta.32 /
+  `@auth/core` 0.41.3 — GHSA-x445, #518) może trafić w to okno i zostać opóźniony do 7 dni.
+  **Wyjście awaryjne, świadome i jednorazowe:** `npm install <pkg>@<ver> --min-release-age 0`,
+  albo trwale dla jednej paczki wpis w `min-release-age-exclude` — każdy taki wpis to dziura
+  w tej ochronie, więc **zawsze z komentarzem i datą przeglądu**.
+- **PUŁAPKA PRZY EDYCJI:** reguła semgrepa dopasowuje **tekst pliku i nie pomija komentarzy** —
+  dosłowne `min-release-age` z `=` i zerem w komentarzu czerwieni cały pipeline („sets it too
+  low"). Dlatego w `.npmrc` wariant awaryjny zapisany jest z **odstępem** zamiast `=`.
+
+## AES-GCM — jawna długość tagu uwierzytelniającego (`authTagLength: 16`)
+
+- **CO:** `src/lib/crypto.ts` przekazuje `{ authTagLength: 16 }` do `createCipheriv`
+  **i** `createDecipheriv`, zamiast polegać na domyślnej długości tagu Node'a.
+- **DLACZEGO to NIE była kosmetyka pod semgrepa (`gcm-no-tag-length`):** zmierzone na
+  **Node 22** — wersji, na której buduje CI (`node:22-bookworm-slim`) — deszyfrator zbudowany **bez** tej opcji przyjmuje **skrócony**
+  tag: dobrze uformowana koperta z 4-bajtowym tagiem uwierzytelniła się i `decryptSecret`
+  zwrócił `""` zamiast `null`. Node 26 to odrzuca, więc sprawdzenie tylko na nowym Node
+  uznałoby znalezisko za false-positive — **na runtimie, który wtedy testowaliśmy, było realne**.
+  ⚠️ *Sprostowanie 2026-08-17:* pierwotny zapis twierdził, że Node 22 to „wersja, którą realnie
+  niesie produkcja". To była **nieprawda** — Vercel raportuje `nodeVersion: 24.x`, a
+  `engines.node ">=22"` jest tylko dolną granicą. Zachowania Node 24 przy obciętym tagu nie
+  mierzyliśmy. Decyzja przez to **mocnieje, nie słabnie**: przy rozjeździe CI ↔ produkcja ↔
+  lokalnie jedyną wartością, na której można polegać, jest ta zapisana jawnie w kodzie.
+  CI zostało od tej pory uzgodnione z produkcją (`node:24-bookworm-slim`).
+  Skrócony tag to wykładniczo tańsze fałszerstwo, a powtarzane próby przeciw obciętemu
+  tagowi wyciekają klucz uwierzytelniający GHASH. Moduł chroni `Tenant.botSecret` i tokeny
+  OAuth `Connection`, więc długość tagu jest **parametrem uwierzytelnienia**, nie formatowaniem.
+- **ZGODNOŚĆ WSTECZNA (udowodniona testem, nie założona):** układ koperty
+  `iv[12] | tag[16] | ciphertext` **nie zmienia się** — `getAuthTag()` zawsze emitował pełne
+  16 bajtów, więc wiersze już zapisane w bazie czytają się bez migracji. Pokryte testami:
+  round-trip blobów zapisanych **przez writer sprzed poprawki** (v1 i v2) oraz odczyt
+  świeżego szyfrogramu „starym" czytnikiem (rollback commita nie osieroci nowych zapisów).
+- **DOWÓD REGRESJI:** 6 testów `crypto.test.ts` **failuje** na Node 22 po cofnięciu samej
+  opcji (`expected '' to be null`) — to nie są testy tautologiczne.
+
+---
+
+## `pg_net` w schemacie `public` — ostrzeżenie advisora, którego NIE da się i nie warto „naprawiać"
+
+**Data:** 2026-08-17 · **Status:** zamknięte jako nieakcyjne, z dowodem
+
+- **CO zgłasza Supabase:** `extension_in_public` (WARN) — jedyne realne ostrzeżenie
+  bezpieczeństwa w obu projektach (pozostałe 111 to `rls_enabled_no_policy` na poziomie INFO,
+  czyli nasz zamierzony wzorzec: RLS włączone, zero polityk, aplikacja łączy się jako właściciel).
+- **DLACZEGO nie jest groźne — sprawdzone zapytaniem, nie założone:** rozszerzenie ma
+  `extnamespace = public`, ale **wszystkie 27 jego obiektów leży w schemacie `net`**, a w
+  `public` **nie ma ani jednego**. Ryzyko, przed którym ostrzega reguła (przesłonięcie funkcji
+  przez `search_path`), nie ma tu powierzchni.
+- **DLACZEGO nie da się przenieść:** `pg_net` ma `relocatable = false`, więc
+  `ALTER EXTENSION pg_net SET SCHEMA extensions` **kończy się błędem**. Jedyną drogą byłoby
+  `DROP EXTENSION … CASCADE` + `CREATE`, co skasowałoby schemat `net` razem z funkcjami.
+- **CZEGO by to kosztowało:** aktywne zadanie `cron.job` **`ghost-go-live-ping` (co 2 minuty)**
+  woła `net.http_post(...)`. Drop rozwaliłby ping go-live na produkcji — realna awaria w zamian
+  za ostrzeżenie bez powierzchni ataku.
+- **WERDYKT:** zostaje. Przy kolejnym audycie **nie badać od nowa** — dowód jest tutaj.
+
+---
+
+## Portal założyciela bez osiągalnego adresu — to NIE jest defekt
+
+**Data:** 2026-08-17 · **Status:** wyjaśnione, żadna zmiana nie jest potrzebna
+
+- **CO wygląda na problem z zewnątrz:** portal `ghost-empire` ma `domain = NULL`, na Vercelu
+  podpięte są wyłącznie `empire-forge.com` i `www.empire-forge.com` (bez wildcardu), a wejście
+  na `ghost-empire.empire-forge.com` kończy się stroną błędu.
+- **DLACZEGO to stan zamierzony:** routing po subdomenach **nie jest jeszcze wdrożony**.
+  `lib/tenant-host.ts` mówi to wprost — mapowanie hosta na slug jest „a deliberate no-op until
+  subdomains are actually deployed" i zwraca `null`, dopóki `NEXT_PUBLIC_ROOT_DOMAIN` nie jest
+  ustawione. To samo odnotowują `proxy.ts`, `/portals` i onboarding.
+- **CO trzeba zrobić, gdy przyjdzie na to czas:** rekord DNS `*.empire-forge.com` → Vercel,
+  dodanie domeny wildcard w projekcie i ustawienie `NEXT_PUBLIC_ROOT_DOMAIN`. Do tego czasu
+  każdy portal jest osiągalny wyłącznie przez własną domenę w kolumnie `domain`.

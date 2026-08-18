@@ -6,6 +6,7 @@ const BASE: DigestStats = {
   tenantName: "E-Forge",
   tokenSymbol: "GT",
   portalUrl: "https://example.com",
+  brandColor: "#0b6f78",
   newUsers: 12,
   activeUsers: 87,
   gtEarned: 15000,
@@ -59,5 +60,33 @@ describe("composeDigest", () => {
     expect(html).not.toContain("<script>");
     expect(html).not.toContain('<b onmouseover');
     expect(html).toContain("&lt;script&gt;");
+  });
+});
+
+// Audyt 2026-08: nagłówek, ramka ostrzeżenia i przycisk były zaszyte na czerwieni ZAŁOŻYCIELA
+// (#e50914), więc raport tygodniowy KAŻDEGO portalu wyglądał jak Ghost Empire — mail trafia
+// do skrzynki właściciela, więc leak był podwójnie niezręczny.
+describe("composeDigest — kolor marki portalu", () => {
+  it("używa koloru PORTALU, nie zaszytej czerwieni założyciela", () => {
+    const { html } = composeDigest({ ...BASE, brandColor: "#1d4ed8" });
+    expect(html).toContain("#1d4ed8");
+    expect(html).not.toContain("#e50914");
+  });
+
+  it("każdy portal dostaje SWÓJ kolor", () => {
+    const a = composeDigest({ ...BASE, brandColor: "#aa0011" }).html;
+    const b = composeDigest({ ...BASE, brandColor: "#00bb22" }).html;
+    expect(a).toContain("#aa0011");
+    expect(a).not.toContain("#00bb22");
+    expect(b).toContain("#00bb22");
+  });
+
+  it("kolor spoza #rrggbb NIE wchodzi do stylu — to wektor wstrzyknięcia CSS w mailu", () => {
+    // Wartość leci wprost do `style="…"`, więc traktujemy ją jak `brandColor` w layoucie portalu.
+    for (const zly of ['red', '#fff', 'blue;background:url(x)', '#12345', '', null, undefined]) {
+      const { html } = composeDigest({ ...BASE, brandColor: zly as unknown as string });
+      expect(html).toContain("#52525b");           // neutralna szarość zamiast śmiecia
+      expect(html).not.toContain("url(x)");        // nic się nie przemyciło
+    }
   });
 });
