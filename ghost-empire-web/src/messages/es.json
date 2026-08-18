@@ -524,6 +524,18 @@
     "errNet": "Error de red"
   },
   "profile": {
+    "donationClaim": {
+      "title": "¿Donaste sin el código?",
+      "intro": "Si tu donación no se acreditó, notifícala aquí — el streamer la aprobará.",
+      "amount": "Importe",
+      "currency": "Moneda",
+      "date": "Fecha del pago",
+      "evidence": "Información adicional (opcional)",
+      "evidencePh": "p. ej. el nick o correo con el que pagaste, el número de transacción",
+      "submit": "Notificar donación",
+      "done": "Enviado — a la espera de la aprobación del streamer.",
+      "err": "No se pudo enviar"
+    },
     "help": "Tu perfil: vincula cuentas (Twitch, Kick, YouTube, Discord), elige tu apodo y mira tus estadísticas. Las cuentas vinculadas suman tu actividad en directo a misiones y clasificación.",
     "phHandle": "tu_usuario",
     "phYoutube": "@canal o enlace",
@@ -4229,5 +4241,18 @@
     "title_legend": "Leyenda",
     "title_phantom": "Fantasma",
     "title_eternal": "Eterno"
+  },
+  "extensions": {
+    "metaTitle": "Complementos del portal",
+    "metaDesc": "NX Companion y NX Chat Tools — %brandName% dentro de tus directos de Twitch y Kick.",
+    "kicker": "Ecosistema",
+    "title": "Complementos del portal",
+    "lead": "Dos complementos ligeros para el navegador y un bot de Discord — saldo de %gt%, misiones, herramientas de moderación y avisos en directo sin cambiar de pestaña.",
+    "frictionTitle": "Cero fricción",
+    "frictionBody": "El overlay se muestra sobre Twitch y Kick. Reclama misiones y códigos de drop justo donde ves el directo.",
+    "privacyTitle": "Privacidad y seguridad",
+    "privacyBody": "Permisos mínimos, sin venta de datos, código abierto. Solo funciona en los chats compatibles.",
+    "ecosystemTitle": "Parte del ecosistema",
+    "ecosystemBody": "Las mismas cuentas y los mismos %tokenName% que en el portal: las extensiones son una capa, no un mundo aparte."
   }
 }

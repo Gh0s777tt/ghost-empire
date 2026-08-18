@@ -524,6 +524,18 @@
     "errNet": "ネットワークエラー"
   },
   "profile": {
+    "donationClaim": {
+      "title": "コードなしで支援した？",
+      "intro": "支援が反映されていない場合はここから申請してください。配信者が承認します。",
+      "amount": "金額",
+      "currency": "通貨",
+      "date": "支払日",
+      "evidence": "補足情報（任意）",
+      "evidencePh": "例：支払いに使ったニックネームやメール、取引番号",
+      "submit": "支援を申請",
+      "done": "申請しました — 配信者の承認待ちです。",
+      "err": "申請できませんでした"
+    },
     "help": "あなたのプロフィール：アカウント連携（Twitch、Kick、YouTube、Discord）、ニックネーム設定、統計の確認ができます。連携したアカウントの配信での活動はクエストやランキングに反映されます。",
     "phHandle": "あなたの_ハンドル",
     "phYoutube": "@チャンネルまたはリンク",
@@ -4229,5 +4241,18 @@
     "title_legend": "レジェンド",
     "title_phantom": "ファントム",
     "title_eternal": "エターナル"
+  },
+  "extensions": {
+    "metaTitle": "ポータル拡張",
+    "metaDesc": "NX Companion と NX Chat Tools — %brandName% を Twitch と Kick の配信画面にそのまま。",
+    "kicker": "エコシステム",
+    "title": "ポータル拡張",
+    "lead": "軽量なブラウザ拡張が2つと Discord ボットが1つ — %gt% の残高、クエスト、モデレーションツール、配信開始通知を、タブを切り替えずに。",
+    "frictionTitle": "ストレスゼロ",
+    "frictionBody": "オーバーレイは Twitch と Kick の上に表示されます。視聴しているその場でクエストとドロップコードを受け取れます。",
+    "privacyTitle": "プライバシーと安全性",
+    "privacyBody": "権限は最小限、データの販売なし、コードはオープンソース。対応チャットでのみ動作します。",
+    "ecosystemTitle": "エコシステムの一部",
+    "ecosystemBody": "ポータルと同じアカウント、同じ %tokenName%。拡張は別世界ではなく、重ねる層です。"
   }
 }

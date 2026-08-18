@@ -524,6 +524,18 @@
     "errNet": "Kesalahan jaringan"
   },
   "profile": {
+    "donationClaim": {
+      "title": "Donasi tanpa kode?",
+      "intro": "Kalau donasimu belum masuk, laporkan di sini — streamer yang menyetujuinya.",
+      "amount": "Jumlah",
+      "currency": "Mata uang",
+      "date": "Tanggal pembayaran",
+      "evidence": "Info tambahan (opsional)",
+      "evidencePh": "mis. nick atau email yang kamu pakai membayar, nomor transaksi",
+      "submit": "Laporkan donasi",
+      "done": "Terkirim — menunggu persetujuan streamer.",
+      "err": "Gagal mengirim"
+    },
     "help": "Profilmu: tautkan akun (Twitch, Kick, YouTube, Discord), atur nickname, dan lihat statistik. Akun tertaut menghitung aktivitas streaming-mu untuk quest dan peringkat.",
     "phHandle": "username_kamu",
     "phYoutube": "@kanal atau tautan",
@@ -4229,5 +4241,18 @@
     "title_legend": "Legenda",
     "title_phantom": "Phantom",
     "title_eternal": "Abadi"
+  },
+  "extensions": {
+    "metaTitle": "Add-on portal",
+    "metaDesc": "NX Companion dan NX Chat Tools — %brandName% langsung di siaran Twitch dan Kick-mu.",
+    "kicker": "Ekosistem",
+    "title": "Add-on portal",
+    "lead": "Dua add-on peramban yang ringan dan satu bot Discord — saldo %gt%, quest, alat moderasi, dan notifikasi live tanpa pindah tab.",
+    "frictionTitle": "Tanpa hambatan",
+    "frictionBody": "Overlay muncul di atas Twitch dan Kick. Ambil quest dan drop-code langsung di tempat kamu menonton.",
+    "privacyTitle": "Privasi & keamanan",
+    "privacyBody": "Izin seminimal mungkin, tanpa penjualan data, kode sumber terbuka. Hanya berjalan di chat yang didukung.",
+    "ecosystemTitle": "Bagian dari ekosistem",
+    "ecosystemBody": "Akun yang sama dan %tokenName% yang sama seperti di portal — ekstensi ini lapisan, bukan dunia terpisah."
   }
 }

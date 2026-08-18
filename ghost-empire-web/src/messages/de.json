@@ -524,6 +524,18 @@
     "errNet": "Netzwerkfehler"
   },
   "profile": {
+    "donationClaim": {
+      "title": "Ohne Code gespendet?",
+      "intro": "Wurde deine Spende nicht gutgeschrieben? Melde sie hier — der Streamer bestätigt sie.",
+      "amount": "Betrag",
+      "currency": "Währung",
+      "date": "Datum der Zahlung",
+      "evidence": "Zusatzinfo (optional)",
+      "evidencePh": "z. B. Nickname/E-Mail der Zahlung, Transaktionsnummer",
+      "submit": "Spende melden",
+      "done": "Gemeldet — wartet auf die Bestätigung des Streamers.",
+      "err": "Melden fehlgeschlagen"
+    },
     "help": "Dein Profil: Konten verbinden (Twitch, Kick, YouTube, Discord), Nickname festlegen, Statistiken ansehen. Verbundene Konten zählen deine Stream-Aktivität für Quests und Rangliste.",
     "phHandle": "dein_handle",
     "phYoutube": "@Kanal oder Link",
@@ -4229,5 +4241,18 @@
     "title_legend": "Legende",
     "title_phantom": "Phantom",
     "title_eternal": "Der Ewige"
+  },
+  "extensions": {
+    "metaTitle": "Portal-Add-ons",
+    "metaDesc": "NX Companion und NX Chat Tools — %brandName% direkt in deinen Twitch- und Kick-Streams.",
+    "kicker": "Ökosystem",
+    "title": "Portal-Add-ons",
+    "lead": "Zwei schlanke Browser-Add-ons und ein Discord-Bot — %gt%-Guthaben, Quests, Mod-Tools und Live-Benachrichtigungen ohne Tab-Wechsel.",
+    "frictionTitle": "Null Reibung",
+    "frictionBody": "Das Overlay liegt über Twitch und Kick. Quests und Drop-Codes holst du dir dort ab, wo du zuschaust.",
+    "privacyTitle": "Privatsphäre & Sicherheit",
+    "privacyBody": "Minimale Berechtigungen, kein Datenverkauf, Open-Source-Code. Läuft nur in unterstützten Chats.",
+    "ecosystemTitle": "Teil des Ökosystems",
+    "ecosystemBody": "Dieselben Konten und dieselben %tokenName% wie im Portal — die Add-ons sind eine Ebene, keine eigene Welt."
   }
 }

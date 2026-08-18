@@ -524,6 +524,18 @@
     "errNet": "네트워크 오류"
   },
   "profile": {
+    "donationClaim": {
+      "title": "코드 없이 후원했나요?",
+      "intro": "후원이 반영되지 않았다면 여기에서 신청하세요. 스트리머가 승인합니다.",
+      "amount": "금액",
+      "currency": "통화",
+      "date": "결제일",
+      "evidence": "추가 정보 (선택)",
+      "evidencePh": "예: 결제에 사용한 닉네임이나 이메일, 거래 번호",
+      "submit": "후원 신청",
+      "done": "신청 완료 — 스트리머의 승인을 기다리는 중입니다.",
+      "err": "신청하지 못했습니다"
+    },
     "help": "내 프로필: 계정 연결(Twitch, Kick, YouTube, Discord), 닉네임 설정, 통계 확인. 연결된 계정의 방송 활동이 퀘스트와 랭킹에 반영됩니다.",
     "phHandle": "당신의_핸들",
     "phYoutube": "@채널 또는 링크",
@@ -4229,5 +4241,18 @@
     "title_legend": "레전드",
     "title_phantom": "팬텀",
     "title_eternal": "이터널"
+  },
+  "extensions": {
+    "metaTitle": "포털 확장",
+    "metaDesc": "NX Companion과 NX Chat Tools — %brandName%을(를) Twitch와 Kick 방송 화면에 그대로.",
+    "kicker": "생태계",
+    "title": "포털 확장",
+    "lead": "가벼운 브라우저 확장 두 개와 Discord 봇 하나 — %gt% 잔액, 퀘스트, 모더레이션 도구, 방송 알림을 탭 전환 없이.",
+    "frictionTitle": "마찰 제로",
+    "frictionBody": "오버레이가 Twitch와 Kick 위에 표시됩니다. 보고 있는 그 자리에서 퀘스트와 드롭 코드를 받으세요.",
+    "privacyTitle": "개인정보와 보안",
+    "privacyBody": "최소 권한, 데이터 판매 없음, 오픈소스 코드. 지원되는 채팅에서만 작동합니다.",
+    "ecosystemTitle": "생태계의 일부",
+    "ecosystemBody": "포털과 같은 계정, 같은 %tokenName%. 확장은 별도의 세계가 아니라 하나의 레이어입니다."
   }
 }

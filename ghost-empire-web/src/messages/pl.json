@@ -2770,6 +2770,18 @@
     "empty": "Brak powiadomień"
   },
   "profile": {
+    "donationClaim": {
+      "title": "Wpłaciłeś bez kodu?",
+      "intro": "Jeśli Twoja wpłata nie została doliczona, zgłoś ją — streamer ją zatwierdzi.",
+      "amount": "Kwota",
+      "currency": "Waluta",
+      "date": "Data wpłaty",
+      "evidence": "Dodatkowe info (opcjonalnie)",
+      "evidencePh": "np. nick lub e-mail, z którego wpłaciłeś, numer transakcji",
+      "submit": "Zgłoś wpłatę",
+      "done": "Zgłoszono — czeka na zatwierdzenie przez streamera.",
+      "err": "Nie udało się zgłosić"
+    },
     "help": "Twój profil: łączysz konta (Twitch, Kick, YouTube, Discord), ustawiasz nick i widzisz statystyki. Połączone konta zliczają aktywność ze streamów do questów i rankingu.",
     "phHandle": "twoj_handle",
     "phYoutube": "@channel lub link",
@@ -4340,5 +4352,18 @@
     "title_legend": "Legenda",
     "title_phantom": "Widmo",
     "title_eternal": "Wieczny"
+  },
+  "extensions": {
+    "metaTitle": "Dodatki do portalu",
+    "metaDesc": "NX Companion i NX Chat Tools — %brandName% prosto na streamach Twitch i Kick.",
+    "kicker": "Ekosystem",
+    "title": "Dodatki do portalu",
+    "lead": "Dwa lekkie dodatki do przeglądarki i bot na Discorda — saldo %gt%, questy, narzędzia moderacji i powiadomienia live bez przełączania kart.",
+    "frictionTitle": "Zero tarcia",
+    "frictionBody": "Overlay pojawia się na Twitchu i Kicku, a bot pilnuje Discorda. Odbierasz questy i drop-code'y tam, gdzie jesteś.",
+    "privacyTitle": "Prywatność i bezpieczeństwo",
+    "privacyBody": "Minimalne uprawnienia, żadnej sprzedaży danych, kod open-source. Działa tylko na obsługiwanych czatach.",
+    "ecosystemTitle": "Część ekosystemu",
+    "ecosystemBody": "Te same konta i te same %tokenName% co na portalu — rozszerzenia to nakładka, nie osobny świat."
   }
 }
