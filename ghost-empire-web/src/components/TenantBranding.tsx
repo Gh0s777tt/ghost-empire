@@ -23,6 +23,9 @@ export type TenantBrandingValue = {
    *  E-Forge), false on a streamer's white-label sub-portal. Gates platform-commercial chrome
    *  (the "Go Premium" CTA) so a sub-portal doesn't advertise the SaaS plan to its viewers (#746). */
   isPlatformBrand: boolean;
+  /** Klucze funkcji WYŁĄCZONYCH przez właściciela portalu — Header ukrywa te pozycje nawigacji
+   *  (allow-by-default: pusta lista = wszystko widoczne). Katalog/logika w `lib/features`. */
+  disabledFeatures: string[];
 };
 
 const TenantBrandingContext = createContext<TenantBrandingValue>({
@@ -35,6 +38,7 @@ const TenantBrandingContext = createContext<TenantBrandingValue>({
   brandColor: "#E50914",
   channels: streamingChannels(null, true),
   isPlatformBrand: true,
+  disabledFeatures: [],
 });
 
 export function TenantBrandingProvider({

@@ -5,6 +5,7 @@ import { currentTenantId, getCurrentTenant } from "@/lib/tenant";
 import { Header } from "@/components/Header";
 import { PollsClient } from "@/components/polls/PollsClient";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
@@ -16,6 +17,7 @@ export async function generateMetadata() {
 }
 
 export default async function PollsPage() {
+  await requireFeature("polls"); // 404 if disabled (/admin#features)
   const session = await auth();
   const userId = session?.user?.id ?? null;
 

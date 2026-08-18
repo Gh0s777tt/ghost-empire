@@ -79,6 +79,7 @@ export const TenantsManager = dynamic(() => import("./sections/Tenants").then((m
 export const AppearanceManager = dynamic(() => import("./sections/Appearance").then((m) => m.AppearanceManager), { ssr: false, loading: SectionLoading });
 export const DonationIntegrationsManager = dynamic(() => import("./sections/DonationIntegrations").then((m) => m.DonationIntegrationsManager), { ssr: false, loading: SectionLoading });
 export const HubManager = dynamic(() => import("./sections/Hub").then((m) => m.HubManager), { ssr: false, loading: SectionLoading });
+export const FeaturesManager = dynamic(() => import("./sections/Features").then((m) => m.FeaturesManager), { ssr: false, loading: SectionLoading });
 export const SupportTicketsManager = dynamic(() => import("./sections/SupportTickets").then((m) => m.SupportTicketsManager), { ssr: false, loading: SectionLoading });
 export const RoleRoster = dynamic(() => import("./sections/RoleRoster").then((m) => m.RoleRoster), { ssr: false, loading: SectionLoading });
 export const SubscribersManager = dynamic(() => import("./sections/Subscribers").then((m) => m.SubscribersManager), { ssr: false, loading: SectionLoading });

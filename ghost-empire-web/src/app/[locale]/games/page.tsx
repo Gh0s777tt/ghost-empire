@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { GameVoteButton } from "@/components/games/GameVoteButton";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const SOURCE_LABEL: Record<string, string> = { steam: "Steam", gog: "GOG", psn: "PlayStation", xbox: "Xbox" };
 
 export default async function GamesPage() {
+  await requireFeature("games"); // 404 if disabled (/admin#features)
   const t = await getTranslations("games");
   const tid = await currentTenantId();
   const games = await prisma.game.findMany({

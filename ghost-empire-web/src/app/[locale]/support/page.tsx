@@ -17,6 +17,7 @@ import { PenaltyList, type PublicPenalty } from "@/components/support/PenaltyLis
 import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -163,6 +164,7 @@ async function loadSupport(tid: string | null, brandName: string) {
 }
 
 export default async function SupportPage({ params }: { params: Promise<{ locale: string }> }) {
+  await requireFeature("support"); // 404 if disabled (/admin#features)
   const { locale } = await params;
   const tid = await currentTenantId();
   const tenant = await getCurrentTenant();
