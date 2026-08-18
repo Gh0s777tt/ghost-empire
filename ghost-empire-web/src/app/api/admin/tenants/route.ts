@@ -7,6 +7,7 @@ import { requirePlatformOwner } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { validateTenantSlug } from "@/lib/tenants";
 import { normalizePlan } from "@/lib/entitlements";
+import { seedTenantContent } from "@/lib/tenant-seed";
 
 export const dynamic = "force-dynamic";
 
@@ -91,13 +92,21 @@ export async function POST(req: Request) {
     },
   });
 
+  // Ten sam seed, co przy samoobsługowym zakładaniu portalu (`api/onboarding/route.ts`).
+  // Do 2026-08 stał TYLKO tam, więc portal założony przez właściciela platformy startował PUSTY —
+  // bez osiągnięć, questów dziennych, stylu alertów i battle passa — a portal założony przez
+  // streamera dostawał komplet. Dwie ścieżki tworzenia, dwa różne rezultaty i nic tego nie mówiło.
+  // Best-effort tak samo jak tam: seed nie rzuca (oddaje licznik), więc nie może zablokować
+  // provisioningu.
+  const seeded = await seedTenantContent(tenant.id);
+
   await logAdminAction({
     adminId: gate.userId,
     action: "set_user_role",
     targetType: "tenant_create",
-    details: { slug, name, plan: tenant.plan },
+    details: { slug, name, plan: tenant.plan, seeded },
     req,
   });
 
-  return NextResponse.json({ ok: true, id: tenant.id, slug: tenant.slug });
+  return NextResponse.json({ ok: true, id: tenant.id, slug: tenant.slug, seeded });
 }

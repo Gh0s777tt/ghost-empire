@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AlertCard } from "@/components/AlertCard";
 import { ParticleBurst } from "./ParticleBurst";
+import { useOverlayAccent, AKCENT_NEUTRALNY } from "@/lib/use-overlay-accent";
 import {
   resolveAlertAnchorStyle,
   scaleOriginFor,
@@ -74,7 +75,11 @@ export function OverlayClient() {
   const [authStatus, setAuthStatus] = useState<"idle" | "ok" | "unauthorized" | "no-token">("idle");
   const [current, setCurrent] = useState<AlertItem | null>(null);
   const [visible, setVisible] = useState(false);
-  const [accent, setAccent] = useState("#E50914");
+  // Kolor sprzed przyjścia ustawień alertów: branding PORTALU, nie czerwień założyciela.
+  // Feed nadal wygrywa — `setAccent(s.accentColor)` niżej nadpisuje to, gdy dojdą ustawienia.
+  const [accent, setAccent] = useState(AKCENT_NEUTRALNY);
+  const akcentPortalu = useOverlayAccent();
+  useEffect(() => { if (accent === AKCENT_NEUTRALNY) setAccent(akcentPortalu); }, [akcentPortalu, accent]);
   const [duration, setDuration] = useState(DEFAULT_DURATION);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [sizeScale, setSizeScale] = useState(1);

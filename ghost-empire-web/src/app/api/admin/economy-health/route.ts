@@ -94,7 +94,7 @@ export async function GET() {
       .filter((r) => normalizeShopCurrency(r.currency) === currency)
       .map((r) => ({ reason: r.reason, total: r._sum.amount ?? 0, count: r._count._all }));
 
-  const { sources, sinks } = splitSourcesSinks(reasonsFor("GT"), TOP_N);
+  const { sources, sinks } = splitSourcesSinks(reasonsFor("GT"), TOP_N); // wl-ok: "GT" to dyskryminant enuma waluty (GT|CHIPS), nie wyświetlany symbol
   const chips = splitSourcesSinks(reasonsFor("CHIPS"), TOP_N);
   const chipsMintedTotal = chipsMinted.total;
   const chipsBurnedTotal = Math.abs(chipsBurned.total);

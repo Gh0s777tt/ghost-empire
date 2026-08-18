@@ -111,10 +111,15 @@ async function subathonFeed(_p: URLSearchParams, tid: string | null): Promise<un
     ? (await prisma.subathon.findUnique({ where: { tenantId: tid } }))
       ?? (await prisma.subathon.findUnique({ where: { id: "default" } }))
     : await prisma.subathon.findUnique({ where: { id: "default" } });
+  // Gdy subathon nie ma własnego akcentu, spadamy na kolor PORTALU — nie na czerwień
+  // założyciela. `tid` jest tu dostępne, więc nie ma powodu zgadywać.
+  const marka = tid
+    ? (await prisma.tenant.findUnique({ where: { id: tid }, select: { brandColor: true } }))?.brandColor
+    : null;
   return {
     active: s?.active ?? false,
     endsAt: s?.endsAt?.toISOString() ?? null,
-    accentColor: s?.accentColor ?? "#E50914",
+    accentColor: s?.accentColor ?? marka ?? "#52525b",
     label: s?.label ?? "Subathon",
     serverNow: new Date().toISOString(),
   };

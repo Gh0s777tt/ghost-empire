@@ -2,7 +2,7 @@
 # scripts/verify-all.sh — local stand-in for CI while GitHub Actions is down.
 #
 # Runs the same gates CI runs (typecheck · lint · docs:check · docs:env ·
-# docs:i18n · docs:i18n:dup · docs:roadmap · unit tests · integration tests) plus an optional production
+# docs:i18n · docs:i18n:dup · docs:brand · docs:roadmap · unit tests · integration tests) plus an optional production
 # build and an optional Playwright E2E smoke run.
 # The integration step
 # needs a real Postgres; this script spins up a THROWAWAY local cluster
@@ -108,6 +108,7 @@ gate "docs:check"        npm run --silent docs:check
 gate "docs:env"          npm run --silent docs:env
 gate "docs:i18n"         npm run --silent docs:i18n
 gate "docs:i18n:dup"     npm run --silent docs:i18n:dup
+gate "docs:brand"        npm run --silent docs:brand
 gate "docs:roadmap"      npm run --silent docs:roadmap
 gate "unit tests"        npm run --silent test
 

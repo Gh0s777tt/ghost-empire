@@ -62,7 +62,27 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 > Decyzja: priorytet (AI vs security vs hardware vs emotki). Hardware (Hue/Govee) + AI wymagają kont/kluczy.
 
+> **🆕 Świeżo dowiezione (2026-08, gałąź `fix/akcent-i-sufit-audytu-2026-08`):** 🎨 **overlay maluje się kolorem PORTALU, nie założyciela** — `#E50914` zniknął z siedmiu klientów overlaya i dwóch serwerowych defaultów; nowy hook `useOverlayAccent` ustala kolor w kolejności `?accent=` → `brandColor` portalu → neutralna szarość (`grep "E50914" src/app/overlay/` = 0) · 🧾 **log audytu podaje prawdziwą liczbę wpisów** (`count` obok `take: 30`) i mówi wprost „pokazano N z M" zamiast podpisywać listę liczbą 30 · 🪝 przy okazji naprawiona kolejność hooków w `SubathonOverlayClient` (hook stał po wczesnym `return`).
+
+
 ---
+
+## 0b. Reszta audytu 2026-08 — cztery pozycje wymagające decyzji 🟡
+
+Sesja audytowa z sierpnia 2026 domknęła **13 defektów** (patrz `CHANGELOG.md`). Cztery zostały
+świadomie — **żadna nie jest już „poprawką"**, każda wymaga decyzji projektowej albo osobnego
+przebiegu. Zapisane tutaj, żeby nie zginęły.
+
+| # | Rzecz | Dlaczego nie w tej sesji |
+|---|---|---|
+| **D7** | `Hub.tsx` i `DonationIntegrations.tsx` trzymają teksty w obiektach `const T = {pl, en}` w kodzie, plus wtrącenia `isPl ? …` w `Streamlabs.tsx` i `PaymentMethods.tsx` | 12 locale dostaje angielski, a `docs:i18n` tego **nie wykryje**, bo kluczy nie ma w katalogu. Przeniesienie to ~60 stringów × 14 języków — mechaniczne, ale nieproporcjonalnie duże jak na sekcje panelu, które czyta właściciel portalu (głównie PL/EN). **Warunek dobrego wykonania:** przenieść komplet do `messages/*.json`, nie połowicznie, inaczej powstanie trzecie źródło prawdy. |
+| **D10** | Martwe kolumny: `Event.autoDrawAt` (**0 czytelników**) i `Connection.isMuted` (**0 czytelników**) | Schemat obiecuje automatyczne losowanie i wyciszanie; żadne nie następuje. Ożywienie ich to **nowe funkcje**, nie sprzątanie: `autoDrawAt` wymaga cron-dispatchera z claimem przez warunkowy `updateMany`, a `isMuted` **musi być uzgodnione z botem czatu** (`ghost-empire-chat/src/moderation.ts`) — inaczej powstaną dwa niezależne stany wyciszenia. Alternatywa: skasować kolumny i przestać obiecywać. |
+| **D16** | `buildBackup` czyta **globalnie** (24 × `findMany` bez filtra portalu) | Dlatego kopia jest za bramką właściciela platformy, a streamer nie ma dostępu do własnych danych. Scope'owanie po `tenantId` zmienia **semantykę** kopii platformowej (czy właściciel nadal ma pełną?), więc to projekt, nie poprawka. |
+| **D18** | `EAUTHTIMEOUT` do Postgresa przy odświeżaniu cache'u (ranking, osiągnięcia, liga typerów) | Objaw puli połączeń — `max: 3` na instancję na Vercelu — a nie błąd w linijce kodu. Wymaga pomiaru pod obciążeniem i decyzji o poolerze, nie edycji. |
+
+Poza tym z audytu zostają dwa znaleziska **zamknięte dowodem, nie zmianą** — `pg_net` i portal
+założyciela bez adresu; oba opisane w [`DECISIONS.md`](docs/DECISIONS.md), żeby kolejny audyt nie
+badał ich od zera.
 
 ## 1. Jakość kodu, testy i CI/CD 🔥
 

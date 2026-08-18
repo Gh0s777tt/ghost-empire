@@ -75,7 +75,11 @@ zgaszone (`turn`).
      przeglądarka blokuje na stronie https. Dlatego karta rozwija instrukcję: naciśnij przycisk na
      mostku i w ciągu 30 s uruchom jedno polecenie `curl` (z już wstawionym IP), a z odpowiedzi
      wklej `username`. Bez instalowania czegokolwiek, na każdym systemie.
-2. Reguły — sekcja panelu w kolejnej porcji; do tego czasu wiersze `hue_rules` zakłada się przez API.
+2. Reguły — `/admin#huerules`, sekcja **Reguły Hue**: wyzwalacz (typ alertu albo „dowolny"), próg
+   kwoty, lampa i akcja (kolor / jasność / włącz-wyłącz), opcjonalnie z powrotem po N sekundach.
+   Puste pole **Lampa** = wszystkie lampy, jakie wystawia mostek. Sekcja jest za `requireAdmin`,
+   tak jak trasa. *(Do wersji z 2026-08 wiersze `hue_rules` trzeba było zakładać ręcznie przez API —
+   cały łańcuch był zbudowany i przetestowany, brakowało wyłącznie powierzchni w panelu.)*
 3. Źródło **sterowania OBS** musi być dodane w OBS (to samo, które obsługuje reguły scen).
 
 ⚠️ Hue jest **uśpione**, dopóki nie ma **obu** poświadczeń — portal celowo nie wysyła połowicznej

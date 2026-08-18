@@ -76,14 +76,27 @@ export function AdminAssistant({
     }
   }
 
-  // /admin#<id> in assistant text → button jumping to the section.
+  // /admin#<id> w tekście asystenta → przycisk skaczący do sekcji.
+  //
+  // Wzorzec MUSI dopuszczać wielkie litery i łącznik. Wcześniej stało tu `[a-z]+`, więc dwie
+  // sekcje odstające od konwencji — `donationIntegrations` (camelCase) i `portal-copy` (kebab) —
+  // nigdy nie dostawały klikalnego przycisku: asystent podawał do nich ścieżkę, a ta zostawała
+  // gołym tekstem. Świadomie NIE przemianowuję tych identyfikatorów: siedzą w adresach
+  // (`/admin#portal-copy`), więc zmiana zepsułaby istniejące deep-linki i zakładki, żeby
+  // naprawić objaw po niewłaściwej stronie.
   function renderContent(text: string) {
-    const parts = text.split(/(\/admin#[a-z]+)/g);
+    const parts = text.split(/(\/admin#[a-zA-Z-]+)/g);
     return parts.map((part, i) => {
-      const m = /^\/admin#([a-z]+)$/.exec(part);
+      const m = /^\/admin#([a-zA-Z-]+)$/.exec(part);
       if (!m) return <span key={i}>{part}</span>;
-      const id = m[1];
-      const label = sections.find((s) => s.id === id)?.label;
+      const surowy = m[1];
+      // Model bywa niedokładny w wielkości liter — dopasuj też bez rozróżniania, zanim uznasz
+      // sekcję za halucynację. Dokładne trafienie ma pierwszeństwo.
+      const dopasowana =
+        sections.find((s) => s.id === surowy) ??
+        sections.find((s) => s.id.toLowerCase() === surowy.toLowerCase());
+      const id = dopasowana?.id ?? surowy;
+      const label = dopasowana?.label;
       // hallucinated / not-permitted section → leave it as plain text
       if (!label) return <span key={i}>{part}</span>;
       return (

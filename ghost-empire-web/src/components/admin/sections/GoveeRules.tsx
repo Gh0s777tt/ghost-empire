@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, apiPatch, apiDelete, ApiError } from "@/lib/api-client";
 import { ALERT_TRIGGER_TYPES, ANY_TRIGGER, type GoveeAction } from "@/lib/govee-rules";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type Rule = {
   id: string;
@@ -24,6 +25,9 @@ type Kind = (typeof KINDS)[number];
 
 export function GoveeRulesManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void }) {
   const t = useTranslations("admin.goveeRules");
+  // Kolor marki jest per portal — literał #E50914 pokazywałby każdemu tenantowi
+  // czerwień założyciela w podglądzie "jak to wygląda".
+  const { brandColor } = useTenantBranding();
   const [loading, setLoading] = useState(true);
   const [rules, setRules] = useState<Rule[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -31,7 +35,7 @@ export function GoveeRulesManager({ onToast }: { onToast: (k: "ok" | "err", m: s
   const [trigger, setTrigger] = useState<string>("donation");
   const [minAmount, setMinAmount] = useState("");
   const [kind, setKind] = useState<Kind>("set_color");
-  const [color, setColor] = useState("#e50914");
+  const [color, setColor] = useState(brandColor);
   const [useRevertColor, setUseRevertColor] = useState(false);
   const [revertColor, setRevertColor] = useState("#ffffff");
   const [brightness, setBrightness] = useState("100");
