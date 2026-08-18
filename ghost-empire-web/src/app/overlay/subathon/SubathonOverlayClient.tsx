@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SubathonCard } from "@/components/SubathonCard";
 import { useOverlayStream } from "@/lib/use-overlay-stream";
+import { useOverlayAccent } from "@/lib/use-overlay-accent";
 
 type Feed = { active: boolean; endsAt: string | null; accentColor?: string; label?: string; serverNow: string };
 
@@ -13,6 +14,9 @@ export function SubathonOverlayClient() {
   const { data, status } = useOverlayStream<Feed>({ feed: "subathon", intervalMs: 3000 });
   const offsetRef = useRef(0); // localNow - serverNow
   const [, setTick] = useState(0); // forces a 1s re-render
+  // Przed wczesnymi returnami: kolejność hooków musi być identyczna w każdym renderze,
+  // a ten komponent zwraca null, gdy subathon jest nieaktywny.
+  const accent = useOverlayAccent(data?.accentColor);
 
   // Re-sync the drift offset whenever a fresh payload arrives.
   useEffect(() => {
@@ -34,7 +38,6 @@ export function SubathonOverlayClient() {
   const serverNow = Date.now() - offsetRef.current;
   const remainingMs = Math.max(0, endsAtMs - serverNow);
   const ended = remainingMs <= 0;
-  const accent = data.accentColor ?? "#E50914";
   const label = data.label ?? "Subathon";
 
   return (

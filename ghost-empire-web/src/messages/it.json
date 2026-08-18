@@ -2491,6 +2491,7 @@
       "addBtn": "Aggiungi webhook"
     },
     "auditLog": {
+      "truncated": "Mostrati {shown} di {total} record — dal più recente.",
       "title": "Registro di audit (ultime {count})",
       "empty": "Nessuna azione di admin nel database. Ogni assegnazione/estrazione/rimborso apparirà qui: chi e quando.",
       "accountDeleted": "account eliminato",

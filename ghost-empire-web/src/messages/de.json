@@ -2491,6 +2491,7 @@
       "addBtn": "Webhook hinzufügen"
     },
     "auditLog": {
+      "truncated": "{shown} von {total} Einträgen angezeigt — neueste zuerst.",
       "title": "Audit-Log (letzte {count})",
       "empty": "Keine Admin-Aktionen in der Datenbank. Jede Vergabe/Ziehung/Erstattung erscheint hier — wer und wann.",
       "accountDeleted": "Konto gelöscht",

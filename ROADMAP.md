@@ -60,6 +60,9 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 > Decyzja: priorytet (AI vs security vs hardware vs emotki). Hardware (Hue/Govee) + AI wymagają kont/kluczy.
 
+> **🆕 Świeżo dowiezione (2026-08, gałąź `fix/akcent-i-sufit-audytu-2026-08`):** 🎨 **overlay maluje się kolorem PORTALU, nie założyciela** — `#E50914` zniknął z siedmiu klientów overlaya i dwóch serwerowych defaultów; nowy hook `useOverlayAccent` ustala kolor w kolejności `?accent=` → `brandColor` portalu → neutralna szarość (`grep "E50914" src/app/overlay/` = 0) · 🧾 **log audytu podaje prawdziwą liczbę wpisów** (`count` obok `take: 30`) i mówi wprost „pokazano N z M" zamiast podpisywać listę liczbą 30 · 🪝 przy okazji naprawiona kolejność hooków w `SubathonOverlayClient` (hook stał po wczesnym `return`).
+
+
 ---
 
 ## 0b. Reszta audytu 2026-08 — cztery pozycje wymagające decyzji 🟡

@@ -987,6 +987,7 @@
     },
     "auditLog": {
       "secTitle": "Audit log",
+      "truncated": "Pokazano {shown} z {total} wpisów — najnowsze pierwsze.",
       "title": "Audit log (ostatnie {count})",
       "empty": "Brak akcji admin w bazie. Tu pojawi się każdy grant/draw/refund kto i kiedy.",
       "accountDeleted": "konto usunięte",

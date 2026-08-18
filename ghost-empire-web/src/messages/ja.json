@@ -2491,6 +2491,7 @@
       "addBtn": "webhook を追加"
     },
     "auditLog": {
+      "truncated": "全 {total} 件のうち {shown} 件を表示 — 新しい順。",
       "title": "監査ログ（最新 {count}）",
       "empty": "データベースに管理者操作がありません。すべての付与/抽選/返金がここに表示されます：誰がいつ。",
       "accountDeleted": "アカウント削除済み",

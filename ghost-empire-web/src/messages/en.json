@@ -987,6 +987,7 @@
     },
     "auditLog": {
       "secTitle": "Audit log",
+      "truncated": "Showing {shown} of {total} entries — newest first.",
       "title": "Audit log (last {count})",
       "empty": "No admin actions in the database. Every grant/draw/refund will show up here — who and when.",
       "accountDeleted": "account deleted",
