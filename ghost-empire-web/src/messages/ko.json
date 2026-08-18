@@ -2491,6 +2491,7 @@
       "addBtn": "webhook 추가"
     },
     "auditLog": {
+      "truncated": "전체 {total}건 중 {shown}건 표시 — 최신순.",
       "title": "감사 로그(최근 {count})",
       "empty": "데이터베이스에 관리자 작업이 없습니다. 모든 지급/추첨/환불이 여기에 표시됩니다: 누가 언제.",
       "accountDeleted": "계정 삭제됨",

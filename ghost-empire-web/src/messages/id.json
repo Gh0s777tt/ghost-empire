@@ -2491,6 +2491,7 @@
       "addBtn": "Tambah webhook"
     },
     "auditLog": {
+      "truncated": "Menampilkan {shown} dari {total} entri — terbaru dulu.",
       "title": "Log audit ({count} terakhir)",
       "empty": "Tidak ada tindakan admin di basis data. Setiap pemberian/undian/pengembalian akan muncul di sini — siapa dan kapan.",
       "accountDeleted": "akun dihapus",

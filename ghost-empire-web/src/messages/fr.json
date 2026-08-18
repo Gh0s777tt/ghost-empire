@@ -2491,6 +2491,7 @@
       "addBtn": "Ajouter le webhook"
     },
     "auditLog": {
+      "truncated": "Affichage de {shown} entrées sur {total} — les plus récentes d'abord.",
       "title": "Journal d'audit (dernières {count})",
       "empty": "Aucune action d'admin dans la base de données. Chaque attribution/tirage/remboursement apparaîtra ici : qui et quand.",
       "accountDeleted": "compte supprimé",

@@ -145,7 +145,14 @@ export async function GET(req: Request) {
       const where = isFounderBrand(tenant)
         ? { OR: [{ tenantId: tenant.id }, { tenantId: null }] }
         : { tenantId: tenant.id };
-      const auditLog = await prisma.adminAction.findMany({ where, orderBy: { createdAt: "desc" }, take: 30 });
+      // `take` bez `count` to CICHY SUFIT: panel pokazywał 30 wpisów i podpisywał je liczbą 30,
+      // choć w bazie mogą być tysiące — a `pruneOldRecords` świadomie NIE kasuje AdminAction,
+      // więc tabela rośnie w nieskończoność. Ta sama poprawka, którą dostał cron raportu
+      // („żadnych cichych sufitów"), tylko tutaj brakowało jej dłużej.
+      const [auditLog, auditTotal] = await Promise.all([
+        prisma.adminAction.findMany({ where, orderBy: { createdAt: "desc" }, take: 30 }),
+        prisma.adminAction.count({ where }),
+      ]);
 
       // Resolve human-readable names so the log shows WHO did it + WHO it affected,
       // not raw cuids. Admin + user-targets come from User; connection-targets join
@@ -187,6 +194,7 @@ export async function GET(req: Request) {
       };
 
       return NextResponse.json({
+        auditTotal,
         auditLog: auditLog.map((a) => ({
           id: a.id, adminId: a.adminId,
           adminName: nameById.get(a.adminId) ?? a.adminName,

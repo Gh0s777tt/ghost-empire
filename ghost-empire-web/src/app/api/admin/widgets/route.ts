@@ -45,10 +45,16 @@ export async function POST(req: Request) {
   const tenantWhere = tid ? { OR: [{ tenantId: tid }, { tenantId: null }] } : {};
 
   if (body.action === "create" || body.action === "update") {
+    // Domyślny akcent nowego widgetu bierzemy z marki PORTALU. To nie jest podpowiedź w panelu,
+    // tylko wartość ZAPISYWANA do bazy, która potem renderuje się na antenie — czerwień
+    // założyciela wjeżdżałaby stąd na cudzy stream.
+    const marka = tid
+      ? (await prisma.tenant.findUnique({ where: { id: tid }, select: { brandColor: true } }))?.brandColor
+      : null;
     const data = {
       name: String(body.name ?? "").trim().slice(0, 80) || "Widget",
       text: String(body.text ?? "").slice(0, 500),
-      accentColor: hex(body.accentColor, "#E50914"),
+      accentColor: hex(body.accentColor, marka ?? "#52525b"),
       textColor: hex(body.textColor, "#ffffff"),
       fontSizePx: clampInt(body.fontSizePx, 10, 120, 28),
       fontFamily: typeof body.fontFamily === "string" ? body.fontFamily.slice(0, 40) : "Inter",

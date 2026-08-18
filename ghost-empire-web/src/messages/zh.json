@@ -2491,6 +2491,7 @@
       "addBtn": "添加 webhook"
     },
     "auditLog": {
+      "truncated": "显示 {total} 条记录中的 {shown} 条 —— 最新在前。",
       "title": "审计日志（最近 {count}）",
       "empty": "数据库中没有管理员操作。每次发放/抽取/退款都会显示在这里：谁和何时。",
       "accountDeleted": "账户已删除",

@@ -605,8 +605,8 @@ export function AdminClient({
           {activeSection === "twofactor" && isAdmin && <TwoFactorManager onToast={showToast} />}
 
           {activeSection === "audit" && can("view_audit") && (
-            <LazySection<{ auditLog: AuditEntry[] }> s="audit">
-              {(d) => <AuditLogSection auditLog={d.auditLog} />}
+            <LazySection<{ auditLog: AuditEntry[]; auditTotal?: number }> s="audit">
+              {(d) => <AuditLogSection auditLog={d.auditLog} total={d.auditTotal} />}
             </LazySection>
           )}
         </div>
