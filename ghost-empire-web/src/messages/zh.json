@@ -524,6 +524,18 @@
     "errNet": "网络错误"
   },
   "profile": {
+    "donationClaim": {
+      "title": "打赏时没填代码？",
+      "intro": "如果你的打赏没有入账，在这里提交，主播会审核通过。",
+      "amount": "金额",
+      "currency": "币种",
+      "date": "支付日期",
+      "evidence": "补充信息（选填）",
+      "evidencePh": "例如支付时使用的昵称或邮箱、交易流水号",
+      "submit": "提交打赏",
+      "done": "已提交 —— 等待主播审核。",
+      "err": "提交失败"
+    },
     "help": "你的个人资料：绑定账号（Twitch、Kick、YouTube、Discord）、设置昵称并查看统计。绑定的账号会把直播活跃度计入任务和排行榜。",
     "phHandle": "你的_用户名",
     "phYoutube": "@频道或链接",
@@ -4229,5 +4241,18 @@
     "title_legend": "传奇",
     "title_phantom": "幻影",
     "title_eternal": "永恒"
+  },
+  "extensions": {
+    "metaTitle": "门户扩展",
+    "metaDesc": "NX Companion 与 NX Chat Tools —— 把 %brandName% 直接带进你的 Twitch 和 Kick 直播。",
+    "kicker": "生态",
+    "title": "门户扩展",
+    "lead": "两款轻量浏览器扩展加一个 Discord 机器人 —— %gt% 余额、任务、管理工具和开播提醒，无需来回切换标签页。",
+    "frictionTitle": "零阻力",
+    "frictionBody": "覆盖层直接显示在 Twitch 和 Kick 上。在你观看的地方就能领取任务和掉落码。",
+    "privacyTitle": "隐私与安全",
+    "privacyBody": "权限最小化，不出售数据，代码开源。仅在受支持的聊天中运行。",
+    "ecosystemTitle": "生态的一部分",
+    "ecosystemBody": "与门户相同的账号、相同的 %tokenName% —— 扩展只是一层，不是另一个世界。"
   }
 }

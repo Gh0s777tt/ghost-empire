@@ -2770,6 +2770,18 @@
     "empty": "No notifications"
   },
   "profile": {
+    "donationClaim": {
+      "title": "Donated without the code?",
+      "intro": "If your tip wasn't credited, submit it here — the streamer approves it.",
+      "amount": "Amount",
+      "currency": "Currency",
+      "date": "Date paid",
+      "evidence": "Extra info (optional)",
+      "evidencePh": "e.g. the nick/email you paid with, a transaction reference",
+      "submit": "Submit claim",
+      "done": "Submitted — awaiting the streamer's approval.",
+      "err": "Couldn't submit"
+    },
     "help": "Your profile: link accounts (Twitch, Kick, YouTube, Discord), set your nickname and see your stats. Linked accounts count your stream activity towards quests and the ranking.",
     "phHandle": "your_handle",
     "phYoutube": "@channel or link",
@@ -4340,5 +4352,18 @@
     "title_legend": "Legend",
     "title_phantom": "Phantom",
     "title_eternal": "Eternal"
+  },
+  "extensions": {
+    "metaTitle": "Portal add-ons",
+    "metaDesc": "NX Companion and NX Chat Tools — %brandName% right inside your Twitch and Kick streams.",
+    "kicker": "Ecosystem",
+    "title": "Portal add-ons",
+    "lead": "Two lightweight browser add-ons and a Discord bot — %gt% balance, quests, mod tools and live alerts without tab-switching.",
+    "frictionTitle": "Zero friction",
+    "frictionBody": "The overlay sits on Twitch and Kick. Claim quests and drop-codes right where you watch.",
+    "privacyTitle": "Privacy & safety",
+    "privacyBody": "Minimal permissions, no data selling, open-source code. Runs only on supported chats.",
+    "ecosystemTitle": "Part of the ecosystem",
+    "ecosystemBody": "Same accounts and same %tokenName% as the portal — the extensions are a layer, not a separate world."
   }
 }
