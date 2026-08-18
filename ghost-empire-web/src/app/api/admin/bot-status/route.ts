@@ -3,14 +3,18 @@
 // last /api/bot/heartbeat beat is fresh. Same gate as bot-config (the badge
 // renders inside that section).
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/lib/admin";
+import { requireAnyPermission } from "@/lib/admin";
 import { currentTenantId } from "@/lib/tenant";
 import { readHeartbeat, isHeartbeatFresh } from "@/lib/bot-heartbeat";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const auth = await requirePermission("manage_shop");
+// Okres podwójnej akceptacji (audyt 2026-08): trasa ma własne uprawnienie, ale nadal
+// przepuszcza `manage_shop`, żeby moderatorzy nadani PRZED rozdzieleniem nie stracili dostępu
+// z dnia na dzień. Po nadaniu nowego uprawnienia wszystkim, którzy go potrzebują, zdejmij
+// `manage_shop` z tej listy — wtedy rozdzielenie zaczyna faktycznie obowiązywać.
+  const auth = await requireAnyPermission(["manage_bot", "manage_shop"]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const tid = await currentTenantId();
