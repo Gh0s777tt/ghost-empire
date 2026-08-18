@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { AuctionsClient } from "@/components/auctions/AuctionsClient";
 import { getCurrentTenant } from "@/lib/tenant";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 // White-label: auctions are paid in this portal's own currency (tenant.tokenName).
@@ -17,6 +18,7 @@ export async function generateMetadata() {
 }
 
 export default async function AuctionsPage() {
+  await requireFeature("auctions"); // 404 if disabled (/admin#features)
   const session = await auth();
   // Admins/mods with the events permission see the create + cancel controls. The API
   // re-checks this independently, so the flag is purely for showing the UI.

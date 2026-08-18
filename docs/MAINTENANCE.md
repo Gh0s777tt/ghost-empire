@@ -52,7 +52,7 @@ flowchart LR
   T --> B["build<br/>build:web"]
   B --> R["release<br/>semantic-release"]
   SG["gitleaks<br/>(sekrety)"]
-  SS["semgrep · trivy<br/>(doradcze)"]
+  SS["semgrep · trivy<br/>(SAST · CVE, twarde)"]
   DD["docs-drift<br/>(MR)"]
   DP["pages<br/>(deploy)"]
   L -.->|needs: lint:web| T
@@ -61,12 +61,12 @@ flowchart LR
   B -.->|needs| R
   classDef hard fill:#0d2b1a,stroke:#3fcf8e,color:#fff;
   classDef soft fill:#3a2a0d,stroke:#e0a800,color:#fff;
-  class V,L,T,B,SG,DD hard;
-  class R,SS,DP soft;
+  class V,L,T,B,SG,SS,DD hard;
+  class R,DP soft;
 ```
 
-<sub>🟢 twarde bramki (blokują merge): commitlint*, lint, test, build, **gitleaks**, **docs-drift**.
-🟠 nie-blokujące: semgrep/trivy (doradcze), release (bootstrap), pages (deploy po merge). Skany i docs
+<sub>🟢 twarde bramki (blokują merge): commitlint*, lint, test, build, **gitleaks**, **semgrep**,
+**trivy**, **docs-drift**. 🟠 nie-blokujące: release (bootstrap), pages (deploy po merge). Skany i docs
 mają `needs: []` — startują równolegle. \* `commitlint` biegnie **wyłącznie na MR**.</sub>
 
 ### Joby i bramki
@@ -74,23 +74,23 @@ mają `needs: []` — startują równolegle. \* `commitlint` biegnie **wyłączn
 | Job | Stage | Bramka | Kiedy biegnie | Co robi |
 |---|---|---|---|---|
 | `commitlint` | verify | 🔴 twarda | **MR** | Waliduje komunikaty commitów (Conventional Commits). |
-| `lint:web` | lint | 🔴 twarda | MR + main | `typecheck` · `lint` (eslint) · `docs:check` · `docs:env` · `docs:i18n` · `docs:i18n:dup`. |
+| `lint:web` | lint | 🔴 twarda | MR + main | `typecheck` · `lint` (eslint) · `docs:check` · `docs:env` · `docs:i18n` · `docs:i18n:dup` · **`docs:brand`** — web-owy odpowiednik bot-owego `lint:brand` (patrz niżej): `scripts/check-white-label.mjs` failuje, gdy founderowy literał (`GT`/`Ghost Tokens`/`Ghost Empire`/`GH0ST EMPIRE`/handle/Discord) trafi do pola/zmiennej/atrybutu JSX widocznego dla widza. Proza (`message`/`title`) tylko **ostrzega** (spłata = migracja i18n). Wyjątek przez `// wl-ok: <powód>` (np. dyskryminant enuma waluty). · **`docs:roadmap`** — `scripts/check-roadmap-sync.mjs` failuje, gdy najnowsza nota „🆕 Świeżo dowiezione" w `ROADMAP.md` odstaje >14 dni (`ROADMAP_MAX_DRIFT_DAYS`) od najnowszego shipped commita (ta sama konwencja „shipped" co `docs:check`). Cichy repo zielony; tylko nieodnotowana praca wywala bramkę. Brak historii gita → SKIPPED. |
 | `lint:chat` | lint | 🔴 twarda | MR + main | `typecheck` · **`lint:brand`** (bot) — bramka white-label: chodzi po **AST TypeScripta** i failuje, gdy founderowy literał („Ghost Tokens", „GT", „Ghost Empire", handle/Discord właściciela) trafi do stringa/templata, który może wyjść na czat. Komentarze, `console.*`, placeholder `%gt%` i `__tests__` są świadomie pomijane; wyjątek przez `// wl-ok: <powód>`. **Grep by tu nie wystarczył** — większość surowych trafień w `src/` to komentarze, a copy dla widza jest **argumentem wywołania** (`broadcast(…)`), nie `field: "literal"`. |
 | `test:chat` | test | 🔴 twarda | MR + main | `npm test` (bot) — wbudowany runner **`node:test`** przez tsx, **bez vitesta** (dev-tooling bota to tylko tsx + tsc, nie dokładamy tam zależności). Pilnuje inwariantów `src/branding.ts`: awaria portalu → neutralne „tokeny", **nigdy** „GT". |
 | `test:unit:web` | test | 🔴 twarda | MR + main | `test:coverage` (vitest, bez bazy). Badge coverage. |
 | `test:integration:web` | test | 🔴 twarda | MR + main | Realny **Postgres 16** (service) + `prisma db push` + testy integracyjne. |
 | `build:web` | build | 🔴 twarda | MR + main | `next build` (env-stuby; build nie sięga bazy). |
-| `gitleaks` | security | 🔴 **twarda** | MR + main + schedule | Skan sekretów w drzewie roboczym. |
-| `semgrep` | security | 🟠 doradcza | MR + main + schedule | SAST (`p/ci` + `p/typescript`). `allow_failure`. |
-| `trivy` | security | 🟠 doradcza | MR + main + schedule | CVE w zależnościach. `allow_failure`. |
+| `gitleaks` | security | 🔴 **twarda** | MR + main + schedule | Skan sekretów w drzewie roboczym (`--no-git`), allowlista w `.gitleaks.toml`. |
+| `semgrep` | security | 🔴 **twarda** | MR + main + schedule | SAST (`p/ci` + `p/typescript`). `allow_failure` **zdjęte** (audyt 2026-08). |
+| `trivy` | security | 🔴 **twarda** | MR + main + schedule | CVE w zależnościach (`fs --scanners vuln`, **jeden cel na wywołanie** — po jednym przebiegu na `ghost-empire-web` i `ghost-empire-chat`). HIGH/CRITICAL czerwieni job, LOW/MEDIUM informacyjnie; `allow_failure` **zdjęte** (audyt 2026-08). |
 | `pages` | docs | — | main | Buduje MkDocs + TypeDoc → GitLab Pages. `needs: []`. |
 | `docs-drift` | docs | 🔴 twarda | MR | Failuje MR, gdy zmieniono trasy `/api/*` bez `docs/`. |
 | `release` | release | 🟠 bootstrap | main | `semantic-release`. `allow_failure` do czasu setupu (§4). |
 | `renovate` | security | 🟠 | schedule `RENOVATE=true` | Otwiera MR-y z aktualizacjami zależności. |
 
 **Twarda bramka** = jej porażka **czerwieni** pipeline. **Doradcza** (`allow_failure:
-true`) = porażka daje **pomarańczowe ostrzeżenie**, nie blokuje merge'a. To świadomy
-kompromis — zob. §6.
+true`) = porażka daje **pomarańczowe ostrzeżenie**, nie blokuje merge'a. Wszystkie trzy
+skanery bezpieczeństwa są dziś **twarde** — zob. §6.
 
 ### Egzekwowanie bramek na MR
 Bramki są *blokujące* dopiero, gdy właściciel włączy **Settings → Merge requests →
@@ -263,24 +263,52 @@ Skanuje bieżące drzewo (`--no-git`) z allowlistą [`.gitleaks.toml`](https://g
 1. Jeśli **prawdziwy** — natychmiast **zrotuj** go u dostawcy (nie tylko usuń z kodu;
    historia git go pamięta), potem usuń z drzewa i użyj zmiennej środowiskowej.
 2. Jeśli **placeholder / false-positive** — dodaj ścieżkę lub regex do allowlisty w
-   `.gitleaks.toml` (nie wyłączaj całego joba).
+   `.gitleaks.toml` (nie wyłączaj całego joba). **Allowlista ma być WĄSKA:** wycisza się
+   konkretną **wartość** (dosłowny regex), a nie regułę i nie cały plik — `paths` i
+   `regexes` w jednym bloku `[allowlist]` łączy **OR**, więc dopisanie pliku do `paths`
+   zdejmuje skan z CAŁEGO pliku. Po każdej zmianie allowlisty zrób **kontrolę pozytywną**:
+   wstrzyknij atrapę sekretu do tego samego pliku i sprawdź, że job dalej jest czerwony
+   (przykład: `ge-gambling-ack-v1` — nazwa klucza w `localStorage`, łapana przez
+   `generic-api-key` po entropii; wyciszona sama wartość, reguła w tym pliku dalej działa).
 
 > `gitleaks` skanuje tylko **bieżące drzewo**, nie pełną historię git. Sekret
 > zakopany w starej historii nie zostanie złapany przez CI — bezpieczeństwo historii
 > zależy od rotacji (§7).
 
-### `semgrep` (SAST) i `trivy` (CVE) — DORADCZE
-Są `allow_failure: true`, bo na realnym drzewie Next 16 / npm **niemal zawsze** coś
-zgłoszą; twarda bramka blokowałaby całą pracę. Findings dają **pomarańczowe
-ostrzeżenie**, nie fałszywy zielony. **Triaż (docelowo):**
+### `semgrep` (SAST) i `trivy` (CVE) — TWARDE bramki
+`allow_failure` zostało **zdjęte** (audyt 2026-08, decyzja właściciela): pojedynczy finding
+**czerwieni cały pipeline**. Wcześniej były doradcze — dług „szumu" wytriażowano i zamknięto.
+**Triaż:**
 - Przejrzyj findings w logu joba (`semgrep` / `trivy`).
-- Realne → napraw. Zaakceptowane CVE → dodaj do `.trivyignore`. Reguły semgrep z
-  false-positive → dostosuj `--config`.
-- Gdy szum opanowany → **usuń `allow_failure`**, żeby stały się twardymi bramkami.
+- **Realne → napraw u źródła.** Domyślne wyjście to poprawka, nie wyciszenie.
+- **NIE przywracaj `allow_failure`** dla pojedynczego false-positive — to zaślepia CAŁY
+  skaner i przywraca fałszywy zielony. Wycisz **punktowo** i zawsze z powodem: semgrep →
+  inline `// nosemgrep: <rule-id>` albo wpis w `.semgrepignore`; trivy → jedna linia
+  `CVE-XXXX-YYYY` w `.trivyignore` z komentarzem i datą przeglądu. Świadome odstępstwa →
+  [`DECISIONS.md`](DECISIONS.md).
 
-Zgłaszanie podatności: [`SECURITY.md`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/SECURITY.md).
+**`trivy fs` przyjmuje DOKŁADNIE JEDEN cel na wywołanie.** Dwa katalogi naraz kończą się
+`FATAL Fatal error multiple targets cannot be specified` i **exit 1** — job jest wtedy
+czerwony, choć nie przeskanował niczego. Dokładasz projekt → dokładasz **parę linii**
+(przebieg informacyjny LOW/MEDIUM + bramkujący HIGH/CRITICAL), nie kolejny argument. Trivy
+domyślnie **pomija dev-dependencies** (`--include-dev-deps` je pokazuje), więc zielony job
+znaczy „brak HIGH/CRITICAL w zależnościach produkcyjnych".
 
----
+> **Uwaga o regułach tekstowych:** część reguł (np. `npm-missing-minimum-release-age`)
+> dopasowuje **surowy tekst pliku i nie pomija komentarzy** — opisanie w komentarzu
+> „złej" wartości potrafi samo w sobie zapalić finding. Zob. komentarz-pułapkę w
+> `ghost-empire-web/.npmrc`.
+
+> **Czerwona bramka to nie zawsze finding.** Zanim uznasz job za „znalazł podatność",
+> sprawdź w logu, czy nie padł na **błędzie konfiguracji** (zła składnia, brak celu) —
+> albo na `ci_quota_exceeded` (wyczerpane minuty planu free) — wtedy nie chroni niczego,
+> mimo że świeci na czerwono.
+
+**Lokalne odtworzenie bramki** (zanim wypchniesz — ten sam config co CI):
+
+```bash
+semgrep scan --error --config p/ci --config p/typescript ghost-empire-web ghost-empire-chat
+```
 
 ## 7. Rotacja sekretów
 
@@ -306,6 +334,23 @@ GitLab. Dependabot działa tylko na GitHubie (mirror) → jego PR-y nie trafiaj�
   są grupowane, żeby wersje szły w parze.
 - **Node** trzymany na `<23` (projekt celuje w Node 22).
 - Wymaga zmiennej **`RENOVATE_TOKEN`** (GitLab PAT, scope `api` + `write_repository`).
+
+### Karencja 7 dni na świeże wersje (`min-release-age`)
+
+`ghost-empire-web/.npmrc` ustawia **`min-release-age=7`**: rozwiązywanie zależności nie
+sięgnie po wersję młodszą niż 7 dni. Powód — Vercel przy deployu robi **świeży
+`npm install`**, który na nowo rozwiązuje zakresy `^` (43 z 47 zależności), więc to jedyne
+miejsce, gdzie złośliwa świeżo wypuszczona paczka wjeżdża na prod bez przeglądu.
+
+- **Nie dotyczy `npm ci`** (odtwarza lockfile, nie rozwiązuje zakresów) → CI i lokalne
+  instalacje działają bez zmian.
+- Klucz wymaga **npm ≥ 11.10**; npm 10.9.8 z obrazu `node:22-bookworm-slim` po prostu go
+  ignoruje (bez błędu i bez warningu) — bezpieczny no-op tam, gdzie npm jest starszy.
+- **Pilny bump bezpieczeństwa** trafiający w to okno → świadomie, jednorazowo:
+  `npm install <pkg>@<ver> --min-release-age 0`. Trwały wyjątek dla jednej paczki →
+  `min-release-age-exclude` w `.npmrc`, **zawsze z komentarzem i datą przeglądu** (każdy wpis
+  to dziura w tej ochronie).
+- Uzasadnienie i ryzyko rezydualne: [`DECISIONS.md`](DECISIONS.md).
 
 ---
 
@@ -368,6 +413,7 @@ mają w regule `&& $CI_PIPELINE_SOURCE != "schedule"`, więc żaden scheduled pi
 | **Pages nie publikują** | Job `pages` biegnie tylko na `main`. Sprawdź, czy Pages jest włączone (Deploy → Pages) i czy `docs:api` + `mkdocs build` przeszły. |
 | **`release` nie tworzy wersji** | Brak `GITLAB_TOKEN` / tagu bazowego / root locka (§4), albo brak commitów `feat:`/`fix:` od ostatniego tagu. |
 | **Złe wydanie trafiło na `main`** | `git revert` wadliwych commitów → merge → semantic-release wyda kolejny patch naprawczy (nie przepisuj historii). Błędny tag/Release można usunąć/oznaczyć w GitLab (wymaga `GITLAB_TOKEN` roli Maintainer). |
+| **Donacje przestały wpadać (Streamlabs)** | Poller sam odświeża token OAuth, więc zwykłe wygaśnięcie leczy się bez ingerencji (#801). Sprawdź Sentry po tagu `streamlabsError`: `refresh_failed` = przejściowa awaria Streamlabs (kolejny tick cronu ponowi, nic nie rób); `reauth_required` / `token_unreadable` = **wymagana akcja człowieka** — właściciel portalu klika ponownie „Połącz Streamlabs" w `/admin` (przy `token_unreadable` sprawdź najpierw, czy nie zmienił się `ENCRYPTION_KEY` — wtedy re-connect jest jedynym wyjściem, §7). Szybka diagnoza bez Sentry: `StreamlabsConnection.lastPolledAt` (kolumna = **ostatni udany** poll) — stara data przy żywym cronie oznacza, że każdy poll kończy się `ok:false`. |
 | **Bot nie odpowiada na czacie** | `ghost-empire-chat` to **osobny runtime** (`tsx src/index.ts`) hostowany poza tym repo — restart i logi po stronie hostingu bota; sekret `BOT_SECRET`. To repo obejmuje bota tylko w CI (`lint:chat`). |
 | **`commitlint` czerwieni MR** | Komunikat nie trzyma Conventional Commits — popraw (`git commit --amend`) lub zrób rebase. Dozwolone typy: `commitlint.config.js`. |
 | **Pula jackpota spadła do ziarna po deployu** | Oczekiwane raz: jackpot przeszedł z jednego, WSPÓLNEGO klucza Redis na pulę **per portal** (`jackpot:surplus:<tenantId>`), więc historyczna nadwyżka została pod starym kluczem. Żetony nie mają wartości rynkowej, więc nic nie przepada. Jeśli chcesz oddać ją portalowi: `npx tsx scripts/migrate-jackpot-pool.ts` (dry run) → `--apply` (domyślnie tenant `ghost-empire`, `--tenant <id>` dla innego). Skrypt robi `GETDEL` na starym kluczu, więc jest idempotentny. |
@@ -390,3 +436,30 @@ mają w regule `&& $CI_PIPELINE_SOURCE != "schedule"`, więc żaden scheduled pi
 (driver-adapter `@prisma/adapter-pg`, konfiguracja w `prisma.config.ts`) · Postgres
 (Supabase) · Tailwind 4 · NextAuth · next-intl · bot `ghost-empire-chat` (Node + tmi.js + tsx).
 Node **≥ 22**. Menedżer pakietów: **npm** (`.npmrc`: `legacy-peer-deps=true`).
+
+## 13. Kolejność scalania serii „update scen i portalu" (2026-08)
+
+Seria z sierpnia 2026 to **siedem commitów w jednym łańcuchu** plus jedna niezależna poprawka CI.
+Gałęzie pośrednie istnieją wyłącznie po to, żeby dało się przejrzeć zmiany po kawałku — **szczyt
+łańcucha zawiera je wszystkie**, więc nie trzeba scalać sześciu MR-ów po kolei.
+
+| Krok | Gałąź | Co wnosi |
+|:-:|:--|:--|
+| 1 | `ci/commitlint-ca-certs` | Odblokowuje `commitlint`, przez który **żaden MR nie przechodził CI**. Mała, niezależna, bez migracji — dlatego pierwsza. |
+| 2 | `fix/scenes-selfreview-2026-08` | **Cała reszta**: poprawka Kreatora Scen, fale A–D, przegląd własnych zmian i weryfikacja na żywo (7 commitów). |
+
+**Jedyny konflikt między nimi to `CHANGELOG.md`** — oba wpisy wchodzą na górę tej samej sekcji. Kod
+jest całkowicie rozłączny (`.gitlab-ci.yml` kontra reszta). Rozwiązanie: **zachowaj oba wpisy**, jeden
+pod drugim.
+
+Świadomie NIE przestawiałem serii na poprawkę CI: rebase przepisałby siedem SHA, unieważnił sześć
+otwartych MR-ów i wymagał dwunastu force-pushy — nieproporcjonalnie do jednego trywialnego konfliktu
+w pliku tekstowym.
+
+Po scaleniu kroku 2 gałęzie pośrednie (`feat/scene-editor-pro`, `feat/scene-live`,
+`feat/portal-palette`, `feat/portal-copy`, `fix/scene-builder`) zamkną się same — ich commity będą już
+w `main`. Skasuj je z obu remote'ów.
+
+**Migracje** (wszystkie addytywne, każda z runbookiem w `MIGRACJA-2026-08.md`; kod działa też PRZED
+ich wykonaniem): §4 `OverlayScene.enabled` · §5 `OverlayScene.isActive` · §6 paleta portalu ·
+§7 `TenantCopy` **+ obowiązkowe `ENABLE ROW LEVEL SECURITY`**.

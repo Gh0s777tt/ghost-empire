@@ -13,6 +13,7 @@ import type { Metadata } from "next";
 import { getTranslations, getLocale } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -22,6 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function DropsPage() {
+  await requireFeature("drops"); // 404 if disabled (/admin#features)
   const session = await auth();
   const isAuthenticated = !!session?.user?.id;
   const locale = await getLocale();

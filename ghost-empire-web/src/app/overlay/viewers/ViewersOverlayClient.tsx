@@ -4,18 +4,14 @@
 // shows a small "👁 N" badge while live. Hidden when offline / not configured.
 import { useEffect, useState } from "react";
 import { useOverlayStream } from "@/lib/use-overlay-stream";
+import { useOverlayAccent } from "@/lib/use-overlay-accent";
 
 type Feed = { live: boolean; configured?: boolean; viewers?: number; game?: string | null };
 
 export function ViewersOverlayClient() {
   const { data: feed, status } = useOverlayStream<Feed>({ feed: "viewers", intervalMs: 20_000 });
-  const [accent, setAccent] = useState("#E50914");
+  const accent = useOverlayAccent();
 
-  // Accent is a client-only display override from the URL (not sent to the server).
-  useEffect(() => {
-    const a = new URL(window.location.href).searchParams.get("accent");
-    if (a && /^[0-9a-fA-F]{6}$/.test(a)) setAccent(`#${a}`);
-  }, []);
 
   if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
   if (status === "unauthorized") return <StatusBox msg="Invalid token" />;

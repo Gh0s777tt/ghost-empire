@@ -310,6 +310,33 @@ export function ObsControlClient() {
       if (!stopped) pollTimer = setTimeout(() => void poll(), POLL_MS);
     }
 
+    /** Pobiera konfigurację (reguły OBS + mostek Hue) i wstawia ją do żywych zmiennych sesji.
+     *  Wydzielone, bo od 2026-08 wołamy to CYKLICZNIE, nie tylko przy montażu — patrz `odswiezKonfig`. */
+    async function pobierzKonfig(): Promise<Config | null> {
+      const res = await fetch(`/api/obs-control/config?token=${encodeURIComponent(token!)}`, { cache: "no-store" });
+      if (res.status === 401) return null;
+      return (await res.json()) as Config;
+    }
+
+    // ⚠️ Konfiguracja MUSI być odświeżana. Do 2026-08 pobierano ją wyłącznie raz, przy montażu
+    // źródła — a panel obiecuje wprost, że zmiany stosują się „na żywo". Skutek: streamer dodawał
+    // regułę OBS albo Hue, wracał na stream i nic się nie działo, dopóki ręcznie nie odświeżył
+    // źródła w OBS. Odpytujemy rzadziej niż kolejki (te zmieniają się co sekundy, konfiguracja
+    // co tygodnie), więc koszt jest znikomy, a obietnica panelu wreszcie prawdziwa.
+    const KONFIG_CO_MS = 30_000;
+    let konfigTimer: ReturnType<typeof setInterval> | null = null;
+    async function odswiezKonfig() {
+      try {
+        const cfg = await pobierzKonfig();
+        if (!cfg || stopped) return;
+        rules = cfg.rules ?? [];
+        hue = cfg.hue ?? null;
+        setRulesCount(rules.length);
+      } catch {
+        /* przejściowe — następny tik spróbuje ponownie; stara konfiguracja działa dalej */
+      }
+    }
+
     (async () => {
       try {
         const cfgRes = await fetch(`/api/obs-control/config?token=${encodeURIComponent(token)}`, { cache: "no-store" });
@@ -331,6 +358,7 @@ export function ObsControlClient() {
         setStatus("connected");
         setDetail(cfg.obsUrl);
         void poll();
+        konfigTimer = setInterval(() => void odswiezKonfig(), KONFIG_CO_MS);
       } catch (e) {
         if (!stopped) {
           setStatus("error");
@@ -349,6 +377,7 @@ export function ObsControlClient() {
     return () => {
       stopped = true;
       if (pollTimer) clearTimeout(pollTimer);
+      if (konfigTimer) clearInterval(konfigTimer);
       // Restore everything still pending BEFORE dropping the connection: otherwise removing or
       // refreshing the browser source leaves the streamer's scene stuck mid-effect with no timer
       // left to undo it. Sequential and best-effort, then disconnect regardless.

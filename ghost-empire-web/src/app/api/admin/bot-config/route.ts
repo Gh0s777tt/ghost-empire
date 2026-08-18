@@ -2,7 +2,7 @@
 // PATCH — update bot config (singleton row id="default")
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/admin";
+import { requireAnyPermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
 
@@ -17,14 +17,18 @@ async function getBotCfg() {
 }
 
 export async function GET() {
-  const auth = await requirePermission("manage_shop"); // closest existing perm; could add bot_config later
+// Okres podwójnej akceptacji (audyt 2026-08): trasa ma własne uprawnienie, ale nadal
+// przepuszcza `manage_shop`, żeby moderatorzy nadani PRZED rozdzieleniem nie stracili dostępu
+// z dnia na dzień. Po nadaniu nowego uprawnienia wszystkim, którzy go potrzebują, zdejmij
+// `manage_shop` z tej listy — wtedy rozdzielenie zaczyna faktycznie obowiązywać.
+  const auth = await requireAnyPermission(["manage_bot", "manage_shop"])
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const config = await getBotCfg();
   return NextResponse.json(config);
 }
 
 export async function PATCH(req: Request) {
-  const auth = await requirePermission("manage_shop");
+  const auth = await requireAnyPermission(["manage_bot", "manage_shop"]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: {

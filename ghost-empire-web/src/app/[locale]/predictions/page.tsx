@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/i18n/metadata";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function PredictionsPage() {
+  await requireFeature("predictions"); // 404 if disabled (/admin#features)
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const tid = await currentTenantId();

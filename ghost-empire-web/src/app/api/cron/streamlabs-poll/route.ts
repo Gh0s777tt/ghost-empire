@@ -36,7 +36,7 @@ export async function GET(req: Request) {
   const conns = await prisma.streamlabsConnection.findMany({ select: { tenantId: true } });
   // Sequential (like cron/weekly-rewards) — don't fan out concurrent external-API + DB-tx
   // work across every portal at once.
-  const results: Array<{ tenantId: string | null; ok: boolean; fetched: number; matched: number; unmatched: number; error?: string }> = [];
+  const results: Array<{ tenantId: string | null; ok: boolean; fetched: number; matched: number; unmatched: number; error?: string; errorCode?: string }> = [];
   for (const c of conns) {
     try {
       const r = await pollAndProcessDonations(c.tenantId);
@@ -46,10 +46,13 @@ export async function GET(req: Request) {
       // Sentry too — otherwise a sustained Streamlabs outage stalls income while only nudging the
       // failed-count, invisible to alerting.
       if (!r.ok) {
-        log.error("portal poll failed (fetch)", { tenantId: c.tenantId, error: r.error });
+        log.error("portal poll failed (fetch)", r.error, { tenantId: c.tenantId, errorCode: r.errorCode });
         Sentry.captureMessage("streamlabs-poll: portal fetch failed", {
           level: "error",
-          tags: { cron: "streamlabs-poll" },
+          // `streamlabsError` is a TAG, not just extra: `reauth_required` means this portal's
+          // donations are dead until an admin re-runs the OAuth connect, while `refresh_failed`
+          // clears itself on the next tick. Alert rules need to tell those apart. #801
+          tags: { cron: "streamlabs-poll", streamlabsError: r.errorCode ?? "fetch_failed" },
           extra: { tenantId: c.tenantId, error: r.error },
         });
       }
@@ -58,7 +61,7 @@ export async function GET(req: Request) {
       // mint transaction / achievements / goals would otherwise abort the loop and starve every
       // portal ordered AFTER this one (their real-money donations never ingested this cycle).
       const error = e instanceof Error ? e.message : "poll_failed";
-      log.error("portal poll threw", { tenantId: c.tenantId, error });
+      log.error("portal poll threw", e, { tenantId: c.tenantId });
       Sentry.captureException(e, { tags: { cron: "streamlabs-poll" }, extra: { tenantId: c.tenantId } });
       results.push({ tenantId: c.tenantId, ok: false, fetched: 0, matched: 0, unmatched: 0, error });
     }

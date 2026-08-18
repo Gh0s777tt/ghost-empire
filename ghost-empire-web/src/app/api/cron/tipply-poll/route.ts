@@ -90,7 +90,7 @@ export async function GET(req: Request) {
       results.push({ id: it.id, ok: true, ingested });
     } catch (e) {
       const error = e instanceof Error ? e.message : "poll_failed";
-      log.error("tipply poll failed for portal", { integrationId: it.id, tenantId: it.tenantId, error });
+      log.error("tipply poll failed for portal", e, { integrationId: it.id, tenantId: it.tenantId });
       Sentry.captureException(e, { tags: { cron: "tipply-poll" }, extra: { integrationId: it.id, tenantId: it.tenantId } });
       // Surface it to the streamer in the admin panel rather than failing silently.
       await prisma.donationIntegration.update({ where: { id: it.id }, data: { lastError: error.slice(0, 300) } }).catch(() => {});

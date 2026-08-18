@@ -51,6 +51,8 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 > **🆕 Świeżo dowiezione (2026-07-24):** 🔐 **sekret bota per portal wystawiany samoobsługowo** — `Tenant.botSecret` miał od #599 kolumnę i weryfikator (`verifyBotSecretForTenant`), ale **żadnego zapisu**: lista pól edytora tenanta świadomie go pomija, więc jedyną drogą był wpis prosto do bazy. Nowa trasa `/api/admin/bot-secret` + karta „Sekret bota portalu" w `/admin#bot`: mint `randomToken(32)` (CSPRNG, base64url), **wartość pokazywana dokładnie raz** (potem tylko `{configured, hint}` z 4 ostatnimi znakami), rotacja i wyczyszczenie (powrót do globalnego `BOT_SECRET`), bramka `canManageTenantBotSecret` ostrzejsza niż `requireAdmin()` (legacy admin z `tenantId=NULL` odpada), step-up 2FA, audyt bez wartości. Runbook: [docs/PER-TENANT-IDENTITY.md §9](docs/PER-TENANT-IDENTITY.md#10-per-tenant-bot-identity-tenantbotsecret). **Egzekucja** (odrzucanie globalnego sekretu) nadal odłożona — wymaga instancji bota per portal, ale brakujący *provisioning* jest już dowieziony.
 
+> **🆕 Świeżo dowiezione (2026-08-14, gałęzie audytu/deps/streamdeck/scene-video + `docs/working-agreement`):** 🛡️ **audyt 2026-08-12 domknięty w kodzie** (`fix/audit-2026-08`) — pozostałe znaleziska medium/low, `Connection` dostał `tenantId` (ten sam login platformy na wielu portalach), `Tenant.botSecret` **szyfrowany at-rest** (AES-256-GCM), CI semgrep+trivy jako **twarde bramki**, świadome decyzje w [`docs/DECISIONS.md`](docs/DECISIONS.md). 💰 **GT przestają być naliczane za pieniądze** (regulamin `REGULAMIN_GHOST_TOKENS.md` §7/§8, forma bezpośrednia **i** pośrednia — `gtFromPln`→0 w jednym audytowalnym miejscu, 8 wyzwalaczy osiągnięć + 5 źródeł XP kupowanych za pieniądze wyzerowane; nic nie skasowane, donacja nadal zapisana/dopasowana/ogłoszona/liczona do celów) + moduł kar realpieniężnych i reguły Philips Hue. 🔐 **Bezpieczeństwo zależności** (`fix/deps-*`) — `next-auth beta.32` ([GHSA-x445](https://github.com/advisories/GHSA-x445-f3h2-j279), cross-provider reuse OAuth state) + dev-lockfile refresh. 🎛️ **Stream Deck / Bitfocus Companion → alerty portalu** (#520/#521) — token per-tenant (`Tenant.streamDeckToken`, szyfrowany, węższy niż `botSecret` — tylko enqueue alertów), self-serve mint w Stream Alerts. 🎬 **Wideo/animacje (mp4/webm) jako element scen OBS + alertów** (#523) — sceny mogą być animowane, nie tylko statyczne (bezschematowo, `safeMediaUrl` po obu stronach). 📋 **CLAUDE.md „Standard prowadzenia projektu"** (#522) — 7 mandatory reguł profesjonalnego prowadzenia **na bieżąco** (docs+PDF ze zrzutami, oba remote'y+tagi, skan sekretów/PII, kod „niebezpieczny" uzasadniony w DECISIONS) + 4 nowe pozycje Definition of Done. ⚙️ **Nowa bramka `docs:roadmap`** (ta nota) — `scripts/check-roadmap-sync.mjs` twardo failuje, gdy najnowsza nota „Świeżo dowiezione" odstaje >14 dni od najnowszego shipped commita, więc roadmap nie może już po cichu gnić (wpięta w `verify-all` + CI, jak `docs:check`).
+
 **Pozostałe duże kierunki:**
 - **🏢 SaaS — odblokowania po stronie usera (kod 100% gotowy, zero programowania):** ① env Stripe (sekcja w README — 10 minut) → sprzedaż automatyczna; ② domena produktu + `NEXT_PUBLIC_ROOT_DOMAIN` + wildcard DNS w Vercel → subdomeny per tenant ożywają (overlaye i bot już przewleczone #432/#433; **per-tenant identity #510/#511 i cała konfigurowalna treść #512 też już przewleczone** — „kopiuj URL OBS" działa z natury); ③ odpalenie instancji bota per klient wg README `ghost-empire-chat` (`ENV_FILE=tenants/<slug>.env`, **własny sekret portalu generowany w `/admin#bot`**); ④ opcjonalnie `ownerUserId` dla GE, by właściciel widział dashboard „Mój portal".
 - **F6 — security/backup** (zrobione: backup JSON, sanityzacja URL, ✅ **szyfrowanie sekretów at-rest AES-256-GCM**, ✅ **nagłówki overlay `noindex`/`no-store`**, ✅ **cron czyszczący bazę**). Zostaje: auto-backup `pg_dump` na osobny bucket (decyzja: dokąd), AV uploadów.
@@ -60,7 +62,27 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 > Decyzja: priorytet (AI vs security vs hardware vs emotki). Hardware (Hue/Govee) + AI wymagają kont/kluczy.
 
+> **🆕 Świeżo dowiezione (2026-08, gałąź `fix/akcent-i-sufit-audytu-2026-08`):** 🎨 **overlay maluje się kolorem PORTALU, nie założyciela** — `#E50914` zniknął z siedmiu klientów overlaya i dwóch serwerowych defaultów; nowy hook `useOverlayAccent` ustala kolor w kolejności `?accent=` → `brandColor` portalu → neutralna szarość (`grep "E50914" src/app/overlay/` = 0) · 🧾 **log audytu podaje prawdziwą liczbę wpisów** (`count` obok `take: 30`) i mówi wprost „pokazano N z M" zamiast podpisywać listę liczbą 30 · 🪝 przy okazji naprawiona kolejność hooków w `SubathonOverlayClient` (hook stał po wczesnym `return`).
+
+
 ---
+
+## 0b. Reszta audytu 2026-08 — cztery pozycje wymagające decyzji 🟡
+
+Sesja audytowa z sierpnia 2026 domknęła **13 defektów** (patrz `CHANGELOG.md`). Cztery zostały
+świadomie — **żadna nie jest już „poprawką"**, każda wymaga decyzji projektowej albo osobnego
+przebiegu. Zapisane tutaj, żeby nie zginęły.
+
+| # | Rzecz | Dlaczego nie w tej sesji |
+|---|---|---|
+| **D7** | `Hub.tsx` i `DonationIntegrations.tsx` trzymają teksty w obiektach `const T = {pl, en}` w kodzie, plus wtrącenia `isPl ? …` w `Streamlabs.tsx` i `PaymentMethods.tsx` | 12 locale dostaje angielski, a `docs:i18n` tego **nie wykryje**, bo kluczy nie ma w katalogu. Przeniesienie to ~60 stringów × 14 języków — mechaniczne, ale nieproporcjonalnie duże jak na sekcje panelu, które czyta właściciel portalu (głównie PL/EN). **Warunek dobrego wykonania:** przenieść komplet do `messages/*.json`, nie połowicznie, inaczej powstanie trzecie źródło prawdy. |
+| **D10** | Martwe kolumny: `Event.autoDrawAt` (**0 czytelników**) i `Connection.isMuted` (**0 czytelników**) | Schemat obiecuje automatyczne losowanie i wyciszanie; żadne nie następuje. Ożywienie ich to **nowe funkcje**, nie sprzątanie: `autoDrawAt` wymaga cron-dispatchera z claimem przez warunkowy `updateMany`, a `isMuted` **musi być uzgodnione z botem czatu** (`ghost-empire-chat/src/moderation.ts`) — inaczej powstaną dwa niezależne stany wyciszenia. Alternatywa: skasować kolumny i przestać obiecywać. |
+| **D16** | `buildBackup` czyta **globalnie** (24 × `findMany` bez filtra portalu) | Dlatego kopia jest za bramką właściciela platformy, a streamer nie ma dostępu do własnych danych. Scope'owanie po `tenantId` zmienia **semantykę** kopii platformowej (czy właściciel nadal ma pełną?), więc to projekt, nie poprawka. |
+| **D18** | `EAUTHTIMEOUT` do Postgresa przy odświeżaniu cache'u (ranking, osiągnięcia, liga typerów) | Objaw puli połączeń — `max: 3` na instancję na Vercelu — a nie błąd w linijce kodu. Wymaga pomiaru pod obciążeniem i decyzji o poolerze, nie edycji. |
+
+Poza tym z audytu zostają dwa znaleziska **zamknięte dowodem, nie zmianą** — `pg_net` i portal
+założyciela bez adresu; oba opisane w [`DECISIONS.md`](docs/DECISIONS.md), żeby kolejny audyt nie
+badał ich od zera.
 
 ## 1. Jakość kodu, testy i CI/CD 🔥
 
@@ -151,6 +173,7 @@ Pełne specyfikacje w [PHASE3.md](PHASE3.md). Skrót tego, co jeszcze NIE zrobio
 
 ### Pomysły użytkownika (2026-05-30) — do zrealizowania
 
+- ✅ **Feature-flags portalu** — **ZROBIONE w całości** (gałąź `feat/feature-flags-2026-08`, wymaga `db push`): panel `/admin#features` (włącz/wyłącz), nav-hide wszystkich 24 funkcji, API `/api/admin/features`, `Tenant.disabledFeatures String[]`, oraz **bramka `notFound()` na WSZYSTKICH 24 stronach funkcji** (`requireFeature`). Katalog kluczy: `src/lib/features.ts`. **Bramka API (403) `requireFeatureApi`** — wpięta w trasy hazardu (kasyno: `gt-games/play`+`blackjack`/`hilo`/`mines`/start, `casino/daily-chips`; koło: `wheel/spin`), więc wyłączone kasyno/koło odmawia też na API, nie tylko chowa stronę (ratuje wartość z równoległego #519). **ZOSTAJE (nice-to-have):** analogiczna bramka API na pozostałych money-POST toggle'owalnych funkcji (shop/gift/market/…) — strona i tak jest 404, więc opcjonalne.
 - ✅ **Customizacja alertów** (T16) — podgląd na żywo + rozmiar/kolor tekstu (#24, #25) **oraz per-typ**: animacja / pozycja / własny dźwięk / próg kwotowy osobno dla każdego typu alertu (`AlertTypeConfig`, `/admin#alerts`). **ZROBIONE w całości.**
 - 🔥 **OBS WebSocket — hasło wklejane na stronie** (`/admin`), nie w env → przeżywa zmianę komputera (kopiuj-wklej)
 - 🔥🎨 **Strona startowa (landing)** — ładny pierwszy ekran przy wejściu. *(Wymaga Twojego kierunku wizualnego — robię świadomie po Twoim feedbacku, by nie zgadywać gustu i nie generować churnu.)*

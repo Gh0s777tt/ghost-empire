@@ -70,3 +70,35 @@ describe("MOD_PERMISSIONS / PERMISSION_GROUPS integrity", () => {
     }
   });
 });
+
+// Strażnik rozdzielenia uprawnień (audyt 2026-08). `bot-config` i `schedule` jechały na
+// `manage_shop` z komentarzem „closest existing perm", więc moderator od sklepu mógł zmieniać
+// STAWKI NAGRÓD bota — czyli ekonomię portalu. Test pilnuje, że rozdzielenie istnieje i że
+// okres podwójnej akceptacji jest świadomy, a nie zapomniany.
+describe("rozdzielenie uprawnień bota i harmonogramu", () => {
+  it("nowe uprawnienia istnieją i mają własną grupę", () => {
+    const ids = MOD_PERMISSIONS.map((p) => p.id);
+    expect(ids).toContain("manage_bot");
+    expect(ids).toContain("manage_schedule");
+    for (const id of ["manage_bot", "manage_schedule"] as const) {
+      const p = MOD_PERMISSIONS.find((x) => x.id === id)!;
+      expect(p.group).toBe("config");
+      expect(p.desc.length).toBeGreaterThan(20); // opis, nie zaślepka
+    }
+  });
+
+  it("moderator z manage_bot NIE dostaje przez to sklepu ani banów", () => {
+    const mod = { isAdmin: false, isModerator: true, modPermissions: ["manage_bot"] };
+    expect(hasPermission(mod, "manage_bot")).toBe(true);
+    expect(hasPermission(mod, "manage_shop")).toBe(false);
+    expect(hasPermission(mod, "ban_users")).toBe(false);
+  });
+
+  it("moderator od sklepu nadal przechodzi w okresie podwójnej akceptacji", () => {
+    // Trasy wołają requireAnyPermission(["manage_bot", "manage_shop"]) — sam `manage_shop`
+    // wystarczy DO CZASU zdjęcia go z tej listy, żeby nikt nie stracił dostępu z dnia na dzień.
+    const stary = { isAdmin: false, isModerator: true, modPermissions: ["manage_shop"] };
+    expect(hasPermission(stary, "manage_shop")).toBe(true);
+    expect(hasPermission(stary, "manage_bot")).toBe(false);
+  });
+});

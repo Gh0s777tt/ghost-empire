@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { KasynoClient } from "@/components/kasyno/KasynoClient";
 import { GamblingGate } from "@/components/kasyno/GamblingGate";
+import { requireFeature } from "@/lib/feature-gate";
 
 export const dynamic = "force-dynamic";
 // Casino runs on free "Żetony/Chips" (🪙) — a fixed, non-branded casino currency, same on every
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Kasyno", description: "Gry na darmowe żetony 🪙 — sloty, ruletka, blackjack, mines i więcej. 18+, graj rozsądnie." };
 
 export default async function KasynoPage() {
+  await requireFeature("casino"); // 404 if the portal owner disabled the casino (/admin#features)
   const session = await auth();
   let balance: number | null = null;
   if (session?.user?.id) {

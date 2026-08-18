@@ -11,6 +11,7 @@ import { getTranslations } from "next-intl/server";
 import HowItWorks from "@/components/HowItWorks";
 import { localeAlternates } from "@/i18n/metadata";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -20,6 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function SchedulePage() {
+  await requireFeature("schedule"); // 404 if disabled (/admin#features)
   const t = await getTranslations("schedule");
   const tenant = await getCurrentTenant();
   const tid = await currentTenantId();

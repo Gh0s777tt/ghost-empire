@@ -4,8 +4,20 @@
 // for the vercel.app host today; a root-domain RP ID for subdomains is a future
 // tweak). Pure host/origin helpers are unit-tested.
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
+import { SITE } from "@/lib/site";
 
-export const RP_NAME = "GH0ST EMPIRE";
+/**
+ * Display name of the Relying Party — the brand the OS passkey dialog shows.
+ *
+ * @remarks
+ * Only a FALLBACK: the register route passes the current portal's `tenant.name`
+ * and drops to this when a tenant has none, so a sub-portal never advertises the
+ * founder's brand. Sourced from {@link SITE} rather than a literal so the default
+ * brand lives in exactly one place (white-label guard: `npm run docs:brand`).
+ * `rp.name` is display-only — credentials are scoped by `rpID`, so varying it
+ * per portal can never invalidate an existing passkey.
+ */
+export const RP_NAME = SITE.name;
 export const REG_CHALLENGE_COOKIE = "pk_reg_chal";
 export const AUTH_CHALLENGE_COOKIE = "pk_auth_chal";
 

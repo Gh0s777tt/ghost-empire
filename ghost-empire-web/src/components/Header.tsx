@@ -19,6 +19,7 @@ import { useTour } from "@/components/tour/SiteTour";
 import { BALANCE_EVENT } from "@/lib/balance-bus";
 import { useTenantBranding } from "@/components/TenantBranding";
 import { useViewerPreview } from "@/components/ViewerPreview";
+import { isHrefHidden } from "@/lib/features";
 
 // Grouped navigation. Labels are i18n keys (namespace "nav") resolved at render.
 type NavKey =
@@ -75,8 +76,7 @@ const NAV: NavEntry[] = [
   },
 ];
 
-// Flattened leaf list for the mobile scroll strip.
-const NAV_LEAVES: NavLeaf[] = NAV.flatMap((e) => (isGroup(e) ? e.children : [e]));
+// (Mobile leaf strip is derived per-render from the feature-filtered `nav` — see the component body.)
 
 function isLeafActive(href: string, pathname: string): boolean {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -89,7 +89,7 @@ export function Header() {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const tDeck = useTranslations("deck");
-  const { brandName, logoUrl, isPlatformBrand } = useTenantBranding();
+  const { brandName, logoUrl, isPlatformBrand, disabledFeatures } = useTenantBranding();
   const { preview, setPreview } = useViewerPreview();
   const tTour = useTranslations("tour");
   const fmt = useLocaleFmt();
@@ -114,6 +114,14 @@ export function Header() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [menuOpen]);
+
+  // Per-portal feature flags (allow-by-default): drop nav entries the owner disabled. A group whose
+  // every child is hidden disappears too. The mobile strip flattens the already-filtered tree, so
+  // both navs agree. Core routes (home/ranking — not in the feature catalog) are never hidden.
+  const nav = NAV
+    .map((e) => (isGroup(e) ? { ...e, children: e.children.filter((c) => !isHrefHidden(disabledFeatures, c.href)) } : e))
+    .filter((e) => (isGroup(e) ? e.children.length > 0 : !isHrefHidden(disabledFeatures, e.href)));
+  const navLeaves = nav.flatMap((e) => (isGroup(e) ? e.children : [e]));
 
   return (
     <header
@@ -145,7 +153,7 @@ export function Header() {
 
           {/* Desktop nav — direct links + dropdown groups (hover / keyboard-focus) */}
           <nav className="hidden lg:flex items-center gap-0.5" aria-label={t("mainNav")} data-tour="nav">
-            {NAV.map((entry) =>
+            {nav.map((entry) =>
               isGroup(entry) ? (
                 <NavDropdown
                   key={entry.tk}
@@ -362,7 +370,7 @@ export function Header() {
 
         {/* Mobile nav — flat horizontal scroll of every destination (groups expanded) */}
         <nav className="lg:hidden flex overflow-x-auto no-scrollbar items-center gap-1 pb-2 -mt-1" aria-label={t("mainNav")} data-tour="nav">
-          {NAV_LEAVES.map(({ href, tk, icon: Icon }) => {
+          {navLeaves.map(({ href, tk, icon: Icon }) => {
             const active = isLeafActive(href, pathname);
             return (
               <Link

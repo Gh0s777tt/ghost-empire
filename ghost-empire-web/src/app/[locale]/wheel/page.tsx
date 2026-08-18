@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { WheelPageClient } from "@/components/wheel/WheelPageClient";
 import { GamblingGate } from "@/components/kasyno/GamblingGate";
+import { requireFeature } from "@/lib/feature-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export const metadata = {
 };
 
 export default async function WheelPage() {
+  await requireFeature("wheel"); // 404 if disabled (/admin#features)
   const session = await auth();
 
   return (

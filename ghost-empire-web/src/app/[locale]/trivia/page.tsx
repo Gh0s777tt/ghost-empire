@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { TriviaClient } from "@/components/trivia/TriviaClient";
 import { getCurrentTenant } from "@/lib/tenant";
 
+import { requireFeature } from "@/lib/feature-gate";
 export const dynamic = "force-dynamic";
 
 // White-label: trivia rewards this portal's own currency (tenant.tokenName).
@@ -16,6 +17,7 @@ export async function generateMetadata() {
 }
 
 export default async function TriviaPage() {
+  await requireFeature("trivia"); // 404 if disabled (/admin#features)
   const session = await auth();
   return (
     <div className="min-h-screen bg-black">
