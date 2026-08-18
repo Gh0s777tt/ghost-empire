@@ -3,7 +3,29 @@
 A daily cron exports a JSON backup (config/catalog + user balances — **no secrets/PII**) and uploads it to an S3-compatible bucket. Off by default; turns on the moment you set the env (#677).
 
 ## What it backs up
-The same data as the admin download (`/admin` → backup): shop, events, achievements, chat config (commands / timers / FAQ / welcome / bot), schedule, subathon, moderation, seasons + rewards, alert settings/types, codes, polls, predictions, goals, overlay config, custom alerts/widgets, and **user balances** (id / username / tokens / totalEarned / level / xp / streak / roles). **Excluded:** auth tokens, emails, sessions, logs, chat feed — no secrets, no PII. It is a **logical** export (Vercel serverless has no `pg_dump` binary).
+
+The same data as the admin download (`/admin` → backup): **45 of the schema's 111 models** — configuration, content catalogs and user balances.
+
+**Portal identity (white-label):** `Tenant` (name, currency name/symbol, colours, font, logo, background, socials, hub, plan, disabled features), `TenantCopy` (the portal's own welcome/about text), `OverlayScene` (scene builder output), `ObsRule` / `GoveeRule` / `HueRule` (automation).
+
+**Catalogs & config:** shop, events, achievements, chat config (commands / timers / FAQ / welcome / bot), schedule, subathon, moderation, seasons + rewards, alert settings/types, codes, drops, polls, predictions, goals, overlay config, custom alerts/widgets, wheel, sound rewards, payment methods, sponsors, collectibles, trivia questions, penalties + config, games, clip director, support goals, bounties, daily tasks, song-request bans.
+
+**User balances:** id / username / tokens / totalEarned / level / xp / streak / roles.
+
+**Excluded — deliberately, with a reason recorded per model** (`MODELE_POZA_KOPIA` in `src/lib/backup.ts`):
+
+| Class | Why |
+|---|---|
+| Credential stores (`Account`, `Session`, `Connection`, `IntegrationConfig`, `GameLibraryConfig`, the four streamer-token models, `StreamlabsConnection`, `DonationIntegration`, `PushSubscription`, `OutgoingWebhook`, …) | A backup must not carry secrets. After a restore the operator re-enters keys. |
+| Personal data (`ShippingProfile`, `Donation`, `DonationClaim`, `SocialLink`, `SupportTicket`) | Addresses, phone numbers, e-mails, donor names. |
+| Volume / ephemera (`ChatFeedMessage`, `StreamAlert`, `RateLimitBucket`, logs, platform event tables, …) | Rebuilds itself; in a backup it only bloats the file. |
+| Gameplay history (`Transaction`, `GtGamePlay`, `Duel`, `Heist`, votes, entries, claims, `Clan`, …) | The backup carries **balances**, not the play-by-play that produced them. |
+
+`Tenant` is read through a **positive `select`**, not "everything except these five" — with `omit`, every future secret added to the model would silently enter the backup. `botSecret`, `streamDeckToken`, `stripeCustomerId`, `stripeSubscriptionId` and `ownerEmail` stay out; `tokenName`/`tokenSymbol` are the **portal's currency name**, not credentials, and are exactly what a restore has to reproduce.
+
+⚠️ **This coverage is enforced, not documented-and-hoped:** `src/lib/__tests__/backup-coverage.test.ts` reads `schema.prisma` and fails when any model is in neither list. Adding a model forces the decision "should a restore reproduce this?" instead of letting it vanish quietly — which is exactly how the backup drifted to **24 of 111 models**, losing every portal's branding and content on restore.
+
+It is a **logical** export (Vercel serverless has no `pg_dump` binary).
 
 ## Enable (Vercel → Settings → Environment Variables)
 | Var | Example | |
