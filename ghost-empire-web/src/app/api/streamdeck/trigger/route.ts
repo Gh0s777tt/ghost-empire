@@ -14,6 +14,7 @@
 //
 //   POST { action: "test" }                     → fire the built-in test alert
 //   POST { action: "custom_fire", id: "<id>" }  → fire a saved Custom Alert by id
+//   POST { action: "scene_switch", id|name }    → przełącz AKTYWNĄ scenę (to, co renderuje /overlay/live)
 //
 // The switch is intentionally small (alert-domain only, zero economy mutation) so v1 ships safe;
 // economy/event actions (drop, draw, goal_reset, subathon…) are a deliberate later slice that
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Za szybko" }, { status: 429, headers: rateLimitHeaders(rl) });
   }
 
-  let body: { action?: unknown; id?: unknown };
+  let body: { action?: unknown; id?: unknown; name?: unknown };
   try { body = (await req.json()) as typeof body; } catch {
     return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
   }
@@ -90,6 +91,38 @@ export async function POST(req: Request) {
         tid,
       );
       return NextResponse.json({ ok: true, alertId: alert?.id ?? null, dropped: alert === null });
+    }
+
+    case "scene_switch": {
+      // Przełącz AKTYWNĄ scenę (update 2026-08) — to, co renderuje stały adres `/overlay/live`.
+      // Sedno funkcji: fizyczny przycisk na Stream Decku zmienia obraz na streamie, a streamer nie
+      // dotyka OBS-a. Przyjmujemy `id` albo `name`, bo w Companion wygodniej wpisać nazwę sceny niż
+      // cuid — nazwa jest szukana WYŁĄCZNIE w obrębie tego portalu.
+      const id = typeof body.id === "string" ? body.id : "";
+      const name = typeof body.name === "string" ? body.name.trim() : "";
+      if (!id && !name) return NextResponse.json({ error: "Podaj `id` albo `name` sceny" }, { status: 400 });
+
+      const scene = await prisma.overlayScene
+        .findFirst({
+          where: { tenantId: tid, ...(id ? { id } : { name }) },
+          select: { id: true, name: true },
+        })
+        .catch(() => null);
+      if (!scene) return NextResponse.json({ error: "Nie znaleziono sceny" }, { status: 404 });
+
+      // Jedyność aktywnej sceny wymuszamy transakcją (jak w panelu) — bez tego nieudany drugi zapis
+      // zostawiłby portal z zerem albo dwiema aktywnymi scenami.
+      const ok = await prisma
+        .$transaction([
+          prisma.overlayScene.updateMany({ where: { tenantId: tid }, data: { isActive: false } }),
+          prisma.overlayScene.updateMany({ where: { id: scene.id, tenantId: tid }, data: { isActive: true } }),
+        ])
+        .then(() => true)
+        .catch(() => false);
+      // Brak kolumny `isActive` = migracja jeszcze nie poszła (docs/MIGRACJA-2026-08.md §5).
+      if (!ok) return NextResponse.json({ error: "Przełączanie scen wymaga migracji bazy (db push)" }, { status: 503 });
+
+      return NextResponse.json({ ok: true, sceneId: scene.id, sceneName: scene.name });
     }
 
     case "custom_fire": {

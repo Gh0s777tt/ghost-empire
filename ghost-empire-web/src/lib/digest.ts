@@ -7,6 +7,9 @@ export type DigestStats = {
   tenantName: string;
   tokenSymbol: string;
   portalUrl: string;
+  /** Kolor marki PORTALU. Do 2026-08 nagłówek i przycisk były zaszyte na czerwieni założyciela,
+   *  więc każdy portal wysyłał swojemu właścicielowi mail wyglądający jak Ghost Empire. */
+  brandColor: string;
   newUsers: number;
   activeUsers: number;
   gtEarned: number;
@@ -35,7 +38,15 @@ function row(label: string, value: string, accent = false): string {
 }
 
 /** Compose the weekly digest email for a portal owner. Pure — fully unit-testable. */
+/** Kolor marki trafia WPROST do deklaracji CSS w mailu, więc przepuszczamy wyłącznie `#rrggbb`.
+ *  Ta sama zasada co przy `brandColor` w layoucie portalu — string z bazy nigdy nie wchodzi
+ *  do stylu bez sprawdzenia. Nieznana wartość → neutralna szarość, nie czerwień założyciela. */
+function bezpiecznyKolor(hex: string | null | undefined): string {
+  return typeof hex === "string" && /^#[0-9a-f]{6}$/i.test(hex.trim()) ? hex.trim() : "#52525b";
+}
+
 export function composeDigest(s: DigestStats): { subject: string; html: string } {
+  const marka = bezpiecznyKolor(s.brandColor);
   const name = escapeHtml(s.tenantName);
   const sym = escapeHtml(s.tokenSymbol);
   const subject = `${s.tenantName} — tygodniowy raport portalu`;
@@ -49,7 +60,7 @@ export function composeDigest(s: DigestStats): { subject: string; html: string }
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:24px 0;">
 <tr><td align="center">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#111113;border:1px solid #27272a;">
-  <tr><td style="padding:20px 24px;border-bottom:2px solid #e50914;">
+  <tr><td style="padding:20px 24px;border-bottom:2px solid ${marka};">
     <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:3px;color:#71717a;text-transform:uppercase;">Tygodniowy raport</div>
     <div style="font-family:Arial,sans-serif;font-size:22px;font-weight:900;color:#fafafa;margin-top:4px;">${name}</div>
   </td></tr>
@@ -63,9 +74,9 @@ export function composeDigest(s: DigestStats): { subject: string; html: string }
       ${s.pendingOrders > 0 ? row("Zamówienia do realizacji", nf(s.pendingOrders), true) : ""}
       ${s.openTickets > 0 ? row("Otwarte zgłoszenia", nf(s.openTickets), true) : ""}
     </table>
-    ${attention.length ? `<div style="margin-top:14px;padding:10px 12px;background:#2a0e0e;border-left:3px solid #e50914;color:#fca5a5;font-size:12px;">Wymaga uwagi: ${attention.map(escapeHtml).join(" · ")}</div>` : ""}
+    ${attention.length ? `<div style="margin-top:14px;padding:10px 12px;background:#2a0e0e;border-left:3px solid ${marka};color:#fca5a5;font-size:12px;">Wymaga uwagi: ${attention.map(escapeHtml).join(" · ")}</div>` : ""}
     <div style="margin-top:18px;">
-      <a href="${escapeHtml(s.portalUrl)}/admin" style="display:inline-block;background:#e50914;color:#ffffff;font-size:13px;font-weight:700;text-decoration:none;padding:10px 18px;font-family:Arial,sans-serif;">Otwórz panel</a>
+      <a href="${escapeHtml(s.portalUrl)}/admin" style="display:inline-block;background:${marka};color:#ffffff;font-size:13px;font-weight:700;text-decoration:none;padding:10px 18px;font-family:Arial,sans-serif;">Otwórz panel</a>
     </div>
   </td></tr>
   <tr><td style="padding:12px 24px;border-top:1px solid #27272a;font-family:Arial,sans-serif;font-size:11px;color:#52525b;">

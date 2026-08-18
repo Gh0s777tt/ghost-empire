@@ -5,6 +5,7 @@
 // top clans by war points. Hidden entirely while no war is live.
 import { useEffect, useState } from "react";
 import { useOverlayStream } from "@/lib/use-overlay-stream";
+import { useOverlayAccent } from "@/lib/use-overlay-accent";
 
 type Standing = { tag: string; name: string; points: number };
 type Feed =
@@ -26,13 +27,8 @@ function remainingLabel(endsAt: string, now: number): string {
 
 export function ClanWarOverlayClient() {
   const { data: feed, status } = useOverlayStream<Feed>({ feed: "clan-war", intervalMs: 5000 });
-  const [accent, setAccent] = useState("#E50914");
+  const accent = useOverlayAccent();
   const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const a = new URL(window.location.href).searchParams.get("accent");
-    if (a && /^[0-9a-fA-F]{6}$/.test(a)) setAccent(`#${a}`);
-  }, []);
   // Tick once a second so the countdown reads smoothly between feed updates.
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);

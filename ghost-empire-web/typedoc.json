@@ -3,6 +3,7 @@
   "plugin": ["typedoc-plugin-markdown"],
   "entryPoints": [
     "src/lib/secure-rng.ts",
+    "src/lib/crypto.ts",
     "src/lib/economy.ts",
     "src/lib/gt-games.ts",
     "src/lib/wheel.ts",

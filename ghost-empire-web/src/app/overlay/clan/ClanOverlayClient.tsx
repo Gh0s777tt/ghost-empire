@@ -4,6 +4,7 @@
 // (/api/overlay/stream/clan) + polling fallback. Hidden until a clan has a treasury.
 import { useEffect, useState } from "react";
 import { useOverlayStream } from "@/lib/use-overlay-stream";
+import { useOverlayAccent } from "@/lib/use-overlay-accent";
 
 type Feed =
   | { exists: false }
@@ -11,12 +12,7 @@ type Feed =
 
 export function ClanOverlayClient() {
   const { data: feed, status } = useOverlayStream<Feed>({ feed: "clan", intervalMs: 10000 });
-  const [accent, setAccent] = useState("#E50914");
-
-  useEffect(() => {
-    const a = new URL(window.location.href).searchParams.get("accent");
-    if (a && /^[0-9a-fA-F]{6}$/.test(a)) setAccent(`#${a}`);
-  }, []);
+  const accent = useOverlayAccent();
 
   if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
   if (status === "unauthorized") return <StatusBox msg="Invalid token" />;

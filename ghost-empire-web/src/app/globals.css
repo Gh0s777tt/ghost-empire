@@ -555,7 +555,11 @@
   color-scheme: light;
   background: #fafafa;
 }
-[data-theme="light"] body { background-color: #fafafa !important; color: #18181b; }
+/* Motyw wybrany przez WIDZA wygrywa z paletą portalu — tak jak wygrywa z każdą inną
+   powierzchnią w tym pliku. Bez `!important` przy `color` inline `color` z `Tenant.textColor`
+   przebijał tę regułę, a `background-color` już nie — czyli portal z ciemnym tłem i jasnym
+   tekstem dostawał w trybie jasnym JASNY TEKST NA JASNYM TLE. Para musi być domknięta razem. */
+[data-theme="light"] body { background-color: #fafafa !important; color: #18181b !important; }
 
 /* Surfaces */
 [data-theme="light"] .bg-black     { background-color: #ffffff !important; }
@@ -608,7 +612,7 @@
    ============================================================ */
 
 /* MIDNIGHT — deep navy surfaces. */
-[data-theme="midnight"] body { background-color: #070b16 !important; }
+[data-theme="midnight"] body { background-color: #070b16 !important; color: #E8E8E8 !important; }
 [data-theme="midnight"] .bg-black     { background-color: #070b16 !important; }
 [data-theme="midnight"] .bg-zinc-950  { background-color: #0a1020 !important; }
 [data-theme="midnight"] .bg-zinc-900  { background-color: #111a2e !important; }
@@ -627,7 +631,7 @@
 [data-theme="midnight"] .border-zinc-800 { border-color: #1f2c47 !important; }
 
 /* SLATE — soft neutral graphite, gentler than pure black. */
-[data-theme="slate"] body { background-color: #16161a !important; }
+[data-theme="slate"] body { background-color: #16161a !important; color: #E8E8E8 !important; }
 [data-theme="slate"] .bg-black     { background-color: #16161a !important; }
 [data-theme="slate"] .bg-zinc-950  { background-color: #1a1a1f !important; }
 [data-theme="slate"] .bg-zinc-900  { background-color: #232329 !important; }
@@ -646,7 +650,7 @@
 [data-theme="slate"] .border-zinc-800 { border-color: #34343d !important; }
 
 /* FOREST — deep evergreen surfaces. */
-[data-theme="forest"] body { background-color: #08120c !important; }
+[data-theme="forest"] body { background-color: #08120c !important; color: #E8E8E8 !important; }
 [data-theme="forest"] .bg-black     { background-color: #08120c !important; }
 [data-theme="forest"] .bg-zinc-950  { background-color: #0b160f !important; }
 [data-theme="forest"] .bg-zinc-900  { background-color: #122019 !important; }
@@ -665,7 +669,7 @@
 [data-theme="forest"] .border-zinc-800 { border-color: #1f3528 !important; }
 
 /* PLUM — deep wine/purple surfaces. */
-[data-theme="plum"] body { background-color: #120a16 !important; }
+[data-theme="plum"] body { background-color: #120a16 !important; color: #E8E8E8 !important; }
 [data-theme="plum"] .bg-black     { background-color: #120a16 !important; }
 [data-theme="plum"] .bg-zinc-950  { background-color: #160b1b !important; }
 [data-theme="plum"] .bg-zinc-900  { background-color: #1f1227 !important; }

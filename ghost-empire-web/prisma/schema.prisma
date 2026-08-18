@@ -23,6 +23,15 @@ model Tenant {
   name                 String // brand display name, e.g. "GH0ST EMPIRE"
   shortName            String? // manifest short_name / compact UI
   brandColor           String    @default("#E50914")
+  // PALETA PORTALU (update 2026-08): `brandColor` był JEDYNYM kolorem, przez co portal z jasnym
+  // brandem dostawał nieczytelny tekst i nie miał jak się o tym dowiedzieć. Te dwa dokładają
+  // powierzchnię i tekst, a panel liczy dla nich kontrast WCAG (lib/brand-palette) i mówi wprost,
+  // gdy para jest nieczytelna. `null` = zachowanie sprzed zmiany (kolory z motywu).
+  surfaceColor         String?
+  textColor            String?
+  // Krój portalu — identyfikator z ZAMKNIĘTEJ listy (lib/brand-palette PORTAL_FONTS), nigdy dowolna
+  // nazwa: wartość trafia do CSS, a kroje systemowe nie wymagają zapytania do cudzego serwisu.
+  fontFamily           String?
   logoUrl              String?
   domain               String?   @unique // optional custom apex domain → this portal (#653, e.g. "empire-forge.com"); null = subdomain/default only
   // White-label currency naming (Phase 5): i18n catalogs carry %tokenName%/%gt%
@@ -2020,11 +2029,22 @@ model OverlayScene {
   id        String   @id @default(cuid())
   tenantId  String?
   name      String
-  elements  String   @db.Text // JSON: [{ id, widget, x, y, w, h }]
+  elements  String   @db.Text // JSON: [{ id, widget, x, y, w, h, src?, enabled? }]
+  // Wyłączona scena zostaje w panelu (można ją dalej edytować), ale jej URL OBS renderuje pustkę —
+  // streamer chowa całą kompozycję jednym kliknięciem, bez kasowania układu i bez zmiany źródła
+  // w OBS. Domyślnie `true`, więc sceny sprzed tej zmiany działają bez ruszania danych.
+  enabled   Boolean  @default(true)
+  // AKTYWNA SCENA (update 2026-08): dokładnie jedna scena per portal może być aktywna, a stały adres
+  // `/overlay/live` renderuje właśnie ją. Dzięki temu streamer wkleja do OBS JEDEN adres raz na
+  // zawsze i przełącza sceny z panelu albo ze Stream Decka — zamiast podmieniać źródło na żywo.
+  // Jedyność pilnuje trasa API (najpierw zeruje flagę w obrębie portalu, potem ustawia jedną),
+  // nie baza: unique-constraint na `[tenantId, isActive]` blokowałby DWIE nieaktywne sceny.
+  isActive  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([tenantId])
+  @@index([tenantId, isActive])
   @@map("overlay_scenes")
 }
 
@@ -2666,4 +2686,32 @@ model LeagueSeasonResult {
   @@unique([tenantId, seasonNumber, userId])
   @@index([tenantId, seasonNumber, rank])
   @@map("league_season_results")
+}
+
+// Nadpisania COPY per portal (update 2026-08). Do tej pory `welcome`/`about` pochodziły wyłącznie
+// z `src/messages/*.json`, wspólnych dla wszystkich portali — czyli każdy portal wyglądał inaczej,
+// ale MÓWIŁ to samo. To był realny sufit white-label: streamer nie mógł opisać własnej społeczności
+// swoimi słowami.
+//
+// Model celowo klucz-wartość, a nie kolumna per tekst: zbiór edytowalnych pól rośnie, a każde nowe
+// pole nie może znaczyć migracji. Klucze pochodzą z ZAMKNIĘTEJ listy (`lib/tenant-copy`), więc
+// tabela nie jest workiem na dowolne dane.
+//
+// Wartość PRZECHOWUJE markery (`%tokenName%`, `%brandShort%`) i jest rozwiązywana przy odczycie —
+// zgodnie z zasadą z CLAUDE.md: tekst, który PERSYSTUJE, trzyma marker, żeby zmiana nazwy waluty
+// naprawiła też stare wiersze.
+model TenantCopy {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  locale    String // 'pl' | 'en' | … (14 locale)
+  key       String // klucz z allowlisty, np. "welcome.sub2"
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Unique ZŁOŻONY z tenantem — nigdy globalny na `key`, inaczej pierwszy portal
+  // zabrałby klucz wszystkim pozostałym (konwencja multi-tenant z CLAUDE.md).
+  @@unique([tenantId, locale, key])
+  @@index([tenantId, locale])
+  @@map("tenant_copy")
 }

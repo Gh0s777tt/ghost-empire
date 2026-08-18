@@ -3,10 +3,12 @@
 // Realtime emoji combos via SSE (/api/overlay/stream/emoji-combo) + polling fallback;
 // pops a big emoji + "xN COMBO!" while fresh. Re-animates when a new combo (ts) arrives.
 import { useOverlayStream } from "@/lib/use-overlay-stream";
+import { useOverlayAccent } from "@/lib/use-overlay-accent";
 
 type Feed = { active: boolean; emoji?: string; count?: number; ts?: number };
 
 export function EmojiComboOverlayClient() {
+  const accent = useOverlayAccent();
   const { data: feed, status } = useOverlayStream<Feed>({ feed: "emoji-combo", intervalMs: 1500 });
 
   if (status === "no-token") return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
@@ -45,7 +47,9 @@ export function EmojiComboOverlayClient() {
             fontWeight: 900,
             color: "#fff",
             letterSpacing: 2,
-            textShadow: "0 0 14px #E50914, 0 3px 10px rgba(0,0,0,0.85)",
+            // Poświata brała kolor założyciela na sztywno — jedyne miejsce w overlayach, gdzie nie
+            // dało się go nadpisać nawet parametrem `?accent=`.
+            textShadow: `0 0 14px ${accent}, 0 3px 10px rgba(0,0,0,0.85)`,
             WebkitTextStroke: "1px rgba(0,0,0,0.4)",
           }}
         >

@@ -67,7 +67,7 @@ workflow:
 # ── Ukryte szablony jobów (DRY) ──────────────────────────────────────────────
 # Cache node_modules per-projekt, kluczowany hashem lockfile'a danego projektu.
 .web:
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   cache:
     key:
       files:
@@ -81,7 +81,7 @@ workflow:
   interruptible: true
 
 .chat:
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   cache:
     key:
       files:
@@ -126,7 +126,7 @@ workflow:
 # ODPORNY na brak root package-lock.json (bootstrap) — commitlint leci na KAŻDYM MR.
 commitlint:
   stage: verify
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   needs: []
   rules:
     # commitlint TYLKO na MR: na push do main CI_MERGE_REQUEST_TARGET_BRANCH_NAME
@@ -134,7 +134,11 @@ commitlint:
     # ma czego walidować (commity już zmergowane).
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   before_script:
-    - apt-get update && apt-get install -y --no-install-recommends git
+    # `ca-certificates` jest tu OBOWIĄZKOWE, nie ozdobne: bez niego `git fetch` po HTTPS pada na
+    # „server certificate verification failed. CAfile: none", job kończy się exit 128 i — ponieważ
+    # commitlint jest bramką blokującą odpalaną na KAŻDYM MR — żaden merge request w repo nie może
+    # przejść CI. Obraz `-slim` nie niesie bundla CA, a instalowany tu `git` go wymaga.
+    - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
     - npm install --no-save @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
   script:
     - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --depth 100
@@ -155,6 +159,8 @@ lint:web:
     - npm run docs:env         # node scripts/check-env-docs.mjs (każdy process.env.X udokumentowany w ENV.md)
     - npm run docs:i18n        # scripts/check-i18n-legal.mjs (copy prawne obecne w KAŻDYM locale)
     - npm run docs:i18n:dup    # scripts/check-i18n-duplicates.mjs (zero zduplikowanych kluczy w src/messages/*.json)
+    - npm run docs:brand       # scripts/check-white-label.mjs (zero stałych foundera w kodzie widocznym dla widza)
+    - npm run docs:roadmap     # scripts/check-roadmap-sync.mjs (nota „Świeżo dowiezione" nie odstaje >14 dni od shipped)
   rules: !reference [.rules_mr_main, rules]
 
 # ghost-empire-chat: `typecheck` + `lint:brand` + `test` (brak eslint/build — tsx odpala TS wprost).
@@ -379,6 +385,13 @@ semgrep:
 # WAŻNE: gdy CVE jest niereachable / zaakceptowane po triażu, NIE przywracaj allow_failure
 # (to znów zaślepia CAŁY skaner). Wycisz PUNKTOWO: wpis w `.trivyignore` (jeden CVE = jedna
 # linia `CVE-XXXX-YYYY`) — zawsze z komentarzem podającym powód i datę przeglądu.
+#
+# SKŁADNIA: `trivy fs` przyjmuje DOKŁADNIE JEDEN cel na wywołanie. Podanie dwóch katalogów
+# naraz (`trivy fs ... ghost-empire-web ghost-empire-chat`) kończyło się
+# `FATAL Fatal error multiple targets cannot be specified` i EXIT 1 — job był czerwony od
+# 2026-08-12, ale NIE dlatego, że coś znalazł: padał na pierwszej linii i nie skanował
+# NICZEGO. Dlatego każdy katalog ma własne wywołanie. Dokładając kolejny projekt —
+# dołóż PARĘ linii (przebieg informacyjny + bramkujący), nie kolejny argument.
 trivy:
   stage: security
   image:
@@ -394,8 +407,13 @@ trivy:
       - .trivycache/
   script:
     - trivy --version
-    - trivy fs --scanners vuln --severity UNKNOWN,LOW,MEDIUM --exit-code 0 ghost-empire-web ghost-empire-chat
-    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 ghost-empire-web ghost-empire-chat
+    # Przebieg 1 — INFORMACYJNY (exit 0): pokazuje LOW/MEDIUM w logu, nie czerwieni joba.
+    - trivy fs --scanners vuln --severity UNKNOWN,LOW,MEDIUM --exit-code 0 ghost-empire-web
+    - trivy fs --scanners vuln --severity UNKNOWN,LOW,MEDIUM --exit-code 0 ghost-empire-chat
+    # Przebieg 2 — BRAMKUJĄCY (exit 1): HIGH/CRITICAL czerwieni job. Osobno per katalog,
+    # więc log jednoznacznie wskazuje, KTÓRY projekt ma podatność.
+    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 ghost-empire-web
+    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 ghost-empire-chat
   rules: !reference [.rules_scan, rules]
   interruptible: true
 
@@ -413,7 +431,7 @@ trivy:
 # jest generowana z kodu tuż przed buildem, więc zawsze zgadza się ze źródłem.
 pages:
   stage: docs
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   needs: []
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
@@ -539,7 +557,7 @@ docs-drift:
 #   5. ⬜ Dopiero wtedy ZDEJMIJ `allow_failure: true`.
 release:
   stage: release
-  image: node:22-bookworm-slim
+  image: node:24-bookworm-slim
   needs: ["test:unit:web", "test:integration:web", "build:web"]
   allow_failure: true
   rules:
