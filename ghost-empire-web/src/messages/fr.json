@@ -1082,7 +1082,7 @@
     "s10i1": "Ces conditions sont régies par le droit polonais.",
     "s10i2": "Les questions non couvertes sont soumises au Code civil polonais et au RGPD.",
     "s10i3": "Les litiges sont résolus par le tribunal compétent du lieu de résidence de l'Opérateur, sauf si le Consommateur en choisit autrement.",
-    "s10i4": "Contact : serveur Discord <discord>discord.gg/deAPJ9Ym2F</discord>"
+    "s10i4": "Contact : serveur Discord <discord>Discord</discord>"
   },
   "privacy": {
     "metaTitle": "Politique de confidentialité",
@@ -1092,7 +1092,7 @@
     "seeAlso": "Voir aussi :",
     "termsLink": "Conditions",
     "s1": "1. Responsable du traitement",
-    "s1p": "Le responsable du traitement de tes données personnelles sur le portail %brandShort% (ci-après : <em>Portail</em>) est <b>%owner%</b> — un streamer actif sur Twitch, Kick et Discord. Contact RGPD : via le serveur Discord <discord>discord.gg/deAPJ9Ym2F</discord> — un message direct à l'admin.",
+    "s1p": "Le responsable du traitement de tes données personnelles sur le portail %brandShort% (ci-après : <em>Portail</em>) est <b>%owner%</b> — un streamer actif sur Twitch, Kick et Discord. Contact RGPD : via le serveur Discord <discord>Discord</discord> — un message direct à l'admin.",
     "s2": "2. Quelles données nous collectons",
     "s2intro1": "Quand tu te connectes via OAuth (Twitch / Discord), le Portail reçoit :",
     "s2b1": "Ton <b>adresse e-mail</b> (de ton compte Twitch ou Discord)",

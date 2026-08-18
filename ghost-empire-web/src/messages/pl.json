@@ -3956,7 +3956,7 @@
     "s10i1": "Regulamin podlega prawu polskiemu.",
     "s10i2": "W sprawach nieuregulowanych stosuje się przepisy Kodeksu Cywilnego oraz RODO.",
     "s10i3": "Spory rozstrzyga sąd właściwy dla miejsca zamieszkania Operatora, chyba że Konsument wybierze inaczej.",
-    "s10i4": "Kontakt: serwer Discord <discord>discord.gg/deAPJ9Ym2F</discord>"
+    "s10i4": "Kontakt: serwer Discord <discord>Discord</discord>"
   },
   "privacy": {
     "metaTitle": "Polityka prywatności",
@@ -3966,7 +3966,7 @@
     "seeAlso": "Zobacz też:",
     "termsLink": "Regulamin",
     "s1": "1. Administrator danych",
-    "s1p": "Administratorem Twoich danych osobowych w portalu %brandShort% (dalej: <em>Portal</em>) jest <b>%owner%</b> — streamer prowadzący działalność na platformach Twitch, Kick i Discord. Kontakt w sprawach RODO: przez serwer Discord <discord>discord.gg/deAPJ9Ym2F</discord> — wiadomość prywatna do admina.",
+    "s1p": "Administratorem Twoich danych osobowych w portalu %brandShort% (dalej: <em>Portal</em>) jest <b>%owner%</b> — streamer prowadzący działalność na platformach Twitch, Kick i Discord. Kontakt w sprawach RODO: przez serwer Discord <discord>Discord</discord> — wiadomość prywatna do admina.",
     "s2": "2. Jakie dane zbieramy",
     "s2intro1": "Przy logowaniu przez OAuth (Twitch / Discord) Portal otrzymuje:",
     "s2b1": "Twój <b>adres email</b> (z konta Twitch lub Discord)",
