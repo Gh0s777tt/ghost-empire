@@ -19,7 +19,8 @@
     "src/lib/chips.ts",
     "src/lib/shop-currency.ts",
     "src/lib/after-safe.ts",
-    "src/lib/penalties.ts"
+    "src/lib/penalties.ts",
+    "src/lib/streamlabs.ts"
   ],
   "out": "../docs/api",
   "readme": "none",

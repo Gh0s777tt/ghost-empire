@@ -70,6 +70,25 @@ Trzymamy je tu, żeby kolejny przegląd nie „naprawiał" ich na ślepo i nie c
   (`docs/PLAN-UPDATE-2026-08.md §0.2`). Do tego czasu: nie oferować tenantom, nie reklamować
   jako metody płatności portalu.
 
+## Streamlabs refresh OAuth używa globalnego `REDIRECT_URI` (nie per-host)
+
+- **CO:** `refreshConnectionToken` w `lib/streamlabs.ts` puszcza grant `refresh_token` z
+  **globalnym** `REDIRECT_URI` (`NEXTAUTH_URL + /api/auth/streamlabs/callback`), podczas gdy
+  *connect* (`getAuthorizeUrl`/`exchangeCode`) przyjmuje **per-host** `redirectUri` z audytu
+  2026-08 (sub-tenant podłącza własne Streamlabs przez WŁASNY host).
+- **DLACZEGO to NIE aktywna awaria:** Streamlabs matchuje `redirect_uri` na grancie refresh
+  byte-for-byte z wartością z connectu. **Founder-portal działa** — jego origin **jest**
+  `REDIRECT_URI`, więc connect i refresh używają tej samej wartości. Ryzyko dotyczy wyłącznie
+  sub-tenanta, który połączył Streamlabs przez własny host: jego refresh miałby niedopasowany
+  `redirect_uri` i spadłby na `reauth_required` (poller zwraca to jako `errorCode`, alert
+  Sentry `streamlabsError` — czyli **degraduje głośno do ręcznego re-connectu**, nie po cichu).
+- **CZEMU NIE „naprawione teraz":** poprawny per-host refresh wymaga **przechowywania
+  `redirect_uri` per połączenie** (kolumna na `StreamlabsConnection` → migracja `db push`),
+  żeby refresh mógł odtworzyć dokładnie ten origin, którym sub-tenant się łączył. To zmiana
+  schematu, poza zakresem salvage'u samego mechanizmu odświeżania.
+- **PLAN (śledzony):** dołożyć `redirectUri` do wiersza połączenia przy connectcie i czytać go
+  w `refreshConnectionToken`; do tego czasu per-host sub-tenant Streamlabs degraduje do
+  ręcznego re-connectu (widoczne w panelu + Sentry). Founder niezmieniony.
 ## `min-release-age=7` w `.npmrc` — karencja na świeże wersje z npm
 
 - **CO:** `ghost-empire-web/.npmrc` ustawia `min-release-age=7` — rozwiązywanie zależności
