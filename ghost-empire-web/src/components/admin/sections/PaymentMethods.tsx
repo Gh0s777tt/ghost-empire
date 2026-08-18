@@ -5,7 +5,7 @@
 // /api/admin/payment-methods.
 import { useState, useEffect, useCallback } from "react";
 import { Wallet, Loader2, Trash2, Plus, Eye, EyeOff, Star, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { PaymentLogo } from "@/components/PaymentLogo";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
@@ -20,7 +20,6 @@ const KIND_ICON: Record<Kind, string> = { link: "🔗", crypto: "🪙", bank: "�
 
 export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void }) {
   const t = useTranslations("admin.paymentMethods");
-  const isPl = useLocale().startsWith("pl");
   const [loading, setLoading] = useState(true);
   const [methods, setMethods] = useState<Method[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -140,11 +139,9 @@ export function PaymentMethodsManager({ onToast }: { onToast: (k: "ok" | "err", 
         <label className="flex items-start gap-2 mb-2 cursor-pointer">
           <input type="checkbox" checked={gAutoTrack} onChange={(e) => setGAutoTrack(e.target.checked)} className="accent-emerald-500 mt-0.5" />
           <span className="text-[11px] text-zinc-400 leading-snug">
-            {isPl ? "Licz automatycznie z realnych wpłat" : "Track automatically from real donations"}
+            {t("autoTrack")}
             <span className="block text-[10px] text-zinc-600">
-              {isPl
-                ? "Pasek liczy się z zaksięgowanych donacji; pole „zebrano” działa wtedy jako ręczna dopłata (wpłaty spoza portalu)."
-                : "The bar sums credited donations; the “collected” field then acts as a manual offset (off-platform gifts)."}
+              {t("autoTrackHint")}
             </span>
           </span>
         </label>

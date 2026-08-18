@@ -70,7 +70,7 @@ Jeden plik na **wszystko, co dalej**: kolejne features, hardening, optymalizacje
 
 ---
 
-## 0b. Reszta audytu 2026-08 — cztery pozycje wymagające decyzji 🟡
+## 0b. Reszta audytu 2026-08 — trzy pozycje wymagające decyzji 🟡
 
 Sesja audytowa z sierpnia 2026 domknęła **13 defektów** (patrz `CHANGELOG.md`). Cztery zostały
 świadomie — **żadna nie jest już „poprawką"**, każda wymaga decyzji projektowej albo osobnego
@@ -78,7 +78,7 @@ przebiegu. Zapisane tutaj, żeby nie zginęły.
 
 | # | Rzecz | Dlaczego nie w tej sesji |
 |---|---|---|
-| **D7** | ~~`Hub.tsx` i `DonationIntegrations.tsx`~~ → **powierzchnie WIDZA spłacone** (`DonationClaimCard.tsx`, `rozszerzenia/page.tsx` — 21 kluczy × 14 locale). Zostaje **cz. 2: pięć sekcji panelu** — `Hub.tsx`, `DonationIntegrations.tsx`, `Features.tsx` + wtrącenia `isPl ?` w `Streamlabs.tsx` i `PaymentMethods.tsx` | ~92 stringi × 14 języków, czyta je właściciel portalu (głównie PL/EN), więc niżej w kolejce niż powierzchnie widza. **Luka przestała być niewidoczna:** test `inline-i18n` trzyma te pięć plików w jawnym rejestrze długu i blokuje NOWE wystąpienia — `docs:i18n` tego nie widzi, bo kluczy nie ma w katalogu. **Warunek dobrego wykonania bez zmian:** przenieść komplet danego pliku, nie połowicznie, inaczej powstanie trzecie źródło prawdy. |
+| ~~**D7**~~ ✅ | ~~teksty w obiektach `const T = {pl, en}` + wtrącenia `isPl ?`~~ | **Zrobione** (gałąź `fix/d7-panel-do-katalogu-2026-08`): 67 kluczy × 14 locale, dwie rundy — najpierw powierzchnie widza, potem pięć sekcji panelu. Nazwy 24 funkcji czytane z `nav.*`, nie zduplikowane. Rejestr długu w `inline-i18n.test.ts` **pusty**, a strażnik pilnuje obu kierunków. |
 | **D10** | Martwe kolumny: `Event.autoDrawAt` (**0 czytelników**) i `Connection.isMuted` (**0 czytelników**) | Schemat obiecuje automatyczne losowanie i wyciszanie; żadne nie następuje. Ożywienie ich to **nowe funkcje**, nie sprzątanie: `autoDrawAt` wymaga cron-dispatchera z claimem przez warunkowy `updateMany`, a `isMuted` **musi być uzgodnione z botem czatu** (`ghost-empire-chat/src/moderation.ts`) — inaczej powstaną dwa niezależne stany wyciszenia. Alternatywa: skasować kolumny i przestać obiecywać. |
 | **D16** | `buildBackup` czyta **globalnie** (45 × `findMany` bez filtra portalu) | Dlatego kopia jest za bramką właściciela platformy, a streamer nie ma dostępu do własnych danych. Scope'owanie po `tenantId` zmienia **semantykę** kopii platformowej (czy właściciel nadal ma pełną?), więc to projekt, nie poprawka. Sama **luka w pokryciu** (24 ze 111 modeli, restore gubił `Tenant`/`TenantCopy`/sceny/reguły) jest już **naprawiona** i pilnowana testem `backup-coverage` — zostaje wyłącznie pytanie o zakres per portal. |
 | **D18** | `EAUTHTIMEOUT` do Postgresa przy odświeżaniu cache'u (ranking, osiągnięcia, liga typerów) | Objaw puli połączeń — `max: 3` na instancję na Vercelu — a nie błąd w linijce kodu. Wymaga pomiaru pod obciążeniem i decyzji o poolerze, nie edycji. |

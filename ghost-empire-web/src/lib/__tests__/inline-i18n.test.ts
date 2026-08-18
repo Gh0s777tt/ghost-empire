@@ -16,17 +16,17 @@ const KORZEN = join(process.cwd(), "src");
 
 /**
  * Pliki, w których wbudowany słownik jeszcze siedzi — z powodem, dlaczego nie padł w tej rundzie.
- * Wszystkie są sekcjami **panelu administracyjnego**, czytanymi przez właściciela portalu; teksty
- * widoczne dla WIDZA zostały przeniesione do katalogu, bo tam angielszczyzna dla 12 języków
- * uderza w produkt, a nie w operatora.
+ *
+ * @remarks
+ * **Rejestr jest PUSTY i to jest stan docelowy** — D7 (ROADMAP §0b) domknięte w całości: najpierw
+ * powierzchnie widza, potem pięć sekcji panelu. Pusty rejestr znaczy, że każdy tekst w produkcie
+ * idzie z `messages/*.json`, czyli ze wszystkich 14 języków, a nie z dwóch wpisanych w komponent.
+ *
+ * Dopisanie tu czegokolwiek to **zaciągnięcie długu**, nie wyjątek: pozycja musi nieść powód i być
+ * opisana w PR. Test niżej pilnuje obu kierunków — nie wpuszcza nowych plików i nie pozwala trzymać
+ * w rejestrze pozycji już spłaconych.
  */
-const DOPUSZCZONE: Readonly<Record<string, string>> = {
-  "components/admin/sections/Hub.tsx": "D7 cz. 2 — sekcja panelu (~19 stringów)",
-  "components/admin/sections/DonationIntegrations.tsx": "D7 cz. 2 — sekcja panelu (~28 stringów)",
-  "components/admin/sections/Features.tsx": "D7 cz. 2 — sekcja panelu (~35 stringów)",
-  "components/admin/sections/Streamlabs.tsx": "D7 cz. 2 — wtrącenia `isPl ?` (7)",
-  "components/admin/sections/PaymentMethods.tsx": "D7 cz. 2 — wtrącenia `isPl ?` (3)",
-};
+const DOPUSZCZONE: Readonly<Record<string, string>> = {};
 
 /** `const T = {` z zagnieżdżonym `pl:` — słownik dwujęzyczny trzymany w kodzie. */
 const SLOWNIK = /const\s+T\s*=\s*\{[\s\S]{0,400}?\bpl\s*:/;
