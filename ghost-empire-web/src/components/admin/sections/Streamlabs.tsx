@@ -24,8 +24,7 @@ export function StreamlabsManager({
   pending: boolean;
 }) {
   const t = useTranslations("admin.streamlabs");
-  const nf = useLocale();
-  const isPl = nf.startsWith("pl");
+  const nf = useLocale(); // locale do formatowania liczb/dat, nie do wyboru tekstu
   const [busy, setBusy] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Record<string, string>>({});
   const [stats, setStats] = useState<DonationStats | null>(null);
@@ -138,8 +137,8 @@ export function StreamlabsManager({
 
       {/* Donations stats header (this tenant only). Provider-agnostic — renders whenever the portal
           has ANY money-in, so a Ko-fi/Tipply/custom streamer sees their totals even without a
-          Streamlabs OAuth connection. Labels follow the file's existing inline isPl pattern (no new
-          i18n keys); provider names come straight from the enum-ish `source` value. PLN here is the
+          Streamlabs OAuth connection. Etykiety idą z katalogu (`admin.streamlabs`); nazwy dostawców
+          biorą się wprost z enumowej wartości `source`. PLN here is the
           operator's real settlement currency (admin-only surface), NOT the per-tenant virtual token —
           so it is not a white-label leak. */}
       {stats && stats.count > 0 && (
@@ -147,7 +146,7 @@ export function StreamlabsManager({
           <div className="grid grid-cols-2 gap-3 mb-2">
             <div>
               <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 mb-0.5">
-                {isPl ? "Łącznie (PLN)" : "Total (PLN)"}
+                {t("totalPln")}
               </div>
               <div className="text-lg font-bold text-green-300">
                 {stats.totalPln.toLocaleString(nf, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -155,7 +154,7 @@ export function StreamlabsManager({
             </div>
             <div>
               <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 mb-0.5">
-                {isPl ? "Donejty" : "Donations"}
+                {t("donations")}
               </div>
               <div className="text-lg font-bold text-white">{stats.count.toLocaleString(nf)}</div>
             </div>
@@ -220,8 +219,8 @@ export function StreamlabsManager({
                     <div className="mb-2 border border-amber-900/60 bg-amber-950/20 p-2">
                       <div className="text-[10px] font-mono uppercase tracking-widest text-amber-400 mb-1">
                         {d.claims.length > 1
-                          ? (isPl ? `⚠ ${d.claims.length} osoby zgłaszają tę wpłatę` : `⚠ ${d.claims.length} people claim this payment`)
-                          : (isPl ? "Zgłoszenie widza (niezweryfikowane)" : "Viewer claim (unverified)")}
+                          ? t("claimsWarn", { count: d.claims.length })
+                          : t("viewerClaim")}
                       </div>
                       {d.claims.map((c) => (
                         <button
@@ -235,9 +234,7 @@ export function StreamlabsManager({
                         </button>
                       ))}
                       <p className="text-[10px] text-zinc-500 mt-1 leading-snug">
-                        {isPl
-                          ? "Kwota i data są publiczne — to NIE jest dowód. Porównaj z panelem dostawcy płatności (imię darczyńcy wyżej), zanim przypiszesz."
-                          : "Amount and date are public — this is NOT proof. Check your payment provider (donor name above) before assigning."}
+                        {t("claimNotProof")}
                       </p>
                     </div>
                   )}
