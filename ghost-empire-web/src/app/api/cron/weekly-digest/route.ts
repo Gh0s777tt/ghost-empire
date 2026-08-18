@@ -11,7 +11,12 @@ import { composeDigest } from "@/lib/digest";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("cron.weekly-digest");
-const MAX_TENANTS = 25;
+// Portale przetwarzamy STRONICOWANIEM KURSOROWYM, nie jednym `take`. Wcześniej stało tu
+// `take: MAX_TENANTS` (25) — portal nr 26 po prostu nie dostawał raportu i NIKT się o tym nie
+// dowiadywał, bo cron kończył się sukcesem. Twardy sufit zostaje (cron ma limit czasu), ale
+// jego osiągnięcie jest teraz LOGOWANE i widoczne w odpowiedzi, zamiast milczeć.
+const ROZMIAR_STRONY = 25;
+const SUFIT_PORTALI = 500;
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +27,27 @@ export async function GET(req: Request) {
   if (!emailConfigured()) return NextResponse.json({ skipped: true, reason: "email not configured" });
 
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const tenants = await prisma.tenant.findMany({
-    where: { ownerUserId: { not: null } },
-    select: { id: true, name: true, tokenSymbol: true, domain: true, slug: true, ownerUserId: true },
-    take: MAX_TENANTS,
-  });
+  // Zbieramy WSZYSTKIE portale z właścicielem, stronami po ROZMIAR_STRONY, aż do sufitu.
+  const tenants: Array<{ id: string; name: string; tokenSymbol: string; brandColor: string; domain: string | null; slug: string; ownerUserId: string | null }> = [];
+  let kursor: string | undefined;
+  let sufitOsiagniety = false;
+  for (;;) {
+    const strona = await prisma.tenant.findMany({
+      where: { ownerUserId: { not: null } },
+      select: { id: true, name: true, tokenSymbol: true, brandColor: true, domain: true, slug: true, ownerUserId: true },
+      orderBy: { id: "asc" },
+      take: ROZMIAR_STRONY,
+      ...(kursor ? { skip: 1, cursor: { id: kursor } } : {}),
+    });
+    tenants.push(...strona);
+    if (strona.length < ROZMIAR_STRONY) break;
+    if (tenants.length >= SUFIT_PORTALI) { sufitOsiagniety = true; break; }
+    kursor = strona[strona.length - 1].id;
+  }
+  if (sufitOsiagniety) {
+    // Cichy sufit czyta się jak „wysłano wszystkim" — dlatego krzyczy.
+    log.error("digest: osiągnięto sufit portali — część NIE dostała raportu", undefined, { sufit: SUFIT_PORTALI, przetworzono: tenants.length });
+  }
 
   let sent = 0, skippedNoEmail = 0, failed = 0;
   for (const t of tenants) {
@@ -60,6 +81,7 @@ export async function GET(req: Request) {
       const stats = {
         tenantName: t.name,
         tokenSymbol: t.tokenSymbol || "GT",
+        brandColor: t.brandColor,
         portalUrl: t.domain ? `https://${t.domain}` : (process.env.NEXT_PUBLIC_SITE_URL || "https://ghost-empire-web.vercel.app"),
         newUsers,
         activeUsers: active[0]?.n ?? 0,

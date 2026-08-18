@@ -14,6 +14,12 @@ export const MOD_PERMISSIONS = [
   { id: "mute_users",      label: "Mutowanie userów",           group: "moderation", desc: "Wyciszanie userów." },
   { id: "mark_subs",       label: "Flagowanie subskrybentów",   group: "moderation", desc: "Nadawanie statusu sub / mod / VIP per platforma." },
   { id: "view_audit",      label: "Podgląd audit log",          group: "moderation", desc: "Wgląd w log akcji admina i moderacji." },
+  // Rozdzielone od `manage_shop` (audyt 2026-08): konfiguracja bota ustala STAWKI NAGRÓD,
+  // czyli ekonomię portalu, a harmonogram streamów nie ma ze sklepem nic wspólnego. Obie trasy
+  // jechały wcześniej na `manage_shop` z komentarzem „closest existing perm", więc moderator
+  // od sklepu mógł zmieniać wypłaty bota.
+  { id: "manage_bot",      label: "Konfiguracja bota",          group: "config",     desc: "Stawki nagród bota za wiadomości i czas na kanale głosowym, happy hour, włącznik bota." },
+  { id: "manage_schedule", label: "Harmonogram streamów",       group: "config",     desc: "Dodawanie, edycja i usuwanie slotów w harmonogramie transmisji." },
 ] as const;
 
 export type ModPermission = (typeof MOD_PERMISSIONS)[number]["id"];
@@ -22,6 +28,7 @@ export const PERMISSION_GROUPS: Record<string, { label: string; color: string }>
   economy:    { label: "EKONOMIA",   color: "#10b981" },
   events:     { label: "EVENTY",     color: "#a855f7" },
   moderation: { label: "MODERACJA",  color: "#3b82f6" },
+  config:     { label: "KONFIGURACJA", color: "#f59e0b" },
 };
 
 /**
