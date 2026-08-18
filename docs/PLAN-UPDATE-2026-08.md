@@ -83,7 +83,18 @@ statyczne** na własnej grafice.
 + wykryty `kind`) lub URL (rozpoznanie po rozszerzeniu); render `<video>` autoplay/muted/loop w
 `/overlay/scene/[id]`; `src` przez `safeMediaUrl` po obu stronach; podgląd wideo w kafelku edytora.
 Duże pliki (>~4.5 MB) przez URL (upload proxy Vercela ma limit body — signed-URL to osobny fast-follow).
-**ZOSTAJE:** warstwy (z-index) + więcej stylowania elementu (opacity/rotacja). Effort resztki: **S**.
+✅ **ŻYWY PODGLĄD + WŁĄCZ/WYŁĄCZ ZROBIONE (gałąź `fix/scene-builder-2026-08`).** Kafelki mogą renderować
+prawdziwy widget (iframe jak w OBS, domyślnie off — 24 elementy × osobna strona z pollingiem);
+`enabled` na elemencie (w tym samym JSON → **zero migracji**, brak pola = włączony) i `OverlayScene.enabled`
+na całej scenie (**wymaga `prisma db push`**). Wyłączone elementy odsiewane SERWEROWO, więc nie kosztują CPU.
+Naprawiony przy okazji defekt: poprawka nazwy sceny kasowała niezapisane elementy z płótna.
+✅ **WARSTWY + PRZYCIĄGANIE + DUPLIKAT + EKSPORT/IMPORT + TŁO PODGLĄDU ZROBIONE (gałąź
+`feat/scene-editor-pro-2026-08`).** Warstwy bez pola `z` — tablica `elements` JEST kolejnością
+renderowania, więc „na wierzch/pod spód" to przestawienie w tablicy (zero zmian formatu).
+Przyciąganie do krawędzi/osi sąsiadów i środka płótna z prowadnicami. Duplikat sceny, eksport/import
+układu do JSON (import walidowany jak każdy zapis), podgląd na tle zrzutu z gry (localStorage,
+nie trafia do OBS). Wszystko **bez migracji bazy**.
+**ZOSTAJE:** więcej stylowania elementu (opacity/rotacja). Effort resztki: **S**.
 
 ### 2c. Widgety/Alerty — własna grafika/animacja
 ✅ **WŁASNA GRAFIKA/ANIMACJA ALERTU ZROBIONE (slice 6).** `AlertTypeConfig` dostał `imageUrl`+

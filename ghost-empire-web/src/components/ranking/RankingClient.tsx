@@ -34,15 +34,19 @@ type User = {
   isBanned?: boolean;
 };
 
+// `isCurrency` marks the columns denominated in the portal's token, so formatValue
+// appends THIS portal's tokenSymbol. It replaced a `suffix: "GT"` sentinel — that
+// literal was only ever compared against, never rendered, but it read like a
+// hardcoded founder symbol and tripped the white-label guard (npm run docs:brand).
 const SORT_META: Record<
   Sort,
-  { icon: typeof Trophy; suffix: string; color: string }
+  { icon: typeof Trophy; isCurrency: boolean; color: string }
 > = {
-  tokens:      { icon: Trophy,       suffix: "GT", color: "#E50914" },
-  totalEarned: { icon: TrendingUp,   suffix: "GT", color: "#10b981" },
-  weekly:      { icon: CalendarDays, suffix: "GT", color: "#38bdf8" },
-  level:       { icon: Sparkles,     suffix: "",   color: "#a855f7" },
-  streak:      { icon: Flame,        suffix: "",   color: "#FF4500" },
+  tokens:      { icon: Trophy,       isCurrency: true,  color: "#E50914" },
+  totalEarned: { icon: TrendingUp,   isCurrency: true,  color: "#10b981" },
+  weekly:      { icon: CalendarDays, isCurrency: true,  color: "#38bdf8" },
+  level:       { icon: Sparkles,     isCurrency: false, color: "#a855f7" },
+  streak:      { icon: Flame,        isCurrency: false, color: "#FF4500" },
 };
 
 const PODIUM_STYLE = [
@@ -98,7 +102,7 @@ export function RankingClient({
     const v = sort === "weekly" ? (u.weekly ?? 0) : u[sort];
     if (sort === "level") return `LVL ${v}`;
     if (sort === "streak") return `${v} ${t("streakUnit", { count: v })}`;
-    return `${fmt(v)} ${meta.suffix === "GT" ? tokenSymbol : meta.suffix}`;
+    return meta.isCurrency ? `${fmt(v)} ${tokenSymbol}` : `${fmt(v)}`;
   }
 
   return (

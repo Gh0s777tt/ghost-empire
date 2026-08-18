@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { SectionCard, FieldInput, FieldTextarea } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { AlertCard } from "@/components/AlertCard";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type CustomAlertRow = { id: string; label: string; title: string; message: string; icon: string | null; accent: string | null; amount: number | null; amountLabel: string | null };
 
@@ -17,6 +18,9 @@ export function CustomAlertsCard({
   pending: boolean;
 }) {
   const t = useTranslations("admin.customAlerts");
+  // Kolor marki jest per portal — literał #E50914 pokazywałby każdemu tenantowi
+  // czerwień założyciela w podglądzie "jak to wygląda".
+  const { brandColor } = useTenantBranding();
   const [list, setList] = useState<CustomAlertRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -27,7 +31,7 @@ export function CustomAlertsCard({
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [icon, setIcon] = useState("🔔");
-  const [accent, setAccent] = useState("#E50914");
+  const [accent, setAccent] = useState(brandColor);
   const [useAccent, setUseAccent] = useState(false);
   const [amount, setAmount] = useState("");
   const [amountLabel, setAmountLabel] = useState("");
@@ -42,12 +46,12 @@ export function CustomAlertsCard({
 
   function openCreate() {
     setEditing(null); setCreating(true);
-    setLabel(""); setTitle(""); setMessage(""); setIcon("🔔"); setAccent("#E50914"); setUseAccent(false); setAmount(""); setAmountLabel("");
+    setLabel(""); setTitle(""); setMessage(""); setIcon("🔔"); setAccent(brandColor); setUseAccent(false); setAmount(""); setAmountLabel("");
   }
   function openEdit(a: CustomAlertRow) {
     setCreating(false); setEditing(a);
     setLabel(a.label); setTitle(a.title); setMessage(a.message); setIcon(a.icon ?? "🔔");
-    setAccent(a.accent ?? "#E50914"); setUseAccent(!!a.accent); setAmount(a.amount?.toString() ?? ""); setAmountLabel(a.amountLabel ?? "");
+    setAccent(a.accent ?? brandColor); setUseAccent(!!a.accent); setAmount(a.amount?.toString() ?? ""); setAmountLabel(a.amountLabel ?? "");
   }
 
   async function call(payload: Record<string, unknown>, okMsg?: string) {
@@ -71,7 +75,7 @@ export function CustomAlertsCard({
     if (ok) { setEditing(null); setCreating(false); await load(); }
   }
 
-  const previewAccent = useAccent ? accent : "#E50914";
+  const previewAccent = useAccent ? accent : brandColor;
 
   return (
     <SectionCard title={t("title")} icon={Bell}>

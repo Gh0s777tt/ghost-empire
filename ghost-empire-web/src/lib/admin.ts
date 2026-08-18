@@ -193,7 +193,8 @@ export async function requireStepUp(
   const secret = decryptSecret(u.totpSecret);
   if (!secret) {
     // Key drift: a 2FA-enabled admin's secret no longer decrypts. Surface it loudly either way.
-    log.error("2FA-enabled admin has an undecryptable TOTP secret", { userId, failClosed: opts?.failClosed ?? false });
+    // Nie ma tu wartości rzuconej — drugi argument to POZYCJA BŁĘDU, więc kontekst musi iść trzeci.
+    log.error("2FA-enabled admin has an undecryptable TOTP secret", undefined, { userId, failClosed: opts?.failClosed ?? false });
     if (opts?.failClosed) {
       // Destructive path: do NOT bypass the second factor. Block and force key remediation.
       return { ok: false, status: 503, error: "2FA chwilowo niedostępne (klucz szyfrowania) — napraw konfigurację klucza przed wykonaniem tej akcji" };

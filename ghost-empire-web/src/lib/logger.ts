@@ -26,6 +26,18 @@ export function errContext(e: unknown): Context {
       ? { err: e.message }
       : { err: e.message, stack: e.stack };
   }
+  // ⚠️ A plain object arriving here is almost always a MISPLACED context argument —
+  // `log.error(msg, { tenantId })` instead of `log.error(msg, err, { tenantId })`, because
+  // `error()` takes the thrown value SECOND while `warn`/`info`/`debug` take context second.
+  // The old `String(e)` turned it into the literal "[object Object]" and silently discarded
+  // every field. That is not hypothetical: it is how `cron.streamlabs-poll` failed 672 times
+  // over three weeks while its log line named neither the failing portal nor the reason.
+  // Spreading is strictly better on both readings — a misplaced context still reaches the log,
+  // and a genuinely thrown non-Error object (`throw { code: "X" }`) becomes readable instead
+  // of being flattened away.
+  if (e !== null && typeof e === "object" && !Array.isArray(e)) {
+    return { ...(e as Context) };
+  }
   return { err: String(e) };
 }
 

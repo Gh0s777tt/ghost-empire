@@ -55,6 +55,21 @@ export async function GET(req: Request) {
 
   const payload: Array<{ drawId: string; label: string; intensity: number; durationMs: number; action: unknown }> = [];
   for (const d of due) {
+    // ⚠️ KLEPNIJ ZANIM PODASZ. Nagłówek tego pliku deklaruje at-most-once, ale do 2026-08 kod
+    // budował payload z `due` i stemplował go DOPIERO NA KOŃCU jednym `updateMany` BEZ warunku
+    // `appliedAt: null`. Dwa równoległe odpytania — dwa źródła OBS, odświeżenie strony, retry —
+    // obie widziały ten sam nierozdany wiersz i obie go dostawały. Skutek: kara, za którą widz
+    // ZAPŁACIŁ, wykonywała się na wizji dwa razy.
+    //
+    // `appliedAt: null` w WHERE sprawia, że `updateMany` blokuje wiersz i rozstrzyga wyścig:
+    // przegrany dostaje `count === 0` i po prostu tej kary nie otrzymuje. Ten sam idiom, co
+    // atomowy claim rozstrzygnięcia predykcji (`lib/predictions.ts`) — tam chroni przed podwójną
+    // wypłatą, tu przed podwójnym wykonaniem.
+    const claim = await prisma.penaltyDraw
+      .updateMany({ where: { id: d.id, appliedAt: null }, data: { appliedAt: now } })
+      .catch(() => ({ count: 0 }));
+    if (claim.count === 0) continue; // inny poll był pierwszy — to NIE jest nasza kara
+
     const spec = d.penaltyId ? byId.get(d.penaltyId) : undefined;
     // "challenge" (update 2026-08): free-text wyzwanie — brak akcji OBS, dostarczamy marker
     // {kind:"challenge"}, a źródło OBS-control pokaże `label` jako banner zamiast aktuować OBS.
@@ -65,18 +80,14 @@ export async function GET(req: Request) {
         : penaltyAction(spec, d.intensity, d.durationMs)
       : null;
     if (!action) {
-      // The catalogue row was deleted or is incomplete. Stamp it so it stops being re-served every
-      // 2 seconds forever, and say so — silently retrying an unactuatable draw is a hot loop.
+      // Wiersz katalogu skasowany albo niekompletny. Jest już OSTEMPLOWANY przez claim wyżej,
+      // więc przestaje być podawany co 2 sekundy w kółko — ciche ponawianie nieaktuowalnego
+      // losowania to gorąca pętla.
       log.warn("undeliverable draw, marking applied", { drawId: d.id, penaltyId: d.penaltyId });
       continue;
     }
     payload.push({ drawId: d.id, label: d.penaltyLabel, intensity: d.intensity, durationMs: d.durationMs, action });
   }
-
-  // Stamp EVERY row we looked at, deliverable or not — see the at-most-once note in the header.
-  await prisma.penaltyDraw
-    .updateMany({ where: { id: { in: due.map((d) => d.id) } }, data: { appliedAt: now } })
-    .catch(() => {});
 
   return NextResponse.json({ penalties: payload });
 }

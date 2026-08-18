@@ -2,12 +2,16 @@
 // CRUD for stream schedule slots
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/admin";
+import { requireAnyPermission } from "@/lib/admin";
 import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
 
 export async function POST(req: Request) {
-  const auth = await requirePermission("manage_shop"); // reusing — could add own perm later
+// Okres podwójnej akceptacji (audyt 2026-08): trasa ma własne uprawnienie, ale nadal
+// przepuszcza `manage_shop`, żeby moderatorzy nadani PRZED rozdzieleniem nie stracili dostępu
+// z dnia na dzień. Po nadaniu nowego uprawnienia wszystkim, którzy go potrzebują, zdejmij
+// `manage_shop` z tej listy — wtedy rozdzielenie zaczyna faktycznie obowiązywać.
+  const auth = await requireAnyPermission(["manage_schedule", "manage_shop"])
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: {
@@ -60,7 +64,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const auth = await requirePermission("manage_shop");
+  const auth = await requireAnyPermission(["manage_schedule", "manage_shop"]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: {
@@ -99,7 +103,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const auth = await requirePermission("manage_shop");
+  const auth = await requireAnyPermission(["manage_schedule", "manage_shop"]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);

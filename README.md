@@ -33,10 +33,12 @@ Zaangażowanie widzów jest rozsypane po platformach, a gotowe narzędzia (Strea
 | Ekonomia i zaangażowanie | Streamer / Admin | Boty i overlaye |
 |---|---|---|
 | 👻 Ghost Tokens za czat, voice, suby, donacje | 🛒 Sklep (nagrody cyfrowe i fizyczne) | 💬 Chat bot na Twitch / Kick / YouTube |
-| 🎁 Eventy, raffle, giveaway, konkursy | 🎯 Stream Goals + Hype Train + Subathon | 🛡️ Automod (linki, słowa, fale spamu, eskalacja) |
-| 🎲 Predictions · 🗳️ Ankiety · 🎰 Kasyno GT | 🔔 Alerty OBS per-typ (sub/gift/bit/donate) | 🧩 Biblioteka + generator widgetów |
-| 🏆 Battle Pass / Sezony · 🏅 Osiągnięcia | 👥 Role, moderacja, merge duplikatów | 🖼️ 20+ overlayów z podglądem na żywo |
-| 📅 Daily questy · 🔑 Drop-code'y · 📊 Ranking | 🔌 Panel integracji (klucze API na stronie) | ⏱️ Timery · ❓ FAQ · 👋 Powitania · 🎵 Song requesty |
+| 🎰 Kasyno i 🎡 Koło Fortuny **na darmowych żetonach** · 🎲 Predictions · 🗳️ Ankiety | 🎯 Stream Goals · 🚂 Hype Train · ⏳ Subathon | 🛡️ Automod (linki, słowa, fale spamu, eskalacja) |
+| 🏆 Battle Pass / Sezony · 🏅 Osiągnięcia · 🥇 Ligi typerów | 🔔 Alerty OBS per-typ (sub/gift/bit/donate) | 🖼️ 20+ overlayów z podglądem na żywo |
+| ⚔️ Klany + wojny · 🎁 Eventy/raffle · 🎯 Bounties · 📅 Questy · 🔑 Drop-code'y | 👥 Role, moderacja, merge duplikatów · 🔐 2FA / passkeys | 🧩 Biblioteka + generator widgetów |
+| 🃏 Kolekcje kart + marketplace P2P · 🎁 Prezenty · 🏛️ Aukcje (GT-sinki) · 📊 Ranking | 🔌 Panel integracji · 🎚️ Stream Deck · 🚩 Feature flags | ⏱️ Timery · ❓ FAQ · 👋 Powitania · 🎵 Song requesty · 📱 PWA |
+
+> **Dwie waluty:** **GT** (Ghost Tokens) to wirtualna waluta portalu zdobywana za aktywność. Kasyno i Koło Fortuny chodzą na **osobnych, darmowych żetonach (🪙)** — niekupowalnych i niespieniężalnych, 18+, dla rozrywki (nie hazard na pieniądze; regulamin §3).
 
 ## 🧱 Stack
 
@@ -52,7 +54,7 @@ Zaangażowanie widzów jest rozsypane po platformach, a gotowe narzędzia (Strea
 - **Web** — Next.js 16 (App Router, React 19 Server Components), TypeScript, Tailwind 4, next-intl (i18n, 14 języków), NextAuth (Twitch/Discord/Google/Kick).
 - **Dane** — Prisma 7 + Postgres (Supabase); driver-adapter (`@prisma/adapter-pg`), `db push` (bez migracji na tym etapie).
 - **Bot czatu** — `ghost-empire-chat` (Node + tmi.js, osobny runtime na Docker).
-- **Płatności** — Stripe (subskrypcje SaaS, dry-wired — bez kluczy działa jako pojedynczy tenant).
+- **Płatności** — Stripe (subskrypcje SaaS — **live na portalu-założyciela**; bez kluczy dry-wire'uje się na pojedynczy tenant, checkout 503).
 - **Deploy** — Vercel (web, auto-deploy z `main`); bot na własnym hoście.
 
 ## 🗺️ Architektura
@@ -71,7 +73,7 @@ flowchart TD
   end
   subgraph W["ghost-empire-web · Next.js 16"]
     VIEW["Portal widza<br/>sklep · eventy · ranking"]:::web
-    ADMIN["Panel /admin<br/>~46 sekcji"]:::web
+    ADMIN["Panel /admin<br/>~56 sekcji"]:::web
     API["API routes /api/*"]:::web
     OVL["Overlaye OBS /overlay/*"]:::web
   end

@@ -7,11 +7,14 @@ import { Brain, Loader2, Trash2, Plus, Eye, EyeOff, Check, X, Radio, Square } fr
 import { useTranslations } from "next-intl";
 import { SectionCard } from "../shared";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
+import { useTenantBranding } from "@/components/TenantBranding";
 
 type Question = { id: string; question: string; options: string[]; correctIndex: number; reward: number; category: string | null; active: boolean; answers: number; live: boolean; liveEndsAt: string | null };
 
 export function TriviaManager({ onToast }: { onToast: (k: "ok" | "err", m: string) => void }) {
   const t = useTranslations("admin.trivia");
+  // Symbol waluty jest per portal — literał "GT" pokazywałby walutę założyciela każdemu tenantowi.
+  const { tokenSymbol } = useTenantBranding();
   const [loading, setLoading] = useState(true);
   const [list, setList] = useState<Question[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -78,7 +81,7 @@ export function TriviaManager({ onToast }: { onToast: (k: "ok" | "err", m: strin
                   <div className="text-[11px] text-zinc-500 mt-0.5">
                     {q.options.map((o, i) => <span key={i} className={i === q.correctIndex ? "text-emerald-400" : ""}>{i > 0 && " · "}{o}</span>)}
                   </div>
-                  <div className="text-[10px] text-zinc-600 font-mono mt-0.5">{q.reward} GT · {t("answersCount", { n: q.answers })}{q.category ? ` · ${q.category}` : ""}</div>
+                  <div className="text-[10px] text-zinc-600 font-mono mt-0.5">{q.reward} {tokenSymbol} · {t("answersCount", { n: q.answers })}{q.category ? ` · ${q.category}` : ""}</div>
                 </div>
                 {q.live ? (
                   <button onClick={() => void endLive()} disabled={busy === "end"} title={t("endLive")} className="shrink-0 text-red-300 border border-red-800 bg-red-950/40 w-6 h-6 flex items-center justify-center animate-pulse"><Square className="w-3 h-3" /></button>
