@@ -31,6 +31,7 @@
     "docs:brand": "node scripts/check-white-label.mjs",
     "docs:roadmap": "node scripts/check-roadmap-sync.mjs",
     "docs:rls": "node scripts/check-rls-sync.mjs",
+    "docs:changelog": "node scripts/check-changelog-sections.mjs",
     "docs:api": "typedoc",
     "verify-all": "bash scripts/verify-all.sh",
     "verify-all:fast": "bash scripts/verify-all.sh --fast",
