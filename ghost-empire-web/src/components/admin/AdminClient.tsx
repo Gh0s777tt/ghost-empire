@@ -200,7 +200,12 @@ export function AdminClient({
       const raw = window.location.hash.replace(/^#/, "");
       // permitted (not mode-visible): a deep link must open the section even
       // when the current panel mode hides it from the nav
-      const known = permittedSections.find((s) => s.id === raw);
+      // Dokładne trafienie ma pierwszeństwo; dopasowanie bez wielkości liter ratuje adres
+      // przepisany ręcznie albo podany przez asystenta w innej wielkości (`#portalcopy`,
+      // `#donationintegrations`). Identyfikatory zostają nietknięte, żeby nie zepsuć zakładek.
+      const known =
+        permittedSections.find((s) => s.id === raw) ??
+        permittedSections.find((s) => s.id.toLowerCase() === raw.toLowerCase());
       setActiveSection(known ? known.id : "dashboard");
     };
     fromHash();
