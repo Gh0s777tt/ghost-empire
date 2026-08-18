@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
-import { exchangeCode, fetchUserInfo } from "@/lib/streamlabs";
+import { exchangeCode, fetchUserInfo, tokenExpiryFrom } from "@/lib/streamlabs";
 import { logAdminAction } from "@/lib/audit";
 import { encryptSecret } from "@/lib/crypto";
 import { verifyOAuthState } from "@/lib/oauth-state";
@@ -72,9 +72,9 @@ export async function GET(req: Request) {
     log.warn("user info fetch failed", errContext(e));
   }
 
-  const expiresAt = token.expires_in
-    ? new Date(Date.now() + token.expires_in * 1000)
-    : null;
+  // Shared with the poller's refresh path so a connection ALWAYS lands with a known expiry —
+  // a null `tokenExpiresAt` makes every poll refresh (see needsTokenRefresh). #801
+  const expiresAt = tokenExpiryFrom(token.expires_in);
 
   const keys = tokenUpsertKeys(payload.tenantId);
   await prisma.streamlabsConnection.upsert({

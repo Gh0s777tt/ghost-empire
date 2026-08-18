@@ -8,7 +8,7 @@ import {
   ShoppingBag, Ban, Bot, CalendarDays, Zap,
   LayoutDashboard, LayoutGrid, Bell, Tv, Tv2, Menu, GitMerge, Radio, MonitorPlay, Lightbulb,
   Target, RefreshCw, Ticket, MessageSquare, Clock, HelpCircle, UserPlus, Music, Hourglass, BarChart3, Plug, Search, Disc3, Webhook, Gamepad2, Building2, Swords, KeyRound, Volume2, Wallet, Sparkles, Clapperboard, Brain, Megaphone, Handshake, Layers, LifeBuoy, Wand2, Palette, Link2, Gavel,
-} from "lucide-react";
+  Languages } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { ErrorState } from "@/components/EmptyState";
 import { useToast } from "@/components/ToastProvider";
@@ -25,9 +25,9 @@ import type { AuditEntry, BotConfigData, ScheduleSlot, TwitchEventSubData, Strea
 
 import {
   AnalyticsSection, EconomyHealthSection, CommunitySection, ClanWarsManager, SoundRewardsManager, PaymentMethodsManager,
-  PushBroadcastManager, SponsorsManager, SceneBuilder, CollectiblesManager, RecapManager, ClipDirectorManager,
+  PushBroadcastManager, SponsorsManager, SceneBuilder, PortalCopy, CollectiblesManager, RecapManager, ClipDirectorManager,
   TriviaManager, TwoFactorManager, AuditLogSection, PollsManager, ModerationManager, WidgetsLibrary,
-  IntegrationsManager, ObsRulesManager, GoveeRulesManager, WheelManager, PenaltiesManager, WebhooksOutManager, GamesLibraryManager,
+  IntegrationsManager, ObsRulesManager, GoveeRulesManager, HueRulesManager, WheelManager, PenaltiesManager, WebhooksOutManager, GamesLibraryManager,
   AchievementsManager, PredictionsManager, BountiesManager, WelcomeManager, FaqManager, ChatTimersManager,
   ChatCommandsManager, SongQueueManager, SubathonManager, GrantTokensCard, CreateDropCard, DatabaseResetCard,
   CustomAlertsCard, ChatOverlayCard, StreamGoalsManager, KickEventsManager, YouTubeLiveManager, RumbleManager,
@@ -95,7 +95,7 @@ export function AdminClient({
   // `permission` returns true if the user can see ANY card in this section.
   type SectionId =
     | "dashboard" | "users" | "merge" | "events" | "shop" | "drops"
-    | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "penalties" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub" | "features" | "donationIntegrations";
+    | "huerules" | "schedule" | "bot" | "donations" | "twitch" | "kick" | "youtube" | "rumble" | "chat" | "moderation" | "timers" | "faq" | "welcome" | "songs" | "widgets" | "alerts" | "goals" | "subathon" | "predictions" | "bounties" | "seasons" | "achievements" | "polls" | "features" | "analytics" | "economy" | "community" | "clanwars" | "soundrewards" | "payments" | "sponsors" | "scenes" | "collectibles" | "notifications" | "recap" | "clipdirector" | "trivia" | "audit" | "twofactor" | "integrations" | "obsrules" | "goverules" | "wheel" | "penalties" | "webhooks" | "games" | "tickets" | "subscribers" | "tenants" | "appearance" | "hub" | "donationIntegrations" | "portal-copy";
 
   // `level` maps a section to the panel mode that reveals it in the nav:
   // 1 = everyday tools (simple), 2 = full streamer toolkit (advanced), 3 = developer.
@@ -112,6 +112,7 @@ export function AdminClient({
     // Self-serve portal branding for the tenant owner (#785) — level 1 so a streamer finds
     // "make it mine" immediately (the API is owner-scoped + Elite-gated, so it's safe for any admin).
     { id: "appearance", label: t("secAppearance"),  icon: Palette,        group: "main",       level: 1, permission: () => isAdmin },
+    { id: "portal-copy", label: t("secPortalCopy"), icon: Languages, group: "main", level: 2, permission: () => isAdmin },
     { id: "hub",       label: t("secHub"),          icon: Link2,          group: "main",       level: 1, permission: () => isAdmin },
     { id: "features",  label: t("secFeatures"),     icon: LayoutGrid,     group: "main",       level: 1, permission: () => isAdmin },
     { id: "donationIntegrations", label: t("secDonationIntegrations"), icon: Webhook, group: "main", level: 2, permission: () => isAdmin },
@@ -129,6 +130,7 @@ export function AdminClient({
     { id: "integrations", label: t("secIntegrations"), icon: Plug,          group: "main",       level: 3, permission: () => isAdmin },
     { id: "obsrules",  label: t("secObsRules"),     icon: MonitorPlay,    group: "main",       level: 3, permission: () => isAdmin },
     { id: "goverules", label: t("secGoveeRules"),   icon: Lightbulb,      group: "main",       level: 3, permission: () => isAdmin },
+    { id: "huerules",  label: t("secHueRules"),     icon: Lightbulb,      group: "main",       level: 3, permission: () => isAdmin },
     { id: "webhooks",  label: t("secWebhooks"),     icon: Webhook,         group: "main",       level: 3, permission: () => isAdmin },
     // level 1 = always visible: it's already gated to the platform owner (only they see it
     // at all), so hiding it behind "dev" mode just made the multi-portal creator hard to find (#656).
@@ -199,7 +201,12 @@ export function AdminClient({
       const raw = window.location.hash.replace(/^#/, "");
       // permitted (not mode-visible): a deep link must open the section even
       // when the current panel mode hides it from the nav
-      const known = permittedSections.find((s) => s.id === raw);
+      // Dokładne trafienie ma pierwszeństwo; dopasowanie bez wielkości liter ratuje adres
+      // przepisany ręcznie albo podany przez asystenta w innej wielkości (`#portalcopy`,
+      // `#donationintegrations`). Identyfikatory zostają nietknięte, żeby nie zepsuć zakładek.
+      const known =
+        permittedSections.find((s) => s.id === raw) ??
+        permittedSections.find((s) => s.id.toLowerCase() === raw.toLowerCase());
       setActiveSection(known ? known.id : "dashboard");
     };
     fromHash();
@@ -592,7 +599,9 @@ export function AdminClient({
           {activeSection === "sponsors" && isAdmin && <SponsorsManager onToast={showToast} />}
           {activeSection === "obsrules" && isAdmin && <ObsRulesManager onToast={showToast} />}
           {activeSection === "goverules" && isAdmin && <GoveeRulesManager onToast={showToast} />}
+          {activeSection === "huerules" && isAdmin && <HueRulesManager onToast={showToast} />}
           {activeSection === "scenes" && isAdmin && <SceneBuilder onToast={showToast} />}
+          {activeSection === "portal-copy" && isAdmin && <PortalCopy onToast={showToast} />}
           {activeSection === "collectibles" && isAdmin && <CollectiblesManager onToast={showToast} />}
           {activeSection === "recap" && isAdmin && <RecapManager onToast={showToast} />}
           {activeSection === "clipdirector" && isAdmin && <ClipDirectorManager onToast={showToast} />}
@@ -600,8 +609,8 @@ export function AdminClient({
           {activeSection === "twofactor" && isAdmin && <TwoFactorManager onToast={showToast} />}
 
           {activeSection === "audit" && can("view_audit") && (
-            <LazySection<{ auditLog: AuditEntry[] }> s="audit">
-              {(d) => <AuditLogSection auditLog={d.auditLog} />}
+            <LazySection<{ auditLog: AuditEntry[]; auditTotal?: number }> s="audit">
+              {(d) => <AuditLogSection auditLog={d.auditLog} total={d.auditTotal} />}
             </LazySection>
           )}
         </div>
@@ -884,7 +893,7 @@ function DashboardSection({
           {t("dashShortcutsHint")}
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] font-mono uppercase tracking-widest">
-          <a href="#users" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="cine-tile p-3 text-zinc-300">
+          <a href="#events" onClick={(e) => { e.preventDefault(); onJump("events"); }} className="cine-tile p-3 text-zinc-300">
             ▸ {t("secEvents")}
           </a>
           <a href="#drops" onClick={(e) => { e.preventDefault(); onJump("drops"); }} className="cine-tile p-3 text-zinc-300">

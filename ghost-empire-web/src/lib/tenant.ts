@@ -31,6 +31,12 @@ export type TenantBrand = {
   name: string;
   shortName: string;
   brandColor: string;
+  /** Paleta portalu (update 2026-08): `null` = kolor z motywu, czyli zachowanie sprzed zmiany.
+   *  Oba pola są walidowane jako `#rrggbb` przy zapisie, bo trafiają wprost do deklaracji CSS. */
+  surfaceColor: string | null;
+  textColor: string | null;
+  /** Identyfikator kroju z zamkniętej listy (`lib/brand-palette`), nigdy dowolna nazwa. */
+  fontFamily: string | null;
   /** White-label currency naming (Phase 5) — replaces %tokenName%/%gt% in i18n. */
   tokenName: string;
   tokenSymbol: string;
@@ -81,6 +87,9 @@ export const FALLBACK_TENANT: TenantBrand = {
   name: SITE.name,
   shortName: SITE.shortName,
   brandColor: SITE.brandColor,
+  surfaceColor: null,
+  textColor: null,
+  fontFamily: null,
   tokenName: "Ghost Tokens",
   tokenSymbol: "GT",
   ownerHandle: SITE.owner,
@@ -106,6 +115,9 @@ function toBrand(t: Tenant): TenantBrand {
     name: t.name,
     shortName: t.shortName ?? t.name,
     brandColor: t.brandColor,
+    surfaceColor: t.surfaceColor ?? null,
+    textColor: t.textColor ?? null,
+    fontFamily: t.fontFamily ?? null,
     tokenName: t.tokenName,
     tokenSymbol: t.tokenSymbol,
     ownerHandle: t.ownerHandle ?? t.shortName ?? t.name,

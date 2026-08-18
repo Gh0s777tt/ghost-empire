@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { TenantBrandingProvider } from "@/components/TenantBranding";
 import { getCurrentTenant, isFounderBrand, isPlatformBrand } from "@/lib/tenant";
 import { streamingChannels } from "@/lib/channels";
+import { fontStack } from "@/lib/brand-palette";
 import { hexToRgbTriplet } from "@/lib/tenant-host";
 import { normalizeTheme } from "@/lib/themes";
 import { VIEWER_PREVIEW_COOKIE, readViewerPreview } from "@/lib/viewer-preview";
@@ -105,6 +106,22 @@ export default async function LocaleLayout({
   const brandStyle = {
     "--brand": tenant.brandColor,
     "--brand-rgb": hexToRgbTriplet(tenant.brandColor),
+    // Paleta portalu (update 2026-08). Ustawiamy PRAWDZIWE właściwości, nie własne zmienne CSS:
+    // `--surface`/`--text` nie są przez nic czytane (motyw jedzie na klasach Tailwinda), więc
+    // zmienna byłaby ustawieniem, które nic nie robi. `<body>` ma klasy `bg-black text-zinc-200`,
+    // a styl inline ma wyższą specyficzność niż klasa — więc to nadpisanie faktycznie działa.
+    //
+    // ZAKRES, świadomie ograniczony: zmienia się TŁO STRONY i domyślny kolor tekstu. Panele i karty
+    // z własnym `bg-*` zachowują swoje kolory — inaczej trzeba by przepisać cały motyw, a to osobna
+    // robota. Panel mówi o tym wprost, żeby streamer nie szukał zmiany tam, gdzie jej nie ma.
+    //
+    // Oba pola przechodzą walidację `#rrggbb` przy zapisie (`/api/onboarding/my`), więc nie mogą
+    // zamknąć deklaracji ani otworzyć nowej — ta sama zasada co przy `bgImageUrl`/`safeMediaUrl`.
+    ...(tenant.surfaceColor ? { backgroundColor: tenant.surfaceColor } : {}),
+    ...(tenant.textColor ? { color: tenant.textColor } : {}),
+    // Krój z ZAMKNIĘTEJ listy — `fontStack` mapuje identyfikator na gotowy stos CSS i przy nieznanej
+    // wartości oddaje systemowy, więc string z bazy nigdy nie trafia do `font-family` wprost.
+    ...(tenant.fontFamily ? { fontFamily: fontStack(tenant.fontFamily) } : {}),
     // Optional per-portal background (#audit3): either a built-in DARK gradient template
     // (bgPreset — already dark, applied directly) or a custom image URL (rendered behind a
     // strong dark gradient overlay so text contrast is preserved). The preset CSS comes from

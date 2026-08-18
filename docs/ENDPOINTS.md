@@ -49,7 +49,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | Trasa | Auth | Po co |
 |---|---|---|
 | `…/api/auth/[...nextauth]` | public | NextAuth (login/logout/sesja) — Twitch/Discord/Google/Kick |
-| `…/api/auth/streamlabs` + `/callback` | session | OAuth Streamlabs (połączenie konta donacji) |
+| `…/api/auth/streamlabs` + `/callback` | session | OAuth Streamlabs (połączenie konta donacji). Callback zapisuje `accessToken`/`refreshToken`/`tokenExpiresAt` (szyfrowane, `encryptSecret`) — `refreshToken` jest **czytany** przez poller, który sam odświeża wygasający token (#801) |
 
 ## Akcje użytkownika (session)
 | Trasa | Metoda | Po co |
@@ -58,7 +58,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/polls/vote` | POST | Głos w ankiecie (1/usera, zmienialny; rate-limit) |
 | `…/api/predictions` · `…/api/predictions/[id]/wager` | GET/POST | Predykcje + obstawianie GT (auto-zamykanie po `closesAt`) |
 | `…/api/bounties` · `…/api/bounties/pledge` | GET/POST | Viewer Bounties — lista/otwórz wyzwanie + zrzutka GT do puli (escrow, atomowo) |
-| `…/api/wheel` · `…/api/wheel/spin` | GET/POST | Koło Fortuny — stan + zakręcenie (wydaje GT, rate-limit 20/min) |
+| `…/api/wheel` · `…/api/wheel/spin` | GET/POST | Koło Fortuny — stan + zakręcenie (wydaje **żetony 🪙** — darmowa waluta kasyna, `currency:"CHIPS"` w `lib/wheel.ts`, **nie GT**; rate-limit 20/min) |
 | `…/api/games` | GET | Publiczna biblioteka gier (widoczne, wg czasu gry) |
 | `…/api/games/vote` | POST | Głos „zagraj następne" — 1 gra/widz/portal (zalogowany), set/clear, tenant-scoped (#628) |
 | `…/api/daily-bonus` | GET/POST | Dzienny bonus GT (stan + odbiór, streak) |
@@ -124,7 +124,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | Trasa | Metoda | Po co |
 |---|---|---|
 | `…/api/onboarding` | POST | Provisioning portalu tenanta przy zakładaniu konta (slug/nazwa/branding) |
-| `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta |
+| `…/api/onboarding/my` | GET/PATCH | Stan i edycja onboardingu/brandingu własnego tenanta — od 2026-08 także `socialLinks`, `timezone`, `companionDefaultName`, `supportAlertMode` (walidacja przepisana co do znaku z trasy właściciela platformy). **`domain` świadomie poza zakresem**: jest `@unique` i mapuje Host→tenant, więc samoobsługa bez weryfikacji DNS pozwoliłaby przejąć cudzy adres |
 | `…/api/billing/checkout` | GET/POST | Status billingu (GET `{configured}`) / utworzenie Stripe Checkout (POST `{plan,months,currency}` — wielowaluta przez `currency_options`, trial 14 dni, #744). Gdy Stripe nieskonfigurowany → 503 (trial bez karty) |
 | `…/api/billing/portal` | POST | Stripe Customer Portal dla własnego tenanta — samodzielne faktury/karta/anulowanie. 400 przed pierwszym checkoutem (brak customer), 503 gdy Stripe nieskonfigurowany |
 
@@ -153,7 +153,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/webhooks-out` | admin | Webhooki wychodzące — CRUD + test (POST JSON na zewnętrzne URL) |
 | `…/api/upload` | admin | `POST` multipart — upload mediów (tło/alerty/sceny) do Supabase Storage, per-tenant prefix; zwraca publiczny URL. Magic-bytes allowlist (SVG wykluczony), cap 20 MB, rate-limit. 503 bez `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`/bucketa |
 | `…/api/admin/donations` | admin | Donacje: `GET` statystyki (suma PLN/liczba/per-provider, tenant-scoped) + `PATCH` dopasowanie/skip |
-| `…/api/admin/streamlabs` | admin | Stan połączenia Streamlabs |
+| `…/api/admin/streamlabs` | admin | Stan połączenia Streamlabs + `{action:"sync"\|"disconnect"}`; `sync` zwraca ten sam kształt co cron (`ok`/`fetched`/`matched`/`unmatched`/`error`/`errorCode`) |
 | `…/api/admin/subathon` | admin | Subathon (start/stop/±czas) |
 | `…/api/admin/welcome` · `chat-commands` · `chat-timers` · `faq` · `song-requests` | admin | Konfiguracja bota czatu |
 | `…/api/admin/schedule` | perm:manage_shop | Harmonogram streamów |
@@ -177,7 +177,9 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/admin/govee-rules` | admin | CRUD reguł oświetlenia Govee (event→akcja świetlna, #721) — GET/POST/PATCH/DELETE, tenant-scoped, limit 50/portal |
 | `…/api/admin/govee-test` | admin | POST — jednorazowy widoczny test lampki Govee portalu (błyśnij zielonym→biały) by sprawdzić creds+urządzenie (#725) |
 | `…/api/admin/overlay-token` | admin | Token overlayów (do podglądów) |
-| `…/api/admin/overlay-scenes` | admin | CRUD scen overlay (#550 — wiele widżetów na jednym płótnie → jedno źródło OBS `/overlay/scene/<id>`) |
+| `…/api/admin/overlay-scenes` | admin | CRUD scen overlay (#550 — wiele widżetów na jednym płótnie → jedno źródło OBS `/overlay/scene/<id>`). `duplicate` klonuje scenę (bez dziedziczenia `enabled`); `set_active` wskazuje scenę renderowaną pod stałym adresem `/overlay/live` (jedyność w transakcji); `update` przyjmuje też `enabled` (wyłączona scena renderuje w OBS pustkę); elementy mogą nieść `enabled:false` (ukryty element, odsiewany serwerowo przed renderem) |
+| `…/api/admin/tenant-copy` | admin | Nadpisania treści portalu (`welcome`) per locale — klucze WYŁĄCZNIE z zamkniętej listy `lib/tenant-copy`; pola prawne (`terms`/`privacy`) poza zasięgiem panelu z założenia |
+| `…/api/overlay/live` | token nakładki | Układ AKTYWNEJ sceny portalu — źródło danych dla stałego adresu OBS `/overlay/live`; portal z nagłówka Host, wyłączone elementy i wyłączona scena odsiewane serwerowo |
 | `…/api/admin/2fa` | admin | Enrollment/zarządzanie TOTP bieżącego admina (step-up dla wrażliwych akcji, #490) |
 | `…/api/admin/payment-methods` | admin | CRUD metod wsparcia/napiwków na `/support` (link/krypto/IBAN, #514) + cel zbiórki (`save-goal`) + konfigurowalny tekst strony (`save-support-text`: nagłówek/opis/dziękuję, #742) |
 | `…/api/admin/sound-rewards` | admin | CRUD katalogu GT-dźwięków (widz wykupuje na `/sounds`, #505) |
@@ -288,7 +290,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/webhooks/paymedia` | Webhook płatności PayMedia (sekret) |
 | `…/api/webhooks/stripe` | Webhook Stripe (podpis `STRIPE_WEBHOOK_SECRET`) — aktywacja/odnowienie/wygaśnięcie planu tenanta |
 | `…/api/yt/poll-live-chat` | Polling YouTube Live Chat (super chaty / membery) |
-| `…/api/cron/streamlabs-poll` | Cron (Vercel, co 15 min) — polling donacji Streamlabs, **per portal** (`CRON_SECRET`). **Tylko produkcja:** na deployu `VERCEL_ENV=preview`/`development` zwraca 200 `{skipped:"non-production-deployment"}` bez pollingu i bez Sentry (fail-open: brak `VERCEL_ENV` = produkcja, patrz [ENV.md](ENV.md)). Awaria któregokolwiek portalu → HTTP 500 + `Sentry.captureMessage` (alert na zastój wpływu) |
+| `…/api/cron/streamlabs-poll` | Cron (Vercel, co 15 min) — polling donacji Streamlabs, **per portal** (`CRON_SECRET`). **Sam odświeża token OAuth** przed pollem, gdy `tokenExpiresAt` jest ≤5 min od wygaśnięcia lub nieznane (#801); przy porażce odświeżenia zwraca `ok:false` + `errorCode` (`reauth_required` \| `refresh_failed` \| `session_invalid` \| `token_unreadable`) i taguje Sentry `streamlabsError` (`reauth_required` = portal wymaga ponownego połączenia w `/admin`). **Tylko produkcja:** na deployu `VERCEL_ENV=preview`/`development` zwraca 200 `{skipped:"non-production-deployment"}` bez pollingu i bez Sentry (fail-open: brak `VERCEL_ENV` = produkcja, patrz [ENV.md](ENV.md)). Awaria któregokolwiek portalu → HTTP 500 + `Sentry.captureMessage` (alert na zastój wpływu) |
 | `…/api/admin/hue-rules` | admin | **Reguły Philips Hue** (#817): GET/POST/PATCH/DELETE, tenant-scoped, audytowane, limit 50 reguł. Walidacja w `lib/hue-rules.ts`. ⚠️ Te wiersze **nie są konsumowane po stronie serwera** — inaczej niż Govee, które jest chmurowe. Mostek Hue stoi w LAN streamera, więc reguły są **dowożone do źródła przeglądarkowego w OBS** przez `/api/obs-control/config`; dlatego nic tutaj nie sprawdza poświadczeń, a reguła zapisana przy nieskonfigurowanym mostku jest poprawna, tylko bezczynna. Kolumna `brightness` trzyma **procent** wpisany przez streamera, nie 1–254 mostka — konwersja jest w aktuatorze, żeby panel pokazywał liczbę, którą człowiek wpisał |
 | `…/api/admin/penalties` | admin | **Kary** (#806): GET = konfiguracja portalu (włącznik, próg, cooldown) + katalog + 25 ostatnich losowań + limity + ostrzeżenie prawne. POST `saveConfig` · `savePenalty` · `deletePenalty`. Efekt kary walidowany **tymi samymi walidatorami co reguły OBS**; przedziały porządkowane przy zapisie; próg z **podłogą 1 zł**. Zapis konfiguracji przez `findFirst` + jawną gałąź, nie `upsert` — `tenantId` to **nullowalny** unique, a Postgres traktuje NULL-e jako różne. Edycja i usuwanie scope'owane po portalu, więc obce `id` jest no-opem. Włączenie jest audytowane |
 | `/api/obs-control/penalties` | overlay-token | Wydaje aktuatorowi w OBS **wylosowane kary, którym nadszedł czas** (#806). **Świadomie NIE feed alertów:** tamten respektuje progi wyświetlania per typ (`AlertTypeConfig.minAmount`), więc alert ukryty przed overlayem nie dotarłby też do aktuatora — a karę ktoś **zapłacił**, więc nie może jej zjeść niepowiązany próg wyświetlania. Zero filtrowania po kwocie. **Dostarczenie jest at-most-once:** wiersz dostaje `appliedAt` w momencie wydania, więc zamknięcie lub odświeżenie źródła przeglądarkowego nie odtworzy efektów, które już poszły. Kosztem jest odwrotna awaria — losowanie wydane źródłu, które padło przed wykonaniem, przepada; to właściwa strona kompromisu, bo zdublowany efekt porywa stream, a pominięty jest widoczny w panelu jako wiersz z `appliedAt` i niczym na ekranie. Wiersz, którego nie da się wykonać (skasowany albo niekompletny wpis katalogu), też jest stemplowany — inaczej byłby wydawany co 2 s w pętli |

@@ -5,6 +5,7 @@
 // (web-push uses Node crypto) — import only from Node API routes, never the client.
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
+import { SITE } from "@/lib/site";
 
 export type PushPayload = { title: string; body: string; url?: string; icon?: string; tag?: string };
 
@@ -102,7 +103,10 @@ export async function sendPushToTenant(tenantId: string | null, payload: PushPay
  */
 export async function notifyStreamLive(tenantId: string | null): Promise<{ sent: number; pruned: number }> {
   if (!isPushConfigured()) return { sent: 0, pruned: 0 };
-  let name = "GH0ST EMPIRE";
+  // Fallback marki z SITE (jedyny udokumentowany default) — nigdy literał, żeby portal bez
+  // nazwy nie wyciekał marki foundera pod inną pisownią. Jawny `: string`, bo SITE jest `as
+  // const` → bez adnotacji `name` dostałoby typ literalny i nie przyjęłoby nazwy tenanta niżej.
+  let name: string = SITE.name;
   if (tenantId) {
     const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, ownerHandle: true } }).catch(() => null);
     name = t?.ownerHandle || t?.name || name;

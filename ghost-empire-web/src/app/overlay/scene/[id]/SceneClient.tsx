@@ -8,7 +8,7 @@ import { SCENE_WIDGETS, VIDEO_WIDGET, MEDIA_WIDGETS, type SceneElement } from "@
 
 const BY_ID = new Map(SCENE_WIDGETS.map((w) => [w.id, w]));
 
-export function SceneClient({ elements, found }: { elements: SceneElement[]; found: boolean }) {
+export function SceneClient({ elements, found, enabled = true }: { elements: SceneElement[]; found: boolean; enabled?: boolean }) {
   const [token, setToken] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -18,6 +18,9 @@ export function SceneClient({ elements, found }: { elements: SceneElement[]; fou
   if (token === undefined) return null; // token not read yet (avoid a flash with no token)
   if (!found) return <StatusBox msg="Scene not found" />;
   if (!token) return <StatusBox msg="Missing ?token=<OVERLAY_TOKEN>" />;
+  // Scena wyłączona w panelu (update 2026-08): renderujemy PUSTKĘ, nie komunikat — źródło w OBS
+  // zostaje na miejscu i ma po prostu zniknąć z ekranu, a nie pokazywać widzom napis.
+  if (!enabled) return null;
   if (elements.length === 0) return <StatusBox msg="Empty scene — add widgets in /admin#scenes" />;
 
   return (
