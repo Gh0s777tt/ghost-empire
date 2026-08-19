@@ -14,6 +14,7 @@
 // $transaction (helper runs OUTSIDE the transaction, dispatched after commit).
 import { prisma } from "@/lib/prisma";
 import { plnFromMinor } from "@/lib/donations/fx";
+import { kursyDoPrzeliczen } from "@/lib/donations/fx-store";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { createLogger, errContext } from "@/lib/logger";
 
@@ -212,7 +213,8 @@ async function computeCurrentValue(userId: string, triggerType: AchievementTrigg
         where: { userId },
         _sum: { amountGrosze: true },
       });
-      const totalPln = rows.reduce((sum, r) => sum + (plnFromMinor(r._sum.amountGrosze ?? 0, r.currency) ?? 0), 0);
+      const kursy = await kursyDoPrzeliczen();
+      const totalPln = rows.reduce((sum, r) => sum + (plnFromMinor(r._sum.amountGrosze ?? 0, r.currency, kursy) ?? 0), 0);
       return Math.floor(totalPln);
     }
 

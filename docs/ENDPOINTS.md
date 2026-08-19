@@ -300,6 +300,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/cron/weekly-rewards` | Cron (Vercel, pon.) — tygodniowe nagrody GT + **miesięczne rozliczenie Ligi Typerów** (idempotentne, #682); `CRON_SECRET` |
 | `…/api/cron/backup` | Cron (Vercel, 05:00) — off-site backup JSON → bucket S3-compatible (R2/B2/S3); **dormant** bez `BACKUP_S3_*` (`CRON_SECRET`, #677) |
 | `…/api/cron/weekly-digest` | Cron (Vercel, pon. 07:00) — tygodniowy raport email do właścicieli portali (nowi/GT-flow/top/pending); **dormant** bez `RESEND_API_KEY`+`EMAIL_FROM` (`CRON_SECRET`, #773) |
+| `…/api/cron/fx-rates` | Cron (Vercel, pon.–pt. 12:30) — pobiera **tabelę A NBP** i odkłada kursy do cache'u, z którego `plnFromMinor` liczy grant waluty portalu za realną wpłatę. Bez tego kursy były wpisane na sztywno (na dzień wdrożenia mylił się o **29 %** na TRY). Porażka jest nieszkodliwa: produkt jedzie na ostatnim znanym kursie, a przy pustym cache'u na tabeli awaryjnej w `lib/donations/fx.ts` (`CRON_SECRET`). |
 
 ## Public / serwisowe (bez auth)
 | Trasa | Metoda | Po co |

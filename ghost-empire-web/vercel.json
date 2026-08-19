@@ -31,6 +31,7 @@
     {
       "path": "/api/cron/reconcile-ledger",
       "schedule": "0 6 * * *"
-    }
+    },
+    { "path": "/api/cron/fx-rates", "schedule": "30 12 * * 1-5" }
   ]
 }

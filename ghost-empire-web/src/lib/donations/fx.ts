@@ -9,8 +9,14 @@
 //
 // So: an explicit ALLOW-LIST with a real rate and the correct exponent per currency. A currency we
 // do not know is NOT guessed — the caller must refuse to mint and queue the donation for review.
-// Rates are deliberately conservative static approximations (we have no FX feed); they are used only
-// to size a virtual-currency grant and to move progress bars, never to state an amount owed.
+//
+// KURSY: tabela `RATES` niżej jest dziś **awaryjnym dnem**, nie źródłem prawdy. Żywe kursy idą
+// z NBP (`donations/nbp.ts` + cron `api/cron/fx-rates`) i wjeżdżają tu **parametrem** `kursy` —
+// dzięki temu ten moduł zostaje CZYSTY i unit-testowany bez sieci, zgodnie z konwencją repo.
+// Statyczne wartości zostają jako zabezpieczenie: gdy NBP nie odpowiada, a cache jest pusty,
+// wolimy policzyć grant przybliżonym kursem niż wstrzymać księgowanie wszystkich wpłat.
+// Kursy służą wyłącznie do wielkości grantu waluty portalu i pasków postępu — nigdy do podania
+// kwoty należnej komukolwiek.
 
 /** PLN per 1 major unit, plus how many decimal places the currency actually has. */
 type Fx = { pln: number; decimals: number };
@@ -43,9 +49,15 @@ const RATES: Record<string, Fx> = {
   KRW: { pln: 0.003, decimals: 0 },
 };
 
-/** Is this a currency we are willing to MINT from? Unknown → caller must queue, not guess. */
-export function isSupportedCurrency(code: string): boolean {
-  return Object.prototype.hasOwnProperty.call(RATES, code.toUpperCase());
+/**
+ * Is this a currency we are willing to MINT from? Unknown → caller must queue, not guess.
+ *
+ * @param kursy - opcjonalne żywe kursy z NBP; poszerzają listę o waluty, których nie ma w `RATES`.
+ */
+export function isSupportedCurrency(code: string, kursy?: Readonly<Record<string, number>>): boolean {
+  const k = code.toUpperCase();
+  if (kursy && typeof kursy[k] === "number" && kursy[k] > 0) return true;
+  return Object.prototype.hasOwnProperty.call(RATES, k);
 }
 
 /** Minor-unit exponent for a currency (2 by default; 0 for JPY/KRW). */
@@ -59,14 +71,27 @@ export function currencyDecimals(code: string): number {
  * Returning null (instead of a guess) is the whole point: an unrecognized code must downgrade the
  * donation to "needs review" rather than mint at an invented rate.
  *
+ * @param kursy - żywe kursy NBP (PLN za jednostkę). Podane — MAJĄ PIERWSZEŃSTWO nad `RATES`.
+ *   Pominięte lub bez tej waluty — spadamy na kurs statyczny. Parametr zamiast odczytu globalnego
+ *   stanu, żeby funkcja została czysta i testowalna bez sieci.
+ *
  * @remarks unit-tested in `__tests__/donations-fx.test.ts`.
  */
-export function plnFromMinor(amountMinor: number, code: string): number | null {
-  const fx = RATES[code.toUpperCase()];
-  if (!fx) return null;
+export function plnFromMinor(
+  amountMinor: number,
+  code: string,
+  kursy?: Readonly<Record<string, number>>,
+): number | null {
+  const k = code.toUpperCase();
+  const zywy = kursy?.[k];
+  const fx = RATES[k];
+  // Waluta znana wyłącznie z NBP nadal ma sensowny wykładnik: `currencyDecimals` zna zero-decimal
+  // (JPY/KRW) z tabeli, a dla reszty 2 jest poprawne.
+  const pln = typeof zywy === "number" && Number.isFinite(zywy) && zywy > 0 ? zywy : fx?.pln;
+  if (pln === undefined) return null;
   if (!Number.isFinite(amountMinor) || amountMinor <= 0) return 0;
-  const major = amountMinor / 10 ** fx.decimals;
-  return major * fx.pln;
+  const major = amountMinor / 10 ** (fx?.decimals ?? currencyDecimals(k));
+  return major * pln;
 }
 
 /**
