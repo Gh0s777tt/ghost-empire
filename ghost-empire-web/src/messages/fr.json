@@ -1745,6 +1745,15 @@
       "loadingUrl": "Chargement de l'URL de l'overlay…"
     },
     "events": {
+        "publicTitle": "Jours fériés",
+        "publicCountry": "Code pays",
+        "publicIntro": "Calendrier des jours fériés du pays choisi. Clique pour lancer une happy hour ×2 sur toute la journée.",
+        "publicLoading": "Chargement du calendrier…",
+        "publicNone": "Aucun jour férié à venir pour ce pays.",
+        "publicInDays": "dans {n} jours",
+        "publicRegional": "régional",
+        "publicLaunch": "Lancer",
+        "publicDesc": "Happy hour pour {name}",
       "templatesTitle": "Événements saisonniers (modèles)",
       "templatesIntro": "Lance un événement saisonnier prêt à l'emploi <b>en un clic</b> : il crée un événement actif qui démarre maintenant (happy hour = multiplicateur %gt% bonus, giveaway = tirage de prix). Modifie les détails / termine-le ci-dessous dans les événements actifs.",
       "launchNow": "Lancer maintenant",

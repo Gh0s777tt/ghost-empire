@@ -1958,6 +1958,15 @@
       "skipBtn": "Pomiń"
     },
     "events": {
+        "publicTitle": "Święta państwowe",
+        "publicCountry": "Kod kraju",
+        "publicIntro": "Kalendarz świąt urzędowych wybranego kraju. Kliknij, żeby odpalić happy hour ×2 na cały dzień święta.",
+        "publicLoading": "Pobieram kalendarz…",
+        "publicNone": "Brak nadchodzących świąt dla tego kraju.",
+        "publicInDays": "za {n} dni",
+        "publicRegional": "regionalne",
+        "publicLaunch": "Odpal",
+        "publicDesc": "Happy hour z okazji: {name}",
       "templatesTitle": "Eventy okolicznościowe (szablony)",
       "templatesIntro": "Odpal gotowy event świąteczny <b>jednym kliknięciem</b> — tworzy aktywny event od teraz (happy hour = bonus mnożnik do %gt%, giveaway = losowanie nagrody). Szczegóły zmienisz / zakończysz go niżej w „aktywnych eventach”.",
       "launchNow": "Odpal teraz",

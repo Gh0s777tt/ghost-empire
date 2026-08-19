@@ -1958,6 +1958,15 @@
       "skipBtn": "Skip"
     },
     "events": {
+        "publicTitle": "Public holidays",
+        "publicCountry": "Country code",
+        "publicIntro": "Official holiday calendar for the chosen country. Click to launch a ×2 happy hour for the whole day.",
+        "publicLoading": "Loading calendar…",
+        "publicNone": "No upcoming holidays for this country.",
+        "publicInDays": "in {n} days",
+        "publicRegional": "regional",
+        "publicLaunch": "Launch",
+        "publicDesc": "Happy hour for {name}",
       "templatesTitle": "Seasonal events (templates)",
       "templatesIntro": "Launch a ready-made seasonal event <b>with one click</b> — it creates an active event starting now (happy hour = bonus %gt% multiplier, giveaway = prize draw). Edit the details / end it below in “active events”.",
       "launchNow": "Launch now",

@@ -1745,6 +1745,15 @@
       "builderHintSlot": "Klik atau geser di layar untuk menetapkan posisi bebas, atau gunakan dropdown slot."
     },
     "events": {
+        "publicTitle": "Hari libur nasional",
+        "publicCountry": "Kode negara",
+        "publicIntro": "Kalender hari libur resmi negara pilihanmu. Klik untuk menyalakan happy hour ×2 sepanjang hari libur.",
+        "publicLoading": "Memuat kalender…",
+        "publicNone": "Tidak ada hari libur mendatang untuk negara ini.",
+        "publicInDays": "{n} hari lagi",
+        "publicRegional": "regional",
+        "publicLaunch": "Nyalakan",
+        "publicDesc": "Happy hour untuk {name}",
       "templatesTitle": "Acara musiman (templat)",
       "templatesIntro": "Luncurkan acara musiman siap pakai <b>dengan satu klik</b> — membuat acara aktif yang dimulai sekarang (happy hour = pengganda %gt% bonus, giveaway = pengundian hadiah). Edit detailnya / akhiri di bawah pada «acara aktif».",
       "launchNow": "Luncurkan sekarang",

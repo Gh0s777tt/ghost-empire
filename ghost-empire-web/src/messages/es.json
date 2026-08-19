@@ -1745,6 +1745,15 @@
       "loadingUrl": "Cargando URL del overlay…"
     },
     "events": {
+        "publicTitle": "Festivos oficiales",
+        "publicCountry": "Código de país",
+        "publicIntro": "Calendario de festivos del país elegido. Pulsa para lanzar una happy hour ×2 durante todo el día.",
+        "publicLoading": "Cargando calendario…",
+        "publicNone": "No hay festivos próximos para este país.",
+        "publicInDays": "en {n} días",
+        "publicRegional": "regional",
+        "publicLaunch": "Lanzar",
+        "publicDesc": "Happy hour por {name}",
       "templatesTitle": "Eventos de temporada (plantillas)",
       "templatesIntro": "Lanza un evento de temporada listo <b>con un clic</b>: crea un evento activo que empieza ahora (happy hour = multiplicador de %gt% extra, giveaway = sorteo de premios). Edita los detalles / termínalo abajo en eventos activos.",
       "launchNow": "Lanzar ahora",

@@ -301,6 +301,7 @@ Spis tras API (`ghost-empire-web/src/app/api/**`), pogrupowany wg modelu autoryz
 | `…/api/cron/backup` | Cron (Vercel, 05:00) — off-site backup JSON → bucket S3-compatible (R2/B2/S3); **dormant** bez `BACKUP_S3_*` (`CRON_SECRET`, #677) |
 | `…/api/cron/weekly-digest` | Cron (Vercel, pon. 07:00) — tygodniowy raport email do właścicieli portali (nowi/GT-flow/top/pending); **dormant** bez `RESEND_API_KEY`+`EMAIL_FROM` (`CRON_SECRET`, #773) |
 | `…/api/cron/fx-rates` | Cron (Vercel, pon.–pt. 12:30) — pobiera **tabelę A NBP** i odkłada kursy do cache'u, z którego `plnFromMinor` liczy grant waluty portalu za realną wpłatę. Bez tego kursy były wpisane na sztywno (na dzień wdrożenia mylił się o **29 %** na TRY). Porażka jest nieszkodliwa: produkt jedzie na ostatnim znanym kursie, a przy pustym cache'u na tabeli awaryjnej w `lib/donations/fx.ts` (`CRON_SECRET`). |
+| `…/api/admin/holidays?kraj=XX` | GET — nadchodzące **święta państwowe** wskazanego kraju (Nager.Date, 204 kraje, bez klucza) pod kafelki „odpal event" w panelu. Kod kraju walidowany serwerowo (dokładnie dwie litery — trafia do URL-a), odpowiedź cache'owana 12 h **wspólnie dla wszystkich portali**. Fail-soft: niedostępność Nager zwraca pustą listę, a nie błąd — zaszyte szablony kulturowe działają dalej. Bramka `create_events`. |
 
 ## Public / serwisowe (bez auth)
 | Trasa | Metoda | Po co |
