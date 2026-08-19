@@ -1745,6 +1745,15 @@
       "loadingUrl": "正在加载叠加层 URL…"
     },
     "events": {
+        "publicTitle": "法定节假日",
+        "publicCountry": "国家代码",
+        "publicIntro": "所选国家的官方节假日日历。点击即可在节日当天开启全天 ×2 欢乐时光。",
+        "publicLoading": "正在加载日历…",
+        "publicNone": "该国家暂无即将到来的节日。",
+        "publicInDays": "{n} 天后",
+        "publicRegional": "地区性",
+        "publicLaunch": "开启",
+        "publicDesc": "{name} 欢乐时光",
       "templatesTitle": "季节性活动（模板）",
       "templatesIntro": "<b>一键</b>启动现成的季节性活动：创建一个立即开始的活动（happy hour = 额外 %gt% 倍率，giveaway = 抽奖）。在下方的活动中编辑详情 / 结束它。",
       "launchNow": "立即启动",

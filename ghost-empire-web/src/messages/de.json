@@ -1745,6 +1745,15 @@
       "loadingUrl": "Overlay-URL wird geladen…"
     },
     "events": {
+        "publicTitle": "Gesetzliche Feiertage",
+        "publicCountry": "Ländercode",
+        "publicIntro": "Feiertagskalender des gewählten Landes. Klicke, um für den ganzen Tag eine Happy Hour ×2 zu starten.",
+        "publicLoading": "Kalender wird geladen…",
+        "publicNone": "Keine bevorstehenden Feiertage für dieses Land.",
+        "publicInDays": "in {n} Tagen",
+        "publicRegional": "regional",
+        "publicLaunch": "Starten",
+        "publicDesc": "Happy Hour zum {name}",
       "templatesTitle": "Saisonale Events (Vorlagen)",
       "templatesIntro": "Starte ein fertiges saisonales Event <b>mit einem Klick</b> — es erstellt ein aktives Event, das jetzt beginnt (Happy Hour = Bonus-%gt%-Multiplikator, Giveaway = Preisverlosung). Bearbeite die Details / beende es unten unter aktive Events.",
       "launchNow": "Jetzt starten",

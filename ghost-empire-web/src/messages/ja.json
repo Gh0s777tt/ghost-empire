@@ -1745,6 +1745,15 @@
       "loadingUrl": "オーバーレイ URL を読み込み中…"
     },
     "events": {
+        "publicTitle": "祝日",
+        "publicCountry": "国コード",
+        "publicIntro": "選んだ国の祝日カレンダーです。クリックすると当日一日を通してハッピーアワー ×2 を開始します。",
+        "publicLoading": "カレンダーを読み込み中…",
+        "publicNone": "この国に予定されている祝日はありません。",
+        "publicInDays": "あと {n} 日",
+        "publicRegional": "地域限定",
+        "publicLaunch": "開始",
+        "publicDesc": "{name} のハッピーアワー",
       "templatesTitle": "シーズンイベント（テンプレート）",
       "templatesIntro": "既成のシーズンイベントを<b>ワンクリック</b>で開始——今すぐ始まるアクティブなイベントを作成します（happy hour = ボーナス %gt% 倍率、giveaway = 賞品抽選）。下のアクティブなイベントで詳細を編集 / 終了します。",
       "launchNow": "今すぐ開始",

@@ -1,13 +1,14 @@
 "use client";
 // src/components/admin/sections/Events.tsx — lazily-loaded events cluster:
 // holiday templates, create-event form, and the active-events manager + editor.
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, Loader2, Zap, Plus, Dice5, Eye, EyeOff, Pencil, X, Check } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn, formatDate } from "@/lib/utils";
 import { SectionCard, FieldInput, FieldTextarea, ListSearch } from "../shared";
 import { filterByText } from "@/lib/list-filter";
-import { apiPost, apiPatch, ApiError } from "@/lib/api-client";
+import { apiGet, apiPost, apiPatch, ApiError } from "@/lib/api-client";
+import { krajDlaLocale, dniDo, type Swieto } from "@/lib/holidays";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import type { EventRow } from "../types";
 
@@ -39,6 +40,9 @@ type HolidayMeta = {
   winnersCount?: number;
 };
 
+// Święta KULTUROWE, wspólne dla większości portali i celowo zaszyte: Halloween ani walentynki
+// nie są nigdzie świętem państwowym, więc żadne API ich nie zwróci. Kalendarz PAŃSTWOWY danego
+// kraju dochodzi obok, z `api/admin/holidays` (Nager.Date) — patrz `SwietaPanstwowe` niżej.
 const HOLIDAY_META: HolidayMeta[] = [
   { key: "womens_day", emoji: "💃", type: "happy_hour", durationMinutes: 1440, multiplier: 2 },
   { key: "valentines", emoji: "❤️", type: "happy_hour", durationMinutes: 1440, multiplier: 2 },
@@ -47,6 +51,78 @@ const HOLIDAY_META: HolidayMeta[] = [
   { key: "christmas", emoji: "🎄", type: "giveaway", durationMinutes: 4320, winnersCount: 5 },
   { key: "nye", emoji: "🎆", type: "happy_hour", durationMinutes: 720, multiplier: 2.5 },
 ];
+
+/**
+ * Kafelki świąt PAŃSTWOWYCH kraju portalu — uzupełnienie zaszytej listy kulturowej.
+ *
+ * @remarks
+ * Powód istnienia jest wprost z modelu platformy: zaszyte sześć świąt to kalendarz polsko-zachodni,
+ * więc portal japoński czy indonezyjski nie miał ani jednego własnego. Kraj proponujemy z locale
+ * panelu (`krajDlaLocale`) i pozwalamy zmienić — locale to nie kraj, a `en` może znaczyć i UK, i US.
+ *
+ * Niedostępność Nager.Date jest **nieszkodliwa**: lista zostaje pusta, a zaszyte kafelki działają
+ * dalej. Brak kalendarza państwowego nie może zabrać właścicielowi portalu Halloween.
+ */
+function SwietaPanstwowe({
+  onOdpal, busy, pending,
+}: {
+  onOdpal: (nazwa: string, dataISO: string) => void;
+  busy: string | null;
+  pending: boolean;
+}) {
+  const t = useTranslations("admin.events");
+  const locale = useLocale();
+  const [kraj, setKraj] = useState(() => krajDlaLocale(locale) ?? "");
+  const [swieta, setSwieta] = useState<Swieto[] | null>(null);
+
+  useEffect(() => {
+    if (!/^[A-Za-z]{2}$/.test(kraj)) { setSwieta([]); return; }
+    let aktualne = true;
+    void apiGet<{ swieta: Swieto[] }>(`/api/admin/holidays?kraj=${kraj}`)
+      .then((d) => { if (aktualne) setSwieta(d.swieta); })
+      .catch(() => { if (aktualne) setSwieta([]); }); // fail-soft — patrz nagłówek
+    return () => { aktualne = false; };
+  }, [kraj]);
+
+  return (
+    <div className="mt-4 pt-4 border-t border-zinc-800">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{t("publicTitle")}</h4>
+        <input
+          value={kraj}
+          onChange={(e) => setKraj(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase())}
+          placeholder="PL"
+          maxLength={2}
+          aria-label={t("publicCountry")}
+          className="w-14 bg-black border border-zinc-800 px-2 py-1 text-xs text-white text-center uppercase font-mono outline-hidden focus:border-zinc-600"
+        />
+      </div>
+      <p className="text-[11px] text-zinc-500 mb-2 leading-snug">{t("publicIntro")}</p>
+      {swieta === null && <div className="text-[11px] text-zinc-600">{t("publicLoading")}</div>}
+      {swieta?.length === 0 && <div className="text-[11px] text-zinc-600">{t("publicNone")}</div>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+        {(swieta ?? []).map((sw) => (
+          <div key={`${sw.data}-${sw.nazwaEn}`} className="border border-zinc-800 bg-zinc-950 px-2.5 py-2 flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-white truncate">{sw.nazwaLokalna}</div>
+              <div className="text-[10px] font-mono text-zinc-600">
+                {sw.data} · {t("publicInDays", { n: dniDo(sw) })}
+                {!sw.ogolnokrajowe && ` · ${t("publicRegional")}`}
+              </div>
+            </div>
+            <button
+              onClick={() => onOdpal(sw.nazwaLokalna, sw.data)}
+              disabled={busy !== null || pending}
+              className="px-2 py-1 border border-zinc-700 text-zinc-200 hover:border-zinc-500 text-[9px] font-bold tracking-widest uppercase disabled:opacity-50 shrink-0"
+            >
+              {busy === sw.data ? <Loader2 className="w-3 h-3 animate-spin" /> : t("publicLaunch")}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function HolidayEventsCard({
   onToast, onSuccess, pending,
@@ -73,6 +149,33 @@ export function HolidayEventsCard({
         : {}),
     },
   }));
+
+  /**
+   * Happy hour na święto państwowe. Start liczymy od PÓŁNOCY dnia święta w strefie przeglądarki
+   * admina — event ma trwać w dniu święta, a nie od momentu kliknięcia dzień wcześniej.
+   * Ujemny wynik (klik w dniu święta, po północy) ścinamy do zera, czyli „zacznij teraz".
+   */
+  async function odpalSwieto(nazwa: string, dataISO: string) {
+    setBusy(dataISO);
+    try {
+      const start = new Date(`${dataISO}T00:00:00`);
+      const zaMinut = Math.max(0, Math.round((start.getTime() - Date.now()) / 60000));
+      await apiPost("/api/admin/events", {
+        type: "happy_hour",
+        name: nazwa,
+        description: t("publicDesc", { name: nazwa }),
+        durationMinutes: 1440,
+        multiplier: 2,
+        startsInMinutes: zaMinut,
+      });
+      onToast("ok", t("launched", { label: nazwa })); onSuccess();
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) onToast("err", err.message || t("err"));
+      else onToast("err", t("netErr"));
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function launch(tpl: HolidayTemplate) {
     setBusy(tpl.key);
@@ -116,6 +219,7 @@ export function HolidayEventsCard({
           </div>
         ))}
       </div>
+      <SwietaPanstwowe onOdpal={odpalSwieto} busy={busy} pending={pending} />
     </SectionCard>
   );
 }

@@ -1745,6 +1745,15 @@
       "loadingUrl": "Caricamento dell'URL dell'overlay…"
     },
     "events": {
+        "publicTitle": "Festività nazionali",
+        "publicCountry": "Codice paese",
+        "publicIntro": "Calendario delle festività del paese scelto. Clicca per lanciare una happy hour ×2 per tutta la giornata.",
+        "publicLoading": "Carico il calendario…",
+        "publicNone": "Nessuna festività in arrivo per questo paese.",
+        "publicInDays": "tra {n} giorni",
+        "publicRegional": "regionale",
+        "publicLaunch": "Lancia",
+        "publicDesc": "Happy hour per {name}",
       "templatesTitle": "Eventi stagionali (modelli)",
       "templatesIntro": "Lancia un evento stagionale pronto <b>con un clic</b>: crea un evento attivo che inizia ora (happy hour = moltiplicatore %gt% extra, giveaway = estrazione di premi). Modifica i dettagli / terminalo qui sotto in eventi attivi.",
       "launchNow": "Lancia ora",

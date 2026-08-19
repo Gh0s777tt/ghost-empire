@@ -1745,6 +1745,15 @@
       "builderHintSlot": "Clique ou arraste na tela para definir uma posição livre, ou use a lista de slots."
     },
     "events": {
+        "publicTitle": "Feriados oficiais",
+        "publicCountry": "Código do país",
+        "publicIntro": "Calendário de feriados do país escolhido. Clica para lançar uma happy hour ×2 durante todo o dia.",
+        "publicLoading": "A carregar calendário…",
+        "publicNone": "Sem feriados próximos para este país.",
+        "publicInDays": "daqui a {n} dias",
+        "publicRegional": "regional",
+        "publicLaunch": "Lançar",
+        "publicDesc": "Happy hour por {name}",
       "templatesTitle": "Eventos sazonais (modelos)",
       "templatesIntro": "Lance um evento sazonal pronto <b>com um clique</b> — cria um evento ativo começando agora (happy hour = multiplicador de %gt% bônus, sorteio = sorteio de prêmio). Edite os detalhes / encerre abaixo em «eventos ativos».",
       "launchNow": "Lançar agora",
