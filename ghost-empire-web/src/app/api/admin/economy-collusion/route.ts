@@ -13,11 +13,14 @@ import {
   flagReferralStars, flagDuelCollusion, flagGiftConcentration, pairKey,
   type ReferrerRow, type DuelPairRow, type GiftUserRow,
 } from "@/lib/economy-collusion";
+import { domenaZEmaila, flagujKonta, type KontoDoOceny } from "@/lib/disposable-email";
+import { jednorazoweWgDisify } from "@/lib/disposable-email-check";
 
 export const dynamic = "force-dynamic";
 
 const LOW_ACTIVITY_TOKENS = 200; // a referred account below this + level ≤ 1 reads as inert (farmed)
 const DUEL_LOOKBACK_DAYS = 90;
+const EMAIL_CAP = 5000; // ogranicz odczyt domen; przy większym portalu skanujemy najnowsze konta
 const DUEL_CAP = 20000; // bound the resolved-duel read; older/overflow duels are noted, not silently dropped
 
 export async function GET() {
@@ -28,7 +31,7 @@ export async function GET() {
   const userWhere = tid ? { tenantId: tid } : {};
   const duelSince = new Date(Date.now() - DUEL_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
 
-  const [referredUsers, duels, giftRows] = await Promise.all([
+  const [referredUsers, duels, giftRows, kontaEmail] = await Promise.all([
     // Referral graph: every referred account in this portal + the cheap "is it inert?" signal.
     prisma.user.findMany({
       where: { referredById: { not: null }, ...userWhere },
@@ -46,6 +49,15 @@ export async function GET() {
       by: ["userId", "reason"],
       where: { reason: { in: ["gift_sent", "gift_received"] }, ...(tid ? { user: { tenantId: tid } } : {}) },
       _sum: { amount: true },
+    }),
+    // Sygnał anty-multikonto: DOMENA adresu, nigdy pełny adres (patrz nota o prywatności
+    // w lib/disposable-email.ts). `level`/`tokens` to ta sama heurystyka bezczynności,
+    // której używamy przy poleconych — konto farmione zwykle nie ma żadnej aktywności.
+    prisma.user.findMany({
+      where: userWhere,
+      select: { id: true, email: true, level: true, tokens: true },
+      orderBy: { createdAt: "desc" },
+      take: EMAIL_CAP,
     }),
   ]);
 
@@ -89,11 +101,33 @@ export async function GET() {
   const giftRowsAgg: GiftUserRow[] = [...giftMap.entries()].map(([userId, v]) => ({ userId, sent: v.sent, received: v.received, earnedTotal: giftEarned.get(userId) ?? 0 }));
   const giftCollectors = flagGiftConcentration(giftRowsAgg);
 
+  // --- Konta jednorazowe / skupiska domen -------------------------------------------------------
+  // Domeny liczymy lokalnie, a Disify odpytujemy WYŁĄCZNIE o te, których nie ma na liście
+  // wbudowanej — i tylko o domenę, nigdy o adres. Niedostępność Disify jest nieszkodliwa:
+  // zostaje sama lista lokalna, czyli sygnał słabszy, ale wciąż działający.
+  const licznikDomen = new Map<string, number>();
+  for (const u of kontaEmail) {
+    const d = domenaZEmaila(u.email);
+    if (d) licznikDomen.set(d, (licznikDomen.get(d) ?? 0) + 1);
+  }
+  const jednorazoweZdalne = await jednorazoweWgDisify(licznikDomen.keys()).catch(() => new Set<string>());
+  const kontaDoOceny: KontoDoOceny[] = kontaEmail.map((u) => {
+    const domena = domenaZEmaila(u.email);
+    return {
+      userId: u.id,
+      domena,
+      kontZDomeny: domena ? (licznikDomen.get(domena) ?? 0) : 0,
+      nieaktywne: u.level <= 1 && u.tokens < LOW_ACTIVITY_TOKENS,
+    };
+  });
+  const podejrzaneKonta = flagujKonta(kontaDoOceny, jednorazoweZdalne);
+
   // --- Resolve display names for every flagged id in one query. ---
   const ids = new Set<string>();
   referralStars.forEach((f) => ids.add(f.referrerId));
   duelCollusion.forEach((f) => { ids.add(f.a); ids.add(f.b); });
   giftCollectors.forEach((f) => ids.add(f.userId));
+  podejrzaneKonta.forEach((f) => ids.add(f.userId));
   const users = ids.size
     ? await prisma.user.findMany({ where: { id: { in: [...ids] } }, select: { id: true, username: true, displayName: true } })
     : [];
@@ -104,6 +138,7 @@ export async function GET() {
     referralStars: referralStars.map((f) => ({ ...f, referrerName: nameOf(f.referrerId) })),
     duelCollusion: duelCollusion.map((f) => ({ ...f, aName: nameOf(f.a), bName: nameOf(f.b), winnerName: nameOf(f.winner) })),
     giftCollectors: giftCollectors.map((f) => ({ ...f, name: nameOf(f.userId) })),
-    meta: { duelsScanned: duels.length, duelWindowDays: DUEL_LOOKBACK_DAYS, duelCapReached: duels.length >= DUEL_CAP },
+    podejrzaneKonta: podejrzaneKonta.map((f) => ({ ...f, name: nameOf(f.userId) })),
+    meta: { kontScanned: kontaEmail.length, domenSprawdzonych: licznikDomen.size, duelsScanned: duels.length, duelWindowDays: DUEL_LOOKBACK_DAYS, duelCapReached: duels.length >= DUEL_CAP },
   });
 }
