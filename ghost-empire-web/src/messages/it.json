@@ -2413,12 +2413,23 @@
       "granted": "{delta} %gt% per {user}. Saldo: {balance}"
     },
     "userRoles": {
+        "permDormant": "inattivo",
+        "permDormantHint": "La funzione non esiste ancora: concedere questo permesso non cambia nulla.",
       "permGroup": {
+          "config": "CONFIGURAZIONE",
         "economy": "ECONOMIA",
         "events": "EVENTI",
         "moderation": "MODERAZIONE"
       },
       "perm": {
+          "manage_bot": {
+            "label": "Configurazione del bot",
+            "desc": "Tassi di ricompensa del bot per messaggi e tempo in canale vocale, happy hour e interruttore del bot."
+          },
+          "manage_schedule": {
+            "label": "Programmazione dirette",
+            "desc": "Aggiungere, modificare ed eliminare slot nel palinsesto delle dirette."
+          },
         "grant_tokens": {
           "label": "Assegnare token",
           "desc": "Aggiungere / rimuovere %tokenName% agli utenti (sezione Utenti)."

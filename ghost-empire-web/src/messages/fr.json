@@ -2413,12 +2413,23 @@
       "granted": "{delta} %gt% pour {user}. Solde : {balance}"
     },
     "userRoles": {
+        "permDormant": "inactif",
+        "permDormantHint": "La fonctionnalité n'existe pas encore — accorder cette permission ne change rien.",
       "permGroup": {
+          "config": "CONFIGURATION",
         "economy": "ÉCONOMIE",
         "events": "ÉVÉNEMENTS",
         "moderation": "MODÉRATION"
       },
       "perm": {
+          "manage_bot": {
+            "label": "Configuration du bot",
+            "desc": "Taux de récompense du bot pour les messages et le temps en vocal, happy hour et interrupteur du bot."
+          },
+          "manage_schedule": {
+            "label": "Programme des streams",
+            "desc": "Ajouter, modifier et supprimer des créneaux dans le planning de diffusion."
+          },
         "grant_tokens": {
           "label": "Attribuer des tokens",
           "desc": "Ajouter / retirer des %tokenName% aux utilisateurs (section Utilisateurs)."

@@ -2413,12 +2413,23 @@
       "granted": "{user} に {delta} %gt%。残高：{balance}"
     },
     "userRoles": {
+        "permDormant": "無効",
+        "permDormantHint": "この機能はまだ存在しません — この権限を付与しても何も変わりません。",
       "permGroup": {
+          "config": "設定",
         "economy": "エコノミー",
         "events": "イベント",
         "moderation": "モデレーション"
       },
       "perm": {
+          "manage_bot": {
+            "label": "ボットの設定",
+            "desc": "メッセージとボイスチャンネル滞在時間に対するボットの報酬レート、ハッピーアワー、ボットのオン・オフ。"
+          },
+          "manage_schedule": {
+            "label": "配信スケジュール",
+            "desc": "配信スケジュールの枠の追加・編集・削除。"
+          },
         "grant_tokens": {
           "label": "トークンの付与",
           "desc": "ユーザーへの %tokenName% の追加 / 削除（ユーザーセクション）。"

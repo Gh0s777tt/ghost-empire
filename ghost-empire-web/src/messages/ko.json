@@ -2413,12 +2413,23 @@
       "granted": "{user}에게 {delta} %gt%. 잔액: {balance}"
     },
     "userRoles": {
+        "permDormant": "비활성",
+        "permDormantHint": "아직 없는 기능입니다 — 이 권한을 줘도 달라지는 것이 없습니다.",
       "permGroup": {
+          "config": "설정",
         "economy": "경제",
         "events": "이벤트",
         "moderation": "모더레이션"
       },
       "perm": {
+          "manage_bot": {
+            "label": "봇 설정",
+            "desc": "메시지와 음성 채널 이용 시간에 대한 봇 보상 비율, 해피 아워, 봇 켜기/끄기."
+          },
+          "manage_schedule": {
+            "label": "방송 일정",
+            "desc": "방송 일정의 시간대 추가·수정·삭제."
+          },
         "grant_tokens": {
           "label": "토큰 지급",
           "desc": "사용자에게 %tokenName% 추가 / 제거(사용자 섹션)."

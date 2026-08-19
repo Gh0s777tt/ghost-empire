@@ -926,12 +926,23 @@
       "saveBtn": "Save moderation settings"
     },
     "userRoles": {
+        "permDormant": "inactive",
+        "permDormantHint": "The feature does not exist yet — granting this permission changes nothing.",
       "permGroup": {
+          "config": "CONFIGURATION",
         "economy": "ECONOMY",
         "events": "EVENTS",
         "moderation": "MODERATION"
       },
       "perm": {
+          "manage_bot": {
+            "label": "Bot configuration",
+            "desc": "Bot reward rates for messages and voice-channel time, happy hour, and the bot's on/off switch."
+          },
+          "manage_schedule": {
+            "label": "Stream schedule",
+            "desc": "Adding, editing and removing slots in the broadcast schedule."
+          },
         "grant_tokens": {
           "label": "Granting tokens",
           "desc": "Adding / removing %tokenName% for users (Users section)."

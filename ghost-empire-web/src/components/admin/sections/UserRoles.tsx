@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, Crown, Heart, UserCog, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { MOD_PERMISSIONS, PERMISSION_GROUPS } from "@/lib/permissions";
+import { MOD_PERMISSIONS, PERMISSION_GROUPS, USPIONE_UPRAWNIENIA } from "@/lib/permissions";
 import { SectionCard, FieldInput } from "../shared";
 import { apiGet, apiPost, apiPostStepUp, ApiError } from "@/lib/api-client";
 
@@ -64,12 +64,17 @@ function ModPermissionsPicker({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {perms.map((p) => {
                   const isSet = selected.has(p.id);
+                  // Uprawnienie uśpione = wymienione, ale przez nic niesprawdzane. Nadal da się je
+                  // zaznaczyć (id bywa już zapisane w `User.modPermissions`), ale panel mówi wprost,
+                  // że nic z tego nie wynika — zamiast obiecywać funkcję, której produkt nie ma.
+                  const uspione = USPIONE_UPRAWNIENIA.has(p.id);
                   return (
                     <label
                       key={p.id}
-                      title={tf(`perm.${p.id}.desc`, p.desc)}
+                      title={uspione ? t("permDormantHint") : tf(`perm.${p.id}.desc`, p.desc)}
                       className={cn(
                         "flex items-start gap-2 px-2 py-1.5 border cursor-pointer transition-all",
+                        uspione && "opacity-60",
                         isSet
                           ? "border-blue-700 bg-blue-950/30 text-blue-200"
                           : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700",
@@ -82,8 +87,17 @@ function ModPermissionsPicker({
                         className="accent-blue-500 mt-0.5 shrink-0"
                       />
                       <span className="min-w-0">
-                        <span className="text-xs block font-medium">{tf(`perm.${p.id}.label`, p.label)}</span>
-                        <span className="text-[10px] text-zinc-500 leading-snug block">{tf(`perm.${p.id}.desc`, p.desc)}</span>
+                        <span className="text-xs block font-medium">
+                          {tf(`perm.${p.id}.label`, p.label)}
+                          {uspione && (
+                            <span className="ml-1.5 text-[9px] font-mono uppercase tracking-wider text-amber-500/90 border border-amber-700/50 px-1 py-px align-middle">
+                              {t("permDormant")}
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 leading-snug block">
+                          {uspione ? t("permDormantHint") : tf(`perm.${p.id}.desc`, p.desc)}
+                        </span>
                       </span>
                     </label>
                   );
