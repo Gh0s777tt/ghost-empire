@@ -11,7 +11,13 @@ export const MOD_PERMISSIONS = [
   { id: "draw_events",     label: "Losowanie zwycięzców",       group: "events",     desc: "Losowanie zwycięzców w eventach / giveawayach." },
   { id: "create_drops",    label: "Tworzenie drop codes",       group: "events",     desc: "Tworzenie i zarządzanie drop-code'ami (kody na streamie)." },
   { id: "ban_users",       label: "Banowanie userów",           group: "moderation", desc: "Banowanie userów — blokada konta (czasowa lub stała)." },
-  { id: "mute_users",      label: "Mutowanie userów",           group: "moderation", desc: "Wyciszanie userów." },
+  // ⚠️ UŚPIONE — `dormant: true`. To uprawnienie nie jest sprawdzane NIGDZIE w kodzie, a kolumna,
+  // którą miało rządzić (`Connection.isMuted`), ma zero czytelników (ROADMAP §0b D10). Panel
+  // pokazywał je jak każde inne, więc właściciel portalu nadawał moderatorowi prawo do funkcji,
+  // której produkt nie ma. Id ZOSTAJE, bo usunięcie osierociłoby wpisy już zapisane w
+  // `User.modPermissions`; znika wyłącznie obietnica w UI. Ożywienie wymaga uzgodnienia z botem
+  // czatu (`ghost-empire-chat/src/moderation.ts`) — inaczej powstaną dwa niezależne stany wyciszenia.
+  { id: "mute_users",      label: "Mutowanie userów",           group: "moderation", desc: "Wyciszanie userów.", dormant: true },
   { id: "mark_subs",       label: "Flagowanie subskrybentów",   group: "moderation", desc: "Nadawanie statusu sub / mod / VIP per platforma." },
   { id: "view_audit",      label: "Podgląd audit log",          group: "moderation", desc: "Wgląd w log akcji admina i moderacji." },
   // Rozdzielone od `manage_shop` (audyt 2026-08): konfiguracja bota ustala STAWKI NAGRÓD,
@@ -23,6 +29,19 @@ export const MOD_PERMISSIONS = [
 ] as const;
 
 export type ModPermission = (typeof MOD_PERMISSIONS)[number]["id"];
+
+/**
+ * Uprawnienia UŚPIONE — wymienione w panelu, ale nie sprawdzane przez żaden kod.
+ *
+ * @remarks
+ * Trzymamy je jawnie zamiast po cichu usuwać, bo id mogą już siedzieć w `User.modPermissions`.
+ * Panel oznacza je jako nieaktywne, więc nikt nie nadaje prawa do funkcji, której nie ma.
+ * Lista powinna dążyć do pustej: albo funkcja powstaje, albo uprawnienie znika razem z migracją
+ * czyszczącą wpisy.
+ */
+export const USPIONE_UPRAWNIENIA: ReadonlySet<string> = new Set(
+  MOD_PERMISSIONS.filter((p) => "dormant" in p && p.dormant).map((p) => p.id),
+);
 
 export const PERMISSION_GROUPS: Record<string, { label: string; color: string }> = {
   economy:    { label: "EKONOMIA",   color: "#10b981" },

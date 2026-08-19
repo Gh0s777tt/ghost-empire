@@ -2413,12 +2413,23 @@
       "granted": "{delta} %gt% para {user}. Saldo: {balance}"
     },
     "userRoles": {
+        "permDormant": "inactivo",
+        "permDormantHint": "La función todavía no existe: conceder este permiso no cambia nada.",
       "permGroup": {
+          "config": "CONFIGURACIÓN",
         "economy": "ECONOMÍA",
         "events": "EVENTOS",
         "moderation": "MODERACIÓN"
       },
       "perm": {
+          "manage_bot": {
+            "label": "Configuración del bot",
+            "desc": "Tasas de recompensa del bot por mensajes y tiempo en canal de voz, happy hour y el interruptor del bot."
+          },
+          "manage_schedule": {
+            "label": "Horario de streams",
+            "desc": "Añadir, editar y eliminar franjas del horario de emisiones."
+          },
         "grant_tokens": {
           "label": "Conceder tokens",
           "desc": "Añadir / quitar %tokenName% a los usuarios (sección Usuarios)."

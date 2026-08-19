@@ -926,12 +926,23 @@
       "saveBtn": "Zapisz ustawienia moderacji"
     },
     "userRoles": {
+        "permDormant": "nieaktywne",
+        "permDormantHint": "Funkcja jeszcze nie istnieje — nadanie tego uprawnienia nic nie zmienia.",
       "permGroup": {
+          "config": "KONFIGURACJA",
         "economy": "EKONOMIA",
         "events": "EVENTY",
         "moderation": "MODERACJA"
       },
       "perm": {
+          "manage_bot": {
+            "label": "Konfiguracja bota",
+            "desc": "Stawki nagród bota za wiadomości i czas na kanale głosowym, happy hour, włącznik bota."
+          },
+          "manage_schedule": {
+            "label": "Harmonogram streamów",
+            "desc": "Dodawanie, edycja i usuwanie slotów w harmonogramie transmisji."
+          },
         "grant_tokens": {
           "label": "Przyznawanie tokenów",
           "desc": "Dodawanie / odejmowanie %tokenName% userom (sekcja Użytkownicy)."

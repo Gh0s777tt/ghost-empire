@@ -2413,12 +2413,23 @@
       "granted": "{delta} %gt% untuk {user}. Saldo: {balance}"
     },
     "userRoles": {
+        "permDormant": "nonaktif",
+        "permDormantHint": "Fiturnya belum ada — memberikan izin ini tidak mengubah apa pun.",
       "permGroup": {
+          "config": "KONFIGURASI",
         "economy": "EKONOMI",
         "events": "ACARA",
         "moderation": "MODERASI"
       },
       "perm": {
+          "manage_bot": {
+            "label": "Konfigurasi bot",
+            "desc": "Tarif hadiah bot untuk pesan dan waktu di kanal suara, happy hour, serta sakelar bot."
+          },
+          "manage_schedule": {
+            "label": "Jadwal siaran",
+            "desc": "Menambah, mengubah, dan menghapus slot pada jadwal siaran."
+          },
         "grant_tokens": {
           "label": "Berikan token",
           "desc": "Menambah / menghapus %tokenName% untuk pengguna (bagian Pengguna)."

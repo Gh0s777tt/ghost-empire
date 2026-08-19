@@ -2413,12 +2413,23 @@
       "granted": "{delta} %gt% 给 {user}。余额：{balance}"
     },
     "userRoles": {
+        "permDormant": "未启用",
+        "permDormantHint": "该功能尚不存在 —— 授予此权限不会有任何变化。",
       "permGroup": {
+          "config": "配置",
         "economy": "经济",
         "events": "活动",
         "moderation": "管理"
       },
       "perm": {
+          "manage_bot": {
+            "label": "机器人配置",
+            "desc": "机器人对消息和语音频道时长的奖励费率、欢乐时光，以及机器人开关。"
+          },
+          "manage_schedule": {
+            "label": "直播排期",
+            "desc": "添加、编辑和删除直播排期中的时段。"
+          },
         "grant_tokens": {
           "label": "发放代币",
           "desc": "为用户添加 / 移除 %tokenName%（用户部分）。"
