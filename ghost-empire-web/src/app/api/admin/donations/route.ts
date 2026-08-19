@@ -8,6 +8,7 @@ import { logAdminAction } from "@/lib/audit";
 import { currentTenantId } from "@/lib/tenant";
 import { gtFromPln } from "@/lib/donation-rate";
 import { plnFromMinor, currencyDecimals } from "@/lib/donations/fx";
+import { kursyDoPrzeliczen } from "@/lib/donations/fx-store";
 import { sendDonationReceipt } from "@/lib/email-receipts";
 import { claimsForDonation, type QueueDonation } from "@/lib/donation-claim";
 import { createLogger } from "@/lib/logger";
@@ -67,12 +68,15 @@ export async function GET() {
     _sum: { amountGrosze: true },
   });
 
+  // Ten sam kurs, którym liczy tor mintowania — raport z panelu ma się zgadzać z tym, co
+  // naprawdę zaksięgowano, a nie z osobną, statyczną tabelą.
+  const kursy = await kursyDoPrzeliczen();
   let count = 0;
   let totalPln = 0;
   const byProvider = new Map<string, { count: number; pln: number }>();
   for (const g of groups) {
     const n = g._count._all;
-    const pln = plnFromMinor(g._sum.amountGrosze ?? 0, g.currency) ?? 0;
+    const pln = plnFromMinor(g._sum.amountGrosze ?? 0, g.currency, kursy) ?? 0;
     count += n;
     totalPln += pln;
     const prev = byProvider.get(g.source) ?? { count: 0, pln: 0 };
@@ -138,12 +142,13 @@ export async function PATCH(req: Request) {
   // admitted multi-currency providers — it under-mints a $10 Ko-fi tip (credited as 10 PLN instead
   // of ~40) and OVER-mints a 5000 RUB DonationAlerts tip by ~20× (credited as 5000 PLN instead of
   // ~220). This manual-match path is a mint rail, so it uses the same FX table as the automatic one.
-  const amountPln = plnFromMinor(donation.amountGrosze, donation.currency);
+  const kursyRecz = await kursyDoPrzeliczen();
+  const amountPln = plnFromMinor(donation.amountGrosze, donation.currency, kursyRecz);
   if (amountPln === null) {
     // An unknown currency is never guessed — see lib/donations/fx.ts. Refusing here is the whole
     // point: a human approving the row must not be the step that invents an exchange rate.
     return NextResponse.json(
-      { error: `Nieznana waluta „${donation.currency}" — nie znam jej kursu, więc nie mogę wyliczyć kwoty w GT. Dodaj kurs w lib/donations/fx.ts albo zaksięguj wpłatę ręcznie.` },
+      { error: `Nieznana waluta „${donation.currency}" — nie znam jej kursu, więc nie mogę wyliczyć kwoty w GT. NBP jej nie notuje, a nie ma jej też w tabeli awaryjnej — zaksięguj wpłatę ręcznie albo dopisz kurs w lib/donations/fx.ts.` },
       { status: 422 },
     );
   }

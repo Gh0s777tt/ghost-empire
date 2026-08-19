@@ -19,6 +19,7 @@
 import { prisma } from "@/lib/prisma";
 import { gtFromPln } from "@/lib/donation-rate";
 import { plnFromMinor, currencyDecimals, MAX_AMOUNT_MINOR } from "./fx";
+import { kursyDoPrzeliczen } from "./fx-store";
 import { matchDonationToUser } from "@/lib/streamlabs";
 import { dispatchAlertSafe } from "@/lib/alerts";
 import { incrementGoals } from "@/lib/stream-goals";
@@ -76,7 +77,9 @@ export async function ingestDonation(event: NormalizedDonation, tenantId: string
   // Real per-currency rate; null = currency we do not know. We must NOT invent a rate (the old flat
   // "×4 for everything" over-minted a ¥1000 tip ~160×), so an unknown currency loses the right to
   // mint and the donation goes to review instead.
-  const plnAmount = plnFromMinor(event.amountMinor, event.currency);
+  // Żywe kursy NBP (cron `api/cron/fx-rates`); pusta mapa = spadek na tabelę statyczną w `fx.ts`.
+  const kursy = await kursyDoPrzeliczen();
+  const plnAmount = plnFromMinor(event.amountMinor, event.currency, kursy);
 
   // ---- match the donor to one of OUR users -----------------------------------------------------
   // The GE-code inside the donor message is the ONLY verification we accept (donor name is
