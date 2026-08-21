@@ -661,6 +661,10 @@
     "setupPillHint": "Dokończ konfigurację portalu",
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "Kopia zapasowa off-site",
+            "hint": "Ustaw BACKUP_S3_* (R2/B2/S3) — bez tego nocna kopia NIE powstaje, a cron i tak świeci na zielono."
+          },
         "platform": {
           "label": "Podłączona platforma streamingowa",
           "hint": "Połącz Twitch, Kick albo YouTube — wystarczy jedna, by ruszyć na żywo."

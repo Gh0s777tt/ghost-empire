@@ -12,6 +12,7 @@ import { getSettings as getAlertSettings } from "@/lib/alerts";
 import { getTwitchStreamerToken, getKickStreamerToken, getYouTubeStreamerToken } from "@/lib/platform-tokens";
 import { currentTenantId } from "@/lib/tenant";
 import { computeSetupProgress, shouldAutoOpenWizard } from "@/lib/setup-status";
+import { backupBucketConfigured } from "@/lib/backup-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ const LABELS: Record<string, { label: string; hint: string }> = {
   youtube: { label: "YouTube połączony", hint: "Połącz YouTube w sekcji YouTube" },
   moderation: { label: "Moderacja czatu włączona", hint: "Włącz reguły automoderacji w sekcji Moderacja" },
   ai: { label: "Klucz AI (postać @bot + !imagine)", hint: "Wklej klucz AI w sekcji Integracje" },
+  backup: { label: "Kopia zapasowa off-site", hint: "Ustaw BACKUP_S3_* (R2/B2/S3) — bez tego nocna kopia NIE powstaje, a cron i tak świeci na zielono" },
   shopItem: { label: "Pierwszy przedmiot w sklepie", hint: "Dodaj nagrodę za GT w sekcji Sklep — daje widzom powód, by zbierać" },
   firstEvent: { label: "Pierwszy event lub zakład", hint: "Utwórz event/loterię albo predykcję — pierwsza wspólna aktywność" },
   payment: { label: "Metoda wsparcia na /support", hint: "Dodaj link/krypto/konto w sekcji Wsparcie / płatności" },
@@ -72,6 +74,8 @@ export async function GET() {
     youtube: !!youtube,
     moderation: !!mod?.enabled,
     ai: !!integ.aiApiKey,
+    // Czytane ze zmiennych środowiskowych, nie z bazy — to konfiguracja wdrożenia, nie portalu.
+    backup: backupBucketConfigured(),
     shopItem: shopItems > 0,
     firstEvent: events + predictions > 0,
     payment: payMethods > 0,

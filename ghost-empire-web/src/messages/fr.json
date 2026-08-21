@@ -2729,6 +2729,10 @@
     },
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "Sauvegarde externalisée",
+            "hint": "Renseigne BACKUP_S3_* (R2/B2/S3) — sans cela la sauvegarde nocturne N'EST PAS créée, alors que le cron signale une réussite."
+          },
         "ai": {
           "label": "Clé IA (persona @bot + !imagine)",
           "hint": "Colle la clé IA dans la section Intégrations"

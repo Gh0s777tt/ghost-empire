@@ -2729,6 +2729,10 @@
     },
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "异地备份",
+            "hint": "设置 BACKUP_S3_*（R2/B2/S3）—— 未设置时夜间备份不会生成，但定时任务仍会报告成功。"
+          },
         "ai": {
           "label": "AI 密钥（@bot 角色 + !imagine）",
           "hint": "在集成部分粘贴 AI 密钥"

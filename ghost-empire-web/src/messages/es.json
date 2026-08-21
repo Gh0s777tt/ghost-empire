@@ -2729,6 +2729,10 @@
     },
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "Copia de seguridad externa",
+            "hint": "Configura BACKUP_S3_* (R2/B2/S3): sin esto NO se crea la copia nocturna, aunque el cron siga marcando éxito."
+          },
         "ai": {
           "label": "Clave de IA (persona @bot + !imagine)",
           "hint": "Pega la clave de IA en la sección Integraciones"

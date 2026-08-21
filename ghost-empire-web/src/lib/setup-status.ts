@@ -32,6 +32,12 @@ export const SETUP_STEPS: SetupStepDef[] = [
   { key: "youtube", section: "youtube", optional: true, group: "platform" },
   { key: "moderation", section: "moderation", optional: true, group: "engagement" },
   { key: "ai", section: "integrations", optional: true, group: "engagement" },
+  // Kopia off-site jest DOMYŚLNIE UŚPIONA (`BACKUP_S3_*` nieustawione → cron zwraca
+  // `{ skipped: true }` i 200). Bez tego kroku właściciel portalu nie miał ŻADNEGO sygnału, że
+  // kopii zapasowej nie ma — cron świecił na zielono, panel milczał, a dowiedziałby się dopiero
+  // przy próbie odtworzenia. `optional`, bo portal działa bez niej; widoczna, bo cisza tutaj
+  // kosztuje najwięcej ze wszystkich niewidocznych braków.
+  { key: "backup", section: "integrations", optional: true, group: "essential" },
   // Activation funnel (#772) — the "aha-moment" steps: content that makes the portal worth
   // visiting. Derived from real rows (first shop item / event / payment method / drop), so
   // they tick themselves the moment the streamer creates the thing anywhere in the panel.

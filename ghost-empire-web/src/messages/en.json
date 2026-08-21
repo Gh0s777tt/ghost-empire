@@ -661,6 +661,10 @@
     "setupPillHint": "Finish setting up your portal",
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "Off-site backup",
+            "hint": "Set BACKUP_S3_* (R2/B2/S3) — without it the nightly backup is NOT created, yet the cron still reports success."
+          },
         "platform": {
           "label": "Streaming platform connected",
           "hint": "Connect Twitch, Kick or YouTube — one is enough to go live."
