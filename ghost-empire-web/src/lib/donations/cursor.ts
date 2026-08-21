@@ -52,6 +52,34 @@ export function pollSince(
   return new Date(Math.max(...floors));
 }
 
+/**
+ * Ile wpłat mogło zostać POMINIĘTYCH, bo kursor wypadł poza okno `maxLookbackMs`.
+ *
+ * @returns liczba milisekund między kursorem a sufitem okna; `0`, gdy nic nie ucięto.
+ *
+ * @remarks
+ * **Po co to istnieje:** `pollSince` bierze `max(createdAt, now - maxLookback, lastEventAt - grace)`.
+ * Gdy poller nie działał dłużej niż okno (baza leżała, cron padał, integracja wisiała na błędzie),
+ * `now - maxLookback` wygrywa z kursorem — a wpłaty między kursorem a sufitem są **po cichu
+ * odrzucane** przez `selectFresh` i nigdy nie zostaną zaksięgowane. Nic tego dotąd nie mówiło:
+ * poll kończył się `ok`, z `ingested: 0`, nie do odróżnienia od „nikt nic nie wpłacił".
+ *
+ * Ta funkcja niczego nie zmienia w księgowaniu — służy wyłącznie temu, żeby wywołujący mógł
+ * **głośno zgłosić** utratę zamiast ją przemilczeć. Świadoma decyzja: sufit zostaje (chroni przed
+ * odtworzeniem miesiąca historii na wizji przy włączeniu długo uśpionej integracji), ale przestaje
+ * być niewidzialny.
+ */
+export function pominietoMs(
+  lastEventAt: Date | null,
+  now: Date,
+  maxLookbackMs: number = DEFAULT_MAX_LOOKBACK_MS,
+): number {
+  if (!lastEventAt) return 0; // brak kursora = pierwszy poll, nie ma czego gubić
+  const sufit = now.getTime() - maxLookbackMs;
+  const kursor = lastEventAt.getTime() - CURSOR_GRACE_MS;
+  return Math.max(0, sufit - kursor);
+}
+
 /** Drop events older than the cutoff — see {@link pollSince}. */
 export function selectFresh<T extends { donatedAt: Date }>(events: T[], since: Date): T[] {
   return events.filter((e) => e.donatedAt.getTime() >= since.getTime());

@@ -31,7 +31,7 @@ import { verifyCronSecret } from "@/lib/utils";
 import { httpFetch, jsonOrThrow } from "@/lib/http";
 import { deploymentEnv, isProductionDeployment } from "@/lib/deployment";
 import { ingestDonation } from "@/lib/donations/ingest";
-import { parseTipplyFeed, tipplyFeedUrl, tipplySince, selectFreshTips } from "@/lib/donations/tipply";
+import { parseTipplyFeed, tipplyFeedUrl, tipplySince, selectFreshTips, tipplyPominietoMs } from "@/lib/donations/tipply";
 import { createLogger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -74,7 +74,27 @@ export async function GET(req: Request) {
       const payload = await jsonOrThrow<unknown>(res, "tipply last-tips");
       // The endpoint always returns the most recent ~25 tips, so without a cutoff the first poll
       // would replay history as live donations. See tipplySince() for the exact rule.
-      const since = tipplySince(it.createdAt, it.lastEventAt, new Date());
+      const teraz = new Date();
+      const since = tipplySince(it.createdAt, it.lastEventAt, teraz);
+
+      // Kursor starszy niż okno = poller nie chodził dłużej, niż sięga sufit (baza leżała, cron
+      // padał, integracja wisiała na błędzie). Wpłaty z tej luki `selectFreshTips` odrzuci i NIKT
+      // by się o tym nie dowiedział: poll kończy się `ok` z `ingested: 0`, nie do odróżnienia od
+      // „nikt nic nie wpłacił". Nie zmieniamy tu księgowania — robimy tę utratę WIDOCZNĄ.
+      const pominieto = tipplyPominietoMs(it.lastEventAt, teraz);
+      if (pominieto > 0) {
+        const godzin = Math.round(pominieto / 3_600_000);
+        log.warn("tipply: kursor poza oknem — wpłaty z luki mogły przepaść", {
+          integrationId: it.id, tenantId: it.tenantId, lukaGodzin: godzin,
+          kursor: it.lastEventAt?.toISOString() ?? null,
+        });
+        Sentry.captureMessage("tipply-poll: kursor poza oknem, możliwa utrata wpłat", {
+          level: "warning",
+          tags: { cron: "tipply-poll" },
+          extra: { integrationId: it.id, tenantId: it.tenantId, lukaGodzin: godzin },
+        });
+      }
+
       const tips = selectFreshTips(parseTipplyFeed(payload), since);
 
       let ingested = 0;
