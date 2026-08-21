@@ -161,6 +161,66 @@ git push origin --delete <gałąź>
 
 ---
 
+## 3b. Lokalne środowisko w Dockerze (Postgres + Redis)
+
+`docker-compose.dev.yml` w korzeniu repo stawia **Postgresa i Redisa** odwzorowujących produkcję.
+Uzupełnia `scripts/verify-all.sh`, który stawia Postgresa przez Homebrew — a więc **działa wyłącznie
+na macOS** i domyślnie sięga po `postgresql@16`, podczas gdy produkcja stoi na **17**.
+
+```bash
+docker compose -f docker-compose.dev.yml up -d      # start
+docker compose -f docker-compose.dev.yml down       # stop, dane zostają
+docker compose -f docker-compose.dev.yml down -v    # stop + SKASUJ dane
+```
+
+Do `ghost-empire-web/.env.local`:
+
+```bash
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/ghost_empire?connection_limit=3"
+DIRECT_URL="postgresql://postgres:postgres@127.0.0.1:55432/ghost_empire"
+UPSTASH_REDIS_REST_URL="http://127.0.0.1:8079"
+UPSTASH_REDIS_REST_TOKEN="dev_token_lokalny"
+```
+
+Testy integracyjne biorą osobną zmienną i same robią `db push`:
+
+```bash
+TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/ghost_empire" npm run test:integration
+```
+
+**Zweryfikowane, nie założone** (2026-08-20): Postgres w kontenerze raportuje **17.11** (produkcja:
+17), `prisma db push` zakłada komplet tabel, a **69 testów integracyjnych przechodzi** na tym stacku.
+
+### Trzy decyzje, które wyglądają na drobiazgi, a nie są
+
+**Redis idzie po REST, nie po TCP.** Aplikacja używa `@upstash/redis`, czyli klienta **REST** —
+zwykłe `redis://` nie zadziała. Stąd `serverless-redis-http` jako nakładka. Bez niej `hasRedis` jest
+`false`, a wtedy część rzeczy po cichu zachowuje się inaczej niż na produkcji: **feed kursów NBP**
+(`lib/donations/fx-store.ts` zapisuje wyłącznie do Redisa — bez niego cron jest no-opem) i
+współdzielone limity zapytań. Sprawdzone: `POST / ["SET","k","v"]` z nagłówkiem `Authorization:
+Bearer` zwraca `{"result":"OK"}`, a wartość realnie ląduje w Redisie.
+
+**Postgres słucha na 55432, nie na 5432.** Port domyślny na maszynie deweloperskiej jest praktycznie
+zawsze zajęty — przy pisaniu tej sekcji trzymał go kontener innego projektu. Wysoki port znaczy, że
+ten stack wstaje **obok** cudzych, a nie zamiast nich.
+
+**Oba porty słuchają wyłącznie na `127.0.0.1`.** Bez tego przedrostka Docker wystawia port na
+wszystkie interfejsy, **z pominięciem zapory hosta** — czyli baza z trywialnym hasłem trafiłaby do
+sieci lokalnej. Hasła w tym pliku są umyślnie trywialne i mają takie zostać: to środowisko lokalne.
+
+### Czego ten plik NIE jest
+
+To **nie jest lokalny Supabase**. Nie ma PostgREST-a, GoTrue ani Storage — i nie musi, bo Ghost
+Empire ich nie używa (zero zależności `@supabase/*`; auth to NextAuth + Prisma, a Supabase jest tu
+hostowanym Postgresem i niczym więcej). Podmiana bazy sprowadza się do zmiany `DATABASE_URL`.
+
+Panel **E-Bota** to inna historia: używa `@supabase/supabase-js`, czyli warstwy PostgREST, więc
+lokalnie potrzebuje pełnego stacku Supabase, a nie tego pliku.
+
+Ten sam compose wejdzie bez zmian do Coolify albo na dowolny VPS, gdyby kiedyś doszło do
+self-hostingu — ale **nie na dysk przenośny**: baza na nośniku, który potrafi się odłączyć w trakcie
+zapisu, to nie „chwilowa niedostępność", tylko uszkodzone dane.
+
 ## 4. Wydawanie wersji (semantic-release)
 
 Konfiguracja: [`.releaserc.json`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/.releaserc.json) + root [`package.json`](https://gitlab.com/Gh0s777tt/ghost-empire/-/blob/main/package.json).
