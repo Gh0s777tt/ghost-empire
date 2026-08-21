@@ -65,10 +65,12 @@ Items marked **⚠️ gap** are known shortfalls, recorded here deliberately rat
 - **Branch protection** — `main` on GitLab accepts push and merge from *Maintainers* only. GitLab is
   the source of truth; GitHub is a read-only mirror that Vercel deploys from. A change therefore
   reaches production only through a merge request on the protected branch.
-- **⚠️ gap — commits are not signed.** `git log --format=%G?` returns `N`, and Vercel records every
-  deployment as `githubCommitVerification: "unverified"`. The repository is public and `main`
-  auto-deploys, so commit authorship is currently **not cryptographically verifiable**. Remediation
-  (SSH signing, one-time setup) is documented in `CLAUDE.md` § *Wydania, podpisy i integralność*.
+- **Commit signing — enabled on GitLab (2026-08-21), still open on GitHub.** Commits and tags are
+  signed with an `ed25519` SSH key (`git log --format=%G?` → `G`) and the public key is registered
+  on GitLab as a *signing* key, so GitLab verifies authorship. **⚠️ gap: the key is not on GitHub**,
+  so the mirror — and therefore every Vercel deployment record — still reports
+  `githubCommitVerification: "unverified"`. Adding it needs an interactive scope grant and is the
+  owner's action; steps in `CLAUDE.md` § *Wydania, podpisy i integralność*.
 - **⚠️ gap — releases are not tagged.** One tag (`v0.1.0`) exists against ~1000 changelog entries, so
   "which version is live" has no answer and rollback means locating a commit by date. Tagging rules
   are in the same `CLAUDE.md` section.
