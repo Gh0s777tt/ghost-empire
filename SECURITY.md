@@ -56,6 +56,61 @@ The codebase is hardened along these lines (see `docs/ARCHITECTURE.md` for detai
   TTL-bounded and provider-bound.
 - **Auditability** — sensitive admin actions are recorded in an append-only audit log.
 
+## Supply chain & release integrity
+
+The section above covers the **product**. This one covers **how code gets to production** — because
+a hardened app deployed from an unverifiable commit is only as trustworthy as its weakest link.
+Items marked **⚠️ gap** are known shortfalls, recorded here deliberately rather than left implicit.
+
+- **Branch protection** — `main` on GitLab accepts push and merge from *Maintainers* only. GitLab is
+  the source of truth; GitHub is a read-only mirror that Vercel deploys from. A change therefore
+  reaches production only through a merge request on the protected branch.
+- **⚠️ gap — commits are not signed.** `git log --format=%G?` returns `N`, and Vercel records every
+  deployment as `githubCommitVerification: "unverified"`. The repository is public and `main`
+  auto-deploys, so commit authorship is currently **not cryptographically verifiable**. Remediation
+  (SSH signing, one-time setup) is documented in `CLAUDE.md` § *Wydania, podpisy i integralność*.
+- **⚠️ gap — releases are not tagged.** One tag (`v0.1.0`) exists against ~1000 changelog entries, so
+  "which version is live" has no answer and rollback means locating a commit by date. Tagging rules
+  are in the same `CLAUDE.md` section.
+- **Merging with a red pipeline is permitted, deliberately.**
+  `only_allow_merge_if_pipeline_succeeds` is `false` because GitLab CI can stall on exhausted
+  free-plan minutes (`ci_quota_exceeded`), which is not a code regression. The trade-off is that
+  verification moves to the human: it is allowed **only** when the failure is infrastructural, all
+  gates passed locally on a clean install, and the MR description says so with concrete numbers.
+  Never when the pipeline is red because of the code.
+- **Machine-checked repository hygiene** — beyond `gitleaks` (secrets) and `semgrep`/`trivy`, the
+  repo enforces its own invariants as hard gates: `docs:brand` (no founder-brand literals in
+  viewer-facing code), `docs:rls` (every table has an `ENABLE ROW LEVEL SECURITY` line — a missing
+  one means a table ships readable with the Supabase `anon` key), `docs:env`, `docs:changelog`,
+  `docs:roadmap`. Each exists because that class of drift happened at least twice.
+- **Guards are proven by mutation.** A gate that has never been red proves nothing, so every
+  invariant test is verified by breaking the code, observing the failure, and restoring it. The
+  mutation result belongs in the MR description.
+
+## Availability, backups and provider risk
+
+Confidentiality and integrity are covered above; **availability and recoverability** are part of the
+security posture too, and both have bitten this project.
+
+- **Off-site backup is dormant unless configured.** `api/cron/backup` returns `{ skipped: true }`
+  with HTTP 200 when `BACKUP_S3_*` is unset. That state is now surfaced as a step in the admin setup
+  checklist, and a **failed upload returns 503** rather than a 200 with `ok: false` — cron monitoring
+  reads the status code, so a silent failure used to look like a success. **Verify the checklist step
+  is ticked; a backup you believe exists but does not is worse than none.**
+- **The backup deliberately contains no secrets or PII.** It carries configuration, catalogues and
+  balances — not auth tokens, emails, sessions or shipping addresses. `Tenant` is exported through a
+  **positive field list**, never an "everything except" filter, so a newly added secret column cannot
+  drift into the backup unnoticed.
+- **A provider can pause the whole platform without warning.** Supabase suspends every project in an
+  organisation over unpaid invoices; restoring is blocked until they are settled (90-day window).
+  During such an outage the app's front page still returns 200 while everything DB-backed is dead —
+  monitor **`/api/health`**, which reports `status`, `db` and whether the shared Redis is wired.
+  Watching only `/` will report a healthy site through a total outage.
+- **Outages can lose money silently.** Donation pollers that cap how far back they look will drop
+  events older than that window once the gap exceeds it. The gap is now measured and reported
+  (log + Sentry) instead of passing as "nobody donated". Treat a long provider outage as a
+  potential data-loss event, not merely downtime.
+
 ## Secret rotation
 
 If a secret leaks (or for routine rotation), follow the runbook in
