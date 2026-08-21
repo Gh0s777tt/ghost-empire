@@ -116,6 +116,110 @@ opisują *jak*; ta sekcja jest nadrzędnym *co i dlaczego*.
 > zmiana, brakujący screen tam gdzie potrzebny, niewypchnięty commit, nieaktualny tag, martwa gałąź,
 > sekret/PII w pliku publicznym, ryzykowny kod bez wyjaśnienia — **praca NIE jest skończona.**
 
+## 🏷️ Wydania, podpisy i integralność zmian (mandatory)
+
+Sekcje wyżej pilnują, żeby **treść** była zsynchronizowana. Ta pilnuje, żeby **historia i wydania**
+były wiarygodne — czyli żeby dało się odpowiedzieć na pytanie „co dokładnie jest na produkcji, kto
+to napisał i czy ktokolwiek to przejrzał". Trzy rzeczy poniżej są dziś **luką**, nie stanem
+osiągniętym; zapisane tutaj, żeby nie były luką po cichu.
+
+### Wydania i tagi
+
+**Stan zastany (audyt 2026-08): jeden tag `v0.1.0` na ~1000 wpisów w `CHANGELOG.md`.** Sekcja
+`[Unreleased]` rośnie w nieskończoność, więc „co poszło w wersji X" nie ma odpowiedzi, a rollback
+sprowadza się do szukania commita po dacie.
+
+Zasady:
+
+1. **Tag = punkt, do którego umiesz wrócić.** Po serii zmergowanych MR-ów, które razem tworzą
+   sensowną całość (albo po każdej zmianie dotykającej **toru pieniężnego**, migracji bazy lub
+   uwierzytelniania), zamknij wersję: przenieś wpisy z `[Unreleased]` do `## [YYYY-MM-DD]`,
+   otaguj **anotowanym** tagiem (`git tag -a v… -m …`, nigdy „lekkim") i wypchnij tag na **oba**
+   remote'y.
+2. **Wersje datowane, nie SemVer** — to aplikacja, nie biblioteka; taka jest konwencja tego
+   `CHANGELOG.md` i ma taka zostać. *(E-Bot ma inaczej: semantic-release z commitów konwencjonalnych
+   i ręczny job `release`. Nie mieszaj tych dwóch modeli.)*
+3. **Tag bez wpisu w CHANGELOG-u jest błędem** i odwrotnie: wersja w CHANGELOG-u bez tagu też.
+   Numer w tagu, nagłówek w CHANGELOG-u i to, co realnie stoi na produkcji, muszą się zgadzać.
+
+### Podpisy commitów
+
+**Stan zastany: commity są NIEPODPISANE** (`git log --format=%G?` → `N`; Vercel raportuje każdy
+deploy jako `githubCommitVerification: "unverified"`). Repo jest publiczne, a `main` auto-deployuje
+na produkcję — czyli autorstwo commita jest dziś **niezweryfikowane kryptograficznie**.
+
+Docelowo: podpisywanie włączone lokalnie i egzekwowane na `main`.
+
+```bash
+# SSH jest prostsze niż GPG i używa klucza, który już masz
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+git config --global tag.gpgsign true
+# klucz publiczny dodaj w GitLab → Preferences → SSH Keys (typ: Signing)
+#                          i GitHub → Settings → SSH and GPG keys → New SSH key (typ: Signing)
+```
+
+**To zmiana w konfiguracji właściciela i jego kluczach — nie wprowadzaj jej za niego.** Zgłoś, gdy
+zauważysz, że commity nadal są `N`, i zostaw powyższe komendy.
+
+### Dyscyplina merge'owania
+
+`main` jest chroniony (push i merge: tylko *Maintainers*) — i tak ma zostać.
+
+**`only_allow_merge_if_pipeline_succeeds` jest ustawione na `false`** i to jest **świadoma decyzja**,
+nie niedopatrzenie: CI na GitLabie potrafi stać z powodu wyczerpanych minut planu free
+(`ci_quota_exceeded`), a to nie jest regresja kodu. Cena tej decyzji: **weryfikacja przenosi się na
+Ciebie**. Merge przy niezielonym pipelinie jest dopuszczalny **wyłącznie** gdy:
+
+- pipeline jest czerwony z powodu **infrastruktury**, nie kodu (limit minut, padły runner) —
+  i **napisałeś to wprost w opisie MR-a**;
+- **wszystkie bramki przeszły lokalnie** (patrz „Verification gates") na świeżej instalacji;
+- opis MR-a wymienia **konkretne liczby** (ile testów, jakie bramki), a nie „zielone".
+
+Nigdy nie merguj przy pipelinie czerwonym z powodu **kodu**. Nigdy nie pisz „zielone", jeśli czegoś
+nie uruchomiłeś.
+
+### Audyt na bieżąco, nie „kiedyś"
+
+Przy każdej sesji przejrzyj i **zgłoś** (nie musisz naprawiać w tym samym MR-ze):
+
+- **czy commity są podpisane** i czy tag odpowiada temu, co jest na produkcji;
+- **czy `main` na obu remote'ach jest identyczny** i czy nie ma martwych gałęzi;
+- **czy któraś bramka nie została wyciszona** zamiast naprawiona;
+- **czy nowy kod nie dokłada sekretu, PII ani stałej marki** do plików publicznych;
+- **czy nie przybyła funkcja, która świeci na zielono, ale nic nie robi** (patrz niżej).
+
+## 🔇 Cicha awaria jest gorsza niż głośna (mandatory)
+
+Lekcje z audytu 2026-08 — każda z nich to realny defekt znaleziony w tym repo, nie teoria. To są
+**reguły projektowe**, nie porady:
+
+1. **Zielone bramki ≠ działający produkt.** `tsc` i testy nie widzą funkcji, która jest poprawna
+   składniowo i martwa w praktyce. Znalezione tak: uprawnienie `mute_users`, którego **żaden kod nie
+   sprawdzał**; pole `modNote` zapisywane i **nigdy nieczytane**; reguły OBS, które nie wchodziły na
+   antenę. **Nową funkcję sprawdź na żywym przepływie**, a jeśli się nie da — napisz strażnika, który
+   wykryje jej martwotę.
+2. **Nie obiecuj w UI tego, czego produkt nie ma.** Uprawnienie, przełącznik albo pole w panelu jest
+   **obietnicą**. Jeśli za nią nic nie stoi, oznacz to wprost (wzorzec: `dormant: true` +
+   plakietka „nieaktywne") albo usuń. Milczenie jest najgorszą opcją.
+3. **Funkcja uśpiona musi być WIDOCZNA.** Cron kopii zapasowej zwracał `{ skipped: true }` i **200**
+   bez konfiguracji — świecił na zielono, a kopii nie było i nikt nie miał jak się dowiedzieć.
+   Uśpienie zgłaszaj tam, gdzie patrzy właściciel (lista kontrolna panelu), a **porażkę** sygnalizuj
+   kodem błędu, nie polem `ok: false` w odpowiedzi 200.
+4. **W torze pieniężnym cicha utrata jest niedopuszczalna.** Poller Tipply odrzucał wpłaty starsze
+   niż okno i kończył się `ok` z `ingested: 0` — **nie do odróżnienia od „nikt nic nie wpłacił"**.
+   Gdy ograniczenie ucina dane, **zmierz i zgłoś, ile uciął**.
+5. **Zewnętrzne API weryfikuj na żywo, nie z katalogu.** LibreTranslate figuruje w katalogach jako
+   „bez klucza" — w rzeczywistości oficjalna instancja żąda klucza, a mirrory zwracają 301/502.
+   Sprawdzaj **zanim** oprzesz na czymś kod, a wynik sprawdzenia **zapisz w nagłówku modułu**, żeby
+   następna osoba nie przechodziła tej samej drogi.
+6. **Powtarzalny dryf zamieniaj w skrypt, nie w pamięć.** Jeśli poprawiasz to samo drugi raz —
+   napisz bramkę. Tak powstały `docs:brand`, `docs:roadmap`, `docs:rls` i `docs:changelog`.
+7. **Strażnik, który nigdy nie był czerwony, niczego nie dowodzi.** Każdą nową bramkę i każdy test
+   pilnujący inwariantu **udowodnij mutacją**: zepsuj kod, pokaż, że test pada, przywróć. Wynik
+   mutacji wpisz do opisu MR-a.
+
 ## 📌 Documentation must never drift (mandatory)
 Every change that ships behavior **must** update the docs in the same PR. `npm run docs:check`
 (CI + local gate) fails if any PR shipped in recent git history is missing from `CHANGELOG.md`.
@@ -163,6 +267,14 @@ Rule of thumb: **if a user would notice the change, a user-facing surface must d
 - [ ] **Sekrety/PII:** żaden prawdziwy klucz/token/sekret ani dane osobowe nie trafiają do plików publicznych **ani do zrzutów ekranu** (zredagowane) — §4.
 - [ ] **Ryzykowny kod:** skomentowany „**dlaczego** tu jest" + świadoma weryfikacja „czy usuwalny / w pełni bezpieczny"; jeśli zostaje mimo ryzyka → decyzja w `docs/DECISIONS.md` — §7.
 - [ ] **Repo:** zacommitowane i **wypchnięte na oba remote'y** (albo zostawione dokładne komendy push/tag/merge, jeśli sesja nieinteraktywna); tag wersji i gałęzie zweryfikowane, martwe gałęzie posprzątane — §3.
+- [ ] **Cicha awaria:** nowa funkcja **nie może** świecić na zielono i nic nie robić — uśpienie
+      widoczne tam, gdzie patrzy właściciel; porażka sygnalizowana **kodem błędu**, nie polem
+      `ok: false` w odpowiedzi 200; utrata danych **zmierzona i zgłoszona** — patrz „Cicha awaria".
+- [ ] **Strażnik udowodniony mutacją:** każdy nowy test pilnujący inwariantu i każda nowa bramka
+      **były czerwone** po zepsuciu kodu; wynik mutacji w opisie MR-a.
+- [ ] **Wydanie:** jeśli zmiana dotyka toru pieniężnego, migracji bazy albo uwierzytelniania —
+      wersja zamknięta i **otagowana** (anotowany tag na oba remote'y), tag zgodny z CHANGELOG-iem
+      i z tym, co stoi na produkcji — patrz „Wydania, podpisy i integralność".
 
 ## Code-level documentation (write for the first-time reader)
 The goal: someone opening a file cold should understand **what this code does and why**, without
