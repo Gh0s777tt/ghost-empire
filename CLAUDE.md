@@ -144,24 +144,33 @@ Zasady:
 
 ### Podpisy commitów
 
-**Stan zastany: commity są NIEPODPISANE** (`git log --format=%G?` → `N`; Vercel raportuje każdy
-deploy jako `githubCommitVerification: "unverified"`). Repo jest publiczne, a `main` auto-deployuje
-na produkcję — czyli autorstwo commita jest dziś **niezweryfikowane kryptograficznie**.
-
-Docelowo: podpisywanie włączone lokalnie i egzekwowane na `main`.
+**Stan: WŁĄCZONE (2026-08-21).** Commity i tagi są podpisywane kluczem SSH (`ed25519`), a klucz
+publiczny jest zarejestrowany na GitLabie jako **signing key**. Weryfikacja lokalna:
 
 ```bash
-# SSH jest prostsze niż GPG i używa klucza, który już masz
-git config --global gpg.format ssh
-git config --global user.signingkey ~/.ssh/id_ed25519.pub
-git config --global commit.gpgsign true
-git config --global tag.gpgsign true
-# klucz publiczny dodaj w GitLab → Preferences → SSH Keys (typ: Signing)
-#                          i GitHub → Settings → SSH and GPG keys → New SSH key (typ: Signing)
+git log -1 --format='%G? %GS'      # oczekiwane: `G <e-mail>` — G = poprawny podpis zaufanym kluczem
 ```
 
-**To zmiana w konfiguracji właściciela i jego kluczach — nie wprowadzaj jej za niego.** Zgłoś, gdy
-zauważysz, że commity nadal są `N`, i zostaw powyższe komendy.
+Konfiguracja (globalna, obowiązuje w obu repo):
+
+```bash
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/<klucz>.pub
+git config --global commit.gpgsign true
+git config --global tag.gpgsign true
+git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
+```
+
+⚠️ **`allowedSignersFile` nie jest opcjonalne.** Bez niego git **podpisuje**, ale nie potrafi
+zweryfikować podpisu lokalnie — `%G?` zwraca wtedy `N`, co wygląda dokładnie tak, jakby
+podpisywanie w ogóle nie działało. Plik ma format `<e-mail> <typ> <klucz>`, po jednej linii na
+tożsamość, uprawnienia `600`.
+
+**⚠️ pozostała luka: GitHub.** Klucz jest na GitLabie, **nie na GitHubie**, więc mirror i deploye
+Vercela nadal raportują `githubCommitVerification: "unverified"`. Dodanie wymaga interaktywnego
+rozszerzenia uprawnień (`gh auth refresh -h github.com -s admin:ssh_signing_key`, logowanie
+w przeglądarce) albo ręcznego wklejenia w **Settings → SSH and GPG keys → New SSH key**, typ
+**Signing**. To czynność właściciela — nie da się jej wykonać nieinteraktywnie.
 
 ### Dyscyplina merge'owania
 
