@@ -1,0 +1,102 @@
+# docker-compose.dev.yml — lokalne środowisko deweloperskie: Postgres + Redis (REST).
+#
+# PO CO ISTNIEJE: `scripts/verify-all.sh` stawia Postgresa przez Homebrew, co działa **wyłącznie na
+# macOS** i domyślnie sięga po `postgresql@16`, podczas gdy produkcja (Supabase) stoi na **17**.
+# Ten plik daje to samo środowisko na każdym systemie i pod właściwą wersją, a przy okazji dokłada
+# Redisa, którego wariant Homebrew w ogóle nie miał.
+#
+# ⚠️ REDIS MUSI BYĆ PO REST, NIE PO TCP. Aplikacja używa `@upstash/redis`, czyli klienta **REST** —
+# zwykły `redis://` nie zadziała. Stąd `serverless-redis-http`: cienka nakładka mówiąca protokołem
+# Upstasha do zwykłego Redisa. Bez niej `hasRedis` jest `false`, a wtedy część rzeczy po cichu nie
+# działa lokalnie tak jak na produkcji — m.in. **feed kursów NBP** (`lib/donations/fx-store.ts`
+# zapisuje wyłącznie do Redisa, bez niego cron jest no-opem) i współdzielone limity zapytań.
+#
+# CZEGO TU NIE MA I DLACZEGO: to NIE jest lokalny Supabase. Nie ma PostgREST-a, GoTrue ani Storage —
+# bo Ghost Empire ich nie używa (zero zależności `@supabase/*`; auth to NextAuth + Prisma, a Supabase
+# jest hostowanym Postgresem i niczym więcej). Panel E-Bota to inna historia: używa
+# `@supabase/supabase-js`, więc potrzebuje pełnego stacku Supabase, nie tego pliku.
+#
+# UŻYCIE:
+#   docker compose -f docker-compose.dev.yml up -d
+#   # wklej do ghost-empire-web/.env.local wartości wypisane w docs/MAINTENANCE.md
+#   docker compose -f docker-compose.dev.yml down        # stop, dane zostają
+#   docker compose -f docker-compose.dev.yml down -v     # stop + SKASUJ dane
+#
+# ⚠️ Hasła niżej są **umyślnie trywialne** — to środowisko lokalne, nasłuchujące wyłącznie na
+# 127.0.0.1. Nie kopiuj ich nigdzie indziej i nie wystawiaj tych portów na świat.
+
+name: ghost-empire-dev
+
+services:
+  postgres:
+    # 17, bo tyle ma produkcja (Supabase: postgres_engine 17). Trzymanie tej samej wersji major
+    # to nie pedanteria — różnice w planerze i w składni potrafią przepuścić lokalnie zapytanie,
+    # które na produkcji padnie.
+    image: postgres:17-alpine
+    container_name: ge-dev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ghost_empire
+      # Kolacja C.UTF-8 zamiast domyślnej systemowej — inaczej sortowanie tekstu potrafi się
+      # różnić między maszynami, a to widać w rankingach i w testach kolejności.
+      LANG: C.UTF-8
+    command:
+      # Prisma trzyma pulę `connection_limit=3` na instancję, ale lokalnie odpalasz zwykle kilka
+      # procesów naraz (dev server + testy + studio). 100 to domyślna wartość Postgresa — zostaje
+      # jawnie, żeby było wiadomo, że to świadomy wybór, a nie przypadek.
+      - postgres
+      - -c
+      - max_connections=100
+    ports:
+      # NIE 5432. Port domyślny na maszynie deweloperskiej jest praktycznie zawsze zajęty —
+      # przez Postgresa z Homebrew albo przez kontener innego projektu (przy pisaniu tego pliku
+      # trzymał go `app-magazynowa-postgres-1`). Własny, wysoki port znaczy, że ten stack
+      # wstaje obok cudzych, a nie zamiast nich.
+      #
+      # Tylko pętla zwrotna: bez `127.0.0.1:` Docker wystawiłby port na WSZYSTKIE interfejsy,
+      # z pominięciem zapory hosta — czyli baza z trywialnym hasłem trafiłaby do sieci lokalnej.
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - ge-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ghost_empire"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: ge-dev-redis
+    restart: unless-stopped
+    # Bez portu na hoście — aplikacja NIE gada z Redisem po TCP, tylko przez nakładkę REST niżej.
+    # Wystawianie go byłoby myląceniem i niepotrzebną powierzchnią.
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    volumes:
+      - ge-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis-rest:
+    # Mówi protokołem REST Upstasha do zwykłego Redisa — dzięki temu `@upstash/redis` działa
+    # lokalnie bez zmiany ani jednej linii kodu aplikacji.
+    image: hiett/serverless-redis-http:latest
+    container_name: ge-dev-redis-rest
+    restart: unless-stopped
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: dev_token_lokalny
+      SRH_CONNECTION_STRING: "redis://redis:6379"
+    ports:
+      - "127.0.0.1:8079:80"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  ge-pgdata:
+  ge-redisdata:
