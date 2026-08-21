@@ -24,7 +24,7 @@
 // existing serverless cron with zero new infrastructure, so that is what this adapter feeds.)
 import { clampText, syntheticExternalId, type NormalizedDonation } from "./types";
 import { MAX_AMOUNT_MINOR } from "./fx";
-import { pollSince, selectFresh, DEFAULT_MAX_LOOKBACK_MS } from "./cursor";
+import { pollSince, selectFresh, pominietoMs, DEFAULT_MAX_LOOKBACK_MS } from "./cursor";
 
 /** One item of Tipply's last-tips response. Everything optional — it is remote, undocumented input. */
 export type TipplyTip = {
@@ -140,6 +140,18 @@ export const TIPPLY_MAX_LOOKBACK_MS = DEFAULT_MAX_LOOKBACK_MS;
  */
 export function tipplySince(createdAt: Date, lastEventAt: Date | null, now: Date): Date {
   return pollSince(createdAt, lastEventAt, now, TIPPLY_MAX_LOOKBACK_MS);
+}
+
+/**
+ * Ile wpłat mogło przepaść, bo kursor wypadł poza okno — patrz {@link pominietoMs}.
+ *
+ * @remarks
+ * Tipply jest jedynym dostawcą z sufitem okna: DonationAlerts jedzie na `vendorSince` (bez sufitu),
+ * a Streamlabs w ogóle nie ma kursora i dedupuje po `Donation.externalId`. Dlatego tylko tutaj
+ * długa przerwa w pollowaniu potrafi trwale zgubić wpłatę i tylko tutaj trzeba o tym krzyczeć.
+ */
+export function tipplyPominietoMs(lastEventAt: Date | null, now: Date): number {
+  return pominietoMs(lastEventAt, now, TIPPLY_MAX_LOOKBACK_MS);
 }
 
 /** Drop tips older than the cutoff — see {@link tipplySince}. */
