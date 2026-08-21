@@ -2729,6 +2729,10 @@
     },
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "Off-site-Backup",
+            "hint": "Setze BACKUP_S3_* (R2/B2/S3) — ohne das entsteht KEIN nächtliches Backup, der Cron meldet trotzdem Erfolg."
+          },
         "ai": {
           "label": "KI-Schlüssel (@bot-Persona + !imagine)",
           "hint": "Füge den KI-Schlüssel im Bereich Integrationen ein"

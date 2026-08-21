@@ -2729,6 +2729,10 @@
     },
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "Backup off-site",
+            "hint": "Imposta BACKUP_S3_* (R2/B2/S3): senza, il backup notturno NON viene creato, eppure il cron risulta riuscito."
+          },
         "ai": {
           "label": "Chiave IA (persona @bot + !imagine)",
           "hint": "Incolla la chiave IA nella sezione Integrazioni"

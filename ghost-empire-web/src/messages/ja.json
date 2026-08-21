@@ -2729,6 +2729,10 @@
     },
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "オフサイトバックアップ",
+            "hint": "BACKUP_S3_*（R2/B2/S3）を設定してください。未設定だと夜間バックアップは作成されませんが、cron は成功として報告します。"
+          },
         "ai": {
           "label": "AI キー（@bot ペルソナ + !imagine）",
           "hint": "連携セクションで AI キーを貼り付け"

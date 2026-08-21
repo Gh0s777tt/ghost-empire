@@ -2729,6 +2729,10 @@
     },
     "setupStatus": {
       "item": {
+          "backup": {
+            "label": "Cadangan off-site",
+            "hint": "Atur BACKUP_S3_* (R2/B2/S3) — tanpa itu cadangan malam TIDAK dibuat, tetapi cron tetap melaporkan sukses."
+          },
         "ai": {
           "label": "Kunci AI (persona @bot + !imagine)",
           "hint": "Tempel kunci AI di bagian Integrasi"
